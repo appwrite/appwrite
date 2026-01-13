@@ -22,7 +22,7 @@ abstract class Scope extends TestCase
     public const DB_ADAPTER_ENV_KEY = '_APP_DB_ADAPTER';
 
     protected ?Client $client = null;
-    protected string $endpoint = 'http://localhost/v1';
+    protected string $endpoint = 'http://appwrite.test/v1';
 
     protected function setUp(): void
     {

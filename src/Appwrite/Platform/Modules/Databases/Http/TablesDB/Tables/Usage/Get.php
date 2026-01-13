@@ -53,6 +53,7 @@ class Get extends CollectionUsageGet
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->inject('getDatabasesDB')
             ->callback($this->action(...));
     }

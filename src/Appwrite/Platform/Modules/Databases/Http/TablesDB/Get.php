@@ -33,7 +33,7 @@ class Get extends DatabaseGet
                 group: 'tablesdb',
                 name: 'get',
                 description: '/docs/references/tablesdb/get.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

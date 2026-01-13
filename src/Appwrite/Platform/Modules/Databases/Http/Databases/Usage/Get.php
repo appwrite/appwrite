@@ -96,15 +96,16 @@ class Get extends Action
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $range, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $range, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $periods = Config::getParam('usage', []);
@@ -115,7 +116,7 @@ class Get extends Action
             $this->getMetrics()
         );
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

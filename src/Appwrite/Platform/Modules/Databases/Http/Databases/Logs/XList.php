@@ -13,7 +13,6 @@ use DeviceDetector\DeviceDetector as Detector;
 use MaxMind\Db\Reader;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
@@ -68,15 +67,16 @@ class XList extends Action
             ->inject('dbForProject')
             ->inject('locale')
             ->inject('geodb')
+            ->inject('audit')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb): void
+    public function action(string $databaseId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         try {
@@ -85,15 +85,13 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
 
-        $audit = new Audit($dbForProject);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+
         $resource = 'database/' . $databaseId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
@@ -140,7 +138,7 @@ class XList extends Action
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByResource($resource, $queries),
+            'total' => $audit->countLogsByResource($resource),
             'logs' => $output,
         ]), UtopiaResponse::MODEL_LOG_LIST);
     }

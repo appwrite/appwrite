@@ -53,10 +53,10 @@ class Create extends Base
                 name: 'createTemplateDeployment',
                 description: <<<EOT
                 Create a deployment based on a template.
-                
+
                 Use this endpoint with combination of [listTemplates](https://appwrite.io/docs/products/sites/templates) to find the template details.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -79,6 +79,7 @@ class Create extends Base
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('gitHub')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -97,7 +98,8 @@ class Create extends Base
         Document $project,
         Event $queueForEvents,
         Build $queueForBuilds,
-        GitHub $github
+        GitHub $github,
+        Authorization $authorization
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -130,6 +132,7 @@ class Create extends Base
                 template: $template,
                 github: $github,
                 activate: $activate,
+                authorization: $authorization,
             );
 
             $queueForEvents
@@ -185,10 +188,11 @@ class Create extends Base
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;
 
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        Authorization::skip(
+        $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
@@ -207,6 +211,8 @@ class Create extends Base
                 'region' => $project->getAttribute('region')
             ]))
         );
+
+        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
 
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)

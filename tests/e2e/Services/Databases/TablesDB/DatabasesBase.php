@@ -1402,7 +1402,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $unknown['headers']['status-code']);
-        $this->assertEquals('Unknown column: Unknown. Verify the column name or create the column.', $unknown['body']['message']);
+        $this->assertEquals('The column \'Unknown\' required for the index could not be found. Please confirm all your columns are in the available state.', $unknown['body']['message']);
 
         $index1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -7832,6 +7832,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
         $this->assertEquals(200, $inc['headers']['status-code']);
+        $this->assertEquals($tableId, $inc['body']['$tableId']);
+        $this->assertEquals($databaseId, $inc['body']['$databaseId']);
         $this->assertEquals(6, $inc['body']['count']);
 
         // Verify count = 6
@@ -7944,6 +7946,8 @@ trait DatabasesBase
         ]));
         $this->assertEquals(200, $dec['headers']['status-code']);
         $this->assertEquals(9, $dec['body']['count']);
+        $this->assertEquals($tableId, $dec['body']['$tableId']);
+        $this->assertEquals($databaseId, $dec['body']['$databaseId']);
 
         $get = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, array_merge([
             'content-type' => 'application/json',

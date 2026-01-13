@@ -63,7 +63,7 @@ class Upsert extends Action
                     group: $this->getSDKGroup(),
                     name: self::getName(),
                     description: '/docs/references/databases/upsert-document.md',
-                    auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,
@@ -80,7 +80,7 @@ class Upsert extends Action
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
             ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID.', false, ['dbForProject'])
-            ->param('data', [], new JSON(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.')
+            ->param('data', [], new JSON(), 'Document data as JSON object. Include all required attributes of the document to be created or updated.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
             ->inject('requestTimestamp')
@@ -92,10 +92,11 @@ class Upsert extends Action
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Document $user, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, TransactionState $transactionState, array $plan, Authorization $authorization): void
     {
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -107,17 +108,17 @@ class Upsert extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
-        $isAPIKey = User::isApp(Authorization::getRoles());
-        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception($this->getParentNotFoundException());
+            throw new Exception($this->getParentNotFoundException(), params: [$collectionId]);
         }
 
         if ($transactionId === null) {
@@ -143,7 +144,7 @@ class Upsert extends Action
                 // Use transaction-aware document retrieval to see changes from same transaction
                 $oldDocument = $transactionState->getDocument($database, $collectionTableId, $documentId, $transactionId);
             } else {
-                $oldDocument = Authorization::skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
+                $oldDocument = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionTableId, $documentId));
             }
             if ($oldDocument->isEmpty()) {
                 if (!empty($user->getId())) {
@@ -159,7 +160,7 @@ class Upsert extends Action
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
+        $roles = $authorization->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
@@ -172,7 +173,7 @@ class Upsert extends Action
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!Authorization::isRole($role)) {
+                    if (!$authorization->hasRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
@@ -185,7 +186,7 @@ class Upsert extends Action
         $newDocument = new Document($data);
         $operations = 0;
 
-        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $dbForDatabases, $database, &$operations) {
+        $setCollection = (function (Document $collection, Document $document) use ($isAPIKey, $isPrivilegedUser, &$setCollection, $dbForProject, $dbForDatabases, $database, &$operations, $authorization) {
             $operations++;
 
             $relationships = \array_filter(
@@ -209,7 +210,7 @@ class Upsert extends Action
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
+                $relatedCollection = $authorization->skip(
                     fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $relatedCollectionId)
                 );
 
@@ -226,7 +227,7 @@ class Upsert extends Action
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
-                        $oldDocument = Authorization::skip(fn () => $dbForDatabases->getDocument(
+                        $oldDocument = $authorization->skip(fn () => $dbForDatabases->getDocument(
                             'database_' . $database->getSequence() . '_collection_' . $relatedCollection->getSequence(),
                             $relation->getId()
                         ));
@@ -263,10 +264,10 @@ class Upsert extends Action
         // Handle transaction staging
         if ($transactionId !== null) {
             $transaction = ($isAPIKey || $isPrivilegedUser)
-                ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+                ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
             if ($transaction->isEmpty()) {
-                throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+                throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
             }
             if ($transaction->getAttribute('status', '') !== 'pending') {
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
@@ -339,7 +340,7 @@ class Upsert extends Action
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());
         } catch (DuplicateException) {
-            throw new Exception($this->getDuplicateException());
+            throw new Exception($this->getDuplicateException(), params: [$documentId]);
         } catch (RelationshipException $e) {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
@@ -365,6 +366,7 @@ class Upsert extends Action
             document: $document,
             dbForProject: $dbForProject,
             collectionsCache: $collectionsCache,
+            authorization: $authorization
         );
 
         $relationships = \array_map(

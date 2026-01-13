@@ -14,6 +14,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
@@ -21,6 +22,8 @@ use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
 use Swoole\Runtime;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -46,19 +49,30 @@ use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
-Authorization::disable();
 Runtime::enableCoroutine();
 
 Server::setResource('register', fn () => $register);
 
-Server::setResource('dbForPlatform', function (Cache $cache, Registry $register) {
+Server::setResource('authorization', function () {
+    $authorization = new Authorization();
+    $authorization->disable();
+    return  $authorization;
+}, []);
+
+Server::setResource('dbForPlatform', function (Cache $cache, Registry $register, Authorization $authorization) {
     $pools = $register->get('pools');
     $adapter = new DatabasePool($pools->get('console'));
     $dbForPlatform = new Database($adapter, $cache);
-    $dbForPlatform->setNamespace('_console');
-    $dbForPlatform->setDocumentType('users', User::class);
+
+    $dbForPlatform
+        ->setAuthorization($authorization)
+        ->setNamespace('_console')
+        ->setDocumentType('users', User::class)
+    ;
+
+
     return $dbForPlatform;
-}, ['cache', 'register']);
+}, ['cache', 'register', 'authorization']);
 
 Server::setResource('project', function (Message $message, Database $dbForPlatform) {
     $payload = $message->getPayload() ?? [];
@@ -71,7 +85,7 @@ Server::setResource('project', function (Message $message, Database $dbForPlatfo
     return $dbForPlatform->getDocument('projects', $project->getId());
 }, ['message', 'dbForPlatform']);
 
-Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForPlatform) {
+Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForPlatform, Authorization $authorization) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForPlatform;
     }
@@ -103,15 +117,17 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
             ->setNamespace('_' . $project->getSequence());
     }
 
-    $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+    $database
+        ->setAuthorization($authorization)
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
     return $database;
-}, ['cache', 'register', 'message', 'project', 'dbForPlatform']);
+}, ['cache', 'register', 'message', 'project', 'dbForPlatform', 'authorization']);
 
-Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache) {
+Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, Authorization $authorization) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForPlatform, $cache, &$databases): Database {
+    return function (Document $project) use ($pools, $dbForPlatform, $cache, $authorization, &$databases): Database {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForPlatform;
         }
@@ -125,7 +141,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
 
         if (isset($databases[$dsn->getHost()])) {
             $database = $databases[$dsn->getHost()];
-
+            $database->setAuthorization($authorization);
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
             if (\in_array($dsn->getHost(), $sharedTables)) {
@@ -162,15 +178,17 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
                 ->setNamespace('_' . $project->getSequence());
         }
 
-        $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
+        $database
+            ->setAuthorization($authorization)
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
         return $database;
     };
-}, ['pools', 'dbForPlatform', 'cache']);
+}, ['pools', 'dbForPlatform', 'cache', 'authorization']);
 
-Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
+Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorization $authorization) {
     $database = null;
-    return function (?Document $project = null) use ($pools, $cache, $database) {
+    return function (?Document $project = null) use ($pools, $cache, $database, $authorization) {
         if ($database !== null && $project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
             $database->setTenant((int)$project->getSequence());
             return $database;
@@ -180,10 +198,11 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
         $database = new Database($adapter, $cache);
 
         $database
+            ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER)
-            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES);
+            ->setMaxQueryValues(APP_DATABASE_QUERY_MAX_VALUES_WORKER);
 
         // set tenant
         if ($project !== null && !$project->isEmpty() && $project->getId() !== 'console') {
@@ -192,7 +211,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache) {
 
         return $database;
     };
-}, ['pools', 'cache']);
+}, ['pools', 'cache', 'authorization']);
 
 Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register, Document $project) {
     return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project): Database {
@@ -348,6 +367,10 @@ Server::setResource('queueForBuilds', function (Publisher $publisher) {
     return new Build($publisher);
 }, ['publisher']);
 
+Server::setResource('queueForScreenshots', function (Publisher $publisher) {
+    return new Screenshot($publisher);
+}, ['publisher']);
+
 Server::setResource('queueForDeletes', function (Publisher $publisher) {
     return new Delete($publisher);
 }, ['publisher']);
@@ -454,6 +477,13 @@ Server::setResource('logError', function (Registry $register, Document $project)
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
 
+            if ($error->getPrevious() !== null) {
+                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                    $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
+                }
+                $log->addExtra('previousFile', $error->getPrevious()->getFile());
+                $log->addExtra('previousLine', $error->getPrevious()->getLine());
+            }
 
             foreach (($extras ?? []) as $key => $value) {
                 $log->addExtra($key, $value);
@@ -474,10 +504,30 @@ Server::setResource('logError', function (Registry $register, Document $project)
 
         Console::warning("Failed: {$error->getMessage()}");
         Console::warning($error->getTraceAsString());
+
+        if ($error->getPrevious() !== null) {
+            if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                Console::warning("Previous Failed: {$error->getPrevious()->getMessage()}");
+            }
+            Console::warning("Previous File: {$error->getPrevious()->getFile()} Line: {$error->getPrevious()->getLine()}");
+        }
     };
 }, ['register', 'project']);
 
 Server::setResource('executor', fn () => new Executor());
+
+Server::setResource('getAudit', function (Database $dbForPlatform, callable $getProjectDB) {
+    return function (Document $project) use ($dbForPlatform, $getProjectDB) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            $adapter = new AdapterDatabase($dbForPlatform);
+            return new UtopiaAudit($adapter);
+        }
+
+        $dbForProject = $getProjectDB($project);
+        $adapter = new AdapterDatabase($dbForProject);
+        return new UtopiaAudit($adapter);
+    };
+}, ['dbForPlatform', 'getProjectDB']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
@@ -523,7 +573,8 @@ $worker
     ->inject('log')
     ->inject('pools')
     ->inject('project')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($worker, $queueName) {
+    ->inject('authorization')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project, Authorization $authorization) use ($worker, $queueName) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($logger) {
@@ -539,7 +590,7 @@ $worker
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
-            $log->addExtra('roles', Authorization::getRoles());
+            $log->addExtra('roles', $authorization->getRoles());
 
             $isProduction = System::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
@@ -556,11 +607,6 @@ $worker
         Console::error('[Error] Message: ' . $error->getMessage());
         Console::error('[Error] File: ' . $error->getFile());
         Console::error('[Error] Line: ' . $error->getLine());
-    });
-
-$worker->workerStart()
-    ->action(function () use ($workerName) {
-        Console::info("Worker $workerName  started");
     });
 
 $worker->start();

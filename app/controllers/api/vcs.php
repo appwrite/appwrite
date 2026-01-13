@@ -4,7 +4,6 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\Redirect;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
@@ -77,7 +76,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 use function Swoole\Coroutine\batch;
 
-$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForPlatform, Build $queueForBuilds, callable $getProjectDB, Request $request) {
+$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForPlatform, Authorization $authorization, Build $queueForBuilds, callable $getProjectDB, Request $request, array $platform) {
     $errors = [];
     foreach ($repositories as $repository) {
         try {
@@ -88,12 +87,12 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             }
 
             $projectId = $repository->getAttribute('projectId');
-            $project = Authorization::skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
+            $project = $authorization->skip(fn () => $dbForPlatform->getDocument('projects', $projectId));
             $dbForProject = $getProjectDB($project);
 
             $resourceCollection = $resourceType === "function" ? 'functions' : 'sites';
             $resourceId = $repository->getAttribute('resourceId');
-            $resource = Authorization::skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
+            $resource = $authorization->skip(fn () => $dbForProject->getDocument($resourceCollection, $resourceId));
             $resourceInternalId = $resource->getSequence();
 
             $deploymentId = ID::unique();
@@ -133,7 +132,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $commentStatus = $isAuthorized ? 'waiting' : 'failed';
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+            $hostname = $platform['consoleHostname'] ?? '';
 
             $authorizeUrl = $protocol . '://' . $hostname . "/console/git/authorize-contributor?projectId={$projectId}&installationId={$installationId}&repositoryId={$repositoryId}&providerPullRequestId={$providerPullRequestId}";
 
@@ -142,7 +141,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $latestCommentId = '';
 
             if (!empty($providerPullRequestId) && $resource->getAttribute('providerSilentMode', false) === false) {
-                $latestComment = Authorization::skip(fn () => $dbForPlatform->findOne('vcsComments', [
+                $latestComment = $authorization->skip(fn () => $dbForPlatform->findOne('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerPullRequestId', [$providerPullRequestId]),
                     Query::orderDesc('$createdAt'),
@@ -175,24 +174,24 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     if ($lockAcquired) {
                         // Wrap in try/finally to ensure lock file gets deleted
                         try {
-                            $comment = new Comment();
+                            $comment = new Comment($platform);
                             $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
                             $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                             $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                         } finally {
-                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
+                            $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }
                     }
                 } else {
-                    $comment = new Comment();
+                    $comment = new Comment($platform);
                     $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
                     $latestCommentId = \strval($github->createComment($owner, $repositoryName, $providerPullRequestId, $comment->generateComment()));
 
                     if (!empty($latestCommentId)) {
                         $teamId = $project->getAttribute('teamId', '');
 
-                        $latestComment = Authorization::skip(fn () => $dbForPlatform->createDocument('vcsComments', new Document([
+                        $latestComment = $authorization->skip(fn () => $dbForPlatform->createDocument('vcsComments', new Document([
                             '$id' => ID::unique(),
                             '$permissions' => [
                                 Permission::read(Role::team(ID::custom($teamId))),
@@ -213,7 +212,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     }
                 }
             } elseif (!empty($providerBranch)) {
-                $latestComments = Authorization::skip(fn () => $dbForPlatform->find('vcsComments', [
+                $latestComments = $authorization->skip(fn () => $dbForPlatform->find('vcsComments', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::equal('providerBranch', [$providerBranch]),
                     Query::orderDesc('$createdAt'),
@@ -246,13 +245,13 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     if ($lockAcquired) {
                         // Wrap in try/finally to ensure lock file gets deleted
                         try {
-                            $comment = new Comment();
+                            $comment = new Comment($platform);
                             $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
                             $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, '');
 
                             $latestCommentId = \strval($github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment()));
                         } finally {
-                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
+                            $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                         }
                     }
                 }
@@ -295,7 +294,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $commands[] = $resource->getAttribute('commands', '');
             }
 
-            $deployment = Authorization::skip(fn () => $dbForProject->createDocument('deployments', new Document([
+            $deployment = $authorization->skip(fn () => $dbForProject->createDocument('deployments', new Document([
                 '$id' => $deploymentId,
                 '$permissions' => [
                     Permission::read(Role::any()),
@@ -335,7 +334,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 ->setAttribute('latestDeploymentInternalId', $deployment->getSequence())
                 ->setAttribute('latestDeploymentCreatedAt', $deployment->getCreatedAt())
                 ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
-            Authorization::skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource));
+            $authorization->skip(fn () => $dbForProject->updateDocument($resource->getCollection(), $resource->getId(), $resource));
 
             if ($resource->getCollection() === 'sites') {
                 $projectId = $project->getId();
@@ -345,7 +344,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
                 $previewRuleId = $ruleId;
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -378,7 +377,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
-                        Authorization::skip(
+                        $authorization->skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([
                                 '$id' => $ruleId,
                                 'projectId' => $project->getId(),
@@ -409,7 +408,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     $domain = "commit-" . substr($providerCommitHash, 0, 16) . ".{$sitesDomain}";
                     $ruleId = md5($domain);
                     try {
-                        Authorization::skip(
+                        $authorization->skip(
                             fn () => $dbForPlatform->createDocument('rules', new Document([
                                 '$id' => $ruleId,
                                 'projectId' => $project->getId(),
@@ -461,19 +460,19 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 if ($lockAcquired) {
                     // Wrap in try/finally to ensure lock file gets deleted
                     try {
-                        $rule = Authorization::skip(fn () => $dbForPlatform->getDocument('rules', $previewRuleId));
+                        $rule = $authorization->skip(fn () => $dbForPlatform->getDocument('rules', $previewRuleId));
 
                         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
                         $previewUrl = !empty($rule) ? ("{$protocol}://" . $rule->getAttribute('domain', '')) : '';
 
                         if (!empty($previewUrl)) {
-                            $comment = new Comment();
+                            $comment = new Comment($platform);
                             $comment->parseComment($github->getComment($owner, $repositoryName, $latestCommentId));
                             $comment->addBuild($project, $resource, $resourceType, $commentStatus, $deploymentId, $action, $previewUrl);
                             $github->updateComment($owner, $repositoryName, $latestCommentId, $comment->generateComment());
                         }
                     } finally {
-                        Authorization::skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
+                        $authorization->skip(fn () => $dbForPlatform->deleteDocument('vcsCommentLocks', $latestCommentId));
                     }
                 }
             }
@@ -542,12 +541,12 @@ App::get('/v1/vcs/github/authorize')
         type: MethodType::WEBAUTH,
         hide: true,
     ))
-    ->param('success', '', fn ($platforms) => new Redirect($platforms), 'URL to redirect back to console after a successful installation attempt.', true, ['platforms'])
-    ->param('failure', '', fn ($platforms) => new Redirect($platforms), 'URL to redirect back to console after a failed installation attempt.', true, ['platforms'])
-    ->inject('request')
+    ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a successful installation attempt.', true, ['redirectValidator'])
+    ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a failed installation attempt.', true, ['redirectValidator'])
     ->inject('response')
     ->inject('project')
-    ->action(function (string $success, string $failure, Request $request, Response $response, Document $project) {
+    ->inject('platform')
+    ->action(function (string $success, string $failure, Response $response, Document $project, array $platform) {
         $state = \json_encode([
             'projectId' => $project->getId(),
             'success' => $success,
@@ -556,7 +555,7 @@ App::get('/v1/vcs/github/authorize')
 
         $appName = System::getEnv('_APP_VCS_GITHUB_APP_NAME');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+        $hostname = $platform['consoleHostname'] ?? '';
 
         if (empty($appName)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GitHub App name is not configured. Please configure VCS (Version Control System) variables in .env file.');
@@ -585,10 +584,10 @@ App::get('/v1/vcs/github/callback')
     ->inject('gitHub')
     ->inject('user')
     ->inject('project')
-    ->inject('request')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $providerInstallationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Request $request, Response $response, Database $dbForPlatform) {
+    ->inject('platform')
+    ->action(function (string $providerInstallationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Response $response, Database $dbForPlatform, array $platform) {
         if (empty($state)) {
             $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
@@ -615,7 +614,7 @@ App::get('/v1/vcs/github/callback')
 
         $region = $project->getAttribute('region', 'default');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+        $hostname = $platform['consoleHostname'] ?? '';
 
         $defaultState = [
             'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
@@ -1477,10 +1476,12 @@ App::post('/v1/vcs/github/events')
     ->inject('request')
     ->inject('response')
     ->inject('dbForPlatform')
+    ->inject('authorization')
     ->inject('getProjectDB')
     ->inject('queueForBuilds')
+    ->inject('platform')
     ->action(
-        function (GitHub $github, Request $request, Response $response, Database $dbForPlatform, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
+        function (GitHub $github, Request $request, Response $response, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB, Build $queueForBuilds, array $platform) use ($createGitDeployments) {
             $payload = $request->getRawPayload();
             $signatureRemote = $request->getHeader('x-hub-signature-256', '');
             $signatureLocal = System::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
@@ -1516,14 +1517,14 @@ App::post('/v1/vcs/github/events')
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
                 //find resourceId from relevant resources table
-                $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
+                $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::limit(100),
                 ]));
 
                 // create new deployment only on push (not committed by us) and not when branch is created or deleted
                 if ($providerCommitAuthorEmail !== APP_VCS_GITHUB_EMAIL && !$providerBranchCreated && !$providerBranchDeleted) {
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthorName, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $request, $platform);
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
@@ -1536,16 +1537,16 @@ App::post('/v1/vcs/github/events')
                     ]);
 
                     foreach ($installations as $installation) {
-                        $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
+                        $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                             Query::equal('installationInternalId', [$installation->getSequence()]),
                             Query::limit(1000)
                         ]));
 
                         foreach ($repositories as $repository) {
-                            Authorization::skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
+                            $authorization->skip(fn () => $dbForPlatform->deleteDocument('repositories', $repository->getId()));
                         }
 
-                        Authorization::skip(fn () => $dbForPlatform->deleteDocument('installations', $installation->getId()));
+                        $authorization->skip(fn () => $dbForPlatform->deleteDocument('installations', $installation->getId()));
                     }
                 }
             } elseif ($event == $github::EVENT_PULL_REQUEST) {
@@ -1574,12 +1575,12 @@ App::post('/v1/vcs/github/events')
                     $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
                     $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
-                    $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
+                    $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::orderDesc('$createdAt')
                     ]));
 
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $request, $platform);
                 } elseif ($parsedPayload["action"] == "closed") {
                     // Allowed external contributions cleanup
 
@@ -1588,7 +1589,7 @@ App::post('/v1/vcs/github/events')
                     $external = $parsedPayload["external"] ?? true;
 
                     if ($external) {
-                        $repositories = Authorization::skip(fn () => $dbForPlatform->find('repositories', [
+                        $repositories = $authorization->skip(fn () => $dbForPlatform->find('repositories', [
                             Query::equal('providerRepositoryId', [$providerRepositoryId]),
                             Query::orderDesc('$createdAt')
                         ]));
@@ -1599,7 +1600,7 @@ App::post('/v1/vcs/github/events')
                             if (\in_array($providerPullRequestId, $providerPullRequestIds)) {
                                 $providerPullRequestIds = \array_diff($providerPullRequestIds, [$providerPullRequestId]);
                                 $repository = $repository->setAttribute('providerPullRequestIds', $providerPullRequestIds);
-                                $repository = Authorization::skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
+                                $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
                             }
                         }
                     }
@@ -1783,20 +1784,21 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
     ->param('repositoryId', '', new Text(256), 'VCS Repository Id')
     ->param('providerPullRequestId', '', new Text(256), 'GitHub Pull Request Id')
     ->inject('gitHub')
-    ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForPlatform')
+    ->inject('authorization')
     ->inject('getProjectDB')
     ->inject('queueForBuilds')
-    ->action(function (string $installationId, string $repositoryId, string $providerPullRequestId, GitHub $github, Request $request, Response $response, Document $project, Database $dbForPlatform, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
+    ->inject('platform')
+    ->action(function (string $installationId, string $repositoryId, string $providerPullRequestId, GitHub $github, Request $request, Response $response, Document $project, Database $dbForPlatform, Authorization $authorization, callable $getProjectDB, Build $queueForBuilds, array $platform) use ($createGitDeployments) {
         $installation = $dbForPlatform->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $repository = Authorization::skip(fn () => $dbForPlatform->findOne('repositories', [
+        $repository = $authorization->skip(fn () => $dbForPlatform->findOne('repositories', [
             Query::equal('$id', [$repositoryId]),
             Query::equal('projectInternalId', [$project->getSequence()])
         ]));
@@ -1814,7 +1816,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
 
         // TODO: Delete from array when PR is closed
 
-        $repository = Authorization::skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
+        $repository = $authorization->skip(fn () => $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository));
 
         $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
@@ -1837,8 +1839,16 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
 
         $providerBranch = \explode(':', $pullRequestResponse['head']['label'])[1] ?? '';
         $providerCommitHash = $pullRequestResponse['head']['sha'] ?? '';
+        $providerBranchUrl = $pullRequestResponse['head']['repo']['html_url'] ?? '';
+        $providerRepositoryName = $pullRequestResponse['head']['repo']['name'] ?? '';
+        $providerRepositoryUrl = $pullRequestResponse['head']['repo']['html_url'] ?? '';
+        $providerRepositoryOwner = $pullRequestResponse['head']['repo']['owner']['login'] ?? '';
+        $providerCommitAuthor = $pullRequestResponse['head']['user']['login'] ?? '';
+        $providerCommitAuthorUrl = $pullRequestResponse['head']['user']['html_url'] ?? '';
+        $providerCommitMessage = $pullRequestResponse['title'] ?? '';
+        $providerCommitUrl = $pullRequestResponse['html_url'] ?? '';
 
-        $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerCommitHash, $providerPullRequestId, true, $dbForPlatform, $queueForBuilds, $getProjectDB, $request);
+        $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, '', '', '', '', $providerCommitHash, '', '', '', '', $providerPullRequestId, true, $dbForPlatform, $authorization, $queueForBuilds, $getProjectDB, $request, $platform);
 
         $response->noContent();
     });

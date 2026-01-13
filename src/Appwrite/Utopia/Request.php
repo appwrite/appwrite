@@ -9,6 +9,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Route;
 use Utopia\Swoole\Request as UtopiaRequest;
+use Utopia\System\System;
 
 class Request extends UtopiaRequest
 {
@@ -20,6 +21,9 @@ class Request extends UtopiaRequest
 
     public function __construct(SwooleRequest $request)
     {
+        $trustedHeaders = System::getEnv('_APP_TRUSTED_HEADERS', 'x-forwarded-for');
+        $this->setTrustedIpHeaders(explode(',', $trustedHeaders));
+
         parent::__construct($request);
     }
 
@@ -210,7 +214,7 @@ class Request extends UtopiaRequest
     {
         $forwardedUserAgent = $this->getHeader('x-forwarded-user-agent');
         if (!empty($forwardedUserAgent)) {
-            $roles = Authorization::getRoles();
+            $roles = $this->authorization->getRoles();
             $isAppUser = User::isApp($roles);
 
             if ($isAppUser) {
@@ -232,5 +236,12 @@ class Request extends UtopiaRequest
         $params = $this->getParams();
         ksort($params);
         return md5($this->getURI() . '*' . serialize($params) . '*' . APP_CACHE_BUSTER);
+    }
+
+    private ?Authorization $authorization = null;
+
+    public function setAuthorization(Authorization $authorization): void
+    {
+        $this->authorization = $authorization;
     }
 }

@@ -70,6 +70,7 @@ class Upsert extends DocumentsUpsert
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

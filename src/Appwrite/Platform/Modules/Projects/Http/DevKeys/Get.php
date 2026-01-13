@@ -28,7 +28,7 @@ class Get extends Action
             ->setHttpPath('/v1/projects/:projectId/dev-keys/:keyId')
             ->desc('Get dev key')
             ->groups(['api', 'projects'])
-            ->label('scope', 'projects.read')
+            ->label('scope', 'devKeys.read')
             ->label('sdk', new Method(
                 namespace: 'projects',
                 group: 'devKeys',

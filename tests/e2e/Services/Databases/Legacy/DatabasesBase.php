@@ -1431,7 +1431,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $unknown['headers']['status-code']);
-        $this->assertEquals('Unknown attribute: Unknown. Verify the attribute name or create the attribute.', $unknown['body']['message']);
+        $this->assertEquals('The attribute \'Unknown\' required for the index could not be found. Please confirm all your attributes are in the available state.', $unknown['body']['message']);
 
         $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -6185,6 +6185,8 @@ trait DatabasesBase
         ]));
         $this->assertEquals(200, $inc['headers']['status-code']);
         $this->assertEquals(6, $inc['body']['count']);
+        $this->assertEquals($collectionId, $inc['body']['$collectionId']);
+        $this->assertEquals($databaseId, $inc['body']['$databaseId']);
 
         // Verify count = 6
         $get = $this->client->call(Client::METHOD_GET, "/databases/$databaseId/collections/$collectionId/documents/$docId", array_merge([
@@ -6296,6 +6298,8 @@ trait DatabasesBase
         ]));
         $this->assertEquals(200, $dec['headers']['status-code']);
         $this->assertEquals(9, $dec['body']['count']);
+        $this->assertEquals($collectionId, $dec['body']['$collectionId']);
+        $this->assertEquals($databaseId, $dec['body']['$databaseId']);
 
         $get = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',

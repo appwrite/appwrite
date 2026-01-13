@@ -10,6 +10,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filters\ListSelection;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
@@ -47,7 +48,7 @@ class XList extends Base
                 description: <<<EOT
                 Get a list of all the function's code deployments. You can use the query params to filter your results.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -119,7 +120,9 @@ class XList extends Base
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+        $grouped = Query::groupByType($queries);
+        $filterQueries = $grouped['filters'];
+        $selectQueries = $grouped['selections'] ?? [];
 
         try {
             $results = $dbForProject->find('deployments', $queries);
@@ -128,7 +131,7 @@ class XList extends Base
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        $this->applySelectQueries($request, $response, Response::MODEL_DEPLOYMENT);
+        $response->addFilter(new ListSelection($selectQueries, 'deployments'));
 
         $response->dynamic(new Document([
             'deployments' => $results,

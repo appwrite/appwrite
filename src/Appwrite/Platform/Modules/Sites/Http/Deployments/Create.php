@@ -60,7 +60,7 @@ class Create extends Action
                 description: <<<EOT
                 Create a new site code deployment. Use this endpoint to upload a new version of your site code. To activate your newly uploaded code, you'll need to update the site's deployment to use your new deployment ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -87,6 +87,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -106,7 +107,8 @@ class Create extends Action
         Device $deviceForSites,
         Device $deviceForLocal,
         Build $queueForBuilds,
-        array $plan
+        array $plan,
+        Authorization $authorization
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -272,10 +274,11 @@ class Create extends Action
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
 
-                // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-                $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+                // TODO: (@Meldiron) Remove after 1.7.x migration
+                $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+                $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -340,7 +343,7 @@ class Create extends Action
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -364,6 +367,8 @@ class Create extends Action
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceChunksUploaded', $chunksUploaded)->setAttribute('sourceMetadata', $metadata));
             }
         }
+
+
 
         $metadata = null;
 

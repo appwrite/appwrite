@@ -42,7 +42,7 @@ class Update extends Action
                     group: 'databases',
                     name: 'update',
                     description: '/docs/references/databases/update.md',
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_OK,
@@ -70,7 +70,7 @@ class Update extends Action
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
         $database = $dbForProject->updateDocument('databases', $databaseId, $database

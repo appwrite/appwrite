@@ -46,7 +46,7 @@ class Create extends IndexCreate
                 group: $this->getSDKGroup(),
                 name: 'createIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/tablesdb/create-index.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
@@ -67,6 +67,8 @@ class Create extends IndexCreate
             ->inject('getDatabasesDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
+
 }

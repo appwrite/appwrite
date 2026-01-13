@@ -38,7 +38,7 @@ class Get extends Base
                 description: <<<EOT
                 Get a site by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,

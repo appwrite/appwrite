@@ -45,7 +45,7 @@ class Update extends CollectionUpdate
                 group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/update-table.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -64,6 +64,7 @@ class Update extends CollectionUpdate
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

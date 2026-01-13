@@ -1572,7 +1572,7 @@ class DatabasesCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(400, $tooMany['headers']['status-code']);
-        $this->assertEquals('Index limit exceeded', $tooMany['body']['message']);
+        $this->assertEquals("The maximum number of indexes for collection '$collectionId' has been reached.", $tooMany['body']['message']);
 
         $collection = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
             'content-type' => 'application/json',
