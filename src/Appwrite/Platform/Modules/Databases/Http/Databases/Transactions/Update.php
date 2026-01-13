@@ -76,7 +76,6 @@ class Update extends Action
             ->inject('queueForRealtime')
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -103,7 +102,7 @@ class Update extends Action
      * @throws Structure
      * @throws \Utopia\Exception
      */
-    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization): void
+    public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks): void
     {
         if (!$commit && !$rollback) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Either commit or rollback must be true');
@@ -112,11 +111,11 @@ class Update extends Action
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Cannot commit and rollback at the same time');
         }
 
-        $isAPIKey = User::isApp($authorization->getRoles());
-        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
+        $isAPIKey = User::isApp(Authorization::getRoles());
+        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
 
         $transaction = ($isAPIKey || $isPrivilegedUser)
-            ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
+            ? Authorization::skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
             : $dbForProject->getDocument('transactions', $transactionId);
         if ($transaction->isEmpty()) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
@@ -139,12 +138,12 @@ class Update extends Action
             $currentDocumentId = null;
 
             try {
-                $dbForProject->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
-                    $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                $dbForProject->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks) {
+                    Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'committing',
                     ])));
 
-                    $operations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
+                    $operations = Authorization::skip(fn () => $dbForProject->find('transactionLogs', [
                         Query::equal('transactionInternalId', [$transaction->getSequence()]),
                         Query::orderAsc(),
                         Query::limit(PHP_INT_MAX),
@@ -168,7 +167,7 @@ class Update extends Action
                         }
 
                         if (!isset($collections[$collectionId])) {
-                            $collections[$collectionId] = $authorization->skip(
+                            $collections[$collectionId] = Authorization::skip(
                                 fn () => $dbForProject->getCollection($collectionId)
                             );
                         }
@@ -233,7 +232,7 @@ class Update extends Action
                         }
                     }
 
-                    $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                    $transaction = Authorization::skip(fn () => $dbForProject->updateDocument(
                         'transactions',
                         $transactionId,
                         new Document(['status' => 'committed'])
@@ -244,33 +243,33 @@ class Update extends Action
                         ->setDocument($transaction);
                 });
             } catch (NotFoundException $e) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
 
                 throw new Exception(Exception::DOCUMENT_NOT_FOUND, previous: $e, params: [$currentDocumentId ?? 'unknown']);
             } catch (DuplicateException | ConflictException $e) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::TRANSACTION_CONFLICT, previous: $e);
             } catch (StructureException $e) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
             } catch (LimitException $e) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, $e->getMessage());
             } catch (TransactionException $e) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::TRANSACTION_FAILED, $e->getMessage());
             } catch (QueryException $e) {
-                $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
+                Authorization::skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
                 ])));
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
@@ -298,11 +297,11 @@ class Update extends Action
                     $data = $data->getArrayCopy();
                 }
 
-                $database = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                $database = Authorization::skip(fn () => $dbForProject->findOne('databases', [
                     Query::equal('$sequence', [$databaseInternalId])
                 ]));
 
-                $collection = $authorization->skip(fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
+                $collection = Authorization::skip(fn () => $dbForProject->findOne('database_' . $databaseInternalId, [
                     Query::equal('$sequence', [$collectionInternalId])
                 ]));
 
@@ -394,7 +393,7 @@ class Update extends Action
         }
 
         if ($rollback) {
-            $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+            $transaction = Authorization::skip(fn () => $dbForProject->updateDocument(
                 'transactions',
                 $transactionId,
                 new Document(['status' => 'failed'])

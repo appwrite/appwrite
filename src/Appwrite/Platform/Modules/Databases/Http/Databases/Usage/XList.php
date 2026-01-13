@@ -56,11 +56,10 @@ class XList extends Action
             ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
             ->inject('response')
             ->inject('dbForProject')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $range, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
+    public function action(string $range, UtopiaResponse $response, Database $dbForProject): void
     {
 
         $periods = Config::getParam('usage', []);
@@ -75,7 +74,7 @@ class XList extends Action
             METRIC_DATABASES_OPERATIONS_WRITES,
         ];
 
-        $authorization->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

@@ -58,7 +58,6 @@ class XList extends Action
             ->inject('dbForProject')
             ->inject('project')
             ->inject('getLogsDB')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -69,8 +68,7 @@ class XList extends Action
         Response $response,
         Database $dbForProject,
         Document $project,
-        callable $getLogsDB,
-        Authorization $authorization
+        callable $getLogsDB
     ) {
         try {
             $queries = Query::parseQueries($queries);
@@ -119,6 +117,7 @@ class XList extends Action
 
         if (!empty($buckets)) {
             $bucketByStatsId = [];
+            $dbForLogs = call_user_func($getLogsDB, $project);
 
             foreach ($buckets as $bucket) {
                 $metric = str_replace(
@@ -135,28 +134,22 @@ class XList extends Action
                 $bucket->setAttribute('totalSize', 0);
             }
 
-            try {
-                $dbForLogs = $getLogsDB($project);
+            /* @type Document[] $stats */
+            $stats = Authorization::skip(function () use ($dbForLogs, $bucketByStatsId) {
+                $statsIds = array_keys($bucketByStatsId);
 
-                /* @var array<Document> $stats */
-                $stats = $authorization->skip(function () use ($dbForLogs, $bucketByStatsId) {
-                    $statsIds = array_keys($bucketByStatsId);
+                return $dbForLogs->find('stats', [
+                    Query::equal('$id', $statsIds),
+                    Query::select(['value']),
+                ]);
+            });
 
-                    return $dbForLogs->find('stats', [
-                        Query::equal('$id', $statsIds),
-                        Query::select(['value']),
-                    ]);
-                });
+            foreach ($stats as $stat) {
+                $bucket = $bucketByStatsId[$stat->getId()];
 
-                foreach ($stats as $stat) {
-                    $bucket = $bucketByStatsId[$stat->getId()];
-
-                    if ($bucket) {
-                        $bucket->setAttribute('totalSize', $stat->getAttribute('value', 0));
-                    }
+                if ($bucket) {
+                    $bucket->setAttribute('totalSize', $stat->getAttribute('value', 0));
                 }
-            } catch (\Throwable) {
-                // Stats may not be available, default to 0
             }
         }
 
