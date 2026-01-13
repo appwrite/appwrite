@@ -119,6 +119,7 @@ App::get('/v1/health/db')
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
+                    $adapter->setAuthorization($authorization);
                     $checkStart = \microtime(true);
 
                     if ($adapter->ping()) {
