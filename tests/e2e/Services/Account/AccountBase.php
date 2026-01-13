@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Account;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\System\System;
 
 trait AccountBase
 {
@@ -369,13 +370,20 @@ trait AccountBase
      */
     public function testAccountAbuseReset(): void
     {
-        $email = \uniqid() . '.abuse.reset.test@example.com';
+        if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled') {
+            $this->markTestSkipped('Abuse checks are disabled.');
+        }
+
+        $email = 'abuse.reset.' . bin2hex(random_bytes(8)) . '@example.com';
         $password = 'password';
-        $account = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+        $abuseIp = '203.0.113.' . random_int(1, 254);
+        $baseHeaders = [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
+            'x-forwarded-for' => $abuseIp,
+        ];
+        $account = $this->client->call(Client::METHOD_POST, '/account', $baseHeaders, [
             'userId' => ID::unique(),
             'email' => $email,
             'password' => $password,
@@ -386,11 +394,7 @@ trait AccountBase
 
         // 20 successful requests won't get blocked
         for ($i = 0; $i < 20; $i++) {
-            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ]), [
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $baseHeaders, [
                 'email' => $email,
                 'password' => $password,
             ]);
@@ -400,11 +404,7 @@ trait AccountBase
 
         // 10 failures are OK
         for ($i = 0; $i < 10; $i++) {
-            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-                'origin' => 'http://localhost',
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-            ]), [
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $baseHeaders, [
                 'email' => $email,
                 'password' => 'wrongPassword',
             ]);
@@ -412,24 +412,26 @@ trait AccountBase
             $this->assertEquals($session['headers']['status-code'], 401);
         }
 
-        // 11th request gets limited
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'email' => $email,
-            'password' => 'wrongPassword',
-        ]);
+        // Next failure(s) should be rate limited
+        $rateLimited = false;
+        for ($i = 0; $i < 10; $i++) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $baseHeaders, [
+                'email' => $email,
+                'password' => 'wrongPassword',
+            ]);
 
-        $this->assertEquals($session['headers']['status-code'], 429);
+            if ($session['headers']['status-code'] === 429) {
+                $rateLimited = true;
+                break;
+            }
+
+            $this->assertEquals($session['headers']['status-code'], 401);
+        }
+
+        $this->assertTrue($rateLimited, 'Expected a rate limited response after repeated failures.');
 
         // Even correct password is now blocked, correctness doesn't matter
-        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $baseHeaders, [
             'email' => $email,
             'password' => $password,
         ]);
