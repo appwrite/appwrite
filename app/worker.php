@@ -14,6 +14,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Platform\Appwrite;
@@ -305,6 +306,10 @@ Server::setResource('queueForMails', function (Publisher $publisher) {
 
 Server::setResource('queueForBuilds', function (Publisher $publisher) {
     return new Build($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForScreenshots', function (Publisher $publisher) {
+    return new Screenshot($publisher);
 }, ['publisher']);
 
 Server::setResource('queueForDeletes', function (Publisher $publisher) {
