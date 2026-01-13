@@ -1,10 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { ComingSoonView } from '@/components/pages/projects/$projectId/shared/ComingSoon'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_public/projects/$projectId/messaging')({
-  component: MessagingPage,
+  component: MessagingLayout,
 })
 
-function MessagingPage() {
-  return <ComingSoonView title="Messaging" />
+function MessagingLayout() {
+  return <Outlet />
 }

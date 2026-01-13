@@ -410,19 +410,19 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
 
             {/* Right: Project ID and Region/Endpoint labels */}
             <TooltipProvider delayDuration={0}>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 overflow-hidden">
                 {/* Project ID Label */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       onClick={() => copyToClipboard(projectId, 'projectId')}
-                      className="flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      className="flex min-w-0 items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
-                      <span>{projectId}</span>
+                      <span className="truncate max-w-[120px] sm:max-w-[180px]">{projectId}</span>
                       {copiedField === 'projectId' ? (
-                        <Check className="h-3 w-3 text-emerald-500" />
+                        <Check className="h-3 w-3 shrink-0 text-emerald-500" />
                       ) : (
-                        <Copy className="h-3 w-3" />
+                        <Copy className="h-3 w-3 shrink-0" />
                       )}
                     </button>
                   </TooltipTrigger>
@@ -438,10 +438,10 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
                       onClick={() =>
                         copyToClipboard(projectEndpoint, 'endpoint')
                       }
-                      className="flex items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      className="flex min-w-0 items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       <Link className="h-3.5 w-3.5 shrink-0" />
-                      <span className="font-mono">{endpointDisplay}</span>
+                      <span className="truncate max-w-[100px] sm:max-w-[160px] font-mono">{endpointDisplay}</span>
                       {copiedField === 'endpoint' ? (
                         <Check className="h-3 w-3 shrink-0 text-emerald-500" />
                       ) : (

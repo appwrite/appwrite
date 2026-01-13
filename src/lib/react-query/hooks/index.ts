@@ -34,4 +34,5 @@ export * from './project-domains'
 export * from './backups'
 export * from './locale'
 export * from './vcs'
+export * from './messaging'
 

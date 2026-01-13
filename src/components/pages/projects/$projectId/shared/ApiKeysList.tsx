@@ -116,27 +116,27 @@ export function ApiKeysList({
             return (
               <div
                 key={apiKey.id}
-                className="flex items-center justify-between gap-3 p-4"
+                className="flex items-center justify-between gap-3 p-4 overflow-hidden"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1 overflow-hidden">
+                  <div className="flex items-center gap-2 min-w-0">
                     <Key className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <p className="text-[14px] font-medium text-foreground">
+                    <p className="text-[14px] font-medium text-foreground truncate min-w-0">
                       {apiKey.name}
                     </p>
-                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground shrink-0">
                       {apiKey.scopes.length === 0
                         ? 'No scopes'
                         : `${apiKey.scopes.length} scope${apiKey.scopes.length !== 1 ? 's' : ''}`}
                     </span>
                   </div>
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <code className="rounded bg-muted px-2 py-0.5 font-mono text-[12px] text-muted-foreground">
+                  <div className="mt-1.5 flex items-center gap-2 min-w-0 overflow-hidden">
+                    <code className="rounded bg-muted px-2 py-0.5 font-mono text-[12px] text-muted-foreground truncate max-w-[200px] sm:max-w-none">
                       {maskKey(apiKey.key)}
                     </code>
                     <button
                       onClick={() => handleView(apiKey.id)}
-                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
                       title="View key"
                     >
                       <Eye className="h-3.5 w-3.5" />
@@ -145,7 +145,7 @@ export function ApiKeysList({
                       onClick={() =>
                         handleCopy(apiKey.key, `apiKey-${apiKey.id}`)
                       }
-                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
                       title="Copy key"
                     >
                       {copiedField === `apiKey-${apiKey.id}` ? (
@@ -154,15 +154,15 @@ export function ApiKeysList({
                         <Copy className="h-3.5 w-3.5" />
                       )}
                     </button>
-                    <div className="ml-auto flex items-center gap-3">
-                      <span className="text-[12px] text-muted-foreground">
+                    <div className="ml-auto flex items-center gap-2 sm:gap-3 shrink-0">
+                      <span className="text-[12px] text-muted-foreground whitespace-nowrap hidden sm:inline">
                         Created{' '}
                         <DateTooltip
                           date={apiKey.createdAt}
                           className="text-[12px] text-muted-foreground"
                         />
                       </span>
-                      <span className="text-[12px] text-muted-foreground">
+                      <span className="text-[12px] text-muted-foreground whitespace-nowrap hidden md:inline">
                         {apiKey.expire ? (
                           <>
                             Expires{' '}
@@ -176,11 +176,11 @@ export function ApiKeysList({
                         )}
                       </span>
                       {expirationStatus && expirationStatus.isExpired ? (
-                        <Badge variant="secondary" className="text-[10px]">
+                        <Badge variant="secondary" className="text-[10px] shrink-0">
                           Expired
                         </Badge>
                       ) : expirationStatus && expirationStatus.isExpiringSoon ? (
-                        <Badge variant="warning" className="text-[10px]">
+                        <Badge variant="warning" className="text-[10px] shrink-0">
                           Expires soon
                         </Badge>
                       ) : null}

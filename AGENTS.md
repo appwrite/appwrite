@@ -1491,3 +1491,286 @@ components/pages/projects/$projectId/[service-name]/
 7. **Responsive** - Test on mobile and desktop viewports
 8. **Performance** - Use pagination, avoid loading all resources at once
 9. **Error boundaries** - Handle API errors gracefully with user-friendly messages
+
+## Settings Card Structure
+
+When creating settings pages (detail pages, settings tabs, etc.), always follow the consistent card structure pattern used throughout the application. This ensures visual consistency and a uniform user experience.
+
+### Standard Card Structure
+
+**Container:**
+```tsx
+<div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+  {/* Header */}
+  {/* Separator */}
+  {/* Content */}
+  {/* Footer (if has update button) */}
+</div>
+```
+
+**Complete Card Pattern:**
+```tsx
+<div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+  {/* Header Section */}
+  <div className="px-6 py-4">
+    <h3 className="text-[15px] font-semibold text-foreground">
+      Section Title
+    </h3>
+    {/* Optional description */}
+    <p className="text-[13px] text-muted-foreground mt-2">
+      Optional description text explaining what this section does.
+    </p>
+  </div>
+  
+  {/* Separator */}
+  <div className="border-t border-border" />
+  
+  {/* Content Section */}
+  <div className="px-6 py-4">
+    {/* Form fields, switches, inputs, etc. */}
+  </div>
+  
+  {/* Footer Section (only if has update button) */}
+  <div className="px-6 py-4 border-t border-border bg-muted/30">
+    <Button
+      size="sm"
+      className="h-9 text-[13px]"
+      disabled={/* disable conditions */}
+      onClick={handleUpdate}
+    >
+      Update
+    </Button>
+  </div>
+</div>
+```
+
+### Card Sections
+
+**1. Header Section:**
+- Always use `px-6 py-4` padding
+- Title: `h3` with `text-[15px] font-semibold text-foreground`
+- Optional description: `text-[13px] text-muted-foreground mt-2`
+
+**2. Separator:**
+- Always include `border-t border-border` between header and content
+- Also between content and footer (if footer exists)
+
+**3. Content Section:**
+- Always use `px-6 py-4` padding
+- Contains form fields, switches, inputs, etc.
+- Use consistent spacing between form elements
+
+**4. Footer Section (for update buttons):**
+- Only include if the card has an "Update" button
+- Use `px-6 py-4 border-t border-border bg-muted/30`
+- Button should be `size="sm"` with `h-9 text-[13px]`
+- Button should be disabled when:
+  - No changes have been made
+  - Mutation is pending
+  - Form validation fails
+
+### Special Card Types
+
+**Information/Details Card (no update button):**
+```tsx
+<div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+  <div className="px-6 py-4">
+    <h3 className="text-[15px] font-semibold text-foreground">
+      Resource Name or Section Title
+    </h3>
+  </div>
+  <div className="border-t border-border" />
+  <div className="px-6 py-4">
+    {/* Display information, metadata, etc. */}
+    <div className="space-y-1">
+      <p className="text-[13px] text-muted-foreground">
+        Resource ID: <span className="ml-1.5"><CopyableId id={resource.$id} size="sm" /></span>
+      </p>
+      <p className="text-[13px] text-muted-foreground">
+        Created: <DateTooltip date={new Date(resource.$createdAt)} showFormattedDate className="text-foreground" />
+      </p>
+    </div>
+  </div>
+</div>
+```
+
+**Update Form Card (with update button):**
+```tsx
+<div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+  <div className="px-6 py-4">
+    <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
+  </div>
+  <div className="border-t border-border" />
+  <div className="px-6 py-4">
+    <p className="text-[13px] text-muted-foreground">
+      Update your resource's display name.
+    </p>
+    <Input
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      placeholder="Resource name"
+      className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+    />
+  </div>
+  <div className="px-6 py-4 border-t border-border bg-muted/30">
+    <Button
+      size="sm"
+      className="h-9 text-[13px]"
+      disabled={
+        name.trim() === resource.name ||
+        !name.trim() ||
+        updateMutation.isPending
+      }
+      onClick={() => updateMutation.mutate(name)}
+    >
+      Update
+    </Button>
+  </div>
+</div>
+```
+
+**Toggle/Switch Card:**
+```tsx
+<div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+  <div className="px-6 py-4">
+    <h3 className="text-[15px] font-semibold text-foreground">
+      Feature Name
+    </h3>
+    <p className="text-[13px] text-muted-foreground mt-2">
+      Description of what this feature does.
+    </p>
+  </div>
+  <div className="border-t border-border" />
+  <div className="px-6 py-4">
+    <div className="flex items-center justify-between">
+      <div>
+        <Label htmlFor="feature-toggle" className="text-[13px] font-medium text-foreground">
+          Enabled
+        </Label>
+        <p className="text-[12px] text-muted-foreground mt-0.5">
+          Enable or disable this feature
+        </p>
+      </div>
+      <Switch
+        id="feature-toggle"
+        checked={enabled}
+        onCheckedChange={setEnabled}
+        disabled={updateMutation.isPending}
+      />
+    </div>
+  </div>
+  <div className="px-6 py-4 border-t border-border bg-muted/30">
+    <Button
+      size="sm"
+      className="h-9 text-[13px]"
+      disabled={
+        enabled === resource.enabled ||
+        updateMutation.isPending
+      }
+      onClick={() => {
+        if (enabled !== resource.enabled) {
+          updateMutation.mutate(enabled)
+        }
+      }}
+    >
+      Update
+    </Button>
+  </div>
+</div>
+```
+
+**Danger Zone Card:**
+```tsx
+<div className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden">
+  <div className="px-6 py-4">
+    <h3 className="text-[15px] font-semibold text-foreground">
+      Delete resource
+    </h3>
+    <p className="text-[13px] text-muted-foreground mt-2">
+      Permanently delete this resource. This action cannot be undone.
+    </p>
+  </div>
+  <div className="border-t border-red-500/20" />
+  <div className="px-6 py-4">
+    {/* Optional: Resource preview/info */}
+    <Button
+      variant="destructive"
+      size="sm"
+      className="h-9 text-[13px]"
+      onClick={() => setDeleteDialogOpen(true)}
+      disabled={deleteMutation.isPending}
+    >
+      <Trash2 className="mr-1.5 h-4 w-4" />
+      Delete
+    </Button>
+  </div>
+</div>
+```
+
+### Card Spacing
+
+**Between Cards:**
+- Use `space-y-6` on the container wrapping all cards
+- Or use `mb-6` on each card (if not using space-y)
+
+**Container:**
+```tsx
+<div className="space-y-6">
+  {/* Card 1 */}
+  {/* Card 2 */}
+  {/* Card 3 */}
+</div>
+```
+
+### Key Rules
+
+1. **Never use Card/CardHeader/CardContent** - Use the div-based structure instead
+2. **Always include separator** - `border-t border-border` between header and content
+3. **Footer only for update buttons** - Don't add footer if there's no update action
+4. **Consistent padding** - Always use `px-6 py-4` for all sections
+5. **Button styling** - Update buttons: `size="sm"` with `h-9 text-[13px]`
+6. **Danger zone styling** - Use `border-red-500/30` and `border-red-500/20` for separators
+7. **Background colors** - Footer: `bg-muted/30`, Card: `bg-card/50`
+
+### ❌ WRONG: Using Card Components
+
+```tsx
+// ❌ DON'T: Use Card/CardHeader/CardContent components
+<Card className="mb-6">
+  <CardHeader>
+    <CardTitle>Section Title</CardTitle>
+  </CardHeader>
+  <CardContent>
+    {/* Content */}
+  </CardContent>
+</Card>
+```
+
+### ✅ CORRECT: Using Standard Structure
+
+```tsx
+// ✅ DO: Use the standard div-based structure
+<div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+  <div className="px-6 py-4">
+    <h3 className="text-[15px] font-semibold text-foreground">
+      Section Title
+    </h3>
+  </div>
+  <div className="border-t border-border" />
+  <div className="px-6 py-4">
+    {/* Content */}
+  </div>
+  <div className="px-6 py-4 border-t border-border bg-muted/30">
+    <Button size="sm" className="h-9 text-[13px]">
+      Update
+    </Button>
+  </div>
+</div>
+```
+
+### Examples
+
+See these files for reference:
+- `src/components/pages/projects/$projectId/storage/BucketSettings.tsx`
+- `src/components/pages/projects/$projectId/settings/Overview.tsx`
+- `src/components/pages/organizations/$orgId/domains/$domainId/View.tsx`

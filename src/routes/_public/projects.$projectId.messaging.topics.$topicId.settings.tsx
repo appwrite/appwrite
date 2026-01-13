@@ -1,0 +1,30 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { TopicSettingsView } from '@/components/pages/projects/$projectId/messaging/TopicSettings'
+import { fetchTopic } from '@/lib/react-query/hooks'
+
+export const Route = createFileRoute(
+  '/_public/projects/$projectId/messaging/topics/$topicId/settings',
+)({
+  loader: async ({ params, context }) => {
+    // Only run on client side (SDK requires browser environment)
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const { projectId, topicId } = params
+    const { queryClient } = context
+
+    if (projectId && topicId) {
+      await queryClient.prefetchQuery({
+        queryKey: ['topic', 'project', projectId, topicId],
+        queryFn: () => fetchTopic(projectId, topicId),
+        staleTime: 30 * 1000,
+      })
+    }
+  },
+  component: TopicSettingsPage,
+})
+
+function TopicSettingsPage() {
+  return <TopicSettingsView />
+}

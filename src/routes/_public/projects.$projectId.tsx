@@ -21,6 +21,7 @@ const sectionsWithTabs = new Set([
   'databases',
   'analytics',
   'settings',
+  'messaging',
 ])
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
