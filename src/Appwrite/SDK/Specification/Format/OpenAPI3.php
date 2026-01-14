@@ -610,7 +610,11 @@ class OpenAPI3 extends Format
                                 }
                                 $node['schema']['items']['enum'] = $enumValues;
                                 $node['schema']['items']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
-                                $node['schema']['items']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                                $enumKeys = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                                if ($excludeKeys !== null) {
+                                    $enumKeys = \array_values(\array_filter($enumKeys, fn ($key) => \in_array($key, $enumValues, true)));
+                                }
+                                $node['schema']['items']['x-enum-keys'] = $enumKeys;
                             }
                             if ($validator->getType() === 'integer') {
                                 $node['schema']['items']['format'] = $validator->getFormat() ?? 'int32';
@@ -648,7 +652,11 @@ class OpenAPI3 extends Format
                                 }
                                 $node['schema']['enum'] = $enumValues;
                                 $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
-                                $node['schema']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                                $enumKeys = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                                if ($excludeKeys !== null) {
+                                    $enumKeys = \array_values(\array_filter($enumKeys, fn ($key) => \in_array($key, $enumValues, true)));
+                                }
+                                $node['schema']['x-enum-keys'] = $enumKeys;
                             }
                             if ($validator->getType() === 'integer') {
                                 $node['schema']['format'] = $validator->getFormat() ?? 'int32';
