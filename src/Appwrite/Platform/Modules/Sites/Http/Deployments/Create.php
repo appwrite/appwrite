@@ -87,7 +87,6 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->inject('plan')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -107,8 +106,7 @@ class Create extends Action
         Device $deviceForSites,
         Device $deviceForLocal,
         Build $queueForBuilds,
-        array $plan,
-        Authorization $authorization
+        array $plan
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -278,7 +276,7 @@ class Create extends Action
                 $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
                 $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-                $authorization->skip(
+                Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -343,7 +341,7 @@ class Create extends Action
                 $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
-                $authorization->skip(
+                Authorization::skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -367,8 +365,6 @@ class Create extends Action
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('sourceChunksUploaded', $chunksUploaded)->setAttribute('sourceMetadata', $metadata));
             }
         }
-
-
 
         $metadata = null;
 

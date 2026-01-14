@@ -60,7 +60,7 @@ return [
             [
                 'key' => 'flutter',
                 'name' => 'Flutter',
-                'version' => '20.3.2',
+                'version' => '20.3.3',
                 'url' => 'https://github.com/appwrite/sdk-for-flutter',
                 'package' => 'https://pub.dev/packages/appwrite',
                 'enabled' => true,
@@ -377,7 +377,7 @@ return [
             [
                 'key' => 'dart',
                 'name' => 'Dart',
-                'version' => '20.1.0',
+                'version' => '20.1.1',
                 'url' => 'https://github.com/appwrite/sdk-for-dart',
                 'package' => 'https://pub.dev/packages/dart_appwrite',
                 'enabled' => true,

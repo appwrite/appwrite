@@ -54,11 +54,10 @@ class Get extends Action
             ->inject('project')
             ->inject('dbForProject')
             ->inject('getLogsDB')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $bucketId, string $range, Response $response, Document $project, Database $dbForProject, callable $getLogsDB, Authorization $authorization)
+    public function action(string $bucketId, string $range, Response $response, Document $project, Database $dbForProject, callable $getLogsDB)
     {
         $dbForLogs = call_user_func($getLogsDB, $project);
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
@@ -76,7 +75,7 @@ class Get extends Action
             str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED),
         ];
 
-        $authorization->skip(function () use ($dbForProject, $dbForLogs, $bucket, $days, $metrics, &$stats) {
+        Authorization::skip(function () use ($dbForProject, $dbForLogs, $bucket, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $db = ($metric === str_replace('{bucketInternalId}', $bucket->getSequence(), METRIC_BUCKET_ID_FILES_IMAGES_TRANSFORMED))
                     ? $dbForLogs

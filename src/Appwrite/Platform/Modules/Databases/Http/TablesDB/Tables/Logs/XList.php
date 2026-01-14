@@ -50,7 +50,6 @@ class XList extends CollectionLogXList
             ->inject('dbForProject')
             ->inject('locale')
             ->inject('geodb')
-            ->inject('authorization')
             ->inject('audit')
             ->callback($this->action(...));
     }

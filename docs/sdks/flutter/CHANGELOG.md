@@ -1,5 +1,9 @@
 # Change Log
 
+## 20.3.3
+
+* Fix boolean parameter not handled correctly in Client requests
+
 ## 20.3.2
 
 * Fix OAuth2 browser infinite redirect issue

@@ -58,7 +58,6 @@ class Get extends DocumentGet
             ->inject('dbForProject')
             ->inject('queueForStatsUsage')
             ->inject('transactionState')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 }
