@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
+import { useState } from 'react'
 import {
   createFileRoute,
   useNavigate,
@@ -9,7 +10,7 @@ import { z } from 'zod'
 import { SignIn } from '@/components/global/auth/SignIn'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
-import { AppwriteException } from '@appwrite.io/console'
+import { AppwriteException, OAuthProvider } from '@appwrite.io/console'
 import { toast } from 'sonner'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
@@ -38,6 +39,37 @@ function SignInPage() {
   const search = useSearch({ from: '/_auth/sign-in' })
   const navigate = useNavigate()
   const router = useRouter()
+  const [isGitHubLoading, setIsGitHubLoading] = useState(false)
+
+  const handleGitHubLogin = async () => {
+    setIsGitHubLoading(true)
+    try {
+      // Build success and failure URLs
+      const successUrl = search.redirect && isValidRelativeRedirect(search.redirect)
+        ? `${window.location.origin}${search.redirect}`
+        : `${window.location.origin}/`
+      const failureUrl = `${window.location.origin}/sign-in${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
+
+      // Create OAuth2 session - this will return a URL to redirect to
+      const url = await sdk.forConsole.account.createOAuth2Session({
+        provider: OAuthProvider.Github,
+        success: successUrl,
+        failure: failureUrl,
+      })
+
+      // Redirect to GitHub OAuth (only if URL is returned)
+      if (typeof url === 'string') {
+        window.location.href = url
+      } else {
+        throw new Error('Failed to get OAuth redirect URL')
+      }
+    } catch (error: any) {
+      setIsGitHubLoading(false)
+      const errorMessage = error?.message || 'Failed to initiate GitHub login'
+      toast.error(errorMessage)
+      console.error('GitHub OAuth error:', error)
+    }
+  }
 
   const signInMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
@@ -95,7 +127,9 @@ function SignInPage() {
         <SignIn
           mode="sign-in"
           onSubmit={(data) => signInMutation.mutate(data)}
+          onGitHubLogin={handleGitHubLogin}
           isLoading={signInMutation.isPending}
+          isGitHubLoading={isGitHubLoading}
           redirect={search.redirect}
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
