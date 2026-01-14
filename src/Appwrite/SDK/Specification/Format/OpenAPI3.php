@@ -12,7 +12,6 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -585,18 +584,31 @@ class OpenAPI3 extends Format
                             // Iterate from the blackList. If it matches with the current one, then it is a blackList
                             // Do not add the enum
                             $allowed = true;
+                            $excludeKeys = null;
                             foreach ($this->enumBlacklist as $blacklist) {
                                 if (
                                     $blacklist['namespace'] == $sdk->getNamespace()
                                     && $blacklist['method'] == $methodName
                                     && $blacklist['parameter'] == $name
                                 ) {
-                                    $allowed = false;
+                                    // 'exclude' => true means full exclude
+                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
+                                        $allowed = false;
+                                        break;
+                                    }
+
+                                    if (isset($blacklist['excludeKeys'])) {
+                                        $excludeKeys = $blacklist['excludeKeys'];
+                                    }
                                     break;
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $node['schema']['items']['enum'] = \array_values($validator->getList());
+                                $enumValues = \array_values($validator->getList());
+                                if ($excludeKeys !== null) {
+                                    $enumValues = \array_values(\array_filter($enumValues, fn ($key) => !\in_array($key, $excludeKeys, true)));
+                                }
+                                $node['schema']['items']['enum'] = $enumValues;
                                 $node['schema']['items']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
                                 $node['schema']['items']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
                             }
@@ -610,18 +622,31 @@ class OpenAPI3 extends Format
                             // Iterate from the blackList. If it matches with the current one, then it is a blackList
                             // Do not add the enum
                             $allowed = true;
+                            $excludeKeys = null;
                             foreach ($this->enumBlacklist as $blacklist) {
                                 if (
                                     $blacklist['namespace'] == $sdk->getNamespace()
                                     && $blacklist['method'] == $methodName
                                     && $blacklist['parameter'] == $name
                                 ) {
-                                    $allowed = false;
+                                    // 'exclude' => true means full exclude
+                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
+                                        $allowed = false;
+                                        break;
+                                    }
+
+                                    if (isset($blacklist['excludeKeys'])) {
+                                        $excludeKeys = $blacklist['excludeKeys'];
+                                    }
                                     break;
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $node['schema']['enum'] = \array_values($validator->getList());
+                                $enumValues = \array_values($validator->getList());
+                                if ($excludeKeys !== null) {
+                                    $enumValues = \array_values(\array_filter($enumValues, fn ($key) => !\in_array($key, $excludeKeys, true)));
+                                }
+                                $node['schema']['enum'] = $enumValues;
                                 $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
                                 $node['schema']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
                             }
@@ -907,68 +932,6 @@ class OpenAPI3 extends Format
 
         \ksort($output['paths']);
 
-        return $this->filterOAuthProviders($output);
-    }
-
-    /**
-     * Filter OAuth providers from spec.
-     *
-     * @param array $spec
-     * @return array
-     */
-    protected function filterOAuthProviders(array $spec): array
-    {
-        if (!isset($spec['paths'])) {
-            return $spec;
-        }
-
-        $oAuthProviders = Config::getParam('oAuthProviders', []);
-
-        foreach ($spec['paths'] as &$path) {
-            foreach ($path as &$method) {
-                if (isset($method['parameters'])) {
-                    foreach ($method['parameters'] as &$param) {
-                        if (isset($param['name']) && $param['name'] === 'provider') {
-                            if (isset($param['schema']['enum'])) {
-                                $param['schema']['enum'] = $this->filterProviderList($param['schema']['enum'], $oAuthProviders, 'mock');
-                            }
-                            if (isset($param['schema']['items']['enum'])) {
-                                $param['schema']['items']['enum'] = $this->filterProviderList($param['schema']['items']['enum'], $oAuthProviders, 'mock');
-                            }
-                        }
-                    }
-                }
-
-                // Also check requestBody for provider parameter
-                if (isset($method['requestBody']['content']['application/json']['schema']['properties']['provider'])) {
-                    $providerProp = &$method['requestBody']['content']['application/json']['schema']['properties']['provider'];
-                    if (isset($providerProp['enum'])) {
-                        $providerProp['enum'] = $this->filterProviderList($providerProp['enum'], $oAuthProviders, 'mock');
-                    }
-
-                    if (isset($providerProp['items']['enum'])) {
-                        $providerProp['items']['enum'] = $this->filterProviderList($providerProp['items']['enum'], $oAuthProviders, 'mock');
-                    }
-                }
-            }
-        }
-
-        return $spec;
-    }
-
-    /**
-     * Filter provider list to remove providers based on a given key
-     *
-     * @param array $providers
-     * @param array $oAuthProviders
-     * @param string $key
-     * @return array
-     */
-    protected function filterProviderList(
-        array $providers,
-        array $oAuthProviders,
-        string $key,
-    ): array {
-        return array_values(array_filter($providers, fn ($provider) => empty($oAuthProviders[$provider][$key])));
+        return $output;
     }
 }

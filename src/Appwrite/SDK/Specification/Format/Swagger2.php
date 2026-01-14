@@ -12,7 +12,6 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -572,16 +571,28 @@ class Swagger2 extends Format
                                 $node['x-example'] = $param['example'];
                             }
 
-                            // Iterate the blackList. If it matches with the current one, then it is blackListed
                             $allowed = true;
+                            $excludeKeys = null;
                             foreach ($this->enumBlacklist as $blacklist) {
                                 if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
-                                    $allowed = false;
+                                    // 'exclude' => true means full exclude
+                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
+                                        $allowed = false;
+                                        break;
+                                    }
+
+                                    if (isset($blacklist['excludeKeys'])) {
+                                        $excludeKeys = $blacklist['excludeKeys'];
+                                    }
                                     break;
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $node['items']['enum'] = \array_values($validator->getList());
+                                $enumValues = \array_values($validator->getList());
+                                if ($excludeKeys !== null) {
+                                    $enumValues = \array_values(\array_filter($enumValues, fn ($key) => !\in_array($key, $excludeKeys, true)));
+                                }
+                                $node['items']['enum'] = $enumValues;
                                 $node['items']['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
                                 $node['items']['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
                             }
@@ -592,16 +603,28 @@ class Swagger2 extends Format
                             $node['type'] = $validator->getType();
                             $node['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
 
-                            // Iterate the blackList. If it matches with the current one, then it is blackListed
                             $allowed = true;
+                            $excludeKeys = null;
                             foreach ($this->enumBlacklist as $blacklist) {
                                 if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
-                                    $allowed = false;
+                                    // 'exclude' => true means full exclude
+                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
+                                        $allowed = false;
+                                        break;
+                                    }
+
+                                    if (isset($blacklist['excludeKeys'])) {
+                                        $excludeKeys = $blacklist['excludeKeys'];
+                                    }
                                     break;
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $node['enum'] = \array_values($validator->getList());
+                                $enumValues = \array_values($validator->getList());
+                                if ($excludeKeys !== null) {
+                                    $enumValues = \array_values(\array_filter($enumValues, fn ($key) => !\in_array($key, $excludeKeys, true)));
+                                }
+                                $node['enum'] = $enumValues;
                                 $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
                                 $node['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
                             }
@@ -903,68 +926,6 @@ class Swagger2 extends Format
 
         \ksort($output['paths']);
 
-        return $this->filterOAuthProviders($output);
-    }
-
-    /**
-     * Filter OAuth providers from spec.
-     *
-     * @param array $spec
-     * @return array
-     */
-    protected function filterOAuthProviders(array $spec): array
-    {
-        if (!isset($spec['paths'])) {
-            return $spec;
-        }
-
-        $oAuthProviders = Config::getParam('oAuthProviders', []);
-
-        foreach ($spec['paths'] as &$path) {
-            foreach ($path as &$method) {
-                if (isset($method['parameters'])) {
-                    foreach ($method['parameters'] as &$param) {
-                        if (isset($param['name']) && $param['name'] === 'provider') {
-                            if (isset($param['enum'])) {
-                                $param['enum'] = $this->filterProviderList($param['enum'], $oAuthProviders, 'mock');
-                            }
-                            if (isset($param['items']['enum'])) {
-                                $param['items']['enum'] = $this->filterProviderList($param['items']['enum'], $oAuthProviders, 'mock');
-                            }
-                        }
-
-                        if (isset($param['schema']['properties']['provider'])) {
-                            if (isset($param['schema']['properties']['provider']['enum'])) {
-                                $param['schema']['properties']['provider']['enum'] =
-                                    $this->filterProviderList($param['schema']['properties']['provider']['enum'], $oAuthProviders, 'mock');
-                            }
-
-                            if (isset($param['schema']['properties']['provider']['items']['enum'])) {
-                                $param['schema']['properties']['provider']['items']['enum'] =
-                                    $this->filterProviderList($param['schema']['properties']['provider']['items']['enum'], $oAuthProviders, 'mock');
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return $spec;
-    }
-
-    /**
-     * Filter provider list to remove providers based on a given key.
-     *
-     * @param array $providers
-     * @param array $oAuthProviders
-     * @param string $key
-     * @return array
-     */
-    protected function filterProviderList(
-        array $providers,
-        array $oAuthProviders,
-        string $key,
-    ): array {
-        return array_values(array_filter($providers, fn ($provider) => empty($oAuthProviders[$provider][$key])));
+        return $output;
     }
 }
