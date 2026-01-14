@@ -48,6 +48,24 @@ abstract class Format
             'namespace' => 'users',
             'method' => 'getUsage',
             'parameter' => 'provider'
+        ],
+        [
+            'namespace' => 'account',
+            'method' => 'createOAuth2Session',
+            'parameter' => 'provider',
+            'excludeKeys' => ['mock', 'mock-unverified']
+        ],
+        [
+            'namespace' => 'account',
+            'method' => 'createOAuth2Token',
+            'parameter' => 'provider',
+            'excludeKeys' => ['mock', 'mock-unverified']
+        ],
+        [
+            'namespace' => 'account',
+            'method' => 'updateMagicURLSession',
+            'parameter' => 'provider',
+            'excludeKeys' => ['mock', 'mock-unverified']
         ]
     ];
 
