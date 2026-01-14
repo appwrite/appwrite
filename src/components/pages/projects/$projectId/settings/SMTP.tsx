@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useProject, useUpdateSMTP } from '@/lib/react-query/hooks'
+import { useProject, useUpdateSMTP, useOrganizationPlan } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,10 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { toast } from 'sonner'
-import { Loader2, AlertCircle } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { Loader2 } from 'lucide-react'
+import { UpgradeCurtain } from '@/components/ui/upgrade-curtain'
 
 interface SMTPProps {
   projectId: string
@@ -30,6 +29,13 @@ export function SMTP({ projectId }: SMTPProps) {
     // This would ideally come from a hook that returns the full Models.Project
     return projectData as any
   }, [projectData])
+
+  // Get project to access teamId (organization ID)
+  const orgId = projectData?.teamId
+
+  // Get organization plan to check if custom SMTP is supported
+  const { plan: organizationPlan } = useOrganizationPlan(orgId)
+  const supportsCustomSmtp = organizationPlan?.customSmtp ?? false
 
   const [enabled, setEnabled] = useState(false)
   const [senderName, setSenderName] = useState('')
@@ -110,9 +116,6 @@ export function SMTP({ projectId }: SMTPProps) {
     }
   }
 
-  // Check if plan is free (this would need to come from organization data)
-  const isFreePlan = false // TODO: Get from organization plan
-
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -123,21 +126,6 @@ export function SMTP({ projectId }: SMTPProps) {
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-4 py-4 sm:px-6">
-      {/* Free Plan Alert */}
-      {isFreePlan && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="text-[13px]">
-            Custom SMTP is a Pro plan feature.{' '}
-            <Button variant="outline" size="sm" className="ml-2 h-7 text-[12px]" asChild>
-              <Link to="/organizations/$orgId/billing" params={{ orgId: rawProject?.teamId }}>
-                Upgrade plan
-              </Link>
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* SMTP Configuration Card */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         {/* Header */}
@@ -154,201 +142,209 @@ export function SMTP({ projectId }: SMTPProps) {
         {/* Separator */}
         <div className="border-t border-border" />
 
-        {/* Content */}
-        <div className="px-6 py-4">
-          {/* Enable/Disable Toggle */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex-1">
-              <Label htmlFor="smtp-enabled" className="text-[13px] font-medium text-foreground">
-                Enable custom SMTP server
-              </Label>
-              <p className="text-[12px] text-muted-foreground mt-0.5">
-                When enabled, all emails will be sent through your configured SMTP server.
-              </p>
+        {/* Content with Upgrade Curtain */}
+        <UpgradeCurtain
+          isLocked={!supportsCustomSmtp}
+          orgId={orgId}
+          message="Custom SMTP is available on Appwrite Cloud Pro and higher plans."
+        >
+          <div>
+            <div className="px-6 py-4">
+              {/* Enable/Disable Toggle */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex-1">
+                  <Label htmlFor="smtp-enabled" className="text-[13px] font-medium text-foreground">
+                    Enable custom SMTP server
+                  </Label>
+                  <p className="text-[12px] text-muted-foreground mt-0.5">
+                    When enabled, all emails will be sent through your configured SMTP server.
+                  </p>
+                </div>
+                <Switch
+                  id="smtp-enabled"
+                  checked={enabled}
+                  onCheckedChange={setEnabled}
+                  disabled={!supportsCustomSmtp || updateSMTPMutation.isPending}
+                />
+              </div>
+
+              {/* Configuration Fields */}
+              {enabled && (
+                <div className="space-y-6">
+                  {/* Sender Information Section */}
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-[13px] font-medium text-foreground mb-3">
+                        Sender information
+                      </h4>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="sender-name" className="text-[12px] font-medium">
+                            Sender name <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="sender-name"
+                            placeholder="John Doe"
+                            value={senderName}
+                            onChange={(e) => setSenderName(e.target.value)}
+                            disabled={updateSMTPMutation.isPending}
+                            className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="sender-email" className="text-[12px] font-medium">
+                            Sender email <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="sender-email"
+                            type="email"
+                            placeholder="noreply@example.com"
+                            value={senderEmail}
+                            onChange={(e) => setSenderEmail(e.target.value)}
+                            disabled={updateSMTPMutation.isPending}
+                            className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                          />
+                        </div>
+
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label htmlFor="reply-to" className="text-[12px] font-medium">
+                            Reply to
+                          </Label>
+                          <Input
+                            id="reply-to"
+                            type="email"
+                            placeholder="support@example.com"
+                            value={replyTo}
+                            onChange={(e) => setReplyTo(e.target.value)}
+                            disabled={updateSMTPMutation.isPending}
+                            className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                          />
+                          <p className="text-[11px] text-muted-foreground">
+                            Optional. Email address where replies will be sent.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Server Configuration Section */}
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-[13px] font-medium text-foreground mb-3">
+                        Server configuration
+                      </h4>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label htmlFor="host" className="text-[12px] font-medium">
+                            Server host <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="host"
+                            placeholder="smtp.example.com"
+                            value={host}
+                            onChange={(e) => setHost(e.target.value)}
+                            disabled={updateSMTPMutation.isPending}
+                            className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="port" className="text-[12px] font-medium">
+                            Server port <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="port"
+                            type="number"
+                            placeholder="587"
+                            value={port || ''}
+                            onChange={(e) => setPort(parseInt(e.target.value) || 587)}
+                            disabled={updateSMTPMutation.isPending}
+                            className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="secure" className="text-[12px] font-medium">
+                            Secure protocol
+                          </Label>
+                          <Select
+                            value={secure}
+                            onValueChange={(value) => setSecure(value as 'tls' | 'ssl' | 'none')}
+                            disabled={updateSMTPMutation.isPending}
+                          >
+                            <SelectTrigger id="secure" className="h-9 text-[13px]">
+                              <SelectValue placeholder="Select protocol" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="tls">TLS</SelectItem>
+                              <SelectItem value="ssl">SSL</SelectItem>
+                              <SelectItem value="none">None</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Authentication Section */}
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-[13px] font-medium text-foreground mb-3">
+                        Authentication
+                      </h4>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="username" className="text-[12px] font-medium">
+                            Username
+                          </Label>
+                          <Input
+                            id="username"
+                            placeholder="smtp@example.com"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            disabled={updateSMTPMutation.isPending}
+                            className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="password" className="text-[12px] font-medium">
+                            Password
+                          </Label>
+                          <Input
+                            id="password"
+                            type="password"
+                            placeholder="Enter password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            disabled={updateSMTPMutation.isPending}
+                            className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                          />
+                          <p className="text-[11px] text-muted-foreground">
+                            Leave blank to keep current password unchanged.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            <Switch
-              id="smtp-enabled"
-              checked={enabled}
-              onCheckedChange={setEnabled}
-              disabled={isFreePlan || updateSMTPMutation.isPending}
-            />
+
+            {/* Footer with Update Button */}
+            <div className="px-6 py-4 border-t border-border bg-muted/30">
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={handleUpdate}
+                disabled={!hasChanges || !supportsCustomSmtp || updateSMTPMutation.isPending}
+              >
+                Update
+              </Button>
+            </div>
           </div>
-
-          {/* Configuration Fields */}
-          {enabled && !isFreePlan && (
-            <div className="space-y-6">
-              {/* Sender Information Section */}
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-[13px] font-medium text-foreground mb-3">
-                    Sender information
-                  </h4>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="sender-name" className="text-[12px] font-medium">
-                        Sender name <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="sender-name"
-                        placeholder="John Doe"
-                        value={senderName}
-                        onChange={(e) => setSenderName(e.target.value)}
-                        disabled={updateSMTPMutation.isPending}
-                        className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="sender-email" className="text-[12px] font-medium">
-                        Sender email <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="sender-email"
-                        type="email"
-                        placeholder="noreply@example.com"
-                        value={senderEmail}
-                        onChange={(e) => setSenderEmail(e.target.value)}
-                        disabled={updateSMTPMutation.isPending}
-                        className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      />
-                    </div>
-
-                    <div className="space-y-2 sm:col-span-2">
-                      <Label htmlFor="reply-to" className="text-[12px] font-medium">
-                        Reply to
-                      </Label>
-                      <Input
-                        id="reply-to"
-                        type="email"
-                        placeholder="support@example.com"
-                        value={replyTo}
-                        onChange={(e) => setReplyTo(e.target.value)}
-                        disabled={updateSMTPMutation.isPending}
-                        className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      />
-                      <p className="text-[11px] text-muted-foreground">
-                        Optional. Email address where replies will be sent.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Server Configuration Section */}
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-[13px] font-medium text-foreground mb-3">
-                    Server configuration
-                  </h4>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2 sm:col-span-2">
-                      <Label htmlFor="host" className="text-[12px] font-medium">
-                        Server host <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="host"
-                        placeholder="smtp.example.com"
-                        value={host}
-                        onChange={(e) => setHost(e.target.value)}
-                        disabled={updateSMTPMutation.isPending}
-                        className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="port" className="text-[12px] font-medium">
-                        Server port <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="port"
-                        type="number"
-                        placeholder="587"
-                        value={port || ''}
-                        onChange={(e) => setPort(parseInt(e.target.value) || 587)}
-                        disabled={updateSMTPMutation.isPending}
-                        className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="secure" className="text-[12px] font-medium">
-                        Secure protocol
-                      </Label>
-                      <Select
-                        value={secure}
-                        onValueChange={(value) => setSecure(value as 'tls' | 'ssl' | 'none')}
-                        disabled={updateSMTPMutation.isPending}
-                      >
-                        <SelectTrigger id="secure" className="h-9 text-[13px]">
-                          <SelectValue placeholder="Select protocol" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="tls">TLS</SelectItem>
-                          <SelectItem value="ssl">SSL</SelectItem>
-                          <SelectItem value="none">None</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Authentication Section */}
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-[13px] font-medium text-foreground mb-3">
-                    Authentication
-                  </h4>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="username" className="text-[12px] font-medium">
-                        Username
-                      </Label>
-                      <Input
-                        id="username"
-                        placeholder="smtp@example.com"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        disabled={updateSMTPMutation.isPending}
-                        className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="password" className="text-[12px] font-medium">
-                        Password
-                      </Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="Enter password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={updateSMTPMutation.isPending}
-                        className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      />
-                      <p className="text-[11px] text-muted-foreground">
-                        Leave blank to keep current password unchanged.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer with Update Button */}
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            onClick={handleUpdate}
-            disabled={!hasChanges || isFreePlan || updateSMTPMutation.isPending}
-          >
-            Update
-          </Button>
-        </div>
+        </UpgradeCurtain>
       </div>
     </div>
   )
