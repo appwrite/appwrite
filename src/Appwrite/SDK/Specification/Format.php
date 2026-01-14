@@ -40,34 +40,45 @@ abstract class Format
         'license.url' => '',
     ];
 
-    /*
-     * Blacklist to omit the enum types for the given route's parameter
-     */
-    protected array $enumBlacklist = [
+    private const array OAUTH_PROVIDER_BLACKLIST = [
+        [
+            'namespace' => 'account',
+            'methods' => [
+                'createOAuth2Session',
+                'createOAuth2Token',
+                'updateMagicURLSession'
+            ],
+            'parameter' => 'provider',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
+        [
+            'namespace' => 'projects',
+            'methods' => [
+                'updateOAuth2'
+            ],
+            'parameter' => 'provider',
+            'excludeKeys' => [
+                'mock',
+                'mock-unverified'
+            ],
+        ],
+    ];
+
+    private const array PROVIDER_USAGE_BLACKLIST = [
         [
             'namespace' => 'users',
-            'method' => 'getUsage',
-            'parameter' => 'provider'
-        ],
-        [
-            'namespace' => 'account',
-            'method' => 'createOAuth2Session',
+            'methods' => [
+                'getUsage'
+            ],
             'parameter' => 'provider',
-            'excludeKeys' => ['mock', 'mock-unverified']
+            'exclude' => true, /* fully excluded */
         ],
-        [
-            'namespace' => 'account',
-            'method' => 'createOAuth2Token',
-            'parameter' => 'provider',
-            'excludeKeys' => ['mock', 'mock-unverified']
-        ],
-        [
-            'namespace' => 'account',
-            'method' => 'updateMagicURLSession',
-            'parameter' => 'provider',
-            'excludeKeys' => ['mock', 'mock-unverified']
-        ]
     ];
+
+    protected array $enumBlacklist = [];
 
     public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount, string $platform)
     {
@@ -78,6 +89,49 @@ abstract class Format
         $this->keys = $keys;
         $this->authCount = $authCount;
         $this->platform = $platform;
+
+        $this->enumBlacklist = $this->buildEnumBlacklist();
+    }
+
+    protected function buildEnumBlacklist(): array
+    {
+        $blacklist = [];
+
+        foreach (self::OAUTH_PROVIDER_BLACKLIST as $config) {
+            foreach ($config['methods'] as $method) {
+                $entry = [
+                    'namespace' => $config['namespace'],
+                    'method' => $method,
+                    'parameter' => $config['parameter'],
+                ];
+                if (isset($config['excludeKeys'])) {
+                    $entry['excludeKeys'] = $config['excludeKeys'];
+                }
+                if (isset($config['exclude'])) {
+                    $entry['exclude'] = $config['exclude'];
+                }
+                $blacklist[] = $entry;
+            }
+        }
+
+        foreach (self::PROVIDER_USAGE_BLACKLIST as $config) {
+            foreach ($config['methods'] as $method) {
+                $entry = [
+                    'namespace' => $config['namespace'],
+                    'method' => $method,
+                    'parameter' => $config['parameter'],
+                ];
+                if (isset($config['excludeKeys'])) {
+                    $entry['excludeKeys'] = $config['excludeKeys'];
+                }
+                if (isset($config['exclude'])) {
+                    $entry['exclude'] = $config['exclude'];
+                }
+                $blacklist[] = $entry;
+            }
+        }
+
+        return $blacklist;
     }
 
     /**
