@@ -1,5 +1,13 @@
 # Change Log
 
+## 13.0.0
+
+- Mark release as stable
+- Feat: add pull sync on destruction of remote resources (+ confirmation)
+- Fix: refine zod schema to check string size
+- Validate using zod schema during push cli command
+- Maintain order of keys in local config
+
 ## 13.0.0-rc.5
 
 - Fix push all command not working correctly
