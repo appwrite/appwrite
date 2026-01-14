@@ -584,20 +584,45 @@ class OpenAPI3 extends Format
                             // Iterate from the blackList. If it matches with the current one, then it is a blackList
                             // Do not add the enum
                             $allowed = true;
+                            $excludeKeys = null;
                             foreach ($this->enumBlacklist as $blacklist) {
                                 if (
                                     $blacklist['namespace'] == $sdk->getNamespace()
                                     && $blacklist['method'] == $methodName
                                     && $blacklist['parameter'] == $name
                                 ) {
-                                    $allowed = false;
+                                    // 'exclude' => true means full exclude
+                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
+                                        $allowed = false;
+                                        break;
+                                    }
+
+                                    if (isset($blacklist['excludeKeys'])) {
+                                        $excludeKeys = $blacklist['excludeKeys'];
+                                    }
                                     break;
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $node['schema']['items']['enum'] = \array_values($validator->getList());
+                                $allValues = \array_values($validator->getList());
+                                $allKeys = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+
+                                if ($excludeKeys !== null) {
+                                    $keepIndices = [];
+                                    foreach ($allValues as $index => $value) {
+                                        if (!\in_array($value, $excludeKeys, true)) {
+                                            $keepIndices[] = $index;
+                                        }
+                                    }
+                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
+                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
+                                } else {
+                                    $enumKeys = $allKeys;
+                                    $enumValues = $allValues;
+                                }
+                                $node['schema']['items']['enum'] = $enumValues;
                                 $node['schema']['items']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
-                                $node['schema']['items']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                                $node['schema']['items']['x-enum-keys'] = $enumKeys;
                             }
                             if ($validator->getType() === 'integer') {
                                 $node['schema']['items']['format'] = $validator->getFormat() ?? 'int32';
@@ -609,20 +634,45 @@ class OpenAPI3 extends Format
                             // Iterate from the blackList. If it matches with the current one, then it is a blackList
                             // Do not add the enum
                             $allowed = true;
+                            $excludeKeys = null;
                             foreach ($this->enumBlacklist as $blacklist) {
                                 if (
                                     $blacklist['namespace'] == $sdk->getNamespace()
                                     && $blacklist['method'] == $methodName
                                     && $blacklist['parameter'] == $name
                                 ) {
-                                    $allowed = false;
+                                    // 'exclude' => true means full exclude
+                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
+                                        $allowed = false;
+                                        break;
+                                    }
+
+                                    if (isset($blacklist['excludeKeys'])) {
+                                        $excludeKeys = $blacklist['excludeKeys'];
+                                    }
                                     break;
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $node['schema']['enum'] = \array_values($validator->getList());
+                                $allValues = \array_values($validator->getList());
+                                $allKeys = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+
+                                if ($excludeKeys !== null) {
+                                    $keepIndices = [];
+                                    foreach ($allValues as $index => $value) {
+                                        if (!\in_array($value, $excludeKeys, true)) {
+                                            $keepIndices[] = $index;
+                                        }
+                                    }
+                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
+                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
+                                } else {
+                                    $enumKeys = $allKeys;
+                                    $enumValues = $allValues;
+                                }
+                                $node['schema']['enum'] = $enumValues;
                                 $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
-                                $node['schema']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                                $node['schema']['x-enum-keys'] = $enumKeys;
                             }
                             if ($validator->getType() === 'integer') {
                                 $node['schema']['format'] = $validator->getFormat() ?? 'int32';

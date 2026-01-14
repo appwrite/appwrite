@@ -571,18 +571,42 @@ class Swagger2 extends Format
                                 $node['x-example'] = $param['example'];
                             }
 
-                            // Iterate the blackList. If it matches with the current one, then it is blackListed
                             $allowed = true;
+                            $excludeKeys = null;
                             foreach ($this->enumBlacklist as $blacklist) {
                                 if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
-                                    $allowed = false;
+                                    // 'exclude' => true means full exclude
+                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
+                                        $allowed = false;
+                                        break;
+                                    }
+
+                                    if (isset($blacklist['excludeKeys'])) {
+                                        $excludeKeys = $blacklist['excludeKeys'];
+                                    }
                                     break;
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $node['items']['enum'] = \array_values($validator->getList());
+                                $allValues = \array_values($validator->getList());
+                                $allKeys = $this->getRequestEnumKeys($namespace, $methodName, $name);
+
+                                if ($excludeKeys !== null) {
+                                    $keepIndices = [];
+                                    foreach ($allValues as $index => $value) {
+                                        if (!\in_array($value, $excludeKeys, true)) {
+                                            $keepIndices[] = $index;
+                                        }
+                                    }
+                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
+                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
+                                } else {
+                                    $enumKeys = $allKeys;
+                                    $enumValues = $allValues;
+                                }
+                                $node['items']['enum'] = $enumValues;
                                 $node['items']['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
-                                $node['items']['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
+                                $node['items']['x-enum-keys'] = $enumKeys;
                             }
                             if ($validator->getType() === 'integer') {
                                 $node['items']['format'] = $validator->getFormat() ?? 'int32';
@@ -591,18 +615,42 @@ class Swagger2 extends Format
                             $node['type'] = $validator->getType();
                             $node['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
 
-                            // Iterate the blackList. If it matches with the current one, then it is blackListed
                             $allowed = true;
+                            $excludeKeys = null;
                             foreach ($this->enumBlacklist as $blacklist) {
                                 if ($blacklist['namespace'] == $namespace && $blacklist['method'] == $methodName && $blacklist['parameter'] == $name) {
-                                    $allowed = false;
+                                    // 'exclude' => true means full exclude
+                                    if (isset($blacklist['exclude']) && $blacklist['exclude'] === true) {
+                                        $allowed = false;
+                                        break;
+                                    }
+
+                                    if (isset($blacklist['excludeKeys'])) {
+                                        $excludeKeys = $blacklist['excludeKeys'];
+                                    }
                                     break;
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $node['enum'] = \array_values($validator->getList());
+                                $allValues = \array_values($validator->getList());
+                                $allKeys = $this->getRequestEnumKeys($namespace, $methodName, $name);
+
+                                if ($excludeKeys !== null) {
+                                    $keepIndices = [];
+                                    foreach ($allValues as $index => $value) {
+                                        if (!\in_array($value, $excludeKeys, true)) {
+                                            $keepIndices[] = $index;
+                                        }
+                                    }
+                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
+                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
+                                } else {
+                                    $enumKeys = $allKeys;
+                                    $enumValues = $allValues;
+                                }
+                                $node['enum'] = $enumValues;
                                 $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
-                                $node['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
+                                $node['x-enum-keys'] = $enumKeys;
                             }
                             if ($validator->getType() === 'integer') {
                                 $node['format'] = $validator->getFormat() ?? 'int32';
