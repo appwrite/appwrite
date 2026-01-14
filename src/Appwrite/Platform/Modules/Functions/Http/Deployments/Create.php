@@ -17,7 +17,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -89,7 +88,6 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->inject('plan')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -107,8 +105,7 @@ class Create extends Action
         Device $deviceForFunctions,
         Device $deviceForLocal,
         Build $queueForBuilds,
-        array $plan,
-        Authorization $authorization
+        array $plan
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 

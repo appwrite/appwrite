@@ -50,7 +50,6 @@ class Create extends TransactionsCreate
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

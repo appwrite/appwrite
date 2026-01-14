@@ -539,7 +539,7 @@ class Swagger2 extends Format
                         break;
                     case 'Utopia\Validator\Integer':
                         $node['type'] = $validator->getType();
-                        $node['format'] = 'int32';
+                        $node['format'] = $validator->getFormat();
                         if (!empty($param['example'])) {
                             $node['x-example'] = $param['example'];
                         }
@@ -585,7 +585,7 @@ class Swagger2 extends Format
                                 $node['items']['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
                             }
                             if ($validator->getType() === 'integer') {
-                                $node['items']['format'] = 'int32';
+                                $node['items']['format'] = $validator->getFormat() ?? 'int32';
                             }
                         } else {
                             $node['type'] = $validator->getType();
@@ -605,7 +605,7 @@ class Swagger2 extends Format
                                 $node['x-enum-keys'] = $this->getRequestEnumKeys($namespace, $methodName, $name);
                             }
                             if ($validator->getType() === 'integer') {
-                                $node['format'] = 'int32';
+                                $node['format'] = $validator->getFormat() ?? 'int32';
                             }
                         }
                         break;
@@ -682,6 +682,10 @@ class Swagger2 extends Format
                         'default' => $node['default'] ?? null,
                         'x-example' => $node['x-example'] ?? null,
                     ];
+
+                    if (isset($node['format'])) {
+                        $body['schema']['properties'][$name]['format'] = $node['format'];
+                    }
 
                     if (isset($node['enum'])) {
                         /// If the enum flag is Set, add the enum values to the body
@@ -776,7 +780,7 @@ class Swagger2 extends Format
 
                     case 'integer':
                         $type = 'integer';
-                        $format = 'int32';
+                        $format = $rule['format'] ?? 'int32';
                         break;
 
                     case 'float':

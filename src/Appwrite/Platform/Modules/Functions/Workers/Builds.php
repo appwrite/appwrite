@@ -25,6 +25,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Detector\Detection\Rendering\SSR;
 use Utopia\Detector\Detection\Rendering\XStatic;
 use Utopia\Detector\Detector\Rendering;
@@ -1023,6 +1024,11 @@ class Builds extends Action
                 Console::log('Deployment activated');
             }
 
+            $this->afterDeploymentSuccess(
+                $project,
+                $deployment,
+            );
+
             // Send realtime event after updating the associated resource so that Console will have the resource's deployment details when re-fetching.
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -1115,7 +1121,7 @@ class Builds extends Action
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $resource->getAttribute('schedule'))
                     ->setAttribute('active', !empty($resource->getAttribute('schedule')) && !empty($resource->getAttribute('deploymentId')));
-                $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule);
+                Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
             }
 
             Console::info('Deployment action finished');
@@ -1255,6 +1261,26 @@ class Builds extends Action
         }
     }
 
+    /**
+     * Hook to run after deployment is activated
+     *
+     * @param Document $project
+     * @param Document $deployment
+     * @return void
+     */
+    protected function afterDeploymentSuccess(
+        Document $project,
+        Document $deployment,
+    ): void {
+        if (!($project instanceof Document)) {
+            throw new Exception('project must be an instance of Document');
+        }
+
+        if (!($deployment instanceof Document)) {
+            throw new Exception('deployment must be an instance of Document');
+        }
+    }
+
     protected function getRuntime(Document $resource, string $version): array
     {
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
@@ -1324,6 +1350,7 @@ class Builds extends Action
      * @return void
      * @throws Structure
      * @throws \Utopia\Database\Exception
+     * @throws Authorization
      * @throws Conflict
      * @throws Restricted
      */
@@ -1412,11 +1439,11 @@ class Builds extends Action
                         default => throw new \Exception('Invalid resource type')
                     };
 
-                    $rule = $dbForPlatform->findOne('rules', [
+                    $rule = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
                         Query::equal("projectInternalId", [$project->getSequence()]),
                         Query::equal("type", ["deployment"]),
                         Query::equal("deploymentInternalId", [$deployment->getSequence()]),
-                    ]);
+                    ]));
 
                     $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                     $previewUrl = match($resource->getCollection()) {

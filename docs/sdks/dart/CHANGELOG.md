@@ -1,5 +1,9 @@
 # Change Log
 
+## 20.1.1
+
+* Fix boolean parameter not handled correctly in Client requests
+
 ## 20.1.0
 
 * Added ability to create columns and indexes synchronously while creating a table

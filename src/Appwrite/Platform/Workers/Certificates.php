@@ -21,7 +21,6 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
-use Utopia\Database\Exception\NotFound;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -59,7 +58,6 @@ class Certificates extends Action
             ->inject('log')
             ->inject('certificates')
             ->inject('plan')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -74,8 +72,6 @@ class Certificates extends Action
      * @param Certificate $queueForCertificates
      * @param Log $log
      * @param CertificatesAdapter $certificates
-     * @param array $plan
-     * @param ValidatorAuthorization $authorization
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
@@ -91,8 +87,7 @@ class Certificates extends Action
         Certificate $queueForCertificates,
         Log $log,
         CertificatesAdapter $certificates,
-        array $plan,
-        ValidatorAuthorization $authorization,
+        array $plan
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -111,11 +106,11 @@ class Certificates extends Action
 
         switch ($action) {
             case Certificate::ACTION_DOMAIN_VERIFICATION:
-                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForCertificates, $log, $authorization, $validationDomain);
+                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForCertificates, $log, $validationDomain);
                 break;
 
             case Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $authorization, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $skipRenewCheck, $plan, $validationDomain);
                 break;
 
             default:
@@ -132,12 +127,10 @@ class Certificates extends Action
      * @param Realtime $queueForRealtime
      * @param Certificate $queueForCertificates
      * @param Log $log
-     * @param ValidatorAuthorization $authorization
      * @param string|null $validationDomain
      * @return void
+     * @throws Throwable
      * @throws \Utopia\Database\Exception
-     * @throws NotFound
-     * @throws \Utopia\Database\Exception\Query
      */
     private function handleDomainVerificationAction(
         Domain $domain,
@@ -148,13 +141,12 @@ class Certificates extends Action
         Realtime $queueForRealtime,
         Certificate $queueForCertificates,
         Log $log,
-        ValidatorAuthorization $authorization,
         ?string $validationDomain = null
     ): void {
         // Get rule
         $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
-            : $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+            ? ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
+            : ValidatorAuthorization::skip(fn () => $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
                 Query::limit(1),
             ]));
@@ -203,23 +195,15 @@ class Certificates extends Action
      * @param Database $dbForPlatform
      * @param Mail $queueForMails
      * @param Event $queueForEvents
-     * @param Webhook $queueForWebhooks
      * @param Func $queueForFunctions
      * @param Realtime $queueForRealtime
-     * @param Log $log
      * @param CertificatesAdapter $certificates
-     * @param ValidatorAuthorization $authorization
      * @param bool $skipRenewCheck
      * @param array $plan
      * @param string|null $validationDomain
      * @return void
-     * @throws Authorization
-     * @throws Conflict
-     * @throws NotFound
-     * @throws Structure
      * @throws Throwable
      * @throws \Utopia\Database\Exception
-     * @throws \Utopia\Database\Exception\Query
      */
     private function handleCertificateGenerationAction(
         Domain $domain,
@@ -232,7 +216,6 @@ class Certificates extends Action
         Realtime $queueForRealtime,
         Log $log,
         CertificatesAdapter $certificates,
-        ValidatorAuthorization $authorization,
         bool $skipRenewCheck = false,
         array $plan = [],
         ?string $validationDomain = null
@@ -269,8 +252,8 @@ class Certificates extends Action
         // Get rule document for domain
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
-            : $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+            ? ValidatorAuthorization::skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
+            : ValidatorAuthorization::skip(fn () => $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
                 Query::limit(1),
             ]));
