@@ -12,6 +12,7 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -906,6 +907,66 @@ class OpenAPI3 extends Format
 
         \ksort($output['paths']);
 
-        return $output;
+        return $this->filterOAuthProviders($output);
+    }
+
+    /**
+     * Filter OAuth providers from spec.
+     *
+     * @param array $spec
+     * @return array
+     */
+    protected function filterOAuthProviders(array $spec): array
+    {
+        if (!isset($spec['paths'])) {
+            return $spec;
+        }
+
+        $oAuthProviders = Config::getParam('oAuthProviders', []);
+
+        foreach ($spec['paths'] as &$path) {
+            foreach ($path as &$method) {
+                if (isset($method['parameters'])) {
+                    foreach ($method['parameters'] as &$param) {
+                        if (isset($param['name']) && $param['name'] === 'provider') {
+                            if (isset($param['schema']['enum'])) {
+                                $param['schema']['enum'] = $this->filterProviderList($param['schema']['enum'], $oAuthProviders, 'mock');
+                            }
+                            if (isset($param['schema']['items']['enum'])) {
+                                $param['schema']['items']['enum'] = $this->filterProviderList($param['schema']['items']['enum'], $oAuthProviders, 'mock');
+                            }
+                        }
+                    }
+                }
+
+                // Also check requestBody for provider parameter
+                if (isset($method['requestBody']['content']['application/json']['schema']['properties']['provider']['enum'])) {
+                    $method['requestBody']['content']['application/json']['schema']['properties']['provider']['enum'] =
+                        $this->filterProviderList(
+                            $method['requestBody']['content']['application/json']['schema']['properties']['provider']['enum'],
+                            $oAuthProviders,
+                            'mock'
+                        );
+                }
+            }
+        }
+
+        return $spec;
+    }
+
+    /**
+     * Filter provider list to remove providers based on a given key
+     *
+     * @param array $providers
+     * @param array $oAuthProviders
+     * @param string $key
+     * @return array
+     */
+    protected function filterProviderList(
+        array $providers,
+        array $oAuthProviders,
+        string $key,
+    ): array {
+        return array_values(array_filter($providers, fn ($provider) => empty($oAuthProviders[$provider][$key])));
     }
 }

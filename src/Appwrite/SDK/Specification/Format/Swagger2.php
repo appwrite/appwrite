@@ -12,6 +12,7 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response\Model\Any;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -902,6 +903,56 @@ class Swagger2 extends Format
 
         \ksort($output['paths']);
 
-        return $output;
+        return $this->filterOAuthProviders($output);
+    }
+
+    /**
+     * Filter OAuth providers from spec.
+     *
+     * @param array $spec
+     * @return array
+     */
+    protected function filterOAuthProviders(array $spec): array
+    {
+        if (!isset($spec['paths'])) {
+            return $spec;
+        }
+
+        $oAuthProviders = Config::getParam('oAuthProviders', []);
+
+        foreach ($spec['paths'] as &$path) {
+            foreach ($path as &$method) {
+                if (isset($method['parameters'])) {
+                    foreach ($method['parameters'] as &$param) {
+                        if (isset($param['name']) && $param['name'] === 'provider') {
+                            if (isset($param['enum'])) {
+                                $param['enum'] = $this->filterProviderList($param['enum'], $oAuthProviders, 'mock');
+                            }
+                            if (isset($param['items']['enum'])) {
+                                $param['items']['enum'] = $this->filterProviderList($param['items']['enum'], $oAuthProviders, 'mock');
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return $spec;
+    }
+
+    /**
+     * Filter provider list to remove providers based on a given key.
+     *
+     * @param array $providers
+     * @param array $oAuthProviders
+     * @param string $key
+     * @return array
+     */
+    protected function filterProviderList(
+        array $providers,
+        array $oAuthProviders,
+        string $key,
+    ): array {
+        return array_values(array_filter($providers, fn ($provider) => empty($oAuthProviders[$provider][$key])));
     }
 }
