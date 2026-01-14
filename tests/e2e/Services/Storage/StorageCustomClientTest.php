@@ -1509,7 +1509,7 @@ class StorageCustomClientTest extends Scope
             'compression' => 'none'
         ]);
 
-        // Existing fie did not update
+        // Existing file did not update
         $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucket['body']['$id'] . '/files/' . $file['body']['$id'], [
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
