@@ -60,6 +60,7 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -68,7 +69,8 @@ class Get extends Action
         string $type,
         Response $response,
         Database $dbForPlatform,
-        array $platform
+        array $platform,
+        Authorization $authorization,
     ) {
         $domains = $platform['hostnames'] ?? [];
         if ($type === 'rules') {
@@ -121,7 +123,7 @@ class Get extends Action
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
             }
 
-            $document = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+            $document = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$value]),
             ]));
 
