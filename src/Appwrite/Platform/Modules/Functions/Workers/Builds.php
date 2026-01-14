@@ -1261,6 +1261,13 @@ class Builds extends Action
         }
     }
 
+    /**
+     * Hook to run after deployment is activated
+     *
+     * @param Document $project
+     * @param Document $deployment
+     * @return void
+     */
     protected function afterDeploymentSuccess(
         Document $project,
         Document $deployment,
