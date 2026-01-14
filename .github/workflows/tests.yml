@@ -134,14 +134,6 @@ jobs:
           docker compose up -d
           sleep 10
           
-      - name: Wait for Open Runtimes
-        timeout-minutes: 3
-        run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
-            echo "Waiting for Executor to come online"
-            sleep 1
-          done
-
       - name: Run General Tests
         run: |
           docker compose exec -T \
@@ -204,14 +196,6 @@ jobs:
           sed -i 's|^_APP_BROWSER_HOST=.*|_APP_BROWSER_HOST=http://invalid-browser/v1|' .env
           docker compose up -d
           sleep 30
-
-      - name: Wait for Open Runtimes
-        timeout-minutes: 3
-        run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
-            echo "Waiting for Executor to come online"
-            sleep 1
-          done
 
       - name: Run ${{ matrix.service }} tests with Project table mode
         run: |
@@ -287,14 +271,6 @@ jobs:
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 30
-
-      - name: Wait for Open Runtimes
-        timeout-minutes: 3
-        run: |
-          while ! docker compose logs openruntimes-executor | grep -q "Executor is ready."; do
-            echo "Waiting for Executor to come online"
-            sleep 1
-          done
 
       - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
         run: |

@@ -871,11 +871,11 @@ $enableAssistant = $this->getParam('enableAssistant', false);
 
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: exc1
+    hostname: executor
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.7.22
+    image: openruntimes/executor:0.19.0
     networks:
       - appwrite
       - runtimes
