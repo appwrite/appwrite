@@ -604,16 +604,24 @@ class OpenAPI3 extends Format
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $enumValues = \array_values($validator->getList());
+                                $allValues = \array_values($validator->getList());
+                                $allKeys = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+
                                 if ($excludeKeys !== null) {
-                                    $enumValues = \array_values(\array_filter($enumValues, fn ($key) => !\in_array($key, $excludeKeys, true)));
+                                    $keepIndices = [];
+                                    foreach ($allValues as $index => $value) {
+                                        if (!\in_array($value, $excludeKeys, true)) {
+                                            $keepIndices[] = $index;
+                                        }
+                                    }
+                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
+                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
+                                } else {
+                                    $enumKeys = $allKeys;
+                                    $enumValues = $allValues;
                                 }
                                 $node['schema']['items']['enum'] = $enumValues;
                                 $node['schema']['items']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
-                                $enumKeys = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
-                                if ($excludeKeys !== null) {
-                                    $enumKeys = \array_values(\array_filter($enumKeys, fn ($key) => \in_array($key, $enumValues, true)));
-                                }
                                 $node['schema']['items']['x-enum-keys'] = $enumKeys;
                             }
                             if ($validator->getType() === 'integer') {
@@ -646,16 +654,24 @@ class OpenAPI3 extends Format
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $enumValues = \array_values($validator->getList());
+                                $allValues = \array_values($validator->getList());
+                                $allKeys = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+
                                 if ($excludeKeys !== null) {
-                                    $enumValues = \array_values(\array_filter($enumValues, fn ($key) => !\in_array($key, $excludeKeys, true)));
+                                    $keepIndices = [];
+                                    foreach ($allValues as $index => $value) {
+                                        if (!\in_array($value, $excludeKeys, true)) {
+                                            $keepIndices[] = $index;
+                                        }
+                                    }
+                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
+                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
+                                } else {
+                                    $enumKeys = $allKeys;
+                                    $enumValues = $allValues;
                                 }
                                 $node['schema']['enum'] = $enumValues;
                                 $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
-                                $enumKeys = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
-                                if ($excludeKeys !== null) {
-                                    $enumKeys = \array_values(\array_filter($enumKeys, fn ($key) => \in_array($key, $enumValues, true)));
-                                }
                                 $node['schema']['x-enum-keys'] = $enumKeys;
                             }
                             if ($validator->getType() === 'integer') {

@@ -588,16 +588,24 @@ class Swagger2 extends Format
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $enumValues = \array_values($validator->getList());
+                                $allValues = \array_values($validator->getList());
+                                $allKeys = $this->getRequestEnumKeys($namespace, $methodName, $name);
+
                                 if ($excludeKeys !== null) {
-                                    $enumValues = \array_values(\array_filter($enumValues, fn ($key) => !\in_array($key, $excludeKeys, true)));
+                                    $keepIndices = [];
+                                    foreach ($allValues as $index => $value) {
+                                        if (!\in_array($value, $excludeKeys, true)) {
+                                            $keepIndices[] = $index;
+                                        }
+                                    }
+                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
+                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
+                                } else {
+                                    $enumKeys = $allKeys;
+                                    $enumValues = $allValues;
                                 }
                                 $node['items']['enum'] = $enumValues;
                                 $node['items']['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
-                                $enumKeys = $this->getRequestEnumKeys($namespace, $methodName, $name);
-                                if ($excludeKeys !== null) {
-                                    $enumKeys = \array_values(\array_filter($enumKeys, fn ($key) => \in_array($key, $enumValues, true)));
-                                }
                                 $node['items']['x-enum-keys'] = $enumKeys;
                             }
                             if ($validator->getType() === 'integer') {
@@ -624,16 +632,24 @@ class Swagger2 extends Format
                                 }
                             }
                             if ($allowed && $validator->getType() === 'string') {
-                                $enumValues = \array_values($validator->getList());
+                                $allValues = \array_values($validator->getList());
+                                $allKeys = $this->getRequestEnumKeys($namespace, $methodName, $name);
+
                                 if ($excludeKeys !== null) {
-                                    $enumValues = \array_values(\array_filter($enumValues, fn ($key) => !\in_array($key, $excludeKeys, true)));
+                                    $keepIndices = [];
+                                    foreach ($allValues as $index => $value) {
+                                        if (!\in_array($value, $excludeKeys, true)) {
+                                            $keepIndices[] = $index;
+                                        }
+                                    }
+                                    $enumKeys = \array_values(\array_intersect_key($allKeys, \array_flip($keepIndices)));
+                                    $enumValues = \array_values(\array_intersect_key($allValues, \array_flip($keepIndices)));
+                                } else {
+                                    $enumKeys = $allKeys;
+                                    $enumValues = $allValues;
                                 }
                                 $node['enum'] = $enumValues;
                                 $node['x-enum-name'] = $this->getRequestEnumName($namespace, $methodName, $name);
-                                $enumKeys = $this->getRequestEnumKeys($namespace, $methodName, $name);
-                                if ($excludeKeys !== null) {
-                                    $enumKeys = \array_values(\array_filter($enumKeys, fn ($key) => \in_array($key, $enumValues, true)));
-                                }
                                 $node['x-enum-keys'] = $enumKeys;
                             }
                             if ($validator->getType() === 'integer') {
