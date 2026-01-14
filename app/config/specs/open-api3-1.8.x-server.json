@@ -3217,9 +3217,7 @@
                                 "yammer",
                                 "yandex",
                                 "zoho",
-                                "zoom",
-                                "mock",
-                                "mock-unverified"
+                                "zoom"
                             ],
                             "x-enum-name": "OAuthProvider",
                             "x-enum-keys": []
@@ -45416,7 +45414,7 @@
                     "status": {
                         "type": "string",
                         "description": "Status of delivery.",
-                        "x-example": "Message status can be one of the following: draft, processing, scheduled, sent, or failed.",
+                        "x-example": "processing",
                         "enum": [
                             "draft",
                             "processing",
@@ -45462,7 +45460,7 @@
                         "subject": "Welcome to Appwrite",
                         "content": "Hi there, welcome to Appwrite family."
                     },
-                    "status": "Message status can be one of the following: draft, processing, scheduled, sent, or failed."
+                    "status": "processing"
                 }
             },
             "topic": {
