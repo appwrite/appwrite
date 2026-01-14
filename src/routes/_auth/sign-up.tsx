@@ -12,6 +12,7 @@ import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException, ID, OAuthProvider } from '@appwrite.io/console'
 import { toast } from 'sonner'
+import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -50,19 +51,21 @@ function SignUpPage() {
         : `${window.location.origin}/`
       const failureUrl = `${window.location.origin}/sign-up${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
-      // Create OAuth2 session - this will return a URL to redirect to
+      // Store GitHub as last login method before redirecting
+      setLastLoginMethod('github')
+
+      // Create OAuth2 session - this may return a URL or void (if it redirects automatically)
       const url = await sdk.forConsole.account.createOAuth2Session({
         provider: OAuthProvider.Github,
         success: successUrl,
         failure: failureUrl,
       })
 
-      // Redirect to GitHub OAuth (only if URL is returned)
+      // If URL is returned, redirect manually; otherwise SDK handles redirect automatically
       if (typeof url === 'string') {
         window.location.href = url
-      } else {
-        throw new Error('Failed to get OAuth redirect URL')
       }
+      // If void, the SDK has already initiated the redirect, so we don't need to do anything
     } catch (error: any) {
       setIsGitHubLoading(false)
       const errorMessage = error?.message || 'Failed to initiate GitHub login'
@@ -94,6 +97,8 @@ function SignUpPage() {
       }
     },
     onSuccess: async () => {
+      // Store email as last login method
+      setLastLoginMethod('email')
       await router.invalidate()
       if (search.redirect && isValidRelativeRedirect(search.redirect)) {
         navigate({ to: search.redirect as any })

@@ -1,6 +1,7 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, useLocation } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
+import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 
 export const Route = createFileRoute('/_public/')({
   component: RootRedirect,
@@ -9,9 +10,28 @@ export const Route = createFileRoute('/_public/')({
 function RootRedirect() {
   const { account } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     if (!account) return // Wait for auth
+
+    // Check if this is an OAuth callback (URL might contain OAuth params)
+    // If we have an account and came from OAuth flow, ensure GitHub method is saved
+    const urlParams = new URLSearchParams(location.search)
+    const isOAuthCallback = urlParams.has('project') || 
+                            urlParams.has('key') || 
+                            location.pathname.includes('callback')
+    
+    // If we detect OAuth callback and account exists, save GitHub method
+    if (isOAuthCallback && account) {
+      // Check if account has GitHub identity
+      const hasGitHubIdentity = account.identities?.some(
+        (identity: any) => identity.provider === 'github'
+      )
+      if (hasGitHubIdentity) {
+        setLastLoginMethod('github')
+      }
+    }
 
     // Get org ID from account prefs
     const orgId = account.prefs?.organization as string | undefined
@@ -30,7 +50,7 @@ function RootRedirect() {
       to: '/onboarding',
       replace: true,
     })
-  }, [account, navigate])
+  }, [account, navigate, location])
 
   // Show loading while redirecting
   return (
