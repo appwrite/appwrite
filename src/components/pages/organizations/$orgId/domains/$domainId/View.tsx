@@ -540,14 +540,15 @@ export function DomainDetailView() {
   }
 
   return (
-    <ConsoleLayout
-      header={{
-        onCommandCenterOpen: () => {},
-        onCreateOrganization: () => {},
-      }}
-      showFooter
-      containerClassName="domain-detail-layout-container"
-    >
+    <>
+      <ConsoleLayout
+        header={{
+          onCommandCenterOpen: () => {},
+          onCreateOrganization: () => {},
+        }}
+        showFooter
+        containerClassName="domain-detail-layout-container"
+      >
       <ServiceHeader
           title={
           <div className="flex items-center gap-2">
@@ -1216,7 +1217,7 @@ export function DomainDetailView() {
           isLoading={retryVerificationMutation.isPending}
         />
       )}
-    </div>
+    </>
   )
 }
 

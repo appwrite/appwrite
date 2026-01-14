@@ -102,16 +102,16 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
   const Icon = emptyState.icon
 
   return (
-    <ConsoleLayout
-      header={{
-        onCommandCenterOpen: () => setCommandCenterOpen(true),
-      }}
-      showFooter
-      containerClassName="account-layout-container"
-    >
-      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
-          {/* Account Header with Tabs */}
-          <div>
+    <>
+      <ConsoleLayout
+        header={{
+          onCommandCenterOpen: () => setCommandCenterOpen(true),
+        }}
+        showFooter
+        containerClassName="account-layout-container"
+      >
+        {/* Account Header with Tabs */}
+        <div>
             {/* Title Row */}
             <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
               <h1 className="text-[20px] font-semibold text-foreground">
@@ -174,8 +174,8 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="flex-1">
+        {/* Main Content */}
+        <div className="flex-1">
             {activeTab === 'overview' ? (
               <AccountOverview />
             ) : activeTab === 'sessions' ? (
@@ -196,17 +196,16 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
                   </div>
                 </div>
               </div>
-          )}
-        </div>
-      </div>
-    </ConsoleLayout>
+            )}
+          </div>
+      </ConsoleLayout>
 
       {/* Command Center */}
       <CommandCenter
         open={commandCenterOpen}
         onOpenChange={setCommandCenterOpen}
       />
-    </div>
+    </>
   )
 }
 

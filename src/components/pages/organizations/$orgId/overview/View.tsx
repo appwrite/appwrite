@@ -755,7 +755,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       settings: '/organizations/$orgId/settings',
     }
     
-    const route = tabRoutes[activeTab] || '/organizations/$orgId'
+    const route = (activeTab && tabRoutes[activeTab as keyof typeof tabRoutes]) || '/organizations/$orgId'
     navigate({
       to: route as any,
       params: { orgId: org.$id } as any,
@@ -774,17 +774,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
 
   return (
-    <ConsoleLayout
-      header={{
-        onCommandCenterOpen: () => setCommandCenterOpen(true),
-        onCreateOrganization: () => setCreateOrgDialogOpen(true),
-      }}
-      showFooter
-      containerClassName="org-layout-container"
-    >
-      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
-          {/* Org Header with Switcher */}
-          <div>
+    <>
+      <ConsoleLayout
+        header={{
+          onCommandCenterOpen: () => setCommandCenterOpen(true),
+          onCreateOrganization: () => setCreateOrgDialogOpen(true),
+        }}
+        showFooter
+        containerClassName="org-layout-container"
+      >
+      {/* Org Header with Switcher */}
+      <div>
             {/* Title Row with Org Switcher */}
             <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
             {/* Left: Org Switcher */}
@@ -1189,9 +1189,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           return null
         })()}
 
-          {/* Main Content */}
-          <div className="flex-1">
-            <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+        {/* Main Content */}
+        <div className="flex-1">
+          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
             {/* Render child routes (domains list) when on domains route */}
             {shouldRenderChildren && children ? (
               <div className="h-full">{children}</div>
@@ -1216,9 +1216,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
                 {/* Projects Content - placeholderData keeps previous data visible while loading */}
                 {!activeProjectsError && (
-              <>
-                
-                {/* Toolbar: Search + Filters + Create */}
+                  <>
+                    {/* Toolbar: Search + Filters + Create */}
                 <div className="mb-4 flex items-center gap-3">
                   <div className="relative w-64">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -2017,7 +2016,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             {activeTab === 'domains' && <DomainsView />}
               </>
             )}
-            </div>
           </div>
         </div>
       </ConsoleLayout>
@@ -2234,6 +2232,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         }}
         isLoading={createOrgMutation.isPending}
       />
-    </div>
+    </>
   )
 }
