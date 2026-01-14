@@ -15,7 +15,6 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
@@ -337,7 +336,6 @@ class Functions extends Action
      * @param string|null $eventData
      * @param string|null $executionId
      * @return void
-     * @throws Authorization
      * @throws Structure
      * @throws \Utopia\Database\Exception
      * @throws Conflict
@@ -464,7 +462,11 @@ class Functions extends Action
         if ($execution->getAttribute('status') !== 'processing') {
             $execution->setAttribute('status', 'processing');
 
-            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            try {
+                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            } catch (\Throwable $e) {
+                $log->addExtra('updateError', $e->getMessage());
+            }
         }
 
         $durationStart = \microtime(true);
@@ -607,6 +609,13 @@ class Functions extends Action
             $error = $th->getMessage();
             $errorCode = $th->getCode();
         } finally {
+            /** Update execution status */
+            try {
+                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            } catch (\Throwable $e) {
+                $log->addExtra('updateError', $e->getMessage());
+            }
+
             /** Trigger usage queue */
             $queueForStatsUsage
                 ->setProject($project)
@@ -622,8 +631,6 @@ class Functions extends Action
                 ->trigger()
             ;
         }
-
-        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
         $executionModel = new Execution();
         $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));

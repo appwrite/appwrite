@@ -2720,9 +2720,7 @@
                             "yammer",
                             "yandex",
                             "zoho",
-                            "zoom",
-                            "mock",
-                            "mock-unverified"
+                            "zoom"
                         ],
                         "x-enum-name": "OAuthProvider",
                         "x-enum-keys": [],
@@ -3666,9 +3664,7 @@
                             "yammer",
                             "yandex",
                             "zoho",
-                            "zoom",
-                            "mock",
-                            "mock-unverified"
+                            "zoom"
                         ],
                         "x-enum-name": "OAuthProvider",
                         "x-enum-keys": [],
@@ -28355,9 +28351,7 @@
                                         "yammer",
                                         "yandex",
                                         "zoho",
-                                        "zoom",
-                                        "mock",
-                                        "mock-unverified"
+                                        "zoom"
                                     ],
                                     "x-enum-name": "OAuthProvider",
                                     "x-enum-keys": []
