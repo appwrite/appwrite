@@ -462,7 +462,11 @@ class Functions extends Action
         if ($execution->getAttribute('status') !== 'processing') {
             $execution->setAttribute('status', 'processing');
 
-            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            try {
+                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            } catch (\Throwable $e) {
+                $log->addExtra('updateError', $e->getMessage());
+            }
         }
 
         $durationStart = \microtime(true);
@@ -605,6 +609,13 @@ class Functions extends Action
             $error = $th->getMessage();
             $errorCode = $th->getCode();
         } finally {
+            /** Update execution status */
+            try {
+                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            } catch (\Throwable $e) {
+                $log->addExtra('updateError', $e->getMessage());
+            }
+
             /** Trigger usage queue */
             $queueForStatsUsage
                 ->setProject($project)
@@ -620,8 +631,6 @@ class Functions extends Action
                 ->trigger()
             ;
         }
-
-        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
         $executionModel = new Execution();
         $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
