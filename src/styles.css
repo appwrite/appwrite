@@ -220,16 +220,22 @@ code {
     }
     
     /* Ensure the flex container properly constrains children */
-    .project-layout-container > div[class*="flex"][class*="flex-1"] {
+    .project-layout-container > div[class*="flex"][class*="flex-1"],
+    .org-layout-container > div[class*="flex"][class*="flex-1"],
+    .account-layout-container > div[class*="flex"][class*="flex-1"],
+    .domain-detail-layout-container > div[class*="flex"][class*="flex-1"] {
       min-height: 0;
       max-height: 100%;
       overflow: hidden;
     }
     
-    /* Fix for iOS Safari - ensure project layout container uses dvh */
+    /* Fix for iOS Safari - ensure layout containers use dvh */
     @supports (height: 100dvh) {
-      /* Ensure project layout uses proper height calculation */
-      .project-layout-container {
+      /* Ensure layout containers use proper height calculation */
+      .project-layout-container,
+      .org-layout-container,
+      .account-layout-container,
+      .domain-detail-layout-container {
         height: 100%;
         max-height: 100dvh;
         overflow: hidden;
@@ -263,17 +269,30 @@ code {
       }
       
       /* Ensure flex containers properly constrain on iOS */
-      .project-layout-container {
+      .project-layout-container,
+      .org-layout-container,
+      .account-layout-container,
+      .domain-detail-layout-container {
         display: flex;
         flex-direction: column;
         position: relative;
       }
       
-      .project-layout-container > div[class*="flex"][class*="flex-1"] {
+      .project-layout-container > div[class*="flex"][class*="flex-1"],
+      .org-layout-container > div[class*="flex"][class*="flex-1"],
+      .account-layout-container > div[class*="flex"][class*="flex-1"],
+      .domain-detail-layout-container > div[class*="flex"][class*="flex-1"] {
         min-height: 0;
         max-height: 100%;
         overflow: hidden;
         position: relative;
+      }
+      
+      /* Ensure content areas can scroll on iOS */
+      .org-layout-container > div[class*="overflow-y-auto"],
+      .account-layout-container > div[class*="overflow-y-auto"],
+      .domain-detail-layout-container > div[class*="overflow-y-auto"] {
+        max-height: 100%;
       }
     }
   }

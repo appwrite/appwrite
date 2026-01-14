@@ -77,17 +77,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { toast } from 'sonner'
-import { ConsoleHeader } from '@/components/global/layout/Header'
+import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
-import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/date-utils'
 import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'
 import { DomainsView } from '../domains/View'
-import { ConsoleFooter } from '@/components/global/layout/Footer'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -776,25 +774,19 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
 
   return (
-    <div className="flex min-h-full flex-col bg-background">
-      {/* Header Section */}
-      <div className="sticky top-0 z-30 flex-shrink-0 bg-background">
-        {/* Payment Alert */}
-        <PaymentAlert />
-
-        {/* Reuse ConsoleHeader */}
-        <ConsoleHeader 
-          onCommandCenterOpen={() => setCommandCenterOpen(true)}
-          onCreateOrganization={() => setCreateOrgDialogOpen(true)}
-        />
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Org Header with Switcher */}
-        <div>
-          {/* Title Row with Org Switcher */}
-          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+    <ConsoleLayout
+      header={{
+        onCommandCenterOpen: () => setCommandCenterOpen(true),
+        onCreateOrganization: () => setCreateOrgDialogOpen(true),
+      }}
+      showFooter
+      containerClassName="org-layout-container"
+    >
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+          {/* Org Header with Switcher */}
+          <div>
+            {/* Title Row with Org Switcher */}
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
             {/* Left: Org Switcher */}
             <div className="flex items-center gap-2">
               {selectedOrg && (
@@ -1197,9 +1189,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           return null
         })()}
 
-        {/* Main Content */}
-        <main className="flex-1">
-          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+          {/* Main Content */}
+          <div className="flex-1">
+            <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
             {/* Render child routes (domains list) when on domains route */}
             {shouldRenderChildren && children ? (
               <div className="h-full">{children}</div>
@@ -2025,11 +2017,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             {activeTab === 'domains' && <DomainsView />}
               </>
             )}
+            </div>
           </div>
-        </main>
-
-        <ConsoleFooter />
-      </div>
+        </div>
+      </ConsoleLayout>
 
       {/* Command Center */}
       <CommandCenter

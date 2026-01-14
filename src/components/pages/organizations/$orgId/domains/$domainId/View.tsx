@@ -88,9 +88,7 @@ import {
   useDeleteOrganizationDomain,
   useOrganizations,
 } from '@/lib/react-query/hooks'
-import { ConsoleHeader } from '@/components/global/layout/Header'
-import { ConsoleFooter } from '@/components/global/layout/Footer'
-import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
+import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 
 export function DomainDetailView() {
   const { orgId, domainId } = useParams({
@@ -542,22 +540,15 @@ export function DomainDetailView() {
   }
 
   return (
-    <div className="flex min-h-full flex-col bg-background">
-      {/* Header Section */}
-      <div className="sticky top-0 z-30 flex-shrink-0 bg-background">
-        {/* Payment Alert */}
-        <PaymentAlert />
-
-        {/* Console Header */}
-        <ConsoleHeader 
-          onCommandCenterOpen={() => {}}
-          onCreateOrganization={() => {}}
-        />
-      </div>
-
-      {/* Content */}
-      <div className="flex h-full min-h-0 flex-col">
-        <ServiceHeader
+    <ConsoleLayout
+      header={{
+        onCommandCenterOpen: () => {},
+        onCreateOrganization: () => {},
+      }}
+      showFooter
+      containerClassName="domain-detail-layout-container"
+    >
+      <ServiceHeader
           title={
           <div className="flex items-center gap-2">
             <Button
@@ -608,8 +599,7 @@ export function DomainDetailView() {
           }
         />
 
-        <div className="flex-1 flex flex-col">
-          <div className="mx-auto w-full max-w-7xl flex-1 px-4 pt-4 pb-4 sm:px-6 sm:pb-6">
+        <div className="mx-auto w-full max-w-7xl flex-1 px-4 pt-4 pb-4 sm:px-6 sm:pb-6">
         {activeTab === 'records' ? (
           <>
             {/* Domain Metadata Card */}
@@ -1175,10 +1165,8 @@ export function DomainDetailView() {
             )}
           </div>
         )}
-          </div>
-          <ConsoleFooter />
         </div>
-      </div>
+      </ConsoleLayout>
 
       {/* Create Record Dialog */}
       <CreateRecordDialog

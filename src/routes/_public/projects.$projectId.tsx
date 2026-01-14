@@ -1,11 +1,7 @@
 import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { ConsoleSidebar } from '@/components/global/layout/Sidebar'
-import { ConsoleHeader } from '@/components/global/layout/Header'
+import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
-import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
-import { ConsoleFooter } from '@/components/global/layout/Footer'
-import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
   component: ProjectLayout,
@@ -70,54 +66,21 @@ function ProjectLayout() {
 
   return (
     <KeyboardShortcutsProvider projectId={projectId}>
-      <div className="flex h-full flex-col bg-background project-layout-container">
-        {/* Sticky header section - takes space in flex layout */}
-        <div className="flex-shrink-0">
-          <div className="sticky top-0 z-40">
-            <PaymentAlert />
-          </div>
-          <div className="sticky top-0 z-30 bg-background">
-            <ConsoleHeader
-              onMenuClick={() => setSidebarOpen(true)}
-              projectId={projectId}
-            />
-          </div>
-        </div>
-
-        {/* Mobile sidebar overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/60"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {/* Sidebar + Content below header */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
-          {/* Sidebar */}
-          <ConsoleSidebar
-            projectId={projectId}
-            activeSection={activeSection}
-            mobileOpen={sidebarOpen}
-            onMobileClose={() => setSidebarOpen(false)}
-          />
-
-          {/* Main content area */}
-          <main
-            className={cn(
-              'flex-1 bg-background flex flex-col min-h-0',
-              isFixedLayoutView ? 'overflow-hidden' : 'overflow-y-auto',
-            )}
-          >
-            <div className={cn('flex-1', (isFixedLayoutView || isDetailRoute) && 'min-h-0')}>
-                <div className={cn('h-full', (isFixedLayoutView || isDetailRoute) && 'min-h-0')}>
-                  <Outlet />
-                </div>
-            </div>
-            {!hideFooter && <ConsoleFooter />}
-          </main>
-        </div>
-      </div>
+      <ConsoleLayout
+        sidebar={{
+          projectId,
+          activeSection,
+          mobileOpen: sidebarOpen,
+          onMobileClose: () => setSidebarOpen(false),
+          onMenuClick: () => setSidebarOpen(true),
+        }}
+        header={{ projectId }}
+        showFooter={!hideFooter}
+        fixedLayout={isFixedLayoutView}
+        isDetailRoute={isDetailRoute}
+      >
+        <Outlet />
+      </ConsoleLayout>
     </KeyboardShortcutsProvider>
   )
 }

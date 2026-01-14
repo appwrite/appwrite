@@ -5,9 +5,7 @@ import { AccountOverview } from './Overview'
 import { AccountSessions } from './Sessions'
 import { User, CreditCard, LogOut } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import { ConsoleHeader } from '@/components/global/layout/Header'
-import { ConsoleFooter } from '@/components/global/layout/Footer'
-import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
+import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { cn } from '@/lib/utils'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
@@ -104,110 +102,104 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
   const Icon = emptyState.icon
 
   return (
-    <div className="flex min-h-full flex-col bg-background">
-      {/* Header Section */}
-      <div className="sticky top-0 z-30 flex-shrink-0 bg-background">
-        {/* Payment Alert */}
-        <PaymentAlert />
-
-        {/* Console Header */}
-        <ConsoleHeader onCommandCenterOpen={() => setCommandCenterOpen(true)} />
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Account Header with Tabs */}
-        <div>
-          {/* Title Row */}
-          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-            <h1 className="text-[20px] font-semibold text-foreground">
-              {account?.name || account?.email || 'Account'}
-            </h1>
-            <button
-              onClick={async () => {
-                await signOut()
-              }}
-              className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
-          </div>
-
-          {/* Tabs Row */}
-          <div className="border-b border-border">
-            <div
-              className="mx-auto flex w-full max-w-7xl gap-0 overflow-x-auto px-4 sm:px-6"
-              role="tablist"
-            >
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.id
-                return (
-                  <Link
-                    key={tab.id}
-                    to={tab.to as any}
-                    replace
-                    role="tab"
-                    aria-selected={isActive}
-                    className={cn(
-                      'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
-                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                      isActive
-                        ? 'text-foreground'
-                        : 'text-muted-foreground hover:text-foreground/80',
-                    )}
-                  >
-                    {tab.label}
-                    {tab.count !== undefined && (
-                      <span
-                        className={cn(
-                          'rounded-full px-1.5 py-0.5 text-[10px]',
-                          isActive
-                            ? 'bg-accent text-foreground'
-                            : 'bg-muted text-muted-foreground',
-                        )}
-                      >
-                        {tab.count}
-                      </span>
-                    )}
-                    {isActive && (
-                      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-                    )}
-                  </Link>
-                )
-              })}
+    <ConsoleLayout
+      header={{
+        onCommandCenterOpen: () => setCommandCenterOpen(true),
+      }}
+      showFooter
+      containerClassName="account-layout-container"
+    >
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+          {/* Account Header with Tabs */}
+          <div>
+            {/* Title Row */}
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+              <h1 className="text-[20px] font-semibold text-foreground">
+                {account?.name || account?.email || 'Account'}
+              </h1>
+              <button
+                onClick={async () => {
+                  await signOut()
+                }}
+                className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
             </div>
-          </div>
-        </div>
 
-        {/* Main Content */}
-        <main className="flex-1">
-          {activeTab === 'overview' ? (
-            <AccountOverview />
-          ) : activeTab === 'sessions' ? (
-            <AccountSessions />
-          ) : (
-            <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
-              <div className="flex h-full min-h-[400px] items-center justify-center">
-                <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                    <Icon className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <h2 className="mb-1.5 text-[15px] font-medium text-foreground">
-                    {emptyState.title}
-                  </h2>
-                  <p className="text-[13px] text-muted-foreground">
-                    {emptyState.description}
-                  </p>
-                </div>
+            {/* Tabs Row */}
+            <div className="border-b border-border">
+              <div
+                className="mx-auto flex w-full max-w-7xl gap-0 overflow-x-auto px-4 sm:px-6"
+                role="tablist"
+              >
+                {tabs.map((tab) => {
+                  const isActive = activeTab === tab.id
+                  return (
+                    <Link
+                      key={tab.id}
+                      to={tab.to as any}
+                      replace
+                      role="tab"
+                      aria-selected={isActive}
+                      className={cn(
+                        'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
+                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                        isActive
+                          ? 'text-foreground'
+                          : 'text-muted-foreground hover:text-foreground/80',
+                      )}
+                    >
+                      {tab.label}
+                      {tab.count !== undefined && (
+                        <span
+                          className={cn(
+                            'rounded-full px-1.5 py-0.5 text-[10px]',
+                            isActive
+                              ? 'bg-accent text-foreground'
+                              : 'bg-muted text-muted-foreground',
+                          )}
+                        >
+                          {tab.count}
+                        </span>
+                      )}
+                      {isActive && (
+                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+                      )}
+                    </Link>
+                  )
+                })}
               </div>
             </div>
-          )}
-        </main>
+          </div>
 
-        {/* Footer */}
-        <ConsoleFooter />
+          {/* Main Content */}
+          <div className="flex-1">
+            {activeTab === 'overview' ? (
+              <AccountOverview />
+            ) : activeTab === 'sessions' ? (
+              <AccountSessions />
+            ) : (
+              <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+                <div className="flex h-full min-h-[400px] items-center justify-center">
+                  <div className="text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted ring-1 ring-border">
+                      <Icon className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <h2 className="mb-1.5 text-[15px] font-medium text-foreground">
+                      {emptyState.title}
+                    </h2>
+                    <p className="text-[13px] text-muted-foreground">
+                      {emptyState.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+          )}
+        </div>
       </div>
+    </ConsoleLayout>
 
       {/* Command Center */}
       <CommandCenter
