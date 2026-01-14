@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2d32f0fe31dc03c1f96a2582093afca1",
+    "content-hash": "33da844fdf5648d1d1a027dfb6ae42bc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3552,16 +3552,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "2.0.3",
+            "version": "2.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "662244bd170bab3ba45fd4470ac2e5a36c980131"
+                "reference": "1301ab2607667b9f86456f86895f3e26f8c0c9a7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/662244bd170bab3ba45fd4470ac2e5a36c980131",
-                "reference": "662244bd170bab3ba45fd4470ac2e5a36c980131",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/1301ab2607667b9f86456f86895f3e26f8c0c9a7",
+                "reference": "1301ab2607667b9f86456f86895f3e26f8c0c9a7",
                 "shasum": ""
             },
             "require": {
@@ -3595,9 +3595,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/2.0.3"
+                "source": "https://github.com/utopia-php/audit/tree/2.0.4"
             },
-            "time": "2026-01-13T09:49:40+00:00"
+            "time": "2026-01-14T07:22:46+00:00"
         },
         {
             "name": "utopia-php/auth",
@@ -3898,16 +3898,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "4.4.0",
+            "version": "4.5.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "783193d5cdc723b3784e8fb399068b17d4228d53"
+                "reference": "7b935bb09aeae8aeff5a28f6f2485cef1cc4d898"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/783193d5cdc723b3784e8fb399068b17d4228d53",
-                "reference": "783193d5cdc723b3784e8fb399068b17d4228d53",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/7b935bb09aeae8aeff5a28f6f2485cef1cc4d898",
+                "reference": "7b935bb09aeae8aeff5a28f6f2485cef1cc4d898",
                 "shasum": ""
             },
             "require": {
@@ -3950,9 +3950,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/4.4.0"
+                "source": "https://github.com/utopia-php/database/tree/4.5.1"
             },
-            "time": "2026-01-08T04:54:39+00:00"
+            "time": "2026-01-14T12:07:24+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -5056,22 +5056,22 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.8.4",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "150c30700e738c52348cce9ed0e0f0ff96872081"
+                "reference": "95a937acb393dbf95cccba239d55886e2848ab0b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/150c30700e738c52348cce9ed0e0f0ff96872081",
-                "reference": "150c30700e738c52348cce9ed0e0f0ff96872081",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/95a937acb393dbf95cccba239d55886e2848ab0b",
+                "reference": "95a937acb393dbf95cccba239d55886e2848ab0b",
                 "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.33.*"
+                "utopia-php/framework": "0.33.37"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -5101,9 +5101,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.8.4"
+                "source": "https://github.com/utopia-php/swoole/tree/1.0.0"
             },
-            "time": "2025-09-07T09:39:46+00:00"
+            "time": "2026-01-14T14:00:11+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5481,7 +5481,7 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.14",
+            "version": "1.8.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
@@ -5526,7 +5526,7 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.14"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.15"
             },
             "time": "2026-01-14T10:42:32+00:00"
         },
@@ -9011,5 +9011,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
