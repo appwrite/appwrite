@@ -94,7 +94,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <AIChatProvider>
               <PromoBannerProvider>
                 <div className="flex h-screen w-screen overflow-hidden">
-                  <div className="flex-1 overflow-auto">{children}</div>
+                  <div className="flex-1 overflow-hidden min-h-0 h-full">{children}</div>
                   <AIChatPanel />
                 </div>
                 <DebugMenu />

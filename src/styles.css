@@ -172,4 +172,17 @@ code {
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Mobile touch scrolling improvements */
+  html {
+    height: 100%;
+    height: 100dvh;
+  }
+  
+  /* Smooth touch scrolling on iOS */
+  [class*="overflow-auto"],
+  [class*="overflow-y-auto"] {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
 }

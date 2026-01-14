@@ -7,23 +7,6 @@ import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/Paym
 import { ConsoleFooter } from '@/components/global/layout/Footer'
 import { cn } from '@/lib/utils'
 
-// Sections that should take full width (no max-width container)
-const fullWidthSections = new Set(['databases', 'storage'])
-
-// Sections that have a ServiceHeader with tabs (need full-width border)
-const sectionsWithTabs = new Set([
-  'auth',
-  'functions',
-  'overview',
-  'imagine',
-  'activity',
-  'usage',
-  'databases',
-  'analytics',
-  'settings',
-  'messaging',
-])
-
 export const Route = createFileRoute('/_public/projects/$projectId')({
   component: ProjectLayout,
 })
@@ -36,9 +19,6 @@ function ProjectLayout() {
   // Extract active section from pathname
   const pathParts = location.pathname.split('/')
   const activeSection = pathParts[3] || 'overview'
-
-  const isFullWidth = fullWidthSections.has(activeSection)
-  const hasTabs = sectionsWithTabs.has(activeSection)
 
   // Check if we're in a database table spreadsheet view (rows, columns, indexes, security, settings)
   // Pattern: /projects/:projectId/databases/:databaseId/tables/:tableId/(rows|columns|indexes|security|settings)
@@ -91,14 +71,16 @@ function ProjectLayout() {
   return (
     <KeyboardShortcutsProvider projectId={projectId}>
       <div className="flex h-full flex-col bg-background">
-        {/* Payment Alert */}
-        <PaymentAlert />
+        <div className="sticky top-0 z-40">
+          <PaymentAlert />
+        </div>
 
-        {/* Full-width Header at top */}
-        <ConsoleHeader
-          onMenuClick={() => setSidebarOpen(true)}
-          projectId={projectId}
-        />
+        <div className="sticky top-0 z-30 flex-shrink-0 bg-background">
+          <ConsoleHeader
+            onMenuClick={() => setSidebarOpen(true)}
+            projectId={projectId}
+          />
+        </div>
 
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
@@ -109,7 +91,7 @@ function ProjectLayout() {
         )}
 
         {/* Sidebar + Content below header */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Sidebar */}
           <ConsoleSidebar
             projectId={projectId}
@@ -121,7 +103,7 @@ function ProjectLayout() {
           {/* Main content area */}
           <main
             className={cn(
-              'flex-1 bg-background flex flex-col',
+              'flex-1 bg-background flex flex-col min-h-0',
               isFixedLayoutView ? 'overflow-hidden' : 'overflow-y-auto',
             )}
           >

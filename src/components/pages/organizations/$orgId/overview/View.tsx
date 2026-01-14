@@ -776,9 +776,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
 
   return (
-    <div className="flex h-screen flex-col bg-background">
-      {/* Sticky Header Section */}
-      <div className="sticky top-0 z-30 flex-shrink-0">
+    <div className="flex min-h-full flex-col bg-background">
+      {/* Header Section */}
+      <div className="sticky top-0 z-30 flex-shrink-0 bg-background">
         {/* Payment Alert */}
         <PaymentAlert />
 
@@ -789,8 +789,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         />
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto flex flex-col">
+      {/* Content */}
+      <div className="flex-1 flex flex-col">
         {/* Org Header with Switcher */}
         <div>
           {/* Title Row with Org Switcher */}

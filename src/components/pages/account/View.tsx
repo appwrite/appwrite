@@ -104,9 +104,9 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
   const Icon = emptyState.icon
 
   return (
-    <div className="flex h-screen flex-col bg-background">
-      {/* Sticky Header Section */}
-      <div className="sticky top-0 z-30 flex-shrink-0">
+    <div className="flex min-h-full flex-col bg-background">
+      {/* Header Section */}
+      <div className="sticky top-0 z-30 flex-shrink-0 bg-background">
         {/* Payment Alert */}
         <PaymentAlert />
 
@@ -114,8 +114,8 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
         <ConsoleHeader onCommandCenterOpen={() => setCommandCenterOpen(true)} />
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto flex flex-col">
+      {/* Content */}
+      <div className="flex-1 flex flex-col">
         {/* Account Header with Tabs */}
         <div>
           {/* Title Row */}

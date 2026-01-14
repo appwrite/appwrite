@@ -542,9 +542,9 @@ export function DomainDetailView() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-background">
-      {/* Sticky Header Section */}
-      <div className="sticky top-0 z-30 flex-shrink-0">
+    <div className="flex min-h-full flex-col bg-background">
+      {/* Header Section */}
+      <div className="sticky top-0 z-30 flex-shrink-0 bg-background">
         {/* Payment Alert */}
         <PaymentAlert />
 
@@ -555,8 +555,8 @@ export function DomainDetailView() {
         />
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex h-full min-h-0 flex-col overflow-y-auto">
+      {/* Content */}
+      <div className="flex h-full min-h-0 flex-col">
         <ServiceHeader
           title={
           <div className="flex items-center gap-2">

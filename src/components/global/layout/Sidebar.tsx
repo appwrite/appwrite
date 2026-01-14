@@ -371,7 +371,8 @@ export function ConsoleSidebar({
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'relative hidden flex-col border-r border-border bg-background transition-all duration-200 lg:flex',
+          'hidden flex-col border-r border-border bg-background transition-all duration-200 lg:flex',
+          'h-full flex-shrink-0',
           collapsed ? 'w-[60px]' : 'w-[220px]',
           className,
         )}
