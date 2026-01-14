@@ -940,13 +940,15 @@ class OpenAPI3 extends Format
                 }
 
                 // Also check requestBody for provider parameter
-                if (isset($method['requestBody']['content']['application/json']['schema']['properties']['provider']['enum'])) {
-                    $method['requestBody']['content']['application/json']['schema']['properties']['provider']['enum'] =
-                        $this->filterProviderList(
-                            $method['requestBody']['content']['application/json']['schema']['properties']['provider']['enum'],
-                            $oAuthProviders,
-                            'mock'
-                        );
+                if (isset($method['requestBody']['content']['application/json']['schema']['properties']['provider'])) {
+                    $providerProp = &$method['requestBody']['content']['application/json']['schema']['properties']['provider'];
+                    if (isset($providerProp['enum'])) {
+                        $providerProp['enum'] = $this->filterProviderList($providerProp['enum'], $oAuthProviders, 'mock');
+                    }
+
+                    if (isset($providerProp['items']['enum'])) {
+                        $providerProp['items']['enum'] = $this->filterProviderList($providerProp['items']['enum'], $oAuthProviders, 'mock');
+                    }
                 }
             }
         }

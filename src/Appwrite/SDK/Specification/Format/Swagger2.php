@@ -932,6 +932,18 @@ class Swagger2 extends Format
                                 $param['items']['enum'] = $this->filterProviderList($param['items']['enum'], $oAuthProviders, 'mock');
                             }
                         }
+
+                        if (isset($param['schema']['properties']['provider'])) {
+                            if (isset($param['schema']['properties']['provider']['enum'])) {
+                                $param['schema']['properties']['provider']['enum'] =
+                                    $this->filterProviderList($param['schema']['properties']['provider']['enum'], $oAuthProviders, 'mock');
+                            }
+
+                            if (isset($param['schema']['properties']['provider']['items']['enum'])) {
+                                $param['schema']['properties']['provider']['items']['enum'] =
+                                    $this->filterProviderList($param['schema']['properties']['provider']['items']['enum'], $oAuthProviders, 'mock');
+                            }
+                        }
                     }
                 }
             }
