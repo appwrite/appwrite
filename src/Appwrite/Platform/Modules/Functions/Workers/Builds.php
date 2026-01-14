@@ -1024,6 +1024,11 @@ class Builds extends Action
                 Console::log('Deployment activated');
             }
 
+            $this->afterDeploymentSuccess(
+                $project,
+                $deployment,
+            );
+
             // Send realtime event after updating the associated resource so that Console will have the resource's deployment details when re-fetching.
             $queueForRealtime
                 ->setPayload($deployment->getArrayCopy())
@@ -1253,6 +1258,19 @@ class Builds extends Action
         }
         if (!is_string($adapter) && !is_null($adapter)) {
             throw new Exception('adapter must be a string or null');
+        }
+    }
+
+    protected function afterDeploymentSuccess(
+        Document $project,
+        Document $deployment,
+    ): void {
+        if (!($project instanceof Document)) {
+            throw new Exception('project must be an instance of Document');
+        }
+
+        if (!($deployment instanceof Document)) {
+            throw new Exception('deployment must be an instance of Document');
         }
     }
 
