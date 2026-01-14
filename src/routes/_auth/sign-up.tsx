@@ -96,9 +96,9 @@ function SignUpPage() {
           </a>
           .
         </p>
-      </div>
-      <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
-        <AppwriteLogo className="h-6 w-auto" />
+        <div className="mt-6 flex justify-center">
+          <AppwriteLogo className="h-6 w-auto" />
+        </div>
       </div>
     </div>
   )
