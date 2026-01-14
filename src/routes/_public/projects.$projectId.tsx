@@ -71,15 +71,17 @@ function ProjectLayout() {
   return (
     <KeyboardShortcutsProvider projectId={projectId}>
       <div className="flex h-full flex-col bg-background">
-        <div className="sticky top-0 z-40">
-          <PaymentAlert />
-        </div>
-
-        <div className="sticky top-0 z-30 flex-shrink-0 bg-background">
-          <ConsoleHeader
-            onMenuClick={() => setSidebarOpen(true)}
-            projectId={projectId}
-          />
+        {/* Sticky header section - takes space in flex layout */}
+        <div className="flex-shrink-0">
+          <div className="sticky top-0 z-40">
+            <PaymentAlert />
+          </div>
+          <div className="sticky top-0 z-30 bg-background">
+            <ConsoleHeader
+              onMenuClick={() => setSidebarOpen(true)}
+              projectId={projectId}
+            />
+          </div>
         </div>
 
         {/* Mobile sidebar overlay */}
