@@ -371,7 +371,7 @@ export function ConsoleSidebar({
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'hidden flex-col border-r border-border bg-background transition-all duration-200 lg:flex',
+          'relative hidden flex-col border-r border-border bg-background transition-all duration-200 lg:flex',
           'h-full flex-shrink-0',
           collapsed ? 'w-[60px]' : 'w-[220px]',
           className,
@@ -380,7 +380,7 @@ export function ConsoleSidebar({
         {/* Collapse Toggle - positioned on the border */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shadow-sm"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <ChevronLeft
