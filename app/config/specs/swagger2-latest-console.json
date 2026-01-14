@@ -201,7 +201,8 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
@@ -333,13 +334,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password. Must be at least 8 chars.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 }
                             },
                             "required": [
@@ -548,7 +551,8 @@
                                     "type": "integer",
                                     "description": "Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.",
                                     "default": 900,
-                                    "x-example": 0
+                                    "x-example": 0,
+                                    "format": "int32"
                                 }
                             }
                         }
@@ -1911,7 +1915,8 @@
                                     "type": "string",
                                     "description": "Current user password. Must be at least 8 chars.",
                                     "default": "",
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 }
                             },
                             "required": [
@@ -1985,13 +1990,15 @@
                                     "type": "string",
                                     "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": null,
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password. Must be at least 8 chars.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 }
                             },
                             "required": [
@@ -2193,13 +2200,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "url": {
                                     "type": "string",
                                     "description": "URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
                                     "default": null,
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 }
                             },
                             "required": [
@@ -2513,13 +2522,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password. Must be at least 8 chars.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 }
                             },
                             "required": [
@@ -3445,7 +3456,8 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "phrase": {
                                     "type": "boolean",
@@ -3535,13 +3547,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "url": {
                                     "type": "string",
                                     "description": "URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
                                     "default": "",
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 },
                                 "phrase": {
                                     "type": "boolean",
@@ -3767,7 +3781,8 @@
                                     "type": "string",
                                     "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": null,
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 }
                             },
                             "required": [
@@ -3894,7 +3909,8 @@
                                     "type": "string",
                                     "description": "URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
                                     "default": null,
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 }
                             },
                             "required": [
@@ -6518,7 +6534,8 @@
                                     "type": "integer",
                                     "description": "Seconds before the transaction expires.",
                                     "default": 300,
-                                    "x-example": 60
+                                    "x-example": 60,
+                                    "format": "int32"
                                 }
                             }
                         }
@@ -8343,6 +8360,7 @@
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": "email@example.com",
+                                    "format": "email",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -8457,6 +8475,7 @@
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": "email@example.com",
+                                    "format": "email",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -8819,6 +8838,7 @@
                                     "description": "Minimum value.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -8826,6 +8846,7 @@
                                     "description": "Maximum value.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -8833,6 +8854,7 @@
                                     "description": "Default value. Cannot be set when required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -8947,6 +8969,7 @@
                                     "description": "Minimum value.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -8954,6 +8977,7 @@
                                     "description": "Maximum value.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -8961,6 +8985,7 @@
                                     "description": "Default value. Cannot be set when required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -9075,6 +9100,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -9082,6 +9108,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -9089,6 +9116,7 @@
                                     "description": "Default value. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -9203,6 +9231,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -9210,6 +9239,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -9217,6 +9247,7 @@
                                     "description": "Default value. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -10356,7 +10387,8 @@
                                     "type": "integer",
                                     "description": "Attribute size for text attributes, in number of characters.",
                                     "default": null,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "required": {
                                     "type": "boolean",
@@ -10497,6 +10529,7 @@
                                     "description": "Maximum size of the string attribute.",
                                     "default": null,
                                     "x-example": 1,
+                                    "format": "int32",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -10611,6 +10644,7 @@
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": "https:\/\/example.com",
+                                    "format": "url",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -10725,6 +10759,7 @@
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": "https:\/\/example.com",
+                                    "format": "url",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -12327,13 +12362,15 @@
                                     "type": "number",
                                     "description": "Value to increment the attribute by. The value must be a number.",
                                     "default": 1,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "float"
                                 },
                                 "min": {
                                     "type": "number",
                                     "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "transactionId": {
@@ -12448,13 +12485,15 @@
                                     "type": "number",
                                     "description": "Value to increment the attribute by. The value must be a number.",
                                     "default": 1,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "float"
                                 },
                                 "max": {
                                     "type": "number",
                                     "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "transactionId": {
@@ -13505,7 +13544,8 @@
                                     "type": "integer",
                                     "description": "Function maximum execution time in seconds.",
                                     "default": 15,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -14292,7 +14332,8 @@
                                     "type": "integer",
                                     "description": "Maximum execution time in seconds.",
                                     "default": 15,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -18576,7 +18617,8 @@
                                     "type": "integer",
                                     "description": "Badge for push notification. Available only for iOS Platform.",
                                     "default": -1,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "draft": {
                                     "type": "boolean",
@@ -18788,6 +18830,7 @@
                                     "description": "Badge for push notification. Available only for iOS platforms.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int32",
                                     "x-nullable": true
                                 },
                                 "draft": {
@@ -20368,7 +20411,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -20380,7 +20424,8 @@
                                     "type": "string",
                                     "description": "Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -20507,7 +20552,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -20821,7 +20867,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -20833,7 +20880,8 @@
                                     "type": "string",
                                     "description": "Email set in the reply to field for the mail. Default value is sender email.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -20947,7 +20995,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -21053,7 +21102,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -21065,7 +21115,8 @@
                                     "type": "string",
                                     "description": "Email set in the reply to field for the mail. Default value is sender email.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -21179,7 +21230,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -21365,7 +21417,8 @@
                                     "type": "integer",
                                     "description": "The default SMTP server port.",
                                     "default": 587,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "username": {
                                     "type": "string",
@@ -21414,7 +21467,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -21426,7 +21480,8 @@
                                     "type": "string",
                                     "description": "Email set in the reply to field for the mail. Default value is sender email.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -21611,6 +21666,7 @@
                                     "description": "SMTP port.",
                                     "default": null,
                                     "x-example": 1,
+                                    "format": "int32",
                                     "x-nullable": true
                                 },
                                 "username": {
@@ -21661,7 +21717,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -21762,7 +21819,8 @@
                                     "type": "string",
                                     "description": "Sender Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": "",
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "customerId": {
                                     "type": "string",
@@ -21970,7 +22028,8 @@
                                     "type": "string",
                                     "description": "Sender Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": "",
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "username": {
                                     "type": "string",
@@ -22178,7 +22237,8 @@
                                     "type": "string",
                                     "description": "Sender Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": "",
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "accountSid": {
                                     "type": "string",
@@ -22386,7 +22446,8 @@
                                     "type": "string",
                                     "description": "Sender Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": "",
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "apiKey": {
                                     "type": "string",
@@ -23743,7 +23804,8 @@
                                     "type": "string",
                                     "description": "Source Appwrite endpoint",
                                     "default": null,
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 },
                                 "projectId": {
                                     "type": "string",
@@ -24392,7 +24454,8 @@
                                     "type": "integer",
                                     "description": "Source's Database Port",
                                     "default": 5432,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 }
                             },
                             "required": [
@@ -24627,7 +24690,8 @@
                                     "type": "string",
                                     "description": "Source's Supabase Endpoint",
                                     "default": null,
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 },
                                 "apiKey": {
                                     "type": "string",
@@ -24657,7 +24721,8 @@
                                     "type": "integer",
                                     "description": "Source's Database Port",
                                     "default": 5432,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 }
                             },
                             "required": [
@@ -25569,7 +25634,8 @@
                                     "type": "string",
                                     "description": "Project URL.",
                                     "default": "",
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 },
                                 "legalName": {
                                     "type": "string",
@@ -25761,7 +25827,8 @@
                                     "type": "string",
                                     "description": "Project URL.",
                                     "default": "",
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 },
                                 "legalName": {
                                     "type": "string",
@@ -26226,7 +26293,8 @@
                                     "type": "integer",
                                     "description": "Project session length in seconds. Max length: 31536000 seconds.",
                                     "default": null,
-                                    "x-example": 0
+                                    "x-example": 0,
+                                    "format": "int32"
                                 }
                             },
                             "required": [
@@ -26305,7 +26373,8 @@
                                     "type": "integer",
                                     "description": "Set the max number of users allowed in this project. Use 0 for unlimited.",
                                     "default": null,
-                                    "x-example": 0
+                                    "x-example": 0,
+                                    "format": "int32"
                                 }
                             },
                             "required": [
@@ -26384,7 +26453,8 @@
                                     "type": "integer",
                                     "description": "Set the max number of users allowed in this project. Value allowed is between 1-100. Default is 10",
                                     "default": null,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 }
                             },
                             "required": [
@@ -26717,7 +26787,8 @@
                                     "type": "integer",
                                     "description": "Set the max number of passwords to store in user history. User can't choose a new password that is already stored in the password history list.  Max number of passwords allowed in history is20. Default value is 0",
                                     "default": null,
-                                    "x-example": 0
+                                    "x-example": 0,
+                                    "format": "int32"
                                 }
                             },
                             "required": [
@@ -27570,7 +27641,8 @@
                                     "type": "integer",
                                     "description": "Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.",
                                     "default": 900,
-                                    "x-example": 0
+                                    "x-example": 0,
+                                    "format": "int32"
                                 }
                             },
                             "required": [
@@ -29079,13 +29151,15 @@
                                     "type": "string",
                                     "description": "Email of the sender",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyTo": {
                                     "type": "string",
                                     "description": "Reply to email",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "host": {
                                     "type": "string",
@@ -29097,7 +29171,8 @@
                                     "type": "integer",
                                     "description": "SMTP server port",
                                     "default": 587,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "username": {
                                     "type": "string",
@@ -29292,13 +29367,15 @@
                                     "type": "string",
                                     "description": "Email of the sender",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyTo": {
                                     "type": "string",
                                     "description": "Reply to email",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "host": {
                                     "type": "string",
@@ -29310,7 +29387,8 @@
                                     "type": "integer",
                                     "description": "SMTP server port",
                                     "default": 587,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "username": {
                                     "type": "string",
@@ -29894,13 +29972,15 @@
                                     "type": "string",
                                     "description": "Email of the sender",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyTo": {
                                     "type": "string",
                                     "description": "Reply to email",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 }
                             },
                             "required": [
@@ -31811,7 +31891,8 @@
                                     "type": "string",
                                     "description": "Target URL of redirection",
                                     "default": null,
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 },
                                 "statusCode": {
                                     "type": "string",
@@ -32310,7 +32391,8 @@
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
                                     "default": 30,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "installCommand": {
                                     "type": "string",
@@ -32994,7 +33076,8 @@
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
                                     "default": 30,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "installCommand": {
                                     "type": "string",
@@ -34916,7 +34999,8 @@
                                     "type": "integer",
                                     "description": "Maximum file size allowed in bytes. Maximum allowed value is 30MB.",
                                     "default": {},
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "allowedFileExtensions": {
                                     "type": "array",
@@ -35125,7 +35209,8 @@
                                     "type": "integer",
                                     "description": "Maximum file size allowed in bytes. Maximum allowed value is 30MB.",
                                     "default": {},
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "allowedFileExtensions": {
                                     "type": "array",
@@ -36469,7 +36554,8 @@
                                     "type": "integer",
                                     "description": "Seconds before the transaction expires.",
                                     "default": 300,
-                                    "x-example": 60
+                                    "x-example": 60,
+                                    "format": "int32"
                                 }
                             }
                         }
@@ -38189,6 +38275,7 @@
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": "email@example.com",
+                                    "format": "email",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -38302,6 +38389,7 @@
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": "email@example.com",
+                                    "format": "email",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -38661,6 +38749,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -38668,6 +38757,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -38675,6 +38765,7 @@
                                     "description": "Default value. Cannot be set when required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -38788,6 +38879,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -38795,6 +38887,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -38802,6 +38895,7 @@
                                     "description": "Default value. Cannot be set when required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -38915,6 +39009,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -38922,6 +39017,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -38929,6 +39025,7 @@
                                     "description": "Default value. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -39042,6 +39139,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -39049,6 +39147,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -39056,6 +39155,7 @@
                                     "description": "Default value. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -40185,7 +40285,8 @@
                                     "type": "integer",
                                     "description": "Column size for text columns, in number of characters.",
                                     "default": null,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "required": {
                                     "type": "boolean",
@@ -40325,6 +40426,7 @@
                                     "description": "Maximum size of the string column.",
                                     "default": null,
                                     "x-example": 1,
+                                    "format": "int32",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -40438,6 +40540,7 @@
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": "https:\/\/example.com",
+                                    "format": "url",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -40551,6 +40654,7 @@
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": "https:\/\/example.com",
+                                    "format": "url",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -42590,13 +42694,15 @@
                                     "type": "number",
                                     "description": "Value to increment the column by. The value must be a number.",
                                     "default": 1,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "float"
                                 },
                                 "min": {
                                     "type": "number",
                                     "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "transactionId": {
@@ -42710,13 +42816,15 @@
                                     "type": "number",
                                     "description": "Value to increment the column by. The value must be a number.",
                                     "default": 1,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "float"
                                 },
                                 "max": {
                                     "type": "number",
                                     "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "transactionId": {
@@ -43551,7 +43659,8 @@
                                     "type": "string",
                                     "description": "Email of the new team member.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "userId": {
                                     "type": "string",
@@ -43563,7 +43672,8 @@
                                     "type": "string",
                                     "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": "",
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "roles": {
                                     "type": "array",
@@ -43585,7 +43695,8 @@
                                     "type": "string",
                                     "description": "URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
                                     "default": "",
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 },
                                 "name": {
                                     "type": "string",
@@ -44591,6 +44702,7 @@
                                     "description": "User email.",
                                     "default": null,
                                     "x-example": "email@example.com",
+                                    "format": "email",
                                     "x-nullable": true
                                 },
                                 "phone": {
@@ -44598,6 +44710,7 @@
                                     "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": null,
                                     "x-example": "+12065550100",
+                                    "format": "phone",
                                     "x-nullable": true
                                 },
                                 "password": {
@@ -44689,13 +44802,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using Argon2.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "name": {
                                     "type": "string",
@@ -44782,13 +44897,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using Bcrypt.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "name": {
                                     "type": "string",
@@ -45016,13 +45133,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using MD5.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "name": {
                                     "type": "string",
@@ -45109,13 +45228,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using PHPass.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "name": {
                                     "type": "string",
@@ -45202,13 +45323,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using Scrypt.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "passwordSalt": {
                                     "type": "string",
@@ -45220,25 +45343,29 @@
                                     "type": "integer",
                                     "description": "Optional CPU cost used to hash password.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "passwordMemory": {
                                     "type": "integer",
                                     "description": "Optional memory cost used to hash password.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "passwordParallel": {
                                     "type": "integer",
                                     "description": "Optional parallelization cost used to hash password.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "passwordLength": {
                                     "type": "integer",
                                     "description": "Optional hash length used to hash password.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "name": {
                                     "type": "string",
@@ -45330,13 +45457,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using Scrypt Modified.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "passwordSalt": {
                                     "type": "string",
@@ -45444,13 +45573,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using SHA.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "passwordVersion": {
                                     "type": "string",
@@ -45748,7 +45879,8 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 }
                             },
                             "required": [
@@ -45835,7 +45967,8 @@
                                     "type": "integer",
                                     "description": "Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.",
                                     "default": 900,
-                                    "x-example": 0
+                                    "x-example": 0,
+                                    "format": "int32"
                                 }
                             }
                         }
@@ -47070,7 +47203,8 @@
                                     "type": "string",
                                     "description": "User phone number.",
                                     "default": null,
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 }
                             },
                             "required": [
@@ -48048,13 +48182,15 @@
                                     "type": "integer",
                                     "description": "Token length in characters. The default length is 6 characters",
                                     "default": 6,
-                                    "x-example": 4
+                                    "x-example": 4,
+                                    "format": "int32"
                                 },
                                 "expire": {
                                     "type": "integer",
                                     "description": "Token expiration period in seconds. The default expiration is 15 minutes.",
                                     "default": 900,
-                                    "x-example": 60
+                                    "x-example": 60,
+                                    "format": "int32"
                                 }
                             }
                         }
@@ -50940,14 +51076,14 @@
                     "type": "integer",
                     "description": "Minimum value to enforce for new documents.",
                     "x-example": 1,
-                    "format": "int32",
+                    "format": "int64",
                     "x-nullable": true
                 },
                 "max": {
                     "type": "integer",
                     "description": "Maximum value to enforce for new documents.",
                     "x-example": 10,
-                    "format": "int32",
+                    "format": "int64",
                     "x-nullable": true
                 },
                 "default": {
@@ -52390,14 +52526,14 @@
                     "type": "integer",
                     "description": "Minimum value to enforce for new documents.",
                     "x-example": 1,
-                    "format": "int32",
+                    "format": "int64",
                     "x-nullable": true
                 },
                 "max": {
                     "type": "integer",
                     "description": "Maximum value to enforce for new documents.",
                     "x-example": 10,
-                    "format": "int32",
+                    "format": "int64",
                     "x-nullable": true
                 },
                 "default": {

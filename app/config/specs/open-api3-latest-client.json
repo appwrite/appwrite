@@ -140,7 +140,8 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "password": {
                                         "type": "string",
@@ -224,12 +225,14 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "password": {
                                         "type": "string",
                                         "description": "User password. Must be at least 8 chars.",
-                                        "x-example": "password"
+                                        "x-example": "password",
+                                        "format": "password"
                                     }
                                 },
                                 "required": [
@@ -439,7 +442,8 @@
                                     "duration": {
                                         "type": "integer",
                                         "description": "Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.",
-                                        "x-example": 0
+                                        "x-example": 0,
+                                        "format": "int32"
                                     }
                                 }
                             }
@@ -1796,7 +1800,8 @@
                                     "oldPassword": {
                                         "type": "string",
                                         "description": "Current user password. Must be at least 8 chars.",
-                                        "x-example": "password"
+                                        "x-example": "password",
+                                        "format": "password"
                                     }
                                 },
                                 "required": [
@@ -1868,12 +1873,14 @@
                                     "phone": {
                                         "type": "string",
                                         "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
-                                        "x-example": "+12065550100"
+                                        "x-example": "+12065550100",
+                                        "format": "phone"
                                     },
                                     "password": {
                                         "type": "string",
                                         "description": "User password. Must be at least 8 chars.",
-                                        "x-example": "password"
+                                        "x-example": "password",
+                                        "format": "password"
                                     }
                                 },
                                 "required": [
@@ -2072,12 +2079,14 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "url": {
                                         "type": "string",
                                         "description": "URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
-                                        "x-example": "https:\/\/example.com"
+                                        "x-example": "https:\/\/example.com",
+                                        "format": "url"
                                     }
                                 },
                                 "required": [
@@ -2382,12 +2391,14 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "password": {
                                         "type": "string",
                                         "description": "User password. Must be at least 8 chars.",
-                                        "x-example": "password"
+                                        "x-example": "password",
+                                        "format": "password"
                                     }
                                 },
                                 "required": [
@@ -3304,7 +3315,8 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "phrase": {
                                         "type": "boolean",
@@ -3390,12 +3402,14 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "url": {
                                         "type": "string",
                                         "description": "URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
-                                        "x-example": "https:\/\/example.com"
+                                        "x-example": "https:\/\/example.com",
+                                        "format": "url"
                                     },
                                     "phrase": {
                                         "type": "boolean",
@@ -3621,7 +3635,8 @@
                                     "phone": {
                                         "type": "string",
                                         "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
-                                        "x-example": "+12065550100"
+                                        "x-example": "+12065550100",
+                                        "format": "phone"
                                     }
                                 },
                                 "required": [
@@ -3746,7 +3761,8 @@
                                     "url": {
                                         "type": "string",
                                         "description": "URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
-                                        "x-example": "https:\/\/example.com"
+                                        "x-example": "https:\/\/example.com",
+                                        "format": "url"
                                     }
                                 },
                                 "required": [
@@ -5980,7 +5996,8 @@
                                     "ttl": {
                                         "type": "integer",
                                         "description": "Seconds before the transaction expires.",
-                                        "x-example": 60
+                                        "x-example": 60,
+                                        "format": "int32"
                                     }
                                 }
                             }
@@ -7146,12 +7163,14 @@
                                     "value": {
                                         "type": "number",
                                         "description": "Value to increment the attribute by. The value must be a number.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "format": "float"
                                     },
                                     "min": {
                                         "type": "number",
                                         "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
                                         "x-example": null,
+                                        "format": "float",
                                         "x-nullable": true
                                     },
                                     "transactionId": {
@@ -7273,12 +7292,14 @@
                                     "value": {
                                         "type": "number",
                                         "description": "Value to increment the attribute by. The value must be a number.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "format": "float"
                                     },
                                     "max": {
                                         "type": "number",
                                         "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
                                         "x-example": null,
+                                        "format": "float",
                                         "x-nullable": true
                                     },
                                     "transactionId": {
@@ -8452,7 +8473,8 @@
                                     "file": {
                                         "type": "string",
                                         "description": "Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](https:\/\/appwrite.io\/docs\/products\/storage\/upload-download#input-file).",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "format": "binary"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -9240,7 +9262,8 @@
                                     "ttl": {
                                         "type": "integer",
                                         "description": "Seconds before the transaction expires.",
-                                        "x-example": 60
+                                        "x-example": 60,
+                                        "format": "int32"
                                     }
                                 }
                             }
@@ -10403,12 +10426,14 @@
                                     "value": {
                                         "type": "number",
                                         "description": "Value to increment the column by. The value must be a number.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "format": "float"
                                     },
                                     "min": {
                                         "type": "number",
                                         "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
                                         "x-example": null,
+                                        "format": "float",
                                         "x-nullable": true
                                     },
                                     "transactionId": {
@@ -10529,12 +10554,14 @@
                                     "value": {
                                         "type": "number",
                                         "description": "Value to increment the column by. The value must be a number.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "format": "float"
                                     },
                                     "max": {
                                         "type": "number",
                                         "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
                                         "x-example": null,
+                                        "format": "float",
                                         "x-nullable": true
                                     },
                                     "transactionId": {
@@ -11104,7 +11131,8 @@
                                     "email": {
                                         "type": "string",
                                         "description": "Email of the new team member.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "userId": {
                                         "type": "string",
@@ -11114,7 +11142,8 @@
                                     "phone": {
                                         "type": "string",
                                         "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
-                                        "x-example": "+12065550100"
+                                        "x-example": "+12065550100",
+                                        "format": "phone"
                                     },
                                     "roles": {
                                         "type": "array",
@@ -11134,7 +11163,8 @@
                                     "url": {
                                         "type": "string",
                                         "description": "URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
-                                        "x-example": "https:\/\/example.com"
+                                        "x-example": "https:\/\/example.com",
+                                        "format": "url"
                                     },
                                     "name": {
                                         "type": "string",
