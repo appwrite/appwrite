@@ -59,6 +59,6 @@ class Get extends Action
 
     public function action(string $code, int $width, int $height, int $quality, Response $response)
     {
-        $this->avatarCallback('browsers', $code, $width, $height, $quality, $response);
+        $this->avatar('browsers', $code, $width, $height, $quality, $response);
     }
 }
