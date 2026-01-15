@@ -49,6 +49,7 @@ import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_p
 import { Route as PublicOrganizationsOrgIdSettingsRouteImport } from './routes/_public/organizations.$orgId.settings'
 import { Route as PublicOrganizationsOrgIdMembersRouteImport } from './routes/_public/organizations.$orgId.members'
 import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
+import { Route as PublicOrganizationsOrgIdChangePlanRouteImport } from './routes/_public/organizations.$orgId.change-plan'
 import { Route as PublicOrganizationsOrgIdBillingRouteImport } from './routes/_public/organizations.$orgId.billing'
 import { Route as PublicProjectsProjectIdStorageIndexRouteImport } from './routes/_public/projects.$projectId.storage.index'
 import { Route as PublicProjectsProjectIdSettingsIndexRouteImport } from './routes/_public/projects.$projectId.settings.index'
@@ -339,6 +340,12 @@ const PublicOrganizationsOrgIdDomainsRoute =
   PublicOrganizationsOrgIdDomainsRouteImport.update({
     id: '/domains',
     path: '/domains',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdChangePlanRoute =
+  PublicOrganizationsOrgIdChangePlanRouteImport.update({
+    id: '/change-plan',
+    path: '/change-plan',
     getParentRoute: () => PublicOrganizationsOrgIdRoute,
   } as any)
 const PublicOrganizationsOrgIdBillingRoute =
@@ -807,6 +814,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
+  '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRoute
@@ -915,6 +923,7 @@ export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/account/$tab': typeof PublicAccountTabRoute
   '/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
+  '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
@@ -1014,6 +1023,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId': typeof PublicOrganizationsOrgIdRouteWithChildren
   '/_public/projects/$projectId': typeof PublicProjectsProjectIdRouteWithChildren
   '/_public/organizations/$orgId/billing': typeof PublicOrganizationsOrgIdBillingRoute
+  '/_public/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/_public/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/_public/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/_public/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRoute
@@ -1126,6 +1136,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId'
     | '/projects/$projectId'
     | '/organizations/$orgId/billing'
+    | '/organizations/$orgId/change-plan'
     | '/organizations/$orgId/domains'
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
@@ -1234,6 +1245,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account/$tab'
     | '/organizations/$orgId/billing'
+    | '/organizations/$orgId/change-plan'
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
     | '/projects/$projectId/activity'
@@ -1332,6 +1344,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId'
     | '/_public/projects/$projectId'
     | '/_public/organizations/$orgId/billing'
+    | '/_public/organizations/$orgId/change-plan'
     | '/_public/organizations/$orgId/domains'
     | '/_public/organizations/$orgId/members'
     | '/_public/organizations/$orgId/settings'
@@ -1712,6 +1725,13 @@ declare module '@tanstack/react-router' {
       path: '/domains'
       fullPath: '/organizations/$orgId/domains'
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
+    }
+    '/_public/organizations/$orgId/change-plan': {
+      id: '/_public/organizations/$orgId/change-plan'
+      path: '/change-plan'
+      fullPath: '/organizations/$orgId/change-plan'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdChangePlanRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdRoute
     }
     '/_public/organizations/$orgId/billing': {
@@ -2296,6 +2316,7 @@ const PublicOrganizationsOrgIdDomainsRouteWithChildren =
 
 interface PublicOrganizationsOrgIdRouteChildren {
   PublicOrganizationsOrgIdBillingRoute: typeof PublicOrganizationsOrgIdBillingRoute
+  PublicOrganizationsOrgIdChangePlanRoute: typeof PublicOrganizationsOrgIdChangePlanRoute
   PublicOrganizationsOrgIdDomainsRoute: typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   PublicOrganizationsOrgIdMembersRoute: typeof PublicOrganizationsOrgIdMembersRoute
   PublicOrganizationsOrgIdSettingsRoute: typeof PublicOrganizationsOrgIdSettingsRoute
@@ -2305,6 +2326,8 @@ interface PublicOrganizationsOrgIdRouteChildren {
 const PublicOrganizationsOrgIdRouteChildren: PublicOrganizationsOrgIdRouteChildren =
   {
     PublicOrganizationsOrgIdBillingRoute: PublicOrganizationsOrgIdBillingRoute,
+    PublicOrganizationsOrgIdChangePlanRoute:
+      PublicOrganizationsOrgIdChangePlanRoute,
     PublicOrganizationsOrgIdDomainsRoute:
       PublicOrganizationsOrgIdDomainsRouteWithChildren,
     PublicOrganizationsOrgIdMembersRoute: PublicOrganizationsOrgIdMembersRoute,

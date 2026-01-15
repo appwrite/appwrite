@@ -43,7 +43,7 @@ import type { Models } from '@appwrite.io/console'
  */
 
 interface PaymentMethodsProps {
-  onAddPaymentMethod?: () => void
+  onAddPaymentMethod?: (isBackup?: boolean) => void
   orgId?: string
 }
 
@@ -162,7 +162,7 @@ export function PaymentMethods({ onAddPaymentMethod, orgId }: PaymentMethodsProp
           <Button
             size="sm"
             className="h-9 gap-2 text-[13px]"
-            onClick={onAddPaymentMethod}
+            onClick={() => onAddPaymentMethod?.()}
           >
             <Plus className="h-4 w-4" />
             Add payment method
@@ -271,7 +271,7 @@ export function PaymentMethods({ onAddPaymentMethod, orgId }: PaymentMethodsProp
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-[13px]"
-                    onClick={onAddPaymentMethod}
+                    onClick={() => onAddPaymentMethod?.(true)}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add new card
@@ -283,7 +283,7 @@ export function PaymentMethods({ onAddPaymentMethod, orgId }: PaymentMethodsProp
                 variant="outline"
                 size="sm"
                 className="h-9 gap-2 text-[13px]"
-                onClick={onAddPaymentMethod}
+                onClick={() => onAddPaymentMethod?.(true)}
               >
                 <Plus className="h-4 w-4" />
                 Add backup
@@ -305,7 +305,7 @@ interface PaymentMethodCardProps {
   onReplaceBackup?: (paymentMethodId: string) => void
   onRemove: () => void
   availableMethods: Models.PaymentMethod[]
-  onAddPaymentMethod?: () => void
+  onAddPaymentMethod?: (isBackup?: boolean) => void
 }
 
 function PaymentMethodCard({
@@ -433,7 +433,7 @@ function PaymentMethodCard({
                   )}
                   <DropdownMenuItem
                     className="text-[13px]"
-                    onClick={onAddPaymentMethod}
+                    onClick={() => onAddPaymentMethod?.(!isPrimary)}
                   >
                     <Plus className="h-4 w-4 mr-2 shrink-0" />
                     Add new card

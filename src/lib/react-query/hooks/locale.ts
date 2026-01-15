@@ -1,7 +1,7 @@
 /**
  * React Query hooks for Locale
  * 
- * Handles locale code fetching.
+ * Handles locale code, countries, and locale information fetching.
  */
 
 import { useQuery } from '@tanstack/react-query'
@@ -23,6 +23,28 @@ export async function fetchLocaleCodes() {
   return response
 }
 
+/**
+ * Query function to fetch countries
+ * 
+ * Uses the console SDK locale service to get all available countries.
+ * @returns Countries list from the API
+ */
+export async function fetchCountries() {
+  const response = await sdk.forConsole.locale.listCountries()
+  return response
+}
+
+/**
+ * Query function to fetch user locale information
+ * 
+ * Uses the console SDK locale service to get user's locale information.
+ * @returns Locale information from the API
+ */
+export async function fetchLocale() {
+  const response = await sdk.forConsole.locale.get()
+  return response
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -37,6 +59,32 @@ export function useLocaleCodes() {
     queryKey: ['localeCodes', 'console'],
     queryFn: fetchLocaleCodes,
     staleTime: LONG_STALE_TIME, // Locale codes don't change often
+  })
+}
+
+/**
+ * Hook to fetch countries
+ * 
+ * Uses the console SDK to fetch all available countries.
+ */
+export function useCountries() {
+  return useQuery({
+    queryKey: ['countries', 'console'],
+    queryFn: fetchCountries,
+    staleTime: LONG_STALE_TIME, // Countries don't change often
+  })
+}
+
+/**
+ * Hook to fetch user locale information
+ * 
+ * Uses the console SDK to fetch user's locale information.
+ */
+export function useLocale() {
+  return useQuery({
+    queryKey: ['locale', 'console'],
+    queryFn: fetchLocale,
+    staleTime: LONG_STALE_TIME,
   })
 }
 

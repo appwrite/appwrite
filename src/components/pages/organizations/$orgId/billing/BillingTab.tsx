@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -5,6 +6,7 @@ import { AlertTriangle, CreditCard } from 'lucide-react'
 import { PlanSummary } from './PlanSummary'
 import { PaymentHistory } from './PaymentHistory'
 import { PaymentMethods } from './PaymentMethods'
+import { PaymentModal } from './PaymentModal'
 import { BillingAddressSection } from './BillingAddressSection'
 import { TaxIdSection } from './TaxIdSection'
 import { BudgetCapSection } from './BudgetCapSection'
@@ -32,6 +34,10 @@ import { toast } from 'sonner'
 export function BillingTab() {
   const params = useParams({ strict: false })
   const orgId = params.orgId as string | undefined
+
+  // Payment modal state
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false)
+  const [isBackupPaymentMethod, setIsBackupPaymentMethod] = useState(false)
 
   // Fetch organization data for alerts
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
@@ -88,13 +94,19 @@ export function BillingTab() {
     }
   }
 
-  // Modal handlers - these would open respective modals
+  // Modal handlers
   const handleChangePlan = () => {
     console.log('Open change plan modal')
   }
 
-  const handleAddPaymentMethod = () => {
-    console.log('Open add payment method modal')
+  const handleAddPaymentMethod = (isBackup = false) => {
+    setIsBackupPaymentMethod(isBackup)
+    setPaymentModalOpen(true)
+  }
+
+  const handlePaymentModalSuccess = () => {
+    // Payment method will be automatically assigned if organizationId is provided
+    setPaymentModalOpen(false)
   }
 
   const handleEditAddress = () => {
@@ -183,6 +195,15 @@ export function BillingTab() {
 
       {/* Available Credits */}
       <AvailableCreditsSection onAddCredits={handleAddCredits} orgId={orgId} />
+
+      {/* Payment Modal */}
+      <PaymentModal
+        open={paymentModalOpen}
+        onOpenChange={setPaymentModalOpen}
+        organizationId={orgId}
+        isBackup={isBackupPaymentMethod}
+        onSuccess={handlePaymentModalSuccess}
+      />
     </div>
   )
 }

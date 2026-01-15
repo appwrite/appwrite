@@ -258,6 +258,187 @@ export async function fetchBillingAddress(billingAddressId: string) {
   return response
 }
 
+/**
+ * Query function to fetch all available billing plans
+ * 
+ * @returns Plans list response from the API
+ */
+export async function fetchBillingPlans() {
+  try {
+    // Try billing service first (if it exists)
+    if ((sdk.forConsole as any).billing?.listPlans) {
+      return await (sdk.forConsole as any).billing.listPlans()
+    }
+    // Fallback to organizations service
+    if ((sdk.forConsole.organizations as any).listPlans) {
+      return await (sdk.forConsole.organizations as any).listPlans()
+    }
+    // If neither exists, return empty plans object
+    return { plans: {} }
+  } catch (error) {
+    console.warn('Failed to fetch billing plans:', error)
+    return { plans: {} }
+  }
+}
+
+/**
+ * Query function to get coupon account information
+ * 
+ * @param couponCode - The coupon code to validate
+ * @returns Coupon details from the API
+ */
+export async function fetchCouponAccount(couponCode: string) {
+  if (!couponCode) {
+    return null
+  }
+  try {
+    // Try billing service first (if it exists)
+    if ((sdk.forConsole as any).billing?.getCouponAccount) {
+      return await (sdk.forConsole as any).billing.getCouponAccount(couponCode)
+    }
+    // Fallback to organizations service
+    if ((sdk.forConsole.organizations as any).getCouponAccount) {
+      return await (sdk.forConsole.organizations as any).getCouponAccount(couponCode)
+    }
+    return null
+  } catch (error) {
+    console.warn('Failed to fetch coupon:', error)
+    return null
+  }
+}
+
+/**
+ * Query function to fetch organization usage
+ * 
+ * @param organizationId - The organization ID
+ * @returns Organization usage data
+ */
+export async function fetchOrganizationUsage(organizationId: string) {
+  if (!organizationId) {
+    return undefined
+  }
+  try {
+    // Try billing service first (if it exists)
+    if ((sdk.forConsole as any).billing?.listUsage) {
+      return await (sdk.forConsole as any).billing.listUsage(organizationId)
+    }
+    // Fallback to organizations service
+    if ((sdk.forConsole.organizations as any).listUsage) {
+      return await (sdk.forConsole.organizations as any).listUsage(organizationId)
+    }
+    return undefined
+  } catch (error) {
+    console.warn('Failed to fetch organization usage:', error)
+    return undefined
+  }
+}
+
+/**
+ * Query function to fetch all projects for an organization
+ * 
+ * @param organizationId - The organization ID
+ * @returns Projects list
+ */
+export async function fetchOrganizationProjects(organizationId: string) {
+  if (!organizationId) {
+    return { projects: [] }
+  }
+  try {
+    const response = await sdk.forConsole.projects.list([
+      Query.equal('teamId', organizationId),
+      Query.limit(1000),
+    ])
+    return {
+      projects: response.projects || [],
+      total: response.total || 0,
+    }
+  } catch (error) {
+    console.warn('Failed to fetch organization projects:', error)
+    return { projects: [], total: 0 }
+  }
+}
+
+/**
+ * Query function to get cost estimation for creating a new organization
+ * 
+ * @param billingPlan - The billing plan
+ * @param couponId - Optional coupon ID
+ * @param collaborators - Array of collaborator emails
+ * @returns Estimation data
+ */
+export async function fetchEstimationCreateOrganization(
+  billingPlan: BillingPlan,
+  couponId: string | null,
+  collaborators: string[],
+) {
+  try {
+    // Try billing service first (if it exists)
+    if ((sdk.forConsole as any).billing?.estimationCreateOrganization) {
+      return await (sdk.forConsole as any).billing.estimationCreateOrganization(
+        billingPlan,
+        couponId || undefined,
+        collaborators,
+      )
+    }
+    // Fallback to organizations service
+    if ((sdk.forConsole.organizations as any).estimationCreateOrganization) {
+      return await (sdk.forConsole.organizations as any).estimationCreateOrganization(
+        billingPlan,
+        couponId || undefined,
+        collaborators,
+      )
+    }
+    return null
+  } catch (error) {
+    console.warn('Failed to fetch estimation:', error)
+    return null
+  }
+}
+
+/**
+ * Query function to get cost estimation for updating a plan
+ * 
+ * @param organizationId - The organization ID
+ * @param billingPlan - The billing plan
+ * @param couponId - Optional coupon ID
+ * @param collaborators - Array of collaborator emails
+ * @returns Estimation data
+ */
+export async function fetchEstimationUpdatePlan(
+  organizationId: string,
+  billingPlan: BillingPlan,
+  couponId: string | null,
+  collaborators: string[],
+) {
+  if (!organizationId) {
+    return null
+  }
+  try {
+    // Try billing service first (if it exists)
+    if ((sdk.forConsole as any).billing?.estimationUpdatePlan) {
+      return await (sdk.forConsole as any).billing.estimationUpdatePlan(
+        organizationId,
+        billingPlan,
+        couponId || undefined,
+        collaborators,
+      )
+    }
+    // Fallback to organizations service
+    if ((sdk.forConsole.organizations as any).estimationUpdatePlan) {
+      return await (sdk.forConsole.organizations as any).estimationUpdatePlan(
+        organizationId,
+        billingPlan,
+        couponId || undefined,
+        collaborators,
+      )
+    }
+    return null
+  } catch (error) {
+    console.warn('Failed to fetch estimation:', error)
+    return null
+  }
+}
+
 
 // ============================================================================
 // MUTATION FUNCTIONS
@@ -333,22 +514,38 @@ export async function updateOrganizationPaymentMethod(params: {
   paymentMethodId?: string
   backupPaymentMethodId?: string
 }) {
-  // Use updatePlan to update payment method
-  // Note: backupPaymentMethodId is not supported in updatePlan API
-  // For now, we only update the primary payment method
-  const org = await fetchOrganizationById(params.organizationId)
-  if (!org) {
-    throw new Error('Organization not found')
+  // Use dedicated SDK methods for setting payment methods
+  if (params.backupPaymentMethodId !== undefined) {
+    if (params.backupPaymentMethodId) {
+      // Set backup payment method
+      return await sdk.forConsole.organizations.setBackupPaymentMethod({
+        organizationId: params.organizationId,
+        paymentMethodId: params.backupPaymentMethodId,
+      })
+    } else {
+      // Remove backup payment method
+      return await sdk.forConsole.organizations.deleteBackupPaymentMethod({
+        organizationId: params.organizationId,
+      })
+    }
   }
   
-  // Convert string billingPlan to BillingPlan enum
-  const billingPlan = getBillingPlanEnum(org.billingPlan)
+  if (params.paymentMethodId !== undefined) {
+    if (params.paymentMethodId) {
+      // Set default payment method
+      return await sdk.forConsole.organizations.setDefaultPaymentMethod({
+        organizationId: params.organizationId,
+        paymentMethodId: params.paymentMethodId,
+      })
+    } else {
+      // Remove default payment method
+      return await sdk.forConsole.organizations.deleteDefaultPaymentMethod({
+        organizationId: params.organizationId,
+      })
+    }
+  }
   
-  return await sdk.forConsole.organizations.updatePlan({
-    organizationId: params.organizationId,
-    billingPlan,
-    paymentMethodId: params.paymentMethodId,
-  })
+  throw new Error('Either paymentMethodId or backupPaymentMethodId must be provided')
 }
 
 /**
@@ -378,6 +575,152 @@ export async function updateOrganizationBillingAddress(params: {
 }
 
 /**
+ * Mutation function to update organization billing plan
+ * 
+ * @param params - Plan update parameters
+ * @returns Updated organization or error response
+ */
+export async function updateOrganizationPlan(params: {
+  organizationId: string
+  billingPlan: BillingPlan
+  paymentMethodId?: string
+  billingAddressId?: string
+  couponId?: string
+  invites?: string[]
+  budget?: number
+  taxId?: string | null
+}) {
+  try {
+    // Try billing service first (if it exists)
+    if ((sdk.forConsole as any).billing?.updatePlan) {
+      return await (sdk.forConsole as any).billing.updatePlan(
+        params.organizationId,
+        params.billingPlan,
+        params.paymentMethodId,
+        params.billingAddressId,
+        params.couponId,
+        params.invites,
+        params.budget,
+        params.taxId,
+      )
+    }
+    // Fallback to organizations service
+    return await sdk.forConsole.organizations.updatePlan({
+      organizationId: params.organizationId,
+      billingPlan: params.billingPlan,
+      paymentMethodId: params.paymentMethodId,
+      billingAddressId: params.billingAddressId,
+      couponId: params.couponId,
+      invites: params.invites,
+      budget: params.budget,
+      taxId: params.taxId || undefined,
+    })
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * Mutation function to update selected projects for an organization
+ * 
+ * @param organizationId - The organization ID
+ * @param projectIds - Array of project IDs to keep
+ * @returns Updated organization
+ */
+export async function updateSelectedProjects(
+  organizationId: string,
+  projectIds: string[],
+) {
+  if (!organizationId) {
+    throw new Error('Organization ID is required')
+  }
+  try {
+    // Try billing service first (if it exists)
+    if ((sdk.forConsole as any).billing?.updateSelectedProjects) {
+      return await (sdk.forConsole as any).billing.updateSelectedProjects(
+        organizationId,
+        projectIds,
+      )
+    }
+    // Fallback to organizations service
+    if ((sdk.forConsole.organizations as any).updateSelectedProjects) {
+      return await (sdk.forConsole.organizations as any).updateSelectedProjects(
+        organizationId,
+        projectIds,
+      )
+    }
+    throw new Error('updateSelectedProjects method not available')
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * Mutation function to validate organization after payment
+ * 
+ * @param organizationId - The organization ID
+ * @param invites - Array of invite emails
+ * @returns Validated organization
+ */
+export async function validateOrganization(
+  organizationId: string,
+  invites: string[],
+) {
+  if (!organizationId) {
+    throw new Error('Organization ID is required')
+  }
+  try {
+    // Try billing service first (if it exists)
+    if ((sdk.forConsole as any).billing?.validateOrganization) {
+      return await (sdk.forConsole as any).billing.validateOrganization(
+        organizationId,
+        invites,
+      )
+    }
+    // Fallback to organizations service
+    if ((sdk.forConsole.organizations as any).validateOrganization) {
+      return await (sdk.forConsole.organizations as any).validateOrganization(
+        organizationId,
+        invites,
+      )
+    }
+    throw new Error('validateOrganization method not available')
+  } catch (error) {
+    throw error
+  }
+}
+
+/**
+ * Mutation function to create downgrade feedback
+ * 
+ * @param params - Downgrade feedback parameters
+ * @returns void
+ */
+export async function createDowngradeFeedback(params: {
+  organizationId: string
+  reason: string
+  message: string
+  fromPlanId: string
+  toPlanId: string
+}) {
+  if (!params.organizationId) {
+    throw new Error('Organization ID is required')
+  }
+  try {
+    return await sdk.forConsole.organizations.createDowngradeFeedback({
+      organizationId: params.organizationId,
+      reason: params.reason,
+      message: params.message,
+      fromPlanId: params.fromPlanId,
+      toPlanId: params.toPlanId,
+    })
+  } catch (error) {
+    // Don't throw - feedback is optional
+    console.warn('Failed to create downgrade feedback:', error)
+  }
+}
+
+/**
  * Mutation function to retry invoice payment
  * 
  * @param params - Invoice retry parameters
@@ -392,6 +735,169 @@ export async function retryInvoicePayment(params: {
     organizationId: params.organizationId,
     invoiceId: params.invoiceId,
     paymentMethodId: params.paymentMethodId,
+  })
+}
+
+/**
+ * Mutation function to create a payment method
+ * 
+ * Creates an empty payment method record and returns it with a clientSecret for Stripe
+ * 
+ * @returns Payment method with clientSecret
+ */
+export async function createPaymentMethod() {
+  return await sdk.forConsole.account.createPaymentMethod()
+}
+
+/**
+ * Mutation function to set payment method provider (link Stripe payment method)
+ * 
+ * Links a Stripe payment method to an Appwrite payment method record
+ * 
+ * @param params - Payment method provider parameters
+ * @returns Updated payment method
+ */
+export async function setPaymentMethodProvider(params: {
+  paymentMethodId: string
+  providerMethodId: string
+  name: string
+  state?: string
+}) {
+  return await sdk.forConsole.account.updatePaymentMethodProvider({
+    paymentMethodId: params.paymentMethodId,
+    providerMethodId: params.providerMethodId,
+    name: params.name,
+    state: params.state,
+  })
+}
+
+/**
+ * Mutation function to set organization default payment method
+ * 
+ * @param params - Payment method assignment parameters
+ * @returns Updated organization
+ */
+export async function setOrganizationDefaultPaymentMethod(params: {
+  organizationId: string
+  paymentMethodId: string
+}) {
+  return await sdk.forConsole.organizations.setDefaultPaymentMethod({
+    organizationId: params.organizationId,
+    paymentMethodId: params.paymentMethodId,
+  })
+}
+
+/**
+ * Mutation function to set organization backup payment method
+ * 
+ * @param params - Payment method assignment parameters
+ * @returns Updated organization
+ */
+export async function setOrganizationBackupPaymentMethod(params: {
+  organizationId: string
+  paymentMethodId: string
+}) {
+  return await sdk.forConsole.organizations.setBackupPaymentMethod({
+    organizationId: params.organizationId,
+    paymentMethodId: params.paymentMethodId,
+  })
+}
+
+/**
+ * Mutation function to update payment method expiration
+ * 
+ * @param params - Payment method update parameters
+ * @returns Updated payment method
+ */
+export async function updatePaymentMethod(params: {
+  paymentMethodId: string
+  expiryMonth: number
+  expiryYear: number
+  state: string
+}) {
+  return await sdk.forConsole.account.updatePaymentMethod({
+    paymentMethodId: params.paymentMethodId,
+    expiryMonth: params.expiryMonth,
+    expiryYear: params.expiryYear,
+    state: params.state,
+  })
+}
+
+/**
+ * Mutation function to delete a payment method
+ * 
+ * @param params - Payment method deletion parameters
+ * @returns Empty object
+ */
+export async function deletePaymentMethod(params: {
+  paymentMethodId: string
+}) {
+  return await sdk.forConsole.account.deletePaymentMethod({
+    paymentMethodId: params.paymentMethodId,
+  })
+}
+
+/**
+ * Mutation function to create a billing address
+ * 
+ * @param params - Billing address creation parameters
+ * @returns Created billing address
+ */
+export async function createBillingAddress(params: {
+  country: string
+  streetAddress: string
+  city: string
+  state: string
+  postalCode?: string
+  addressLine2?: string
+}) {
+  return await sdk.forConsole.account.createBillingAddress({
+    country: params.country,
+    streetAddress: params.streetAddress,
+    city: params.city,
+    state: params.state,
+    postalCode: params.postalCode,
+    addressLine2: params.addressLine2,
+  })
+}
+
+/**
+ * Mutation function to update a billing address
+ * 
+ * @param params - Billing address update parameters
+ * @returns Updated billing address
+ */
+export async function updateBillingAddress(params: {
+  billingAddressId: string
+  country: string
+  streetAddress: string
+  city: string
+  state: string
+  postalCode?: string
+  addressLine2?: string
+}) {
+  return await sdk.forConsole.account.updateBillingAddress({
+    billingAddressId: params.billingAddressId,
+    country: params.country,
+    streetAddress: params.streetAddress,
+    city: params.city,
+    state: params.state,
+    postalCode: params.postalCode,
+    addressLine2: params.addressLine2,
+  })
+}
+
+/**
+ * Mutation function to delete a billing address
+ * 
+ * @param params - Billing address deletion parameters
+ * @returns Empty object
+ */
+export async function deleteBillingAddress(params: {
+  billingAddressId: string
+}) {
+  return await sdk.forConsole.account.deleteBillingAddress({
+    billingAddressId: params.billingAddressId,
   })
 }
 
@@ -417,6 +923,8 @@ export function useOrganizations() {
     queryKey: ['organizations', 'console'],
     queryFn: fetchOrganizations,
     staleTime: LONG_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnWindowFocus: false,
   })
 
   // Map the API response to our Organization type
@@ -485,6 +993,8 @@ export function useOrganizationById(orgId: string | null | undefined) {
     queryFn: () => fetchOrganizationById(orgId!),
     enabled: !!orgId,
     staleTime: LONG_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnWindowFocus: false,
   })
 
   // Map the API response to include plan information
@@ -527,6 +1037,8 @@ export function useOrganizationPlan(orgId: string | null | undefined) {
     queryFn: () => fetchOrganizationPlan(orgId!),
     enabled: !!orgId,
     staleTime: LONG_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnWindowFocus: false,
   })
 
   return {
@@ -664,6 +1176,8 @@ export function usePaymentMethods() {
     queryKey: ['payment-methods', 'account'],
     queryFn: fetchPaymentMethods,
     staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnWindowFocus: false,
   })
 
   return {
@@ -854,6 +1368,506 @@ export function useRetryInvoicePayment() {
         queryKey: ['organization', variables.organizationId],
       })
     },
+  })
+}
+
+/**
+ * Hook to create a payment method
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useCreatePaymentMethod() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: createPaymentMethod,
+    onSuccess: () => {
+      // Invalidate payment methods query
+      queryClient.invalidateQueries({
+        queryKey: ['payment-methods', 'account'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to set payment method provider (link Stripe payment method)
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useSetPaymentMethodProvider() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: setPaymentMethodProvider,
+    onSuccess: () => {
+      // Invalidate payment methods query
+      queryClient.invalidateQueries({
+        queryKey: ['payment-methods', 'account'],
+      })
+      // Invalidate individual payment method queries
+      queryClient.invalidateQueries({
+        queryKey: ['payment-method'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to set organization default payment method
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useSetOrganizationDefaultPaymentMethod() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: setOrganizationDefaultPaymentMethod,
+    onSuccess: (_, variables) => {
+      // Invalidate organization query
+      queryClient.invalidateQueries({
+        queryKey: ['organization', variables.organizationId],
+      })
+      // Invalidate payment methods query
+      queryClient.invalidateQueries({
+        queryKey: ['payment-methods', 'account'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to set organization backup payment method
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useSetOrganizationBackupPaymentMethod() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: setOrganizationBackupPaymentMethod,
+    onSuccess: (_, variables) => {
+      // Invalidate organization query
+      queryClient.invalidateQueries({
+        queryKey: ['organization', variables.organizationId],
+      })
+      // Invalidate payment methods query
+      queryClient.invalidateQueries({
+        queryKey: ['payment-methods', 'account'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update payment method expiration
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useUpdatePaymentMethod() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: updatePaymentMethod,
+    onSuccess: (_, variables) => {
+      // Invalidate payment methods query
+      queryClient.invalidateQueries({
+        queryKey: ['payment-methods', 'account'],
+      })
+      // Invalidate individual payment method query
+      queryClient.invalidateQueries({
+        queryKey: ['payment-method', variables.paymentMethodId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to delete a payment method
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useDeletePaymentMethod() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: deletePaymentMethod,
+    onSuccess: () => {
+      // Invalidate payment methods query
+      queryClient.invalidateQueries({
+        queryKey: ['payment-methods', 'account'],
+      })
+      // Invalidate all individual payment method queries
+      queryClient.invalidateQueries({
+        queryKey: ['payment-method'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to create a billing address
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useCreateBillingAddress() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: createBillingAddress,
+    onSuccess: () => {
+      // Invalidate billing addresses query
+      queryClient.invalidateQueries({
+        queryKey: ['billing-addresses', 'account'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update a billing address
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useUpdateBillingAddress() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: updateBillingAddress,
+    onSuccess: (_, variables) => {
+      // Invalidate billing addresses query
+      queryClient.invalidateQueries({
+        queryKey: ['billing-addresses', 'account'],
+      })
+      // Invalidate individual billing address query
+      queryClient.invalidateQueries({
+        queryKey: ['billing-address', variables.billingAddressId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to delete a billing address
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useDeleteBillingAddress() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: deleteBillingAddress,
+    onSuccess: () => {
+      // Invalidate billing addresses query
+      queryClient.invalidateQueries({
+        queryKey: ['billing-addresses', 'account'],
+      })
+      // Invalidate all individual billing address queries
+      queryClient.invalidateQueries({
+        queryKey: ['billing-address'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to fetch all available billing plans
+ * 
+ * @returns Plans list with loading state
+ */
+export function useBillingPlans() {
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['billing-plans'],
+    queryFn: fetchBillingPlans,
+    staleTime: LONG_STALE_TIME,
+    // Prevent infinite refetch loops
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false, // Don't retry if it fails
+    gcTime: Infinity, // Keep in cache forever
+  })
+
+  return {
+    plans: data?.plans || {},
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to fetch coupon account information
+ * 
+ * @param couponCode - The coupon code to validate
+ * @returns Coupon details with loading state
+ */
+export function useCouponAccount(couponCode: string | null | undefined) {
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['coupon-account', couponCode],
+    queryFn: () => fetchCouponAccount(couponCode!),
+    enabled: !!couponCode,
+    staleTime: DEFAULT_STALE_TIME,
+    // Prevent infinite refetch loops
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false,
+  })
+
+  return {
+    coupon: data,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to fetch organization usage
+ * 
+ * @param organizationId - The organization ID
+ * @returns Organization usage data with loading state
+ */
+export function useOrganizationUsage(organizationId: string | null | undefined) {
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['organization-usage', organizationId],
+    queryFn: () => fetchOrganizationUsage(organizationId!),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    // Prevent infinite refetch loops
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false,
+  })
+
+  return {
+    usage: data,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to fetch all projects for an organization
+ * 
+ * @param organizationId - The organization ID
+ * @returns Projects list with loading state
+ */
+export function useOrganizationProjects(organizationId: string | null | undefined) {
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['organization-projects', organizationId],
+    queryFn: () => fetchOrganizationProjects(organizationId!),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    // Prevent infinite refetch loops
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false,
+  })
+
+  return {
+    projects: data?.projects || [],
+    total: data?.total || 0,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to get cost estimation for creating a new organization
+ * 
+ * @param billingPlan - The billing plan
+ * @param couponId - Optional coupon ID
+ * @param collaborators - Array of collaborator emails
+ * @returns Estimation data with loading state
+ */
+export function useEstimationCreateOrganization(
+  billingPlan: BillingPlan | null | undefined,
+  couponId: string | null | undefined,
+  collaborators: string[],
+) {
+  // Serialize collaborators array to avoid reference equality issues
+  // Sort and join to create a stable key - use JSON.stringify for more reliable comparison
+  const collaboratorsKey = useMemo(() => {
+    if (collaborators.length === 0) return ''
+    return JSON.stringify([...collaborators].sort())
+  }, [collaborators])
+
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['estimation-create-org', billingPlan, couponId, collaboratorsKey],
+    queryFn: () => fetchEstimationCreateOrganization(billingPlan!, couponId || null, collaborators),
+    enabled: !!billingPlan,
+    staleTime: 30 * 1000, // 30 seconds
+    // Prevent refetch on window focus to avoid loops
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false, // Don't retry on error
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+  })
+
+  return {
+    estimation: data,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to get cost estimation for updating a plan
+ * 
+ * @param organizationId - The organization ID
+ * @param billingPlan - The billing plan
+ * @param couponId - Optional coupon ID
+ * @param collaborators - Array of collaborator emails
+ * @returns Estimation data with loading state
+ */
+export function useEstimationUpdatePlan(
+  organizationId: string | null | undefined,
+  billingPlan: BillingPlan | null | undefined,
+  couponId: string | null | undefined,
+  collaborators: string[],
+) {
+  // Serialize collaborators array to avoid reference equality issues
+  // Sort and join to create a stable key - use JSON.stringify for more reliable comparison
+  const collaboratorsKey = useMemo(() => {
+    if (collaborators.length === 0) return ''
+    return JSON.stringify([...collaborators].sort())
+  }, [collaborators])
+
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ['estimation-update-plan', organizationId, billingPlan, couponId, collaboratorsKey],
+    queryFn: () => fetchEstimationUpdatePlan(organizationId!, billingPlan!, couponId || null, collaborators),
+    enabled: !!organizationId && !!billingPlan,
+    staleTime: 30 * 1000, // 30 seconds
+    // Prevent refetch on window focus to avoid loops
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: false, // Don't retry on error
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+  })
+
+  return {
+    estimation: data,
+    isLoading,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to update organization billing plan
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useUpdateOrganizationPlan() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: updateOrganizationPlan,
+    onSuccess: (_, variables) => {
+      // Invalidate organization and plan queries
+      queryClient.invalidateQueries({
+        queryKey: ['organization', variables.organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['organization', 'plan', variables.organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['organizations', 'console'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update selected projects for an organization
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useUpdateSelectedProjects() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ organizationId, projectIds }: { organizationId: string; projectIds: string[] }) =>
+      updateSelectedProjects(organizationId, projectIds),
+    onSuccess: (_, variables) => {
+      // Invalidate organization query
+      queryClient.invalidateQueries({
+        queryKey: ['organization', variables.organizationId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to validate organization after payment
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useValidateOrganization() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ organizationId, invites }: { organizationId: string; invites: string[] }) =>
+      validateOrganization(organizationId, invites),
+    onSuccess: (_, variables) => {
+      // Invalidate organization query
+      queryClient.invalidateQueries({
+        queryKey: ['organization', variables.organizationId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['organizations', 'console'],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to create downgrade feedback
+ * 
+ * @returns Mutation object with mutate function
+ */
+export function useCreateDowngradeFeedback() {
+  return useMutation({
+    mutationFn: createDowngradeFeedback,
   })
 }
 

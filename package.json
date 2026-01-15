@@ -74,6 +74,7 @@
     "react-resizable-panels": "^3.0.6",
     "recharts": "^3.2.1",
     "sonner": "^2.0.7",
+    "@stripe/stripe-js": "^4.8.0",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.1.13",
     "tw-animate-css": "^1.3.6",

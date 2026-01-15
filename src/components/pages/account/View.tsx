@@ -3,6 +3,7 @@ import { useLocation, Link } from '@tanstack/react-router'
 import { type Tab } from '../projects/$projectId/shared/ServiceHeader'
 import { AccountOverview } from './Overview'
 import { AccountSessions } from './Sessions'
+import { AccountPayments } from './Payments'
 import { User, CreditCard, LogOut } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
@@ -180,6 +181,8 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
               <AccountOverview />
             ) : activeTab === 'sessions' ? (
               <AccountSessions />
+            ) : activeTab === 'payments' ? (
+              <AccountPayments />
             ) : (
               <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
                 <div className="flex h-full min-h-[400px] items-center justify-center">
