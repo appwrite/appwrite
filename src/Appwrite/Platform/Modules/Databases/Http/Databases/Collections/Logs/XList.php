@@ -71,13 +71,14 @@ class XList extends Action
             ->inject('dbForProject')
             ->inject('locale')
             ->inject('geodb')
+            ->inject('authorization')
             ->inject('audit')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit): void
+    public function action(string $databaseId, string $collectionId, array $queries, UtopiaResponse $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $authorization, Audit $audit): void
     {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
@@ -112,9 +113,9 @@ class XList extends Action
             $detector = new Detector($log['userAgent']);
             $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
 
-            $os = $detector->getOS();
-            $client = $detector->getClient();
-            $device = $detector->getDevice();
+            $os = $detector->getOS() ?: [];
+            $client = $detector->getClient() ?: [];
+            $device = $detector->getDevice() ?: [];
 
             $output[$i] = new Document([
                 'event' => $log['event'],
@@ -122,20 +123,20 @@ class XList extends Action
                 'userEmail' => $log['data']['userEmail'] ?? null,
                 'userName' => $log['data']['userName'] ?? null,
                 'mode' => $log['data']['mode'] ?? null,
-                'ip' => $log['ip'],
-                'time' => $log['time'],
-                'osCode' => $os['osCode'],
-                'osName' => $os['osName'],
-                'osVersion' => $os['osVersion'],
-                'clientType' => $client['clientType'],
-                'clientCode' => $client['clientCode'],
-                'clientName' => $client['clientName'],
-                'clientVersion' => $client['clientVersion'],
-                'clientEngine' => $client['clientEngine'],
-                'clientEngineVersion' => $client['clientEngineVersion'],
-                'deviceName' => $device['deviceName'],
-                'deviceBrand' => $device['deviceBrand'],
-                'deviceModel' => $device['deviceModel']
+                'ip' => $log['ip']  ?? null,
+                'time' => $log['time'] ?? null,
+                'osCode' => $os['osCode'] ?? null,
+                'osName' => $os['osName'] ?? null,
+                'osVersion' => $os['osVersion'] ?? null,
+                'clientType' => $client['clientType'] ?? null,
+                'clientCode' => $client['clientCode'] ?? null,
+                'clientName' => $client['clientName'] ?? null,
+                'clientVersion' => $client['clientVersion'] ?? null,
+                'clientEngine' => $client['clientEngine'] ?? null,
+                'clientEngineVersion' => $client['clientEngineVersion'] ?? null,
+                'deviceName' => $device['deviceName'] ?? null,
+                'deviceBrand' => $device['deviceBrand'] ?? null,
+                'deviceModel' => $device['deviceModel'] ?? null
             ]);
 
             $record = $geodb->get($log['ip']);

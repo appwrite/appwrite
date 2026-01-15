@@ -11,6 +11,7 @@ use Appwrite\Utopia\Response;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Pools\Group;
@@ -48,10 +49,11 @@ class Get extends Action
             ))
             ->inject('response')
             ->inject('pools')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response, Group $pools): void
+    public function action(Response $response, Group $pools, Authorization $authorization): void
     {
         $output = [];
         $failures = [];
@@ -65,6 +67,7 @@ class Get extends Action
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
+                    $adapter->setAuthorization($authorization);
 
                     $checkStart = \microtime(true);
 
@@ -83,6 +86,8 @@ class Get extends Action
             }
         }
 
+        // Only throw error if ALL databases failed (no successful pings)
+        // This allows partial failures in environments where not all DBs are ready
         if (!empty($failures)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
         }
