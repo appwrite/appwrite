@@ -289,7 +289,7 @@ trait ACIDBase
             'commit' => true
         ]);
 
-        $this->assertContains($response['headers']['status-code'], [400, 500], 'Transaction commit should fail due to validation. Response: ' . json_encode($response['body']));
+        $this->assertEquals(400, $response['headers']['status-code'], 'Transaction commit should fail with 400 due to constraint violation. Response: ' . json_encode($response['body']));
 
         // Verify no documents were created
         $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), array_merge([

@@ -156,7 +156,9 @@ abstract class Scope extends TestCase
      */
     protected function getLastRequest(): array
     {
-        return $this->getLastRequestForProject($this->getProject()['$id']);
+        $project = $this->getProject();
+        $this->assertArrayHasKey('$id', $project, 'Project must have an $id');
+        return $this->getLastRequestForProject($project['$id']);
     }
 
     /**

@@ -42,7 +42,18 @@ class Realtime extends MessagingAdapter
     {
         if ($this->pubSubPool === null) {
             global $register;
-            $this->pubSubPool = new PubSubPool($register->get('pools')->get('pubsub'));
+            if (!isset($register)) {
+                throw new \Exception('Register not initialized');
+            }
+            $pools = $register->get('pools');
+            if ($pools === null) {
+                throw new \Exception('Pools not available in register');
+            }
+            $pubsub = $pools->get('pubsub');
+            if ($pubsub === null) {
+                throw new \Exception('PubSub pool not available');
+            }
+            $this->pubSubPool = new PubSubPool($pubsub);
         }
         return $this->pubSubPool;
     }

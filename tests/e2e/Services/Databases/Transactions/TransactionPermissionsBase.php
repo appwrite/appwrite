@@ -37,6 +37,20 @@ trait TransactionPermissionsBase
     }
 
     /**
+     * Clean up database after tests
+     */
+    public function tearDown(): void
+    {
+        $this->client->call(Client::METHOD_DELETE, $this->getApiBasePath() . '/' . $this->permissionsDatabase, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        parent::tearDown();
+    }
+
+    /**
      * Test collection-level create permission check on staging
      */
     public function testCollectionCreatePermissionDenied(): void
@@ -95,10 +109,6 @@ trait TransactionPermissionsBase
         ]);
 
         // This should fail with 401 Unauthorized
-        if ($staged['headers']['status-code'] !== 401) {
-            echo "\nDEBUG - Actual response code: " . $staged['headers']['status-code'] . "\n";
-            echo "DEBUG - Response body: " . json_encode($staged['body'], JSON_PRETTY_PRINT) . "\n";
-        }
         $this->assertEquals(401, $staged['headers']['status-code']);
     }
 
@@ -475,6 +485,7 @@ trait TransactionPermissionsBase
 
         // This should fail with 401 Unauthorized, cannot set permissions for roles you don't have
         $this->assertEquals(401, $staged['headers']['status-code']);
+        $this->assertArrayHasKey('message', $staged['body']);
         $this->assertStringContainsString('Permissions must be one of', $staged['body']['message']);
     }
 

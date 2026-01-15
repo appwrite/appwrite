@@ -60,6 +60,8 @@ trait SchemaPolling
             );
 
             $this->assertEquals(200, $container['headers']['status-code']);
+            $this->assertArrayHasKey('body', $container);
+            $this->assertArrayHasKey($this->getSchemaResource(), $container['body']);
 
             $attributes = $container['body'][$this->getSchemaResource()];
             $availableKeys = [];
@@ -99,6 +101,8 @@ trait SchemaPolling
             );
 
             $this->assertEquals(200, $container['headers']['status-code']);
+            $this->assertArrayHasKey('body', $container);
+            $this->assertArrayHasKey($this->getSchemaResource(), $container['body']);
 
             $attributes = $container['body'][$this->getSchemaResource()];
             $availableCount = 0;
@@ -136,6 +140,8 @@ trait SchemaPolling
             );
 
             $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertArrayHasKey('body', $index);
+            $this->assertArrayHasKey('status', $index['body']);
             $this->assertEquals('available', $index['body']['status']);
         }, $timeoutMs, $waitMs);
     }
@@ -162,6 +168,8 @@ trait SchemaPolling
             );
 
             $this->assertEquals(200, $container['headers']['status-code']);
+            $this->assertArrayHasKey('body', $container);
+            $this->assertArrayHasKey('indexes', $container['body']);
 
             foreach ($container['body']['indexes'] as $index) {
                 $this->assertEquals('available', $index['status'], "Index '{$index['key']}' is not available yet");

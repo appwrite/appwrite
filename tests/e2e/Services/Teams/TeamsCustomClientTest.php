@@ -6,7 +6,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\CLI\Console;
 
 class TeamsCustomClientTest extends Scope
 {
@@ -154,9 +153,6 @@ class TeamsCustomClientTest extends Scope
 
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
-        Console::log(json_encode([
-            'testTeamsInviteHTMLInjection' => $lastEmail
-        ], JSON_PRETTY_PRINT));
 
         $encoded = 'http://localhost:5000/join-us\&quot;&gt;&lt;/a&gt;&lt;h1&gt;INJECTED&lt;/h1&gt;?';
 
