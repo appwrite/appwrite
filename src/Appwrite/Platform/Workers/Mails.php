@@ -197,6 +197,10 @@ class Mails extends Action
 
         $mail->isSMTP();
 
+        if (System::getEnv('_APP_ENV') === 'development') {
+            $mail->SMTPDebug = true;
+        }
+
         $username = $smtp['username'];
         $password = $smtp['password'];
 
