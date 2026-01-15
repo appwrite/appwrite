@@ -18,7 +18,6 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use libphonenumber\PhoneNumberUtil;
-use Utopia\Abuse\Abuse;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Token as ProofsToken;
 use Utopia\Database\Database;
@@ -196,26 +195,17 @@ class Create extends Action
                     ->setRecipients([$phone])
                     ->setProviderType(MESSAGE_TYPE_SMS);
 
-                if (isset($plan['authPhone'])) {
-                    $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
-                    $timelimit
-                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
+                $helper = PhoneNumberUtil::getInstance();
+                $countryCode = $helper->parse($phone)->getCountryCode();
 
-                    $abuse = new Abuse($timelimit);
-                    if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-                        $helper = PhoneNumberUtil::getInstance();
-                        $countryCode = $helper->parse($phone)->getCountryCode();
-
-                        if (!empty($countryCode)) {
-                            $queueForStatsUsage
-                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                        }
-                    }
+                if (!empty($countryCode)) {
                     $queueForStatsUsage
-                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                        ->setProject($project)
-                        ->trigger();
+                        ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
+                $queueForStatsUsage
+                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                    ->setProject($project)
+                    ->trigger();
                 break;
             case Type::EMAIL:
                 if (empty(System::getEnv('_APP_SMTP_HOST'))) {
