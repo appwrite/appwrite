@@ -832,9 +832,26 @@ export function DomainDetailView() {
                                   </Badge>
                                 ) : (
                                   <>
-                                    <code className="text-[12px] font-mono text-foreground break-all">
-                                      {value}
-                                    </code>
+                                    {value && value.length > 50 ? (
+                                      <TooltipProvider delayDuration={0}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <code className="text-[12px] font-mono text-foreground cursor-pointer truncate max-w-[350px] block">
+                                              {value}
+                                            </code>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="top" className="max-w-md">
+                                            <p className="text-[12px] whitespace-pre-wrap break-words font-mono">
+                                              {value}
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    ) : (
+                                      <code className="text-[12px] font-mono text-foreground break-all">
+                                        {value}
+                                      </code>
+                                    )}
                                     <Button
                                       variant="ghost"
                                       size="sm"

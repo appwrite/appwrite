@@ -13,6 +13,7 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "generate:routes": "tsr generate",
+    "generate:icons": "node scripts/generate-apple-icons.js",
     "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack"
   },
   "dependencies": {
@@ -95,6 +96,7 @@
     "eslint-plugin-unused-imports": "^4.3.0",
     "jsdom": "^26.0.0",
     "prettier": "^3.5.3",
+    "sharp": "^0.34.5",
     "typescript": "^5.7.2",
     "vite": "npm:rolldown-vite@latest",
     "vite-plugin-devtools-json": "^1.0.0",
