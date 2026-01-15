@@ -48,6 +48,8 @@ class TablesDBPermissionsGuestTest extends Scope
                 ],
             ]
         );
+        $this->assertEquals(201, $publicMovies['headers']['status-code']);
+
         $privateMovies = $this->client->call(
             Client::METHOD_POST,
             $this->getContainerUrl($databaseId),
@@ -59,11 +61,12 @@ class TablesDBPermissionsGuestTest extends Scope
                 $this->getSecurityParam() => true,
             ]
         );
+        $this->assertEquals(201, $privateMovies['headers']['status-code']);
 
         $publicCollection = ['id' => $publicMovies['body']['$id']];
         $privateCollection = ['id' => $privateMovies['body']['$id']];
 
-        $this->client->call(
+        $publicSchema = $this->client->call(
             Client::METHOD_POST,
             $this->getSchemaUrl($databaseId, $publicCollection['id'], 'string'),
             $this->getServerHeader(),
@@ -73,7 +76,9 @@ class TablesDBPermissionsGuestTest extends Scope
                 'required' => true,
             ]
         );
-        $this->client->call(
+        $this->assertEquals(202, $publicSchema['headers']['status-code']);
+
+        $privateSchema = $this->client->call(
             Client::METHOD_POST,
             $this->getSchemaUrl($databaseId, $privateCollection['id'], 'string'),
             $this->getServerHeader(),
@@ -83,6 +88,7 @@ class TablesDBPermissionsGuestTest extends Scope
                 'required' => true,
             ]
         );
+        $this->assertEquals(202, $privateSchema['headers']['status-code']);
 
         sleep(2);
 
@@ -316,10 +322,11 @@ class TablesDBPermissionsGuestTest extends Scope
                 $this->getSecurityParam() => true
             ]
         );
+        $this->assertEquals(201, $movies['headers']['status-code']);
 
         $moviesId = $movies['body']['$id'];
 
-        $this->client->call(
+        $schema = $this->client->call(
             Client::METHOD_POST,
             $this->getSchemaUrl($databaseId, $moviesId, 'string'),
             $this->getServerHeader(),
@@ -329,6 +336,7 @@ class TablesDBPermissionsGuestTest extends Scope
                 'required' => true,
             ]
         );
+        $this->assertEquals(202, $schema['headers']['status-code']);
 
         sleep(1);
 

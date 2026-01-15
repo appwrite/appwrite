@@ -14,5 +14,6 @@ class TestHook implements Extension
     public function bootstrap(Configuration $configuration, Facade $facade, ParameterCollection $parameters): void
     {
         $facade->registerSubscriber(new TestFinishedSubscriber(self::MAX_SECONDS_ALLOWED));
+        $facade->registerSubscriber(new RetrySubscriber());
     }
 }

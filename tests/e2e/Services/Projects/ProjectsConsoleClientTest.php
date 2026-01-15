@@ -225,6 +225,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($team2, $response['body']['teamId']);
     }
 
+    #[Depends('testCreateProject')]
     #[Group('projectsCRUD')]
     public function testListProject($data): array
     {
@@ -865,6 +866,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
+    #[Depends('testCreateProject')]
     #[Group('smtpAndTemplates')]
     public function testUpdateProjectSMTP($data): array
     {
@@ -1043,6 +1045,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    #[Depends('testCreateProject')]
     #[Group('smtpAndTemplates')]
     public function testUpdateTemplates($data): array
     {
@@ -1972,6 +1975,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateProject')]
     #[Group('smtpAndTemplates')]
     #[Group('projectsCRUD')]
     public function testUpdateMockNumbers($data)

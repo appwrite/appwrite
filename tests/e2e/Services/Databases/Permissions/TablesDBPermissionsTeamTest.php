@@ -68,10 +68,11 @@ class TablesDBPermissionsTeamTest extends Scope
                 ],
             ]
         );
+        $this->assertEquals(201, $collection1['headers']['status-code']);
 
         $this->collections['collection1'] = $collection1['body']['$id'];
 
-        $this->client->call(
+        $schema1 = $this->client->call(
             Client::METHOD_POST,
             $this->getSchemaUrl($this->databaseId, $this->collections['collection1'], 'string'),
             $this->getServerHeader(),
@@ -81,6 +82,7 @@ class TablesDBPermissionsTeamTest extends Scope
                 'required' => true,
             ]
         );
+        $this->assertEquals(202, $schema1['headers']['status-code']);
 
         $collection2 = $this->client->call(
             Client::METHOD_POST,
@@ -97,10 +99,11 @@ class TablesDBPermissionsTeamTest extends Scope
                 ]
             ]
         );
+        $this->assertEquals(201, $collection2['headers']['status-code']);
 
         $this->collections['collection2'] = $collection2['body']['$id'];
 
-        $this->client->call(
+        $schema2 = $this->client->call(
             Client::METHOD_POST,
             $this->getSchemaUrl($this->databaseId, $this->collections['collection2'], 'string'),
             $this->getServerHeader(),
@@ -110,6 +113,7 @@ class TablesDBPermissionsTeamTest extends Scope
                 'required' => true,
             ]
         );
+        $this->assertEquals(202, $schema2['headers']['status-code']);
 
         sleep(2);
 
