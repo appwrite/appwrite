@@ -21,8 +21,8 @@ import {
 } from 'lucide-react'
 import { ServiceHeader, type Tab } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { Button } from '@/components/ui/button'
-import { DateRangePicker } from './DateRangePicker'
-import { ComparisonSelector, type ComparisonType } from './ComparisonSelector'
+import { DateRangePicker } from '../DateRangePicker'
+import { ComparisonSelector, type ComparisonType } from '../ComparisonSelector'
 import {
   Area,
   AreaChart,

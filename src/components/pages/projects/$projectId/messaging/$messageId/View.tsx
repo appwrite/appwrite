@@ -25,7 +25,7 @@ import {
   useProjectUsers,
 } from '@/lib/react-query/hooks'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
@@ -1640,7 +1640,7 @@ function TargetsSelectionModal({
   }
 
   const handleCancel = () => {
-    setSelectedTargetIds(new Set())
+    setSelectedUserIds(new Set())
     setSearch('')
     onOpenChange(false)
   }

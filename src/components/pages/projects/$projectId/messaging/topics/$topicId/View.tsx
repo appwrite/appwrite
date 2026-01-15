@@ -17,7 +17,7 @@ import {
   fetchUser,
 } from '@/lib/react-query/hooks'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { ServiceHeader, type Tab } from '../../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'

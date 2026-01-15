@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useProvider, useProject } from '@/lib/react-query/hooks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ServiceHeader } from '../shared/ServiceHeader'
+import { ServiceHeader } from '../../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Switch } from '@/components/ui/switch'
