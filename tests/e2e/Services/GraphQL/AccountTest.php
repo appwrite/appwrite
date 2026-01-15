@@ -116,6 +116,7 @@ class AccountTest extends Scope
     }
 
     /**
+     * @depends testUpdateAccountPhone
      * @return array
      * @throws \Exception
      */

@@ -1493,13 +1493,14 @@ class FunctionsCustomServerTest extends Scope
     public static function provideCustomExecutions(): array
     {
         // Most disabled to keep tests fast
+        // Using positional arrays to avoid PHPUnit 11 named argument conflicts with @depends
         return [
-            // ['folder' => 'php-fn', 'name' => 'php-8.0', 'entrypoint' => 'index.php', 'runtimeName' => 'PHP', 'runtimeVersion' => '8.0'],
-            ['folder' => 'node', 'name' => 'node-22', 'entrypoint' => 'index.js', 'runtimeName' => 'Node.js', 'runtimeVersion' => '22'],
-            // ['folder' => 'python', 'name' => 'python-3.9', 'entrypoint' => 'main.py', 'runtimeName' => 'Python', 'runtimeVersion' => '3.9'],
-            // ['folder' => 'ruby', 'name' => 'ruby-3.1', 'entrypoint' => 'main.rb', 'runtimeName' => 'Ruby', 'runtimeVersion' => '3.1'],
-            // [ 'folder' => 'dart', 'name' => 'dart-2.15', 'entrypoint' => 'main.dart', 'runtimeName' => 'Dart', 'runtimeVersion' => '2.15' ],
-            // [ 'folder' => 'swift', 'name' => 'swift-5.5', 'entrypoint' => 'index.swift', 'runtimeName' => 'Swift', 'runtimeVersion' => '5.5' ],
+            // ['php-fn', 'php-8.0', 'index.php', 'PHP', '8.0'],
+            ['node', 'node-22', 'index.js', 'Node.js', '22'],
+            // ['python', 'python-3.9', 'main.py', 'Python', '3.9'],
+            // ['ruby', 'ruby-3.1', 'main.rb', 'Ruby', '3.1'],
+            // ['dart', 'dart-2.15', 'main.dart', 'Dart', '2.15'],
+            // ['swift', 'swift-5.5', 'index.swift', 'Swift', '5.5'],
         ];
     }
 

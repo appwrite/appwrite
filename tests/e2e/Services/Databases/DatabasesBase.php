@@ -5832,6 +5832,7 @@ trait DatabasesBase
     }
 
     /**
+     * @depends testCreateDatabase
      * @param array $data
      * @return void
      * @throws \Exception
