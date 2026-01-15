@@ -78,6 +78,7 @@ CLI::setResource('dbForPlatform', function ($pools, $cache, $authorization) {
             $dbForPlatform = new Database($adapter, $cache);
 
             $dbForPlatform
+                ->setDatabase(APP_DATABASE)
                 ->setAuthorization($authorization)
                 ->setNamespace('_console')
                 ->setMetadata('host', \gethostname())
@@ -189,6 +190,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizatio
         $database = new Database($adapter, $cache);
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')

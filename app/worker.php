@@ -65,6 +65,7 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register,
     $dbForPlatform = new Database($adapter, $cache);
 
     $dbForPlatform
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setNamespace('_console')
         ->setDocumentType('users', User::class)
@@ -198,6 +199,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
         $database = new Database($adapter, $cache);
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')

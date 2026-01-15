@@ -66,6 +66,7 @@ if (!function_exists('getConsoleDB')) {
         $adapter = new DatabasePool($pools->get('console'));
         $database = new Database($adapter, getCache());
         $database
+            ->setDatabase(APP_DATABASE)
             ->setNamespace('_console')
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', '_console');

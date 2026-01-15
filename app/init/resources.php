@@ -563,6 +563,7 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authoriz
     $database = new Database($adapter, $cache);
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
@@ -643,6 +644,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizatio
         $database = new Database($adapter, $cache);
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
