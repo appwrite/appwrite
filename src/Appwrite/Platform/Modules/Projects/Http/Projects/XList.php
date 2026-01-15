@@ -12,7 +12,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\ListSelection;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order;
@@ -115,11 +114,7 @@ class XList extends Action
             $selectQueries = Query::groupByType($queries)['selections'] ?? [];
             $filterQueries = Query::groupByType($queries)['filters'];
 
-            /**
-             * Add filters which do not exist in response model?
-             */
-            $filtersToSkip = [];
-            $projects = $dbForPlatform->skipFilters(fn () => $dbForPlatform->find('projects', $queries), $filtersToSkip);
+            $projects = $dbForPlatform->find('projects', $queries);
 
             $total = $includeTotal ? $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (Order $e) {
