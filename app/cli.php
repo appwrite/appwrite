@@ -169,6 +169,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
         }
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());

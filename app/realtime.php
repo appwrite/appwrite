@@ -123,6 +123,7 @@ if (!function_exists('getProjectDB')) {
         }
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 

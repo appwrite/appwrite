@@ -533,6 +533,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     $database = new Database($adapter, $cache);
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
@@ -593,6 +594,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         $configure = (function (Database $database) use ($project, $dsn, $authorization) {
             $database
+                ->setDatabase(APP_DATABASE)
                 ->setAuthorization($authorization)
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())

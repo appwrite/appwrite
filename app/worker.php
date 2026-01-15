@@ -119,6 +119,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     }
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
@@ -180,6 +181,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         }
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
