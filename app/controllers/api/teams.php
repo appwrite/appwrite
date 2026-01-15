@@ -23,6 +23,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Teams;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
 use Utopia\App;
@@ -801,11 +802,15 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setProviderType('SMS');
 
                 $helper = PhoneNumberUtil::getInstance();
-                $countryCode = $helper->parse($phone)->getCountryCode();
+                try {
+                    $countryCode = $helper->parse($phone)->getCountryCode();
 
-                if (!empty($countryCode)) {
-                    $queueForStatsUsage
-                        ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    if (!empty($countryCode)) {
+                        $queueForStatsUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    }
+                } catch (NumberParseException $e) {
+                    // Ignore invalid phone number for country code stats
                 }
                 $queueForStatsUsage
                     ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)

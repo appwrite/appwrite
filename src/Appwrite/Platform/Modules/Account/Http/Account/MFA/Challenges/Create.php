@@ -17,6 +17,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Token as ProofsToken;
@@ -196,11 +197,15 @@ class Create extends Action
                     ->setProviderType(MESSAGE_TYPE_SMS);
 
                 $helper = PhoneNumberUtil::getInstance();
-                $countryCode = $helper->parse($phone)->getCountryCode();
+                try {
+                    $countryCode = $helper->parse($phone)->getCountryCode();
 
-                if (!empty($countryCode)) {
-                    $queueForStatsUsage
-                        ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    if (!empty($countryCode)) {
+                        $queueForStatsUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
+                    }
+                } catch (NumberParseException $e) {
+                    // Ignore invalid phone number for country code stats
                 }
                 $queueForStatsUsage
                     ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
