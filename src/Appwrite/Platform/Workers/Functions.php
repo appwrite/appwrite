@@ -9,6 +9,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Utopia\Response\Model\Execution;
+use Appwrite\Extend\Exception as AppwriteException;
 use Exception;
 use Executor\Executor;
 use Utopia\CLI\Console;
@@ -661,7 +662,11 @@ class Functions extends Action
             ->trigger();
 
         if (!empty($error)) {
-            throw new Exception($error, $errorCode);
+            throw new AppwriteException(
+                AppwriteException::GENERAL_SERVER_ERROR,
+                $error ?: 'Function execution failed with no error message',
+                $errorCode
+            );
         }
     }
 }
