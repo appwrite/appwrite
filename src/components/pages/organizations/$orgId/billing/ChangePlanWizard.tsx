@@ -27,7 +27,7 @@ import { EstimatedTotalBox } from './change-plan/EstimatedTotalBox'
 import { PlanComparisonBox } from './change-plan/PlanComparisonBox'
 import { OrganizationUsageLimits } from './change-plan/OrganizationUsageLimits'
 import { SelectPaymentMethod } from './change-plan/SelectPaymentMethod'
-import { ValidateCreditModal } from './change-plan/ValidateCreditModal'
+import { ValidateCreditModal } from './change-plan/ValidateCredit'
 import { InputTags } from '@/components/ui/input-tags'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -433,7 +433,7 @@ export function ChangePlanWizard() {
       </div>
 
       {/* Main Content */}
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         <div className="grid gap-6 lg:grid-cols-3 pt-6">
           {/* Main Form Content */}
           <div className="lg:col-span-2 space-y-6">

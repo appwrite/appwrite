@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { WebsiteAnalyticsDetail } from '@/components/pages/projects/$projectId/analytics/WebsiteDetail'
+import { WebsiteAnalyticsDetail } from '@/components/pages/projects/$projectId/analytics/$websiteId/View'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/analytics/$websiteId',

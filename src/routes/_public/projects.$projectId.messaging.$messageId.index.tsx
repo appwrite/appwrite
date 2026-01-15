@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { MessageDetailView } from '@/components/pages/projects/$projectId/messaging/MessageDetail'
+import { MessageDetailView } from '@/components/pages/projects/$projectId/messaging/$messageId/View'
 import { fetchMessage } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(

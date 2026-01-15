@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { TopicDetailView } from '@/components/pages/projects/$projectId/messaging/TopicDetail'
+import { TopicDetailView } from '@/components/pages/projects/$projectId/messaging/topics/$topicId/View'
 import { fetchTopic, fetchTopicSubscribers } from '@/lib/react-query/hooks'
 
 const SUBSCRIBERS_PER_PAGE = 25

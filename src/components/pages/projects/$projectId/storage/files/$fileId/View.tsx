@@ -11,8 +11,8 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { FileSecurity } from './FileSecurity'
+import { ServiceHeader, type Tab } from '../../../shared/ServiceHeader'
+import { FileSecurity } from '../../FileSecurity'
 import {
   Dialog,
   DialogContent,

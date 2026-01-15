@@ -43,8 +43,8 @@ import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
-import { EditPaymentMethodModal } from './EditPaymentMethodModal'
-import { DeletePaymentMethodModal } from './DeletePaymentMethodModal'
+import { EditPaymentMethodModal } from './EditPaymentMethod'
+import { DeletePaymentMethodModal } from './DeletePaymentMethod'
 
 interface AccountPaymentMethodsProps {
   onAddPaymentMethod?: () => void

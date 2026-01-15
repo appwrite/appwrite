@@ -138,7 +138,7 @@ export function Domains({ projectId, searchValue: searchValueProp = '' }: Domain
   }, [filteredRules, pageIndexed, pageSize])
 
   return (
-    <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+    <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

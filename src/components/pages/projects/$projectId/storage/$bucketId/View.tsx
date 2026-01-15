@@ -21,7 +21,7 @@ import {
   useBucketFiles,
   Dependencies,
 } from '@/lib/react-query/hooks'
-import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -61,9 +61,9 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { ID } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { UploadFileDialog } from './UploadFileDialog'
-import { BucketSettings } from './BucketSettings'
-import { BucketSecurity } from './BucketSecurity'
+import { UploadFileDialog } from '../UploadFile'
+import { BucketSettings } from '../BucketSettings'
+import { BucketSecurity } from '../BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
 import type { Models } from '@appwrite.io/console'
 

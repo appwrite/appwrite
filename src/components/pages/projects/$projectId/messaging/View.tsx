@@ -415,7 +415,7 @@ export function MessagingView() {
         rightContent={<ViewToggle />}
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {viewMode === 'list' ? (
           currentData.isLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">

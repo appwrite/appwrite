@@ -36,9 +36,9 @@ import { Link, useNavigate, useParams, useLocation } from '@tanstack/react-route
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { CreateDomainDialog } from './CreateDomainDialog'
-import { DeleteDomainDialog } from './DeleteDomainDialog'
-import { RetryVerificationDialog } from './RetryVerificationDialog'
+import { CreateDomainDialog } from './CreateDomain'
+import { DeleteDomainDialog } from './DeleteDomain'
+import { RetryVerificationDialog } from './RetryVerification'
 import type { Models } from '@appwrite.io/console'
 import {
   useCreateOrganizationDomain,
@@ -285,7 +285,7 @@ export function DomainsView() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         {viewMode === 'list' ? (
           domainsLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">

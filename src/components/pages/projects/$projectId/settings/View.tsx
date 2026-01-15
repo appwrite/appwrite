@@ -107,7 +107,7 @@ export function ProjectSettingsView() {
         onCreate={handleCreate}
       />
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         {activeTab === 'overview' && <ProjectSettingsOverview projectId={projectId} />}
         {activeTab === 'domains' && <Domains projectId={projectId} searchValue={searchValue} />}
         {activeTab === 'webhooks' && <Webhooks projectId={projectId} searchValue={searchValue} />}

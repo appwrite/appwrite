@@ -40,8 +40,8 @@ import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
-import { AddressModal } from './AddressModal'
-import { DeleteAddressModal } from './DeleteAddressModal'
+import { AddressModal } from './Address'
+import { DeleteAddressModal } from './DeleteAddress'
 
 export function AccountBillingAddresses() {
   const { addresses: allAddresses, isLoading: addressesLoading } = useBillingAddresses()

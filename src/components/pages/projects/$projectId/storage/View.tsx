@@ -39,7 +39,7 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { ID } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { CreateBucketDialog } from './CreateBucketDialog'
+import { CreateBucketDialog } from './CreateBucket'
 import type { Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 
@@ -257,7 +257,7 @@ export function StorageView() {
         }
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {viewMode === 'list' ? (
           bucketsLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">

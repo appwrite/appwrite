@@ -522,7 +522,7 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
       )}
 
       {/* Activity Table */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         {/* Plan upgrade notice for free tier */}
         {plan === 'free' && (
           <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-950/20">

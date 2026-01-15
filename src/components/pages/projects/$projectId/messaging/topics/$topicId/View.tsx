@@ -270,7 +270,7 @@ export function TopicDetailView() {
         fullWidthBorder
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
         {activeTab === 'subscribers' ? (
           <>
             {subscribersLoading || usersLoading ? (

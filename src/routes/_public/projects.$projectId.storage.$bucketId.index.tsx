@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { BucketDetailView } from '@/components/pages/projects/$projectId/storage/BucketDetail'
+import { BucketDetailView } from '@/components/pages/projects/$projectId/storage/$bucketId/View'
 import { fetchBucket, fetchBucketFiles } from '@/lib/react-query/hooks'
 
 const FILES_PER_PAGE = 25
@@ -8,6 +8,11 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/storage/$bucketId/',
 )({
   loader: async ({ params, context }) => {
+    // Only run on client side (SDK requires browser environment)
+    if (typeof window === 'undefined') {
+      return
+    }
+
     const { projectId, bucketId } = params
     const { queryClient } = context
 

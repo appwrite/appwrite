@@ -539,7 +539,7 @@ export function FunctionDeployments() {
   }
 
   return (
-    <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+    <div ref={scrollContainerRef} className="flex-1">
       <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
         <div className="space-y-6">
         {isBuilding && (

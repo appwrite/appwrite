@@ -89,8 +89,8 @@ import { DomainsView } from '../domains/View'
 import { EnterpriseSuccessManager } from '@/components/pages/projects/$projectId/shared/EnterpriseSuccessManager'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { InviteMembersDialog } from './InviteMembersDialog'
-import { CreateOrganizationDialog } from './CreateOrganizationDialog'
+import { InviteMembersDialog } from './InviteMembers'
+import { CreateOrganizationDialog } from './CreateOrganization'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import {
   Table,

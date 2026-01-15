@@ -548,7 +548,7 @@ export function MessageDetailView() {
         fullWidthBorder
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
         <div className="space-y-6">
           {/* Overview Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">

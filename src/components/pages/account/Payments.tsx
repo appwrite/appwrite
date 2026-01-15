@@ -8,7 +8,7 @@
 import { useState } from 'react'
 import { AccountPaymentMethods } from './Payments/PaymentMethods'
 import { AccountBillingAddresses } from './Payments/BillingAddresses'
-import { PaymentModal } from '../organizations/$orgId/billing/PaymentModal'
+import { PaymentModal } from '../organizations/$orgId/billing/Payment'
 
 export function AccountPayments() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)

@@ -77,7 +77,7 @@ export function FunctionDomains() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1">
       <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
         {/* Domains Table */}
       {rules.length > 0 ? (

@@ -189,7 +189,7 @@ export function FunctionExecutions() {
   // Only show full loading state on initial load when there's no data
   if ((funcLoading || executionsLoading) && executions.length === 0) {
     return (
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         <div className="flex h-full items-center justify-center py-16">
           <div className="text-center">
             <p className="text-[13px] text-muted-foreground">Loading executions...</p>
@@ -200,7 +200,7 @@ export function FunctionExecutions() {
   }
 
   return (
-    <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+    <div ref={scrollContainerRef} className="flex-1">
       {executions.length > 0 ? (
         <>
           <Table className="border-b border-border">

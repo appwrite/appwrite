@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ProviderDetailView } from '@/components/pages/projects/$projectId/messaging/ProviderDetail'
+import { ProviderDetailView } from '@/components/pages/projects/$projectId/messaging/providers/$providerId/View'
 import { fetchProvider } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(

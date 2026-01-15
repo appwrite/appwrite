@@ -29,8 +29,8 @@ import { SelectPaymentMethod } from './change-plan/SelectPaymentMethod'
 import { EstimatedTotalBox } from './change-plan/EstimatedTotalBox'
 import { PlanComparisonBox } from './change-plan/PlanComparisonBox'
 import { OrganizationUsageLimits } from './change-plan/OrganizationUsageLimits'
-import { ValidateCreditModal } from './change-plan/ValidateCreditModal'
-import { PaymentModal } from './PaymentModal'
+import { ValidateCreditModal } from './change-plan/ValidateCredit'
+import { PaymentModal } from './Payment'
 import {
   Select,
   SelectContent,

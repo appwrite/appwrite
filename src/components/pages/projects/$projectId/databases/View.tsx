@@ -51,7 +51,7 @@ import { createProjectTableIndex, deleteProjectTableIndex, useProjectTableIndexe
 import { BackupsView } from './Backups'
 import { ComingSoonView } from '../shared/ComingSoon'
 import { SchemaVisualizer } from './SchemaVisualizer'
-import { SchemaExportDialog } from './SchemaExportDialog'
+import { SchemaExportDialog } from './SchemaExport'
 import { fetchDatabaseSchema, formatSchemaAsJSON, formatSchemaAsMarkdown, formatSchemaAsSVG, downloadAsFile, getCursorDeepLink, getLovableDeepLink, getChatGPTDeepLink, getClaudeDeepLink } from '@/lib/utils/database-schema-export'
 
 interface IndexColumnEntry {
@@ -325,7 +325,7 @@ export function DatabasesListView() {
         }
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {databasesLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <div className="text-muted-foreground">Loading databases...</div>
@@ -1233,7 +1233,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
 
         <div className={cn(
           "flex-1",
-          activeTab === 'settings' || activeTab === 'security' ? 'overflow-y-auto' : 'overflow-hidden'
+          activeTab !== 'settings' && activeTab !== 'security' && 'overflow-hidden'
         )}>
           {activeTab === 'rows' && (
             <RowsSpreadsheet
@@ -2033,7 +2033,7 @@ export function DatabaseOverview({
         }
       />
 
-      <div className={cn("flex-1", activeTab !== 'visualizer' && "overflow-y-auto")}>
+      <div className="flex-1">
         {activeTab === 'tables' && (
           <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
             {tablesLoading ? (
@@ -2913,7 +2913,7 @@ function RowEditDrawer({
             </button>
           </div>
 
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+          <div ref={scrollContainerRef} className="flex-1">
             {activeTab === 'overview' && !isCreateMode && (
               <div className="px-6 py-6">
               <div className="space-y-5">

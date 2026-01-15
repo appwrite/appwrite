@@ -336,7 +336,7 @@ export function AnalyticsView() {
         rightContent={<ViewToggle />}
       />
 
-      <div className="mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {viewMode === 'grid' ? (
           <div className="flex flex-col gap-2">
             <div className="grid gap-4 sm:grid-cols-2">

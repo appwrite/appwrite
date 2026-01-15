@@ -85,7 +85,7 @@ export function FirewallView() {
         } : undefined}
       />
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         {activeTab === 'rules' && <RulesTab projectId={projectId} searchValue={searchValue} />}
         {activeTab === 'analytics' && <AnalyticsTab projectId={projectId} />}
         {activeTab === 'logs' && <LogsTab projectId={projectId} searchValue={searchValue} />}
