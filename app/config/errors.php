@@ -357,6 +357,11 @@ return [
         'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
+    Exception::USER_JWT_AND_COOKIE_SET => [
+        'name' => Exception::USER_JWT_AND_COOKIE_SET,
+        'description' => 'JWT and cookie used in the same request. Use either `setJWT` or `setCookie`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
+        'code' => 403,
+    ],
     Exception::API_KEY_EXPIRED => [
         'name' => Exception::API_KEY_EXPIRED,
         'description' => 'The dynamic API key has expired. Please don\'t use dynamic API keys for more than duration of the execution.',
@@ -1076,7 +1081,7 @@ return [
     ],
     Exception::ACCOUNT_KEY_EXPIRED => [
         'name' => Exception::ACCOUNT_KEY_EXPIRED,
-        'description' => 'The account key has expired. Please generate a new key using the Appwrite console.',
+        'description' => 'The account API key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
     Exception::ROUTER_HOST_NOT_FOUND => [
@@ -1332,5 +1337,20 @@ return [
         'name' => Exception::TARGET_PROVIDER_INVALID_TYPE,
         'description' => 'Target has an invalid provider type.',
         'code' => 400,
+    ],
+    Exception::USER_ID_MISSING => [
+        'name' => Exception::USER_ID_MISSING,
+        'description' => 'When using account API key, make sure to pass x-appwrite-user header with your user ID.',
+        'code' => 403,
+    ],
+    Exception::ORGANIZATION_ID_MISSING => [
+        'name' => Exception::ORGANIZATION_ID_MISSING,
+        'description' => 'When using organization API key, make sure to pass x-appwrite-organization header with your organization ID.',
+        'code' => 403,
+    ],
+    Exception::PROJECT_ID_MISSING => [
+        'name' => Exception::PROJECT_ID_MISSING,
+        'description' => 'When using project API key, make sure to pass x-appwrite-project header with your project ID.',
+        'code' => 403,
     ],
 ];

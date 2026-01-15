@@ -357,16 +357,6 @@ App::init()
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
-                $purgeResource = function () use ($apiKey, $dbForPlatform, $project, $user, $team) {
-                    if (!empty($apiKey->getProjectId())) {
-                        Authorization::skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
-                    } elseif (!empty($apiKey->getUserId())) {
-                        Authorization::skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
-                    } elseif (!empty($apiKey->getTeamId())) {
-                        Authorization::skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
-                    }
-                };
-
                 $updates = new Document();
 
                 $accessedAt = $dbKey->getAttribute('accessedAt', 0);
@@ -391,7 +381,14 @@ App::init()
 
                 if (!$updates->isEmpty()) {
                     Authorization::skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
-                    $purgeResource();
+
+                    if (!empty($apiKey->getProjectId())) {
+                        Authorization::skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+                    } elseif (!empty($apiKey->getUserId())) {
+                        Authorization::skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
+                    } elseif (!empty($apiKey->getTeamId())) {
+                        Authorization::skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
+                    }
                 }
 
                 $queueForAudits->setUser($user);

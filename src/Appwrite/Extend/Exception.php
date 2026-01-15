@@ -107,7 +107,9 @@ class Exception extends \Exception
     public const string USER_DELETION_PROHIBITED = 'user_deletion_prohibited';
     public const string USER_TARGET_NOT_FOUND = 'user_target_not_found';
     public const string USER_TARGET_ALREADY_EXISTS = 'user_target_already_exists';
-    public const string USER_API_KEY_AND_SESSION_SET = 'user_key_and_session_set';
+    public const string USER_API_KEY_AND_SESSION_SET = 'user_api_key_and_session_set';
+    public const string USER_JWT_AND_COOKIE_SET = 'user_jwt_and_cookie_set';
+    public const string USER_ID_MISSING = 'user_id_missing';
 
     public const string API_KEY_EXPIRED = 'api_key_expired';
 
@@ -118,6 +120,8 @@ class Exception extends \Exception
     public const string TEAM_MEMBERSHIP_MISMATCH = 'team_membership_mismatch';
     public const string TEAM_INVITE_MISMATCH = 'team_invite_mismatch';
     public const string TEAM_ALREADY_EXISTS = 'team_already_exists';
+
+    public const string ORGANIZATION_ID_MISSING = 'organization_id_missing';
 
     /** Console */
     public const string RESOURCE_ALREADY_EXISTS = 'resource_already_exists';
@@ -283,6 +287,7 @@ class Exception extends \Exception
 
     /** Projects */
     public const string PROJECT_NOT_FOUND = 'project_not_found';
+    public const string PROJECT_ID_MISSING = 'project_id_missing';
     public const string PROJECT_PROVIDER_DISABLED = 'project_provider_disabled';
     public const string PROJECT_PROVIDER_UNSUPPORTED = 'project_provider_unsupported';
     public const string PROJECT_ALREADY_EXISTS = 'project_already_exists';
