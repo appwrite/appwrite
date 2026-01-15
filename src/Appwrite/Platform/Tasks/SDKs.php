@@ -399,7 +399,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setDefaultHeaders([
                         'X-Appwrite-Response-Format' => '1.8.0',
                     ])
-                    ->setExclude($language['exclude'] ?? []);
+                    ->setExclude($language['exclude'] ?? [])
+                    ->setTest(false);
 
                 // Make sure we have a clean slate.
                 // Otherwise, all files in this dir will be pushed,
