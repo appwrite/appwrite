@@ -364,6 +364,30 @@ export function FileView() {
                           </div>
                         </div>
                       </div>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div>
+                          <Label className="text-[13px] font-medium text-foreground">
+                            Encryption
+                          </Label>
+                          <p className="text-[13px] text-muted-foreground mt-1.5">
+                            {file.encryption === true ? 'Enabled' : 'Disabled'}
+                          </p>
+                        </div>
+                        <div>
+                          <Label className="text-[13px] font-medium text-foreground">
+                            Compression
+                          </Label>
+                          <p className="text-[13px] text-muted-foreground mt-1.5">
+                            {file.compression === 'none' || !file.compression
+                              ? 'None'
+                              : file.compression === 'gzip'
+                              ? 'Gzip'
+                              : file.compression === 'zstd'
+                              ? 'Zstd'
+                              : file.compression.charAt(0).toUpperCase() + file.compression.slice(1)}
+                          </p>
+                        </div>
+                      </div>
                       {file.signature && (
                         <div>
                           <Label className="text-[13px] font-medium text-foreground">

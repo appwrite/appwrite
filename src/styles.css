@@ -297,3 +297,102 @@ code {
     }
   }
 }
+
+/* Animated luxury border for upgrade button */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(200%) translateY(200%) rotate(45deg);
+  }
+}
+
+@keyframes border-rotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(37, 99, 235, 0.4), 0 0 12px rgba(37, 99, 235, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(37, 99, 235, 0.6), 0 0 18px rgba(37, 99, 235, 0.3);
+  }
+}
+
+.upgrade-button-wrapper {
+  position: relative;
+  padding: 1px;
+  border-radius: 0.375rem;
+  background: linear-gradient(
+    90deg,
+    #1e40af 0%,
+    #2563eb 15%,
+    #3b82f6 30%,
+    #60a5fa 45%,
+    #3b82f6 60%,
+    #2563eb 75%,
+    #1e40af 90%,
+    #1e40af 100%
+  );
+  background-size: 300% 100%;
+  animation: border-rotate 4s ease-in-out infinite;
+  overflow: hidden;
+  filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.2));
+}
+
+.upgrade-button-wrapper > * {
+  border-radius: calc(0.375rem - 1px);
+}
+
+.upgrade-button-wrapper::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 70%
+  );
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark .upgrade-button-wrapper {
+  background: linear-gradient(
+    90deg,
+    #1e40af 0%,
+    #2563eb 15%,
+    #3b82f6 30%,
+    #60a5fa 45%,
+    #3b82f6 60%,
+    #2563eb 75%,
+    #1e40af 90%,
+    #1e40af 100%
+  );
+  background-size: 300% 100%;
+  filter: drop-shadow(0 2px 6px rgba(37, 99, 235, 0.3));
+}
+
+.dark .upgrade-button-wrapper::before {
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.7) 50%,
+    transparent 70%
+  );
+}

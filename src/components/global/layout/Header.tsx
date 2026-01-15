@@ -46,6 +46,8 @@ import { ThemeToggle } from '@/components/global/shared/ThemeToggle'
 import { SupportPopover } from '@/components/global/shared/SupportPopover'
 import { FeedbackPopover } from '@/components/global/shared/FeedbackPopover'
 import { useAIChat } from '@/components/global/providers/AIChat'
+import { Button } from '@/components/ui/button'
+import { useOrganizationPlan } from '@/lib/react-query/hooks'
 
 interface ConsoleHeaderProps {
   onMenuClick?: () => void
@@ -77,6 +79,12 @@ export function ConsoleHeader({
 
   // Fetch current project to get teamId when in project context
   const { project } = useProject(projectId)
+
+  // Get organization ID for upgrade button
+  const orgId = project?.teamId || (account?.prefs?.organization as string | undefined)
+  
+  // Fetch organization plan to check if upgrade button should be shown
+  const { plan: organizationPlan } = useOrganizationPlan(orgId)
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -287,7 +295,7 @@ export function ConsoleHeader({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-2">
           {/* Search - hidden on small containers */}
           <button
             onClick={openCommandCenter}
@@ -334,6 +342,31 @@ export function ConsoleHeader({
               <p>Assistant</p>
             </TooltipContent>
           </Tooltip>
+
+          {/* Divider before Upgrade Button - hidden on small containers */}
+          {orgId && (
+            <div className="mx-2 hidden h-5 w-px bg-border @[700px]:block" />
+          )}
+
+          {/* Upgrade Button - hidden on small containers */}
+          {orgId && (
+            <div className="hidden @[700px]:flex">
+              <div className="upgrade-button-wrapper">
+                <Button
+                  asChild
+                  size="sm"
+                  className="h-8 shrink-0 bg-blue-600 px-3 text-[12px] font-semibold text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700 relative z-10 rounded-[calc(0.375rem-1px)]"
+                >
+                  <Link
+                    to="/organizations/$orgId/billing"
+                    params={{ orgId }}
+                  >
+                    Upgrade
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Divider - hidden on small containers */}
           <div className="mx-2 hidden h-5 w-px bg-border @[700px]:block" />
