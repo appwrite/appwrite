@@ -533,6 +533,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     $database = new Database($adapter, $cache);
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
@@ -563,6 +564,7 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authoriz
     $database = new Database($adapter, $cache);
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
@@ -592,6 +594,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         $configure = (function (Database $database) use ($project, $dsn, $authorization) {
             $database
+                ->setDatabase(APP_DATABASE)
                 ->setAuthorization($authorization)
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
@@ -643,6 +646,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizatio
         $database = new Database($adapter, $cache);
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
