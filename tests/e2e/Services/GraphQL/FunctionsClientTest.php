@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use Appwrite\Tests\Async;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -78,6 +79,7 @@ class FunctionsClientTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateFunction')]
     public function testCreateDeployment($function): array
     {
         $projectId = $this->getProject()['$id'];
@@ -143,6 +145,8 @@ class FunctionsClientTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateFunction')]
+    #[Depends('testCreateDeployment')]
     public function testCreateExecution($function, $deployment): array
     {
         $projectId = $this->getProject()['$id'];
@@ -169,6 +173,7 @@ class FunctionsClientTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateFunction')]
     public function testGetExecutions($function): array
     {
         $projectId = $this->getProject()['$id'];
@@ -199,6 +204,8 @@ class FunctionsClientTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateFunction')]
+    #[Depends('testCreateExecution')]
     public function testGetExecution($function, $execution): array
     {
         $projectId = $this->getProject()['$id'];

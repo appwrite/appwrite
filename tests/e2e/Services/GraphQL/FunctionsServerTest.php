@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use Appwrite\Tests\Async;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -77,6 +78,7 @@ class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateFunction')]
     public function testCreateDeployment($function): array
     {
         $projectId = $this->getProject()['$id'];
@@ -138,6 +140,7 @@ class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateDeployment')]
     public function testCreateExecution($deployment): array
     {
         $projectId = $this->getProject()['$id'];
@@ -165,6 +168,7 @@ class FunctionsServerTest extends Scope
      * @return void
      * @throws \Exception
      */
+    #[Depends('testGetDeployment')]
     public function testCreateRetryBuild($deployment): void
     {
         $projectId = $this->getProject()['$id'];
@@ -213,6 +217,7 @@ class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateFunction')]
     public function testGetFunction($function): array
     {
         $projectId = $this->getProject()['$id'];
@@ -263,6 +268,7 @@ class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateFunction')]
     public function testGetDeployments($function)
     {
         $projectId = $this->getProject()['$id'];
@@ -292,6 +298,7 @@ class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateDeployment')]
     public function testGetDeployment($deployment)
     {
         $projectId = $this->getProject()['$id'];
@@ -322,6 +329,7 @@ class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateFunction')]
     public function testGetExecutions($function): array
     {
         $projectId = $this->getProject()['$id'];
@@ -351,6 +359,7 @@ class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateExecution')]
     public function testGetExecution($execution): array
     {
         $projectId = $this->getProject()['$id'];
@@ -381,6 +390,7 @@ class FunctionsServerTest extends Scope
      * @return array
      * @throws \Exception
      */
+    #[Depends('testCreateFunction')]
     public function testUpdateFunction($function): array
     {
         $projectId = $this->getProject()['$id'];
@@ -417,6 +427,7 @@ class FunctionsServerTest extends Scope
      * @param $deployment
      * @throws \Exception
      */
+    #[Depends('testCreateDeployment')]
     public function testDeleteDeployment($deployment): array
     {
         $projectId = $this->getProject()['$id'];
@@ -444,6 +455,7 @@ class FunctionsServerTest extends Scope
      * @param $deployment
      * @throws \Exception
      */
+    #[Depends('testDeleteDeployment')]
     public function testDeleteFunction($deployment): void
     {
         $projectId = $this->getProject()['$id'];

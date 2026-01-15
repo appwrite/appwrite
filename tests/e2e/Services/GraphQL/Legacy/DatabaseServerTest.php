@@ -792,7 +792,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testUpdateURLAttribute')]
+    #[Depends('testCreateURLAttribute')]
     public function testCreateIndex($data): array
     {
         $projectId = $this->getProject()['$id'];
