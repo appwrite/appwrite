@@ -89,7 +89,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
   const handleUpgrade = () => {
     if (orgId) {
       navigate({
-        to: '/organizations/$orgId/billing',
+        to: '/organizations/$orgId/change-plan',
         params: { orgId },
       })
     }

@@ -1038,7 +1038,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <>
                                 Your {planName} plan includes up to {limit} member{limit !== 1 ? 's' : ''}.{' '}
                                 <Link
-                                  to="/organizations/$orgId/billing"
+                                  to="/organizations/$orgId/change-plan"
                                   params={{ orgId: orgId! } as any}
                                   className="font-medium underline hover:no-underline"
                                 >
@@ -1050,7 +1050,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <>
                                 Your {planName} plan includes up to {limit} member{limit !== 1 ? 's' : ''}. You have {remaining} remaining.{' '}
                                 <Link
-                                  to="/organizations/$orgId/billing"
+                                  to="/organizations/$orgId/change-plan"
                                   params={{ orgId: orgId! } as any}
                                   className="font-medium underline hover:no-underline"
                                 >
@@ -1068,7 +1068,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                       >
                         <Link
-                          to="/organizations/$orgId/billing"
+                          to="/organizations/$orgId/change-plan"
                           params={{ orgId: orgId! } as any}
                         >
                           Upgrade
@@ -1144,7 +1144,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <>
                                 Your {planName} plan includes up to {limit} project{limit !== 1 ? 's' : ''}.{' '}
                                 <Link
-                                  to="/organizations/$orgId/billing"
+                                  to="/organizations/$orgId/change-plan"
                                   params={{ orgId: orgId! } as any}
                                   className="font-medium underline hover:no-underline"
                                 >
@@ -1156,7 +1156,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               <>
                                 Your {planName} plan includes up to {limit} project{limit !== 1 ? 's' : ''}. You have {remaining} remaining.{' '}
                                 <Link
-                                  to="/organizations/$orgId/billing"
+                                  to="/organizations/$orgId/change-plan"
                                   params={{ orgId: orgId! } as any}
                                   className="font-medium underline hover:no-underline"
                                 >
@@ -1174,7 +1174,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                       >
                         <Link
-                          to="/organizations/$orgId/billing"
+                          to="/organizations/$orgId/change-plan"
                           params={{ orgId: orgId! } as any}
                         >
                           Upgrade

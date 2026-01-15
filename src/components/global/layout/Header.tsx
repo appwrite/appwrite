@@ -358,7 +358,7 @@ export function ConsoleHeader({
                   className="h-8 shrink-0 bg-blue-600 px-3 text-[12px] font-semibold text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700 relative z-10 rounded-[calc(0.375rem-1px)]"
                 >
                   <Link
-                    to="/organizations/$orgId/billing"
+                    to="/organizations/$orgId/change-plan"
                     params={{ orgId }}
                   >
                     Upgrade

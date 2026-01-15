@@ -261,23 +261,33 @@ export async function fetchBillingAddress(billingAddressId: string) {
 /**
  * Query function to fetch all available billing plans
  * 
- * @returns Plans list response from the API
+ * @returns Plans list response from the API, transformed to object format
  */
 export async function fetchBillingPlans() {
   try {
-    // Try billing service first (if it exists)
-    if ((sdk.forConsole as any).billing?.listPlans) {
-      return await (sdk.forConsole as any).billing.listPlans()
+    // Use console service to fetch plans
+    const response = await sdk.forConsole.console.plans()
+    
+    // Transform array response to object format keyed by plan $id
+    // Response format: { total: number, plans: BillingPlan[] }
+    // We need: { plans: { [planId]: planData } }
+    const plansObject: Record<string, any> = {}
+    
+    if (response.plans && Array.isArray(response.plans)) {
+      response.plans.forEach((plan: any) => {
+        if (plan.$id) {
+          plansObject[plan.$id] = plan
+        }
+      })
     }
-    // Fallback to organizations service
-    if ((sdk.forConsole.organizations as any).listPlans) {
-      return await (sdk.forConsole.organizations as any).listPlans()
+    
+    return {
+      plans: plansObject,
+      total: response.total || 0,
     }
-    // If neither exists, return empty plans object
-    return { plans: {} }
   } catch (error) {
     console.warn('Failed to fetch billing plans:', error)
-    return { plans: {} }
+    return { plans: {}, total: 0 }
   }
 }
 
@@ -407,30 +417,52 @@ export async function fetchEstimationCreateOrganization(
 export async function fetchEstimationUpdatePlan(
   organizationId: string,
   billingPlan: BillingPlan,
-  couponId: string | null,
+  couponId: string | null | undefined,
   collaborators: string[],
 ) {
   if (!organizationId) {
     return null
   }
   try {
+    // Only pass couponId if it's a valid UID string
+    // UID validation: non-empty, max 36 chars, valid chars only (a-z, A-Z, 0-9, _), can't start with _
+    let couponParam: string | undefined = undefined
+    if (couponId) {
+      // Ensure it's a string, not an object or array
+      if (typeof couponId !== 'string') {
+        console.warn('Invalid couponId type:', typeof couponId, couponId)
+        couponParam = undefined
+      } else {
+        const trimmed = couponId.trim()
+        if (
+          trimmed.length > 0 &&
+          trimmed.length <= 36 &&
+          /^[a-zA-Z0-9][a-zA-Z0-9_]*$/.test(trimmed) &&
+          !trimmed.startsWith('_')
+        ) {
+          couponParam = trimmed
+        }
+      }
+    }
+    
     // Try billing service first (if it exists)
     if ((sdk.forConsole as any).billing?.estimationUpdatePlan) {
-      return await (sdk.forConsole as any).billing.estimationUpdatePlan(
+      return await (sdk.forConsole as any).billing.estimationUpdatePlan({
         organizationId,
         billingPlan,
-        couponId || undefined,
-        collaborators,
-      )
+        invites: collaborators,
+        couponId: couponParam,
+      })
     }
     // Fallback to organizations service
     if ((sdk.forConsole.organizations as any).estimationUpdatePlan) {
-      return await (sdk.forConsole.organizations as any).estimationUpdatePlan(
+      const orgService = sdk.forConsole.organizations as any
+      return await orgService.estimationUpdatePlan({
         organizationId,
         billingPlan,
-        couponId || undefined,
-        collaborators,
-      )
+        invites: collaborators,
+        couponId: couponParam,
+      })
     }
     return null
   } catch (error) {
@@ -1773,7 +1805,7 @@ export function useEstimationUpdatePlan(
     refetch,
   } = useQuery({
     queryKey: ['estimation-update-plan', organizationId, billingPlan, couponId, collaboratorsKey],
-    queryFn: () => fetchEstimationUpdatePlan(organizationId!, billingPlan!, couponId || null, collaborators),
+    queryFn: () => fetchEstimationUpdatePlan(organizationId!, billingPlan!, couponId ?? undefined, collaborators),
     enabled: !!organizationId && !!billingPlan,
     staleTime: 30 * 1000, // 30 seconds
     // Prevent refetch on window focus to avoid loops

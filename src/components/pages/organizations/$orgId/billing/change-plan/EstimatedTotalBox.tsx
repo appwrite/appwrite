@@ -72,17 +72,30 @@ export function EstimatedTotalBox({
     )
   }
 
-  const lineItems = estimation.lineItems || []
+  // Map API response structure to component expectations
+  // API returns: { items: [{ label, value }], amount, grossAmount, discount, credits, discounts: [] }
+  // Component expects: { lineItems: [{ name/description, amount }], totalDue, discounts: [], credits: [] }
+  const items = estimation.items || []
+  const lineItems = items.map((item: any) => ({
+    name: item.label,
+    description: item.label,
+    amount: item.value || 0,
+    currency: 'USD',
+  }))
+  
   const discounts = estimation.discounts || []
-  const credits = estimation.credits || []
-  const totalDue = estimation.totalDue || 0
+  const discountAmount = estimation.discount || 0
+  const creditsAmount = estimation.credits || 0
+  const organizationCredits = estimation.organizationCredits || 0
+  const totalDue = estimation.amount || 0
+  const grossAmount = estimation.grossAmount || 0
   const recurringCharge = estimation.recurringCharge || 0
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden sticky top-6">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Estimated Total
+        <h3 className="text-[13px] font-semibold text-foreground">
+          Estimated total
         </h3>
       </div>
 
@@ -104,34 +117,48 @@ export function EstimatedTotalBox({
         )}
 
         {/* Discounts */}
-        {discounts.length > 0 && (
+        {(discounts.length > 0 || discountAmount > 0) && (
           <div className="space-y-2 pt-2 border-t border-border">
             {discounts.map((discount: any, index: number) => (
               <div key={index} className="flex items-center justify-between text-[13px]">
                 <span className="text-muted-foreground">
-                  Discount: {discount.name || discount.description}
+                  Discount: {discount.name || discount.description || 'Discount'}
                 </span>
                 <span className="font-medium text-green-600 dark:text-green-400">
                   -{formatCurrency(discount.amount || 0, discount.currency || 'USD')}
                 </span>
               </div>
             ))}
+            {discountAmount > 0 && discounts.length === 0 && (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-muted-foreground">Discount</span>
+                <span className="font-medium text-green-600 dark:text-green-400">
+                  -{formatCurrency(discountAmount, 'USD')}
+                </span>
+              </div>
+            )}
           </div>
         )}
 
         {/* Credits */}
-        {credits.length > 0 && (
+        {(creditsAmount > 0 || organizationCredits > 0) && (
           <div className="space-y-2 pt-2 border-t border-border">
-            {credits.map((credit: any, index: number) => (
-              <div key={index} className="flex items-center justify-between text-[13px]">
-                <span className="text-muted-foreground">
-                  Credit: {credit.name || credit.description}
-                </span>
+            {creditsAmount > 0 && (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-muted-foreground">Credits</span>
                 <span className="font-medium text-green-600 dark:text-green-400">
-                  -{formatCurrency(credit.amount || 0, credit.currency || 'USD')}
+                  -{formatCurrency(creditsAmount, 'USD')}
                 </span>
               </div>
-            ))}
+            )}
+            {organizationCredits > 0 && (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-muted-foreground">Organization Credits</span>
+                <span className="font-medium text-green-600 dark:text-green-400">
+                  -{formatCurrency(organizationCredits, 'USD')}
+                </span>
+              </div>
+            )}
           </div>
         )}
 
@@ -163,7 +190,7 @@ export function EstimatedTotalBox({
             <div className="flex items-center justify-between">
               <span className="text-[13px] font-medium text-foreground">Total Due</span>
               <span className="text-[15px] font-semibold text-foreground">
-                {formatCurrency(totalDue, estimation.currency || 'USD')}
+                {formatCurrency(totalDue, 'USD')}
               </span>
             </div>
           </div>
@@ -196,16 +223,21 @@ export function EstimatedTotalBox({
             </div>
             {budgetEnabled && (
               <div>
-                <Input
-                  id="budget-amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={budgetValue}
-                  onChange={(e) => handleBudgetChange(e.target.value)}
-                  className="h-9 text-[13px]"
-                  min="0"
-                  step="0.01"
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    id="budget-amount"
+                    type="number"
+                    placeholder="0.00"
+                    value={budgetValue}
+                    onChange={(e) => handleBudgetChange(e.target.value)}
+                    className="h-9 text-[13px] pl-7"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
                 <p className="text-[12px] text-muted-foreground mt-1">
                   Set a monthly spending limit
                 </p>

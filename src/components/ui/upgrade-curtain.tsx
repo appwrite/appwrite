@@ -70,7 +70,7 @@ export function UpgradeCurtain({
     const finalOrgId = getOrgIdFromUrl()
     if (finalOrgId) {
       navigate({
-        to: '/organizations/$orgId/billing',
+        to: '/organizations/$orgId/change-plan',
         params: { orgId: finalOrgId },
       })
     } else {

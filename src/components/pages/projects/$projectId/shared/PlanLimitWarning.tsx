@@ -80,7 +80,7 @@ export function PlanLimitWarning({
                       Your {planName} plan includes up to {limit} {resourceName}.{' '}
                       {orgId && (
                         <Link
-                          to="/organizations/$orgId/billing"
+                          to="/organizations/$orgId/change-plan"
                           params={{ orgId }}
                           className="font-medium underline hover:no-underline"
                         >
@@ -94,7 +94,7 @@ export function PlanLimitWarning({
                       Your {planName} plan includes up to {limit} {resourceName}. You have {remaining} remaining.{' '}
                       {orgId && (
                         <Link
-                          to="/organizations/$orgId/billing"
+                          to="/organizations/$orgId/change-plan"
                           params={{ orgId }}
                           className="font-medium underline hover:no-underline"
                         >
@@ -114,7 +114,7 @@ export function PlanLimitWarning({
                 className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
               >
                 <Link
-                  to="/organizations/$orgId/billing"
+                  to="/organizations/$orgId/change-plan"
                   params={{ orgId }}
                 >
                   Upgrade

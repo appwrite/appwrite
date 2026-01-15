@@ -359,7 +359,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       {/* Header */}
       <div className="px-6 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
@@ -375,10 +375,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               </p>
             )}
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-[20px] font-semibold text-foreground">
-              {formatCurrency(totalAmount)}
-            </p>
+          <div className="text-right shrink-0 flex items-end">
             <p className="text-[11px] text-muted-foreground italic">
               Estimate, subject to change based on usage
             </p>

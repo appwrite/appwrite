@@ -1,10 +1,16 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { CreditCard, Plus, Ticket } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { formatCardExpiry, maskCardNumber } from '../utils'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Plus, Ticket } from 'lucide-react'
+import { formatCardExpiry } from '../utils'
+import { InlinePaymentForm } from './InlinePaymentForm'
 import type { Models } from '@appwrite.io/console'
 
 interface SelectPaymentMethodProps {
@@ -15,6 +21,8 @@ interface SelectPaymentMethodProps {
   taxId: string
   onTaxIdChange: (taxId: string) => void
   onAddCredits: () => void
+  organizationId?: string
+  onPaymentMethodAdded?: () => void
 }
 
 export function SelectPaymentMethod({
@@ -25,133 +33,99 @@ export function SelectPaymentMethod({
   taxId,
   onTaxIdChange,
   onAddCredits,
+  organizationId,
+  onPaymentMethodAdded,
 }: SelectPaymentMethodProps) {
   // Filter to only show completed cards (with last4)
   const completedPaymentMethods = paymentMethods.filter((pm) => pm.last4)
+  
+  // Show inline form only when dropdown is empty (no payment methods)
+  const showInlineForm = completedPaymentMethods.length === 0
+
+  const getDisplayText = (method: Models.PaymentMethod) => {
+    if (!method.last4) return method.name || 'Card'
+    const expiry =
+      method.expiryMonth && method.expiryYear
+        ? formatCardExpiry(method.expiryMonth, method.expiryYear)
+        : null
+    return `${method.name || 'Card'} ending in ${method.last4}${expiry ? ` • Expires ${expiry}` : ''}`
+  }
+
+  const handlePaymentMethodAdded = () => {
+    onPaymentMethodAdded?.()
+  }
 
   return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Payment Method
-        </h3>
-        <p className="text-[13px] text-muted-foreground mt-2">
-          Select a payment method for this plan change.
-        </p>
-      </div>
+    <div className="space-y-4">
+      {/* Inline Payment Form - only show when dropdown is empty */}
+      {showInlineForm ? (
+        <InlinePaymentForm
+          organizationId={organizationId}
+          onSuccess={handlePaymentMethodAdded}
+        />
+      ) : (
+        <>
+          {/* Payment Method Dropdown */}
+          <div>
+            <Label htmlFor="payment-method" className="text-[13px] font-medium mb-2 block">
+              Payment method
+            </Label>
+            <Select
+              value={selectedPaymentMethodId || undefined}
+              onValueChange={onPaymentMethodSelect}
+            >
+              <SelectTrigger id="payment-method" className="h-9 text-[13px]">
+                <SelectValue placeholder="Select payment method" />
+              </SelectTrigger>
+              <SelectContent>
+                {completedPaymentMethods.map((method) => (
+                  <SelectItem key={method.$id} value={method.$id}>
+                    {getDisplayText(method)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      <div className="border-t border-border" />
-
-      <div className="px-6 py-4 space-y-4">
-        {/* Payment Method Selection */}
-        {completedPaymentMethods.length > 0 ? (
-          <RadioGroup
-            value={selectedPaymentMethodId || undefined}
-            onValueChange={onPaymentMethodSelect}
-            className="space-y-3"
-          >
-            {completedPaymentMethods.map((method) => {
-              const isSelected = selectedPaymentMethodId === method.$id
-              const expiry = method.expiryMonth && method.expiryYear
-                ? formatCardExpiry(method.expiryMonth, method.expiryYear)
-                : null
-
-              return (
-                <div
-                  key={method.$id}
-                  className={cn(
-                    'flex items-start space-x-3 rounded-lg border p-3 transition-colors',
-                    isSelected
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-muted/50',
-                  )}
-                >
-                  <RadioGroupItem
-                    value={method.$id}
-                    id={method.$id}
-                    className="mt-1"
-                  />
-                  <Label
-                    htmlFor={method.$id}
-                    className="flex-1 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="text-[13px] font-medium text-foreground">
-                          {method.name || 'Card'}
-                        </div>
-                        {method.last4 && (
-                          <div className="text-[12px] text-muted-foreground mt-0.5">
-                            {maskCardNumber(method.last4)}
-                            {expiry && ` • Expires ${expiry}`}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </Label>
-                </div>
-              )
-            })}
-          </RadioGroup>
-        ) : (
-          <div className="text-center py-6">
-            <p className="text-[13px] text-muted-foreground mb-4">
-              No payment methods available
-            </p>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              className="h-8 text-[13px]"
               onClick={onAddPaymentMethod}
             >
               <Plus className="mr-1.5 h-4 w-4" />
-              Add Payment Method
+              Add payment method
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-[13px]"
+              onClick={onAddCredits}
+            >
+              <Ticket className="mr-1.5 h-4 w-4" />
+              Add credits
             </Button>
           </div>
-        )}
+        </>
+      )}
 
-        {/* Add Payment Method Button */}
-        {completedPaymentMethods.length > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={onAddPaymentMethod}
-          >
-            <Plus className="mr-1.5 h-4 w-4" />
-            Add New Payment Method
-          </Button>
-        )}
-
-        {/* Tax ID */}
-        <div className="pt-4 border-t border-border">
-          <Label htmlFor="tax-id" className="text-[13px] font-medium">
-            Tax ID (Optional)
-          </Label>
-          <Input
-            id="tax-id"
-            value={taxId}
-            onChange={(e) => onTaxIdChange(e.target.value)}
-            placeholder="Enter tax identification number"
-            className="mt-2 h-9 text-[13px]"
-          />
-          <p className="text-[12px] text-muted-foreground mt-1">
-            For business accounts, enter your tax identification number
-          </p>
-        </div>
-
-        {/* Add Credits Button */}
-        <div className="pt-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full"
-            onClick={onAddCredits}
-          >
-            <Ticket className="mr-1.5 h-4 w-4" />
-            Add Credits
-          </Button>
-        </div>
+      {/* Tax ID */}
+      <div className="pt-4 border-t border-border">
+        <Label htmlFor="tax-id" className="text-[13px] font-medium">
+          Tax ID (Optional)
+        </Label>
+        <Input
+          id="tax-id"
+          value={taxId}
+          onChange={(e) => onTaxIdChange(e.target.value)}
+          placeholder="Enter tax identification number"
+          className="mt-2 h-9 text-[13px]"
+        />
+        <p className="text-[12px] text-muted-foreground mt-1">
+          For business accounts, enter your tax identification number
+        </p>
       </div>
     </div>
   )

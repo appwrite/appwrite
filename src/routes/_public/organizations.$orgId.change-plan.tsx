@@ -5,8 +5,10 @@ import {
   fetchOrganizationPlan,
   fetchOrganizationMemberships,
   fetchBillingPlans,
+  fetchOrganizationUsage,
+  fetchOrganizationProjects,
 } from '@/lib/react-query/hooks'
-import { ChangePlanWizard } from '@/components/pages/organizations/$orgId/billing/ChangePlanWizard'
+import { ChangePlanWizardFullscreen } from '@/components/pages/organizations/$orgId/billing/ChangePlanWizardFullscreen'
 
 const MEMBERSHIPS_PER_PAGE = 25
 
@@ -61,6 +63,20 @@ export const Route = createFileRoute('/_public/organizations/$orgId/change-plan'
           queryFn: fetchBillingPlans,
           staleTime: 5 * 60 * 1000, // 5 minutes
         }).catch(() => {}),
+
+        // Organization usage
+        queryClient.prefetchQuery({
+          queryKey: ['organization-usage', orgId],
+          queryFn: () => fetchOrganizationUsage(orgId),
+          staleTime: 30 * 1000, // 30 seconds
+        }).catch(() => {}),
+
+        // Organization projects
+        queryClient.prefetchQuery({
+          queryKey: ['organization-projects', orgId],
+          queryFn: () => fetchOrganizationProjects(orgId),
+          staleTime: 30 * 1000, // 30 seconds
+        }).catch(() => {}),
       ])
     } catch (error) {
       // Don't block rendering if prefetch fails
@@ -71,5 +87,5 @@ export const Route = createFileRoute('/_public/organizations/$orgId/change-plan'
 })
 
 function ChangePlanPage() {
-  return <ChangePlanWizard />
+  return <ChangePlanWizardFullscreen />
 }

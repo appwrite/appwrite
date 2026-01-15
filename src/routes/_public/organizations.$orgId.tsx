@@ -40,10 +40,18 @@ function OrganizationLayout() {
       match.routeId.startsWith('/_public/organizations/$orgId/domains/$domainId')
   )
 
+  // Check if we're on the change-plan route (should not have org header/tabs - it's fullscreen)
+  const isChangePlanRoute = matches.some(
+    (match) =>
+      match.routeId.includes('/change-plan') ||
+      match.routeId === '/_public/organizations/$orgId/change-plan' ||
+      match.routeId.startsWith('/_public/organizations/$orgId/change-plan')
+  )
+
   return (
     <RequireAuth>
-      {isDomainDetailRoute ? (
-        // For domain detail routes, render outlet directly (they have their own layout)
+      {isDomainDetailRoute || isChangePlanRoute ? (
+        // For domain detail routes and change-plan route, render outlet directly (they have their own layout)
         <Outlet />
       ) : (
         // For other routes, render OrgOverview which provides header/tabs

@@ -4,10 +4,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { Info, AlertTriangle, ExternalLink } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { Info, ExternalLink } from 'lucide-react'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
-import type { Models } from '@appwrite.io/console'
 
 interface PlanSelectionProps {
   plans: Record<string, any>
@@ -16,6 +20,7 @@ interface PlanSelectionProps {
   onPlanSelect: (plan: BillingPlan) => void
   selfService: boolean
   hasFreeOrgs: boolean
+  variant?: 'card' | 'inline'
 }
 
 export function PlanSelection({
@@ -25,6 +30,7 @@ export function PlanSelection({
   onPlanSelect,
   selfService,
   hasFreeOrgs,
+  variant = 'card',
 }: PlanSelectionProps) {
   // Filter out Scale plan (not shown in UI per instructions)
   // Handle empty plans object gracefully
@@ -57,116 +63,121 @@ export function PlanSelection({
     return false
   }
 
-  return (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Select a Plan
-        </h3>
-        <p className="text-[13px] text-muted-foreground mt-2">
-          Choose the plan that best fits your needs.
-        </p>
-      </div>
+  const radioGroupContent = (
+    <>
+      {/* Self-service restriction alert */}
+      {!selfService && (
+        <Alert className="mb-4">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Plan Changes Restricted</AlertTitle>
+          <AlertDescription className="mt-2">
+            Plan changes are not available for self-service. Please contact support to change your plan.
+          </AlertDescription>
+        </Alert>
+      )}
 
-      <div className="border-t border-border" />
+      <RadioGroup
+        value={selectedPlan || undefined}
+        onValueChange={(value) => onPlanSelect(value as BillingPlan)}
+        className="space-y-2"
+      >
+        {availablePlans.map(([planTier, planData]) => {
+          // Use plan name from API response, fallback to derived name
+          const planName = planData?.name || getPlanDisplayName(planTier)
+          const disabled = isDisabled(planTier)
+          const isCurrent = isCurrentPlan(planTier)
+          const price = planData?.price || 0
+          // API uses 'desc' not 'description'
+          const description = planData?.desc || planData?.description
+          const isSelected = selectedPlan === planTier
+          const showTooltip = disabled && isFreePlan(planTier) && hasFreeOrgs
 
-      <div className="px-6 py-4">
-        {/* Self-service restriction alert */}
-        {!selfService && (
-          <Alert className="mb-4">
-            <Info className="h-4 w-4" />
-            <AlertTitle>Plan Changes Restricted</AlertTitle>
-            <AlertDescription className="mt-2">
-              Plan changes are not available for self-service. Please contact support to change your plan.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Free org restriction alert */}
-        {hasFreeOrgs && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Free Organization Limit</AlertTitle>
-            <AlertDescription className="mt-2">
-              You already have a free organization. You can only have one free organization per account.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <RadioGroup
-          value={selectedPlan || undefined}
-          onValueChange={(value) => onPlanSelect(value as BillingPlan)}
-          className="space-y-3"
-        >
-          {availablePlans.map(([planTier, planData]) => {
-            const planName = getPlanDisplayName(planTier)
-            const disabled = isDisabled(planTier)
-            const isCurrent = isCurrentPlan(planTier)
-            const price = planData?.price || 0
-
-            return (
-              <div
-                key={planTier}
+          const planCardContent = (
+            <>
+              <RadioGroupItem
+                value={planTier}
+                id={planTier}
+                disabled={disabled}
+                className="mt-0.5 shrink-0 pointer-events-none"
+              />
+              <Label
+                htmlFor={planTier}
                 className={cn(
-                  'flex items-start space-x-3 rounded-lg border p-4 transition-colors',
-                  selectedPlan === planTier
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:bg-muted/50',
-                  disabled && 'opacity-50 cursor-not-allowed',
+                  'flex-1 cursor-pointer min-w-0 pointer-events-none',
+                  disabled && 'cursor-not-allowed',
                 )}
               >
-                <RadioGroupItem
-                  value={planTier}
-                  id={planTier}
-                  disabled={disabled}
-                  className="mt-1"
-                />
-                <Label
-                  htmlFor={planTier}
-                  className={cn(
-                    'flex-1 cursor-pointer',
-                    disabled && 'cursor-not-allowed',
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[15px] font-semibold text-foreground">
-                        {planName}
-                      </span>
-                      {isCurrent && (
-                        <Badge variant="secondary" className="text-[11px]">
-                          Current
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      {price > 0 ? (
-                        <span className="text-[15px] font-semibold text-foreground">
-                          ${price}/month
-                        </span>
-                      ) : (
-                        <span className="text-[15px] font-semibold text-foreground">
-                          Free
-                        </span>
-                      )}
-                    </div>
+                <div className="space-y-0.5">
+                  {/* Plan Name - on its own line */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[15px] font-semibold text-foreground">
+                      {planName}
+                    </span>
+                    {isCurrent && (
+                      <Badge
+                        variant="secondary"
+                        className="text-[11px] font-medium px-2 py-0.5 h-5 shrink-0"
+                      >
+                        Current plan
+                      </Badge>
+                    )}
                   </div>
-                  {planData?.description && (
-                    <p className="text-[13px] text-muted-foreground mt-1">
-                      {planData.description}
+                  
+                  {/* Description - on its own line */}
+                  {description && (
+                    <p className="text-[13px] text-muted-foreground leading-snug">
+                      {description}
                     </p>
                   )}
-                  {disabled && isFreePlan(planTier) && hasFreeOrgs && (
-                    <p className="text-[12px] text-muted-foreground mt-1">
-                      You already have a free organization
-                    </p>
-                  )}
-                </Label>
-              </div>
-            )
-          })}
-        </RadioGroup>
+                  
+                  {/* Price - on its own line */}
+                  <div className="text-[13px] font-medium text-foreground">
+                    {price > 0 ? (
+                      <span>${price.toFixed(2)} per month + usage</span>
+                    ) : (
+                      <span>$0.00</span>
+                    )}
+                  </div>
+                </div>
+              </Label>
+            </>
+          )
 
+          const planCard = (
+            <div
+              key={planTier}
+              className={cn(
+                'flex items-start gap-3 rounded-lg border p-3 transition-colors',
+                isSelected
+                  ? 'border-primary bg-card'
+                  : 'border-border bg-card/50 hover:border-primary/30',
+                disabled && 'opacity-50 cursor-not-allowed',
+              )}
+            >
+              {planCardContent}
+            </div>
+          )
+
+          if (showTooltip) {
+            return (
+              <Tooltip key={planTier}>
+                <TooltipTrigger asChild>
+                  <div className="w-full">
+                    {planCard}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>You already have a free organization. You can only have one free organization per account.</p>
+                </TooltipContent>
+              </Tooltip>
+            )
+          }
+
+          return planCard
+        })}
+      </RadioGroup>
+
+      {variant === 'card' && (
         <div className="mt-4">
           <Button
             variant="ghost"
@@ -184,6 +195,29 @@ export function PlanSelection({
             </a>
           </Button>
         </div>
+      )}
+    </>
+  )
+
+  if (variant === 'inline') {
+    return <div>{radioGroupContent}</div>
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Select a Plan
+        </h3>
+        <p className="text-[13px] text-muted-foreground mt-2">
+          Choose the plan that best fits your needs.
+        </p>
+      </div>
+
+      <div className="border-t border-border" />
+
+      <div className="px-6 py-4">
+        {radioGroupContent}
       </div>
     </div>
   )

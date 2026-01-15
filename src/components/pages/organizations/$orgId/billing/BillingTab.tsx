@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams } from '@tanstack/react-router'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle, CreditCard } from 'lucide-react'
@@ -33,6 +33,7 @@ import { toast } from 'sonner'
 
 export function BillingTab() {
   const params = useParams({ strict: false })
+  const navigate = useNavigate()
   const orgId = params.orgId as string | undefined
 
   // Payment modal state
@@ -96,7 +97,12 @@ export function BillingTab() {
 
   // Modal handlers
   const handleChangePlan = () => {
-    console.log('Open change plan modal')
+    if (orgId) {
+      navigate({
+        to: '/organizations/$orgId/change-plan',
+        params: { orgId },
+      })
+    }
   }
 
   const handleAddPaymentMethod = (isBackup = false) => {
