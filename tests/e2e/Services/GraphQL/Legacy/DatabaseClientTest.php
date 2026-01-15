@@ -141,8 +141,8 @@ class DatabaseClientTest extends Scope
         return $data;
     }
 
-    /**
-     */
+    #[Depends('testCreateStringAttribute')]
+    #[Depends('testCreateIntegerAttribute')]
     public function testCreateDocument($data): array
     {
         sleep(1);
@@ -185,6 +185,7 @@ class DatabaseClientTest extends Scope
         ];
     }
 
+    #[Depends('testCreateCollection')]
     /**
      * @throws \Exception
      */
@@ -210,6 +211,7 @@ class DatabaseClientTest extends Scope
         $this->assertIsArray($documents['body']['data']['databasesListDocuments']);
     }
 
+    #[Depends('testCreateDocument')]
     /**
      * @throws \Exception
      */
@@ -236,6 +238,7 @@ class DatabaseClientTest extends Scope
         $this->assertIsArray($document['body']['data']['databasesGetDocument']);
     }
 
+    #[Depends('testCreateDocument')]
     /**
      * @throws \Exception
      */
@@ -268,6 +271,7 @@ class DatabaseClientTest extends Scope
         $this->assertStringContainsString('New Document Name', $document['data']);
     }
 
+    #[Depends('testCreateDocument')]
     /**
      * @throws \Exception
      */

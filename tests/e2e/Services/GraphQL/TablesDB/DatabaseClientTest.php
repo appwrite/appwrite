@@ -142,8 +142,8 @@ class DatabaseClientTest extends Scope
         return $data;
     }
 
-    /**
-     */
+    #[Depends('testCreateStringColumn')]
+    #[Depends('testCreateIntegerColumn')]
     public function testCreateRow($data): array
     {
         sleep(1);
@@ -186,6 +186,7 @@ class DatabaseClientTest extends Scope
         ];
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws \Exception
      */
@@ -211,6 +212,7 @@ class DatabaseClientTest extends Scope
         $this->assertIsArray($rows['body']['data']['tablesDBListRows']);
     }
 
+    #[Depends('testCreateRow')]
     /**
      * @throws \Exception
      */
@@ -237,6 +239,7 @@ class DatabaseClientTest extends Scope
         $this->assertIsArray($row['body']['data']['tablesDBGetRow']);
     }
 
+    #[Depends('testCreateRow')]
     /**
      * @throws \Exception
      */
@@ -269,6 +272,7 @@ class DatabaseClientTest extends Scope
         $this->assertStringContainsString('New Row Name', $row['data']);
     }
 
+    #[Depends('testCreateRow')]
     /**
      * @throws \Exception
      */

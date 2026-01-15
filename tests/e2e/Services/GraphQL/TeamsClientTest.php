@@ -133,8 +133,8 @@ class TeamsClientTest extends Scope
         $this->assertIsArray($memberships['body']['data']['teamsListMemberships']);
     }
 
-    /**
-     */
+    #[Depends('testCreateTeam')]
+    #[Depends('testCreateTeamMembership')]
     public function testGetTeamMembership($team, $membership)
     {
         $projectId = $this->getProject()['$id'];
@@ -156,8 +156,8 @@ class TeamsClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $membership['body']);
     }
 
-    /**
-     */
+    #[Depends('testCreateTeam')]
+    #[Depends('testCreateTeamMembership')]
     public function testDeleteTeamMembership($team, $membership)
     {
         $projectId = $this->getProject()['$id'];

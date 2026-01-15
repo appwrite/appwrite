@@ -88,6 +88,7 @@ class StorageClientTest extends Scope
         return $file['body']['data']['storageCreateFile'];
     }
 
+    #[Depends('testCreateBucket')]
     /**
      * @param $bucket
      * @return array
@@ -117,6 +118,8 @@ class StorageClientTest extends Scope
         return $files;
     }
 
+    #[Depends('testCreateBucket')]
+    #[Depends('testCreateFile')]
     /**
      * @param $bucket
      * @param $file
@@ -146,6 +149,7 @@ class StorageClientTest extends Scope
         return $file['body']['data']['storageGetFile'];
     }
 
+    #[Depends('testCreateFile')]
     /**
      * @param $file
      * @return array
@@ -175,6 +179,7 @@ class StorageClientTest extends Scope
         return $file;
     }
 
+    #[Depends('testCreateFile')]
     /**
      * @param $file
      * @return array
@@ -200,6 +205,7 @@ class StorageClientTest extends Scope
         $this->assertEquals(47218, \strlen($file['body']));
     }
 
+    #[Depends('testCreateFile')]
     /**
      * @param $file
      * @return array
@@ -225,6 +231,7 @@ class StorageClientTest extends Scope
         $this->assertEquals(47218, \strlen($file['body']));
     }
 
+    #[Depends('testCreateFile')]
     /**
      * @param $file
      * @return array
@@ -260,6 +267,7 @@ class StorageClientTest extends Scope
         return $file;
     }
 
+    #[Depends('testCreateFile')]
     /**
      * @param $file
      * @throws \Exception

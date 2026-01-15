@@ -185,8 +185,8 @@ class TeamsServerTest extends Scope
         $this->assertIsArray($memberships['body']['data']['teamsListMemberships']);
     }
 
-    /**
-     */
+    #[Depends('testCreateTeam')]
+    #[Depends('testCreateTeamMembership')]
     public function testGetTeamMembership($team, $membership)
     {
         $projectId = $this->getProject()['$id'];
@@ -232,8 +232,8 @@ class TeamsServerTest extends Scope
         $this->assertEquals('New Name', $team['name']);
     }
 
-    /**
-     */
+    #[Depends('testCreateTeam')]
+    #[Depends('testCreateTeamMembership')]
     public function testUpdateTeamMembershipRoles($team, $membership)
     {
         $projectId = $this->getProject()['$id'];
@@ -258,8 +258,8 @@ class TeamsServerTest extends Scope
         $this->assertEquals(['developer', 'admin'], $membership['roles']);
     }
 
-    /**
-     */
+    #[Depends('testCreateTeam')]
+    #[Depends('testCreateTeamMembership')]
     public function testDeleteTeamMembership($team, $membership)
     {
         $projectId = $this->getProject()['$id'];

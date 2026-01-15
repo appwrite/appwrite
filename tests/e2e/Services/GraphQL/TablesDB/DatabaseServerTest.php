@@ -110,6 +110,7 @@ class DatabaseServerTest extends Scope
         ];
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -141,6 +142,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateStringColumn')]
     /**
      * @throws Exception
      */
@@ -176,6 +178,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -207,6 +210,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateIntegerColumn')]
     /**
      * @throws Exception
      */
@@ -246,6 +250,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -275,6 +280,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateBooleanColumn')]
     /**
      * @throws Exception
      */
@@ -310,6 +316,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -342,6 +349,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateFloatColumn')]
     /**
      * @throws Exception
      */
@@ -381,6 +389,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -410,6 +419,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateEmailColumn')]
     /**
      * @throws Exception
      */
@@ -445,6 +455,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -480,6 +491,7 @@ class DatabaseServerTest extends Scope
     }
 
 
+    #[Depends('testCreateEnumColumn')]
     /**
      * @throws Exception
      */
@@ -522,6 +534,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -551,6 +564,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateDatetimeColumn')]
     /**
      * @throws Exception
      */
@@ -645,6 +659,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -675,6 +690,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateIPColumn')]
     /**
      * @throws Exception
      */
@@ -710,6 +726,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -740,6 +757,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
+    #[Depends('testCreateURLColumn')]
     /**
      * @throws Exception
      */
@@ -773,6 +791,8 @@ class DatabaseServerTest extends Scope
         $this->assertEquals(200, $column['headers']['status-code']);
     }
 
+    #[Depends('testUpdateStringColumn')]
+    #[Depends('testUpdateIntegerColumn')]
     /**
      * @throws Exception
      */
@@ -810,6 +830,10 @@ class DatabaseServerTest extends Scope
         ];
     }
 
+    #[Depends('testUpdateStringColumn')]
+    #[Depends('testUpdateIntegerColumn')]
+    #[Depends('testUpdateBooleanColumn')]
+    #[Depends('testUpdateEnumColumn')]
     /**
      * @throws Exception
      */
@@ -916,6 +940,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($databases['body']['data']['tablesDBList']);
     }
 
+    #[Depends('testCreateDatabase')]
     /**
      * @throws Exception
      */
@@ -940,6 +965,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($database['body']['data']['tablesDBGet']);
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -966,6 +992,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($tables['body']['data']['tablesDBListTables']);
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -991,6 +1018,8 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($table['body']['data']['tablesDBGetTable']);
     }
 
+    #[Depends('testUpdateStringColumn')]
+    #[Depends('testUpdateIntegerColumn')]
     /**
      * @throws Exception
      */
@@ -1016,6 +1045,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($columns['body']['data']['tablesDBListColumns']);
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -1042,6 +1072,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($column['body']['data']['tablesDBGetColumn']);
     }
 
+    #[Depends('testCreateIndex')]
     /**
      * @throws Exception
      */
@@ -1067,6 +1098,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($indices['body']['data']['tablesDBListIndexes']);
     }
 
+    #[Depends('testCreateIndex')]
     /**
      * @throws Exception
      */
@@ -1093,6 +1125,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($index['body']['data']['tablesDBGetIndex']);
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -1118,6 +1151,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($rows['body']['data']['tablesDBListRows']);
     }
 
+    #[Depends('testCreateRow')]
     /**
      * @throws Exception
      */
@@ -1191,6 +1225,7 @@ class DatabaseServerTest extends Scope
     //        $this->assertIsArray($entity['body']['data']['actorsGet']);
     //    }
 
+    #[Depends('testCreateDatabase')]
     /**
      * @throws Exception
      */
@@ -1216,6 +1251,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($database['body']['data']['tablesDBUpdate']);
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -1243,6 +1279,7 @@ class DatabaseServerTest extends Scope
         $this->assertIsArray($table['body']['data']['tablesDBUpdateTable']);
     }
 
+    #[Depends('testCreateRow')]
     /**
      * @throws Exception
      */
@@ -1302,6 +1339,7 @@ class DatabaseServerTest extends Scope
     //        $this->assertStringContainsString('New Custom Entity Name', $entity['name']);
     //    }
 
+    #[Depends('testCreateRow')]
     /**
      * @throws Exception
      */
@@ -1351,6 +1389,7 @@ class DatabaseServerTest extends Scope
     //        $this->assertEquals(204, $entity['headers']['status-code']);
     //    }
 
+    #[Depends('testUpdateStringColumn')]
     /**
      * @throws Exception
      */
@@ -1376,6 +1415,7 @@ class DatabaseServerTest extends Scope
         $this->assertEquals(204, $column['headers']['status-code']);
     }
 
+    #[Depends('testCreateTable')]
     /**
      * @throws Exception
      */
@@ -1400,6 +1440,7 @@ class DatabaseServerTest extends Scope
         $this->assertEquals(204, $table['headers']['status-code']);
     }
 
+    #[Depends('testCreateDatabase')]
     /**
      * @throws Exception
      */
