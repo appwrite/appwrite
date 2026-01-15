@@ -115,6 +115,7 @@ class Create extends Base
             ->inject('dbForPlatform')
             ->inject('request')
             ->inject('gitHub')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -152,7 +153,8 @@ class Create extends Base
         Func $queueForFunctions,
         Database $dbForPlatform,
         Request $request,
-        GitHub $github
+        GitHub $github,
+        Authorization $authorization
     ) {
 
         // Temporary abuse check
@@ -237,7 +239,7 @@ class Create extends Base
             throw new Exception(Exception::FUNCTION_ALREADY_EXISTS);
         }
 
-        $schedule = Authorization::skip(
+        $schedule = $authorization->skip(
             fn () => $dbForPlatform->createDocument('schedules', new Document([
                 'region' => $project->getAttribute('region'),
                 'resourceType' => SCHEDULE_RESOURCE_TYPE_FUNCTION,
@@ -315,6 +317,7 @@ class Create extends Base
                     template: $template,
                     github: $github,
                     activate: true,
+                    authorization: $authorization,
                     reference: $providerBranch,
                     referenceType: 'branch'
                 );
@@ -366,7 +369,7 @@ class Create extends Base
                 $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
                 $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-                $rule = Authorization::skip(
+                $rule = $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),

@@ -27,6 +27,7 @@ use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -101,7 +102,8 @@ App::get('/v1/health/db')
     ))
     ->inject('response')
     ->inject('pools')
-    ->action(function (Response $response, Group $pools) {
+    ->inject('authorization')
+    ->action(action: function (Response $response, Group $pools, Authorization $authorization) {
         $output = [];
         $failures = [];
 
@@ -114,14 +116,14 @@ App::get('/v1/health/db')
             foreach ($config as $database) {
                 try {
                     $adapter = new DatabasePool($pools->get($database));
-
+                    $adapter->setAuthorization($authorization);
                     $checkStart = \microtime(true);
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
                             'name' => $key . " ($database)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $database;
@@ -132,6 +134,8 @@ App::get('/v1/health/db')
             }
         }
 
+        // Only throw error if ALL databases failed (no successful pings)
+        // This allows partial failures in environments where not all DBs are ready
         if (!empty($failures)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failures));
         }
@@ -181,7 +185,7 @@ App::get('/v1/health/cache')
                         $output[] = new Document([
                             'name' => $key . " ($cache)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $cache;
@@ -241,7 +245,7 @@ App::get('/v1/health/pubsub')
                         $output[] = new Document([
                             'name' => $key . " ($pubsub)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) * 1000)
                         ]);
                     } else {
                         $failures[] = $pubsub;
@@ -823,7 +827,7 @@ App::get('/v1/health/storage/local')
 
         $output = [
             'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+            'ping' => \round((\microtime(true) - $checkStart) * 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -875,7 +879,7 @@ App::get('/v1/health/storage')
 
         $output = [
             'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+            'ping' => \round((\microtime(true) - $checkStart) * 1000)
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);

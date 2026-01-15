@@ -30,6 +30,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Queue\Publisher;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -233,7 +234,8 @@ App::init()
     ->inject('mode')
     ->inject('team')
     ->inject('apiKey')
-    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, User $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey) {
+    ->inject('authorization')
+    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
         $route = $utopia->getRoute();
 
         /**
@@ -314,7 +316,7 @@ App::init()
             // Handle special app role case
             if ($apiKey->getRole() === User::ROLE_APPS) {
                 // Disable authorization checks for API keys
-                Authorization::setDefaultStatus(false);
+                $authorization->setDefaultStatus(false);
 
                 $user = new User([
                     '$id' => '',
@@ -415,14 +417,14 @@ App::init()
                 $scopes = \array_merge($scopes, $roles[$role]['scopes']);
             }
 
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
         }
 
         $scopes = \array_unique($scopes);
 
-        Authorization::setRole($role);
-        foreach ($user->getRoles() as $authRole) {
-            Authorization::setRole($authRole);
+        $authorization->addRole($role);
+        foreach ($user->getRoles($authorization) as $authRole) {
+            $authorization->addRole($authRole);
         }
 
         // Step 6: Update project and user last activity
@@ -430,7 +432,7 @@ App::init()
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $project->setAttribute('accessedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+                $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
             }
         }
 
@@ -465,7 +467,7 @@ App::init()
             if (
                 array_key_exists($namespace, $project->getAttribute('services', []))
                 && !$project->getAttribute('services', [])[$namespace]
-                && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
+                && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
             ) {
                 throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
             }
@@ -532,14 +534,15 @@ App::init()
     ->inject('devKey')
     ->inject('telemetry')
     ->inject('platform')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Migration $queueForMigrations, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->inject('authorization')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Migration $queueForMigrations, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) use ($usageDatabaseListener, $eventDatabaseListener) {
 
         $route = $utopia->getRoute();
 
         if (
             array_key_exists('rest', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['rest']
-            && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
+            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -569,7 +572,7 @@ App::init()
 
         $closestLimit = null;
 
-        $roles = Authorization::getRoles();
+        $roles = $authorization->getRoles();
         $isPrivilegedUser = User::isPrivileged($roles);
         $isAppUser = User::isApp($roles);
 
@@ -680,10 +683,10 @@ App::init()
         if ($useCache) {
             $route = $utopia->match($request);
             $isImageTransformation = $route->getPath() === '/v1/storage/buckets/:bucketId/files/:fileId/preview';
-            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !User::isPrivileged(Authorization::getRoles());
+            $isDisabled = isset($plan['imageTransformations']) && $plan['imageTransformations'] === -1 && !User::isPrivileged($authorization->getRoles());
 
             $key = $request->cacheIdentifier();
-            $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
+            $cacheLog  = $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
@@ -700,10 +703,10 @@ App::init()
 
                 if ($type === 'bucket' && (!$isImageTransformation || !$isDisabled)) {
                     $bucketId = $parts[1] ?? null;
-                    $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+                    $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     $isToken = !$resourceToken->isEmpty() && $resourceToken->getAttribute('bucketInternalId') === $bucket->getSequence();
-                    $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+                    $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAppUser && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
@@ -714,8 +717,7 @@ App::init()
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-                    $validator = new Authorization(Database::PERMISSION_READ);
-                    $valid = $validator->isValid($bucket->getRead());
+                    $valid = $authorization->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
                     if (!$fileSecurity && !$valid && !$isToken) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
@@ -726,7 +728,7 @@ App::init()
                     if ($fileSecurity && !$valid && !$isToken) {
                         $file = $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId);
                     } else {
-                        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+                        $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
                     }
 
                     if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getSequence()) {
@@ -737,11 +739,11 @@ App::init()
                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
                     }
                     //Do not update transformedAt if it's a console user
-                    if (!User::isPrivileged(Authorization::getRoles())) {
+                    if (!User::isPrivileged($authorization->getRoles())) {
                         $transformedAt = $file->getAttribute('transformedAt', '');
                         if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $transformedAt) {
                             $file->setAttribute('transformedAt', DateTime::now());
-                            Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
+                            $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $file->getAttribute('bucketInternalId'), $file->getId(), $file));
                         }
                     }
                 }
@@ -837,8 +839,9 @@ App::shutdown()
     ->inject('queueForWebhooks')
     ->inject('queueForRealtime')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('timelimit')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, callable $timelimit) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -999,11 +1002,11 @@ App::shutdown()
 
                 $key = $request->cacheIdentifier();
                 $signature = md5($data['payload']);
-                $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
+                $cacheLog  =  $authorization->skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', 0);
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
-                    Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
+                    $authorization->skip(fn () => $dbForProject->createDocument('cache', new Document([
                         '$id' => $key,
                         'resource' => $resource,
                         'resourceType' => $resourceType,
@@ -1013,7 +1016,7 @@ App::shutdown()
                     ])));
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
-                    Authorization::skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
+                    $authorization->skip(fn () => $dbForProject->updateDocument('cache', $cacheLog->getId(), $cacheLog));
                     // Overwrite the file every APP_CACHE_UPDATE seconds to update the file modified time that is used in the TTL checks in cache->load()
                     $cache->save($key, $data['payload']);
                 }
@@ -1025,7 +1028,7 @@ App::shutdown()
         }
 
         if ($project->getId() !== 'console') {
-            if (!User::isPrivileged(Authorization::getRoles())) {
+            if (!User::isPrivileged($authorization->getRoles())) {
                 $fileSize = 0;
                 $file = $request->getFiles('file');
                 if (!empty($file)) {
