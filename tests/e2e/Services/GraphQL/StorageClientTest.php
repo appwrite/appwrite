@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\GraphQL;
 
 use CURLFile;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -50,9 +51,7 @@ class StorageClientTest extends Scope
         return $bucket;
     }
 
-    /**
-     * @depends testCreateBucket
-     */
+    #[Depends('testCreateBucket')]
     public function testCreateFile($bucket): array
     {
         $projectId = $this->getProject()['$id'];
@@ -90,7 +89,6 @@ class StorageClientTest extends Scope
     }
 
     /**
-     * @depends testCreateBucket
      * @param $bucket
      * @return array
      * @throws \Exception
@@ -120,8 +118,6 @@ class StorageClientTest extends Scope
     }
 
     /**
-     * @depends testCreateBucket
-     * @depends testCreateFile
      * @param $bucket
      * @param $file
      * @return array
@@ -151,7 +147,6 @@ class StorageClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFile
      * @param $file
      * @return array
      * @throws \Exception
@@ -181,7 +176,6 @@ class StorageClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFile
      * @param $file
      * @return array
      * @throws \Exception
@@ -207,7 +201,6 @@ class StorageClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFile
      * @param $file
      * @return array
      * @throws \Exception
@@ -233,7 +226,6 @@ class StorageClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFile
      * @param $file
      * @return array
      * @throws \Exception
@@ -269,7 +261,6 @@ class StorageClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFile
      * @param $file
      * @throws \Exception
      */

@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
 use Exception;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -2443,9 +2444,7 @@ class RealtimeCustomClientTest extends Scope
         return ['teamId' => $teamId];
     }
 
-    /**
-     * @depends testChannelTeams
-     */
+    #[Depends('testChannelTeams')]
     public function testChannelMemberships(array $data)
     {
         $teamId = $data['teamId'] ?? '';

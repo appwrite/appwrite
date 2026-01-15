@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Storage;
 
 use CURLFile;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -1264,9 +1265,7 @@ class StorageCustomClientTest extends Scope
         return ['fileId' => $file['body']['$id'], 'bucketId' => $bucket['body']['$id']];
     }
 
-    /**
-     * @depends testCreateFileDefaultPermissions
-     */
+    #[Depends('testCreateFileDefaultPermissions')]
     public function testCreateFileAbusePermissions(array $data): void
     {
         /**
@@ -1330,9 +1329,7 @@ class StorageCustomClientTest extends Scope
         $this->assertStringContainsString('user:' . $this->getUser()['$id'], $file['body']['message']);
     }
 
-    /**
-     * @depends testCreateFileDefaultPermissions
-     */
+    #[Depends('testCreateFileDefaultPermissions')]
     public function testUpdateFileAbusePermissions(array $data): void
     {
         /**

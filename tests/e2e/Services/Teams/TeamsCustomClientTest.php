@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Teams;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -14,9 +15,7 @@ class TeamsCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    /**
-     * @depends testGetTeamMemberships
-     */
+    #[Depends('testGetTeamMemberships')]
     public function testGetMembershipPrivacy($data)
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -117,9 +116,7 @@ class TeamsCustomClientTest extends Scope
         $this->assertArrayHasKey('mfa', $response['body']['memberships'][0]);
     }
 
-    /**
-     * @depends testUpdateTeamMembership
-     */
+    #[Depends('testUpdateTeamMembership')]
     public function testTeamsInviteHTMLInjection($data): array
     {
         $teamUid = $data['teamUid'] ?? '';

@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Webhooks;
 use Appwrite\Tests\Async;
 use Appwrite\Tests\Retry;
 use CURLFile;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -99,9 +100,7 @@ trait WebhooksBase
         return array_merge(['actorsId' => $actorsId, 'databaseId' => $databaseId]);
     }
 
-    /**
-     * @depends testCreateCollection
-     */
+    #[Depends('testCreateCollection')]
     public function testCreateAttributes(array $data): array
     {
         $actorsId = $data['actorsId'];
@@ -196,9 +195,7 @@ trait WebhooksBase
         return $data;
     }
 
-    /**
-     * @depends testCreateAttributes
-     */
+    #[Depends('testCreateAttributes')]
     public function testCreateDocument(array $data): array
     {
         $actorsId = $data['actorsId'];
@@ -259,9 +256,7 @@ trait WebhooksBase
         return $data;
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testUpdateDocument(array $data): array
     {
         $actorsId = $data['actorsId'];
@@ -320,7 +315,6 @@ trait WebhooksBase
     }
 
     /**
-     * @depends testCreateCollection
      */
     #[Retry(count: 1)]
     public function testDeleteDocument(array $data): array
@@ -452,9 +446,7 @@ trait WebhooksBase
         return array_merge(['actorsId' => $actorsId, 'databaseId' => $databaseId]);
     }
 
-    /**
-     * @depends testCreateTable
-     */
+    #[Depends('testCreateTable')]
     public function testCreateColumns(array $data): array
     {
         $actorsId = $data['actorsId'];
@@ -547,9 +539,7 @@ trait WebhooksBase
         return $data;
     }
 
-    /**
-     * @depends testCreateColumns
-     */
+    #[Depends('testCreateColumns')]
     public function testCreateRow(array $data): array
     {
         $actorsId = $data['actorsId'];
@@ -610,9 +600,7 @@ trait WebhooksBase
         return $data;
     }
 
-    /**
-     * @depends testCreateRow
-     */
+    #[Depends('testCreateRow')]
     public function testUpdateRow(array $data): array
     {
         $actorsId = $data['actorsId'];
@@ -671,7 +659,6 @@ trait WebhooksBase
     }
 
     /**
-     * @depends testCreateTable
      */
     #[Retry(count: 1)]
     public function testDeleteRow(array $data): array
@@ -787,9 +774,7 @@ trait WebhooksBase
         return array_merge(['bucketId' => $bucketId]);
     }
 
-    /**
-     * @depends testCreateStorageBucket
-     */
+    #[Depends('testCreateStorageBucket')]
     public function testUpdateStorageBucket(array $data): array
     {
         $bucketId = $data['bucketId'];
@@ -832,9 +817,7 @@ trait WebhooksBase
         return array_merge(['bucketId' => $bucket['body']['$id']]);
     }
 
-    /**
-     * @depends testCreateStorageBucket
-     */
+    #[Depends('testCreateStorageBucket')]
     public function testCreateBucketFile(array $data): array
     {
         $bucketId = $data['bucketId'];
@@ -906,9 +889,7 @@ trait WebhooksBase
         return $data;
     }
 
-    /**
-     * @depends testCreateBucketFile
-     */
+    #[Depends('testCreateBucketFile')]
     public function testUpdateBucketFile(array $data): array
     {
         $bucketId = $data['bucketId'];
@@ -962,9 +943,7 @@ trait WebhooksBase
         return $data;
     }
 
-    /**
-     * @depends testUpdateBucketFile
-     */
+    #[Depends('testUpdateBucketFile')]
     public function testDeleteBucketFile(array $data): array
     {
         $bucketId = $data['bucketId'];
@@ -1012,9 +991,7 @@ trait WebhooksBase
         return $data;
     }
 
-    /**
-     * @depends testDeleteBucketFile
-     */
+    #[Depends('testDeleteBucketFile')]
     public function testDeleteStorageBucket(array $data)
     {
         $bucketId = $data['bucketId'];
@@ -1094,9 +1071,7 @@ trait WebhooksBase
         return ['teamId' => $teamId];
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testUpdateTeam($data): array
     {
         $teamId = $data['teamId'];
@@ -1139,9 +1114,7 @@ trait WebhooksBase
         return ['teamId' => $team['body']['$id']];
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testUpdateTeamPrefs(array $data): array
     {
         $id = $data['teamId'] ?? '';
@@ -1235,9 +1208,7 @@ trait WebhooksBase
         return [];
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testCreateTeamMembership($data): array
     {
         $teamId = $data['teamId'] ?? '';
@@ -1315,9 +1286,7 @@ trait WebhooksBase
         ];
     }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
+    #[Depends('testCreateTeamMembership')]
     public function testDeleteTeamMembership($data): void
     {
         $teamId = $data['teamId'] ?? '';
@@ -1434,9 +1403,7 @@ trait WebhooksBase
         $this->assertEquals(400, $webhook['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateCollection
-     */
+    #[Depends('testCreateCollection')]
     public function testWebhookAutoDisable(array $data): void
     {
         $projectId = $this->getProject()['$id'];

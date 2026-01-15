@@ -4,6 +4,8 @@ namespace Tests\E2E\Services\Users;
 
 use Appwrite\Tests\Retry;
 use Appwrite\Utopia\Response;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -180,9 +182,8 @@ trait UsersBase
 
     /**
      * Tries to login into all accounts created with hashed password. Ensures hash veifying logic.
-     *
-     * @depends testCreateUser
      */
+    #[Depends('testCreateUser')]
     public function testCreateUserSessionHashed(array $data): void
     {
         $userIds = ['md5', 'bcrypt', 'argon2', 'sha512', 'scrypt', 'phpass', 'scrypt-modified'];
@@ -232,9 +233,7 @@ trait UsersBase
         }
     }
 
-    /**
-     * @depends testCreateUser
-     */
+    #[Depends('testCreateUser')]
     public function testCreateToken(array $data): void
     {
         /**
@@ -290,9 +289,7 @@ trait UsersBase
         $this->assertArrayNotHasKey('secret', $token['body']);
     }
 
-    /**
-     * @depends testCreateUser
-     */
+    #[Depends('testCreateUser')]
     public function testCreateSession(array $data): void
     {
         /**
@@ -331,9 +328,8 @@ trait UsersBase
 
     /**
      * Tests all optional parameters of createUser (email, phone, anonymous..)
-     *
-     * @depends testCreateUser
      */
+    #[Depends('testCreateUser')]
     public function testCreateUserTypes(array $data): void
     {
         /**
@@ -420,9 +416,7 @@ trait UsersBase
         $this->assertNotEmpty($response['body']['phone']);
     }
 
-    /**
-     * @depends testCreateUser
-     */
+    #[Depends('testCreateUser')]
     public function testListUsers(array $data): void
     {
         $totalUsers = 15;
@@ -760,9 +754,7 @@ trait UsersBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateUser
-     */
+    #[Depends('testCreateUser')]
     public function testGetUser(array $data): array
     {
         /**
@@ -831,9 +823,7 @@ trait UsersBase
         return $data;
     }
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     public function testListUserMemberships(array $data): array
     {
         /**
@@ -922,9 +912,7 @@ trait UsersBase
         return $data;
     }
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     public function testUpdateUserName(array $data): array
     {
         /**
@@ -977,9 +965,7 @@ trait UsersBase
         return $data;
     }
 
-    /**
-     * @depends testUpdateUserName
-     */
+    #[Depends('testUpdateUserName')]
     public function testUpdateUserNameSearch($data): void
     {
         $id = $data['userId'] ?? '';
@@ -1015,9 +1001,7 @@ trait UsersBase
         $this->assertEquals($response['body']['users'][0]['$id'], $id);
     }
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     public function testUpdateUserEmail(array $data): array
     {
         /**
@@ -1070,9 +1054,7 @@ trait UsersBase
         return $data;
     }
 
-    /**
-     * @depends testUpdateUserEmail
-     */
+    #[Depends('testUpdateUserEmail')]
     public function testUpdateUserEmailSearch($data): void
     {
         $id = $data['userId'] ?? '';
@@ -1108,9 +1090,7 @@ trait UsersBase
         $this->assertEquals($response['body']['users'][0]['$id'], $id);
     }
 
-    /**
-     * @depends testUpdateUserEmail
-     */
+    #[Depends('testUpdateUserEmail')]
     public function testUpdateUserPassword(array $data): array
     {
         /**
@@ -1181,9 +1161,7 @@ trait UsersBase
         return $data;
     }
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     #[Retry(count: 1)]
     public function testUpdateUserStatus(array $data): array
     {
@@ -1211,9 +1189,7 @@ trait UsersBase
         return $data;
     }
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     public function testUpdateEmailVerification(array $data): array
     {
         /**
@@ -1240,9 +1216,7 @@ trait UsersBase
         return $data;
     }
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     #[Retry(count: 1)]
     public function testUpdateAndGetUserPrefs(array $data): array
     {
@@ -1296,9 +1270,7 @@ trait UsersBase
         return $data;
     }
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     public function testUpdateUserNumber(array $data): array
     {
         /**
@@ -1364,9 +1336,7 @@ trait UsersBase
         return $data;
     }
 
-    /**
-     * @depends testUpdateUserNumber
-     */
+    #[Depends('testUpdateUserNumber')]
     public function testUpdateUserNumberSearch($data): void
     {
         $id = $data['userId'] ?? '';
@@ -1390,10 +1360,7 @@ trait UsersBase
         $this->assertEquals($response['body']['users'][0]['phone'], $newNumber);
     }
 
-    /**
-     * @return array{}
-     */
-    public function userLabelsProvider()
+    public static function userLabelsProvider(): array
     {
         return [
             'single label' => [
@@ -1434,10 +1401,8 @@ trait UsersBase
         ];
     }
 
-    /**
-     * @depends testGetUser
-     * @dataProvider userLabelsProvider
-     */
+    #[Depends('testGetUser')]
+    #[DataProvider('userLabelsProvider')]
     public function testUpdateUserLabels(array $labels, int $expectedStatus, array $expectedLabels, array $data): array
     {
         $user = $this->client->call(Client::METHOD_PUT, '/users/' . $data['userId'] . '/labels', array_merge([
@@ -1455,9 +1420,7 @@ trait UsersBase
         return $data;
     }
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     public function testUpdateUserLabelsWithoutLabels(array $data): array
     {
         $user = $this->client->call(Client::METHOD_PUT, '/users/' . $data['userId'] . '/labels', array_merge([
@@ -1483,9 +1446,7 @@ trait UsersBase
     }
 
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     public function testGetLogs(array $data): void
     {
         /**
@@ -1601,9 +1562,7 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 400);
     }
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     public function testCreateUserTarget(array $data): array
     {
         $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', \array_merge([
@@ -1631,9 +1590,7 @@ trait UsersBase
         return $response['body'];
     }
 
-    /**
-     * @depends testCreateUserTarget
-     */
+    #[Depends('testCreateUserTarget')]
     public function testUpdateUserTarget(array $data): array
     {
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
@@ -1648,9 +1605,7 @@ trait UsersBase
         return $response['body'];
     }
 
-    /**
-     * @depends testUpdateUserTarget
-     */
+    #[Depends('testUpdateUserTarget')]
     public function testListUserTarget(array $data)
     {
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets', array_merge([
@@ -1662,9 +1617,7 @@ trait UsersBase
         $this->assertEquals(3, \count($response['body']['targets']));
     }
 
-    /**
-     * @depends testUpdateUserTarget
-     */
+    #[Depends('testUpdateUserTarget')]
     public function testGetUserTarget(array $data)
     {
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
@@ -1675,9 +1628,7 @@ trait UsersBase
         $this->assertEquals($data['$id'], $response['body']['$id']);
     }
 
-    /**
-     * @depends testUpdateUserTarget
-     */
+    #[Depends('testUpdateUserTarget')]
     public function testDeleteUserTarget(array $data)
     {
         $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
@@ -1696,9 +1647,7 @@ trait UsersBase
         $this->assertEquals(2, $response['body']['total']);
     }
 
-    /**
-     * @depends testGetUser
-     */
+    #[Depends('testGetUser')]
     public function testDeleteUser(array $data): array
     {
         /**

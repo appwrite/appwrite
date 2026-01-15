@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Tokens;
 
 use CURLFile;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -76,9 +77,7 @@ trait TokensBase
         ];
     }
 
-    /**
-     * @depends testCreateBucketAndFile
-     */
+    #[Depends('testCreateBucketAndFile')]
     public function testFailuresWithoutToken(array $data): array
     {
         $fileId = $data['fileId'];
@@ -140,9 +139,7 @@ trait TokensBase
         return $data;
     }
 
-    /**
-     * @depends testCreateBucketAndFile
-     */
+    #[Depends('testCreateBucketAndFile')]
     public function testPreviewFileWithToken(array $data): array
     {
         $token = $data['token'];
@@ -177,9 +174,7 @@ trait TokensBase
         return $data;
     }
 
-    /**
-     * @depends testPreviewFileWithToken
-     */
+    #[Depends('testPreviewFileWithToken')]
     public function testCustomPreviewFileWithToken(array $data): array
     {
         $fileId = $data['fileId'];
@@ -218,9 +213,7 @@ trait TokensBase
         return $data;
     }
 
-    /**
-     * @depends testPreviewFileWithToken
-     */
+    #[Depends('testPreviewFileWithToken')]
     public function testViewFileWithToken(array $data): void
     {
         $fileId = $data['fileId'];
@@ -248,9 +241,7 @@ trait TokensBase
         $this->assertEquals('PNG', $image->getImageFormat());
     }
 
-    /**
-     * @depends testPreviewFileWithToken
-     */
+    #[Depends('testPreviewFileWithToken')]
     public function testDownloadFileWithToken(array $data): void
     {
         $fileId = $data['fileId'];

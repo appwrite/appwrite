@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Webhooks;
 
 use Appwrite\Tests\Retry;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -145,9 +146,7 @@ class WebhooksCustomClientTest extends Scope
         return [];
     }
 
-    /**
-     * @depends testCreateAccount
-     */
+    #[Depends('testCreateAccount')]
     public function testCreateAccountSession($data): array
     {
         $id = $data['id'] ?? '';
@@ -224,9 +223,7 @@ class WebhooksCustomClientTest extends Scope
         ]);
     }
 
-    /**
-     * @depends testCreateAccount
-     */
+    #[Depends('testCreateAccount')]
     public function testDeleteAccountSession($data): array
     {
         $id = $data['id'] ?? '';
@@ -309,9 +306,7 @@ class WebhooksCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateAccount
-     */
+    #[Depends('testCreateAccount')]
     public function testDeleteAccountSessions($data): array
     {
         $id = $data['id'] ?? '';
@@ -412,7 +407,6 @@ class WebhooksCustomClientTest extends Scope
     }
 
     /**
-     * @depends testDeleteAccountSessions
      */
     #[Retry(count: 1)]
     public function testUpdateAccountName($data): array
@@ -465,9 +459,7 @@ class WebhooksCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountName
-     */
+    #[Depends('testUpdateAccountName')]
     public function testUpdateAccountPassword($data): array
     {
         $id = $data['id'] ?? '';
@@ -520,9 +512,7 @@ class WebhooksCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountPassword
-     */
+    #[Depends('testUpdateAccountPassword')]
     public function testUpdateAccountEmail($data): array
     {
         $id = $data['id'] ?? '';
@@ -575,9 +565,7 @@ class WebhooksCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountEmail
-     */
+    #[Depends('testUpdateAccountEmail')]
     public function testUpdateAccountPrefs($data): array
     {
         $id = $data['id'] ?? '';
@@ -632,9 +620,7 @@ class WebhooksCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountPrefs
-     */
+    #[Depends('testUpdateAccountPrefs')]
     public function testCreateAccountVerification($data): array
     {
         $id = $data['id'] ?? '';
@@ -688,9 +674,7 @@ class WebhooksCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateAccountVerification
-     */
+    #[Depends('testCreateAccountVerification')]
     public function testUpdateAccountVerification($data): array
     {
         $id = $data['id'] ?? '';
@@ -746,9 +730,7 @@ class WebhooksCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountPrefs
-     */
+    #[Depends('testUpdateAccountPrefs')]
     public function testCreateAccountRecovery($data): array
     {
         $id = $data['id'] ?? '';
@@ -801,9 +783,7 @@ class WebhooksCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateAccountRecovery
-     */
+    #[Depends('testCreateAccountRecovery')]
     public function testUpdateAccountRecovery($data): array
     {
         $id = $data['id'] ?? '';
@@ -860,9 +840,7 @@ class WebhooksCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
+    #[Depends('testCreateTeamMembership')]
     public function testUpdateTeamMembership($data): array
     {
         $teamUid = $data['teamId'] ?? '';

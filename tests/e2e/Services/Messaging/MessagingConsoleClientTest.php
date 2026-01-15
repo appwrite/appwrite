@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Messaging;
 
 use Appwrite\Tests\Async;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -18,9 +19,7 @@ class MessagingConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
-    /**
-     * @depends testListProviders
-     */
+    #[Depends('testListProviders')]
     public function testGetProviderLogs(array $providers): void
     {
         /**
@@ -171,9 +170,7 @@ class MessagingConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 400);
     }
 
-    /**
-     * @depends testListTopic
-     */
+    #[Depends('testListTopic')]
     public function testGetTopicLogs(string $topicId): void
     {
         /**
@@ -319,9 +316,7 @@ class MessagingConsoleClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 400);
     }
 
-    /**
-     * @depends testSendEmail
-     */
+    #[Depends('testSendEmail')]
     public function testGetMessageLogs(array $email): void
     {
         /**

@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -45,9 +46,7 @@ class UsersTest extends Scope
         return $user;
     }
 
-    /**
-     * @depends testCreateUser
-     */
+    #[Depends('testCreateUser')]
     public function testCreateUserTarget(array $user)
     {
         $projectId = $this->getProject()['$id'];
@@ -227,9 +226,7 @@ class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']['usersListLogs']);
     }
 
-    /**
-     * @depends testCreateUserTarget
-     */
+    #[Depends('testCreateUserTarget')]
     public function testListUserTargets(array $target)
     {
         $projectId = $this->getProject()['$id'];
@@ -251,9 +248,7 @@ class UsersTest extends Scope
         $this->assertCount(2, $targets['body']['data']['usersListTargets']['targets']);
     }
 
-    /**
-     * @depends testCreateUserTarget
-     */
+    #[Depends('testCreateUserTarget')]
     public function testGetUserTarget(array $target)
     {
         $projectId = $this->getProject()['$id'];
@@ -459,9 +454,7 @@ class UsersTest extends Scope
         $this->assertEquals('{"key":"value"}', $user['body']['data']['usersUpdatePrefs']['data']);
     }
 
-    /**
-     * @depends testCreateUserTarget
-     */
+    #[Depends('testCreateUserTarget')]
     public function testUpdateUserTarget(array $target)
     {
         $projectId = $this->getProject()['$id'];
@@ -531,9 +524,7 @@ class UsersTest extends Scope
         $this->getUser();
     }
 
-    /**
-     * @depends testCreateUserTarget
-     */
+    #[Depends('testCreateUserTarget')]
     public function testDeleteUserTarget(array $target)
     {
         $projectId = $this->getProject()['$id'];

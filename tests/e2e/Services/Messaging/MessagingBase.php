@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Messaging;
 
 use Appwrite\Messaging\Status as MessageStatus;
 use CURLFile;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -129,9 +130,7 @@ trait MessagingBase
         return $providers;
     }
 
-    /**
-     * @depends testCreateProviders
-     */
+    #[Depends('testCreateProviders')]
     public function testUpdateProviders(array $providers): array
     {
         $providersParams = [
@@ -268,9 +267,7 @@ trait MessagingBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testUpdateProviders
-     */
+    #[Depends('testUpdateProviders')]
     public function testListProviders(array $providers)
     {
         $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/', [
@@ -285,9 +282,7 @@ trait MessagingBase
         return $providers;
     }
 
-    /**
-     * @depends testUpdateProviders
-     */
+    #[Depends('testUpdateProviders')]
     public function testGetProvider(array $providers)
     {
         $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'], [
@@ -299,9 +294,7 @@ trait MessagingBase
         $this->assertEquals($providers[0]['name'], $response['body']['name']);
     }
 
-    /**
-     * @depends testUpdateProviders
-     */
+    #[Depends('testUpdateProviders')]
     public function testDeleteProvider(array $providers)
     {
         foreach ($providers as $provider) {
@@ -346,9 +339,7 @@ trait MessagingBase
         ];
     }
 
-    /**
-     * @depends testCreateTopic
-     */
+    #[Depends('testCreateTopic')]
     public function testUpdateTopic(array $topics): string
     {
         $response = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topics['public']['$id'], [
@@ -375,9 +366,7 @@ trait MessagingBase
         return $response['body']['$id'];
     }
 
-    /**
-     * @depends testUpdateTopic
-     */
+    #[Depends('testUpdateTopic')]
     public function testListTopic(string $topicId)
     {
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics', [
@@ -413,9 +402,7 @@ trait MessagingBase
         return $topicId;
     }
 
-    /**
-     * @depends testUpdateTopic
-     */
+    #[Depends('testUpdateTopic')]
     public function testGetTopic(string $topicId)
     {
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId, [
@@ -430,9 +417,7 @@ trait MessagingBase
         $this->assertEquals(0, $response['body']['pushTotal']);
     }
 
-    /**
-     * @depends testCreateTopic
-     */
+    #[Depends('testCreateTopic')]
     public function testCreateSubscriber(array $topics)
     {
         $userId = $this->getUser()['$id'];
@@ -571,9 +556,7 @@ trait MessagingBase
         }
     }
 
-    /**
-     * @depends testCreateSubscriber
-     */
+    #[Depends('testCreateSubscriber')]
     public function testGetSubscriber(array $data)
     {
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers/' . $data['subscriberId'], \array_merge([
@@ -590,9 +573,7 @@ trait MessagingBase
         $this->assertEquals($data['identifier'], $response['body']['target']['identifier']);
     }
 
-    /**
-     * @depends testCreateSubscriber
-     */
+    #[Depends('testCreateSubscriber')]
     public function testListSubscribers(array $data)
     {
         $subscriberId = $data['subscriberId'];
@@ -665,9 +646,7 @@ trait MessagingBase
         return $data;
     }
 
-    /**
-     * @depends testListSubscribers
-     */
+    #[Depends('testListSubscribers')]
     public function testGetSubscriberLogs(array $data): void
     {
         /**
@@ -792,9 +771,7 @@ trait MessagingBase
         $this->assertEquals($response['headers']['status-code'], 400);
     }
 
-    /**
-     * @depends testCreateSubscriber
-     */
+    #[Depends('testCreateSubscriber')]
     public function testDeleteSubscriber(array $data)
     {
         $response = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $data['topicId'] . '/subscribers/' . $data['subscriberId'], \array_merge([
@@ -817,9 +794,7 @@ trait MessagingBase
         $this->assertEquals(0, $topic['body']['pushTotal']);
     }
 
-    /**
-     * @depends testUpdateTopic
-     */
+    #[Depends('testUpdateTopic')]
     public function testDeleteTopic(string $topicId)
     {
         $response = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
@@ -830,9 +805,7 @@ trait MessagingBase
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateDraftEmail
-     */
+    #[Depends('testCreateDraftEmail')]
     public function testListTargets(array $message)
     {
         $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/does_not_exist/targets', [
@@ -1391,9 +1364,7 @@ trait MessagingBase
         ];
     }
 
-    /**
-     * @depends testSendEmail
-     */
+    #[Depends('testSendEmail')]
     public function testUpdateEmail(array $params): void
     {
         $email = $params['message'];
@@ -1558,9 +1529,7 @@ trait MessagingBase
         return $message;
     }
 
-    /**
-     * @depends testSendSMS
-     */
+    #[Depends('testSendSMS')]
     public function testUpdateSMS(array $sms)
     {
         $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $sms['body']['$id'], [
@@ -1719,9 +1688,7 @@ trait MessagingBase
         return $message;
     }
 
-    /**
-     * @depends testSendPushNotification
-     */
+    #[Depends('testSendPushNotification')]
     public function testUpdatePushNotification(array $push)
     {
         $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $push['body']['$id'], [
@@ -1773,7 +1740,6 @@ trait MessagingBase
     }
 
     /**
-     * @depends testSendEmail
      * @return void
      * @throws \Exception
      */

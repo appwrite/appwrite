@@ -4,6 +4,8 @@ namespace Tests\E2E\Services\Storage;
 
 use Appwrite\Extend\Exception;
 use CURLFile;
+use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -13,9 +15,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StorageBase
 {
-    /**
-     * @group fileTokens
-     */
+    #[Group('fileTokens')]
     public function testCreateBucketFile(): array
     {
         /**
@@ -395,9 +395,7 @@ trait StorageBase
         $this->assertEquals(409, $file['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateBucketFile
-     */
+    #[Depends('testCreateBucketFile')]
     public function testListBucketFiles(array $data): array
     {
         /**
@@ -485,9 +483,7 @@ trait StorageBase
         return $data;
     }
 
-    /**
-     * @depends testCreateBucketFile
-     */
+    #[Depends('testCreateBucketFile')]
     public function testGetBucketFile(array $data): array
     {
         $bucketId = $data['bucketId'];
@@ -708,9 +704,7 @@ trait StorageBase
         return $data;
     }
 
-    /**
-     * @depends testCreateBucketFile
-     */
+    #[Depends('testCreateBucketFile')]
     public function testFilePreviewCache(array $data): array
     {
         $bucketId = $data['bucketId'];
@@ -801,9 +795,7 @@ trait StorageBase
         return $data;
     }
 
-    /**
-     * @depends testCreateBucketFileZstdCompression
-     */
+    #[Depends('testCreateBucketFileZstdCompression')]
     public function testFilePreviewZstdCompression(array $data): array
     {
         $bucketId = $data['bucketId'];
@@ -845,9 +837,7 @@ trait StorageBase
         return $data;
     }
 
-    /**
-     * @depends testCreateBucketFile
-     */
+    #[Depends('testCreateBucketFile')]
     public function testUpdateBucketFile(array $data): array
     {
         /**
@@ -901,9 +891,7 @@ trait StorageBase
         return $data;
     }
 
-    /**
-     * @depends testCreateBucketFile
-     */
+    #[Depends('testCreateBucketFile')]
     public function testFilePreview(array $data): array
     {
         $bucketId = $data['bucketId'];
@@ -926,9 +914,7 @@ trait StorageBase
         return $data;
     }
 
-    /**
-     * @depends testUpdateBucketFile
-     */
+    #[Depends('testUpdateBucketFile')]
     public function testDeleteBucketFile(array $data): array
     {
         /**

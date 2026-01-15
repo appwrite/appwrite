@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Functions;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -50,9 +51,7 @@ class FunctionsConsoleClientTest extends Scope
         ];
     }
 
-    /**
-     * @depends testCreateFunction
-     */
+    #[Depends('testCreateFunction')]
     public function testFunctionUsage(array $data)
     {
         /**
@@ -98,9 +97,7 @@ class FunctionsConsoleClientTest extends Scope
         $this->assertEquals(404, $usage['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateFunction
-     */
+    #[Depends('testCreateFunction')]
     public function testCreateFunctionVariable(array $data)
     {
         /**
@@ -182,9 +179,7 @@ class FunctionsConsoleClientTest extends Scope
         );
     }
 
-    /**
-     * @depends testCreateFunctionVariable
-     */
+    #[Depends('testCreateFunctionVariable')]
     public function testListVariables(array $data)
     {
         /**
@@ -211,9 +206,7 @@ class FunctionsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testListVariables
-     */
+    #[Depends('testListVariables')]
     public function testGetVariable(array $data)
     {
         /**
@@ -252,9 +245,7 @@ class FunctionsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testGetVariable
-     */
+    #[Depends('testGetVariable')]
     public function testUpdateVariable(array $data)
     {
         /**
@@ -403,9 +394,7 @@ class FunctionsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateVariable
-     */
+    #[Depends('testUpdateVariable')]
     public function testDeleteVariable(array $data)
     {
         /**

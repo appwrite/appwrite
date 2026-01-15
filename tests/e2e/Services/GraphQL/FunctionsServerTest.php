@@ -73,7 +73,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @param $function
      * @return array
      * @throws \Exception
@@ -135,7 +134,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDeployment
      * @param $deployment
      * @return array
      * @throws \Exception
@@ -163,7 +161,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testGetDeployment
      * @param $deployment
      * @return void
      * @throws \Exception
@@ -212,7 +209,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @param $function
      * @return array
      * @throws \Exception
@@ -263,7 +259,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @param $function
      * @return array
      * @throws \Exception
@@ -293,7 +288,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDeployment
      * @param $deployment
      * @return array
      * @throws \Exception
@@ -324,7 +318,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @param $function
      * @return array
      * @throws \Exception
@@ -354,7 +347,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateExecution
      * @param $execution
      * @return array
      * @throws \Exception
@@ -385,7 +377,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @param $function
      * @return array
      * @throws \Exception
@@ -423,7 +414,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDeployment
      * @param $deployment
      * @throws \Exception
      */
@@ -451,7 +441,6 @@ class FunctionsServerTest extends Scope
     }
 
     /**
-     * @depends testDeleteDeployment
      * @param $deployment
      * @throws \Exception
      */

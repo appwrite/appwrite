@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Tokens;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use CURLFile;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -120,9 +121,7 @@ class TokensConsoleClientTest extends Scope
         ];
     }
 
-    /**
-     * @depends testCreateToken
-     */
+    #[Depends('testCreateToken')]
     public function testUpdateToken(array $data): array
     {
         $tokenId = $data['tokenId'];
@@ -187,9 +186,7 @@ class TokensConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateToken
-     */
+    #[Depends('testCreateToken')]
     public function testListTokens(array $data): array
     {
         $res = $this->client->call(
@@ -243,9 +240,7 @@ class TokensConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateToken
-     */
+    #[Depends('testUpdateToken')]
     public function testDeleteToken(array $data): array
     {
         $tokenId = $data['tokenId'];

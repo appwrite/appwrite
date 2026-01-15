@@ -3,6 +3,7 @@
 namespace Tests\Unit\Utopia\Database\Validator;
 
 use Appwrite\Utopia\Database\Validator\ProjectId;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class ProjectIdTest extends TestCase
@@ -18,10 +19,7 @@ class ProjectIdTest extends TestCase
     {
     }
 
-    /**
-     * @return array
-     */
-    public function provideTest(): array
+    public static function provideTest(): array
     {
         return [
             'unique()' => ['unique()', true],
@@ -34,9 +32,7 @@ class ProjectIdTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider provideTest
-     */
+    #[DataProvider('provideTest')]
     public function testValues(string $input, bool $expected): void
     {
         $this->assertEquals($this->object->isValid($input), $expected);

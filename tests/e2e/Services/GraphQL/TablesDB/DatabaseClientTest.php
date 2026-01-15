@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL\TablesDB;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -44,9 +45,7 @@ class DatabaseClientTest extends Scope
         return $database;
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testCreateTable($database): array
     {
         $projectId = $this->getProject()['$id'];
@@ -84,9 +83,7 @@ class DatabaseClientTest extends Scope
         ];
     }
 
-    /**
-     * @depends testCreateTable
-     */
+    #[Depends('testCreateTable')]
     public function testCreateStringColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -115,9 +112,7 @@ class DatabaseClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateTable
-     */
+    #[Depends('testCreateTable')]
     public function testCreateIntegerColumn($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -148,8 +143,6 @@ class DatabaseClientTest extends Scope
     }
 
     /**
-     * @depends testCreateStringColumn
-     * @depends testCreateIntegerColumn
      */
     public function testCreateRow($data): array
     {
@@ -194,7 +187,6 @@ class DatabaseClientTest extends Scope
     }
 
     /**
-     * @depends testCreateTable
      * @throws \Exception
      */
     public function testGetRows($data): void
@@ -220,7 +212,6 @@ class DatabaseClientTest extends Scope
     }
 
     /**
-     * @depends testCreateRow
      * @throws \Exception
      */
     public function testGetDocument($data): void
@@ -247,7 +238,6 @@ class DatabaseClientTest extends Scope
     }
 
     /**
-     * @depends testCreateRow
      * @throws \Exception
      */
     public function testUpdateRow($data): void
@@ -280,7 +270,6 @@ class DatabaseClientTest extends Scope
     }
 
     /**
-     * @depends testCreateRow
      * @throws \Exception
      */
     public function testDeleteRow($data): void
@@ -387,9 +376,7 @@ class DatabaseClientTest extends Scope
         return compact('databaseId', 'tableId', 'projectId');
     }
 
-    /**
-     * @depends testBulkCreate
-     */
+    #[Depends('testBulkCreate')]
     public function testBulkUpdate(array $data): array
     {
         $userId = $this->getUser()['$id'];
@@ -450,9 +437,7 @@ class DatabaseClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testBulkCreate
-     */
+    #[Depends('testBulkCreate')]
     public function testBulkUpsert(array $data): array
     {
         $userId = $this->getUser()['$id'];
@@ -542,9 +527,7 @@ class DatabaseClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testBulkUpsert
-     */
+    #[Depends('testBulkUpsert')]
     public function testBulkDelete(array $data): array
     {
         $headers = [

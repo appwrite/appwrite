@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\VCS;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -43,9 +44,7 @@ class VCSConsoleClientTest extends Scope
         return $installationId;
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
+    #[Depends('testGitHubAuthorize')]
     public function testGetInstallation(string $installationId): void
     {
         /**
@@ -61,9 +60,7 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals('appwrite-test', $installation['body']['organization']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
+    #[Depends('testGitHubAuthorize')]
     public function testDetectRuntime(string $installationId): void
     {
         /**
@@ -98,9 +95,7 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals(404, $runtime['headers']['status-code']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
+    #[Depends('testGitHubAuthorize')]
     public function testDetectFramework(string $installationId)
     {
         /**
@@ -166,9 +161,7 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals(404, $framework['headers']['status-code']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
+    #[Depends('testGitHubAuthorize')]
     public function testContents(string $installationId): void
     {
         /**
@@ -238,9 +231,7 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals(404, $runtime['headers']['status-code']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
+    #[Depends('testGitHubAuthorize')]
     public function testListRepositories(string $installationId): void
     {
         /**
@@ -398,9 +389,7 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($repositories['body']['total'], 0);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
+    #[Depends('testGitHubAuthorize')]
     public function testGetRepository(string $installationId): void
     {
         /**
@@ -436,9 +425,7 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals(404, $repository['headers']['status-code']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
+    #[Depends('testGitHubAuthorize')]
     public function testListRepositoryBranches(string $installationId): void
     {
         /**
@@ -465,9 +452,7 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals(404, $repositoryBranches['headers']['status-code']);
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
+    #[Depends('testGitHubAuthorize')]
     public function testCreateFunctionUsingVCS(string $installationId): array
     {
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
@@ -503,9 +488,7 @@ class VCSConsoleClientTest extends Scope
         ];
     }
 
-    /**
-     * @depends testCreateFunctionUsingVCS
-     */
+    #[Depends('testCreateFunctionUsingVCS')]
     public function testUpdateFunctionUsingVCS(array $data): string
     {
         $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
@@ -538,9 +521,7 @@ class VCSConsoleClientTest extends Scope
         return $function['body']['$id'];
     }
 
-    /**
-     * @depends testGitHubAuthorize
-     */
+    #[Depends('testGitHubAuthorize')]
     public function testCreateRepository(string $installationId): void
     {
         /**

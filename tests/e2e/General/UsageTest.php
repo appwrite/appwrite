@@ -5,6 +5,7 @@ namespace Tests\E2E\General;
 use Appwrite\Platform\Modules\Compute\Specification;
 use CURLFile;
 use DateTime;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -180,9 +181,7 @@ class UsageTest extends Scope
         ];
     }
 
-    /**
-     * @depends testPrepareUsersStats
-     */
+    #[Depends('testPrepareUsersStats')]
     public function testUsersStats(array $data): array
     {
         $requestsTotal = $data['requestsTotal'];
@@ -226,7 +225,7 @@ class UsageTest extends Scope
         ]);
     }
 
-    /** @depends testUsersStats */
+    #[Depends('testUsersStats')]
     public function testPrepareStorageStats(array $data): array
     {
         $requestsTotal = $data['requestsTotal'];
@@ -359,9 +358,7 @@ class UsageTest extends Scope
         ]);
     }
 
-    /**
-     * @depends testPrepareStorageStats
-     */
+    #[Depends('testPrepareStorageStats')]
     public function testStorageStats(array $data): array
     {
         $bucketId      = $data['bucketId'];
@@ -418,7 +415,7 @@ class UsageTest extends Scope
         return $data;
     }
 
-    /** @depends testStorageStats */
+    #[Depends('testStorageStats')]
     public function testPrepareDatabaseStatsCollectionsAPI(array $data): array
     {
         $requestsTotal = $data['requestsTotal'];
@@ -584,7 +581,7 @@ class UsageTest extends Scope
         ]);
     }
 
-    /** @depends testPrepareDatabaseStatsCollectionsAPI */
+    #[Depends('testPrepareDatabaseStatsCollectionsAPI')]
     public function testDatabaseStatsCollectionsAPI(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -658,7 +655,7 @@ class UsageTest extends Scope
         return $data;
     }
 
-    /** @depends testDatabaseStatsCollectionsAPI */
+    #[Depends('testDatabaseStatsCollectionsAPI')]
     public function testPrepareDatabaseStatsTablesAPI(array $data): array
     {
         $rowsTotal = 0;
@@ -830,7 +827,7 @@ class UsageTest extends Scope
         ]);
     }
 
-    /** @depends testPrepareDatabaseStatsTablesAPI */
+    #[Depends('testPrepareDatabaseStatsTablesAPI')]
     #[Retry(count: 1)]
     public function testDatabaseStatsTablesAPI(array $data): array
     {
@@ -909,7 +906,7 @@ class UsageTest extends Scope
         return $data;
     }
 
-    /** @depends testDatabaseStatsTablesAPI */
+    #[Depends('testDatabaseStatsTablesAPI')]
     public function testPrepareFunctionsStats(array $data): array
     {
         $executionTime = 0;
@@ -1062,7 +1059,7 @@ class UsageTest extends Scope
         ]);
     }
 
-    /** @depends testPrepareFunctionsStats */
+    #[Depends('testPrepareFunctionsStats')]
     public function testFunctionsStats(array $data): array
     {
         $functionId = $data['functionId'];
@@ -1192,7 +1189,7 @@ class UsageTest extends Scope
         return $data;
     }
 
-    /** @depends testPrepareSitesStats */
+    #[Depends('testPrepareSitesStats')]
     public function testSitesStats(array $data)
     {
         $siteId = $data['siteId'];
@@ -1268,7 +1265,7 @@ class UsageTest extends Scope
         });
     }
 
-    /** @depends testFunctionsStats */
+    #[Depends('testFunctionsStats')]
     public function testCustomDomainsFunctionStats(array $data): void
     {
         $functionId = $data['functionId'];

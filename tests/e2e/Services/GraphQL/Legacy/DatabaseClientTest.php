@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL\Legacy;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -43,9 +44,7 @@ class DatabaseClientTest extends Scope
         return $database;
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testCreateCollection($database): array
     {
         $projectId = $this->getProject()['$id'];
@@ -83,9 +82,7 @@ class DatabaseClientTest extends Scope
         ];
     }
 
-    /**
-     * @depends testCreateCollection
-     */
+    #[Depends('testCreateCollection')]
     public function testCreateStringAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -114,9 +111,7 @@ class DatabaseClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateCollection
-     */
+    #[Depends('testCreateCollection')]
     public function testCreateIntegerAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -147,8 +142,6 @@ class DatabaseClientTest extends Scope
     }
 
     /**
-     * @depends testCreateStringAttribute
-     * @depends testCreateIntegerAttribute
      */
     public function testCreateDocument($data): array
     {
@@ -193,7 +186,6 @@ class DatabaseClientTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws \Exception
      */
     public function testGetDocuments($data): void
@@ -219,7 +211,6 @@ class DatabaseClientTest extends Scope
     }
 
     /**
-     * @depends testCreateDocument
      * @throws \Exception
      */
     public function testGetDocument($data): void
@@ -246,7 +237,6 @@ class DatabaseClientTest extends Scope
     }
 
     /**
-     * @depends testCreateDocument
      * @throws \Exception
      */
     public function testUpdateDocument($data): void
@@ -279,7 +269,6 @@ class DatabaseClientTest extends Scope
     }
 
     /**
-     * @depends testCreateDocument
      * @throws \Exception
      */
     public function testDeleteDocument($data): void
@@ -386,9 +375,7 @@ class DatabaseClientTest extends Scope
         ];
     }
 
-    /**
-     * @depends testBulkCreateDocuments
-     */
+    #[Depends('testBulkCreateDocuments')]
     public function testBulkUpdateDocuments(array $data): array
     {
         $userId = $this->getUser()['$id'];
@@ -423,9 +410,7 @@ class DatabaseClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testBulkUpdateDocuments
-     */
+    #[Depends('testBulkUpdateDocuments')]
     public function testBulkUpsertDocuments(array $data): array
     {
         $headers = [
@@ -454,9 +439,7 @@ class DatabaseClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testBulkUpsertDocuments
-     */
+    #[Depends('testBulkUpsertDocuments')]
     public function testBulkDeleteDocuments(array $data): array
     {
         $headers = [

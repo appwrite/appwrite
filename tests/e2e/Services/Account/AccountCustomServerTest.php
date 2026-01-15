@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Account;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -15,9 +16,7 @@ class AccountCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    /**
-     * @depends testCreateAccount
-     */
+    #[Depends('testCreateAccount')]
     public function testCreateAccountSession($data): array
     {
         $email = $data['email'] ?? '';
@@ -112,9 +111,7 @@ class AccountCustomServerTest extends Scope
         ]);
     }
 
-    /**
-     * @depends testCreateAccountSession
-     */
+    #[Depends('testCreateAccountSession')]
     public function testGetAccount($data): array
     {
         $email = $data['email'] ?? '';
@@ -239,9 +236,7 @@ class AccountCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateMagicUrl
-     */
+    #[Depends('testCreateMagicUrl')]
     public function testCreateSessionWithMagicUrl($data): array
     {
         $id = $data['id'] ?? '';

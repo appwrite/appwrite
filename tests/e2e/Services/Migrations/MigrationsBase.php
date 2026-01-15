@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Migrations;
 
 use CURLFile;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -432,9 +433,7 @@ trait MigrationsBase
         ];
     }
 
-    /**
-     * @depends testAppwriteMigrationDatabase
-     */
+    #[Depends('testAppwriteMigrationDatabase')]
     public function testAppwriteMigrationDatabasesTable(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -539,9 +538,7 @@ trait MigrationsBase
         ];
     }
 
-    /**
-     * @depends testAppwriteMigrationDatabasesTable
-     */
+    #[Depends('testAppwriteMigrationDatabasesTable')]
     public function testAppwriteMigrationDatabasesRow(array $data): void
     {
         $table = $data['tableId'];

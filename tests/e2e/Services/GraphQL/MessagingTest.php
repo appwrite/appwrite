@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -119,9 +120,7 @@ class MessagingTest extends Scope
         return $providers;
     }
 
-    /**
-     * @depends testCreateProviders
-     */
+    #[Depends('testCreateProviders')]
     public function testUpdateProviders(array $providers): array
     {
         $providersParams = [
@@ -232,9 +231,7 @@ class MessagingTest extends Scope
         return $providers;
     }
 
-    /**
-     * @depends testUpdateProviders
-     */
+    #[Depends('testUpdateProviders')]
     public function testListProviders(array $providers)
     {
         $query = $this->getQuery(self::LIST_PROVIDERS);
@@ -250,9 +247,7 @@ class MessagingTest extends Scope
         $this->assertEquals(\count($providers), \count($response['body']['data']['messagingListProviders']['providers']));
     }
 
-    /**
-     * @depends testUpdateProviders
-     */
+    #[Depends('testUpdateProviders')]
     public function testGetProvider(array $providers)
     {
         $query = $this->getQuery(self::GET_PROVIDER);
@@ -271,9 +266,7 @@ class MessagingTest extends Scope
         $this->assertEquals($providers[0]['name'], $response['body']['data']['messagingGetProvider']['name']);
     }
 
-    /**
-     * @depends testUpdateProviders
-     */
+    #[Depends('testUpdateProviders')]
     public function testDeleteProvider(array $providers)
     {
         foreach ($providers as $provider) {
@@ -315,9 +308,7 @@ class MessagingTest extends Scope
         return $response['body']['data']['messagingCreateTopic'];
     }
 
-    /**
-     * @depends testCreateTopic
-     */
+    #[Depends('testCreateTopic')]
     public function testUpdateTopic(array $topic)
     {
         $topicId = $topic['_id'];
@@ -341,9 +332,7 @@ class MessagingTest extends Scope
         return $topicId;
     }
 
-    /**
-     * @depends testCreateTopic
-     */
+    #[Depends('testCreateTopic')]
     public function testListTopics()
     {
         $query = $this->getQuery(self::LIST_TOPICS);
@@ -360,9 +349,7 @@ class MessagingTest extends Scope
         $this->assertEquals(1, \count($response['body']['data']['messagingListTopics']['topics']));
     }
 
-    /**
-     * @depends testUpdateTopic
-     */
+    #[Depends('testUpdateTopic')]
     public function testGetTopic(string $topicId)
     {
         $query = $this->getQuery(self::GET_TOPIC);
@@ -382,9 +369,7 @@ class MessagingTest extends Scope
         $this->assertEquals('topic2', $response['body']['data']['messagingGetTopic']['name']);
     }
 
-    /**
-     * @depends testCreateTopic
-     */
+    #[Depends('testCreateTopic')]
     public function testCreateSubscriber(array $topic)
     {
         $topicId = $topic['_id'];
@@ -458,9 +443,7 @@ class MessagingTest extends Scope
         return $response['body']['data']['messagingCreateSubscriber'];
     }
 
-    /**
-     * @depends testCreateSubscriber
-     */
+    #[Depends('testCreateSubscriber')]
     public function testListSubscribers(array $subscriber)
     {
         $query = $this->getQuery(self::LIST_SUBSCRIBERS);
@@ -483,9 +466,7 @@ class MessagingTest extends Scope
         $this->assertEquals(1, \count($response['body']['data']['messagingListSubscribers']['subscribers']));
     }
 
-    /**
-     * @depends testCreateSubscriber
-     */
+    #[Depends('testCreateSubscriber')]
     public function testGetSubscriber(array $subscriber)
     {
         $topicId = $subscriber['topicId'];
@@ -513,9 +494,7 @@ class MessagingTest extends Scope
         $this->assertEquals($subscriber['target']['userId'], $response['body']['data']['messagingGetSubscriber']['target']['userId']);
     }
 
-    /**
-     * @depends testCreateSubscriber
-     */
+    #[Depends('testCreateSubscriber')]
     public function testDeleteSubscriber(array $subscriber)
     {
         $topicId = $subscriber['topicId'];
@@ -537,9 +516,7 @@ class MessagingTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testUpdateTopic
-     */
+    #[Depends('testUpdateTopic')]
     public function testDeleteTopic(string $topicId)
     {
         $query = $this->getQuery(self::DELETE_TOPIC);
@@ -708,9 +685,7 @@ class MessagingTest extends Scope
         return $message['body']['data']['messagingGetMessage'];
     }
 
-    /**
-     * @depends testSendEmail
-     */
+    #[Depends('testSendEmail')]
     public function testUpdateEmail(array $email)
     {
         $query = $this->getQuery(self::CREATE_EMAIL);
@@ -912,9 +887,7 @@ class MessagingTest extends Scope
         return $message['body']['data']['messagingGetMessage'];
     }
 
-    /**
-     * @depends testSendSMS
-     */
+    #[Depends('testSendSMS')]
     public function testUpdateSMS(array $sms)
     {
         $query = $this->getQuery(self::CREATE_SMS);
@@ -1118,9 +1091,7 @@ class MessagingTest extends Scope
         return $message['body']['data']['messagingGetMessage'];
     }
 
-    /**
-     * @depends testSendPushNotification
-     */
+    #[Depends('testSendPushNotification')]
     public function testUpdatePushNotification(array $push)
     {
         $query = $this->getQuery(self::CREATE_PUSH_NOTIFICATION);

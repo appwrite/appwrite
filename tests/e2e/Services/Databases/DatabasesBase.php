@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Databases;
 
 use Appwrite\Extend\Exception;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
@@ -42,9 +43,7 @@ trait DatabasesBase
         return ['databaseId' => $database['body']['$id']];
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testCreateCollection(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -90,9 +89,7 @@ trait DatabasesBase
         ];
     }
 
-    /**
-     * @depends testCreateCollection
-     */
+    #[Depends('testCreateCollection')]
     public function testConsoleProject(array $data): void
     {
         if ($this->getSide() === 'server') {
@@ -132,9 +129,7 @@ trait DatabasesBase
         }
     }
 
-    /**
-     * @depends testCreateCollection
-     */
+    #[Depends('testCreateCollection')]
     public function testDisableCollection(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -201,9 +196,7 @@ trait DatabasesBase
         $this->assertTrue($response['body']['enabled']);
     }
 
-    /**
-     * @depends testCreateCollection
-     */
+    #[Depends('testCreateCollection')]
     public function testCreateAttributes(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -386,9 +379,7 @@ trait DatabasesBase
         return $data;
     }
 
-    /**
-     * @depends testCreateAttributes
-     */
+    #[Depends('testCreateAttributes')]
     public function testListAttributes(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -416,9 +407,7 @@ trait DatabasesBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testPatchAttribute(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -540,9 +529,7 @@ trait DatabasesBase
         $this->assertEquals($attribute['body']['elements'], ['goalkeeper', 'defender', 'midfielder', 'forward', 'coach']);
     }
 
-    /**
-     * @depends testCreateAttributes
-     */
+    #[Depends('testCreateAttributes')]
     public function testAttributeResponseModels(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -1225,9 +1212,7 @@ trait DatabasesBase
         return $data;
     }
 
-    /**
-     * @depends testCreateAttributes
-     */
+    #[Depends('testCreateAttributes')]
     public function testCreateIndexes(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -1466,9 +1451,7 @@ trait DatabasesBase
         return $data;
     }
 
-    /**
-     * @depends testCreateAttributes
-     */
+    #[Depends('testCreateAttributes')]
     public function testGetIndexByKeyWithLengths(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -1551,9 +1534,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(400, $create['headers']['status-code']);
     }
-    /**
-     * @depends testCreateIndexes
-     */
+    #[Depends('testCreateIndexes')]
     public function testListIndexes(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -1582,9 +1563,7 @@ trait DatabasesBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateIndexes
-     */
+    #[Depends('testCreateIndexes')]
     public function testCreateDocument(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -1724,9 +1703,7 @@ trait DatabasesBase
     }
 
 
-    /**
-     * @depends testCreateIndexes
-     */
+    #[Depends('testCreateIndexes')]
     public function testUpsertDocument(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -2290,9 +2267,7 @@ trait DatabasesBase
         }
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testListDocuments(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -2382,9 +2357,7 @@ trait DatabasesBase
         return [$this->getRecordResource() => $documents['body'][$this->getRecordResource()], 'databaseId' => $databaseId];
     }
 
-    /**
-     * @depends testListDocuments
-     */
+    #[Depends('testListDocuments')]
     public function testGetDocument(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -2408,9 +2381,7 @@ trait DatabasesBase
         }
     }
 
-    /**
-     * @depends testListDocuments
-     */
+    #[Depends('testListDocuments')]
     public function testGetDocumentWithQueries(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -2447,9 +2418,7 @@ trait DatabasesBase
         $this->assertTrue(array_key_exists('$sequence', $response['body']));
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testListDocumentsAfterPagination(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -2589,9 +2558,7 @@ trait DatabasesBase
         return [];
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testListDocumentsBeforePagination(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -2702,9 +2669,7 @@ trait DatabasesBase
         return [];
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testListDocumentsLimitAndOffset(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -2741,9 +2706,7 @@ trait DatabasesBase
         return [];
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testDocumentsListQueries(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -2986,9 +2949,7 @@ trait DatabasesBase
         return [];
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testUpdateDocument(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -3508,9 +3469,7 @@ trait DatabasesBase
         $this->assertEquals(2031, $verify2['body']['releaseYear']);
     }
 
-    /**
-     * @depends testCreateDocument
-     */
+    #[Depends('testCreateDocument')]
     public function testDeleteDocument(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -4110,9 +4069,7 @@ trait DatabasesBase
         $this->assertEquals('Invalid document structure: Attribute "lowerBound" has invalid format. Value must be a valid range between 5 and 9,223,372,036,854,775,807', $tooLow['body']['message']);
     }
 
-    /**
-     * @depends testDeleteDocument
-     */
+    #[Depends('testDeleteDocument')]
     public function testDefaultPermissions(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -4619,9 +4576,7 @@ trait DatabasesBase
         $this->assertCount(1, $documentsUser2['body'][$this->getRecordResource()]);
     }
 
-    /**
-     * @depends testDefaultPermissions
-     */
+    #[Depends('testDefaultPermissions')]
     public function testUniqueIndexDuplicate(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -4711,9 +4666,7 @@ trait DatabasesBase
         return $data;
     }
 
-    /**
-     * @depends testUniqueIndexDuplicate
-     */
+    #[Depends('testUniqueIndexDuplicate')]
     public function testPersistentCreatedAt(array $data): array
     {
         $headers = $this->getSide() === 'client' ? array_merge([
@@ -4893,9 +4846,7 @@ trait DatabasesBase
         return [];
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testAttributeBooleanDefault(array $data): void
     {
         $databaseId = $data['databaseId'];
@@ -4941,9 +4892,7 @@ trait DatabasesBase
         $this->assertEquals(202, $false['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testOneToOneRelationship(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -5195,9 +5144,7 @@ trait DatabasesBase
         ];
     }
 
-    /**
-     * @depends testOneToOneRelationship
-     */
+    #[Depends('testOneToOneRelationship')]
     public function testOneToManyRelationship(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -5350,9 +5297,7 @@ trait DatabasesBase
         return ['databaseId' => $databaseId, 'personCollection' => $personCollection];
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testManyToOneRelationship(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -5502,9 +5447,7 @@ trait DatabasesBase
         ];
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testManyToManyRelationship(array $data): array
     {
         $databaseId = $data['databaseId'];
@@ -5665,9 +5608,7 @@ trait DatabasesBase
         ];
     }
 
-    /**
-     * @depends testOneToManyRelationship
-     */
+    #[Depends('testOneToManyRelationship')]
     public function testValidateOperators(array $data): void
     {
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['personCollection']), array_merge([
@@ -5708,9 +5649,7 @@ trait DatabasesBase
         $this->assertArrayHasKey($this->getContainerIdResponseKey(), $response['body'][$this->getRecordResource()][0]);
     }
 
-    /**
-     * @depends testOneToManyRelationship
-     */
+    #[Depends('testOneToManyRelationship')]
     public function testSelectQueries(array $data): void
     {
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['personCollection']), array_merge([
@@ -5893,7 +5832,6 @@ trait DatabasesBase
     }
 
     /**
-     * @depends testCreateDatabase
      * @param array $data
      * @return void
      * @throws \Exception
@@ -5993,9 +5931,7 @@ trait DatabasesBase
         $this->assertEquals(200, $update['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testTimeout(array $data): void
     {
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($data['databaseId']), array_merge([

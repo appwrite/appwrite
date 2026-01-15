@@ -2,6 +2,8 @@
 
 namespace Tests\E2E\Services\Databases\Permissions;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiLegacy;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -118,7 +120,7 @@ class LegacyPermissionsTeamTest extends Scope
      * $success = can $user read from $collection
      * [$user, $collection, $success]
      */
-    public function readDocumentsProvider(): array
+    public static function readDocumentsProvider(): array
     {
         return [
             ['user1', 'collection1', true],
@@ -134,7 +136,7 @@ class LegacyPermissionsTeamTest extends Scope
      * $success = can $user write to $collection
      * [$user, $collection, $success]
      */
-    public function writeDocumentsProvider(): array
+    public static function writeDocumentsProvider(): array
     {
         return [
             ['user1', 'collection1', true],
@@ -196,11 +198,8 @@ class LegacyPermissionsTeamTest extends Scope
         return $this->users;
     }
 
-    /**
-     * Data provider params are passed before test dependencies
-     * @depends testSetupDatabase
-     * @dataProvider readDocumentsProvider
-     */
+    #[Depends('testSetupDatabase')]
+    #[DataProvider('readDocumentsProvider')]
     public function testReadDocuments($user, $collection, $success, $users)
     {
         $documents = $this->client->call(
@@ -221,10 +220,8 @@ class LegacyPermissionsTeamTest extends Scope
         }
     }
 
-    /**
-     * @depends testSetupDatabase
-     * @dataProvider writeDocumentsProvider
-     */
+    #[Depends('testSetupDatabase')]
+    #[DataProvider('writeDocumentsProvider')]
     public function testWriteDocuments($user, $collection, $success, $users)
     {
         $documents = $this->client->call(

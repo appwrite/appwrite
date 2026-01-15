@@ -2,6 +2,8 @@
 
 namespace Tests\E2E\Services\Databases\Permissions;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiLegacy;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -28,7 +30,7 @@ class LegacyPermissionsMemberTest extends Scope
         ];
     }
 
-    public function permissionsProvider(): array
+    public static function permissionsProvider(): array
     {
         return [
             [
@@ -228,11 +230,8 @@ class LegacyPermissionsMemberTest extends Scope
         ];
     }
 
-    /**
-     * Data provider params are passed before test dependencies
-     * @dataProvider permissionsProvider
-     * @depends      testSetupDatabase
-     */
+    #[DataProvider('permissionsProvider')]
+    #[Depends('testSetupDatabase')]
     public function testReadDocuments($permissions, $anyCount, $usersCount, $docOnlyCount, $data)
     {
         $users = $data['users'];

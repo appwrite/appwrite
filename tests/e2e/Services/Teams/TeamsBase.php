@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Teams;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -126,9 +127,7 @@ trait TeamsBase
         return ['teamUid' => $teamUid, 'teamName' => $teamName];
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testGetTeam($data): array
     {
         $id = $data['teamUid'] ?? '';
@@ -157,9 +156,7 @@ trait TeamsBase
         return [];
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testListTeams($data): array
     {
         /**
@@ -437,9 +434,7 @@ trait TeamsBase
         return [];
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testUpdateAndGetUserPrefs(array $data): void
     {
         $id = $data['teamUid'] ?? '';

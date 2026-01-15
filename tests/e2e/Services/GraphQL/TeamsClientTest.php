@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -40,9 +41,7 @@ class TeamsClientTest extends Scope
         return $team;
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testCreateTeamMembership($team): array
     {
         $projectId = $this->getProject()['$id'];
@@ -89,9 +88,7 @@ class TeamsClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $teams['body']);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testGetTeam($team)
     {
         $projectId = $this->getProject()['$id'];
@@ -114,9 +111,7 @@ class TeamsClientTest extends Scope
         $this->assertIsArray($team);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testGetTeamMemberships($team)
     {
         $projectId = $this->getProject()['$id'];
@@ -139,8 +134,6 @@ class TeamsClientTest extends Scope
     }
 
     /**
-     * @depends testCreateTeam
-     * @depends testCreateTeamMembership
      */
     public function testGetTeamMembership($team, $membership)
     {
@@ -164,8 +157,6 @@ class TeamsClientTest extends Scope
     }
 
     /**
-     * @depends testCreateTeam
-     * @depends testCreateTeamMembership
      */
     public function testDeleteTeamMembership($team, $membership)
     {

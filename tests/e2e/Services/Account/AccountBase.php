@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Account;
 
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -365,9 +366,7 @@ trait AccountBase
         $this->assertEquals('191.0.113.195', $response['body']['clientIp'] ?? $response['body']['ip'] ?? '');
     }
 
-    /**
-     * @group abuseEnabled
-     */
+    #[Group('abuseEnabled')]
     public function testAccountAbuseReset(): void
     {
         if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'disabled') {

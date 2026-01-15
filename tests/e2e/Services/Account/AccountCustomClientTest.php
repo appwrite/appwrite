@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Account;
 
 use Appwrite\Tests\Retry;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -20,9 +21,7 @@ class AccountCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    /**
-     * @depends testCreateAccount
-     */
+    #[Depends('testCreateAccount')]
     public function testCreateAccountSession($data): array
     {
         $email = $data['email'] ?? '';
@@ -128,9 +127,7 @@ class AccountCustomClientTest extends Scope
         ]);
     }
 
-    /**
-     * @depends testCreateAccountSession
-     */
+    #[Depends('testCreateAccountSession')]
     public function testGetAccount($data): array
     {
         $email = $data['email'] ?? '';
@@ -177,9 +174,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateAccountSession
-     */
+    #[Depends('testCreateAccountSession')]
     public function testGetAccountPrefs($data): array
     {
         $session = $data['session'] ?? '';
@@ -213,9 +208,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateAccountSession
-     */
+    #[Depends('testCreateAccountSession')]
     public function testGetAccountSessions($data): array
     {
         $session = $data['session'] ?? '';
@@ -270,9 +263,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateAccountSession
-     */
+    #[Depends('testCreateAccountSession')]
     public function testGetAccountLogs($data): array
     {
         sleep(5);
@@ -425,9 +416,7 @@ class AccountCustomClientTest extends Scope
 
     // TODO Add tests for OAuth2 session creation
 
-    /**
-     * @depends testCreateAccountSession
-     */
+    #[Depends('testCreateAccountSession')]
     public function testUpdateAccountName($data): array
     {
         $email = $data['email'] ?? '';
@@ -491,7 +480,6 @@ class AccountCustomClientTest extends Scope
     }
 
     /**
-     * @depends testUpdateAccountName
      */
     #[Retry(count: 1)]
     public function testUpdateAccountPassword($data): array
@@ -728,9 +716,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountPassword
-     */
+    #[Depends('testUpdateAccountPassword')]
     public function testUpdateAccountEmail($data): array
     {
         $newEmail = uniqid() . 'new@localhost.test';
@@ -806,9 +792,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountEmail
-     */
+    #[Depends('testUpdateAccountEmail')]
     public function testUpdateAccountPrefs($data): array
     {
         $newEmail = uniqid() . 'new@localhost.test';
@@ -913,9 +897,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountPrefs
-     */
+    #[Depends('testUpdateAccountPrefs')]
     public function testCreateAccountVerification($data): array
     {
         $email = $data['email'] ?? '';
@@ -990,9 +972,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateAccountVerification
-     */
+    #[Depends('testCreateAccountVerification')]
     public function testUpdateAccountVerification($data): array
     {
         $id = $data['id'] ?? '';
@@ -1044,9 +1024,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountVerification
-     */
+    #[Depends('testUpdateAccountVerification')]
     public function testDeleteAccountSession($data): array
     {
         $email = $data['email'] ?? '';
@@ -1112,9 +1090,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountVerification
-     */
+    #[Depends('testUpdateAccountVerification')]
     public function testDeleteAccountSessionCurrent($data): array
     {
         $email = $data['email'] ?? '';
@@ -1169,9 +1145,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateAccountVerification
-     */
+    #[Depends('testUpdateAccountVerification')]
     public function testDeleteAccountSessions($data): array
     {
         $session = $data['session'] ?? '';
@@ -1219,9 +1193,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testDeleteAccountSession
-     */
+    #[Depends('testDeleteAccountSession')]
     public function testCreateAccountRecovery($data): array
     {
         $email = $data['email'] ?? '';
@@ -1314,7 +1286,6 @@ class AccountCustomClientTest extends Scope
     }
 
     /**
-     * @depends testCreateAccountRecovery
      */
     #[Retry(count: 1)]
     public function testUpdateAccountRecovery($data): array
@@ -1488,9 +1459,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($lastEmailId, $lastEmail['id']);
     }
 
-    /**
-     * @depends testCreateAccountSession
-     */
+    #[Depends('testCreateAccountSession')]
     public function testCreateOAuth2AccountSession(): array
     {
         $provider = 'mock';
@@ -1990,9 +1959,7 @@ class AccountCustomClientTest extends Scope
         return $session;
     }
 
-    /**
-     * @depends testCreateAnonymousAccount
-     */
+    #[Depends('testCreateAnonymousAccount')]
     public function testCreateAnonymousAccountVerification($session): array
     {
         $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
@@ -2010,9 +1977,7 @@ class AccountCustomClientTest extends Scope
         return [];
     }
 
-    /**
-     * @depends testCreateAnonymousAccount
-     */
+    #[Depends('testCreateAnonymousAccount')]
     public function testUpdateAnonymousAccountPassword($session)
     {
         /**
@@ -2032,9 +1997,7 @@ class AccountCustomClientTest extends Scope
         return $session;
     }
 
-    /**
-     * @depends testUpdateAnonymousAccountPassword
-     */
+    #[Depends('testUpdateAnonymousAccountPassword')]
     public function testUpdateAnonymousAccountEmail($session)
     {
         $email = uniqid() . 'new@localhost.test';
@@ -2426,9 +2389,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testUpdateAccountName
-     */
+    #[Depends('testUpdateAccountName')]
     public function testUpdateAccountNameSearch($data): void
     {
         $id = $data['id'] ?? '';
@@ -2466,9 +2427,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($newName, $response['body']['users'][0]['name']);
     }
 
-    /**
-     * @depends testUpdateAccountEmail
-     */
+    #[Depends('testUpdateAccountEmail')]
     public function testUpdateAccountEmailSearch($data): void
     {
         $id = $data['id'] ?? '';
@@ -2568,9 +2527,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreatePhone
-     */
+    #[Depends('testCreatePhone')]
     public function testCreateSessionWithPhone(array $data): array
     {
         $id = $data['id'] ?? '';
@@ -2655,9 +2612,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateSessionWithPhone
-     */
+    #[Depends('testCreateSessionWithPhone')]
     public function testConvertPhoneToPassword(array $data): array
     {
         $session = $data['session'];
@@ -2700,9 +2655,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testConvertPhoneToPassword
-     */
+    #[Depends('testConvertPhoneToPassword')]
     public function testUpdatePhone(array $data): array
     {
         $newPhone = '+45632569856';
@@ -2754,8 +2707,6 @@ class AccountCustomClientTest extends Scope
     }
 
     /**
-     * @depends testGetAccountSessions
-     * @depends testGetAccountLogs
      */
     public function testCreateSession(array $data): array
     {
@@ -2871,9 +2822,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdatePhone
-     */
+    #[Depends('testUpdatePhone')]
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';
@@ -2953,9 +2902,7 @@ class AccountCustomClientTest extends Scope
         ]);
     }
 
-    /**
-     * @depends testPhoneVerification
-     */
+    #[Depends('testPhoneVerification')]
     public function testUpdatePhoneVerification($data): array
     {
         $id = $data['id'] ?? '';
@@ -3114,9 +3061,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateMagicUrl
-     */
+    #[Depends('testCreateMagicUrl')]
     public function testCreateSessionWithMagicUrl($data): array
     {
         $id = $data['id'] ?? '';
@@ -3191,9 +3136,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateSessionWithMagicUrl
-     */
+    #[Depends('testCreateSessionWithMagicUrl')]
     public function testUpdateAccountPasswordWithMagicUrl($data): array
     {
         $email = $data['email'] ?? '';

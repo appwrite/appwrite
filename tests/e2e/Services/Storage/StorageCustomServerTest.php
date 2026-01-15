@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Storage;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -71,9 +72,7 @@ class StorageCustomServerTest extends Scope
         return ['bucketId' => $bucketId];
     }
 
-    /**
-     * @depends testCreateBucket
-     */
+    #[Depends('testCreateBucket')]
     public function testListBucket($data): array
     {
         $id = $data['bucketId'] ?? '';
@@ -170,9 +169,7 @@ class StorageCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateBucket
-     */
+    #[Depends('testCreateBucket')]
     public function testGetBucket(array $data): array
     {
         $id = $data['bucketId'] ?? '';
@@ -229,9 +226,7 @@ class StorageCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateBucket
-     */
+    #[Depends('testCreateBucket')]
     public function testUpdateBucket(array $data): array
     {
         $id = $data['bucketId'] ?? '';
@@ -272,9 +267,7 @@ class StorageCustomServerTest extends Scope
         return ['bucketId' => $bucketId];
     }
 
-    /**
-     * @depends testCreateBucket
-     */
+    #[Depends('testCreateBucket')]
     public function testDeleteBucket(array $data): array
     {
         $id = $data['bucketId'] ?? '';

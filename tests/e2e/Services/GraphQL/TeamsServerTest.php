@@ -2,6 +2,8 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -40,9 +42,7 @@ class TeamsServerTest extends Scope
         return $team;
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testCreateTeamMembership($team): array
     {
         $projectId = $this->getProject()['$id'];
@@ -88,9 +88,7 @@ class TeamsServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $teams['body']);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testGetTeam($team)
     {
         $projectId = $this->getProject()['$id'];
@@ -115,9 +113,7 @@ class TeamsServerTest extends Scope
         return $team;
     }
 
-    /**
-     * @depends testGetTeam
-     */
+    #[Depends('testGetTeam')]
     public function testUpdateTeamPrefs($team)
     {
         $projectId = $this->getProject()['$id'];
@@ -145,9 +141,7 @@ class TeamsServerTest extends Scope
         return $team;
     }
 
-    /**
-     * @depends testUpdateTeamPrefs
-     */
+    #[Depends('testUpdateTeamPrefs')]
     public function testGetTeamPreferences($team)
     {
         $projectId = $this->getProject()['$id'];
@@ -169,9 +163,7 @@ class TeamsServerTest extends Scope
         $this->assertIsArray($prefs['body']['data']['teamsGetPrefs']);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testGetTeamMemberships($team)
     {
         $projectId = $this->getProject()['$id'];
@@ -194,8 +186,6 @@ class TeamsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateTeam
-     * @depends testCreateTeamMembership
      */
     public function testGetTeamMembership($team, $membership)
     {
@@ -218,9 +208,7 @@ class TeamsServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $membership['body']);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testUpdateTeam($team)
     {
         $projectId = $this->getProject()['$id'];
@@ -245,8 +233,6 @@ class TeamsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateTeam
-     * @depends testCreateTeamMembership
      */
     public function testUpdateTeamMembershipRoles($team, $membership)
     {
@@ -273,8 +259,6 @@ class TeamsServerTest extends Scope
     }
 
     /**
-     * @depends testCreateTeam
-     * @depends testCreateTeamMembership
      */
     public function testDeleteTeamMembership($team, $membership)
     {
@@ -297,7 +281,7 @@ class TeamsServerTest extends Scope
         $this->assertEquals(204, $team['headers']['status-code']);
     }
 
-    /** @group cl-ignore */
+    #[Group('cl-ignore')]
     public function testDeleteTeam()
     {
         $team = $this->testCreateTeam();

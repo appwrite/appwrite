@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Teams;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
@@ -14,9 +15,7 @@ class TeamsConsoleClientTest extends Scope
     use ProjectConsole;
     use SideClient;
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testTeamCreateMembershipConsole($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -38,9 +37,7 @@ class TeamsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testTeamMembershipPerms($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -116,7 +113,7 @@ class TeamsConsoleClientTest extends Scope
         return $data;
     }
 
-    /** @depends testUpdateTeamMembership */
+    #[Depends('testUpdateTeamMembership')]
     public function testUpdateTeamMembershipRoles($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -168,9 +165,7 @@ class TeamsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateTeamMembershipRoles
-     */
+    #[Depends('testUpdateTeamMembershipRoles')]
     public function testDeleteTeamMembership($data): array
     {
         $teamUid = $data['teamUid'] ?? '';

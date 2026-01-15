@@ -2,14 +2,13 @@
 
 namespace Tests\E2E\Services\Teams;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBaseServer
 {
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testGetTeamMemberships($data): array
     {
         $id = $data['teamUid'] ?? '';
@@ -32,9 +31,7 @@ trait TeamsBaseServer
         return $data;
     }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
+    #[Depends('testCreateTeamMembership')]
     public function testGetTeamMembership($data): void
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -140,9 +137,7 @@ trait TeamsBaseServer
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testCreateTeamMembership($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -234,9 +229,7 @@ trait TeamsBaseServer
         ];
     }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
+    #[Depends('testCreateTeamMembership')]
     public function testUpdateMembershipRoles($data)
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -283,9 +276,7 @@ trait TeamsBaseServer
         return $data;
     }
 
-    /**
-     * @depends testUpdateMembershipRoles
-     */
+    #[Depends('testUpdateMembershipRoles')]
     public function testDeleteUserUpdatesTeamMembershipCount($data)
     {
         $teamUid = $data['teamUid'] ?? '';

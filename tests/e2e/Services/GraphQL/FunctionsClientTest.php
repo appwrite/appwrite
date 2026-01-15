@@ -74,7 +74,6 @@ class FunctionsClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @param $function
      * @return array
      * @throws \Exception
@@ -139,8 +138,6 @@ class FunctionsClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
-     * @depends testCreateDeployment
      * @param $function
      * @param $deployment
      * @return array
@@ -168,7 +165,6 @@ class FunctionsClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
      * @param $function
      * @return array
      * @throws \Exception
@@ -198,8 +194,6 @@ class FunctionsClientTest extends Scope
     }
 
     /**
-     * @depends testCreateFunction
-     * @depends testCreateExecution
      * @param $function
      * @param $execution
      * @return array

@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Realtime;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -352,9 +353,7 @@ class RealtimeConsoleClientTest extends Scope
         return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
     }
 
-    /**
-     * @depends testAttributesCollectionsAPI
-     */
+    #[Depends('testAttributesCollectionsAPI')]
     public function testIndexesCollectionAPI(array $data)
     {
         $projectId = 'console';
@@ -436,9 +435,7 @@ class RealtimeConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testAttributesTablesAPI
-     */
+    #[Depends('testAttributesTablesAPI')]
     public function testIndexesTablesAPI(array $data)
     {
         $projectId = 'console';
@@ -520,9 +517,7 @@ class RealtimeConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testIndexesCollectionAPI
-     */
+    #[Depends('testIndexesCollectionAPI')]
     public function testDeleteIndexCollectionsAPI(array $data)
     {
         $actorsId = $data['actorsId'];
@@ -599,9 +594,7 @@ class RealtimeConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testIndexesTablesAPI
-     */
+    #[Depends('testIndexesTablesAPI')]
     public function testDeleteIndexTablesAPI(array $data)
     {
         $projectId = 'console';
@@ -678,9 +671,7 @@ class RealtimeConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testDeleteIndexCollectionsAPI
-     */
+    #[Depends('testDeleteIndexCollectionsAPI')]
     public function testDeleteAttributeCollectionsAPI(array $data)
     {
         $projectId = 'console';
@@ -753,9 +744,7 @@ class RealtimeConsoleClientTest extends Scope
         $client->close();
     }
 
-    /**
-     * @depends testDeleteIndexTablesAPI
-     */
+    #[Depends('testDeleteIndexTablesAPI')]
     public function testDeleteAttributeTablesAPI(array $data)
     {
         $projectId = 'console';

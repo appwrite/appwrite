@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Teams;
 
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -10,9 +11,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait TeamsBaseClient
 {
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testGetTeamMemberships($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -137,9 +136,7 @@ trait TeamsBaseClient
         return $data;
     }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
+    #[Depends('testCreateTeamMembership')]
     public function testGetTeamMembership($data): void
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -184,9 +181,7 @@ trait TeamsBaseClient
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testCreateTeamMembership($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -354,9 +349,7 @@ trait TeamsBaseClient
         ];
     }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
+    #[Depends('testCreateTeamMembership')]
     public function testListTeamMemberships($data): void
     {
         $memberships = $this->client->call(Client::METHOD_GET, '/teams/' . $data['teamUid'] . '/memberships', array_merge([
@@ -385,9 +378,7 @@ trait TeamsBaseClient
         $this->assertEquals($memberships['body']['memberships'][1]['$id'], $response['body']['memberships'][0]['$id']);
     }
 
-    /**
-     * @depends testCreateTeamMembership
-     */
+    #[Depends('testCreateTeamMembership')]
     public function testUpdateTeamMembership($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -560,9 +551,7 @@ trait TeamsBaseClient
     }
 
 
-    /**
-     * @depends testCreateTeam
-     */
+    #[Depends('testCreateTeam')]
     public function testUpdateMembershipWithSession(array $data): void
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -631,9 +620,7 @@ trait TeamsBaseClient
         $this->assertEmpty($response['cookies']);
     }
 
-    /**
-     * @depends testUpdateTeamMembership
-     */
+    #[Depends('testUpdateTeamMembership')]
     public function testUpdateTeamMembershipRoles($data): array
     {
         $teamUid = $data['teamUid'] ?? '';
@@ -705,9 +692,7 @@ trait TeamsBaseClient
         return $data;
     }
 
-    /**
-    * @depends testUpdateTeamMembershipRoles
-    */
+    #[Depends('testUpdateTeamMembershipRoles')]
     public function testDeleteTeamMembership($data): array
     {
         $teamUid = $data['teamUid'] ?? '';

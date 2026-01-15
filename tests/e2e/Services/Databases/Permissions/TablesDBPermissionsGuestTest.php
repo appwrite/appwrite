@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Databases\Permissions;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiTablesDB;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -92,7 +93,7 @@ class TablesDBPermissionsGuestTest extends Scope
         ];
     }
 
-    public function permissionsProvider(): array
+    public static function permissionsProvider(): array
     {
         return [
             [[Permission::read(Role::any())]],
@@ -104,9 +105,7 @@ class TablesDBPermissionsGuestTest extends Scope
         ];
     }
 
-    /**
-     * @dataProvider permissionsProvider
-     */
+    #[DataProvider('permissionsProvider')]
     public function testReadDocuments($permissions)
     {
         $data = $this->createCollection();

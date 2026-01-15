@@ -4,6 +4,8 @@ namespace Tests\E2E\Services\Functions;
 
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Retry;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -112,9 +114,7 @@ class FunctionsCustomServerTest extends Scope
         ];
     }
 
-    /**
-     * @depends testCreateFunction
-     */
+    #[Depends('testCreateFunction')]
     public function testListFunctions(array $data): array
     {
         /**
@@ -244,9 +244,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testListFunctions
-     */
+    #[Depends('testListFunctions')]
     public function testGetFunction(array $data): array
     {
         /**
@@ -267,9 +265,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testGetFunction
-     */
+    #[Depends('testGetFunction')]
     public function testUpdateFunction($data): array
     {
         /**
@@ -652,9 +648,7 @@ class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-    /**
-     * @depends testUpdateFunction
-     */
+    #[Depends('testUpdateFunction')]
     public function testCreateDeployment($data): array
     {
         /**
@@ -714,7 +708,6 @@ class FunctionsCustomServerTest extends Scope
     }
 
     /**
-     * @depends testUpdateFunction
      */
     #[Retry(count: 3)]
     public function testCancelDeploymentBuild($data): void
@@ -757,9 +750,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals('canceled', $deployment['body']['status']);
     }
 
-    /**
-     * @depends testUpdateFunction
-     */
+    #[Depends('testUpdateFunction')]
     public function testCreateDeploymentLarge($data): array
     {
         /**
@@ -820,9 +811,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateDeployment
-     */
+    #[Depends('testCreateDeployment')]
     public function testUpdateDeployment($data): array
     {
         /**
@@ -844,9 +833,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateDeployment
-     */
+    #[Depends('testCreateDeployment')]
     public function testListDeployments(array $data): array
     {
         /**
@@ -1026,9 +1013,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateDeployment
-     */
+    #[Depends('testCreateDeployment')]
     public function testGetDeployment(array $data): array
     {
         /**
@@ -1053,9 +1038,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateDeployment
-     */
+    #[Depends('testUpdateDeployment')]
     public function testCreateExecution($data): array
     {
         /**
@@ -1138,9 +1121,7 @@ class FunctionsCustomServerTest extends Scope
         return array_merge($data, ['executionId' => $executionId]);
     }
 
-    /**
-     * @depends testCreateExecution
-     */
+    #[Depends('testCreateExecution')]
     public function testListExecutions(array $data): array
     {
         /**
@@ -1241,9 +1222,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateDeployment
-     */
+    #[Depends('testUpdateDeployment')]
     public function testSyncCreateExecution($data): array
     {
         /**
@@ -1266,9 +1245,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testListExecutions
-     */
+    #[Depends('testListExecutions')]
     public function testGetExecution(array $data): array
     {
         /**
@@ -1291,9 +1268,7 @@ class FunctionsCustomServerTest extends Scope
     }
 
 
-    /**
-     * @depends testGetExecution
-     */
+    #[Depends('testGetExecution')]
     public function testDeleteExecution($data): array
     {
         /**
@@ -1343,9 +1318,7 @@ class FunctionsCustomServerTest extends Scope
 
 
 
-    /**
-     * @depends testGetExecution
-     */
+    #[Depends('testGetExecution')]
     public function testUpdateSpecs($data): array
     {
         /**
@@ -1437,9 +1410,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testGetExecution
-     */
+    #[Depends('testGetExecution')]
     public function testDeleteDeployment($data): array
     {
         /**
@@ -1460,9 +1431,7 @@ class FunctionsCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateDeployment
-     */
+    #[Depends('testCreateDeployment')]
     public function testDeleteFunction($data): array
     {
         /**
@@ -1522,11 +1491,7 @@ class FunctionsCustomServerTest extends Scope
         $this->cleanupFunction($functionId);
     }
 
-    /**
-     *
-     * @return array<mixed>
-     */
-    public function provideCustomExecutions(): array
+    public static function provideCustomExecutions(): array
     {
         // Most disabled to keep tests fast
         return [
@@ -1539,14 +1504,8 @@ class FunctionsCustomServerTest extends Scope
         ];
     }
 
-    /**
-     * @param string $folder
-     * @param string $name
-     * @param string $entrypoint
-     *
-     * @dataProvider provideCustomExecutions
-     * @depends      testExecutionTimeout
-     */
+    #[DataProvider('provideCustomExecutions')]
+    #[Depends('testExecutionTimeout')]
     public function testCreateCustomExecution(string $folder, string $name, string $entrypoint, string $runtimeName, string $runtimeVersion)
     {
         $functionId = $this->setupFunction([

@@ -4,6 +4,8 @@ namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Tests\Async;
+use PHPUnit\Framework\Attributes\Depends;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
 use Tests\E2E\Scopes\ProjectConsole;
@@ -22,10 +24,8 @@ class ProjectsConsoleClientTest extends Scope
     use SideClient;
     use Async;
 
-    /**
-     * @group smtpAndTemplates
-     * @group projectsCRUD
-     */
+    #[Group('smtpAndTemplates')]
+    #[Group('projectsCRUD')]
     public function testCreateProject(): array
     {
         /**
@@ -158,7 +158,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(Exception::PROJECT_ALREADY_EXISTS, $response['body']['type']);
     }
 
-    /** @group projectsCRUD */
+    #[Group('projectsCRUD')]
     public function testTransferProjectTeam()
     {
         /**
@@ -225,10 +225,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($team2, $response['body']['teamId']);
     }
 
-    /**
-     * @group projectsCRUD
-     * @depends testCreateProject
-     */
+    #[Group('projectsCRUD')]
     public function testListProject($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -436,9 +433,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @group projectsCRUD
-     */
+    #[Group('projectsCRUD')]
     public function testListProjectsQuerySelect(): void
     {
         $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
@@ -755,9 +750,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateProject
-     */
+    #[Depends('testCreateProject')]
     public function testGetProjectUsage($data): array
     {
         $this->markTestIncomplete(
@@ -872,10 +865,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
     }
 
-    /**
-     * @group smtpAndTemplates
-     * @depends testCreateProject
-     */
+    #[Group('smtpAndTemplates')]
     public function testUpdateProjectSMTP($data): array
     {
         $id = $data['projectId'];
@@ -949,9 +939,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @group smtpAndTemplates
-     */
+    #[Group('smtpAndTemplates')]
     public function testCreateProjectSMTPTests(): void
     {
         $smtpHost = System::getEnv('_APP_SMTP_HOST', "maildev");
@@ -1055,10 +1043,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    /**
-     * @group smtpAndTemplates
-     * @depends testUpdateProjectSMTP
-     */
+    #[Group('smtpAndTemplates')]
     public function testUpdateTemplates($data): array
     {
         $id = $data['projectId'];
@@ -1147,7 +1132,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /** @depends testCreateProject */
+    #[Depends('testCreateProject')]
     public function testUpdateProjectAuthDuration($data): array
     {
         $id = $data['projectId'];
@@ -1649,9 +1634,7 @@ class ProjectsConsoleClientTest extends Scope
         }
     }
 
-    /**
-     * @depends testCreateProject
-     */
+    #[Depends('testCreateProject')]
     public function testUpdateProjectAuthLimit($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -1765,9 +1748,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateProjectAuthLimit
-     */
+    #[Depends('testUpdateProjectAuthLimit')]
     public function testUpdateProjectAuthSessionsLimit($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -1885,9 +1866,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
 
-    /**
-     * @depends testUpdateProjectAuthLimit
-     */
+    #[Depends('testUpdateProjectAuthLimit')]
     public function testUpdateProjectAuthPasswordHistory($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -1993,12 +1972,8 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @group smtpAndTemplates
-     * @group projectsCRUD
-     *
-     * @depends testCreateProject
-     * */
+    #[Group('smtpAndTemplates')]
+    #[Group('projectsCRUD')]
     public function testUpdateMockNumbers($data)
     {
         $id = $data['projectId'] ?? '';
@@ -2199,9 +2174,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
     }
 
-    /**
-     * @depends testUpdateProjectAuthLimit
-     */
+    #[Depends('testUpdateProjectAuthLimit')]
     public function testUpdateProjectAuthPasswordDictionary($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -2330,9 +2303,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProject
-     */
+    #[Depends('testCreateProject')]
     public function testUpdateDisallowPersonalData($data): void
     {
         $id = $data['projectId'] ?? '';
@@ -2654,7 +2625,7 @@ class ProjectsConsoleClientTest extends Scope
         return ['projectId' => $id];
     }
 
-    /** @depends testUpdateProjectServiceStatusAdmin */
+    #[Depends('testUpdateProjectServiceStatusAdmin')]
     public function testUpdateProjectServiceStatus($data): void
     {
         $id = $data['projectId'];
@@ -2728,7 +2699,7 @@ class ProjectsConsoleClientTest extends Scope
         }
     }
 
-    /** @depends testUpdateProjectServiceStatusAdmin */
+    #[Depends('testUpdateProjectServiceStatusAdmin')]
     public function testUpdateProjectServiceStatusServer($data): void
     {
         $id = $data['projectId'];
@@ -2843,9 +2814,7 @@ class ProjectsConsoleClientTest extends Scope
         }
     }
 
-    /**
-     * @depends testCreateProject
-     */
+    #[Depends('testCreateProject')]
     public function testCreateProjectWebhook($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -2905,9 +2874,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProjectWebhook
-     */
+    #[Depends('testCreateProjectWebhook')]
     public function testListProjectWebhook($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -2927,9 +2894,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProjectWebhook
-     */
+    #[Depends('testCreateProjectWebhook')]
     public function testGetProjectWebhook($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -2963,9 +2928,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProjectWebhook
-     */
+    #[Depends('testCreateProjectWebhook')]
     public function testUpdateProjectWebhook($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -3055,9 +3018,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProjectWebhook
-     */
+    #[Depends('testCreateProjectWebhook')]
     public function testUpdateProjectWebhookSignature($data): void
     {
         $id = $data['projectId'] ?? '';
@@ -3074,9 +3035,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEquals($signatureKey, $response['body']['signatureKey']);
     }
 
-    /**
-     * @depends testCreateProjectWebhook
-     */
+    #[Depends('testCreateProjectWebhook')]
     public function testDeleteProjectWebhook($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -3112,9 +3071,7 @@ class ProjectsConsoleClientTest extends Scope
 
     // Keys
 
-    /**
-     * @depends testCreateProject
-     */
+    #[Depends('testCreateProject')]
     public function testCreateProjectKey($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -3160,9 +3117,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
 
-    /**
-     * @depends testCreateProjectKey
-     */
+    #[Depends('testCreateProjectKey')]
     public function testListProjectKey($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -3184,9 +3139,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
 
-    /**
-     * @depends testCreateProjectKey
-     */
+    #[Depends('testCreateProjectKey')]
     public function testGetProjectKey($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -3223,9 +3176,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProject
-     */
+    #[Depends('testCreateProject')]
     public function testValidateProjectKey($data): void
     {
         $projectId = $data['projectId'] ?? '';
@@ -3370,9 +3321,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
 
-    /**
-     * @depends testCreateProjectKey
-     */
+    #[Depends('testCreateProjectKey')]
     public function testUpdateProjectKey($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -3436,9 +3385,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProjectKey
-     */
+    #[Depends('testCreateProjectKey')]
     public function testDeleteProjectKey($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -3472,9 +3419,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProject
-     */
+    #[Depends('testCreateProject')]
     public function testCreateProjectKeyOutdated($data): void
     {
         $id = $data['projectId'] ?? '';
@@ -3513,9 +3458,7 @@ class ProjectsConsoleClientTest extends Scope
 
     // JWT Keys
 
-    /**
-     * @depends testCreateProject
-     */
+    #[Depends('testCreateProject')]
     public function testJWTKey($data): void
     {
         $id = $data['projectId'] ?? '';
@@ -3567,9 +3510,7 @@ class ProjectsConsoleClientTest extends Scope
 
     // Platforms
 
-    /**
-     * @depends testCreateProject
-     */
+    #[Depends('testCreateProject')]
     public function testCreateProjectPlatform($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -3743,9 +3684,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProjectPlatform
-     */
+    #[Depends('testCreateProjectPlatform')]
     public function testListProjectPlatform($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -3767,9 +3706,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProjectPlatform
-     */
+    #[Depends('testCreateProjectPlatform')]
     public function testGetProjectPlatform($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -3915,9 +3852,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProjectPlatform
-     */
+    #[Depends('testCreateProjectPlatform')]
     public function testUpdateProjectPlatform($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -4090,9 +4025,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateProjectPlatform
-     */
+    #[Depends('testCreateProjectPlatform')]
     public function testDeleteProjectPlatform($data): array
     {
         $id = $data['projectId'] ?? '';
@@ -4432,9 +4365,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $user3['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateProject
-     */
+    #[Depends('testCreateProject')]
     public function testCreateProjectVariable(array $data)
     {
         /**
@@ -4521,9 +4452,7 @@ class ProjectsConsoleClientTest extends Scope
         );
     }
 
-    /**
-     * @depends testCreateProjectVariable
-     */
+    #[Depends('testCreateProjectVariable')]
     public function testListVariables(array $data)
     {
         /**
@@ -4547,9 +4476,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testListVariables
-     */
+    #[Depends('testListVariables')]
     public function testGetVariable(array $data)
     {
         /**
@@ -4591,9 +4518,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testGetVariable
-     */
+    #[Depends('testGetVariable')]
     public function testUpdateVariable(array $data)
     {
         /**
@@ -4728,9 +4653,7 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateVariable
-     */
+    #[Depends('testUpdateVariable')]
     public function testDeleteVariable(array $data)
     {
         /**
@@ -4782,9 +4705,7 @@ class ProjectsConsoleClientTest extends Scope
      * Devkeys Tests starts here ------------------------------------------------
      */
 
-    /**
-     * @group abuseEnabled
-     */
+    #[Group('abuseEnabled')]
     public function testCreateProjectDevKey(): void
     {
         /**
@@ -4843,9 +4764,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
 
-    /**
-     * @group abuseEnabled
-     */
+    #[Group('abuseEnabled')]
     public function testListProjectDevKey(): void
     {
         /**
@@ -4934,9 +4853,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
 
-    /**
-     * @group abuseEnabled
-     */
+    #[Group('abuseEnabled')]
     public function testGetProjectDevKey(): void
     {
         /**
@@ -4978,9 +4895,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
-    /**
-     * @group abuseEnabled
-     */
+    #[Group('abuseEnabled')]
     public function testGetDevKeyWithSdks(): void
     {
         /**
@@ -5035,9 +4950,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertContains('php', $response['body']['sdks']);
     }
 
-    /**
-     * @group abuseEnabled
-     */
+    #[Group('abuseEnabled')]
     public function testNoHostValidationWithDevKey(): void
     {
         /**
@@ -5116,9 +5029,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
     }
 
-    /**
-     * @group abuseEnabled
-     */
+    #[Group('abuseEnabled')]
     public function testCorsWithDevKey(): void
     {
         /**
@@ -5173,9 +5084,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($origin, $response['headers']['access-control-allow-origin'] ?? null);
     }
 
-    /**
-     * @group abuseEnabled
-     */
+    #[Group('abuseEnabled')]
     public function testNoRateLimitWithDevKey(): void
     {
         /**
@@ -5278,9 +5187,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(429, $response['headers']['status-code']);
     }
 
-    /**
-     * @group abuseEnabled
-     */
+    #[Group('abuseEnabled')]
     public function testUpdateProjectDevKey(): void
     {
         $projectId = $this->setupProject([
@@ -5323,9 +5230,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEmpty($response['body']['accessedAt']);
     }
 
-    /**
-     * @group abuseEnabled
-     */
+    #[Group('abuseEnabled')]
     public function testDeleteProjectDevKey(): void
     {
         $projectId = $this->setupProject([

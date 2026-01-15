@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\GraphQL\Legacy;
 
 use Exception;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -44,9 +45,7 @@ class DatabaseServerTest extends Scope
         return $database;
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
+    #[Depends('testCreateDatabase')]
     public function testCreateCollection($database): array
     {
         $projectId = $this->getProject()['$id'];
@@ -111,7 +110,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testCreateStringAttribute($data): array
@@ -143,7 +141,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateStringAttribute
      * @throws Exception
      */
     public function testUpdateStringAttribute($data): array
@@ -179,7 +176,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testCreateIntegerAttribute($data): array
@@ -211,7 +207,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateIntegerAttribute
      * @throws Exception
      */
     public function testUpdateIntegerAttribute($data): array
@@ -251,7 +246,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testCreateBooleanAttribute($data): array
@@ -281,7 +275,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateBooleanAttribute
      * @throws Exception
      */
     public function testUpdateBooleanAttribute($data): array
@@ -317,7 +310,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testCreateFloatAttribute($data): array
@@ -350,7 +342,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateFloatAttribute
      * @throws Exception
      */
     public function testUpdateFloatAttribute($data): array
@@ -390,7 +381,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testCreateEmailAttribute($data): array
@@ -420,7 +410,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateEmailAttribute
      * @throws Exception
      */
     public function testUpdateEmailAttribute($data): array
@@ -456,7 +445,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testCreateEnumAttribute($data): array
@@ -492,7 +480,6 @@ class DatabaseServerTest extends Scope
 
 
     /**
-     * @depends testCreateEnumAttribute
      * @throws Exception
      */
     public function testUpdateEnumAttribute($data): array
@@ -535,7 +522,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testCreateDatetimeAttribute($data): array
@@ -565,7 +551,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDatetimeAttribute
      * @throws Exception
      */
     public function testUpdateDatetimeAttribute($data): array
@@ -600,9 +585,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateCollection
-     */
+    #[Depends('testCreateCollection')]
     public function testCreateRelationshipAttribute(array $data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -632,9 +615,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testCreateRelationshipAttribute
-     */
+    #[Depends('testCreateRelationshipAttribute')]
     public function testUpdateRelationshipAttribute(array $data): array
     {
         sleep(1);
@@ -664,7 +645,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testCreateIPAttribute($data): array
@@ -695,7 +675,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateIPAttribute
      * @throws Exception
      */
     public function testUpdateIPAttribute($data): array
@@ -731,7 +710,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testCreateURLAttribute($data): array
@@ -762,7 +740,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateURLAttribute
      * @throws Exception
      */
     public function testUpdateURLAttribute($data): void
@@ -796,8 +773,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testUpdateStringAttribute
-     * @depends testUpdateIntegerAttribute
      * @throws Exception
      */
     public function testCreateIndex($data): array
@@ -835,10 +810,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testUpdateStringAttribute
-     * @depends testUpdateIntegerAttribute
-     * @depends testUpdateBooleanAttribute
-     * @depends testUpdateEnumAttribute
      * @throws Exception
      */
     public function testCreateDocument($data): array
@@ -945,7 +916,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDatabase
      * @throws Exception
      */
     public function testGetDatabase($database): void
@@ -970,7 +940,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testGetCollections($data): void
@@ -995,7 +964,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testGetCollection($data): void
@@ -1021,8 +989,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testUpdateStringAttribute
-     * @depends testUpdateIntegerAttribute
      * @throws Exception
      */
     public function testGetAttributes($data): void
@@ -1048,7 +1014,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testGetAttribute($data): void
@@ -1075,7 +1040,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateIndex
      * @throws Exception
      */
     public function testGetIndexes($data): void
@@ -1101,7 +1065,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateIndex
      * @throws Exception
      */
     public function testGetIndex($data): void
@@ -1128,7 +1091,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testGetDocuments($data): void
@@ -1154,7 +1116,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDocument
      * @throws Exception
      */
     public function testGetDocument($data): void
@@ -1228,7 +1189,6 @@ class DatabaseServerTest extends Scope
     //    }
 
     /**
-     * @depends testCreateDatabase
      * @throws Exception
      */
     public function testUpdateDatabase($database)
@@ -1254,7 +1214,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testUpdateCollection($data)
@@ -1282,7 +1241,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDocument
      * @throws Exception
      */
     public function testUpdateDocument($data): void
@@ -1342,7 +1300,6 @@ class DatabaseServerTest extends Scope
     //    }
 
     /**
-     * @depends testCreateDocument
      * @throws Exception
      */
     public function testDeleteDocument($data): void
@@ -1392,7 +1349,6 @@ class DatabaseServerTest extends Scope
     //    }
 
     /**
-     * @depends testUpdateStringAttribute
      * @throws Exception
      */
     public function testDeleteAttribute($data): void
@@ -1418,7 +1374,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateCollection
      * @throws Exception
      */
     public function testDeleteCollection($data)
@@ -1443,7 +1398,6 @@ class DatabaseServerTest extends Scope
     }
 
     /**
-     * @depends testCreateDatabase
      * @throws Exception
      */
     public function testDeleteDatabase($database)
@@ -1547,9 +1501,7 @@ class DatabaseServerTest extends Scope
         ];
     }
 
-    /**
-     * @depends testBulkCreateDocuments
-     */
+    #[Depends('testBulkCreateDocuments')]
     public function testBulkUpdateDocuments(array $data): array
     {
         $userId = $this->getUser()['$id'];
@@ -1583,9 +1535,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testBulkUpdateDocuments
-     */
+    #[Depends('testBulkUpdateDocuments')]
     public function testBulkUpsertDocuments(array $data): array
     {
         $headers = array_merge([
@@ -1613,9 +1563,7 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testBulkUpsertDocuments
-     */
+    #[Depends('testBulkUpsertDocuments')]
     public function testBulkDeleteDocuments(array $data): array
     {
         $headers = array_merge([

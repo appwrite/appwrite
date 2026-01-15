@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Webhooks;
 
 use Appwrite\Tests\Async;
 use CURLFile;
+use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -22,9 +23,7 @@ class WebhooksCustomServerTest extends Scope
     use SideServer;
 
     // Collection APIs
-    /**
-     * @depends testCreateAttributes
-     */
+    #[Depends('testCreateAttributes')]
     public function testUpdateCollection($data): array
     {
         $id = $data['actorsId'];
@@ -67,9 +66,7 @@ class WebhooksCustomServerTest extends Scope
         return array_merge(['actorsId' => $actors['body']['$id']]);
     }
 
-    /**
-     * @depends testCreateAttributes
-     */
+    #[Depends('testCreateAttributes')]
     public function testCreateDeleteIndexes($data): array
     {
         $actorsId = $data['actorsId'];
@@ -209,9 +206,7 @@ class WebhooksCustomServerTest extends Scope
     }
 
     // Table APIs
-    /**
-     * @depends testCreateColumns
-     */
+    #[Depends('testCreateColumns')]
     public function testUpdateTable($data): array
     {
         $id = $data['actorsId'];
@@ -254,9 +249,7 @@ class WebhooksCustomServerTest extends Scope
         return array_merge(['actorsId' => $actors['body']['$id']]);
     }
 
-    /**
-     * @depends testCreateColumns
-     */
+    #[Depends('testCreateColumns')]
     public function testCreateDeleteColumnIndexes($data): array
     {
         $actorsId = $data['actorsId'];
@@ -446,9 +439,7 @@ class WebhooksCustomServerTest extends Scope
         return ['userId' => $user['body']['$id'], 'name' => $user['body']['name'], 'email' => $user['body']['email']];
     }
 
-    /**
-     * @depends testCreateUser
-     */
+    #[Depends('testCreateUser')]
     public function testUpdateUserPrefs(array $data): array
     {
         $id = $data['userId'];
@@ -487,9 +478,7 @@ class WebhooksCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateUserPrefs
-     */
+    #[Depends('testUpdateUserPrefs')]
     public function testUpdateUserStatus(array $data): array
     {
         $id = $data['userId'];
@@ -534,9 +523,7 @@ class WebhooksCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateUserStatus
-     */
+    #[Depends('testUpdateUserStatus')]
     public function testDeleteUser(array $data): array
     {
         $id = $data['userId'];
@@ -613,9 +600,7 @@ class WebhooksCustomServerTest extends Scope
         ];
     }
 
-    /**
-     * @depends testCreateFunction
-     */
+    #[Depends('testCreateFunction')]
     public function testUpdateFunction($data): array
     {
         $id = $data['functionId'];
@@ -667,9 +652,7 @@ class WebhooksCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateFunction
-     */
+    #[Depends('testUpdateFunction')]
     public function testCreateDeployment($data): array
     {
         /**
@@ -717,9 +700,7 @@ class WebhooksCustomServerTest extends Scope
         return array_merge($data, ['deploymentId' => $deploymentId]);
     }
 
-    /**
-     * @depends testCreateDeployment
-     */
+    #[Depends('testCreateDeployment')]
     public function testUpdateDeployment($data): array
     {
         $id = $data['functionId'] ?? '';
@@ -766,9 +747,7 @@ class WebhooksCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateDeployment
-     */
+    #[Depends('testUpdateDeployment')]
     public function testExecutions($data): array
     {
         $id = $data['functionId'] ?? '';
@@ -837,9 +816,7 @@ class WebhooksCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testExecutions
-     */
+    #[Depends('testExecutions')]
     public function testDeleteDeployment($data): array
     {
         $id = $data['functionId'] ?? '';
@@ -882,9 +859,7 @@ class WebhooksCustomServerTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testDeleteDeployment
-     */
+    #[Depends('testDeleteDeployment')]
     public function testDeleteFunction($data): array
     {
         $id = $data['functionId'];
