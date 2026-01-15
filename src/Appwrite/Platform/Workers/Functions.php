@@ -8,6 +8,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
 use Executor\Executor;
@@ -15,7 +16,6 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
@@ -337,7 +337,6 @@ class Functions extends Action
      * @param string|null $eventData
      * @param string|null $executionId
      * @return void
-     * @throws Authorization
      * @throws Structure
      * @throws \Utopia\Database\Exception
      * @throws Conflict
@@ -663,7 +662,11 @@ class Functions extends Action
             ->trigger();
 
         if (!empty($error)) {
-            throw new Exception($error, $errorCode);
+            throw new AppwriteException(
+                AppwriteException::GENERAL_SERVER_ERROR,
+                $error ?: 'Function execution failed with no error message',
+                $errorCode
+            );
         }
     }
 }
