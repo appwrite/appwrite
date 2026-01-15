@@ -479,9 +479,8 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     */
     #[Retry(count: 1)]
+    #[Depends('testUpdateAccountName')]
     public function testUpdateAccountPassword($data): array
     {
         $email = $data['email'] ?? '';
@@ -1285,9 +1284,8 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     */
     #[Retry(count: 1)]
+    #[Depends('testCreateAccountRecovery')]
     public function testUpdateAccountRecovery($data): array
     {
         $id = $data['id'] ?? '';
@@ -2706,8 +2704,7 @@ class AccountCustomClientTest extends Scope
         return $data;
     }
 
-    /**
-     */
+    #[Depends('testUpdatePhone')]
     public function testCreateSession(array $data): array
     {
         $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [

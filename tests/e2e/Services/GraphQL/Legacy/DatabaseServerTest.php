@@ -112,6 +112,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateCollection')]
     public function testCreateStringAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -143,6 +144,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateStringAttribute')]
     public function testUpdateStringAttribute($data): array
     {
         // Wait for attributes to be available
@@ -178,6 +180,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testUpdateStringAttribute')]
     public function testCreateIntegerAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -209,6 +212,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateIntegerAttribute')]
     public function testUpdateIntegerAttribute($data): array
     {
         // Wait for attributes to be available
@@ -248,6 +252,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testUpdateIntegerAttribute')]
     public function testCreateBooleanAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -277,6 +282,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateBooleanAttribute')]
     public function testUpdateBooleanAttribute($data): array
     {
         // Wait for attributes to be available
@@ -312,6 +318,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testUpdateBooleanAttribute')]
     public function testCreateFloatAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -344,6 +351,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateFloatAttribute')]
     public function testUpdateFloatAttribute($data): array
     {
         // Wait for attributes to be available
@@ -383,6 +391,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testUpdateFloatAttribute')]
     public function testCreateEmailAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -412,6 +421,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateEmailAttribute')]
     public function testUpdateEmailAttribute($data): array
     {
         // Wait for attributes to be available
@@ -447,6 +457,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testUpdateEmailAttribute')]
     public function testCreateEnumAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -478,10 +489,10 @@ class DatabaseServerTest extends Scope
         return $data;
     }
 
-
     /**
      * @throws Exception
      */
+    #[Depends('testCreateEnumAttribute')]
     public function testUpdateEnumAttribute($data): array
     {
         // Wait for attributes to be available
@@ -524,6 +535,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testUpdateEnumAttribute')]
     public function testCreateDatetimeAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -553,6 +565,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDatetimeAttribute')]
     public function testUpdateDatetimeAttribute($data): array
     {
         // Wait for attributes to be available
@@ -647,6 +660,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testUpdateDatetimeAttribute')]
     public function testCreateIPAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -677,6 +691,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateIPAttribute')]
     public function testUpdateIPAttribute($data): array
     {
         // Wait for attributes to be available
@@ -712,6 +727,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testUpdateIPAttribute')]
     public function testCreateURLAttribute($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -742,6 +758,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateURLAttribute')]
     public function testUpdateURLAttribute($data): void
     {
         // Wait for attributes to be available
@@ -775,6 +792,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testUpdateURLAttribute')]
     public function testCreateIndex($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -812,6 +830,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateIndex')]
     public function testCreateDocument($data): array
     {
         $projectId = $this->getProject()['$id'];
@@ -918,6 +937,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDatabase')]
     public function testGetDatabase($database): void
     {
         $projectId = $this->getProject()['$id'];
@@ -942,6 +962,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testGetCollections($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -966,6 +987,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testGetCollection($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -991,6 +1013,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testGetAttributes($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1016,6 +1039,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testGetAttribute($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1042,6 +1066,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateIndex')]
     public function testGetIndexes($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1067,6 +1092,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateIndex')]
     public function testGetIndex($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1093,6 +1119,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testGetDocuments($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1118,6 +1145,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testGetDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1191,6 +1219,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDatabase')]
     public function testUpdateDatabase($database)
     {
         $projectId = $this->getProject()['$id'];
@@ -1216,6 +1245,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testUpdateCollection($data)
     {
         $projectId = $this->getProject()['$id'];
@@ -1243,6 +1273,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testUpdateDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1302,6 +1333,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testDeleteDocument($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1351,6 +1383,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testDeleteAttribute($data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1376,6 +1409,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDocument')]
     public function testDeleteCollection($data)
     {
         $projectId = $this->getProject()['$id'];
@@ -1400,6 +1434,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
+    #[Depends('testCreateDatabase')]
     public function testDeleteDatabase($database)
     {
         $projectId = $this->getProject()['$id'];
