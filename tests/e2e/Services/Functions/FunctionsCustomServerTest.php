@@ -707,9 +707,8 @@ class FunctionsCustomServerTest extends Scope
         return array_merge($data, ['deploymentId' => $deploymentIdActive]);
     }
 
-    /**
-     */
     #[Retry(count: 3)]
+    #[Depends('testCreateDeployment')]
     public function testCancelDeploymentBuild($data): void
     {
         $functionId = $data['functionId'];

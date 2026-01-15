@@ -406,9 +406,8 @@ class WebhooksCustomClientTest extends Scope
         ]);
     }
 
-    /**
-     */
     #[Retry(count: 1)]
+    #[Depends('testDeleteAccountSessions')]
     public function testUpdateAccountName($data): array
     {
         $id = $data['id'] ?? '';

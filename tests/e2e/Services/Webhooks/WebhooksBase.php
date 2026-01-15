@@ -314,9 +314,8 @@ trait WebhooksBase
         return $data;
     }
 
-    /**
-     */
     #[Retry(count: 1)]
+    #[Depends('testUpdateDocument')]
     public function testDeleteDocument(array $data): array
     {
         $actorsId = $data['actorsId'];
@@ -658,9 +657,8 @@ trait WebhooksBase
         return $data;
     }
 
-    /**
-     */
     #[Retry(count: 1)]
+    #[Depends('testUpdateRow')]
     public function testDeleteRow(array $data): array
     {
         $actorsId = $data['actorsId'];

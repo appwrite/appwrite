@@ -1743,6 +1743,7 @@ trait MessagingBase
      * @return void
      * @throws \Exception
      */
+    #[Depends('testSendEmail')]
     public function testDeleteMessage(array $params): void
     {
         $message = $params['message'];
