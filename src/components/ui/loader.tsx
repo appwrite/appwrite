@@ -36,53 +36,16 @@ const inspiringQuotes = [
   "The best engineers know when not to code.",
 ];
 
-const QUOTE_STORAGE_KEY = "appwrite:loader:quote";
-
-function getTodayKey() {
-  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-}
-
-function getStoredQuote(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(QUOTE_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { quote: string; date: string };
-    if (parsed?.date === getTodayKey() && parsed.quote) {
-      return parsed.quote;
-    }
-  } catch {
-    // ignore corrupt storage
-  }
-  return null;
-}
-
-function storeQuote(quote: string) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(
-      QUOTE_STORAGE_KEY,
-      JSON.stringify({ quote, date: getTodayKey() }),
-    );
-  } catch {
-    // ignore storage failures
-  }
-}
-
-function pickDailyQuote(): string {
-  const stored = getStoredQuote();
-  if (stored) return stored;
-
-  const random =
-    inspiringQuotes[Math.floor(Math.random() * inspiringQuotes.length)];
-  storeQuote(random);
-  return random;
+// Pick a random quote from the array
+function pickRandomQuote(): string {
+  return inspiringQuotes[Math.floor(Math.random() * inspiringQuotes.length)];
 }
 
 export function FullscreenLoader({ isVisible, onComplete }: FullscreenLoaderProps) {
   const [shouldRender, setShouldRender] = useState(isVisible);
   const [mounted, setMounted] = useState(false);
   const { theme, resolvedTheme } = useTheme();
+  // Initialize quote as empty to match server render, then set it after mount
   const [quote, setQuote] = useState<string>('');
 
   // Determine which logo to use based on theme
@@ -91,6 +54,8 @@ export function FullscreenLoader({ isVisible, onComplete }: FullscreenLoaderProp
   // Wait for theme to be mounted to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
+    // Set quote after mount (client-side only)
+    setQuote(pickRandomQuote());
   }, []);
 
   // Use resolvedTheme when available (handles system theme), otherwise fall back to theme
@@ -99,12 +64,6 @@ export function FullscreenLoader({ isVisible, onComplete }: FullscreenLoaderProp
     ? (resolvedTheme ?? theme) === 'dark'
     : true; // Default to dark during SSR/initial render
   const logoSrc = isDark ? '/appwrite-dark.svg' : '/appwrite-light.svg';
-
-  // Pick the daily quote once on mount (avoids post-load text swaps)
-  useEffect(() => {
-    const todayQuote = pickDailyQuote();
-    setQuote(todayQuote);
-  }, []);
 
   useEffect(() => {
     if (isVisible) {
@@ -134,17 +93,20 @@ export function FullscreenLoader({ isVisible, onComplete }: FullscreenLoaderProp
               <div className="flex items-center justify-center">
                 <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin"></div>
               </div>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, ease: "easeInOut", delay: 0.1 }}
-                className="text-sm font-normal leading-relaxed text-muted-foreground/70 max-w-md min-h-[48px]"
-              >
-                {quote}
-              </motion.div>
+              {quote && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, ease: "easeInOut", delay: 0.1 }}
+                  className="text-sm font-normal leading-relaxed text-muted-foreground/70 max-w-md min-h-[48px]"
+                  suppressHydrationWarning
+                >
+                  {quote}
+                </motion.div>
+              )}
             </div>
             {/* Appwrite logo at the bottom */}
-            <div className="absolute bottom-8">
+            <div className="absolute bottom-8" suppressHydrationWarning>
               <img
                 src={logoSrc}
                 alt="Appwrite"
