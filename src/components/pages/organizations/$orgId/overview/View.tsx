@@ -1568,6 +1568,17 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                               <Mail className="mr-2 h-4 w-4" />
                                               {resendInviteMutation.isPending ? 'Resending...' : 'Resend invitation'}
                                             </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                              onClick={() => {
+                                                setSelectedMember(member)
+                                                setRemoveMemberDialogOpen(true)
+                                              }}
+                                              className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                            >
+                                              <Trash2 className="mr-2 h-4 w-4" />
+                                              Remove from team
+                                            </DropdownMenuItem>
                                           </DropdownMenuContent>
                                         </DropdownMenu>
                                       ) : (
@@ -2169,9 +2180,19 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>Remove from Team</DialogTitle>
+            <DialogTitle>
+              {selectedMember?.status === 'pending' ? 'Cancel Invitation' : 'Remove from Team'}
+            </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to remove {selectedMember?.userName || selectedMember?.userEmail || 'this member'} from the team? They will lose access to all organization resources.
+              {selectedMember?.status === 'pending' ? (
+                <>
+                  Are you sure you want to cancel the invitation for {selectedMember?.userName || selectedMember?.userEmail || 'this member'}? They will not be able to join the organization.
+                </>
+              ) : (
+                <>
+                  Are you sure you want to remove {selectedMember?.userName || selectedMember?.userEmail || 'this member'} from the team? They will lose access to all organization resources.
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -2197,7 +2218,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   await removeMemberMutation.mutateAsync(
                     selectedMember.membershipId || selectedMember.$id
                   )
-                  toast.success('Member removed successfully')
+                  toast.success(
+                    selectedMember.status === 'pending'
+                      ? 'Invitation cancelled successfully'
+                      : 'Member removed successfully'
+                  )
                   setRemoveMemberDialogOpen(false)
                   setSelectedMember(null)
                 } catch (error: any) {
@@ -2205,7 +2230,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 }
               }}
             >
-              Remove from team
+              {selectedMember?.status === 'pending' ? 'Cancel invitation' : 'Remove from team'}
             </Button>
           </div>
         </DialogContent>

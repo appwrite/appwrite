@@ -1,3 +1,7 @@
+import { useParams } from '@tanstack/react-router'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { AlertTriangle, CreditCard } from 'lucide-react'
 import { PlanSummary } from './PlanSummary'
 import { PaymentHistory } from './PaymentHistory'
 import { PaymentMethods } from './PaymentMethods'
@@ -6,42 +10,84 @@ import { TaxIdSection } from './TaxIdSection'
 import { BudgetCapSection } from './BudgetCapSection'
 import { BillingAlertsSection } from './BillingAlertsSection'
 import { AvailableCreditsSection } from './AvailableCreditsSection'
+import { useOrganizationById, usePaymentMethod, useRetryInvoicePayment } from '@/lib/react-query/hooks'
+import { sdk } from '@/lib/appwrite/sdk'
+import { toast } from 'sonner'
 
 /**
  * BillingTab Component
  *
  * Main container for the billing dashboard that orchestrates all billing sections:
- * 1. Plan Summary - Current plan, charges breakdown, next payment
- * 2. Payment History - Invoice table with pagination
- * 3. Payment Methods - Primary and backup payment methods
- * 4. Billing Address - Stored billing address
- * 5. Tax ID - Tax identification information
- * 6. Budget Cap - Spending limit toggle and configuration
- * 7. Billing Alerts - Usage threshold notifications
- * 8. Available Credits - Credit balance and expiration
- *
- * Props: None
- *
- * Layout:
- * - Responsive grid layout
- * - Full-width sections for tables (Payment History)
- * - Two-column grid for smaller cards on larger screens
- *
- * Data Flow:
- * - All data currently sourced from mock-data.ts
- * - Ready for integration with real API endpoints
- *
- * User Interactions:
- * - Change plan (opens modal - not implemented)
- * - Add/update payment methods (opens modal - not implemented)
- * - Update billing address (opens modal - not implemented)
- * - Update tax ID (opens modal - not implemented)
- * - Toggle budget cap and set limit
- * - Add/remove/toggle billing alerts
- * - Add credits (opens modal - not implemented)
+ * 1. Alert Messages - Failed invoices, expired payment methods, plan downgrades
+ * 2. Plan Summary - Current plan, charges breakdown, next payment
+ * 3. Payment History - Invoice table with pagination
+ * 4. Payment Methods - Primary and backup payment methods
+ * 5. Billing Address - Stored billing address
+ * 6. Tax ID - Tax identification information
+ * 7. Budget Cap - Spending limit toggle and configuration
+ * 8. Billing Alerts - Usage threshold notifications
+ * 9. Available Credits - Credit balance and expiration
  */
 
 export function BillingTab() {
+  const params = useParams({ strict: false })
+  const orgId = params.orgId as string | undefined
+
+  // Fetch organization data for alerts
+  const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
+  
+  // Fetch payment methods for alert checking
+  const primaryPaymentMethod = usePaymentMethod(organization?.paymentMethodId)
+  const backupPaymentMethod = usePaymentMethod(organization?.backupPaymentMethodId)
+  
+  const retryPaymentMutation = useRetryInvoicePayment()
+
+  // Check for failed invoice
+  const failedInvoice = organization?.failedInvoice
+  const hasFailedInvoice = failedInvoice && failedInvoice.lastError
+
+  // Check for expired payment method
+  const primaryFailed = primaryPaymentMethod.paymentMethod?.failed === true
+  const backupFailed = backupPaymentMethod.paymentMethod?.failed === true
+  const hasExpiredPaymentMethod = primaryFailed && !organization?.backupPaymentMethodId
+
+  // Check for plan downgrade
+  const hasPlanDowngrade = !!organization?.billingPlanDowngrade
+
+  const handleRetryPayment = async () => {
+    if (!orgId || !failedInvoice) return
+    
+    try {
+      // Determine which payment method to use
+      let paymentMethodId = organization.paymentMethodId
+      if (!paymentMethodId || primaryFailed) {
+        paymentMethodId = organization.backupPaymentMethodId
+      }
+      if (!paymentMethodId) {
+        // Get first available payment method from account
+        const paymentMethods = await sdk.forConsole.account.listPaymentMethods()
+        if (paymentMethods.paymentMethods && paymentMethods.paymentMethods.length > 0) {
+          paymentMethodId = paymentMethods.paymentMethods[0].$id
+        }
+      }
+
+      if (!paymentMethodId) {
+        toast.error('No payment method available. Please add a payment method first.')
+        return
+      }
+
+      await retryPaymentMutation.mutateAsync({
+        organizationId: orgId,
+        invoiceId: failedInvoice.$id,
+        paymentMethodId,
+      })
+      
+      toast.success('Payment retry initiated')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to retry payment')
+    }
+  }
+
   // Modal handlers - these would open respective modals
   const handleChangePlan = () => {
     console.log('Open change plan modal')
@@ -65,29 +111,78 @@ export function BillingTab() {
 
   return (
     <div className="space-y-6">
+      {/* Alert Messages */}
+      {!orgLoading && (
+        <>
+          {/* Failed Invoice Alert */}
+          {hasFailedInvoice && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Payment Failed</AlertTitle>
+              <AlertDescription className="mt-2">
+                {failedInvoice.lastError || 'Your last payment attempt failed. Please update your payment method and try again.'}
+                <div className="mt-3">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-[13px]"
+                    onClick={handleRetryPayment}
+                    disabled={retryPaymentMutation.isPending}
+                  >
+                    Try again
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Expired Payment Method Alert */}
+          {hasExpiredPaymentMethod && (
+            <Alert variant="destructive">
+              <CreditCard className="h-4 w-4" />
+              <AlertTitle>Payment Method Failed</AlertTitle>
+              <AlertDescription className="mt-2">
+                Your default payment method has failed and you don't have a backup method. Please add a new payment method to continue using our services.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Plan Downgrade Alert */}
+          {hasPlanDowngrade && (
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Plan Downgrade Scheduled</AlertTitle>
+              <AlertDescription className="mt-2">
+                Your plan will change at the end of your current billing period. You'll keep access to your current plan features until then.
+              </AlertDescription>
+            </Alert>
+          )}
+        </>
+      )}
+
       {/* Plan Summary */}
-      <PlanSummary onChangePlan={handleChangePlan} />
+      <PlanSummary onChangePlan={handleChangePlan} orgId={orgId} />
 
       {/* Payment History */}
       <PaymentHistory />
 
       {/* Payment Methods */}
-      <PaymentMethods onAddPaymentMethod={handleAddPaymentMethod} />
+      <PaymentMethods onAddPaymentMethod={handleAddPaymentMethod} orgId={orgId} />
 
       {/* Billing Address */}
-      <BillingAddressSection onEditAddress={handleEditAddress} />
+      <BillingAddressSection onEditAddress={handleEditAddress} orgId={orgId} />
 
       {/* Tax ID */}
-      <TaxIdSection onEditTaxId={handleEditTaxId} />
+      <TaxIdSection onEditTaxId={handleEditTaxId} orgId={orgId} />
 
       {/* Budget Cap */}
-      <BudgetCapSection />
+      <BudgetCapSection orgId={orgId} />
 
       {/* Billing Alerts */}
-      <BillingAlertsSection />
+      <BillingAlertsSection orgId={orgId} />
 
       {/* Available Credits */}
-      <AvailableCreditsSection onAddCredits={handleAddCredits} />
+      <AvailableCreditsSection onAddCredits={handleAddCredits} orgId={orgId} />
     </div>
   )
 }

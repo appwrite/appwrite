@@ -1,6 +1,7 @@
 import { MapPin, Pencil, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { billingAddress } from '@/lib/utils/mock-data'
+import { useOrganizationById, useBillingAddress, useBillingAddresses, useUpdateOrganizationBillingAddress } from '@/lib/react-query/hooks'
+import { toast } from 'sonner'
 
 /**
  * BillingAddressSection Component
@@ -11,6 +12,7 @@ import { billingAddress } from '@/lib/utils/mock-data'
  *
  * Props:
  * - onEditAddress?: () => void - Callback to update address
+ * - orgId?: string - Organization ID
  *
  * Edge cases:
  * - No address: Shows add address prompt
@@ -18,14 +20,69 @@ import { billingAddress } from '@/lib/utils/mock-data'
 
 interface BillingAddressSectionProps {
   onEditAddress?: () => void
+  orgId?: string
 }
 
 export function BillingAddressSection({
   onEditAddress,
+  orgId,
 }: BillingAddressSectionProps) {
-  const hasAddress = billingAddress && billingAddress.addressLine1
+  const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
+  const { address, isLoading: addressLoading } = useBillingAddress(organization?.billingAddressId)
+  const { addresses: allAddresses } = useBillingAddresses()
+  const updateAddressMutation = useUpdateOrganizationBillingAddress()
 
-  if (!hasAddress) {
+  const isLoading = orgLoading || addressLoading
+
+  const handleLinkAddress = async (addressId: string) => {
+    if (!orgId) return
+    
+    try {
+      await updateAddressMutation.mutateAsync({
+        organizationId: orgId,
+        billingAddressId: addressId,
+      })
+      toast.success('Billing address updated')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update billing address')
+    }
+  }
+
+  const handleRemoveAddress = async () => {
+    if (!orgId) return
+    
+    try {
+      await updateAddressMutation.mutateAsync({
+        organizationId: orgId,
+        billingAddressId: undefined,
+      })
+      toast.success('Billing address removed')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to remove billing address')
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Billing Address
+          </h3>
+        </div>
+        <div className="border-t border-border px-6 py-12 text-center">
+          <p className="text-[13px] text-muted-foreground">Loading address...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!address) {
+    // Show available addresses from account if any
+    const availableAddresses = allAddresses.filter(
+      (addr) => addr.$id !== organization?.billingAddressId,
+    )
+
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
@@ -40,14 +97,38 @@ export function BillingAddressSection({
           <p className="text-[13px] text-muted-foreground mb-4">
             No billing address on file
           </p>
-          <Button
-            size="sm"
-            className="h-9 gap-2 text-[13px]"
-            onClick={onEditAddress}
-          >
-            <Plus className="h-4 w-4" />
-            Add billing address
-          </Button>
+          {availableAddresses.length > 0 ? (
+            <div className="space-y-2">
+              {availableAddresses.map((addr) => (
+                <Button
+                  key={addr.$id}
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-2 text-[13px] w-full"
+                  onClick={() => handleLinkAddress(addr.$id)}
+                >
+                  Use {addr.name || 'Address'}
+                </Button>
+              ))}
+              <Button
+                size="sm"
+                className="h-9 gap-2 text-[13px] w-full"
+                onClick={onEditAddress}
+              >
+                <Plus className="h-4 w-4" />
+                Create new address
+              </Button>
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              className="h-9 gap-2 text-[13px]"
+              onClick={onEditAddress}
+            >
+              <Plus className="h-4 w-4" />
+              Add billing address
+            </Button>
+          )}
         </div>
       </div>
     )
@@ -69,35 +150,50 @@ export function BillingAddressSection({
             <MapPin className="h-5 w-5 text-muted-foreground" />
           </div>
           <div className="text-[13px] text-foreground space-y-0.5">
-            <p className="font-medium">{billingAddress.name}</p>
-            {billingAddress.company && (
-              <p className="text-muted-foreground">{billingAddress.company}</p>
+            {address.name && (
+              <p className="font-medium">{address.name}</p>
             )}
-            <p>{billingAddress.addressLine1}</p>
-            {billingAddress.addressLine2 && (
-              <p>{billingAddress.addressLine2}</p>
+            {address.company && (
+              <p className="text-muted-foreground">{address.company}</p>
+            )}
+            <p>{address.addressLine1}</p>
+            {address.addressLine2 && (
+              <p>{address.addressLine2}</p>
             )}
             <p>
-              {billingAddress.city}
-              {billingAddress.state && `, ${billingAddress.state}`}{' '}
-              {billingAddress.postalCode}
+              {address.city}
+              {address.state && `, ${address.state}`}{' '}
+              {address.postalCode}
             </p>
-            <p>{billingAddress.country}</p>
+            <p>{address.country}</p>
           </div>
         </div>
       </div>
 
       {/* Footer */}
       <div className="border-t border-border px-6 py-4 bg-muted/30">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 gap-2 text-[13px]"
-          onClick={onEditAddress}
-        >
-          <Pencil className="h-4 w-4" />
-          Update address
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2 text-[13px]"
+            onClick={onEditAddress}
+          >
+            <Pencil className="h-4 w-4" />
+            Update address
+          </Button>
+          {allAddresses.length > 1 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={handleRemoveAddress}
+              disabled={updateAddressMutation.isPending}
+            >
+              Remove
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )

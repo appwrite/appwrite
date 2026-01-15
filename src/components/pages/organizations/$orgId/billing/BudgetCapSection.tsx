@@ -1,10 +1,12 @@
-import { useState } from 'react'
-import { Gauge, Info } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Gauge, Info, AlertCircle } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { budgetCap } from '@/lib/utils/mock-data'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { formatCurrency } from './utils'
+import { useOrganizationById, useOrganizationPlan, useUpdateOrganizationBudget } from '@/lib/react-query/hooks'
+import { toast } from 'sonner'
 
 /**
  * BudgetCapSection Component
@@ -14,38 +16,125 @@ import { formatCurrency } from './utils'
  * - Budget limit input when enabled
  * - Explanatory text about how it works
  *
- * Props: None
+ * Props:
+ * - orgId?: string - Organization ID
  *
  * State:
  * - enabled: boolean - Whether budget cap is active
- * - limit: number - Budget limit amount
- *
- * Behavior:
- * - When enabled, services pause when limit is reached
- * - Shows current limit and allows updating
+ * - limit: string - Budget limit amount (as string for input)
  */
 
-export function BudgetCapSection() {
-  const [enabled, setEnabled] = useState(budgetCap.enabled)
-  const [limit, setLimit] = useState(budgetCap.limit.toString())
+interface BudgetCapSectionProps {
+  orgId?: string
+}
+
+export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
+  const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
+  const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
+  const updateBudgetMutation = useUpdateOrganizationBudget()
+  
+  const [budget, setBudget] = useState<string>('')
   const [hasChanges, setHasChanges] = useState(false)
 
-  const handleToggle = (checked: boolean) => {
-    setEnabled(checked)
-    setHasChanges(true)
+  // Initialize from organization
+  useEffect(() => {
+    if (organization?.billingBudget !== undefined) {
+      setBudget(organization.billingBudget > 0 ? organization.billingBudget.toString() : '')
+      setHasChanges(false)
+    }
+  }, [organization?.billingBudget])
+
+  const enabled = (organization?.billingBudget || 0) > 0
+  const isLoading = orgLoading || planLoading
+
+  // Check if plan supports budgeting
+  const supportsBudgeting = plan?.budgeting !== false
+
+  const handleToggle = async (checked: boolean) => {
+    if (!orgId) return
+
+    const newBudget = checked ? (budget ? parseFloat(budget) : 100) : 0
+    
+    try {
+      await updateBudgetMutation.mutateAsync({
+        organizationId: orgId,
+        budget: newBudget,
+        alerts: organization?.budgetAlerts || [],
+      })
+      setBudget(newBudget > 0 ? newBudget.toString() : '')
+      setHasChanges(false)
+      toast.success(checked ? 'Budget cap enabled' : 'Budget cap disabled')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update budget cap')
+    }
   }
 
   const handleLimitChange = (value: string) => {
     // Only allow numbers and decimal point
     if (/^\d*\.?\d*$/.test(value)) {
-      setLimit(value)
-      setHasChanges(true)
+      setBudget(value)
+      const currentBudget = organization?.billingBudget || 0
+      const newBudget = value ? parseFloat(value) : 0
+      setHasChanges(newBudget !== currentBudget)
     }
   }
 
-  const handleSave = () => {
-    // Save logic would go here
-    setHasChanges(false)
+  const handleSave = async () => {
+    if (!orgId) return
+
+    const budgetValue = budget ? parseFloat(budget) : 0
+    
+    if (budgetValue <= 0) {
+      toast.error('Budget cap must be greater than 0')
+      return
+    }
+
+    try {
+      await updateBudgetMutation.mutateAsync({
+        organizationId: orgId,
+        budget: budgetValue,
+        alerts: organization?.budgetAlerts || [],
+      })
+      toast.success('Budget cap updated')
+      setHasChanges(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update budget cap')
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Budget Cap
+          </h3>
+        </div>
+        <div className="border-t border-border px-6 py-12 text-center">
+          <p className="text-[13px] text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!supportsBudgeting) {
+    return (
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Budget Cap
+          </h3>
+        </div>
+        <div className="border-t border-border px-6 py-4">
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-[13px]">
+              Budget caps are not supported on your current plan.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -69,18 +158,22 @@ export function BudgetCapSection() {
                 Enable budget cap
               </p>
               <p className="text-[12px] text-muted-foreground mt-0.5">
-                Automatically pause services when spending reaches your limit
+                Budget cap applies only to additional usage beyond your plan limits
               </p>
             </div>
           </div>
-          <Switch checked={enabled} onCheckedChange={handleToggle} />
+          <Switch
+            checked={enabled}
+            onCheckedChange={handleToggle}
+            disabled={updateBudgetMutation.isPending}
+          />
         </div>
 
         {/* Budget Limit Input */}
         {enabled && (
           <div className="mt-4 pl-14">
             <label className="text-[12px] text-muted-foreground">
-              Monthly spending limit
+              Budget cap (USD)
             </label>
             <div className="mt-1.5 flex items-center gap-2">
               <div className="relative">
@@ -88,15 +181,12 @@ export function BudgetCapSection() {
                   $
                 </span>
                 <Input
-                  value={limit}
+                  value={budget}
                   onChange={(e) => handleLimitChange(e.target.value)}
                   className="h-9 w-32 pl-7 text-[13px]"
                   placeholder="0.00"
                 />
               </div>
-              <span className="text-[13px] text-muted-foreground">
-                {budgetCap.currency}
-              </span>
             </div>
           </div>
         )}
@@ -106,16 +196,21 @@ export function BudgetCapSection() {
           <Info className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-[12px] text-muted-foreground">
             {enabled
-              ? `When your spending reaches ${formatCurrency(parseFloat(limit) || 0)}, all billable services will be paused until the next billing cycle or until you increase your limit.`
-              : 'Enable budget cap to prevent unexpected charges. Your services will automatically pause when the spending limit is reached.'}
+              ? `When your additional usage spending (beyond plan limits) reaches ${formatCurrency(parseFloat(budget) || 0)}, all billable services will be paused until the next billing cycle or until you increase your limit.`
+              : 'Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits. Your services will automatically pause when the spending limit is reached.'}
           </p>
         </div>
       </div>
 
       {/* Footer */}
-      {hasChanges && (
+      {enabled && (
         <div className="border-t border-border px-6 py-4 bg-muted/30">
-          <Button size="sm" className="h-9 text-[13px]" onClick={handleSave}>
+          <Button
+            size="sm"
+            className="h-9 text-[13px]"
+            onClick={handleSave}
+            disabled={!hasChanges || updateBudgetMutation.isPending}
+          >
             Update
           </Button>
         </div>

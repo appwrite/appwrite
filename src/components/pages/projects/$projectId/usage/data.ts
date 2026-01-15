@@ -150,8 +150,8 @@ export const planQuotas = {
       collections: 100,
       documents: null,
     },
-    storage: { bytes: 2 * 1024 * 1024 * 1024, operations: 500_000 }, // 2 GB
-    bandwidth: { egress: 10 * 1024 * 1024 * 1024, ingress: null }, // 10 GB
+    storage: { bytes: 2 * 1000 * 1000 * 1000, operations: 500_000 }, // 2 GB
+    bandwidth: { egress: 10 * 1000 * 1000 * 1000, ingress: null }, // 10 GB
     realtime: { connections: 250 },
     messaging: { messages: 10_000, topics: 100, sms: 0 },
   },
@@ -164,8 +164,8 @@ export const planQuotas = {
       collections: 500,
       documents: null,
     },
-    storage: { bytes: 150 * 1024 * 1024 * 1024, operations: 2_500_000 }, // 150 GB
-    bandwidth: { egress: 300 * 1024 * 1024 * 1024, ingress: null }, // 300 GB
+    storage: { bytes: 150 * 1000 * 1000 * 1000, operations: 2_500_000 }, // 150 GB
+    bandwidth: { egress: 300 * 1000 * 1000 * 1000, ingress: null }, // 300 GB
     realtime: { connections: 500 },
     messaging: { messages: 100_000, topics: 500, sms: 100 },
   },
@@ -178,8 +178,8 @@ export const planQuotas = {
       collections: 2000,
       documents: null,
     },
-    storage: { bytes: 500 * 1024 * 1024 * 1024, operations: 10_000_000 }, // 500 GB
-    bandwidth: { egress: 1024 * 1024 * 1024 * 1024, ingress: null }, // 1 TB
+    storage: { bytes: 500 * 1000 * 1000 * 1000, operations: 10_000_000 }, // 500 GB
+    bandwidth: { egress: 1000 * 1000 * 1000 * 1000, ingress: null }, // 1 TB
     realtime: { connections: 2500 },
     messaging: { messages: 500_000, topics: 2000, sms: 500 },
   },
@@ -354,7 +354,7 @@ export function generateMockUsageData(
           unit: 'GB',
           currentValue: 45.7,
           quota: quotas.storage.bytes
-            ? quotas.storage.bytes / (1024 * 1024 * 1024)
+            ? quotas.storage.bytes / (1000 * 1000 * 1000)
             : null,
           timeSeries: generateTimeSeries(30, 45.7, 0.05, 'up'),
           thresholds: { warning: 75, critical: 90 },
@@ -387,7 +387,7 @@ export function generateMockUsageData(
           unit: 'GB',
           currentValue: 125.8,
           quota: quotas.bandwidth.egress
-            ? quotas.bandwidth.egress / (1024 * 1024 * 1024)
+            ? quotas.bandwidth.egress / (1000 * 1000 * 1000)
             : null,
           timeSeries: generateTimeSeries(30, 4.2, 0.35, 'stable'),
           thresholds: { warning: 75, critical: 90 },
@@ -400,7 +400,7 @@ export function generateMockUsageData(
           unit: 'GB',
           currentValue: 34.2,
           quota: quotas.bandwidth.ingress
-            ? quotas.bandwidth.ingress / (1024 * 1024 * 1024)
+            ? quotas.bandwidth.ingress / (1000 * 1000 * 1000)
             : null,
           timeSeries: generateTimeSeries(30, 1.14, 0.4, 'up'),
         },

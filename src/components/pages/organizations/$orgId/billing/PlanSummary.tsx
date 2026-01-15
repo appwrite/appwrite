@@ -1,57 +1,205 @@
-import { useState } from 'react'
-import { ChevronDown, ChevronUp, Folder } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { useSearch, useNavigate } from '@tanstack/react-router'
+import { ChevronDown, ChevronUp, Folder, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { planDetails } from '@/lib/utils/mock-data'
-import { formatCurrency, formatDate, getRelativeTime } from './utils'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from '@/components/ui/tooltip'
+import { formatCurrency, formatDate } from './utils'
 import { cn } from '@/lib/utils'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
+import { useOrganizationById, useOrganizationPlan, useOrganizationBillingAggregation, useOrganizationCredits } from '@/lib/react-query/hooks'
+import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import { Link } from '@tanstack/react-router'
+import type { Models } from '@appwrite.io/console'
 
 /**
  * PlanSummary Component
  *
- * Displays the current plan information including:
+ * Displays the current plan information matching the old console format:
  * - Plan name and next payment date
  * - Billing cycle date range
  * - Expandable charges breakdown with:
  *   - Base plan cost
- *   - Org-level addons (additional projects, members)
- *   - Collapsible project breakdowns with project-specific addons
+ *   - Additional members cost
+ *   - Additional projects cost with count badge
+ *   - Project breakdowns with detailed usage metrics, progress bars, and costs
  * - Total projected amount
  * - Change plan action
- *
- * Props:
- * - onChangePlan?: () => void - Callback when user clicks change plan
- *
- * State:
- * - expanded: boolean - Controls visibility of charges breakdown
- * - expandedProjects: Set<string> - Tracks which project breakdowns are expanded
  */
 
 interface PlanSummaryProps {
   onChangePlan?: () => void
+  orgId?: string
 }
 
-export function PlanSummary({ onChangePlan }: PlanSummaryProps) {
-  const [expanded, setExpanded] = useState(false)
+interface ResourceItem {
+  name: string
+  usage: number
+  limit: number | null
+  cost: number
+  formatType: 'bytes' | 'number' | 'sms'
+}
+
+const PROJECTS_PER_PAGE = 10
+
+export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
+  const [expanded, setExpanded] = useState(true) // Default to expanded
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
     new Set(),
   )
 
-  // Calculate totals
-  const orgAddonsTotal = planDetails.orgAddons.reduce(
-    (sum, addon) => sum + addon.total,
-    0,
+  // Get pagination from URL
+  const search = useSearch({ strict: false })
+  const navigate = useNavigate()
+  const currentPage = Number(search?.page) || 1
+  const pageLimit = Number(search?.limit) || PROJECTS_PER_PAGE
+  const pageOffset = (currentPage - 1) * pageLimit
+
+  // Fetch organization data
+  const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
+  const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
+  const { aggregation, isLoading: aggLoading } = useOrganizationBillingAggregation(
+    orgId,
+    organization?.billingAggregationId,
+    pageLimit,
+    pageOffset,
   )
-  const projectAddonsTotal = planDetails.projectBreakdowns.reduce(
-    (sum, project) => sum + project.total,
-    0,
-  )
-  const totalAmount =
-    planDetails.basePrice + orgAddonsTotal + projectAddonsTotal
+  const { credits, total: creditsTotal } = useOrganizationCredits(orgId, 0, 1)
+
+  // Calculate available credit
+  const availableCredit = useMemo(() => {
+    if (!credits || credits.length === 0) return 0
+    const now = new Date()
+    return credits.reduce((sum, credit) => {
+      if (credit.expiresAt && new Date(credit.expiresAt) > now) {
+        return sum + (credit.remaining || 0)
+      }
+      return sum
+    }, 0)
+  }, [credits])
+
+  // Get plan name from plan object
+  const planName = useMemo(() => {
+    if (!plan || !plan.name) {
+      if (!organization) return 'Free'
+      return getPlanNameFromTier(organization.billingPlan)
+    }
+    return plan.name
+  }, [plan, organization])
+
+  // Get next plan if downgrade is scheduled
+  const nextPlan = useMemo(() => {
+    if (!organization?.billingPlanDowngrade) return null
+    // TODO: Fetch next plan details if needed
+    // For now, we'll use current plan price
+    return null
+  }, [organization])
+
+  // Get base plan price (use next plan if downgrade scheduled)
+  const basePlanPrice = useMemo(() => {
+    if (nextPlan) {
+      return nextPlan.price || 0
+    }
+    if (!plan) return 0
+    return plan.price || 0
+  }, [plan, nextPlan])
+
+  // Get base amount (from aggregation if available, otherwise plan price)
+  const baseAmount = useMemo(() => {
+    if (aggregation && aggregation.amount !== undefined && aggregation.amount !== null) {
+      return aggregation.amount
+    }
+    return basePlanPrice
+  }, [aggregation, basePlanPrice])
+
+  // Calculate credits applied
+  const creditsApplied = useMemo(() => {
+    return Math.min(baseAmount, availableCredit)
+  }, [baseAmount, availableCredit])
+
+  // Calculate total amount
+  const totalAmount = useMemo(() => {
+    return Math.max(baseAmount - creditsApplied, 0)
+  }, [baseAmount, creditsApplied])
+
+  // Get billing cycle dates from organization
+  const billingCycle = useMemo(() => {
+    if (!organization) return null
+    
+    const cycleStart = organization.billingCurrentInvoiceDate
+    const cycleEnd = organization.billingNextInvoiceDate
+    
+    if (cycleStart && cycleEnd) {
+      return {
+        start: cycleStart,
+        end: cycleEnd,
+      }
+    }
+    
+    return null
+  }, [organization])
+
+  // Get next payment date (same as billing cycle end)
+  const nextPaymentDate = useMemo(() => {
+    if (billingCycle) {
+      return billingCycle.end
+    }
+    return null
+  }, [billingCycle])
+
+  // Get billing cycle label
+  const billingCycleLabel = useMemo(() => {
+    if (!plan) return 'Monthly'
+    return plan.billingCycle || 'Monthly'
+  }, [plan])
+
+  // Get additional members cost from aggregation
+  const additionalMembersCost = useMemo(() => {
+    if (!aggregation || !aggregation.additionalMemberAmount) return 0
+    return aggregation.additionalMemberAmount
+  }, [aggregation])
+
+  const additionalMembersCount = useMemo(() => {
+    if (!aggregation || !aggregation.additionalMembers) return 0
+    return aggregation.additionalMembers
+  }, [aggregation])
+
+  // Calculate additional projects cost
+  // Check both aggregation and plan for project limits
+  const additionalProjectsCost = useMemo(() => {
+    if (!plan || !aggregation) return 0
+    
+    // Get included projects from plan
+    const includedProjects = plan.projects || plan.addons?.projects?.planIncluded || 0
+    const projects = aggregation.breakdown || aggregation.projects || aggregation.projectBreakdown || []
+    const totalProjects = Array.isArray(projects) ? projects.length : 0
+    
+    if (totalProjects <= includedProjects) return 0
+    
+    const additionalCount = totalProjects - includedProjects
+    // Get additional project price from plan addons
+    const additionalProjectPrice = plan.addons?.projects?.price || plan.additionalProjectPrice || 0
+    
+    return additionalCount * additionalProjectPrice
+  }, [plan, aggregation])
+
+  const additionalProjectsCount = useMemo(() => {
+    if (!plan || !aggregation) return 0
+    const includedProjects = plan.projects || plan.addons?.projects?.planIncluded || 0
+    const projects = aggregation.breakdown || aggregation.projects || aggregation.projectBreakdown || []
+    const totalProjects = Array.isArray(projects) ? projects.length : 0
+    return Math.max(0, totalProjects - includedProjects)
+  }, [plan, aggregation])
 
   // Toggle project expansion
   const toggleProject = (projectId: string) => {
@@ -66,10 +214,146 @@ export function PlanSummary({ onChangePlan }: PlanSummaryProps) {
     })
   }
 
-  // Filter projects with charges
-  const projectsWithCharges = planDetails.projectBreakdowns.filter(
-    (p) => p.total > 0,
-  )
+  // Process aggregation breakdown for display
+  const projectBreakdowns = useMemo(() => {
+    if (!aggregation) return []
+    
+    // Try different property names for projects
+    const projects = aggregation.breakdown || aggregation.projects || aggregation.projectBreakdown || []
+    if (!Array.isArray(projects) || projects.length === 0) return []
+    
+    return projects.map((project: any) => {
+      const resources: ResourceItem[] = []
+      let projectTotal = 0
+
+      // Resources are in project.resources array with resourceId and value
+      const projectResources = Array.isArray(project.resources) ? project.resources : []
+      
+      // Map aggregation resourceIds to our internal keys and display info
+      // The aggregation uses resourceId like "bandwidth", "storage", "users", "databasesReads", "GBHours", etc.
+      const resourceIdMap: Record<string, { key: string; name: string; format: 'bytes' | 'number' | 'sms'; planKey: string }> = {
+        bandwidth: { key: 'bandwidth', name: 'Bandwidth', format: 'bytes', planKey: 'bandwidth' },
+        storage: { key: 'storage', name: 'Storage', format: 'bytes', planKey: 'storage' },
+        users: { key: 'users', name: 'Users', format: 'number', planKey: 'users' },
+        databasesReads: { key: 'databaseReads', name: 'Database reads', format: 'number', planKey: 'databaseReads' },
+        databasesWrites: { key: 'databaseWrites', name: 'Database writes', format: 'number', planKey: 'databaseWrites' },
+        executions: { key: 'executions', name: 'Executions', format: 'number', planKey: 'executions' },
+        imageTransformations: { key: 'imageTransformations', name: 'Image transformations', format: 'number', planKey: 'imageTransformations' },
+        GBHours: { key: 'gbHours', name: 'GB-hours', format: 'number', planKey: 'gbHours' },
+        authPhone: { key: 'authPhone', name: 'Phone OTP', format: 'sms', planKey: 'authPhone' },
+      }
+
+      // Helper to get resource from aggregation by resourceId
+      const getResourceByResourceId = (resourceId: string) => {
+        return projectResources.find((r: any) => r.resourceId === resourceId)
+      }
+
+      // Get plan limits from the plan object
+      // Limits are directly on the plan object (e.g., plan.bandwidth, plan.storage)
+      // Some limits need unit conversion (bandwidth and storage are in GB)
+      const getPlanLimit = (planKey: string): number | null => {
+        if (!plan) return null
+        
+        // Map our planKey to the plan object property name
+        const planPropertyMap: Record<string, string> = {
+          bandwidth: 'bandwidth',
+          storage: 'storage',
+          users: 'users',
+          executions: 'executions',
+          gbHours: 'GBHours', // Note: capital GB in plan object
+          databaseReads: 'databasesReads',
+          databaseWrites: 'databasesWrites',
+          imageTransformations: 'imageTransformations',
+          authPhone: 'authPhone',
+        }
+        
+        const planProperty = planPropertyMap[planKey] || planKey
+        
+        // Get the limit value directly from plan object
+        const limitValue = (plan as any)[planProperty]
+        
+        if (limitValue === null || limitValue === undefined) {
+          return null
+        }
+        
+        const numValue = Number(limitValue)
+        if (isNaN(numValue)) {
+          return null
+        }
+        
+        // Convert bandwidth and storage from GB to bytes (multiply by 1 billion)
+        if (planKey === 'bandwidth' || planKey === 'storage') {
+          return numValue * 1000000000
+        }
+        
+        return numValue
+      }
+
+      // Process each resource type from the aggregation
+      Object.entries(resourceIdMap).forEach(([resourceId, { key, name, format, planKey }]) => {
+        const resource = getResourceByResourceId(resourceId)
+        
+        // Get usage from resource.value (aggregation format)
+        const usage = resource?.value !== undefined ? Number(resource.value) : 0
+        
+        // Get limit from plan
+        const limit = getPlanLimit(planKey)
+        
+        // Get cost from resource.amount if available
+        const cost = resource?.amount !== undefined ? Number(resource.amount) : 0
+        
+        // Always show the resource if it exists in aggregation or if plan has a limit
+        // This matches the old UI which shows all resources
+        if (resource || limit !== null) {
+          resources.push({
+            name,
+            usage,
+            limit,
+            cost,
+            formatType: format,
+          })
+          projectTotal += cost
+        }
+      })
+
+      // Debug: Log project structure if no resources found (only in development)
+      if (resources.length === 0 && process.env.NODE_ENV === 'development') {
+        console.log('Project structure:', project)
+        console.log('Available keys:', Object.keys(project))
+      }
+
+      return {
+        projectId: project.projectId || project.$id || project.id,
+        projectName: project.projectName || project.name || 'Unknown Project',
+        resources,
+        total: projectTotal,
+      }
+    })
+  }, [aggregation, plan])
+
+  // Get total projects count for pagination
+  const totalProjects = useMemo(() => {
+    if (!aggregation) return 0
+    const projects = aggregation.breakdown || aggregation.projects || aggregation.projectBreakdown || []
+    return Array.isArray(projects) ? projects.length : 0
+  }, [aggregation])
+
+  const totalPages = Math.ceil(totalProjects / pageLimit)
+
+  const isLoading = orgLoading || planLoading || aggLoading
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+        </div>
+        <div className="border-t border-border px-6 py-12 text-center">
+          <p className="text-[13px] text-muted-foreground">Loading plan details...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -79,37 +363,40 @@ export function PlanSummary({ onChangePlan }: PlanSummaryProps) {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-[15px] font-semibold text-foreground">
-                {planDetails.name} Plan
+                {planName} plan
               </h3>
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                {planDetails.billingCycle}
+                {billingCycleLabel}
               </span>
             </div>
-            <p className="text-[12px] text-muted-foreground">
-              Next payment {getRelativeTime(planDetails.nextPaymentDate)}
-            </p>
+            {totalAmount > 0 && nextPaymentDate && (
+              <p className="text-[12px] text-muted-foreground mt-1">
+                Next payment of <span className="font-medium text-foreground">{formatCurrency(totalAmount)}</span> will occur on <span className="font-medium text-foreground">{formatDate(nextPaymentDate, { month: 'short', day: 'numeric', year: 'numeric' })}</span>.
+              </p>
+            )}
           </div>
           <div className="text-right shrink-0">
             <p className="text-[20px] font-semibold text-foreground">
               {formatCurrency(totalAmount)}
             </p>
-            <p className="text-[11px] text-muted-foreground">
-              projected renewal
+            <p className="text-[11px] text-muted-foreground italic">
+              Estimate, subject to change based on usage
             </p>
           </div>
         </div>
       </div>
 
       {/* Billing Cycle */}
-      <div className="border-t border-border px-6 py-3 bg-muted/30">
-        <div className="flex items-center justify-between text-[12px]">
-          <span className="text-muted-foreground">Current billing cycle</span>
-          <span className="font-medium text-foreground">
-            {formatDate(planDetails.cycleStart)} –{' '}
-            {formatDate(planDetails.cycleEnd)}
-          </span>
+      {billingCycle && (
+        <div className="border-t border-border px-6 py-3 bg-muted/30">
+          <div className="flex items-center justify-between text-[12px]">
+            <span className="text-muted-foreground">Current billing cycle</span>
+            <span className="font-medium text-foreground">
+              ({formatDate(billingCycle.start, { month: 'short', day: 'numeric' })}–{formatDate(billingCycle.end, { month: 'short', day: 'numeric' })})
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Expandable Charges Breakdown */}
       <div className="border-t border-border">
@@ -128,53 +415,72 @@ export function PlanSummary({ onChangePlan }: PlanSummaryProps) {
         <div
           className={cn(
             'overflow-hidden transition-all duration-200',
-            expanded ? 'max-h-[800px]' : 'max-h-0',
+            expanded ? 'max-h-[2000px]' : 'max-h-0',
           )}
         >
           <div className="border-t border-border px-6 py-4 space-y-4">
-            {/* Base Plan */}
+            {/* Base Plan Row */}
             <div className="flex items-center justify-between text-[13px]">
               <span className="text-foreground">
-                {planDetails.name} plan (base)
+                {planName} plan (base)
               </span>
               <span className="font-medium text-foreground">
-                {formatCurrency(planDetails.basePrice)}
+                {formatCurrency(basePlanPrice)}
               </span>
             </div>
 
-            {/* Org-level Addons Section */}
-            {planDetails.orgAddons.length > 0 && (
-              <div className="space-y-2">
-                <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  Organization Add-ons
-                </div>
-                {planDetails.orgAddons.map((addon, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between text-[13px]"
-                  >
-                    <span className="text-muted-foreground">
-                      {addon.name}
-                      <span className="ml-1 text-[11px]">
-                        ({addon.quantity} × {formatCurrency(addon.unitPrice)})
-                      </span>
-                    </span>
-                    <span className="text-foreground">
-                      {formatCurrency(addon.total)}
-                    </span>
-                  </div>
-                ))}
+            {/* Additional Members */}
+            {additionalMembersCost > 0 && (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-foreground flex items-center gap-2">
+                  Additional members
+                  {additionalMembersCount > 0 && (
+                    <Badge variant="secondary" className="h-4 px-1.5 text-[10px] font-medium">
+                      {additionalMembersCount}
+                    </Badge>
+                  )}
+                </span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(additionalMembersCost)}
+                </span>
+              </div>
+            )}
+
+            {/* Additional Projects */}
+            {additionalProjectsCount > 0 && (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-foreground flex items-center gap-2">
+                  Additional projects
+                  <Badge variant="secondary" className="h-4 px-1.5 text-[10px] font-medium">
+                    {additionalProjectsCount}
+                  </Badge>
+                </span>
+                <span className="font-medium text-foreground">
+                  {formatCurrency(additionalProjectsCost)}
+                </span>
+              </div>
+            )}
+
+            {/* Credits Applied */}
+            {creditsApplied > 0 && (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-muted-foreground">
+                  Credits applied
+                </span>
+                <span className="font-medium text-foreground text-green-600 dark:text-green-400">
+                  -{formatCurrency(creditsApplied)}
+                </span>
               </div>
             )}
 
             {/* Project Breakdown Section */}
-            {projectsWithCharges.length > 0 && (
+            {projectBreakdowns.length > 0 && (
               <div className="space-y-2">
                 <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  Project Breakdown
+                  Project breakdown
                 </div>
                 <div className="space-y-1">
-                  {projectsWithCharges.map((project) => (
+                  {projectBreakdowns.map((project) => (
                     <Collapsible
                       key={project.projectId}
                       open={expandedProjects.has(project.projectId)}
@@ -199,28 +505,128 @@ export function PlanSummary({ onChangePlan }: PlanSummaryProps) {
                         </button>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <div className="ml-5 mt-1 space-y-1.5 border-l border-border pl-3 pb-2">
-                          {project.addons.map((addon, addonIndex) => (
-                            <div
-                              key={addonIndex}
-                              className="flex items-center justify-between text-[12px]"
+                        <div className="ml-5 mt-1 border-l border-border pl-3 pr-6 pb-2">
+                          <div className="space-y-0.5">
+                            {project.resources.map((resource, index) => {
+                              const usagePercentage = resource.limit && resource.limit > 0
+                                ? Math.min(100, (resource.usage / resource.limit) * 100)
+                                : null
+                              const usageFormatted = formatResourceUsage(resource.usage, resource.formatType)
+                              const limitFormatted = resource.limit !== null
+                                ? formatResourceLimit(resource.limit, resource.formatType)
+                                : 'Unlimited'
+
+                              return (
+                                <div key={index} className="py-2 border-b border-border last:border-0">
+                                  <div className="flex items-center gap-6">
+                                    {/* Resource name - fixed width */}
+                                    <span className="text-[12px] font-medium text-foreground w-[140px] shrink-0">
+                                      {resource.name}
+                                    </span>
+                                    
+                                    {/* Progress bar - fixed width column for alignment */}
+                                    <div className="w-[120px] shrink-0">
+                                      {usagePercentage !== null ? (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <div>
+                                                <Progress
+                                                  value={usagePercentage}
+                                                  className={cn(
+                                                    'h-2 cursor-pointer',
+                                                    usagePercentage >= 80 && '[&>div]:bg-blue-500',
+                                                  )}
+                                                />
+                                              </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p className="text-[12px]">
+                                                {usagePercentage.toFixed(1)}% used
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      ) : (
+                                        <div className="h-2" /> // Spacer to maintain alignment
+                                      )}
+                                    </div>
+                                    
+                                    {/* Usage/limit text - flexible */}
+                                    <span className="text-[11px] text-muted-foreground whitespace-nowrap flex-1 min-w-0">
+                                      {usageFormatted} / {limitFormatted}
+                                    </span>
+                                    
+                                    {/* Cost - right aligned to match parent prices */}
+                                    <span className="text-[12px] font-medium text-foreground shrink-0 text-right min-w-[70px]">
+                                      {formatCurrency(resource.cost)}
+                                    </span>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                          {orgId && (
+                            <Link
+                              to="/projects/$projectId/usage"
+                              params={{ projectId: project.projectId }}
+                              className="flex items-center gap-1 text-[11px] text-primary hover:underline mt-2"
                             >
-                              <span className="text-muted-foreground">
-                                {addon.name}
-                                <span className="ml-1 text-[10px] opacity-70">
-                                  ({addon.usage})
-                                </span>
-                              </span>
-                              <span className="text-foreground">
-                                {formatCurrency(addon.total)}
-                              </span>
-                            </div>
-                          ))}
+                              Usage details
+                              <ExternalLink className="h-3 w-3" />
+                            </Link>
+                          )}
                         </div>
                       </CollapsibleContent>
                     </Collapsible>
                   ))}
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                    <span className="text-[12px] text-muted-foreground">
+                      Showing {pageOffset + 1}–{Math.min(pageOffset + pageLimit, totalProjects)} of {totalProjects} projects
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-[12px]"
+                        disabled={currentPage === 1}
+                        onClick={() => {
+                          navigate({
+                            search: (prev: any) => ({
+                              ...prev,
+                              page: currentPage - 1,
+                            }),
+                          })
+                        }}
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-[12px] text-muted-foreground">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-[12px]"
+                        disabled={currentPage === totalPages}
+                        onClick={() => {
+                          navigate({
+                            search: (prev: any) => ({
+                              ...prev,
+                              page: currentPage + 1,
+                            }),
+                          })
+                        }}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -236,16 +642,84 @@ export function PlanSummary({ onChangePlan }: PlanSummaryProps) {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-border px-6 py-4 bg-muted/30">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 text-[13px]"
-          onClick={onChangePlan}
-        >
-          Change plan
-        </Button>
-      </div>
+      {plan?.selfService !== false && (
+        <div className="border-t border-border px-6 py-4 bg-muted/30">
+          <div className="flex items-center gap-2">
+            {planName === 'Free' ? (
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={onChangePlan}
+              >
+                Upgrade
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={onChangePlan}
+              >
+                Change plan
+              </Button>
+            )}
+            {organization?.billingPlanDowngrade && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={onChangePlan}
+              >
+                Cancel change
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
+}
+
+// Helper functions
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  const k = 1000
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+}
+
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`
+  }
+  if (num >= 1000) {
+    return `${(num / 1000).toFixed(1)}K`
+  }
+  return num.toLocaleString()
+}
+
+function formatResourceUsage(value: number, type: 'bytes' | 'number' | 'sms'): string {
+  if (type === 'bytes') {
+    return formatBytes(value)
+  }
+  if (type === 'sms') {
+    return `${value.toLocaleString()} SMS messages`
+  }
+  return formatNumber(value)
+}
+
+function formatResourceLimit(value: number | null, type: 'bytes' | 'number' | 'sms'): string {
+  if (value === null) return 'Unlimited'
+  if (type === 'bytes') {
+    // For limits, show in GB if large enough
+    if (value >= 1000 * 1000 * 1000) {
+      return `${(value / (1000 * 1000 * 1000)).toFixed(0)} GB`
+    }
+    return formatBytes(value)
+  }
+  if (type === 'sms') {
+    return `${value.toLocaleString()}`
+  }
+  return formatNumber(value)
 }

@@ -302,9 +302,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   // Format backup size
   const formatSize = (bytes: number | undefined) => {
     if (!bytes) return '-'
-    const mb = bytes / (1024 * 1024)
+    const mb = bytes / (1000 * 1000)
     if (mb < 1) {
-      return `${(bytes / 1024).toFixed(2)} KB`
+      return `${(bytes / 1000).toFixed(2)} KB`
     }
     return `${mb.toFixed(2)} MB`
   }
@@ -1270,9 +1270,9 @@ function RestoreBackupDialog({
 
   const formatSize = (bytes: number | undefined) => {
     if (!bytes) return '-'
-    const mb = bytes / (1024 * 1024)
+    const mb = bytes / (1000 * 1000)
     if (mb < 1) {
-      return `${(bytes / 1024).toFixed(2)} KB`
+      return `${(bytes / 1000).toFixed(2)} KB`
     }
     return `${mb.toFixed(2)} MB`
   }

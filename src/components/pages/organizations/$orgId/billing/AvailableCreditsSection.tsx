@@ -1,8 +1,7 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Plus, Clock, Ticket, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { availableCredits, coupons } from '@/lib/utils/mock-data'
-import { formatCurrency, formatDate, getRelativeTime } from './utils'
+import { formatCurrency, formatDate } from './utils'
 import { cn } from '@/lib/utils'
 import {
   Table,
@@ -12,6 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useOrganizationById, useOrganizationPlan, useOrganizationCredits } from '@/lib/react-query/hooks'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import type { Models } from '@appwrite.io/console'
 
 /**
  * AvailableCreditsSection Component
@@ -24,7 +27,7 @@ import {
  *
  * Props:
  * - onAddCredits?: () => void - Callback to add credits
- * - onApplyCoupon?: () => void - Callback to apply a coupon
+ * - orgId?: string - Organization ID
  *
  * Edge cases:
  * - No credits: Shows zero balance
@@ -34,47 +37,131 @@ import {
 
 interface AvailableCreditsSectionProps {
   onAddCredits?: () => void
-  onApplyCoupon?: () => void
+  orgId?: string
 }
 
-const ITEMS_PER_PAGE = 3
+const ITEMS_PER_PAGE = 5
 
 export function AvailableCreditsSection({
   onAddCredits,
-  onApplyCoupon,
+  orgId,
 }: AvailableCreditsSectionProps) {
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage, setCurrentPage] = useState(0)
+  const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
+  const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
+  const { credits, total: creditsTotal, isLoading: creditsLoading } = useOrganizationCredits(orgId, currentPage, ITEMS_PER_PAGE)
 
-  const hasCredits = availableCredits.amount > 0
-  const isExpiringSoon = isCreditsExpiringSoon(availableCredits.expiresAt)
+  const isLoading = orgLoading || planLoading || creditsLoading
 
-  // Pagination logic
-  const totalPages = Math.ceil(coupons.length / ITEMS_PER_PAGE)
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-  const paginatedCoupons = coupons.slice(
-    startIndex,
-    startIndex + ITEMS_PER_PAGE,
-  )
+  // Check if credits are supported
+  const areCreditsSupported = plan?.credits !== false
+
+  // Calculate total available credit
+  const totalAvailableCredit = useMemo(() => {
+    if (!credits || credits.length === 0) return 0
+    
+    const now = new Date()
+    return credits.reduce((sum, credit) => {
+      if (credit.expiresAt && new Date(credit.expiresAt) > now) {
+        return sum + (credit.remaining || 0)
+      }
+      return sum
+    }, 0)
+  }, [credits])
+
+  // Process credits for display (sort: non-expired first, then by expiration)
+  const processedCredits = useMemo(() => {
+    if (!credits) return []
+    
+    const now = new Date()
+    return credits
+      .map((credit) => {
+        const expiresAt = credit.expiresAt ? new Date(credit.expiresAt) : null
+        const isExpired = expiresAt ? expiresAt < now : false
+        
+        return {
+          ...credit,
+          isExpired,
+          expiresAtDate: expiresAt,
+        }
+      })
+      .sort((a, b) => {
+        // Non-expired first
+        if (a.isExpired !== b.isExpired) {
+          return a.isExpired ? 1 : -1
+        }
+        // Then by expiration date (soonest first)
+        if (a.expiresAtDate && b.expiresAtDate) {
+          return a.expiresAtDate.getTime() - b.expiresAtDate.getTime()
+        }
+        return 0
+      })
+  }, [credits])
+
+  const totalPages = Math.ceil(creditsTotal / ITEMS_PER_PAGE)
 
   const goToNextPage = () => {
-    if (currentPage < totalPages) {
+    if (currentPage < totalPages - 1) {
       setCurrentPage(currentPage + 1)
     }
   }
 
   const goToPrevPage = () => {
-    if (currentPage > 1) {
+    if (currentPage > 0) {
       setCurrentPage(currentPage - 1)
     }
   }
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Available Credits
+          </h3>
+        </div>
+        <div className="border-t border-border px-6 py-12 text-center">
+          <p className="text-[13px] text-muted-foreground">Loading credits...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!areCreditsSupported) {
+    return (
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Available Credits
+          </h3>
+        </div>
+        <div className="border-t border-border px-6 py-4">
+          <Alert>
+            <AlertDescription className="text-[13px]">
+              Upgrade to Pro to add credits.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
+
+  const hasCredits = totalAvailableCredit > 0
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       {/* Header */}
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Available Credits
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Available Credits
+          </h3>
+          {hasCredits && (
+            <Badge variant="secondary" className="h-6 px-2.5 text-[11px] font-medium">
+              Balance: {formatCurrency(totalAvailableCredit)}
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* Content */}
@@ -87,46 +174,16 @@ export function AvailableCreditsSection({
                 hasCredits ? 'text-foreground' : 'text-muted-foreground',
               )}
             >
-              {formatCurrency(
-                availableCredits.amount,
-                availableCredits.currency,
-              )}
+              {formatCurrency(totalAvailableCredit)}
             </p>
             <p className="text-[12px] text-muted-foreground">
               Available balance
             </p>
           </div>
-
-          {hasCredits && (
-            <div
-              className={cn(
-                'flex items-center gap-1.5 rounded-full px-3 py-1.5',
-                isExpiringSoon
-                  ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
-                  : 'bg-muted text-muted-foreground',
-              )}
-            >
-              <Clock className="h-3.5 w-3.5" />
-              <span className="text-[11px] font-medium">
-                Expires {getRelativeTime(availableCredits.expiresAt)}
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Expiration Info */}
-        {hasCredits && (
-          <div className="mt-4 flex items-start gap-2 rounded-lg bg-muted/50 p-3">
-            <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-            <p className="text-[12px] text-muted-foreground">
-              Credits expire on {formatDate(availableCredits.expiresAt)}. Unused
-              credits will be forfeited after this date.
-            </p>
-          </div>
-        )}
-
         {/* No Credits State */}
-        {!hasCredits && (
+        {!hasCredits && processedCredits.length === 0 && (
           <div className="mt-4 text-center py-4">
             <p className="text-[13px] text-muted-foreground">
               You don't have any credits. Credits can be used to offset your
@@ -136,168 +193,152 @@ export function AvailableCreditsSection({
         )}
       </div>
 
-      {/* Coupons Section */}
-      <div className="border-t border-border">
-        <div className="px-6 py-3 bg-muted/30">
-          <div className="flex items-center gap-2">
-            <Ticket className="h-4 w-4 text-muted-foreground" />
-            <span className="text-[13px] font-medium text-foreground">
-              Applied Coupons
-            </span>
-            <span className="text-[11px] text-muted-foreground">
-              ({coupons.length})
-            </span>
-          </div>
-        </div>
-
-        {coupons.length > 0 ? (
-          <>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                      Code
-                    </TableHead>
-                    <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground text-right">
-                      Total
-                    </TableHead>
-                    <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground text-right">
-                      Remaining
-                    </TableHead>
-                    <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground text-right">
-                      Expires at
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedCoupons.map((coupon) => {
-                    const isFullyUsed = coupon.remaining === 0
-                    const isCouponExpiringSoon = isCreditsExpiringSoon(
-                      coupon.expiresAt,
-                    )
-
-                    return (
-                      <TableRow
-                        key={coupon.$id}
-                        className={cn(
-                          'hover:bg-accent/50',
-                          isFullyUsed && 'opacity-50',
-                        )}
-                      >
-                        <TableCell className="py-2.5">
-                          <code className="rounded bg-muted px-1.5 py-0.5 text-[12px] font-mono text-foreground">
-                            {coupon.code}
-                          </code>
-                        </TableCell>
-                        <TableCell className="py-2.5 text-right text-[13px] text-muted-foreground">
-                          {formatCurrency(coupon.total, coupon.currency)}
-                        </TableCell>
-                        <TableCell className="py-2.5 text-right">
-                          <span
-                            className={cn(
-                              'text-[13px] font-medium',
-                              isFullyUsed
-                                ? 'text-muted-foreground'
-                                : 'text-foreground',
-                            )}
-                          >
-                            {formatCurrency(coupon.remaining, coupon.currency)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-2.5 text-right">
-                          <span
-                            className={cn(
-                              'text-[12px]',
-                              isCouponExpiringSoon
-                                ? 'text-yellow-600 dark:text-yellow-400'
-                                : 'text-muted-foreground',
-                            )}
-                          >
-                            {formatDate(coupon.expiresAt)}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
+      {/* Credits Table */}
+      {processedCredits.length > 0 && (
+        <div className="border-t border-border">
+          <div className="px-6 py-3 bg-muted/30">
+            <div className="flex items-center gap-2">
+              <Ticket className="h-4 w-4 text-muted-foreground" />
+              <span className="text-[13px] font-medium text-foreground">
+                Credit History
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                ({creditsTotal})
+              </span>
             </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-border px-6 py-3">
-                <span className="text-[12px] text-muted-foreground">
-                  Showing {startIndex + 1}–
-                  {Math.min(startIndex + ITEMS_PER_PAGE, coupons.length)} of{' '}
-                  {coupons.length}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={goToPrevPage}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-[12px] text-muted-foreground px-2">
-                    {currentPage} / {totalPages}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={goToNextPage}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="px-6 py-6 text-center">
-            <p className="text-[13px] text-muted-foreground">
-              No coupons applied yet.
-            </p>
           </div>
-        )}
-      </div>
+
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Code
+                  </TableHead>
+                  <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground text-right">
+                    Total
+                  </TableHead>
+                  <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground text-right">
+                    Remaining
+                  </TableHead>
+                  <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground text-right">
+                    Expires at
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {processedCredits.map((credit) => {
+                  const isFullyUsed = (credit.remaining || 0) === 0
+                  const isExpired = credit.isExpired
+
+                  return (
+                    <TableRow
+                      key={credit.$id}
+                      className={cn(
+                        'hover:bg-accent/50',
+                        (isFullyUsed || isExpired) && 'opacity-50',
+                      )}
+                    >
+                      <TableCell className="py-2.5">
+                        <code className="rounded bg-muted px-1.5 py-0.5 text-[12px] font-mono text-foreground">
+                          {credit.couponId || '-'}
+                        </code>
+                      </TableCell>
+                      <TableCell className="py-2.5 text-right text-[13px] text-muted-foreground">
+                        {formatCurrency(credit.total || 0, credit.currency || 'USD')}
+                      </TableCell>
+                      <TableCell className="py-2.5 text-right">
+                        <span
+                          className={cn(
+                            'text-[13px] font-medium',
+                            (isFullyUsed || isExpired)
+                              ? 'text-muted-foreground line-through'
+                              : 'text-foreground',
+                          )}
+                        >
+                          {formatCurrency(credit.remaining || 0, credit.currency || 'USD')}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-2.5 text-right">
+                        {credit.expiresAt ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <span
+                              className={cn(
+                                'text-[12px]',
+                                isExpired
+                                  ? 'text-muted-foreground'
+                                  : 'text-foreground',
+                              )}
+                            >
+                              {formatDate(credit.expiresAt)}
+                            </span>
+                            {isExpired && (
+                              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                                Expired
+                              </Badge>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[12px] text-muted-foreground">
+                            -
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-border px-6 py-3">
+              <span className="text-[12px] text-muted-foreground">
+                Showing {currentPage * ITEMS_PER_PAGE + 1}–
+                {Math.min((currentPage + 1) * ITEMS_PER_PAGE, creditsTotal)} of{' '}
+                {creditsTotal}
+              </span>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={goToPrevPage}
+                  disabled={currentPage === 0}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-[12px] text-muted-foreground px-2">
+                  {currentPage + 1} / {totalPages}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages - 1}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Footer */}
       <div className="border-t border-border px-6 py-4 bg-muted/30">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-2 text-[13px]"
-            onClick={onAddCredits}
-          >
-            <Plus className="h-4 w-4" />
-            Add credits
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-2 text-[13px]"
-            onClick={onApplyCoupon}
-          >
-            <Ticket className="h-4 w-4" />
-            Apply coupon
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 gap-2 text-[13px]"
+          onClick={onAddCredits}
+        >
+          <Plus className="h-4 w-4" />
+          Add credits
+        </Button>
       </div>
     </div>
   )
-}
-
-function isCreditsExpiringSoon(expiresAt: string): boolean {
-  const now = new Date()
-  const expiryDate = new Date(expiresAt)
-  const thirtyDaysFromNow = new Date()
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
-  return expiryDate <= thirtyDaysFromNow && expiryDate >= now
 }
