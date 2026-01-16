@@ -206,6 +206,7 @@ class Deletes extends Action
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
+                $this->deleteExecutionsByLimit($project, $getProjectDB, $executionsRetentionCount);
                 break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
