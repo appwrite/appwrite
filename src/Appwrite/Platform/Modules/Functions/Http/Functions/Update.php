@@ -262,6 +262,7 @@ class Update extends Base
             'commands' => $commands,
             'scopes' => $scopes,
             'deploymentRetention' => 0,
+            'startCommand' => '',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
