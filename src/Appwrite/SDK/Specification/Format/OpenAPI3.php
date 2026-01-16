@@ -623,6 +623,10 @@ class OpenAPI3 extends Format
                                 $node['schema']['items']['enum'] = $enumValues;
                                 $node['schema']['items']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
                                 $node['schema']['items']['x-enum-keys'] = $enumKeys;
+
+                                if (!empty($excludeKeys)) {
+                                    $node['description'] = $this->parseDescription($node['description'], $excludeKeys);
+                                }
                             }
                             if ($validator->getType() === 'integer') {
                                 $node['schema']['items']['format'] = $validator->getFormat() ?? 'int32';
@@ -673,6 +677,10 @@ class OpenAPI3 extends Format
                                 $node['schema']['enum'] = $enumValues;
                                 $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
                                 $node['schema']['x-enum-keys'] = $enumKeys;
+
+                                if (!empty($excludeKeys)) {
+                                    $node['description'] = $this->parseDescription($node['description'], $excludeKeys);
+                                }
                             }
                             if ($validator->getType() === 'integer') {
                                 $node['schema']['format'] = $validator->getFormat() ?? 'int32';

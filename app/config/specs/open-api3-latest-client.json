@@ -13454,6 +13454,16 @@
                         "description": "Total number of chunks uploaded",
                         "x-example": 17890,
                         "format": "int32"
+                    },
+                    "encryption": {
+                        "type": "boolean",
+                        "description": "Whether file contents are encrypted at rest.",
+                        "x-example": true
+                    },
+                    "compression": {
+                        "type": "string",
+                        "description": "Compression algorithm used for the file. Will be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd).",
+                        "x-example": "gzip"
                     }
                 },
                 "required": [
@@ -13467,7 +13477,9 @@
                     "mimeType",
                     "sizeOriginal",
                     "chunksTotal",
-                    "chunksUploaded"
+                    "chunksUploaded",
+                    "encryption",
+                    "compression"
                 ],
                 "example": {
                     "$id": "5e5ea5c16897e",
@@ -13482,7 +13494,9 @@
                     "mimeType": "image\/png",
                     "sizeOriginal": 17890,
                     "chunksTotal": 17890,
-                    "chunksUploaded": 17890
+                    "chunksUploaded": 17890,
+                    "encryption": true,
+                    "compression": "gzip"
                 }
             },
             "team": {

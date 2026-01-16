@@ -65,6 +65,7 @@ Server::setResource('dbForPlatform', function (Cache $cache, Registry $register,
     $dbForPlatform = new Database($adapter, $cache);
 
     $dbForPlatform
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setNamespace('_console')
         ->setDocumentType('users', User::class)
@@ -118,6 +119,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     }
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
@@ -179,6 +181,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForPlatf
         }
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
 
@@ -198,6 +201,7 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
         $database = new Database($adapter, $cache);
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')

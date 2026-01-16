@@ -161,6 +161,9 @@ const ACTIVITY_TYPE_GUEST = 'guest';
 const MFA_RECENT_DURATION = 1800; // 30 mins
 
 
+// Database name
+const APP_DATABASE = 'appwrite';
+
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
