@@ -6,7 +6,7 @@ use Utopia\Database\Helpers\ID;
 
 $providers = Config::getParam('oAuthProviders', []);
 
-return [
+$platformCollections = [
     'projects' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('projects'),
@@ -330,7 +330,18 @@ return [
                 'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
-            ]
+            ],
+            [
+                '$id' => ID::custom('labels'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => true,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -644,6 +655,39 @@ return [
                 'filters' => [],
             ],
             [
+                '$id' => 'resourceType',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'resourceId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'resourceInternalId',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -715,6 +759,13 @@ return [
                 '$id' => ID::custom('_key_project'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectInternalId'],
+                'lengths' => [Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC],
+            ],
+            [
+                '$id' => '_key_resource',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceType', 'resourceInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
@@ -1362,21 +1413,21 @@ return [
                 '$id' => '_key_type',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['type'],
-                'lengths' => [32],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => '_key_trigger',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['trigger'],
-                'lengths' => [32],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
                 '$id' => '_key_deploymentResourceType',
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['deploymentResourceType'],
-                'lengths' => [32],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
@@ -1418,20 +1469,20 @@ return [
                 '$id' => ID::custom('_key_owner'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['owner'],
-                'lengths' => [16],
+                'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_region'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['region'],
-                'lengths' => [16],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_piid_riid_rt'),
+                '$id' => ID::custom('_key_piid_diid_drt'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['projectInternalId', 'deploymentInternalId', 'deploymentResourceType'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => '_key_region_status_createdAt',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['region', 'status', '$createdAt'],
                 'lengths' => [],
                 'orders' => [],
             ],
@@ -1903,3 +1954,31 @@ return [
         'indexes' => []
     ],
 ];
+
+// Organization API keys subquery
+$platformCollections['teams']['attributes'][] = [
+    '$id' => ID::custom('keys'),
+    'type' => Database::VAR_STRING,
+    'format' => '',
+    'size' => 16384,
+    'signed' => true,
+    'required' => false,
+    'default' => null,
+    'array' => false,
+    'filters' => ['subQueryOrganizationKeys'],
+];
+
+// Account API keys subquery
+$platformCollections['users']['attributes'][] = [
+    '$id' => ID::custom('keys'),
+    'type' => Database::VAR_STRING,
+    'format' => '',
+    'size' => 16384,
+    'signed' => true,
+    'required' => false,
+    'default' => null,
+    'array' => false,
+    'filters' => ['subQueryAccountKeys'],
+];
+
+return $platformCollections;

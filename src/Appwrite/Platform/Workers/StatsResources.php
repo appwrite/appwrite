@@ -111,7 +111,8 @@ class StatsResources extends Action
                 Query::equal('projectInternalId', [$project->getSequence()])
             ]);
             $keys = $dbForPlatform->count('keys', [
-                Query::equal('projectInternalId', [$project->getSequence()])
+                Query::equal('resourceType', ['projects']),
+                Query::equal('resourceInternalId', [$project->getSequence()]),
             ]);
 
             $domains = $dbForPlatform->count('rules', [

@@ -328,6 +328,12 @@ $register->set('pools', function () {
         Config::setParam('pools-' . $key, $config);
     }
 
+    $reconnectAttempts = (int) System::getEnv('_APP_CONNECTIONS_RECONNECT_ATTEMPTS', 5);
+    $reconnectSleep = (int) System::getEnv('_APP_CONNECTIONS_RECONNECT_SLEEP', 2);
+
+    $group->setReconnectAttempts($reconnectAttempts);
+    $group->setReconnectSleep($reconnectSleep);
+
     return $group;
 });
 
@@ -364,6 +370,8 @@ $register->set('smtp', function () {
     $mail->SMTPSecure = System::getEnv('_APP_SMTP_SECURE', '');
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
+    $mail->Timeout = 10; /* Connection timeout */
+    $mail->getSMTPInstance()->Timelimit = 30; /* Timeout for each individual SMTP command (e.g. HELO, EHLO, etc.) */
 
     $from = \urldecode(System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
     $email = System::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);

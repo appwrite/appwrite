@@ -44,7 +44,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4321;
-const APP_VERSION_STABLE = '1.8.0';
+const APP_VERSION_STABLE = '1.8.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -160,6 +160,9 @@ const ACTIVITY_TYPE_GUEST = 'guest';
  */
 const MFA_RECENT_DURATION = 1800; // 30 mins
 
+
+// Database name
+const APP_DATABASE = 'appwrite';
 
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
