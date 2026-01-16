@@ -490,6 +490,14 @@ Server::setResource('getAudit', function (Database $dbForPlatform, callable $get
     };
 }, ['dbForPlatform', 'getProjectDB']);
 
+Server::setResource('executionsRetentionCount', function (Document $project, array $plan) {
+    if ($project->getId() === 'console' || empty($plan)) {
+        return 0;
+    }
+
+    return (int) ($plan['executionsRetentionCount'] ?? 100);
+}, ['project', 'plan']);
+
 $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');
