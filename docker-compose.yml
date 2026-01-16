@@ -298,7 +298,7 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_LOGGING_CONFIG_REALTIME
       - _APP_DATABASE_SHARED_TABLES
-      - COROUTINE_POOLS=enabled
+      - _APP_POOL_ADAPTER=swoole
 
   appwrite-worker-audits:
     entrypoint: worker-audits

@@ -287,7 +287,7 @@ $register->set('pools', function () {
                 default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
-            $poolAdapter = System::getEnv('COROUTINE_POOLS', 'disabled') === 'enabled' ? new SwoolePool() : new StackPool();
+            $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
 
             $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
