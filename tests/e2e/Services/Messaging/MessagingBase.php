@@ -1069,16 +1069,17 @@ trait MessagingBase
         $this->assertEquals(201, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
 
-        \sleep(8);
+        $messageId = $message['body']['$id'];
+        $this->assertEventually(function () use ($messageId) {
+            $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
 
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
+            $this->assertEquals(200, $message['headers']['status-code']);
+            $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
+        }, 30000, 1000);
     }
 
     public function testScheduledToDraftMessage(): void
@@ -1180,16 +1181,17 @@ trait MessagingBase
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
 
-        \sleep(8);
+        $messageId = $message['body']['$id'];
+        $this->assertEventually(function () use ($messageId) {
+            $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
 
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
+            $this->assertEquals(200, $message['headers']['status-code']);
+            $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
+        }, 30000, 1000);
     }
 
     public function testUpdateScheduledAt(): void
@@ -1236,9 +1238,12 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
 
+        $messageId = $message['body']['$id'];
+
+        // Wait 8 seconds - message should still be scheduled (scheduled for 10 seconds)
         \sleep(8);
 
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -1247,16 +1252,17 @@ trait MessagingBase
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
 
-        \sleep(8);
+        // Wait for message to be processed and fail
+        $this->assertEventually(function () use ($messageId) {
+            $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
 
-        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
+            $this->assertEquals(200, $message['headers']['status-code']);
+            $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
+        }, 30000, 1000);
     }
 
     public function testSendEmail()
