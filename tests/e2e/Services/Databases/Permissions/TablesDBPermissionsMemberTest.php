@@ -33,78 +33,18 @@ class TablesDBPermissionsMemberTest extends Scope
     public static function permissionsProvider(): array
     {
         return [
-            [
-                'permissions' => [Permission::read(Role::any())],
-                'anyCount' => 1,
-                'usersCount' => 1,
-                'docOnlyCount' => 1,
-            ],
-            [
-                'permissions' => [Permission::read(Role::users())],
-                'anyCount' => 2,
-                'usersCount' => 2,
-                'docOnlyCount' => 2,
-            ],
-            [
-                'permissions' => [Permission::read(Role::user(ID::custom('random')))],
-                'anyCount' => 3,
-                'usersCount' => 3,
-                'docOnlyCount' => 2,
-            ],
-            [
-                'permissions' => [Permission::read(Role::user(ID::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))],
-                'anyCount' => 4,
-                'usersCount' => 4,
-                'docOnlyCount' => 2,
-            ],
-            [
-                'permissions' => [Permission::read(Role::user(ID::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))],
-                'anyCount' => 5,
-                'usersCount' => 5,
-                'docOnlyCount' => 2,
-            ],
-            [
-                'permissions' => [Permission::read(Role::user(ID::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))],
-                'anyCount' => 6,
-                'usersCount' => 6,
-                'docOnlyCount' => 2,
-            ],
-            [
-                'permissions' => [Permission::update(Role::any()), Permission::delete(Role::any())],
-                'anyCount' => 7,
-                'usersCount' => 7,
-                'docOnlyCount' => 2,
-            ],
-            [
-                'permissions' => [Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())],
-                'anyCount' => 8,
-                'usersCount' => 8,
-                'docOnlyCount' => 3,
-            ],
-            [
-                'permissions' => [Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())],
-                'anyCount' => 9,
-                'usersCount' => 9,
-                'docOnlyCount' => 4,
-            ],
-            [
-                'permissions' => [Permission::read(Role::user(ID::custom('user1')))],
-                'anyCount' => 10,
-                'usersCount' => 10,
-                'docOnlyCount' => 5,
-            ],
-            [
-                'permissions' => [Permission::read(Role::user(ID::custom('user1'))), Permission::read(Role::user(ID::custom('user1')))],
-                'anyCount' => 11,
-                'usersCount' => 11,
-                'docOnlyCount' => 6,
-            ],
-            [
-                'permissions' => [Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())],
-                'anyCount' => 12,
-                'usersCount' => 12,
-                'docOnlyCount' => 7,
-            ],
+            [[Permission::read(Role::any())], 1, 1, 1],
+            [[Permission::read(Role::users())], 2, 2, 2],
+            [[Permission::read(Role::user(ID::custom('random')))], 3, 3, 2],
+            [[Permission::read(Role::user(ID::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))], 4, 4, 2],
+            [[Permission::read(Role::user(ID::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 5, 5, 2],
+            [[Permission::read(Role::user(ID::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 6, 6, 2],
+            [[Permission::update(Role::any()), Permission::delete(Role::any())], 7, 7, 2],
+            [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], 8, 8, 3],
+            [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())], 9, 9, 4],
+            [[Permission::read(Role::user(ID::custom('user1')))], 10, 10, 5],
+            [[Permission::read(Role::user(ID::custom('user1'))), Permission::read(Role::user(ID::custom('user1')))], 11, 11, 6],
+            [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())], 12, 12, 7],
         ];
     }
 
