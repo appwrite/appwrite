@@ -542,8 +542,7 @@ class Create extends Base
         int $resourceId,
         int $retention,
         DeleteEvent $queueForDeletes
-    ): void
-    {
+    ): void {
         /* cleanup */
         if ($retention > 0) {
             $queueForDeletes
