@@ -168,6 +168,7 @@ class Create extends Base
             throw new Exception($validator->getDescription(), 400);
         }
 
+        /* @var Document $function */
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         $isAPIKey = User::isApp($authorization->getRoles());
@@ -344,6 +345,13 @@ class Create extends Base
                 $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
 
+            $this->enqueueDeletes(
+                $project,
+                $function->getSequence(),
+                $executionsRetentionCount,
+                $queueForDeletes
+            );
+
             return $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                 ->dynamic($execution, Response::MODEL_EXECUTION);
@@ -517,18 +525,32 @@ class Create extends Base
             }
         }
 
-        /* cleanup */
-        if ($executionsRetentionCount > 0) {
+        $this->enqueueDeletes(
+            $project,
+            $function->getSequence(),
+            $executionsRetentionCount,
             $queueForDeletes
-                ->setProject($project)
-                ->setResource($function->getSequence())
-                ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
-                ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
-                ->trigger();
-        }
+        );
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($execution, Response::MODEL_EXECUTION);
+    }
+
+    private function enqueueDeletes(
+        Document $project,
+        string $resourceId,
+        int $executionsRetentionCount,
+        DeleteEvent $queueForDeletes
+    ): void {
+        /* cleanup */
+        if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
+            $queueForDeletes
+                ->setProject($project)
+                ->setResource($resourceId)
+                ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
+                ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
+                ->trigger();
+        }
     }
 }
