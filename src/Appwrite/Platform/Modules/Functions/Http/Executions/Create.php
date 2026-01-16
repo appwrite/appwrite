@@ -544,7 +544,7 @@ class Create extends Base
         DeleteEvent $queueForDeletes
     ): void {
         /* cleanup */
-        if ($executionsRetentionCount > 0) {
+        if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
             $queueForDeletes
                 ->setProject($project)
                 ->setResource($resourceId)
