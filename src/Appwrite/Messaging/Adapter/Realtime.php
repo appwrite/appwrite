@@ -2,7 +2,6 @@
 
 namespace Appwrite\Messaging\Adapter;
 
-use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\RuntimeQuery;
@@ -266,14 +265,20 @@ class Realtime extends MessagingAdapter
     public static function convertQueries(array $queries): array
     {
         $queries = Query::parseQueries($queries);
-        foreach ($queries as $query) {
-            if (!in_array($query->getMethod(), RuntimeQuery::ALLOWED_QUERIES)) {
-                $unsupportedMethod = $query->getMethod();
-                $allowedMethods = implode(', ', RuntimeQuery::ALLOWED_QUERIES);
+        $stack = $queries;
+        $allowedMethods = implode(', ', RuntimeQuery::ALLOWED_QUERIES);
+        while (!empty($stack)) {
+            /** `@var` Query $query */
+            $query = array_pop($stack);
+            $method = $query->getMethod();
+            if (!in_array($method, RuntimeQuery::ALLOWED_QUERIES, true)) {
+                $unsupportedMethod = $method;
                 throw new QueryException(
-                    Exception::REALTIME_POLICY_VIOLATION,
                     "Query method '{$unsupportedMethod}' is not supported in Realtime queries. Allowed query methods are: {$allowedMethods}"
                 );
+            }
+            if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+                $stack = array_merge($stack, $query->getValues());
             }
         }
 

@@ -29,6 +29,7 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
@@ -579,7 +580,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $roles = $user->getRoles($authorization);
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
-        $queries = Realtime::convertQueries($request->getQuery('queries', []));
+        try {
+            $queries = Realtime::convertQueries($request->getQuery('queries', []));
+        } catch (QueryException $e) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
+        }
 
         /**
          * Channels Check
