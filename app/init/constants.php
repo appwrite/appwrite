@@ -194,6 +194,7 @@ const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
 const DELETE_TYPE_TEAM_PROJECTS = 'teams_projects';
 const DELETE_TYPE_EXECUTIONS = 'executions';
+const DELETE_TYPE_EXECUTIONS_LIMIT = 'executionsLimit';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_USAGE = 'usage';

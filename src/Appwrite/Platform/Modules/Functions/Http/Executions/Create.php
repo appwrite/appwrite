@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
@@ -101,6 +102,8 @@ class Create extends Base
             ->inject('executor')
             ->inject('platform')
             ->inject('authorization')
+            ->inject('queueForDeletes')
+            ->inject('executionsRetentionCount')
             ->callback($this->action(...));
     }
 
@@ -127,6 +130,8 @@ class Create extends Base
         Executor $executor,
         array $platform,
         Authorization $authorization,
+        DeleteEvent $queueForDeletes,
+        int $executionsRetentionCount,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -511,6 +516,15 @@ class Create extends Base
                 $response->setContentType(Response::CONTENT_TYPE_MULTIPART);
                 break;
             }
+        }
+
+        /* cleanup */
+        if ($executionsRetentionCount > 0) {
+            $queueForDeletes
+                ->setProject($project)
+                ->setResource($function->getSequence())
+                ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
+                ->trigger();
         }
 
         $response

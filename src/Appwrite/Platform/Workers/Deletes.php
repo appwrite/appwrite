@@ -30,6 +30,8 @@ use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 
+use function Swoole\Coroutine\batch;
+
 class Deletes extends Action
 {
     protected array $selects = ['$sequence', '$id', '$collection', '$permissions', '$updatedAt'];
@@ -59,6 +61,7 @@ class Deletes extends Action
             ->inject('certificates')
             ->inject('executor')
             ->inject('executionRetention')
+            ->inject('executionsRetentionCount')
             ->inject('auditRetention')
             ->inject('log')
             ->inject('getAudit')
@@ -83,6 +86,7 @@ class Deletes extends Action
         CertificatesAdapter $certificates,
         Executor $executor,
         string $executionRetention,
+        int $executionsRetentionCount,
         string $auditRetention,
         Log $log,
         callable $getAudit,
@@ -143,6 +147,17 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
+                break;
+            case DELETE_TYPE_EXECUTIONS_LIMIT:
+                $resourceInternalId = $payload['resource'] ?? null;
+                if ($resourceInternalId) {
+                    $this->deleteExecutionsByLimit(
+                        $project,
+                        $getProjectDB,
+                        $executionsRetentionCount,
+                        $resourceInternalId
+                    );
+                }
                 break;
             case DELETE_TYPE_AUDIT:
                 if (!$project->isEmpty()) {
@@ -694,14 +709,15 @@ class Deletes extends Action
     }
 
     /**
-     * @param database $dbForPlatform
+     * @param Document $project
      * @param callable $getProjectDB
      * @param string $datetime
      * @return void
-     * @throws Exception
+     * @throws Exception|DatabaseException
      */
     private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime): void
     {
+        /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
         // Delete Executions
@@ -711,10 +727,81 @@ class Deletes extends Action
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
         ], $dbForProject);
+
+        /* delete based on custom retention, if any */
+        $this->deleteExecutionsByLimit($project, $getProjectDB);
     }
 
     /**
-     * @param Database $dbForPlatform
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @param int|null $executionsRetentionCount
+     * @param string|null $resourceInternalId
+     * @return void
+     * @throws DatabaseException
+     */
+    protected function deleteExecutionsByLimit(
+        Document $project,
+        callable $getProjectDB,
+        ?int $executionsRetentionCount = 0,
+        ?string $resourceInternalId = null
+    ): void {
+        if ($executionsRetentionCount <= 0) {
+            return;
+        }
+
+        /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+
+        /* delete log for a given $resourceInternalId  */
+        $deleteExecDocuments = function (Database $dbForProject, string $resourceInternalId) use ($executionsRetentionCount) {
+            // get the execution at position `N+1`
+            $execution = $dbForProject->findOne('executions', [
+                Query::select(['$createdAt']),
+                Query::equal('resourceInternalId', [$resourceInternalId]),
+                Query::orderDesc('$createdAt'),
+                Query::offset($executionsRetentionCount),
+            ]);
+
+            if (!$execution->isEmpty()) {
+                // delete everything older
+                $cutoffTime = $execution->getAttribute('$createdAt');
+
+                $this->deleteByGroup('executions', [
+                    Query::select([...$this->selects, '$createdAt']),
+                    Query::equal('resourceInternalId', [$resourceInternalId]),
+                    Query::lessThan('$createdAt', $cutoffTime),
+                    Query::orderDesc('$createdAt'),
+                    Query::orderDesc(),
+                ], $dbForProject);
+            }
+        };
+
+        if (!empty($resourceInternalId)) {
+            // fast path, no need to list anything!
+            $deleteExecDocuments($dbForProject, $resourceInternalId);
+        } else {
+            $processResource = function (string $type) use ($dbForProject, $deleteExecDocuments) {
+                $this->listByGroup(
+                    collection: $type,
+                    queries: [Query::select(['$id'])],
+                    database: $dbForProject,
+                    callback: function (Document $resource) use ($dbForProject, $deleteExecDocuments) {
+                        $deleteExecDocuments($dbForProject, $resource->getSequence());
+                    }
+                );
+            };
+
+            /* perform processing in parallel */
+            batch([
+                fn () => $processResource('sites'),
+                fn () => $processResource('functions'),
+            ]);
+        }
+    }
+
+    /**
+     * @param Document $project
      * @param callable $getProjectDB
      * @return void
      * @throws Exception|Throwable

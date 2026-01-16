@@ -1156,3 +1156,11 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request, A
 App::setResource('transactionState', function (Database $dbForProject, Authorization $authorization) {
     return new TransactionState($dbForProject, $authorization);
 }, ['dbForProject', 'authorization']);
+
+App::setResource('executionsRetentionCount', function (Document $project, array $plan) {
+    if ($project->getId() === 'console' || empty($plan)) {
+        return 0;
+    }
+
+    return (int) ($plan['executionsRetentionCount'] ?? 100);
+}, ['project', 'plan']);
