@@ -804,7 +804,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             ->trigger();
 
         /* cleanup */
-        if ($executionsRetentionCount > 0) {
+        if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
             $resourceType = $type === 'function'
                 ? RESOURCE_TYPE_FUNCTIONS
                 : RESOURCE_TYPE_SITES;

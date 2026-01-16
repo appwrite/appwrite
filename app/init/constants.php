@@ -181,8 +181,10 @@ const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
 
 // Deletion Types
-const DELETE_TYPE_DATABASES = 'databases';
 
+const ENABLE_EXECUTIONS_LIMIT_ON_ROUTE = false;
+
+const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_TRANSACTION = 'transaction';
