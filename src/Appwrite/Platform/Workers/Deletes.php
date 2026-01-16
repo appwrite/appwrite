@@ -201,12 +201,11 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
-                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
+                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount);
                 $this->deleteAuditLogs($project, $getAudit, $auditRetention);
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
-                $this->deleteExecutionsByLimit($project, $getProjectDB, $executionsRetentionCount);
                 break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
@@ -714,10 +713,11 @@ class Deletes extends Action
      * @param Document $project
      * @param callable $getProjectDB
      * @param string $datetime
+     * @param int|null $executionsRetentionCount
      * @return void
      * @throws Exception|DatabaseException
      */
-    private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime): void
+    private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime, ?int $executionsRetentionCount = 0): void
     {
         /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
@@ -731,7 +731,7 @@ class Deletes extends Action
         ], $dbForProject);
 
         /* delete based on custom retention, if any */
-        $this->deleteExecutionsByLimit($project, $getProjectDB);
+        $this->deleteExecutionsByLimit($project, $getProjectDB, $executionsRetentionCount);
     }
 
     /**
