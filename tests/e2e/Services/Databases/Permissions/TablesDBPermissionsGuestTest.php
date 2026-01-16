@@ -144,6 +144,9 @@ class TablesDBPermissionsGuestTest extends Scope
             ]
         );
 
+        if ($publicResponse['headers']['status-code'] !== 201) {
+            var_dump('PUBLIC RESPONSE:', $publicResponse['body']);
+        }
         $this->assertEquals(201, $publicResponse['headers']['status-code']);
         $this->assertEquals(201, $privateResponse['headers']['status-code']);
 
