@@ -1307,7 +1307,7 @@ class RealtimeCustomClientQueryTest extends Scope
         $client->close();
     }
 
-    public function testMultipleQueriesWithOrLogic()
+    public function testMultipleQueriesWithAndLogic()
     {
         $user = $this->getUser();
         $session = $user['session'] ?? '';
@@ -1350,27 +1350,26 @@ class RealtimeCustomClientQueryTest extends Scope
 
         sleep(2);
 
-        $docId1 = ID::unique();
-        $docId2 = ID::unique();
+        $targetDocId = ID::unique();
 
-        // Subscribe with multiple queries (OR logic - any query matching returns event)
+        // Subscribe with multiple queries (AND logic - ALL queries must match for event to be received)
         $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], null, [
-            Query::equal('$id', [$docId1])->toString(),
-            Query::equal('$id', [$docId2])->toString(),
+            Query::equal('$id', [$targetDocId])->toString(),
+            Query::equal('status', ['active'])->toString(),
         ]);
 
         $response = json_decode($client->receive(), true);
         $this->assertEquals('connected', $response['type']);
 
-        // Create document with first ID - should receive event
+        // Create document matching BOTH queries - should receive event
         $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => $docId1,
+            'documentId' => $targetDocId,
             'data' => [
                 'status' => 'active'
             ],
@@ -1381,27 +1380,31 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $event = json_decode($client->receive(), true);
         $this->assertEquals('event', $event['type']);
-        $this->assertEquals($docId1, $event['data']['payload']['$id']);
+        $this->assertEquals($targetDocId, $event['data']['payload']['$id']);
+        $this->assertEquals('active', $event['data']['payload']['status']);
 
-        // Create document with second ID - should receive event
-        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+        // Create document with matching ID but wrong status - should NOT receive event (only one query matches)
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), [
-            'documentId' => $docId2,
+            'documentId' => $targetDocId,
             'data' => [
-                'status' => 'active'
+                'status' => 'inactive'
             ],
             'permissions' => [
                 Permission::read(Role::any()),
             ],
         ]);
 
-        $event = json_decode($client->receive(), true);
-        $this->assertEquals('event', $event['type']);
-        $this->assertEquals($docId2, $event['data']['payload']['$id']);
+        try {
+            $client->receive();
+            $this->fail('Expected TimeoutException - event should be filtered (ID matches but status does not)');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
 
-        // Create document with different ID - should NOT receive event
+        // Create document with matching status but wrong ID - should NOT receive event (only one query matches)
         $otherDocId = ID::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1418,7 +1421,29 @@ class RealtimeCustomClientQueryTest extends Scope
 
         try {
             $client->receive();
-            $this->fail('Expected TimeoutException - event should be filtered');
+            $this->fail('Expected TimeoutException - event should be filtered (status matches but ID does not)');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // Create document matching NEITHER query - should NOT receive event
+        $anotherDocId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $anotherDocId,
+            'data' => [
+                'status' => 'inactive'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        try {
+            $client->receive();
+            $this->fail('Expected TimeoutException - event should be filtered (neither query matches)');
         } catch (TimeoutException $e) {
             $this->assertTrue(true);
         }

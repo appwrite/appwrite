@@ -487,6 +487,17 @@ class RuntimeQueryTest extends TestCase
     }
 
     // Edge cases
+    public function testMultipleQueriesAllMatch(): void
+    {
+        $queries = [
+            Query::equal('name', ['John']),
+            Query::equal('age', [30])
+        ];
+        $payload = ['name' => 'John', 'age' => 30];
+        $result = RuntimeQuery::filter($queries, $payload);
+        $this->assertEquals($payload, $result);
+    }
+
     public function testMultipleQueriesFirstMatches(): void
     {
         $queries = [
@@ -495,7 +506,8 @@ class RuntimeQueryTest extends TestCase
         ];
         $payload = ['name' => 'John', 'age' => 30];
         $result = RuntimeQuery::filter($queries, $payload);
-        $this->assertEquals($payload, $result);
+        // With AND logic, if first matches but second doesn't, should return empty
+        $this->assertEquals([], $result);
     }
 
     public function testMultipleQueriesSecondMatches(): void
@@ -506,7 +518,8 @@ class RuntimeQueryTest extends TestCase
         ];
         $payload = ['name' => 'John', 'age' => 30];
         $result = RuntimeQuery::filter($queries, $payload);
-        $this->assertEquals($payload, $result);
+        // With AND logic, if second matches but first doesn't, should return empty
+        $this->assertEquals([], $result);
     }
 
     public function testMultipleQueriesNoneMatch(): void

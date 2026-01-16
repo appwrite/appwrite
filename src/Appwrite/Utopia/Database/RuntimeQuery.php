@@ -33,12 +33,13 @@ class RuntimeQuery extends Query
         if (empty($queries)) {
             return $payload;
         }
+        // multiple queries follows and condition
         foreach ($queries as $query) {
-            if (self::evaluateFilter($query, $payload)) {
-                return $payload;
+            if (!self::evaluateFilter($query, $payload)) {
+                return [];
             };
         }
-        return [];
+        return $payload;
     }
 
     private static function evaluateFilter(Query $query, array $payload): bool
