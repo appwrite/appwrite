@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Utopia\Database\Query;
+namespace Appwrite\Utopia\Database;
 
 use Utopia\Database\Query;
 
@@ -48,31 +48,24 @@ class RuntimeQuery extends Query
         $values = $query->getValues();
 
         // during 'and' and 'or' attribute will not be present
-        if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR])) {
-            switch ($method) {
-                case Query::TYPE_AND:
-                    // All subqueries must evaluate to true
-                    foreach ($query->getValues() as $subquery) {
-                        if (!self::evaluateFilter($subquery, $payload)) {
-                            return false;
-                        }
+        switch ($method) {
+            case Query::TYPE_AND:
+                // All subqueries must evaluate to true
+                foreach ($query->getValues() as $subquery) {
+                    if (!self::evaluateFilter($subquery, $payload)) {
+                        return false;
                     }
-                    return true;
+                }
+                return true;
 
-                case Query::TYPE_OR:
-                    // At least one subquery must evaluate to true
-                    foreach ($query->getValues() as $subquery) {
-                        if (self::evaluateFilter($subquery, $payload)) {
-                            return true;
-                        }
+            case Query::TYPE_OR:
+                // At least one subquery must evaluate to true
+                foreach ($query->getValues() as $subquery) {
+                    if (self::evaluateFilter($subquery, $payload)) {
+                        return true;
                     }
-                    return false;
-
-                default:
-                    throw new \InvalidArgumentException(
-                        "Unsupported query method: {$method}"
-                    );
-            }
+                }
+                return false;
         }
 
         $hasAttribute = \array_key_exists($attribute, $payload);

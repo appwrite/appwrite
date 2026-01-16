@@ -5,7 +5,7 @@ namespace Appwrite\Messaging\Adapter;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
-use Appwrite\Utopia\Database\Query\RuntimeQuery;
+use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;

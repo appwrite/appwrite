@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Utopia\Database\Query;
 
-use Appwrite\Utopia\Database\Query\RuntimeQuery;
+use Appwrite\Utopia\Database\RuntimeQuery;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Query;
 
