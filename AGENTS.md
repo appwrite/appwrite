@@ -58,6 +58,10 @@ Examples:
 
 Avoid introducing new dependencies other than utopia-php.
 
+## Adding new endpoints
+
+When adding new endpoints, make sure to use modules and follow its patterns. Find instruction in [Modules AGENTS.md](src/Appwrite/Platform/AGENTS.md) file.
+
 ## Pull Request Guidelines
 ### Before Submitting
 

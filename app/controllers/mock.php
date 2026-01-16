@@ -200,8 +200,12 @@ App::post('/v1/mock/api-key-unprefixed')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
+            // TODO: @hmacr Remove `projectInternalId` and `projectId` column writes before deleting the column.
             'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
+            'resourceInternalId' => $project->getSequence(),
+            'resourceId' => $project->getId(),
+            'resourceType' => 'projects',
             'name' => 'Outdated key',
             'scopes' => $scopes,
             'expire' => null,

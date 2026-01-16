@@ -196,4 +196,55 @@ class AccountConsoleClientTest extends Scope
         $lastEmail = $this->getLastEmail();
         $this->assertEquals($lastEmailId, $lastEmail['id']);
     }
+
+    public function testGetAccountLogs(): void
+    {
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        /**
+         * Test for SUCCESS - Create account and session for console project
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+        /**
+         * Test for SUCCESS - Get account logs
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsArray($response['body']['logs']);
+        $this->assertNotEmpty($response['body']['logs']);
+        $this->assertIsNumeric($response['body']['total']);
+    }
 }

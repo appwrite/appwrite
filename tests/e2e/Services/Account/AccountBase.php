@@ -363,4 +363,77 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 201);
         $this->assertEquals('191.0.113.195', $response['body']['clientIp'] ?? $response['body']['ip'] ?? '');
     }
+
+    /**
+     * @group abuseEnabled
+     */
+    public function testAccountAbuseReset(): void
+    {
+        $email = \uniqid() . '.abuse.reset.test@example.com';
+        $password = 'password';
+        $account = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => 'Abuse Reset Test',
+        ]);
+
+        $this->assertEquals($account['headers']['status-code'], 201);
+
+        // 20 successful requests won't get blocked
+        for ($i = 0; $i < 20; $i++) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'email' => $email,
+                'password' => $password,
+            ]);
+
+            $this->assertEquals($session['headers']['status-code'], 201);
+        }
+
+        // 10 failures are OK
+        for ($i = 0; $i < 10; $i++) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ]), [
+                'email' => $email,
+                'password' => 'wrongPassword',
+            ]);
+
+            $this->assertEquals($session['headers']['status-code'], 401);
+        }
+
+        // 11th request gets limited
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => 'wrongPassword',
+        ]);
+
+        $this->assertEquals($session['headers']['status-code'], 429);
+
+        // Even correct password is now blocked, correctness doesn't matter
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals($session['headers']['status-code'], 429);
+    }
 }
