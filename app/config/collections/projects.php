@@ -2098,6 +2098,13 @@ return [
                 'lengths' => [],
                 'orders' => [],
             ],
+            [
+                '$id' => ID::custom('_key_resourceType'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resourceType'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
         ],
     ],
 

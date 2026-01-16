@@ -807,6 +807,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
         if ($executionsRetentionCount > 0) {
             $queueForDeletes
                 ->setProject($project)
+                ->setResourceType($type)
                 ->setResource($resource->getSequence())
                 ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
                 ->trigger();

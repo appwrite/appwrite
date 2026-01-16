@@ -63,7 +63,6 @@ class Create extends Base
             ->label('scope', 'execution.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].create')
-            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'executions',
@@ -523,6 +522,7 @@ class Create extends Base
             $queueForDeletes
                 ->setProject($project)
                 ->setResource($function->getSequence())
+                ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
                 ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
                 ->trigger();
         }

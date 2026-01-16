@@ -150,12 +150,14 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_EXECUTIONS_LIMIT:
                 $resourceInternalId = $payload['resource'] ?? null;
+                $resourceType = $payload['resourceType'] ?? null;
                 if ($resourceInternalId) {
                     $this->deleteExecutionsByLimit(
                         $project,
                         $getProjectDB,
                         $executionsRetentionCount,
-                        $resourceInternalId
+                        $resourceInternalId,
+                        $resourceType
                     );
                 }
                 break;
@@ -214,16 +216,15 @@ class Deletes extends Action
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
      * @param string $datetime
-     * @param Document|null $document
      * @return void
      * @throws Conflict
      * @throws Restricted
      * @throws Structure
-     * @throws DatabaseException
+     * @throws DatabaseException|Exception
      */
     private function deleteSchedules(Database $dbForPlatform, callable $getProjectDB, string $datetime): void
     {
-        // Temporarly accepting both 'fra' and 'default'
+        // Temporarily accepting both 'fra' and 'default'
         // When all migrated, only use _APP_REGION with 'default' as default value
         $regions = [System::getEnv('_APP_REGION', 'default')];
         if (!in_array('default', $regions)) {
@@ -737,6 +738,7 @@ class Deletes extends Action
      * @param callable $getProjectDB
      * @param int|null $executionsRetentionCount
      * @param string|null $resourceInternalId
+     * @param string|null $resourceType
      * @return void
      * @throws DatabaseException
      */
@@ -744,7 +746,8 @@ class Deletes extends Action
         Document $project,
         callable $getProjectDB,
         ?int $executionsRetentionCount = 0,
-        ?string $resourceInternalId = null
+        ?string $resourceInternalId = null,
+        ?string $resourceType = null
     ): void {
         if ($executionsRetentionCount <= 0) {
             return;
@@ -754,11 +757,12 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
 
         /* delete log for a given $resourceInternalId  */
-        $deleteExecDocuments = function (Database $dbForProject, string $resourceInternalId) use ($executionsRetentionCount) {
+        $delete = function (Database $dbForProject, string $resourceInternalId, string $resourceType) use ($executionsRetentionCount) {
             // get the execution at position `N+1`
             $execution = $dbForProject->findOne('executions', [
                 Query::select(['$createdAt']),
                 Query::equal('resourceInternalId', [$resourceInternalId]),
+                Query::equal('resourceType', [$resourceType]),
                 Query::orderDesc('$createdAt'),
                 Query::offset($executionsRetentionCount),
             ]);
@@ -770,6 +774,7 @@ class Deletes extends Action
                 $this->deleteByGroup('executions', [
                     Query::select([...$this->selects, '$createdAt']),
                     Query::equal('resourceInternalId', [$resourceInternalId]),
+                    Query::equal('resourceType', [$resourceType]),
                     Query::lessThan('$createdAt', $cutoffTime),
                     Query::orderDesc('$createdAt'),
                     Query::orderDesc(),
@@ -779,23 +784,23 @@ class Deletes extends Action
 
         if (!empty($resourceInternalId)) {
             // fast path, no need to list anything!
-            $deleteExecDocuments($dbForProject, $resourceInternalId);
+            $delete($dbForProject, $resourceInternalId, $resourceType);
         } else {
-            $processResource = function (string $type) use ($dbForProject, $deleteExecDocuments) {
+            $processResource = function (string $type) use ($dbForProject, $delete, $resourceType) {
                 $this->listByGroup(
                     collection: $type,
                     queries: [Query::select(['$id'])],
                     database: $dbForProject,
-                    callback: function (Document $resource) use ($dbForProject, $deleteExecDocuments) {
-                        $deleteExecDocuments($dbForProject, $resource->getSequence());
+                    callback: function (Document $resource) use ($dbForProject, $delete, $type) {
+                        $delete($dbForProject, $resource->getSequence(), $type);
                     }
                 );
             };
 
             /* perform processing in parallel */
             batch([
-                fn () => $processResource('sites'),
-                fn () => $processResource('functions'),
+                fn () => $processResource(RESOURCE_TYPE_SITES),
+                fn () => $processResource(RESOURCE_TYPE_FUNCTIONS),
             ]);
         }
     }
