@@ -539,12 +539,12 @@ class Create extends Base
 
     private function enqueueDeletes(
         Document $project,
-        int $resourceId,
-        int $retention,
+        string $resourceId,
+        int $executionsRetentionCount,
         DeleteEvent $queueForDeletes
     ): void {
         /* cleanup */
-        if ($retention > 0) {
+        if ($executionsRetentionCount > 0) {
             $queueForDeletes
                 ->setProject($project)
                 ->setResource($resourceId)
