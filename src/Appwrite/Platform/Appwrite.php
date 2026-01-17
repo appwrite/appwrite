@@ -7,6 +7,7 @@ use Appwrite\Platform\Modules\Console;
 use Appwrite\Platform\Modules\Core;
 use Appwrite\Platform\Modules\Databases;
 use Appwrite\Platform\Modules\Functions;
+use Appwrite\Platform\Modules\Locale;
 use Appwrite\Platform\Modules\Projects;
 use Appwrite\Platform\Modules\Proxy;
 use Appwrite\Platform\Modules\Sites;
@@ -22,6 +23,7 @@ class Appwrite extends Platform
         $this->addModule(new Databases\Module());
         $this->addModule(new Projects\Module());
         $this->addModule(new Functions\Module());
+        $this->addModule(new Locale\Module());
         $this->addModule(new Sites\Module());
         $this->addModule(new Console\Module());
         $this->addModule(new Proxy\Module());
