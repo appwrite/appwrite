@@ -93,6 +93,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
+          themes={['light', 'dark', 'system', 'crazy', 'stealth']}
         >
           <FullscreenLoader isVisible={isLoading} />
           <DebugModeProvider>
