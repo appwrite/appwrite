@@ -784,7 +784,7 @@ class Deletes extends Action
         $delete = function (Database $dbForProject, string $resourceInternalId, string $resourceType) use ($executionsRetentionCount) {
             // get the execution at position `N+1`
             $execution = $dbForProject->findOne('executions', [
-                Query::select(['$createdAt']),
+                Query::select('$createdAt'),
                 Query::equal('resourceInternalId', [$resourceInternalId]),
                 Query::equal('resourceType', [$resourceType]),
                 Query::orderDesc('$createdAt'),
@@ -795,14 +795,19 @@ class Deletes extends Action
                 // delete everything older
                 $cutoffTime = $execution->getAttribute('$createdAt');
 
-                $this->deleteByGroup('executions', [
-                    Query::select([...$this->selects, '$createdAt']),
+                $queries = [
                     Query::equal('resourceInternalId', [$resourceInternalId]),
                     Query::equal('resourceType', [$resourceType]),
                     Query::lessThan('$createdAt', $cutoffTime),
                     Query::orderDesc('$createdAt'),
                     Query::orderDesc(),
-                ], $dbForProject);
+                ];
+
+                foreach ([...$this->selects, '$createdAt'] as $select) {
+                    $queries[] = Query::select($select);
+                }
+
+                $this->deleteByGroup('executions', $queries, $dbForProject);
             }
         };
 
