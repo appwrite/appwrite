@@ -52,9 +52,11 @@ class Event
     protected array $sensitive = [];
     protected array $payload = [];
     protected array $context = [];
+    protected array $platform = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
     protected ?string $userId = null;
+
     protected bool $paused = false;
 
     /** @var bool Non-critical events will not throw an exception when enqueuing of the event fails. */
@@ -90,9 +92,9 @@ class Event
      * Set queue used for this event.
      *
      * @param string $queue
-     * @return Event
+     * @return static
      */
-    public function setQueue(string $queue): self
+    public function setQueue(string $queue): static
     {
         $this->queue = $queue;
 
@@ -112,9 +114,9 @@ class Event
     /**
      * Set event name used for this event.
      * @param string $event
-     * @return Event
+     * @return static
      */
-    public function setEvent(string $event): self
+    public function setEvent(string $event): static
     {
         $this->event = $event;
 
@@ -135,9 +137,9 @@ class Event
      * Set project for this event.
      *
      * @param Document $project
-     * @return self
+     * @return static
      */
-    public function setProject(Document $project): self
+    public function setProject(Document $project): static
     {
         $this->project = $project;
         return $this;
@@ -154,12 +156,34 @@ class Event
     }
 
     /**
+     * Set platform for this event.
+     *
+     * @param array $platform
+     * @return static
+     */
+    public function setPlatform(array $platform): static
+    {
+        $this->platform = $platform;
+        return $this;
+    }
+
+    /**
+     * Get platform for this event.
+     *
+     * @return array
+     */
+    public function getPlatform(): array
+    {
+        return $this->platform;
+    }
+
+    /**
      * Set user for this event.
      *
      * @param Document $user
-     * @return self
+     * @return static
      */
-    public function setUser(Document $user): self
+    public function setUser(Document $user): static
     {
         $this->user = $user;
 
@@ -169,9 +193,9 @@ class Event
     /**
      * Set user ID for this event.
      *
-     * @return self
+     * @return static
      */
-    public function setUserId(string $userId): self
+    public function setUserId(string $userId): static
     {
         $this->userId = $userId;
 
@@ -201,9 +225,9 @@ class Event
      *
      * @param array $payload
      * @param array $sensitive
-     * @return self
+     * @return static
      */
-    public function setPayload(array $payload, array $sensitive = []): self
+    public function setPayload(array $payload, array $sensitive = []): static
     {
         $this->payload = $payload;
 
@@ -383,6 +407,8 @@ class Event
     {
         $this->params = [];
         $this->sensitive = [];
+        $this->event = '';
+        $this->payload = [];
 
         return $this;
     }
@@ -569,7 +595,12 @@ class Event
         /**
          * Force a non-assoc array.
          */
-        return \array_values($events);
+        $eventValues = \array_values($events);
+
+        /**
+         * Return a combined list of table, collection events.
+         */
+        return Event::mirrorCollectionEvents($pattern, $eventValues[0], $eventValues);
     }
 
     /**
@@ -585,9 +616,63 @@ class Event
         $this->project = $event->getProject();
         $this->user = $event->getUser();
         $this->payload = $event->getPayload();
+        $this->sensitive = $event->sensitive;
         $this->event = $event->getEvent();
         $this->params = $event->getParams();
         $this->context = $event->context;
         return $this;
+    }
+
+    /**
+     * Adds `table` events for `collection` events.
+     *
+     * Example:
+     *
+     * `databases.*.collections.*.documents.*.update` →\
+     * `[databases.*.collections.*.documents.*.update, databases.*.tables.*.rows.*.update]`
+     */
+    private static function mirrorCollectionEvents(string $pattern, string $firstEvent, array $events): array
+    {
+        $tableEventMap = [
+            'documents'    => 'rows',
+            'collections'  => 'tables',
+            'attributes'   => 'columns',
+        ];
+
+        if (
+            str_contains($pattern, 'databases.') &&
+            str_contains($firstEvent, 'collections')
+        ) {
+            $pairedEvents = [];
+
+            foreach ($events as $event) {
+                $pairedEvents[] = $event;
+
+                if (str_contains($event, 'collections')) {
+                    $tableSideEvent = str_replace(
+                        array_keys($tableEventMap),
+                        array_values($tableEventMap),
+                        $event
+                    );
+                    $pairedEvents[] = $tableSideEvent;
+                }
+            }
+
+            $events = $pairedEvents;
+        }
+
+        return $events;
+    }
+
+    /**
+     * Returns the size of the queue.
+     *
+     * @param bool $failed Whether to include failed events in the count.
+     * @return int The size of the queue.
+     */
+    public function getSize(bool $failed = false): int
+    {
+        $queue = new Queue($this->getQueue());
+        return $this->publisher->getQueueSize($queue, $failed);
     }
 }

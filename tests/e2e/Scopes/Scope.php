@@ -7,6 +7,7 @@ use Appwrite\Tests\Retryable;
 use PHPUnit\Framework\TestCase;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\System\System;
 
 abstract class Scope extends TestCase
 {
@@ -17,12 +18,23 @@ abstract class Scope extends TestCase
     public const REQUEST_TYPE_SMS = 'sms';
 
     protected ?Client $client = null;
-    protected string $endpoint = 'http://localhost/v1';
+    protected string $endpoint = 'http://appwrite.test/v1';
 
     protected function setUp(): void
     {
         $this->client = new Client();
         $this->client->setEndpoint($this->endpoint);
+
+        $format = System::getEnv('_APP_E2E_RESPONSE_FORMAT');
+        if (!empty($format)) {
+            if (
+                !\preg_match('/^\d+\.\d+\.\d+$/', $format) ||
+                !\version_compare($format, APP_VERSION_STABLE, '<=')
+            ) {
+                throw new \Exception('E2E response format must be ' . APP_VERSION_STABLE . ' or lower.');
+            }
+            $this->client->setResponseFormat($format);
+        }
     }
 
     protected function tearDown(): void
@@ -95,6 +107,21 @@ abstract class Scope extends TestCase
         }, $timeoutMs, $waitMs);
 
         return $request;
+    }
+
+    protected function assertSamePixels(string $expectedImagePath, string $actualImageBlob): void
+    {
+        $expected = new \Imagick($expectedImagePath);
+        $actual = new \Imagick();
+        $actual->readImageBlob($actualImageBlob);
+
+        foreach ([$expected, $actual] as $image) {
+            $image->setImageFormat('PNG');
+            $image->stripImage();
+            $image->setOption('png:exclude-chunks', 'date,time,iCCP,sRGB,gAMA,cHRM');
+        }
+
+        $this->assertSame($expected->getImageSignature(), $actual->getImageSignature());
     }
 
     /**
@@ -182,9 +209,9 @@ abstract class Scope extends TestCase
     /**
      * @return array
      */
-    public function getUser(): array
+    public function getUser(bool $fresh = false): array
     {
-        if (isset(self::$user[$this->getProject()['$id']])) {
+        if (!$fresh && isset(self::$user[$this->getProject()['$id']])) {
             return self::$user[$this->getProject()['$id']];
         }
 

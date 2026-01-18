@@ -13,8 +13,10 @@ use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
 
 class XList extends Action
 {
@@ -53,14 +55,16 @@ class XList extends Action
             ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
             ->param('fileId', '', new UID(), 'File unique ID.')
             ->param('queries', [], new FileTokens(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', FileTokens::ALLOWED_ATTRIBUTES), true)
+            ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $bucketId, string $fileId, array $queries, Response $response, Database $dbForProject)
+    public function action(string $bucketId, string $fileId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Authorization $authorization)
     {
-        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $bucketId, $fileId);
+        ['bucket' => $bucket, 'file' => $file] = $this->getFileAndBucket($dbForProject, $authorization, $bucketId, $fileId);
 
         $queries = Query::parseQueries($queries);
         $queries[] = Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_FILES]);
@@ -86,7 +90,7 @@ class XList extends Action
 
         $response->dynamic(new Document([
             'tokens' => $dbForProject->find('resourceTokens', $queries),
-            'total' => $dbForProject->count('resourceTokens', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $includeTotal ? $dbForProject->count('resourceTokens', $filterQueries, APP_LIMIT_COUNT) : 0,
         ]), Response::MODEL_RESOURCE_TOKEN_LIST);
     }
 }

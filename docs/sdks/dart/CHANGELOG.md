@@ -1,5 +1,77 @@
 # Change Log
 
+## 20.1.0
+
+* Added ability to create columns and indexes synchronously while creating a table
+
+## 20.0.0
+
+* Rename `VCSDeploymentType` enum to `VCSReferenceType`
+* Change `createTemplateDeployment` method signature: replace `version` parameter with `type` (TemplateReferenceType) and `reference` parameters
+* Add `Theme`, `Timezone` and `Output` enums
+
+## 19.4.0
+
+* Add `getScreenshot` method to `Avatars` service
+* Add enums `Theme`, `Output` and `Timezone`
+* Update runtime enums to add support for `dart39` and `flutter335` runtimes
+* Fix passing of `null` values and stripping only non-nullable optional parameters from the request body
+
+## 19.3.0
+
+* Add `total` parameter to list queries allowing skipping counting rows in a table for improved performance
+* Add `Operator` class for atomic modification of rows via update, bulk update, upsert, and bulk upsert operations
+* Add `createResendProvider` and `updateResendProvider` methods to `Messaging` service
+
+## 19.2.1
+
+* Add transaction support for Databases and TablesDB
+
+## 19.1.0
+
+* Deprecate `createVerification` method in `Account` service
+* Add `createEmailVerification` method in `Account` service
+
+## 18.1.0
+
+* Add `orderRandom` query support
+
+## 18.0.0
+
+* Rename `CreditCard` enum value `unionChinaPay` to `unionPay`
+* Add time between query support
+* Add spatial attribute support
+* Add spatial index support
+* Add spatial query support
+
+## 17.0.0
+
+* Support for Appwrite 1.8
+* Added TablesDB service
+* Added new query types:
+    * `notContains`
+    * `notSearch`
+    * `notBetween`
+    * `notStartsWith`
+    * `notEndsWith`
+    * `createdBefore`
+    * `createdAfter`
+    * `updatedBefore`
+    * `updatedAfter`
+* Deprecated `updateMagicURLSession`
+* Deprecated `updatePhoneSession`
+* Deprecated Databases service
+> The TablesDB service is the new recommended way to work with databases.
+> Existing databases/collections/attributes/documents can be managed using the TablesDB service.
+> Existing Databases service will continue to work, but new features may only be added to the TablesDB service.
+  
+
+## 16.2.0
+
+* Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service
+* Add `encrypt` support to string attribute model
+* Add `sequence` support to `Document` model
+
 ## 16.1.0
 
 * Add `gif` support to `ImageFormat` enum

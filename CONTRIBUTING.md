@@ -222,51 +222,73 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 ```bash
 .
 ├── app # Main application
+│   ├── assets
+│   │   ├── dbip
+│   │   ├── fonts
+│   │   └── security
 │   ├── config # Config files
+│   │   ├── avatars
+│   │   ├── collections
+│   │   ├── locale
+│   │   ├── specs
+│   │   ├── storage
+│   │   └── templates
 │   ├── controllers # API & dashboard controllers
 │   │   ├── api
 │   │   ├── shared
 │   │   └── web
-│   ├── db # DB schemas
-│   ├── sdks # SDKs generated copies (used for generating code examples)
-│   ├── tasks # Server CLI commands
-│   ├── views # HTML server-side templates
-│   └── workers # Background workers
+│   ├── init # DB schemas
+│   │   └── database
+│   └── views # HTML server-side templates
+│       ├── general
+│       └── install
 ├── bin # Server executables (tasks & workers)
-├── docker # Docker related resources and configs
+├── dev # Debugger config
 ├── docs # Docs and tutorials
 │   ├── examples
+│   ├── lists
 │   ├── references
+│   ├── sdks
 │   ├── services
 │   ├── specs
 │   └── tutorials
 ├── public # Public files
-│   ├── dist
 │   ├── fonts
 │   ├── images
-│   ├── scripts
-│   └── styles
-├── src # Supporting libraries (each lib has one role, common libs are released as individual projects)
-│   └── Appwrite
-│       ├── Auth
-│       ├── Detector
-│       ├── Docker
-|       ├── DSN
-│       ├── Event
-│       ├── Extend
-│       ├── GraphQL
-│       ├── Messaging
-│       ├── Migration
-│       ├── Network
-│       ├── OpenSSL
-│       ├── Promises
-│       ├── Specification
-│       ├── Task
-│       ├── Template
-│       ├── URL
-│       └── Utopia
+│   ├── sdk-console
+│   ├── sdk-project
+│   └── sdk-web
+├── src # Supporting libraries (each lib has one role, common libs are released as
+│   ├── Appwrite
+│   │   ├── Auth
+│   │   ├── Certificates
+│   │   ├── Deletes
+│   │   ├── Detector
+│   │   ├── Docker
+│   │   ├── Event
+│   │   ├── Extend
+│   │   ├── Functions/Validator
+│   │   ├── GraphQL
+│   │   ├── Hooks
+│   │   ├── Messaging
+│   │   ├── Migration
+│   │   ├── Network
+│   │   ├── OpenSSL
+│   │   ├── Platform
+│   │   ├── Promises
+│   │   ├── PubSub
+│   │   ├── SDK
+│   │   ├── Task/Validator
+│   │   ├── Template
+│   │   ├── Transformation
+│   │   ├── URL
+│   │   ├── Utopia
+│   │   └── Vcs
+│   └── Executor
 └── tests # End to end & unit tests
+    ├── benchmarks
     ├── e2e
+    ├── extensions
     ├── resources
     └── unit
 ```

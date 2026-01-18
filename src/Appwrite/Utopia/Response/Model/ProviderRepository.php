@@ -41,12 +41,25 @@ class ProviderRepository extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('defaultBranch', [
+                'type' => self::TYPE_STRING,
+                'description' => "VCS (Version Control System) repository's default branch name.",
+                'default' => '',
+                'example' => 'main',
+            ])
             ->addRule('pushedAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Last commit date in ISO 8601 format.',
                 'default' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'array' => false,
+            ])
+            ->addRule('variables', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Environment variables found in .env files',
+                'default' => [],
+                'array' => true,
+                'example' => ['PORT', 'NODE_ENV'],
             ]);
     }
 

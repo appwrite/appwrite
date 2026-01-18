@@ -2,20 +2,24 @@
 
 namespace Appwrite\SDK\Specification\Format;
 
+use Appwrite\Platform\Tasks\Specs;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response;
 use Appwrite\SDK\Specification\Format;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Database\Validator\Operation;
 use Appwrite\Utopia\Response\Model;
+use Appwrite\Utopia\Response\Model\Any;
+use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Spatial;
 use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
@@ -110,36 +114,14 @@ class OpenAPI3 extends Format
              */
             $consumes = [$sdk->getRequestType()->value];
 
-            $method = $sdk->getMethodName() ?? \uniqid();
-
-            if (!empty($method) && \is_array($method)) {
-                $method = \array_keys($method)[0];
-            }
+            $methodName = $sdk->getMethodName() ?? \uniqid();
 
             $desc = $sdk->getDescriptionFilePath() ?: $sdk->getDescription();
             $produces = ($sdk->getContentType())->value;
             $routeSecurity = $sdk->getAuth() ?? [];
-            $sdkPlatforms = [];
 
-            foreach ($routeSecurity as $value) {
-                switch ($value) {
-                    case AuthType::SESSION:
-                        $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                        break;
-                    case AuthType::JWT:
-                    case AuthType::KEY:
-                        $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                        break;
-                    case AuthType::ADMIN:
-                        $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
-                        break;
-                }
-            }
-
-            if (empty($routeSecurity)) {
-                $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-            }
+            $specs = new Specs();
+            $sdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($routeSecurity);
 
             $namespace = $sdk->getNamespace() ?? 'default';
 
@@ -148,62 +130,132 @@ class OpenAPI3 extends Format
 
             $temp = [
                 'summary' => $route->getDesc(),
-                'operationId' => $namespace . ucfirst($method),
+                'operationId' => $namespace . ucfirst($methodName),
                 'tags' => [$namespace],
                 'description' => $descContents,
                 'responses' => [],
+                'deprecated' => $sdk->isDeprecated(),
                 'x-appwrite' => [ // Appwrite related metadata
-                    'method' => $method,
+                    'method' => $methodName,
                     'group' => $sdk->getGroup(),
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $sdk->getType()->value ?? '',
-                    'deprecated' => $sdk->isDeprecated(),
-                    'demo' => Template::fromCamelCaseToDash($namespace) . '/' . Template::fromCamelCaseToDash($method) . '.md',
-                    'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription() ?? '',
+                    'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodName) . '.md',
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
                     'rate-key' => $route->getLabel('abuse-key', 'url:{url},ip:{ip}'),
                     'scope' => $route->getLabel('scope', ''),
                     'platforms' => $sdkPlatforms,
-                    'packaging' => $sdk->isPackaging()
+                    'packaging' => $sdk->isPackaging(),
+                    'public' => $sdk->isPublic(),
                 ],
             ];
 
+            if ($sdk->getDescriptionFilePath() !== null) {
+                $temp['x-appwrite']['edit'] = 'https://github.com/appwrite/appwrite/edit/master' . $sdk->getDescription();
+            }
+
+            if ($sdk->getDeprecated()) {
+                $temp['x-appwrite']['deprecated'] = [
+                    'since' => $sdk->getDeprecated()->getSince(),
+                    'replaceWith' => $sdk->getDeprecated()->getReplaceWith(),
+                ];
+            }
 
             if (!empty($additionalMethods)) {
                 $temp['x-appwrite']['methods'] = [];
-                foreach ($additionalMethods as $method) {
-                    /** @var Method $method */
-                    $desc = $method->getDescriptionFilePath();
+                foreach ($additionalMethods as $methodObj) {
+                    /** @var Method $methodObj */
+                    $desc = $methodObj->getDescriptionFilePath();
+
+                    $methodSecurities = $methodObj->getAuth();
+                    $methodSdkPlatforms = $specs->getSDKPlatformsForRouteSecurity($methodSecurities);
+
+                    if (!\in_array($this->platform, $methodSdkPlatforms)) {
+                        continue;
+                    }
+
+                    $methodSecurities = ['Project' => []];
+                    foreach ($methodObj->getAuth() as $security) {
+                        if (\array_key_exists($security->value, $this->keys)) {
+                            $methodSecurities[$security->value] = [];
+                        }
+                    }
+
                     $additionalMethod = [
-                        'name' => $method->getMethodName(),
-                        'auth' => \array_merge(...\array_map(fn ($auth) => [$auth->value => []], $method->getAuth())),
+                        'name' => $methodObj->getMethodName(),
+                        'namespace' => $methodObj->getNamespace(),
+                        'desc' => $methodObj->getDesc() ?? '',
+                        'auth' => \array_slice($methodSecurities, 0, $this->authCount),
                         'parameters' => [],
                         'required' => [],
                         'responses' => [],
                         'description' => ($desc) ? \file_get_contents($desc) : '',
+                        'demo' => \strtolower($namespace) . '/' . Template::fromCamelCaseToDash($methodObj->getMethodName()) . '.md',
+                        'public' => $methodObj->isPublic(),
                     ];
 
-                    foreach ($method->getParameters() as $parameter) {
-                        $additionalMethod['parameters'][] = $parameter->getName();
+                    // add deprecation only if method has it!
+                    if ($methodObj->getDeprecated()) {
+                        $additionalMethod['deprecated'] = [
+                            'since' => $methodObj->getDeprecated()->getSince(),
+                            'replaceWith' => $methodObj->getDeprecated()->getReplaceWith(),
+                        ];
+                    }
 
-                        if (!$parameter->getOptional()) {
-                            $additionalMethod['required'][] = $parameter->getName();
+                    // If additional method has no parameters, inherit from route
+                    if (empty($methodObj->getParameters())) {
+                        foreach ($route->getParams() as $name => $param) {
+                            $additionalMethod['parameters'][] = $name;
+                            if (!$param['optional']) {
+                                $additionalMethod['required'][] = $name;
+                            }
+                        }
+                    } else {
+                        // Use method's own parameters
+                        foreach ($methodObj->getParameters() as $parameter) {
+                            $additionalMethod['parameters'][] = $parameter->getName();
+                            if (!$parameter->getOptional()) {
+                                $additionalMethod['required'][] = $parameter->getName();
+                            }
                         }
                     }
 
-                    foreach ($method->getResponses() as $response) {
-                        if (\is_array($response->getModel())) {
+                    foreach ($methodObj->getResponses() as $response) {
+                        /** @var Response|array $response */
+                        $responseModel = $response->getModel();
+
+                        if (\is_array($responseModel)) {
+                            foreach ($responseModel as $modelName) {
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $modelName) {
+                                        $usedModels[] = $modelName;
+                                        break;
+                                    }
+                                }
+                            }
                             $additionalMethod['responses'][] = [
                                 'code' => $response->getCode(),
-                                'model' => \array_map(fn ($m) => '#/components/schemas/' . $m, $response->getModel())
+                                'model' => \array_map(fn ($m) => '#/components/schemas/' . $m, $responseModel)
                             ];
                         } else {
-                            $additionalMethod['responses'][] = [
+                            $responseData = [
                                 'code' => $response->getCode(),
-                                'model' => '#/components/schemas/' . $response->getModel()
                             ];
+
+                            // lets not assume stuff here!
+                            if ($response->getCode() !== 204) {
+                                $responseData['model'] = '#/components/schemas/' . $responseModel;
+                                foreach ($this->models as $value) {
+                                    if ($value->getType() === $responseModel) {
+                                        $usedModels[] = $responseModel;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            $additionalMethod['responses'][] = $responseData;
                         }
                     }
 
@@ -293,7 +345,7 @@ class OpenAPI3 extends Format
                 }
             }
 
-            if ((!empty($scope))) {
+            if (!empty($scope)) {
                 $securities = ['Project' => []];
 
                 foreach ($sdk->getAuth() as $security) {
@@ -343,46 +395,91 @@ class OpenAPI3 extends Format
                     $validator = $validator->getValidator();
                 }
 
-                switch ((!empty($validator)) ? \get_class($validator) : '') {
+                $class = !empty($validator)
+                    ? \get_class($validator)
+                    : '';
+
+                $base = !empty($class)
+                    ? \get_parent_class($class)
+                    : '';
+
+                switch ($base) {
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Base':
+                        $class = $base;
+                        break;
+                }
+
+                if ($class === 'Utopia\Validator\AnyOf') {
+                    $validator = $param['validator']->getValidators()[0];
+                    $class = \get_class($validator);
+                }
+
+                $array = false;
+                if ($class === 'Utopia\Validator\ArrayList') {
+                    $array = true;
+                    $subclass = \get_class($validator->getValidator());
+                    switch ($subclass) {
+                        case 'Appwrite\Utopia\Database\Validator\Operation':
+                        case 'Utopia\Validator\WhiteList':
+                            $class = $subclass;
+                            break;
+                    }
+                }
+
+                switch ($class) {
                     case 'Utopia\Database\Validator\UID':
                     case 'Utopia\Validator\Text':
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Validator\Boolean':
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = false;
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: false;
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CustomId':
                         if ($sdk->getType() === MethodType::UPLOAD) {
                             $node['schema']['x-upload-id'] = true;
                         }
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Database\Validator\DatetimeValidator':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'datetime';
-                        $node['schema']['x-example'] = Model::TYPE_DATETIME_EXAMPLE;
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: Model::TYPE_DATETIME_EXAMPLE;
+                        break;
+                    case 'Utopia\Database\Validator\Spatial':
+                        /** @var Spatial $validator */
+                        $node['schema']['type'] = 'array';
+                        $node['schema']['items'] = [
+                            'oneOf' => [
+                                ['type' => 'array']
+                            ]
+                        ];
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: match ($validator->getSpatialType()) {
+                            Database::VAR_POINT => '[1, 2]',
+                            Database::VAR_LINESTRING => '[[1, 2], [3, 4], [5, 6]]',
+                            Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
+                        };
                         break;
                     case 'Appwrite\Network\Validator\Email':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'email';
-                        $node['schema']['x-example'] = 'email@example.com';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'email@example.com';
                         break;
                     case 'Utopia\Validator\Host':
                     case 'Utopia\Validator\URL':
                     case 'Appwrite\Network\Validator\Redirect':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
-                        $node['schema']['x-example'] = 'https://example.com';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'https://example.com';
                         break;
                     case 'Utopia\Validator\JSON':
                     case 'Utopia\Validator\Mock':
                     case 'Utopia\Validator\Assoc':
                         $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
-                        $node['schema']['x-example'] = '{}';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '{}';
                         break;
                     case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
@@ -395,9 +492,15 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => $validator->getValidator()->getType(),
                         ];
+                        if (!empty($param['example'])) {
+                            $node['schema']['x-example'] = $param['example'];
+                        }
                         break;
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Base':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Tables':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
@@ -432,77 +535,153 @@ class OpenAPI3 extends Format
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['schema']['x-example'] = '["' . Permission::read(Role::any()) . '"]';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '["' . Permission::read(Role::any()) . '"]';
                         break;
                     case 'Utopia\Database\Validator\Roles':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['items'] = [
                             'type' => 'string',
                         ];
-                        $node['schema']['x-example'] = '["' . Role::any()->toString() . '"]';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
                         break;
                     case 'Appwrite\Auth\Validator\Password':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'password';
-                        $node['schema']['x-example'] = 'password';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: 'password';
                         break;
                     case 'Appwrite\Auth\Validator\Phone':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'phone';
-                        $node['schema']['x-example'] = '+12065550100'; // In the US, 555 is reserved like example.com
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '+12065550100'; // In the US, 555 is reserved like example.com
                         break;
                     case 'Utopia\Validator\Range':
                         /** @var Range $validator */
                         $node['schema']['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
                         $node['schema']['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
-                        $node['schema']['x-example'] = $validator->getMin();
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: $validator->getMin();
                         break;
                     case 'Utopia\Validator\Integer':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'int32';
+                        if (!empty($param['example'])) {
+                            $node['schema']['x-example'] = $param['example'];
+                        }
                         break;
                     case 'Utopia\Validator\Numeric':
                     case 'Utopia\Validator\FloatValidator':
                         $node['schema']['type'] = 'number';
                         $node['schema']['format'] = 'float';
+                        if (!empty($param['example'])) {
+                            $node['schema']['x-example'] = $param['example'];
+                        }
                         break;
                     case 'Utopia\Validator\Length':
                         $node['schema']['type'] = $validator->getType();
+                        if (!empty($param['example'])) {
+                            $node['schema']['x-example'] = $param['example'];
+                        }
                         break;
                     case 'Utopia\Validator\WhiteList':
-                        /** @var WhiteList $validator */
-                        $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = $validator->getList()[0];
+                        if ($array) {
+                            $validator = $validator->getValidator();
 
-                        //Iterate from the blackList. If it matches with the current one, then it is a blackList
-                        // Do not add the enum
-                        $allowed = true;
-                        foreach ($this->enumBlacklist as $blacklist) {
-                            if (
-                                $blacklist['namespace'] == $sdk->getNamespace()
-                                && $blacklist['method'] == $method
-                                && $blacklist['parameter'] == $name
-                            ) {
-                                $allowed = false;
-                                break;
+                            $node['schema']['type'] = 'array';
+                            $node['schema']['items'] = [
+                                'type' => $validator->getType(),
+                            ];
+                            if (!empty($param['example'])) {
+                                $node['schema']['x-example'] = $param['example'];
                             }
-                        }
 
-                        if ($allowed) {
-                            $node['schema']['enum'] = $validator->getList();
-                            $node['schema']['x-enum-name'] = $this->getEnumName($sdk->getNamespace() ?? '', $method, $name);
-                            $node['schema']['x-enum-keys'] = $this->getEnumKeys($sdk->getNamespace() ?? '', $method, $name);
-                        }
-                        if ($validator->getType() === 'integer') {
-                            $node['format'] = 'int32';
+                            // Iterate from the blackList. If it matches with the current one, then it is a blackList
+                            // Do not add the enum
+                            $allowed = true;
+                            foreach ($this->enumBlacklist as $blacklist) {
+                                if (
+                                    $blacklist['namespace'] == $sdk->getNamespace()
+                                    && $blacklist['method'] == $methodName
+                                    && $blacklist['parameter'] == $name
+                                ) {
+                                    $allowed = false;
+                                    break;
+                                }
+                            }
+                            if ($allowed && $validator->getType() === 'string') {
+                                $node['schema']['items']['enum'] = \array_values($validator->getList());
+                                $node['schema']['items']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
+                                $node['schema']['items']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                            }
+                            if ($validator->getType() === 'integer') {
+                                $node['schema']['items']['format'] = 'int32';
+                            }
+                        } else {
+                            $node['schema']['type'] = $validator->getType();
+                            $node['schema']['x-example'] = ($param['example'] ?? '') ?: $validator->getList()[0];
+
+                            // Iterate from the blackList. If it matches with the current one, then it is a blackList
+                            // Do not add the enum
+                            $allowed = true;
+                            foreach ($this->enumBlacklist as $blacklist) {
+                                if (
+                                    $blacklist['namespace'] == $sdk->getNamespace()
+                                    && $blacklist['method'] == $methodName
+                                    && $blacklist['parameter'] == $name
+                                ) {
+                                    $allowed = false;
+                                    break;
+                                }
+                            }
+                            if ($allowed && $validator->getType() === 'string') {
+                                $node['schema']['enum'] = \array_values($validator->getList());
+                                $node['schema']['x-enum-name'] = $this->getRequestEnumName($sdk->getNamespace() ?? '', $methodName, $name);
+                                $node['schema']['x-enum-keys'] = $this->getRequestEnumKeys($sdk->getNamespace() ?? '', $methodName, $name);
+                            }
+                            if ($validator->getType() === 'integer') {
+                                $node['format'] = 'int32';
+                            }
                         }
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CompoundUID':
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = '[ID1:ID2]';
+                        $node['schema']['x-example'] = ($param['example'] ?? '') ?: '<ID1:ID2>';
+                        break;
+                    case 'Appwrite\Utopia\Database\Validator\Operation':
+                        if ($array) {
+                            $validator = $validator->getValidator();
+                        }
+
+                        /** @var Operation $validator */
+                        $collectionIdKey = $validator->getCollectionIdKey();
+                        $documentIdKey = $validator->getDocumentIdKey();
+                        if ($array) {
+                            $node['schema']['type'] = 'array';
+                            $node['schema']['items'] = ['type' => 'object'];
+                        } else {
+                            $node['schema']['type'] = 'object';
+                        }
+                        if (empty($param['example'])) {
+                            $example = [
+                                'action' => 'create',
+                                'databaseId' => '<DATABASE_ID>',
+                                $collectionIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($collectionIdKey)).'>',
+                                $documentIdKey => '<'.\strtoupper(Template::fromCamelCaseToSnake($documentIdKey)).'>',
+                                'data' => [
+                                    'name' => 'Walter O\'Brien',
+                                ],
+                            ];
+                            if ($array) {
+                                $example = [$example];
+                            }
+                            $node['schema']['x-example'] = \str_replace("\n", "\n\t", \json_encode($example, JSON_PRETTY_PRINT));
+                        } else {
+                            $node['schema']['x-example'] = $param['example'];
+                        }
                         break;
                     default:
                         $node['schema']['type'] = 'string';
+                        if (!empty($param['example'])) {
+                            $node['schema']['x-example'] = $param['example'];
+                        }
                         break;
                 }
 
@@ -580,6 +759,7 @@ class OpenAPI3 extends Format
 
             $required = $model->getRequired();
             $rules = $model->getRules();
+            $examples = [];
 
             $output['components']['schemas'][$model->getType()] = [
                 'description' => $model->getName(),
@@ -603,6 +783,8 @@ class OpenAPI3 extends Format
                 $format = null;
                 $items = null;
 
+                $examples[$name] = $rule['example'] ?? null;
+
                 switch ($rule['type']) {
                     case 'string':
                     case 'datetime':
@@ -610,9 +792,17 @@ class OpenAPI3 extends Format
                         $type = 'string';
                         break;
 
+                    case 'enum':
+                        $type = 'string';
+                        break;
+
                     case 'json':
                         $type = 'object';
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['additionalProperties'] = true;
+                        break;
+
+                    case 'array':
+                        $type = 'array';
                         break;
 
                     case 'integer':
@@ -660,6 +850,7 @@ class OpenAPI3 extends Format
                         break;
                 }
 
+                $readOnly = $rule['readOnly'] ?? false;
                 if ($rule['array']) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => 'array',
@@ -673,6 +864,9 @@ class OpenAPI3 extends Format
                     if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['format'] = $format;
                     }
+                    if ($readOnly) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
                 } else {
                     $output['components']['schemas'][$model->getType()]['properties'][$name] = [
                         'type' => $type,
@@ -683,14 +877,39 @@ class OpenAPI3 extends Format
                     if ($format) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['format'] = $format;
                     }
+                    if ($readOnly) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
+                    }
                 }
                 if ($items) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['items'] = $items;
+                }
+                if ($rule['type'] === 'enum' && !empty($rule['enum'])) {
+                    if ($rule['array']) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['enum'] = \array_values($rule['enum']);
+                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        if ($enumName) {
+                            $output['components']['schemas'][$model->getType()]['properties'][$name]['items']['x-enum-name'] = $enumName;
+                        }
+                    } else {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['enum'] = \array_values($rule['enum']);
+                        $enumName = $this->getResponseEnumName($model->getType(), $name);
+                        if ($enumName) {
+                            $output['components']['schemas'][$model->getType()]['properties'][$name]['x-enum-name'] = $enumName;
+                        }
+                    }
                 }
                 if (!in_array($name, $required)) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['nullable'] = true;
                 }
             }
+
+            /** @var Any $model */
+            if ($model->isAny() && !empty($model->getSampleData())) {
+                $examples = array_merge($examples, $model->getSampleData());
+            }
+
+            $output['components']['schemas'][$model->getType()]['example'] = $examples;
         }
 
         \ksort($output['paths']);

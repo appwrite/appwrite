@@ -1,0 +1,1 @@
+Get the row activity logs list by its unique ID.

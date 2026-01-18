@@ -1,1 +1,0 @@
-Get a list of all projects. You can use the query params to filter your results. 

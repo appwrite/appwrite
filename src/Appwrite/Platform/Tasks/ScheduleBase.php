@@ -7,11 +7,8 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
-use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -26,7 +23,9 @@ abstract class ScheduleBase extends Action
     protected array $schedules = [];
 
     protected BrokerPool $publisher;
-    protected ?BrokerPool $publisherRedis = null;
+    protected BrokerPool $publisherMigrations;
+    protected BrokerPool $publisherFunctions;
+    protected BrokerPool $publisherMessaging;
 
     private ?Histogram $collectSchedulesTelemetryDuration = null;
     private ?Gauge $collectSchedulesTelemetryCount = null;
@@ -36,7 +35,7 @@ abstract class ScheduleBase extends Action
     abstract public static function getName(): string;
     abstract public static function getSupportedResource(): string;
     abstract public static function getCollectionId(): string;
-    abstract protected function enqueueResources(Group $pools, Database $dbForPlatform, callable $getProjectDB): void;
+    abstract protected function enqueueResources(Database $dbForPlatform, callable $getProjectDB): void;
 
     public function __construct()
     {
@@ -44,7 +43,11 @@ abstract class ScheduleBase extends Action
 
         $this
             ->desc("Execute {$type}s scheduled in Appwrite")
-            ->inject('pools')
+            ->inject('publisher')
+            ->inject('publisherMigrations')
+            ->inject('publisherFunctions')
+            ->inject('publisherMessaging')
+            ->inject('isResourceBlocked')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('telemetry')
@@ -57,7 +60,7 @@ abstract class ScheduleBase extends Action
             $accessedAt = $project->getAttribute('accessedAt', 0);
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_PROJECT_ACCESS)) > $accessedAt) {
                 $project->setAttribute('accessedAt', DateTime::now());
-                Authorization::skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), $project));
+                $dbForPlatform->updateDocument('projects', $project->getId(), $project);
             }
         }
     }
@@ -67,18 +70,15 @@ abstract class ScheduleBase extends Action
      * 2. Create timer that sync all changes from 'schedules' collection to local copy. Only reading changes thanks to 'resourceUpdatedAt' attribute
      * 3. Create timer that prepares coroutines for soon-to-execute schedules. When it's ready, coroutine sleeps until exact time before sending request to worker.
      */
-    public function action(Group $pools, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
+    public function action(BrokerPool $publisher, BrokerPool $publisherMigrations, BrokerPool $publisherFunctions, BrokerPool $publisherMessaging, callable $isResourceBlocked, Database $dbForPlatform, callable $getProjectDB, Telemetry $telemetry): void
     {
         Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
         Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
 
-        $this->publisher = new BrokerPool($pools->get('publisher'));
-
-        try {
-            $this->publisherRedis = new BrokerPool($pools->get('publisherRedis'));
-        } catch (\Throwable) {
-            $this->publisherRedis = null;
-        }
+        $this->publisher = $publisher;
+        $this->publisherMigrations = $publisherMigrations;
+        $this->publisherFunctions = $publisherFunctions;
+        $this->publisherMessaging = $publisherMessaging;
 
         $this->scheduleTelemetryCount = $telemetry->createGauge('task.schedule.count');
         $this->collectSchedulesTelemetryDuration = $telemetry->createHistogram('task.schedule.collect_schedules.duration', 's');
@@ -87,21 +87,21 @@ abstract class ScheduleBase extends Action
 
         // start with "0" to load all active documents.
         $lastSyncUpdate = "0";
-        $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
+        $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $isResourceBlocked);
 
         Console::success("Starting timers at " . DateTime::now());
         /**
          * The timer synchronize $schedules copy with database collection.
          */
-        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate) {
+        Timer::tick(static::UPDATE_TIMER * 1000, function () use ($dbForPlatform, $getProjectDB, &$lastSyncUpdate, $isResourceBlocked) {
             $time = DateTime::now();
             Console::log("Sync tick: Running at $time");
-            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate);
+            $this->collectSchedules($dbForPlatform, $getProjectDB, $lastSyncUpdate, $isResourceBlocked);
         });
 
         while (true) {
             try {
-                go(fn () => $this->enqueueResources($pools, $dbForPlatform, $getProjectDB));
+                go(fn () => $this->enqueueResources($dbForPlatform, $getProjectDB));
                 $this->scheduleTelemetryCount->record(count($this->schedules), ['resourceType' => static::getSupportedResource()]);
                 sleep(static::ENQUEUE_TIMER);
             } catch (\Throwable $th) {
@@ -111,38 +111,9 @@ abstract class ScheduleBase extends Action
         }
     }
 
-    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate): void
+    private function collectSchedules(Database $dbForPlatform, callable $getProjectDB, string &$lastSyncUpdate, callable $isResourceBlocked): void
     {
-        // If we haven't synced yet, load all active schedules
         $initialLoad = $lastSyncUpdate === "0";
-
-        /**
-         * Extract only necessary attributes to lower memory used.
-         *
-         * @return  array
-         * @throws Exception
-         * @var Document $schedule
-         */
-        $getSchedule = function (Document $schedule) use ($dbForPlatform, $getProjectDB): array {
-            $project = $dbForPlatform->getDocument('projects', $schedule->getAttribute('projectId'));
-
-            $resource = $getProjectDB($project)->getDocument(
-                static::getCollectionId(),
-                $schedule->getAttribute('resourceId')
-            );
-
-            return [
-                '$sequence' => $schedule->getSequence(),
-                '$id' => $schedule->getId(),
-                'resourceId' => $schedule->getAttribute('resourceId'),
-                'schedule' => $schedule->getAttribute('schedule'),
-                'active' => $schedule->getAttribute('active'),
-                'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
-                'project' => $project, // TODO: @Meldiron Send only ID to worker to reduce memory usage here
-                'resource' => $resource, // TODO: @Meldiron Send only ID to worker to reduce memory usage here
-            ];
-        };
-
         $loadStart = microtime(true);
         $time = DateTime::now();
 
@@ -150,6 +121,8 @@ abstract class ScheduleBase extends Action
         $sum = $limit;
         $total = 0;
         $latestDocument = null;
+        $updatedProjectIds = []; // Track project IDs from updated/new schedules
+        $updatedSequences = []; // Track sequences that need project/resource loading
 
         while ($sum === $limit) {
             $paginationQueries = [Query::limit($limit)];
@@ -177,41 +150,144 @@ abstract class ScheduleBase extends Action
                 $paginationQueries[] = Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate);
             }
 
-            $results = $dbForPlatform->find('schedules', $paginationQueries);
+            $collectionId = static::getCollectionId();
+            $schedules = $dbForPlatform->find('schedules', $paginationQueries);
+            $sum = count($schedules);
+            $total += $sum;
 
-            $sum = count($results);
-            $total = $total + $sum;
+            foreach ($schedules as $schedule) {
+                $existing = $this->schedules[$schedule->getSequence()] ?? null;
+                $updated = strtotime($existing['resourceUpdatedAt'] ?? '0') !== strtotime($schedule->getAttribute('resourceUpdatedAt') ?? '0');
 
-            foreach ($results as $document) {
-                $localDocument = $this->schedules[$document->getSequence()] ?? null;
-
-                if ($localDocument !== null) {
-                    if (!$document['active']) {
-                        Console::info("Removing: {$document['resourceType']}::{$document['resourceId']}");
-                        unset($this->schedules[$document->getSequence()]);
-                    } elseif (strtotime($localDocument['resourceUpdatedAt']) !== strtotime($document['resourceUpdatedAt'])) {
-                        Console::info("Updating: {$document['resourceType']}::{$document['resourceId']}");
-                        $this->schedules[$document->getSequence()] = $getSchedule($document);
-                    }
-                } else {
+                if ($existing === null || $updated) {
                     try {
-                        $this->schedules[$document->getSequence()] = $getSchedule($document);
+                        $candidate = [
+                            '$sequence' => $schedule->getSequence(),
+                            '$id' => $schedule->getId(),
+                            'projectId' => $schedule->getAttribute('projectId'),
+                            'resourceId' => $schedule->getAttribute('resourceId'),
+                            'resourceType' => $schedule->getAttribute('resourceType'),
+                            'schedule' => $schedule->getAttribute('schedule'),
+                            'active' => $schedule->getAttribute('active'),
+                            'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
+                        ];
                     } catch (\Throwable $th) {
-                        $collectionId = static::getCollectionId();
-                        Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
+                        Console::error("Failed to load schedule for project {$schedule->getAttribute('projectId')} {$collectionId} {$schedule->getAttribute('resourceId')}");
                         Console::error($th->getMessage());
+                        continue;
                     }
+                    // In case the resource is not active (deleted).
+                    if (!$candidate['active']) {
+                        Console::error("Resource is not active: {$candidate['resourceType']}::{$candidate['resourceId']}");
+                        unset($this->schedules[$schedule->getSequence()]);
+                        continue;
+                    }
+
+                    Console::info("Updating: {$candidate['resourceType']}::{$candidate['resourceId']}");
+                    $this->schedules[$schedule->getSequence()] = $candidate;
+
+                    // Track projectId and sequence for updated/new schedules
+                    $updatedProjectIds[] = $candidate['projectId'];
+                    $updatedSequences[] = $schedule->getSequence();
                 }
             }
 
-            $latestDocument = \end($results);
+            $latestDocument = \end($schedules);
+        }
+        if (empty($this->schedules)) {
+            Console::success("No resources found");
+        }
+
+        // On initial load: load all projects from all schedules
+        if ($initialLoad) {
+            $projectIds = array_unique(array_map(fn ($schedule) => $schedule['projectId'], $this->schedules));
+        } else {
+            // Only load projects for updated/new schedules
+            $projectIds = array_unique($updatedProjectIds);
+        }
+
+        // Build existing project map from schedules that already have projects loaded
+        $map = [];
+        foreach ($this->schedules as $schedule) {
+            if (isset($schedule['project'])) {
+                $map[$schedule['projectId']] = $schedule['project'];
+            }
+        }
+
+        // Only load projects that we don't already have in memory
+        $projectIdsToLoad = array_filter($projectIds, fn ($projectId) => !isset($map[$projectId]));
+
+        if (!empty($projectIdsToLoad)) {
+            $projectIdsToLoad = array_values($projectIdsToLoad);
+            $batchSize = APP_DATABASE_QUERY_MAX_VALUES_WORKER;
+            $batches = array_chunk($projectIdsToLoad, $batchSize);
+            $projectsLoadStart = microtime(true);
+
+            foreach ($batches as $batch) {
+                $documents = $dbForPlatform->find('projects', [
+                    Query::equal('$id', $batch),
+                    Query::limit(count($batch)),
+                ]);
+
+                foreach ($documents as $document) {
+                    $map[$document->getId()] = $document;
+                }
+            }
+
+            $projectsLoadDuration = microtime(true) - $projectsLoadStart;
+            Console::success("Projects map loaded in " . $projectsLoadDuration . " seconds with " . count($projectIdsToLoad) . " new projects (total: " . count($map) . " projects)");
+        } else {
+            Console::success("No new projects to load (using " . count($map) . " cached projects)");
+        }
+
+        // Only process updated/new schedules, not all schedules
+        foreach ($updatedSequences as $sequence) {
+            $schedule = $this->schedules[$sequence] ?? null;
+            if ($schedule === null) {
+                continue;
+            }
+
+            $project = $map[$schedule['projectId']] ?? null;
+
+            if ($project === null || $project->isEmpty()) {
+                Console::error("Project not found: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
+                unset($this->schedules[$sequence]);
+                continue;
+            }
+
+            // In case the resource is blocked.
+            if ($isResourceBlocked($project, $collectionId, $schedule['resourceId'])) {
+                Console::error("Resource blocked: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
+                unset($this->schedules[$sequence]);
+                continue;
+            }
+
+            $this->schedules[$sequence]['project'] = $project;
+
+            // In case the resource is not found (project deleted).
+            try {
+                $resource = $getProjectDB($project)->getDocument(static::getCollectionId(), $schedule['resourceId']);
+            } catch (\Throwable $th) {
+                Console::error("Failed to load resource: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
+                Console::error($th->getMessage());
+                unset($this->schedules[$sequence]);
+                continue;
+            }
+
+            if ($resource->isEmpty()) {
+                Console::error("Resource not found: projectId::{$schedule['projectId']} resourceId::{$schedule['resourceId']}");
+                unset($this->schedules[$sequence]);
+                continue;
+            }
+
+            $this->schedules[$sequence]['resource'] = $resource;
         }
 
         $lastSyncUpdate = $time;
         $duration = microtime(true) - $loadStart;
         $this->collectSchedulesTelemetryDuration->record($duration, ['initial' => $initialLoad, 'resourceType' => static::getSupportedResource()]);
         $this->collectSchedulesTelemetryCount->record($total, ['initial' => $initialLoad, 'resourceType' => static::getSupportedResource()]);
-        Console::success("{$total} resources were loaded in " . $duration . " seconds");
+        Console::success("Timer loaded {$total} " . static::getName() . " in " . $duration . " seconds");
     }
 
     protected function recordEnqueueDelay(\DateTime $expectedExecutionSchedule): void

@@ -12,5 +12,5 @@ val databases = Databases(client)
 val response = databases.upsertDocuments(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
-    documents = listOf() // optional
+    documents = listOf()
 )

@@ -4,14 +4,17 @@ namespace Appwrite\Platform\Modules\Compute;
 
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
+use Appwrite\Platform\Action;
+use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Platform\Action;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -19,6 +22,37 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
 {
+    /**
+     * Get default specification based on plan and available specifications.
+     *
+     * @param array $plan The billing plan configuration
+     * @return string The appropriate default specification
+     */
+    protected function getDefaultSpecification(array $plan): string
+    {
+        $specifications = Config::getParam('specifications', []);
+
+        if (empty($specifications)) {
+            return APP_COMPUTE_SPECIFICATION_DEFAULT;
+        }
+
+        $specificationValidator = new SpecificationValidator(
+            $plan,
+            $specifications,
+            System::getEnv('_APP_COMPUTE_CPUS', 0),
+            System::getEnv('_APP_COMPUTE_MEMORY', 0)
+        );
+        $allowedSpecifications = $specificationValidator->getAllowedSpecifications();
+
+        // If there is no plan use the highest specification
+        if (empty($plan)) {
+            return end($allowedSpecifications) ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
+        }
+
+        // Otherwise, use the lowest specification available in the plan
+        return $allowedSpecifications[0] ?? APP_COMPUTE_SPECIFICATION_DEFAULT;
+    }
+
     public function redeployVcsFunction(Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
@@ -109,7 +143,7 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -202,10 +236,11 @@ class Base extends Action
         $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
         $domain = ID::unique() . "." . $sitesDomain;
 
-        // TODO: @christyjacob remove once we migrate the rules in 1.7.x
-        $ruleId = System::getEnv('_APP_RULES_FORMAT') === 'md5' ? md5($domain) : ID::unique();
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        Authorization::skip(
+        $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
@@ -231,7 +266,7 @@ class Base extends Action
             $domain = "commit-" . substr($commitDetails['commitHash'], 0, 16) . ".{$sitesDomain}";
             $ruleId = md5($domain);
             try {
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -268,7 +303,7 @@ class Base extends Action
             $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
             $ruleId = md5($domain);
             try {
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -294,6 +329,8 @@ class Base extends Action
             }
         }
 
+        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
+
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($site)
@@ -301,5 +338,35 @@ class Base extends Action
             ->setTemplate($template);
 
         return $deployment;
+    }
+
+    /**
+     * Update empty manual rule for deployment.
+     * In case of first deployment, deployment ID will be empty in the rules, so we need to update it here.
+     *
+     * @param \Utopia\Database\Document $project
+     * @param \Utopia\Database\Document $resource
+     * @param \Utopia\Database\Document $deployment
+     * @param \Utopia\Database\Database $dbForPlatform
+     * @return void
+     */
+    public static function updateEmptyManualRule(Document $project, Document $resource, Document $deployment, Database $dbForPlatform, Authorization $authorization)
+    {
+        $resourceType = $resource->getCollection() === 'sites' ? 'site' : 'function';
+
+        $queries = [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+            Query::equal('deploymentResourceType', [$resourceType]),
+            Query::equal('deploymentId', ['']),
+            Query::equal('type', ['deployment']),
+            Query::equal('trigger', ['manual']),
+        ];
+        $dbForPlatform->forEach('rules', function (Document $rule) use ($deployment, $dbForPlatform, $authorization) {
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ])));
+        }, $queries);
     }
 }

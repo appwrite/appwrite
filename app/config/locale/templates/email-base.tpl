@@ -1,9 +1,64 @@
 <!doctype html>
 <html>
     <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap">
+        <link rel="preconnect" href="https://assets.appwrite.io/" crossorigin>
+        <meta name="color-scheme" content="light dark">
+        <meta name="supported-color-schemes" content="light dark">
+        <style type="text/css">
+            :root {
+                color-scheme: light dark;
+                supported-color-schemes: light dark;
+            }
+
+            @media (prefers-color-scheme: dark ) {
+                body {
+                    color: #616b7c !important;
+                    background-color: #ffffff !important;
+                }
+                a {
+                    color: currentColor !important;
+                }
+                a.button {
+                    color: #ffffff !important;
+                    background-color: #2D2D31 !important;
+                    border-color: #414146 !important;
+                }
+                h1, h2, h3 {
+                    color: #373b4d !important;
+                }
+                h4 {
+                    color: #4f5769 !important;
+                }
+                p.security-phrase:not(:empty), hr {
+                    border-color: #e8e9f0 !important;
+                }
+            }
+        </style>
+        <style>
+            @font-face {
+                font-family: 'Inter';
+                src: url('https://assets.appwrite.io/fonts/inter/Inter-Regular.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+            
+            @font-face {
+                font-family: 'DM Sans';
+                src: url('https://assets.appwrite.io/fonts/dm-sans/dm-sans-v16-latin-600.woff2') format('woff2');
+                font-weight: 600;
+                font-style: normal;
+                font-display: swap;
+            }
+            
+            @font-face {
+                font-family: 'Poppins';
+                src: url('https://assets.appwrite.io/fonts/poppins/poppins-v23-latin-regular.woff2') format('woff2');
+                font-weight: 400;
+                font-style: normal;
+                font-display: swap;
+            }
+        </style>
         <style>
             body {
                 padding: 32px;
@@ -15,10 +70,26 @@
                 background-color: #ffffff;
                 margin: 0;
                 padding: 0;
+                line-height: 150%;
             }
             a {
                 color: currentColor;
                 word-break: break-all;
+            }
+            a.button {
+                box-sizing: border-box;
+                display: inline-block;
+                text-align: center;
+                text-decoration: none;
+                padding: 9px 14px;
+                color: #ffffff;
+                background-color: #2D2D31;
+                border: 1px solid #414146;
+                border-radius: 8px;
+            }
+            a.button:hover,
+            a.button:focus {
+                opacity: 0.8;
             }
             table {
                 width: 100%;
@@ -67,59 +138,27 @@
                 border: none;
                 border-top: 1px solid #e8e9f0;
             }
+            h* {
+                font-family: 'Poppins', sans-serif;
+            }
+            p {
+                margin-bottom: 10px;
+            }
+            p.security-phrase:not(:empty) {
+                opacity: 0.7;
+                margin-top: 32px;
+                padding-top: 32px;
+                border-top: 1px solid #e8e9f0;
+            }
         </style>
     </head>
 
-<head>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap"
-            rel="stylesheet">
-    <style>
-        a { color:currentColor; word-break: break-all; }
-        body {
-            background-color: #ffffff;
-            padding: 32px;
-            color: #616B7C;
-            font-size: 15px;
-            font-family: 'Inter', sans-serif;
-            line-height: 150%;
-        }
-
-        table {
-            width: 100%;
-            border-spacing: 0 !important;
-        }
-
-        table,
-        tr,
-        th,
-        td {
-            margin: 0;
-            padding: 0;
-        }
-
-        td {
-            vertical-align: top;
-        }
-
-        h* {
-            font-family: 'Poppins', sans-serif;
-        }
-
-        hr {
-            border: none;
-            border-top: 1px solid #E8E9F0;
-        }
-
-        p {
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-
 <body style="direction: {{direction}}">
+
+<div style="display: none; overflow: hidden; max-height: 0; max-width: 0; opacity: 0; line-height: 1px;">
+    {{preview}}
+    <div>{{previewWhitespace}}</div>
+</div>
 
 <div style="max-width:650px; word-wrap: break-word; overflow-wrap: break-word;
   word-break: normal; margin:0 auto;">

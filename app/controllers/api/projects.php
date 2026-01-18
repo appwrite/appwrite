@@ -1,7 +1,6 @@
 <?php
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
@@ -12,6 +11,7 @@ use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
@@ -29,14 +29,11 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Exception\Order as OrderException;
-use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
@@ -48,6 +45,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Multiple;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -120,13 +118,14 @@ App::post('/v1/projects')
             'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
             'passwordHistory' => 0,
             'passwordDictionary' => false,
-            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+            'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
             'mockNumbers' => [],
             'sessionAlerts' => false,
             'membershipsUserName' => false,
             'membershipsUserEmail' => false,
             'membershipsMfa' => false,
+            'invalidateSessions' => true
         ];
 
         foreach ($auth as $method) {
@@ -300,77 +299,6 @@ App::post('/v1/projects')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-App::get('/v1/projects')
-    ->desc('List projects')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'list',
-        description: '/docs/references/projects/list.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT_LIST,
-            )
-        ]
-    ))
-    ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (array $queries, string $search, Response $response, Database $dbForPlatform) {
-
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
-        }
-
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
-
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-            }
-
-            $projectId = $cursor->getValue();
-            $cursorDocument = $dbForPlatform->getDocument('projects', $projectId);
-
-            if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Project '{$projectId}' for the 'cursor' value not found.");
-            }
-
-            $cursor->setValue($cursorDocument);
-        }
-
-        $filterQueries = Query::groupByType($queries)['filters'];
-        try {
-            $projects = $dbForPlatform->find('projects', $queries);
-            $total = $dbForPlatform->count('projects', $filterQueries, APP_LIMIT_COUNT);
-        } catch (OrderException $e) {
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
-        }
-        $response->dynamic(new Document([
-            'projects' => $projects,
-            'total' => $total,
-        ]), Response::MODEL_PROJECT_LIST);
     });
 
 App::get('/v1/projects/:projectId')
@@ -618,19 +546,39 @@ App::patch('/v1/projects/:projectId/api')
     ->desc('Update API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'updateApiStatus',
-        description: '/docs/references/projects/update-api-status.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'projects',
+            name: 'updateApiStatus',
+            description: '/docs/references/projects/update-api-status.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'projects.updateAPIStatus',
+            ),
+            public: false,
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'projects',
+            name: 'updateAPIStatus',
+            description: '/docs/references/projects/update-api-status.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('api', '', new WhiteList(array_keys(Config::getParam('apis')), true), 'API name.')
     ->param('status', null, new Boolean(), 'API status.')
@@ -656,19 +604,39 @@ App::patch('/v1/projects/:projectId/api/all')
     ->desc('Update all API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'updateApiStatusAll',
-        description: '/docs/references/projects/update-api-status-all.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'projects',
+            name: 'updateApiStatusAll',
+            description: '/docs/references/projects/update-api-status-all.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'projects.updateAPIStatusAll',
+            ),
+            public: false,
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'projects',
+            name: 'updateAPIStatusAll',
+            description: '/docs/references/projects/update-api-status-all.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('status', null, new Boolean(), 'API status.')
     ->inject('response')
@@ -712,9 +680,9 @@ App::patch('/v1/projects/:projectId/oauth2')
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'Provider Name')
-    ->param('appId', null, new Text(256), 'Provider app ID. Max length: 256 chars.', true)
-    ->param('secret', null, new text(512), 'Provider secret key. Max length: 512 chars.', true)
-    ->param('enabled', null, new Boolean(), 'Provider status. Set to \'false\' to disable new session creation.', true)
+    ->param('appId', null, new Nullable(new Text(256)), 'Provider app ID. Max length: 256 chars.', true)
+    ->param('secret', null, new Nullable(new text(512)), 'Provider secret key. Max length: 512 chars.', true)
+    ->param('enabled', null, new Nullable(new Boolean()), 'Provider status. Set to \'false\' to disable new session creation.', true)
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $provider, ?string $appId, ?string $secret, ?bool $enabled, Response $response, Database $dbForPlatform) {
@@ -1268,9 +1236,10 @@ App::get('/v1/projects/:projectId/webhooks')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1285,7 +1254,7 @@ App::get('/v1/projects/:projectId/webhooks')
 
         $response->dynamic(new Document([
             'webhooks' => $webhooks,
-            'total' => count($webhooks),
+            'total' => $includeTotal ? count($webhooks) : 0,
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
@@ -1509,8 +1478,8 @@ App::post('/v1/projects/:projectId/keys')
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
-    ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
+    ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
+    ->param('expire', null, new Nullable(new DatetimeValidator()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForPlatform) {
@@ -1565,9 +1534,10 @@ App::get('/v1/projects/:projectId/keys')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1582,7 +1552,7 @@ App::get('/v1/projects/:projectId/keys')
 
         $response->dynamic(new Document([
             'keys' => $keys,
-            'total' => count($keys),
+            'total' => $includeTotal ? count($keys) : 0,
         ]), Response::MODEL_KEY_LIST);
     });
 
@@ -1647,8 +1617,8 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('keyId', '', new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
+    ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('expire', null, new Nullable(new DatetimeValidator()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForPlatform) {
@@ -1790,7 +1760,28 @@ App::post('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('type', null, new WhiteList([Platform::TYPE_WEB, Platform::TYPE_FLUTTER_WEB, Platform::TYPE_FLUTTER_IOS, Platform::TYPE_FLUTTER_ANDROID, Platform::TYPE_FLUTTER_LINUX, Platform::TYPE_FLUTTER_MACOS, Platform::TYPE_FLUTTER_WINDOWS, Platform::TYPE_APPLE_IOS, Platform::TYPE_APPLE_MACOS,  Platform::TYPE_APPLE_WATCHOS, Platform::TYPE_APPLE_TVOS, Platform::TYPE_ANDROID, Platform::TYPE_UNITY, Platform::TYPE_REACT_NATIVE_IOS, Platform::TYPE_REACT_NATIVE_ANDROID], true), 'Platform type.')
+    ->param(
+        'type',
+        null,
+        new WhiteList([
+            Platform::TYPE_WEB,
+            Platform::TYPE_FLUTTER_WEB,
+            Platform::TYPE_FLUTTER_IOS,
+            Platform::TYPE_FLUTTER_ANDROID,
+            Platform::TYPE_FLUTTER_LINUX,
+            Platform::TYPE_FLUTTER_MACOS,
+            Platform::TYPE_FLUTTER_WINDOWS,
+            Platform::TYPE_APPLE_IOS,
+            Platform::TYPE_APPLE_MACOS,
+            Platform::TYPE_APPLE_WATCHOS,
+            Platform::TYPE_APPLE_TVOS,
+            Platform::TYPE_ANDROID,
+            Platform::TYPE_UNITY,
+            Platform::TYPE_REACT_NATIVE_IOS,
+            Platform::TYPE_REACT_NATIVE_ANDROID,
+        ], true),
+        'Platform type. Possible values are: web, flutter-web, flutter-ios, flutter-android, flutter-linux, flutter-macos, flutter-windows, apple-ios, apple-macos, apple-watchos, apple-tvos, android, unity, react-native-ios, react-native-android.'
+    )
     ->param('name', null, new Text(128), 'Platform name. Max length: 128 chars.')
     ->param('key', '', new Text(256), 'Package name for Android or bundle ID for iOS or macOS. Max length: 256 chars.', true)
     ->param('store', '', new Text(256), 'App store or Google Play store ID. Max length: 256 chars.', true)
@@ -1847,9 +1838,10 @@ App::get('/v1/projects/:projectId/platforms')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1864,7 +1856,7 @@ App::get('/v1/projects/:projectId/platforms')
 
         $response->dynamic(new Document([
             'platforms' => $platforms,
-            'total' => count($platforms),
+            'total' => $includeTotal ? count($platforms) : 0,
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
@@ -2017,19 +2009,39 @@ App::patch('/v1/projects/:projectId/smtp')
     ->desc('Update SMTP')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'templates',
-        name: 'updateSmtp',
-        description: '/docs/references/projects/update-smtp.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'updateSmtp',
+            description: '/docs/references/projects/update-smtp.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'projects.updateSMTP',
+            ),
+            public: false,
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'updateSMTP',
+            description: '/docs/references/projects/update-smtp.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_PROJECT,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('enabled', false, new Boolean(), 'Enable custom SMTP service')
     ->param('senderName', '', new Text(255, 0), 'Name of the email sender', true)
@@ -2114,19 +2126,39 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->desc('Create SMTP test')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'templates',
-        name: 'createSmtpTest',
-        description: '/docs/references/projects/create-smtp-test.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_NOCONTENT,
-                model: Response::MODEL_NONE,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'createSmtpTest',
+            description: '/docs/references/projects/create-smtp-test.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'projects.createSMTPTest',
+            ),
+            public: false,
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'createSMTPTest',
+            description: '/docs/references/projects/create-smtp-test.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_NOCONTENT,
+                    model: Response::MODEL_NONE,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
     ->param('senderName', System::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'), new Text(255, 0), 'Name of the email sender')
@@ -2175,7 +2207,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
                 ->setSmtpSenderName($senderName)
                 ->setRecipient($email)
                 ->setName('')
-                ->setbodyTemplate(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl')
+                ->setBodyTemplate(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl')
                 ->setBody($template->render())
                 ->setVariables([])
                 ->setSubject($subject)
@@ -2189,19 +2221,39 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Get custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'templates',
-        name: 'getSmsTemplate',
-        description: '/docs/references/projects/get-sms-template.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_SMS_TEMPLATE,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'getSmsTemplate',
+            description: '/docs/references/projects/get-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'projects.getSMSTemplate',
+            ),
+            public: false,
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'getSMSTemplate',
+            description: '/docs/references/projects/get-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
@@ -2267,17 +2319,56 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $template  = $templates['email.' . $type . '-' . $locale] ?? null;
 
         $localeObj = new Locale($locale);
+        $localeObj->setFallback(System::getEnv('_APP_LOCALE', 'en'));
+
         if (is_null($template)) {
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            /**
+             * different templates, different placeholders.
+             */
+            $templateConfigs = [
+                'magicSession' => [
+                    'file' => 'email-magic-url.tpl',
+                    'placeholders' => ['optionButton', 'buttonText', 'optionUrl', 'clientInfo', 'securityPhrase']
+                ],
+                'mfaChallenge' => [
+                    'file' => 'email-mfa-challenge.tpl',
+                    'placeholders' => ['description', 'clientInfo']
+                ],
+                'otpSession' => [
+                    'file' => 'email-otp.tpl',
+                    'placeholders' => ['description', 'clientInfo', 'securityPhrase']
+                ],
+                'sessionAlert' => [
+                    'file' => 'email-session-alert.tpl',
+                    'placeholders' => ['body', 'listDevice', 'listIpAddress', 'listCountry', 'footer']
+                ],
+            ];
+
+            // fallback to the base template.
+            $config = $templateConfigs[$type] ?? [
+                'file' => 'email-inner-base.tpl',
+                'placeholders' => ['buttonText', 'body', 'footer']
+            ];
+
+            $templateString = file_get_contents(__DIR__ . '/../../config/locale/templates/' . $config['file']);
+
+            // We use `fromString` due to the replace above
+            $message = Template::fromString($templateString);
+
+            // Set type-specific parameters
+            foreach ($config['placeholders'] as $param) {
+                $escapeHtml = !in_array($param, ['clientInfo', 'body', 'footer', 'description']);
+                $message->setParam("{{{$param}}}", $localeObj->getText("emails.{$type}.{$param}"), escapeHtml: $escapeHtml);
+            }
+
             $message
+                // common placeholders on all the templates
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
-                ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
-                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escapeHtml: false)
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
-                ->setParam('{{buttonText}}', $localeObj->getText("emails.{$type}.buttonText"))
-                ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
-                ->setParam('{{direction}}', $localeObj->getText('settings.direction'));
-            $message = $message->render();
+                ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"));
+
+            // `useContent: false` will strip new lines!
+            $message = $message->render(useContent: true);
 
             $template = [
                 'message' => $message,
@@ -2297,19 +2388,39 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Update custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'templates',
-        name: 'updateSmsTemplate',
-        description: '/docs/references/projects/update-sms-template.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_SMS_TEMPLATE,
-            )
-        ]
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'updateSmsTemplate',
+            description: '/docs/references/projects/update-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ],
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'projects.updateSMSTemplate',
+            ),
+            public: false,
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'updateSMSTemplate',
+            description: '/docs/references/projects/update-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ]
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
@@ -2401,20 +2512,41 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Reset custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'templates',
-        name: 'deleteSmsTemplate',
-        description: '/docs/references/projects/delete-sms-template.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_SMS_TEMPLATE,
-            )
-        ],
-        contentType: ContentType::JSON
-    ))
+    ->label('sdk', [
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'deleteSmsTemplate',
+            description: '/docs/references/projects/delete-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ],
+            contentType: ContentType::JSON,
+            deprecated: new Deprecated(
+                since: '1.8.0',
+                replaceWith: 'projects.deleteSMSTemplate',
+            ),
+            public: false,
+        ),
+        new Method(
+            namespace: 'projects',
+            group: 'templates',
+            name: 'deleteSMSTemplate',
+            description: '/docs/references/projects/delete-sms-template.md',
+            auth: [AuthType::ADMIN],
+            responses: [
+                new SDKResponse(
+                    code: Response::STATUS_CODE_OK,
+                    model: Response::MODEL_SMS_TEMPLATE,
+                )
+            ],
+            contentType: ContentType::JSON
+        )
+    ])
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
     ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
@@ -2499,4 +2631,41 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
             'replyTo' => $template['replyTo'],
             'message' => $template['message']
         ]), Response::MODEL_EMAIL_TEMPLATE);
+    });
+
+App::patch('/v1/projects/:projectId/auth/session-invalidation')
+    ->desc('Update invalidate session option of the project')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk', new Method(
+        namespace: 'projects',
+        group: 'auth',
+        name: 'updateSessionInvalidation',
+        description: '/docs/references/projects/update-session-invalidation.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_PROJECT,
+            )
+        ]
+    ))
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('enabled', false, new Boolean(), 'Update authentication session invalidation status. Use this endpoint to enable or disable session invalidation on password change')
+    ->inject('response')
+    ->inject('dbForPlatform')
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForPlatform) {
+
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['invalidateSessions'] = $enabled;
+        $dbForPlatform->updateDocument('projects', $project->getId(), $project
+        ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
     });
