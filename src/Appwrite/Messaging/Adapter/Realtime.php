@@ -4,10 +4,13 @@ namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter as MessagingAdapter;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
+use Appwrite\Utopia\Database\RuntimeQuery;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 class Realtime extends MessagingAdapter
 {
@@ -51,9 +54,10 @@ class Realtime extends MessagingAdapter
      * @param mixed $identifier
      * @param array $roles
      * @param array $channels
+     * @param array $queries
      * @return void
      */
-    public function subscribe(string $projectId, mixed $identifier, array $roles, array $channels): void
+    public function subscribe(string $projectId, mixed $identifier, array $roles, array $channels, array $queries = []): void
     {
         if (!isset($this->subscriptions[$projectId])) { // Init Project
             $this->subscriptions[$projectId] = [];
@@ -72,7 +76,8 @@ class Realtime extends MessagingAdapter
         $this->connections[$identifier] = [
             'projectId' => $projectId,
             'roles' => $roles,
-            'channels' => $channels
+            'channels' => $channels,
+            'queries' => $queries
         ];
     }
 
@@ -206,7 +211,14 @@ class Realtime extends MessagingAdapter
                             /**
                              * To prevent duplicates, we save the connections as array keys.
                              */
-                            $receivers[$id] = 0;
+                            $queries = $this->connections[$id]['queries'] ?? [];
+                            $payload = $event['data']['payload'] ?? [];
+                            if (
+                                empty($queries) ||
+                                !empty(RuntimeQuery::filter($queries, $payload))
+                            ) {
+                                $receivers[$id] = 0;
+                            }
                         }
                         break;
                     }
@@ -243,6 +255,34 @@ class Realtime extends MessagingAdapter
         }
 
         return $channels;
+    }
+
+    /**
+     * Converts the queries from the Query Params into an array.
+     * @param array $queries
+     * @return array
+     */
+    public static function convertQueries(array $queries): array
+    {
+        $queries = Query::parseQueries($queries);
+        $stack = $queries;
+        $allowedMethods = implode(', ', RuntimeQuery::ALLOWED_QUERIES);
+        while (!empty($stack)) {
+            /** `@var` Query $query */
+            $query = array_pop($stack);
+            $method = $query->getMethod();
+            if (!in_array($method, RuntimeQuery::ALLOWED_QUERIES, true)) {
+                $unsupportedMethod = $method;
+                throw new QueryException(
+                    "Query method '{$unsupportedMethod}' is not supported in Realtime queries. Allowed query methods are: {$allowedMethods}"
+                );
+            }
+            if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
+                $stack = array_merge($stack, $query->getValues());
+            }
+        }
+
+        return $queries;
     }
 
     /**
