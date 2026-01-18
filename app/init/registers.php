@@ -264,7 +264,7 @@ $register->set('pools', function () {
                 'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                         return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
-                            \PDO::ATTR_TIMEOUT => 3, // Seconds
+                            \PDO::ATTR_TIMEOUT => 10, // Seconds
                             \PDO::ATTR_PERSISTENT => false,
                             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
                             \PDO::ATTR_EMULATE_PREPARES => true,
