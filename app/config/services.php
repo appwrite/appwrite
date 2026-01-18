@@ -48,7 +48,7 @@ return [
         'name' => 'Avatars',
         'subtitle' => 'The Avatars service aims to help you complete everyday tasks related to your app image, icons, and avatars.',
         'description' => '/docs/services/avatars.md',
-        'controller' => 'api/avatars.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/avatars',
@@ -104,7 +104,7 @@ return [
         'name' => 'Health',
         'subtitle' => 'The Health service allows you to both validate and monitor your Appwrite server\'s health.',
         'description' => '/docs/services/health.md',
-        'controller' => 'api/health.php',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/server/health',
@@ -146,7 +146,7 @@ return [
         'name' => 'Storage',
         'subtitle' => 'The Storage service allows you to manage your project files.',
         'description' => '/docs/services/storage.md',
-        'controller' => '',
+        'controller' => '', // Uses modules
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/client/storage',

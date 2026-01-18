@@ -22,6 +22,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -90,6 +91,7 @@ class Create extends Action
             ->inject('mode')
             ->inject('deviceForFiles')
             ->inject('deviceForLocal')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -105,26 +107,26 @@ class Create extends Action
         Event $queueForEvents,
         string $mode,
         Device $deviceForFiles,
-        Device $deviceForLocal
+        Device $deviceForLocal,
+        Authorization $authorization
     ) {
-        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+        $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        $isAPIKey = User::isApp(Authorization::getRoles());
-        $isPrivilegedUser = User::isPrivileged(Authorization::getRoles());
+        $isAPIKey = User::isApp($authorization->getRoles());
+        $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
         if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $validator = new Authorization(\Utopia\Database\Database::PERMISSION_CREATE);
-        if (!$validator->isValid($bucket->getCreate())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
+        if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
         $allowedPermissions = [
-            \Utopia\Database\Database::PERMISSION_READ,
-            \Utopia\Database\Database::PERMISSION_UPDATE,
-            \Utopia\Database\Database::PERMISSION_DELETE,
+            Database::PERMISSION_READ,
+            Database::PERMISSION_UPDATE,
+            Database::PERMISSION_DELETE,
         ];
 
         // Map aggregate permissions to into the set of individual permissions they represent.
@@ -141,7 +143,7 @@ class Create extends Action
         }
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
+        $roles = $authorization->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser) {
             foreach (\Utopia\Database\Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
@@ -154,7 +156,7 @@ class Create extends Action
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!Authorization::isRole($role)) {
+                    if (!$authorization->hasRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
@@ -379,12 +381,14 @@ class Create extends Action
                  * However as with chunk upload even if we are updating, we are essentially creating a file
                  * adding it's new chunk so we validate create permission instead of update
                  */
-                $validator = new Authorization(\Utopia\Database\Database::PERMISSION_CREATE);
-                if (!$validator->isValid($bucket->getCreate())) {
+                if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
-                $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
+                $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
             }
+
+            // Trigger after create success hook
+            $this->afterCreateSuccess($file);
         } else {
             if ($file->isEmpty()) {
                 $doc = new Document([
@@ -424,13 +428,12 @@ class Create extends Action
                  * However as with chunk upload even if we are updating, we are essentially creating a file
                  * adding it's new chunk so we validate create permission instead of update
                  */
-                $validator = new Authorization(\Utopia\Database\Database::PERMISSION_CREATE);
-                if (!$validator->isValid($bucket->getCreate())) {
+                if (!$authorization->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
                 try {
-                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
+                    $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, $file));
                 } catch (NotFoundException) {
                     throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                 }
@@ -447,5 +450,18 @@ class Create extends Action
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($file, Response::MODEL_FILE);
+    }
+
+    /**
+     * Hook to run after file is created successfully
+     *
+     * @param Document $file
+     * @return void
+     */
+    protected function afterCreateSuccess(Document $file)
+    {
+        if (!($file instanceof Document)) {
+            throw new Exception('file must be an instance of document');
+        }
     }
 }
