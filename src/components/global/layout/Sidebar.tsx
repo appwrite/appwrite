@@ -22,6 +22,7 @@ import {
   FileText,
   BarChart2,
   AlertTriangle,
+  Radio,
   type LucideIcon,
 } from 'lucide-react'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
@@ -139,6 +140,12 @@ const getNavItems = (projectId: string) => {
           label: 'Activity',
           icon: Activity,
           path: `/projects/${projectId}/activity`,
+        },
+        {
+          id: 'realtime',
+          label: 'Realtime',
+          icon: Radio,
+          path: `/projects/${projectId}/realtime`,
         },
         {
           id: 'logs',
