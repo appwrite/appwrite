@@ -647,7 +647,7 @@ App::shutdown()
     ->inject('authorization')
     ->inject('timelimit')
     ->inject('eventProcessor')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, callable $timelimit, EventProcessor $eventProcessor) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject,Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
