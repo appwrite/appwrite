@@ -259,9 +259,9 @@ abstract class Action extends DatabasesAction
         Document $collection,
         Document $document,
         Database $dbForProject,
-
         /* options */
         array &$collectionsCache,
+        Authorization $authorization,
         ?int &$operations = null,
     ): bool {
 
@@ -298,7 +298,7 @@ abstract class Action extends DatabasesAction
             $relatedCollectionId = $relationship->getAttribute('relatedCollection');
 
             if (!isset($collectionsCache[$relatedCollectionId])) {
-                $relatedCollectionDoc = Authorization::skip(
+                $relatedCollectionDoc = $authorization->skip(
                     fn () => $dbForProject->getDocument(
                         'database_' . $database->getSequence(),
                         $relatedCollectionId
@@ -324,7 +324,8 @@ abstract class Action extends DatabasesAction
                         document: $relation,
                         dbForProject: $dbForProject,
                         collectionsCache: $collectionsCache,
-                        operations: $operations
+                        operations: $operations,
+                        authorization: $authorization
                     );
                 }
             }

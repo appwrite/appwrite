@@ -68,6 +68,7 @@ class Update extends DocumentsUpdate
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
+            ->inject('authorization')
             ->inject('eventProcessor')
             ->callback($this->action(...));
     }

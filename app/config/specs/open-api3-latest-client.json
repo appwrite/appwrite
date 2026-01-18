@@ -140,7 +140,8 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "password": {
                                         "type": "string",
@@ -224,12 +225,14 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "password": {
                                         "type": "string",
                                         "description": "User password. Must be at least 8 chars.",
-                                        "x-example": "password"
+                                        "x-example": "password",
+                                        "format": "password"
                                     }
                                 },
                                 "required": [
@@ -439,7 +442,8 @@
                                     "duration": {
                                         "type": "integer",
                                         "description": "Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.",
-                                        "x-example": 0
+                                        "x-example": 0,
+                                        "format": "int32"
                                     }
                                 }
                             }
@@ -551,7 +555,7 @@
                 "x-appwrite": {
                     "method": "updateMFA",
                     "group": "mfa",
-                    "weight": 288,
+                    "weight": 277,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa.md",
@@ -623,7 +627,7 @@
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 290,
+                    "weight": 279,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-authenticator.md",
@@ -747,7 +751,7 @@
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 291,
+                    "weight": 280,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-authenticator.md",
@@ -887,7 +891,7 @@
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 292,
+                    "weight": 281,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/delete-mfa-authenticator.md",
@@ -1011,7 +1015,7 @@
                 "x-appwrite": {
                     "method": "createMfaChallenge",
                     "group": "mfa",
-                    "weight": 296,
+                    "weight": 285,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-challenge.md",
@@ -1145,7 +1149,7 @@
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
                     "group": "mfa",
-                    "weight": 297,
+                    "weight": 286,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-challenge.md",
@@ -1283,7 +1287,7 @@
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
-                    "weight": 289,
+                    "weight": 278,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/list-mfa-factors.md",
@@ -1384,7 +1388,7 @@
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 295,
+                    "weight": 284,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/get-mfa-recovery-codes.md",
@@ -1483,7 +1487,7 @@
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 293,
+                    "weight": 282,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-recovery-codes.md",
@@ -1582,7 +1586,7 @@
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 294,
+                    "weight": 283,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-recovery-codes.md",
@@ -1796,7 +1800,8 @@
                                     "oldPassword": {
                                         "type": "string",
                                         "description": "Current user password. Must be at least 8 chars.",
-                                        "x-example": "password"
+                                        "x-example": "password",
+                                        "format": "password"
                                     }
                                 },
                                 "required": [
@@ -1868,12 +1873,14 @@
                                     "phone": {
                                         "type": "string",
                                         "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
-                                        "x-example": "+12065550100"
+                                        "x-example": "+12065550100",
+                                        "format": "phone"
                                     },
                                     "password": {
                                         "type": "string",
                                         "description": "User password. Must be at least 8 chars.",
-                                        "x-example": "password"
+                                        "x-example": "password",
+                                        "format": "password"
                                     }
                                 },
                                 "required": [
@@ -2072,12 +2079,14 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "url": {
                                         "type": "string",
                                         "description": "URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
-                                        "x-example": "https:\/\/example.com"
+                                        "x-example": "https:\/\/example.com",
+                                        "format": "url"
                                     }
                                 },
                                 "required": [
@@ -2382,12 +2391,14 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "password": {
                                         "type": "string",
                                         "description": "User password. Must be at least 8 chars.",
-                                        "x-example": "password"
+                                        "x-example": "password",
+                                        "format": "password"
                                     }
                                 },
                                 "required": [
@@ -2573,9 +2584,7 @@
                                 "yammer",
                                 "yandex",
                                 "zoho",
-                                "zoom",
-                                "mock",
-                                "mock-unverified"
+                                "zoom"
                             ],
                             "x-enum-name": "OAuthProvider",
                             "x-enum-keys": []
@@ -3304,7 +3313,8 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "phrase": {
                                         "type": "boolean",
@@ -3390,12 +3400,14 @@
                                     "email": {
                                         "type": "string",
                                         "description": "User email.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "url": {
                                         "type": "string",
                                         "description": "URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
-                                        "x-example": "https:\/\/example.com"
+                                        "x-example": "https:\/\/example.com",
+                                        "format": "url"
                                     },
                                     "phrase": {
                                         "type": "boolean",
@@ -3504,9 +3516,7 @@
                                 "yammer",
                                 "yandex",
                                 "zoho",
-                                "zoom",
-                                "mock",
-                                "mock-unverified"
+                                "zoom"
                             ],
                             "x-enum-name": "OAuthProvider",
                             "x-enum-keys": []
@@ -3621,7 +3631,8 @@
                                     "phone": {
                                         "type": "string",
                                         "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
-                                        "x-example": "+12065550100"
+                                        "x-example": "+12065550100",
+                                        "format": "phone"
                                     }
                                 },
                                 "required": [
@@ -3746,7 +3757,8 @@
                                     "url": {
                                         "type": "string",
                                         "description": "URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
-                                        "x-example": "https:\/\/example.com"
+                                        "x-example": "https:\/\/example.com",
+                                        "format": "url"
                                     }
                                 },
                                 "required": [
@@ -4039,7 +4051,7 @@
                 "x-appwrite": {
                     "method": "getBrowser",
                     "group": null,
-                    "weight": 50,
+                    "weight": 288,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-browser.md",
@@ -4167,7 +4179,7 @@
                 "x-appwrite": {
                     "method": "getCreditCard",
                     "group": null,
-                    "weight": 49,
+                    "weight": 287,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-credit-card.md",
@@ -4301,7 +4313,7 @@
                 "x-appwrite": {
                     "method": "getFavicon",
                     "group": null,
-                    "weight": 53,
+                    "weight": 291,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-favicon.md",
@@ -4361,7 +4373,7 @@
                 "x-appwrite": {
                     "method": "getFlag",
                     "group": null,
-                    "weight": 51,
+                    "weight": 289,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-flag.md",
@@ -4851,7 +4863,7 @@
                 "x-appwrite": {
                     "method": "getImage",
                     "group": null,
-                    "weight": 52,
+                    "weight": 290,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-image.md",
@@ -4935,7 +4947,7 @@
                 "x-appwrite": {
                     "method": "getInitials",
                     "group": null,
-                    "weight": 55,
+                    "weight": 293,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-initials.md",
@@ -5029,7 +5041,7 @@
                 "x-appwrite": {
                     "method": "getQR",
                     "group": null,
-                    "weight": 54,
+                    "weight": 292,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-qr.md",
@@ -5123,7 +5135,7 @@
                 "x-appwrite": {
                     "method": "getScreenshot",
                     "group": null,
-                    "weight": 56,
+                    "weight": 294,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-screenshot.md",
@@ -5980,7 +5992,8 @@
                                     "ttl": {
                                         "type": "integer",
                                         "description": "Seconds before the transaction expires.",
-                                        "x-example": 60
+                                        "x-example": 60,
+                                        "format": "int32"
                                     }
                                 }
                             }
@@ -7146,12 +7159,14 @@
                                     "value": {
                                         "type": "number",
                                         "description": "Value to increment the attribute by. The value must be a number.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "format": "float"
                                     },
                                     "min": {
                                         "type": "number",
                                         "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
                                         "x-example": null,
+                                        "format": "float",
                                         "x-nullable": true
                                     },
                                     "transactionId": {
@@ -7273,12 +7288,14 @@
                                     "value": {
                                         "type": "number",
                                         "description": "Value to increment the attribute by. The value must be a number.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "format": "float"
                                     },
                                     "max": {
                                         "type": "number",
                                         "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
                                         "x-example": null,
+                                        "format": "float",
                                         "x-nullable": true
                                     },
                                     "transactionId": {
@@ -7598,7 +7615,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 225,
+                    "weight": 214,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/query.md",
@@ -7652,7 +7669,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 224,
+                    "weight": 213,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/mutation.md",
@@ -7706,7 +7723,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
-                    "weight": 60,
+                    "weight": 49,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/get.md",
@@ -7760,7 +7777,7 @@
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
-                    "weight": 61,
+                    "weight": 50,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-codes.md",
@@ -7814,7 +7831,7 @@
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
-                    "weight": 65,
+                    "weight": 54,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-continents.md",
@@ -7868,7 +7885,7 @@
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
-                    "weight": 62,
+                    "weight": 51,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries.md",
@@ -7922,7 +7939,7 @@
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
-                    "weight": 63,
+                    "weight": 52,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries-eu.md",
@@ -7976,7 +7993,7 @@
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
-                    "weight": 64,
+                    "weight": 53,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries-phones.md",
@@ -8030,7 +8047,7 @@
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
-                    "weight": 66,
+                    "weight": 55,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-currencies.md",
@@ -8084,7 +8101,7 @@
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
-                    "weight": 67,
+                    "weight": 56,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-languages.md",
@@ -8138,7 +8155,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 272,
+                    "weight": 261,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-subscriber.md",
@@ -8222,7 +8239,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 276,
+                    "weight": 265,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-subscriber.md",
@@ -8452,7 +8469,8 @@
                                     "file": {
                                         "type": "string",
                                         "description": "Binary file. Appwrite SDKs provide helpers to handle file input. [Learn about file input](https:\/\/appwrite.io\/docs\/products\/storage\/upload-download#input-file).",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "format": "binary"
                                     },
                                     "permissions": {
                                         "type": "array",
@@ -9240,7 +9258,8 @@
                                     "ttl": {
                                         "type": "integer",
                                         "description": "Seconds before the transaction expires.",
-                                        "x-example": 60
+                                        "x-example": 60,
+                                        "format": "int32"
                                     }
                                 }
                             }
@@ -10403,12 +10422,14 @@
                                     "value": {
                                         "type": "number",
                                         "description": "Value to increment the column by. The value must be a number.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "format": "float"
                                     },
                                     "min": {
                                         "type": "number",
                                         "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
                                         "x-example": null,
+                                        "format": "float",
                                         "x-nullable": true
                                     },
                                     "transactionId": {
@@ -10529,12 +10550,14 @@
                                     "value": {
                                         "type": "number",
                                         "description": "Value to increment the column by. The value must be a number.",
-                                        "x-example": null
+                                        "x-example": null,
+                                        "format": "float"
                                     },
                                     "max": {
                                         "type": "number",
                                         "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
                                         "x-example": null,
+                                        "format": "float",
                                         "x-nullable": true
                                     },
                                     "transactionId": {
@@ -10574,7 +10597,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 145,
+                    "weight": 134,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list.md",
@@ -10663,7 +10686,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 144,
+                    "weight": 133,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create.md",
@@ -10750,7 +10773,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 146,
+                    "weight": 135,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get.md",
@@ -10814,7 +10837,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 148,
+                    "weight": 137,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-name.md",
@@ -10890,7 +10913,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 150,
+                    "weight": 139,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete.md",
@@ -10956,7 +10979,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 152,
+                    "weight": 141,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list-memberships.md",
@@ -11055,7 +11078,7 @@
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 151,
+                    "weight": 140,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create-membership.md",
@@ -11104,7 +11127,8 @@
                                     "email": {
                                         "type": "string",
                                         "description": "Email of the new team member.",
-                                        "x-example": "email@example.com"
+                                        "x-example": "email@example.com",
+                                        "format": "email"
                                     },
                                     "userId": {
                                         "type": "string",
@@ -11114,7 +11138,8 @@
                                     "phone": {
                                         "type": "string",
                                         "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
-                                        "x-example": "+12065550100"
+                                        "x-example": "+12065550100",
+                                        "format": "phone"
                                     },
                                     "roles": {
                                         "type": "array",
@@ -11134,7 +11159,8 @@
                                     "url": {
                                         "type": "string",
                                         "description": "URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
-                                        "x-example": "https:\/\/example.com"
+                                        "x-example": "https:\/\/example.com",
+                                        "format": "url"
                                     },
                                     "name": {
                                         "type": "string",
@@ -11175,7 +11201,7 @@
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 153,
+                    "weight": 142,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-membership.md",
@@ -11249,7 +11275,7 @@
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 154,
+                    "weight": 143,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership.md",
@@ -11345,7 +11371,7 @@
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 156,
+                    "weight": 145,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete-membership.md",
@@ -11421,7 +11447,7 @@
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 155,
+                    "weight": 144,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership-status.md",
@@ -11521,7 +11547,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 147,
+                    "weight": 136,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-prefs.md",
@@ -11584,7 +11610,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 149,
+                    "weight": 138,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-prefs.md",
@@ -13428,6 +13454,16 @@
                         "description": "Total number of chunks uploaded",
                         "x-example": 17890,
                         "format": "int32"
+                    },
+                    "encryption": {
+                        "type": "boolean",
+                        "description": "Whether file contents are encrypted at rest.",
+                        "x-example": true
+                    },
+                    "compression": {
+                        "type": "string",
+                        "description": "Compression algorithm used for the file. Will be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd).",
+                        "x-example": "gzip"
                     }
                 },
                 "required": [
@@ -13441,7 +13477,9 @@
                     "mimeType",
                     "sizeOriginal",
                     "chunksTotal",
-                    "chunksUploaded"
+                    "chunksUploaded",
+                    "encryption",
+                    "compression"
                 ],
                 "example": {
                     "$id": "5e5ea5c16897e",
@@ -13456,7 +13494,9 @@
                     "mimeType": "image\/png",
                     "sizeOriginal": 17890,
                     "chunksTotal": 17890,
-                    "chunksUploaded": 17890
+                    "chunksUploaded": 17890,
+                    "encryption": true,
+                    "compression": "gzip"
                 }
             },
             "team": {

@@ -202,7 +202,8 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
@@ -292,13 +293,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password. Must be at least 8 chars.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 }
                             },
                             "required": [
@@ -513,7 +516,8 @@
                                     "type": "integer",
                                     "description": "Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.",
                                     "default": 900,
-                                    "x-example": 0
+                                    "x-example": 0,
+                                    "format": "int32"
                                 }
                             }
                         }
@@ -624,7 +628,7 @@
                 "x-appwrite": {
                     "method": "updateMFA",
                     "group": "mfa",
-                    "weight": 288,
+                    "weight": 277,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa.md",
@@ -700,7 +704,7 @@
                 "x-appwrite": {
                     "method": "createMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 290,
+                    "weight": 279,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-authenticator.md",
@@ -827,7 +831,7 @@
                 "x-appwrite": {
                     "method": "updateMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 291,
+                    "weight": 280,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-authenticator.md",
@@ -971,7 +975,7 @@
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 292,
+                    "weight": 281,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/delete-mfa-authenticator.md",
@@ -1098,7 +1102,7 @@
                 "x-appwrite": {
                     "method": "createMfaChallenge",
                     "group": "mfa",
-                    "weight": 296,
+                    "weight": 285,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-challenge.md",
@@ -1238,7 +1242,7 @@
                 "x-appwrite": {
                     "method": "updateMfaChallenge",
                     "group": "mfa",
-                    "weight": 297,
+                    "weight": 286,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-challenge.md",
@@ -1381,7 +1385,7 @@
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
-                    "weight": 289,
+                    "weight": 278,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/list-mfa-factors.md",
@@ -1485,7 +1489,7 @@
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 295,
+                    "weight": 284,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/get-mfa-recovery-codes.md",
@@ -1589,7 +1593,7 @@
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 293,
+                    "weight": 282,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/create-mfa-recovery-codes.md",
@@ -1693,7 +1697,7 @@
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 294,
+                    "weight": 283,
                     "cookies": false,
                     "type": "",
                     "demo": "account\/update-mfa-recovery-codes.md",
@@ -1920,7 +1924,8 @@
                                     "type": "string",
                                     "description": "Current user password. Must be at least 8 chars.",
                                     "default": "",
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 }
                             },
                             "required": [
@@ -1996,13 +2001,15 @@
                                     "type": "string",
                                     "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": null,
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password. Must be at least 8 chars.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 }
                             },
                             "required": [
@@ -2210,13 +2217,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "url": {
                                     "type": "string",
                                     "description": "URL to redirect the user back to your app from the recovery email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
                                     "default": null,
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 }
                             },
                             "required": [
@@ -2540,13 +2549,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password. Must be at least 8 chars.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 }
                             },
                             "required": [
@@ -3132,7 +3143,8 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "phrase": {
                                     "type": "boolean",
@@ -3224,13 +3236,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "url": {
                                     "type": "string",
                                     "description": "URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
                                     "default": "",
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 },
                                 "phrase": {
                                     "type": "boolean",
@@ -3343,9 +3357,7 @@
                             "yammer",
                             "yandex",
                             "zoho",
-                            "zoom",
-                            "mock",
-                            "mock-unverified"
+                            "zoom"
                         ],
                         "x-enum-name": "OAuthProvider",
                         "x-enum-keys": [],
@@ -3460,7 +3472,8 @@
                                     "type": "string",
                                     "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": null,
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 }
                             },
                             "required": [
@@ -3591,7 +3604,8 @@
                                     "type": "string",
                                     "description": "URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
                                     "default": null,
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 }
                             },
                             "required": [
@@ -3905,7 +3919,7 @@
                 "x-appwrite": {
                     "method": "getBrowser",
                     "group": null,
-                    "weight": 50,
+                    "weight": 288,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-browser.md",
@@ -4033,7 +4047,7 @@
                 "x-appwrite": {
                     "method": "getCreditCard",
                     "group": null,
-                    "weight": 49,
+                    "weight": 287,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-credit-card.md",
@@ -4167,7 +4181,7 @@
                 "x-appwrite": {
                     "method": "getFavicon",
                     "group": null,
-                    "weight": 53,
+                    "weight": 291,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-favicon.md",
@@ -4233,7 +4247,7 @@
                 "x-appwrite": {
                     "method": "getFlag",
                     "group": null,
-                    "weight": 51,
+                    "weight": 289,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-flag.md",
@@ -4723,7 +4737,7 @@
                 "x-appwrite": {
                     "method": "getImage",
                     "group": null,
-                    "weight": 52,
+                    "weight": 290,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-image.md",
@@ -4809,7 +4823,7 @@
                 "x-appwrite": {
                     "method": "getInitials",
                     "group": null,
-                    "weight": 55,
+                    "weight": 293,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-initials.md",
@@ -4903,7 +4917,7 @@
                 "x-appwrite": {
                     "method": "getQR",
                     "group": null,
-                    "weight": 54,
+                    "weight": 292,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-qr.md",
@@ -4997,7 +5011,7 @@
                 "x-appwrite": {
                     "method": "getScreenshot",
                     "group": null,
-                    "weight": 56,
+                    "weight": 294,
                     "cookies": false,
                     "type": "location",
                     "demo": "avatars\/get-screenshot.md",
@@ -6061,7 +6075,8 @@
                                     "type": "integer",
                                     "description": "Seconds before the transaction expires.",
                                     "default": 300,
-                                    "x-example": 60
+                                    "x-example": 60,
+                                    "format": "int32"
                                 }
                             }
                         }
@@ -7809,6 +7824,7 @@
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": "email@example.com",
+                                    "format": "email",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -7924,6 +7940,7 @@
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": "email@example.com",
+                                    "format": "email",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -8289,6 +8306,7 @@
                                     "description": "Minimum value.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -8296,6 +8314,7 @@
                                     "description": "Maximum value.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -8303,6 +8322,7 @@
                                     "description": "Default value. Cannot be set when required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -8418,6 +8438,7 @@
                                     "description": "Minimum value.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -8425,6 +8446,7 @@
                                     "description": "Maximum value.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -8432,6 +8454,7 @@
                                     "description": "Default value. Cannot be set when required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -8547,6 +8570,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -8554,6 +8578,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -8561,6 +8586,7 @@
                                     "description": "Default value. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -8676,6 +8702,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -8683,6 +8710,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -8690,6 +8718,7 @@
                                     "description": "Default value. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -9839,7 +9868,8 @@
                                     "type": "integer",
                                     "description": "Attribute size for text attributes, in number of characters.",
                                     "default": null,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "required": {
                                     "type": "boolean",
@@ -9981,6 +10011,7 @@
                                     "description": "Maximum size of the string attribute.",
                                     "default": null,
                                     "x-example": 1,
+                                    "format": "int32",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -10096,6 +10127,7 @@
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": "https:\/\/example.com",
+                                    "format": "url",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -10211,6 +10243,7 @@
                                     "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                     "default": null,
                                     "x-example": "https:\/\/example.com",
+                                    "format": "url",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -11746,13 +11779,15 @@
                                     "type": "number",
                                     "description": "Value to increment the attribute by. The value must be a number.",
                                     "default": 1,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "float"
                                 },
                                 "min": {
                                     "type": "number",
                                     "description": "Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "transactionId": {
@@ -11869,13 +11904,15 @@
                                     "type": "number",
                                     "description": "Value to increment the attribute by. The value must be a number.",
                                     "default": 1,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "float"
                                 },
                                 "max": {
                                     "type": "number",
                                     "description": "Maximum value for the attribute. If the current value is greater than this value, an error will be thrown.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "transactionId": {
@@ -12540,7 +12577,8 @@
                                     "type": "integer",
                                     "description": "Function maximum execution time in seconds.",
                                     "default": 15,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -13019,7 +13057,8 @@
                                     "type": "integer",
                                     "description": "Maximum execution time in seconds.",
                                     "default": 15,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -14832,7 +14871,7 @@
                 "x-appwrite": {
                     "method": "query",
                     "group": "graphql",
-                    "weight": 225,
+                    "weight": 214,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/query.md",
@@ -14909,7 +14948,7 @@
                 "x-appwrite": {
                     "method": "mutation",
                     "group": "graphql",
-                    "weight": 224,
+                    "weight": 213,
                     "cookies": false,
                     "type": "graphql",
                     "demo": "graphql\/mutation.md",
@@ -14984,7 +15023,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "health",
-                    "weight": 68,
+                    "weight": 57,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get.md",
@@ -15036,7 +15075,7 @@
                 "x-appwrite": {
                     "method": "getAntivirus",
                     "group": "health",
-                    "weight": 89,
+                    "weight": 78,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-antivirus.md",
@@ -15088,7 +15127,7 @@
                 "x-appwrite": {
                     "method": "getCache",
                     "group": "health",
-                    "weight": 71,
+                    "weight": 60,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-cache.md",
@@ -15140,7 +15179,7 @@
                 "x-appwrite": {
                     "method": "getCertificate",
                     "group": "health",
-                    "weight": 76,
+                    "weight": 65,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-certificate.md",
@@ -15201,7 +15240,7 @@
                 "x-appwrite": {
                     "method": "getDB",
                     "group": "health",
-                    "weight": 70,
+                    "weight": 59,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-db.md",
@@ -15253,7 +15292,7 @@
                 "x-appwrite": {
                     "method": "getPubSub",
                     "group": "health",
-                    "weight": 72,
+                    "weight": 61,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-pub-sub.md",
@@ -15305,7 +15344,7 @@
                 "x-appwrite": {
                     "method": "getQueueBuilds",
                     "group": "queue",
-                    "weight": 78,
+                    "weight": 67,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-builds.md",
@@ -15368,7 +15407,7 @@
                 "x-appwrite": {
                     "method": "getQueueCertificates",
                     "group": "queue",
-                    "weight": 77,
+                    "weight": 66,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-certificates.md",
@@ -15431,7 +15470,7 @@
                 "x-appwrite": {
                     "method": "getQueueDatabases",
                     "group": "queue",
-                    "weight": 79,
+                    "weight": 68,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-databases.md",
@@ -15503,7 +15542,7 @@
                 "x-appwrite": {
                     "method": "getQueueDeletes",
                     "group": "queue",
-                    "weight": 80,
+                    "weight": 69,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-deletes.md",
@@ -15566,7 +15605,7 @@
                 "x-appwrite": {
                     "method": "getFailedJobs",
                     "group": "queue",
-                    "weight": 90,
+                    "weight": 79,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-failed-jobs.md",
@@ -15610,6 +15649,7 @@
                             "v1-webhooks",
                             "v1-certificates",
                             "v1-builds",
+                            "v1-screenshots",
                             "v1-messaging",
                             "v1-migrations"
                         ],
@@ -15653,7 +15693,7 @@
                 "x-appwrite": {
                     "method": "getQueueFunctions",
                     "group": "queue",
-                    "weight": 84,
+                    "weight": 73,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-functions.md",
@@ -15716,7 +15756,7 @@
                 "x-appwrite": {
                     "method": "getQueueLogs",
                     "group": "queue",
-                    "weight": 75,
+                    "weight": 64,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-logs.md",
@@ -15779,7 +15819,7 @@
                 "x-appwrite": {
                     "method": "getQueueMails",
                     "group": "queue",
-                    "weight": 81,
+                    "weight": 70,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-mails.md",
@@ -15842,7 +15882,7 @@
                 "x-appwrite": {
                     "method": "getQueueMessaging",
                     "group": "queue",
-                    "weight": 82,
+                    "weight": 71,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-messaging.md",
@@ -15905,7 +15945,7 @@
                 "x-appwrite": {
                     "method": "getQueueMigrations",
                     "group": "queue",
-                    "weight": 83,
+                    "weight": 72,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-migrations.md",
@@ -15968,7 +16008,7 @@
                 "x-appwrite": {
                     "method": "getQueueStatsResources",
                     "group": "queue",
-                    "weight": 85,
+                    "weight": 74,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-stats-resources.md",
@@ -16031,7 +16071,7 @@
                 "x-appwrite": {
                     "method": "getQueueUsage",
                     "group": "queue",
-                    "weight": 86,
+                    "weight": 75,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-usage.md",
@@ -16094,7 +16134,7 @@
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
                     "group": "queue",
-                    "weight": 74,
+                    "weight": 63,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-webhooks.md",
@@ -16157,7 +16197,7 @@
                 "x-appwrite": {
                     "method": "getStorage",
                     "group": "storage",
-                    "weight": 88,
+                    "weight": 77,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-storage.md",
@@ -16209,7 +16249,7 @@
                 "x-appwrite": {
                     "method": "getStorageLocal",
                     "group": "storage",
-                    "weight": 87,
+                    "weight": 76,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-storage-local.md",
@@ -16261,7 +16301,7 @@
                 "x-appwrite": {
                     "method": "getTime",
                     "group": "health",
-                    "weight": 73,
+                    "weight": 62,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-time.md",
@@ -16313,7 +16353,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": null,
-                    "weight": 60,
+                    "weight": 49,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/get.md",
@@ -16368,7 +16408,7 @@
                 "x-appwrite": {
                     "method": "listCodes",
                     "group": null,
-                    "weight": 61,
+                    "weight": 50,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-codes.md",
@@ -16423,7 +16463,7 @@
                 "x-appwrite": {
                     "method": "listContinents",
                     "group": null,
-                    "weight": 65,
+                    "weight": 54,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-continents.md",
@@ -16478,7 +16518,7 @@
                 "x-appwrite": {
                     "method": "listCountries",
                     "group": null,
-                    "weight": 62,
+                    "weight": 51,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries.md",
@@ -16533,7 +16573,7 @@
                 "x-appwrite": {
                     "method": "listCountriesEU",
                     "group": null,
-                    "weight": 63,
+                    "weight": 52,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries-eu.md",
@@ -16588,7 +16628,7 @@
                 "x-appwrite": {
                     "method": "listCountriesPhones",
                     "group": null,
-                    "weight": 64,
+                    "weight": 53,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-countries-phones.md",
@@ -16643,7 +16683,7 @@
                 "x-appwrite": {
                     "method": "listCurrencies",
                     "group": null,
-                    "weight": 66,
+                    "weight": 55,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-currencies.md",
@@ -16698,7 +16738,7 @@
                 "x-appwrite": {
                     "method": "listLanguages",
                     "group": null,
-                    "weight": 67,
+                    "weight": 56,
                     "cookies": false,
                     "type": "",
                     "demo": "locale\/list-languages.md",
@@ -16753,7 +16793,7 @@
                 "x-appwrite": {
                     "method": "listMessages",
                     "group": "messages",
-                    "weight": 280,
+                    "weight": 269,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-messages.md",
@@ -16839,7 +16879,7 @@
                 "x-appwrite": {
                     "method": "createEmail",
                     "group": "messages",
-                    "weight": 277,
+                    "weight": 266,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-email.md",
@@ -17000,7 +17040,7 @@
                 "x-appwrite": {
                     "method": "updateEmail",
                     "group": "messages",
-                    "weight": 284,
+                    "weight": 273,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-email.md",
@@ -17168,7 +17208,7 @@
                 "x-appwrite": {
                     "method": "createPush",
                     "group": "messages",
-                    "weight": 279,
+                    "weight": 268,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-push.md",
@@ -17293,7 +17333,8 @@
                                     "type": "integer",
                                     "description": "Badge for push notification. Available only for iOS Platform.",
                                     "default": -1,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "draft": {
                                     "type": "boolean",
@@ -17367,7 +17408,7 @@
                 "x-appwrite": {
                     "method": "updatePush",
                     "group": "messages",
-                    "weight": 286,
+                    "weight": 275,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-push.md",
@@ -17506,6 +17547,7 @@
                                     "description": "Badge for push notification. Available only for iOS platforms.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int32",
                                     "x-nullable": true
                                 },
                                 "draft": {
@@ -17581,7 +17623,7 @@
                 "x-appwrite": {
                     "method": "createSms",
                     "group": "messages",
-                    "weight": 278,
+                    "weight": 267,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-sms.md",
@@ -17774,7 +17816,7 @@
                 "x-appwrite": {
                     "method": "updateSms",
                     "group": "messages",
-                    "weight": 285,
+                    "weight": 274,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-sms.md",
@@ -17966,7 +18008,7 @@
                 "x-appwrite": {
                     "method": "getMessage",
                     "group": "messages",
-                    "weight": 283,
+                    "weight": 272,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/get-message.md",
@@ -18023,7 +18065,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "messages",
-                    "weight": 287,
+                    "weight": 276,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete.md",
@@ -18085,7 +18127,7 @@
                 "x-appwrite": {
                     "method": "listMessageLogs",
                     "group": "logs",
-                    "weight": 281,
+                    "weight": 270,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-message-logs.md",
@@ -18168,7 +18210,7 @@
                 "x-appwrite": {
                     "method": "listTargets",
                     "group": "messages",
-                    "weight": 282,
+                    "weight": 271,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-targets.md",
@@ -18251,7 +18293,7 @@
                 "x-appwrite": {
                     "method": "listProviders",
                     "group": "providers",
-                    "weight": 251,
+                    "weight": 240,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-providers.md",
@@ -18337,7 +18379,7 @@
                 "x-appwrite": {
                     "method": "createApnsProvider",
                     "group": "providers",
-                    "weight": 250,
+                    "weight": 239,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-apns-provider.md",
@@ -18529,7 +18571,7 @@
                 "x-appwrite": {
                     "method": "updateApnsProvider",
                     "group": "providers",
-                    "weight": 264,
+                    "weight": 253,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-apns-provider.md",
@@ -18718,7 +18760,7 @@
                 "x-appwrite": {
                     "method": "createFcmProvider",
                     "group": "providers",
-                    "weight": 249,
+                    "weight": 238,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-fcm-provider.md",
@@ -18879,7 +18921,7 @@
                 "x-appwrite": {
                     "method": "updateFcmProvider",
                     "group": "providers",
-                    "weight": 263,
+                    "weight": 252,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-fcm-provider.md",
@@ -19036,7 +19078,7 @@
                 "x-appwrite": {
                     "method": "createMailgunProvider",
                     "group": "providers",
-                    "weight": 240,
+                    "weight": 229,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-mailgun-provider.md",
@@ -19110,7 +19152,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -19122,7 +19165,8 @@
                                     "type": "string",
                                     "description": "Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -19167,7 +19211,7 @@
                 "x-appwrite": {
                     "method": "updateMailgunProvider",
                     "group": "providers",
-                    "weight": 254,
+                    "weight": 243,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-mailgun-provider.md",
@@ -19250,7 +19294,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -19296,7 +19341,7 @@
                 "x-appwrite": {
                     "method": "createMsg91Provider",
                     "group": "providers",
-                    "weight": 244,
+                    "weight": 233,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-msg-91-provider.md",
@@ -19402,7 +19447,7 @@
                 "x-appwrite": {
                     "method": "updateMsg91Provider",
                     "group": "providers",
-                    "weight": 258,
+                    "weight": 247,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-msg-91-provider.md",
@@ -19506,7 +19551,7 @@
                 "x-appwrite": {
                     "method": "createResendProvider",
                     "group": "providers",
-                    "weight": 242,
+                    "weight": 231,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-resend-provider.md",
@@ -19567,7 +19612,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -19579,7 +19625,8 @@
                                     "type": "string",
                                     "description": "Email set in the reply to field for the mail. Default value is sender email.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -19624,7 +19671,7 @@
                 "x-appwrite": {
                     "method": "updateResendProvider",
                     "group": "providers",
-                    "weight": 256,
+                    "weight": 245,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-resend-provider.md",
@@ -19694,7 +19741,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -19740,7 +19788,7 @@
                 "x-appwrite": {
                     "method": "createSendgridProvider",
                     "group": "providers",
-                    "weight": 241,
+                    "weight": 230,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-sendgrid-provider.md",
@@ -19801,7 +19849,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -19813,7 +19862,8 @@
                                     "type": "string",
                                     "description": "Email set in the reply to field for the mail. Default value is sender email.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -19858,7 +19908,7 @@
                 "x-appwrite": {
                     "method": "updateSendgridProvider",
                     "group": "providers",
-                    "weight": 255,
+                    "weight": 244,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-sendgrid-provider.md",
@@ -19928,7 +19978,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -19974,7 +20025,7 @@
                 "x-appwrite": {
                     "method": "createSmtpProvider",
                     "group": "providers",
-                    "weight": 243,
+                    "weight": 232,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-smtp-provider.md",
@@ -20117,7 +20168,8 @@
                                     "type": "integer",
                                     "description": "The default SMTP server port.",
                                     "default": 587,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "username": {
                                     "type": "string",
@@ -20166,7 +20218,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -20178,7 +20231,8 @@
                                     "type": "string",
                                     "description": "Email set in the reply to field for the mail. Default value is sender email.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "enabled": {
                                     "type": "boolean",
@@ -20224,7 +20278,7 @@
                 "x-appwrite": {
                     "method": "updateSmtpProvider",
                     "group": "providers",
-                    "weight": 257,
+                    "weight": 246,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-smtp-provider.md",
@@ -20366,6 +20420,7 @@
                                     "description": "SMTP port.",
                                     "default": null,
                                     "x-example": 1,
+                                    "format": "int32",
                                     "x-nullable": true
                                 },
                                 "username": {
@@ -20416,7 +20471,8 @@
                                     "type": "string",
                                     "description": "Sender email address.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "replyToName": {
                                     "type": "string",
@@ -20469,7 +20525,7 @@
                 "x-appwrite": {
                     "method": "createTelesignProvider",
                     "group": "providers",
-                    "weight": 245,
+                    "weight": 234,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-telesign-provider.md",
@@ -20518,7 +20574,8 @@
                                     "type": "string",
                                     "description": "Sender Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": "",
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "customerId": {
                                     "type": "string",
@@ -20575,7 +20632,7 @@
                 "x-appwrite": {
                     "method": "updateTelesignProvider",
                     "group": "providers",
-                    "weight": 259,
+                    "weight": 248,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-telesign-provider.md",
@@ -20679,7 +20736,7 @@
                 "x-appwrite": {
                     "method": "createTextmagicProvider",
                     "group": "providers",
-                    "weight": 246,
+                    "weight": 235,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-textmagic-provider.md",
@@ -20728,7 +20785,8 @@
                                     "type": "string",
                                     "description": "Sender Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": "",
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "username": {
                                     "type": "string",
@@ -20785,7 +20843,7 @@
                 "x-appwrite": {
                     "method": "updateTextmagicProvider",
                     "group": "providers",
-                    "weight": 260,
+                    "weight": 249,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-textmagic-provider.md",
@@ -20889,7 +20947,7 @@
                 "x-appwrite": {
                     "method": "createTwilioProvider",
                     "group": "providers",
-                    "weight": 247,
+                    "weight": 236,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-twilio-provider.md",
@@ -20938,7 +20996,8 @@
                                     "type": "string",
                                     "description": "Sender Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": "",
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "accountSid": {
                                     "type": "string",
@@ -20995,7 +21054,7 @@
                 "x-appwrite": {
                     "method": "updateTwilioProvider",
                     "group": "providers",
-                    "weight": 261,
+                    "weight": 250,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-twilio-provider.md",
@@ -21099,7 +21158,7 @@
                 "x-appwrite": {
                     "method": "createVonageProvider",
                     "group": "providers",
-                    "weight": 248,
+                    "weight": 237,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-vonage-provider.md",
@@ -21148,7 +21207,8 @@
                                     "type": "string",
                                     "description": "Sender Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": "",
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "apiKey": {
                                     "type": "string",
@@ -21205,7 +21265,7 @@
                 "x-appwrite": {
                     "method": "updateVonageProvider",
                     "group": "providers",
-                    "weight": 262,
+                    "weight": 251,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-vonage-provider.md",
@@ -21307,7 +21367,7 @@
                 "x-appwrite": {
                     "method": "getProvider",
                     "group": "providers",
-                    "weight": 253,
+                    "weight": 242,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/get-provider.md",
@@ -21364,7 +21424,7 @@
                 "x-appwrite": {
                     "method": "deleteProvider",
                     "group": "providers",
-                    "weight": 265,
+                    "weight": 254,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-provider.md",
@@ -21426,7 +21486,7 @@
                 "x-appwrite": {
                     "method": "listProviderLogs",
                     "group": "providers",
-                    "weight": 252,
+                    "weight": 241,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-provider-logs.md",
@@ -21509,7 +21569,7 @@
                 "x-appwrite": {
                     "method": "listSubscriberLogs",
                     "group": "subscribers",
-                    "weight": 274,
+                    "weight": 263,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-subscriber-logs.md",
@@ -21592,7 +21652,7 @@
                 "x-appwrite": {
                     "method": "listTopics",
                     "group": "topics",
-                    "weight": 267,
+                    "weight": 256,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-topics.md",
@@ -21676,7 +21736,7 @@
                 "x-appwrite": {
                     "method": "createTopic",
                     "group": "topics",
-                    "weight": 266,
+                    "weight": 255,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-topic.md",
@@ -21766,7 +21826,7 @@
                 "x-appwrite": {
                     "method": "getTopic",
                     "group": "topics",
-                    "weight": 269,
+                    "weight": 258,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/get-topic.md",
@@ -21828,7 +21888,7 @@
                 "x-appwrite": {
                     "method": "updateTopic",
                     "group": "topics",
-                    "weight": 270,
+                    "weight": 259,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/update-topic.md",
@@ -21911,7 +21971,7 @@
                 "x-appwrite": {
                     "method": "deleteTopic",
                     "group": "topics",
-                    "weight": 271,
+                    "weight": 260,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-topic.md",
@@ -21973,7 +22033,7 @@
                 "x-appwrite": {
                     "method": "listTopicLogs",
                     "group": "topics",
-                    "weight": 268,
+                    "weight": 257,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-topic-logs.md",
@@ -22056,7 +22116,7 @@
                 "x-appwrite": {
                     "method": "listSubscribers",
                     "group": "subscribers",
-                    "weight": 273,
+                    "weight": 262,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/list-subscribers.md",
@@ -22148,7 +22208,7 @@
                 "x-appwrite": {
                     "method": "createSubscriber",
                     "group": "subscribers",
-                    "weight": 272,
+                    "weight": 261,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/create-subscriber.md",
@@ -22238,7 +22298,7 @@
                 "x-appwrite": {
                     "method": "getSubscriber",
                     "group": "subscribers",
-                    "weight": 275,
+                    "weight": 264,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/get-subscriber.md",
@@ -22303,7 +22363,7 @@
                 "x-appwrite": {
                     "method": "deleteSubscriber",
                     "group": "subscribers",
-                    "weight": 276,
+                    "weight": 265,
                     "cookies": false,
                     "type": "",
                     "demo": "messaging\/delete-subscriber.md",
@@ -22544,7 +22604,8 @@
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
                                     "default": 30,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "installCommand": {
                                     "type": "string",
@@ -22981,7 +23042,8 @@
                                     "type": "integer",
                                     "description": "Maximum request time in seconds.",
                                     "default": 30,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "installCommand": {
                                     "type": "string",
@@ -24846,7 +24908,8 @@
                                     "type": "integer",
                                     "description": "Maximum file size allowed in bytes. Maximum allowed value is 30MB.",
                                     "default": {},
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "allowedFileExtensions": {
                                     "type": "array",
@@ -25057,7 +25120,8 @@
                                     "type": "integer",
                                     "description": "Maximum file size allowed in bytes. Maximum allowed value is 30MB.",
                                     "default": {},
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "allowedFileExtensions": {
                                     "type": "array",
@@ -26274,7 +26338,8 @@
                                     "type": "integer",
                                     "description": "Seconds before the transaction expires.",
                                     "default": 300,
-                                    "x-example": 60
+                                    "x-example": 60,
+                                    "format": "int32"
                                 }
                             }
                         }
@@ -27919,6 +27984,7 @@
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": "email@example.com",
+                                    "format": "email",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -28033,6 +28099,7 @@
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": "email@example.com",
+                                    "format": "email",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -28395,6 +28462,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -28402,6 +28470,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -28409,6 +28478,7 @@
                                     "description": "Default value. Cannot be set when required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -28523,6 +28593,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -28530,6 +28601,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -28537,6 +28609,7 @@
                                     "description": "Default value. Cannot be set when required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -28651,6 +28724,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -28658,6 +28732,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -28665,6 +28740,7 @@
                                     "description": "Default value. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -28779,6 +28855,7 @@
                                     "description": "Minimum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "max": {
@@ -28786,6 +28863,7 @@
                                     "description": "Maximum value",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "default": {
@@ -28793,6 +28871,7 @@
                                     "description": "Default value. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "int64",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -29932,7 +30011,8 @@
                                     "type": "integer",
                                     "description": "Column size for text columns, in number of characters.",
                                     "default": null,
-                                    "x-example": 1
+                                    "x-example": 1,
+                                    "format": "int32"
                                 },
                                 "required": {
                                     "type": "boolean",
@@ -30073,6 +30153,7 @@
                                     "description": "Maximum size of the string column.",
                                     "default": null,
                                     "x-example": 1,
+                                    "format": "int32",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -30187,6 +30268,7 @@
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": "https:\/\/example.com",
+                                    "format": "url",
                                     "x-nullable": true
                                 },
                                 "array": {
@@ -30301,6 +30383,7 @@
                                     "description": "Default value for column when not provided. Cannot be set when column is required.",
                                     "default": null,
                                     "x-example": "https:\/\/example.com",
+                                    "format": "url",
                                     "x-nullable": true
                                 },
                                 "newKey": {
@@ -32196,13 +32279,15 @@
                                     "type": "number",
                                     "description": "Value to increment the column by. The value must be a number.",
                                     "default": 1,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "float"
                                 },
                                 "min": {
                                     "type": "number",
                                     "description": "Minimum value for the column. If the current value is lesser than this value, an exception will be thrown.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "transactionId": {
@@ -32318,13 +32403,15 @@
                                     "type": "number",
                                     "description": "Value to increment the column by. The value must be a number.",
                                     "default": 1,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "float"
                                 },
                                 "max": {
                                     "type": "number",
                                     "description": "Maximum value for the column. If the current value is greater than this value, an error will be thrown.",
                                     "default": null,
                                     "x-example": null,
+                                    "format": "float",
                                     "x-nullable": true
                                 },
                                 "transactionId": {
@@ -32364,7 +32451,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "teams",
-                    "weight": 145,
+                    "weight": 134,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list.md",
@@ -32451,7 +32538,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "teams",
-                    "weight": 144,
+                    "weight": 133,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create.md",
@@ -32544,7 +32631,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "teams",
-                    "weight": 146,
+                    "weight": 135,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get.md",
@@ -32609,7 +32696,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "teams",
-                    "weight": 148,
+                    "weight": 137,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-name.md",
@@ -32687,7 +32774,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "teams",
-                    "weight": 150,
+                    "weight": 139,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete.md",
@@ -32752,7 +32839,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 152,
+                    "weight": 141,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/list-memberships.md",
@@ -32847,7 +32934,7 @@
                 "x-appwrite": {
                     "method": "createMembership",
                     "group": "memberships",
-                    "weight": 151,
+                    "weight": 140,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/create-membership.md",
@@ -32895,7 +32982,8 @@
                                     "type": "string",
                                     "description": "Email of the new team member.",
                                     "default": "",
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "userId": {
                                     "type": "string",
@@ -32907,7 +32995,8 @@
                                     "type": "string",
                                     "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": "",
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 },
                                 "roles": {
                                     "type": "array",
@@ -32929,7 +33018,8 @@
                                     "type": "string",
                                     "description": "URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https:\/\/cheatsheetseries.owasp.org\/cheatsheets\/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.",
                                     "default": "",
-                                    "x-example": "https:\/\/example.com"
+                                    "x-example": "https:\/\/example.com",
+                                    "format": "url"
                                 },
                                 "name": {
                                     "type": "string",
@@ -32970,7 +33060,7 @@
                 "x-appwrite": {
                     "method": "getMembership",
                     "group": "memberships",
-                    "weight": 153,
+                    "weight": 142,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-membership.md",
@@ -33043,7 +33133,7 @@
                 "x-appwrite": {
                     "method": "updateMembership",
                     "group": "memberships",
-                    "weight": 154,
+                    "weight": 143,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership.md",
@@ -33139,7 +33229,7 @@
                 "x-appwrite": {
                     "method": "deleteMembership",
                     "group": "memberships",
-                    "weight": 156,
+                    "weight": 145,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/delete-membership.md",
@@ -33214,7 +33304,7 @@
                 "x-appwrite": {
                     "method": "updateMembershipStatus",
                     "group": "memberships",
-                    "weight": 155,
+                    "weight": 144,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-membership-status.md",
@@ -33311,7 +33401,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "teams",
-                    "weight": 147,
+                    "weight": 136,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/get-prefs.md",
@@ -33375,7 +33465,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "teams",
-                    "weight": 149,
+                    "weight": 138,
                     "cookies": false,
                     "type": "",
                     "demo": "teams\/update-prefs.md",
@@ -33826,7 +33916,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "users",
-                    "weight": 167,
+                    "weight": 156,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list.md",
@@ -33910,7 +34000,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "users",
-                    "weight": 158,
+                    "weight": 147,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create.md",
@@ -33954,6 +34044,7 @@
                                     "description": "User email.",
                                     "default": null,
                                     "x-example": "email@example.com",
+                                    "format": "email",
                                     "x-nullable": true
                                 },
                                 "phone": {
@@ -33961,6 +34052,7 @@
                                     "description": "Phone number. Format this number with a leading '+' and a country code, e.g., +16175551212.",
                                     "default": null,
                                     "x-example": "+12065550100",
+                                    "format": "phone",
                                     "x-nullable": true
                                 },
                                 "password": {
@@ -34010,7 +34102,7 @@
                 "x-appwrite": {
                     "method": "createArgon2User",
                     "group": "users",
-                    "weight": 161,
+                    "weight": 150,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-argon-2-user.md",
@@ -34053,13 +34145,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using Argon2.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "name": {
                                     "type": "string",
@@ -34104,7 +34198,7 @@
                 "x-appwrite": {
                     "method": "createBcryptUser",
                     "group": "users",
-                    "weight": 159,
+                    "weight": 148,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-bcrypt-user.md",
@@ -34147,13 +34241,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using Bcrypt.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "name": {
                                     "type": "string",
@@ -34196,7 +34292,7 @@
                 "x-appwrite": {
                     "method": "listIdentities",
                     "group": "identities",
-                    "weight": 175,
+                    "weight": 164,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-identities.md",
@@ -34277,7 +34373,7 @@
                 "x-appwrite": {
                     "method": "deleteIdentity",
                     "group": "identities",
-                    "weight": 198,
+                    "weight": 187,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete-identity.md",
@@ -34341,7 +34437,7 @@
                 "x-appwrite": {
                     "method": "createMD5User",
                     "group": "users",
-                    "weight": 160,
+                    "weight": 149,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-md-5-user.md",
@@ -34384,13 +34480,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using MD5.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "name": {
                                     "type": "string",
@@ -34435,7 +34533,7 @@
                 "x-appwrite": {
                     "method": "createPHPassUser",
                     "group": "users",
-                    "weight": 163,
+                    "weight": 152,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-ph-pass-user.md",
@@ -34478,13 +34576,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using PHPass.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "name": {
                                     "type": "string",
@@ -34529,7 +34629,7 @@
                 "x-appwrite": {
                     "method": "createScryptUser",
                     "group": "users",
-                    "weight": 164,
+                    "weight": 153,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-scrypt-user.md",
@@ -34572,13 +34672,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using Scrypt.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "passwordSalt": {
                                     "type": "string",
@@ -34590,25 +34692,29 @@
                                     "type": "integer",
                                     "description": "Optional CPU cost used to hash password.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "passwordMemory": {
                                     "type": "integer",
                                     "description": "Optional memory cost used to hash password.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "passwordParallel": {
                                     "type": "integer",
                                     "description": "Optional parallelization cost used to hash password.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "passwordLength": {
                                     "type": "integer",
                                     "description": "Optional hash length used to hash password.",
                                     "default": null,
-                                    "x-example": null
+                                    "x-example": null,
+                                    "format": "int32"
                                 },
                                 "name": {
                                     "type": "string",
@@ -34658,7 +34764,7 @@
                 "x-appwrite": {
                     "method": "createScryptModifiedUser",
                     "group": "users",
-                    "weight": 165,
+                    "weight": 154,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-scrypt-modified-user.md",
@@ -34701,13 +34807,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using Scrypt Modified.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "passwordSalt": {
                                     "type": "string",
@@ -34773,7 +34881,7 @@
                 "x-appwrite": {
                     "method": "createSHAUser",
                     "group": "users",
-                    "weight": 162,
+                    "weight": 151,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-sha-user.md",
@@ -34816,13 +34924,15 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 },
                                 "password": {
                                     "type": "string",
                                     "description": "User password hashed using SHA.",
                                     "default": null,
-                                    "x-example": "password"
+                                    "x-example": "password",
+                                    "format": "password"
                                 },
                                 "passwordVersion": {
                                     "type": "string",
@@ -34886,7 +34996,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "users",
-                    "weight": 168,
+                    "weight": 157,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/get.md",
@@ -34943,7 +35053,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "users",
-                    "weight": 196,
+                    "weight": 185,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete.md",
@@ -35007,7 +35117,7 @@
                 "x-appwrite": {
                     "method": "updateEmail",
                     "group": "users",
-                    "weight": 181,
+                    "weight": 170,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-email.md",
@@ -35052,7 +35162,8 @@
                                     "type": "string",
                                     "description": "User email.",
                                     "default": null,
-                                    "x-example": "email@example.com"
+                                    "x-example": "email@example.com",
+                                    "format": "email"
                                 }
                             },
                             "required": [
@@ -35089,7 +35200,7 @@
                 "x-appwrite": {
                     "method": "createJWT",
                     "group": "sessions",
-                    "weight": 199,
+                    "weight": 188,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-jwt.md",
@@ -35140,7 +35251,8 @@
                                     "type": "integer",
                                     "description": "Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.",
                                     "default": 900,
-                                    "x-example": 0
+                                    "x-example": 0,
+                                    "format": "int32"
                                 }
                             }
                         }
@@ -35174,7 +35286,7 @@
                 "x-appwrite": {
                     "method": "updateLabels",
                     "group": "users",
-                    "weight": 177,
+                    "weight": 166,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-labels.md",
@@ -35257,7 +35369,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 173,
+                    "weight": 162,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-logs.md",
@@ -35340,7 +35452,7 @@
                 "x-appwrite": {
                     "method": "listMemberships",
                     "group": "memberships",
-                    "weight": 172,
+                    "weight": 161,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-memberships.md",
@@ -35434,7 +35546,7 @@
                 "x-appwrite": {
                     "method": "updateMfa",
                     "group": "users",
-                    "weight": 186,
+                    "weight": 175,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-mfa.md",
@@ -35573,7 +35685,7 @@
                 "x-appwrite": {
                     "method": "deleteMfaAuthenticator",
                     "group": "mfa",
-                    "weight": 191,
+                    "weight": 180,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete-mfa-authenticator.md",
@@ -35708,7 +35820,7 @@
                 "x-appwrite": {
                     "method": "listMfaFactors",
                     "group": "mfa",
-                    "weight": 187,
+                    "weight": 176,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-mfa-factors.md",
@@ -35828,7 +35940,7 @@
                 "x-appwrite": {
                     "method": "getMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 188,
+                    "weight": 177,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/get-mfa-recovery-codes.md",
@@ -35948,7 +36060,7 @@
                 "x-appwrite": {
                     "method": "updateMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 190,
+                    "weight": 179,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-mfa-recovery-codes.md",
@@ -36068,7 +36180,7 @@
                 "x-appwrite": {
                     "method": "createMfaRecoveryCodes",
                     "group": "mfa",
-                    "weight": 189,
+                    "weight": 178,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-mfa-recovery-codes.md",
@@ -36190,7 +36302,7 @@
                 "x-appwrite": {
                     "method": "updateName",
                     "group": "users",
-                    "weight": 179,
+                    "weight": 168,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-name.md",
@@ -36272,7 +36384,7 @@
                 "x-appwrite": {
                     "method": "updatePassword",
                     "group": "users",
-                    "weight": 180,
+                    "weight": 169,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-password.md",
@@ -36354,7 +36466,7 @@
                 "x-appwrite": {
                     "method": "updatePhone",
                     "group": "users",
-                    "weight": 182,
+                    "weight": 171,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-phone.md",
@@ -36399,7 +36511,8 @@
                                     "type": "string",
                                     "description": "User phone number.",
                                     "default": null,
-                                    "x-example": "+12065550100"
+                                    "x-example": "+12065550100",
+                                    "format": "phone"
                                 }
                             },
                             "required": [
@@ -36434,7 +36547,7 @@
                 "x-appwrite": {
                     "method": "getPrefs",
                     "group": "users",
-                    "weight": 169,
+                    "weight": 158,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/get-prefs.md",
@@ -36496,7 +36609,7 @@
                 "x-appwrite": {
                     "method": "updatePrefs",
                     "group": "users",
-                    "weight": 184,
+                    "weight": 173,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-prefs.md",
@@ -36576,7 +36689,7 @@
                 "x-appwrite": {
                     "method": "listSessions",
                     "group": "sessions",
-                    "weight": 171,
+                    "weight": 160,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-sessions.md",
@@ -36647,7 +36760,7 @@
                 "x-appwrite": {
                     "method": "createSession",
                     "group": "sessions",
-                    "weight": 192,
+                    "weight": 181,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-session.md",
@@ -36704,7 +36817,7 @@
                 "x-appwrite": {
                     "method": "deleteSessions",
                     "group": "sessions",
-                    "weight": 195,
+                    "weight": 184,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete-sessions.md",
@@ -36763,7 +36876,7 @@
                 "x-appwrite": {
                     "method": "deleteSession",
                     "group": "sessions",
-                    "weight": 194,
+                    "weight": 183,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete-session.md",
@@ -36835,7 +36948,7 @@
                 "x-appwrite": {
                     "method": "updateStatus",
                     "group": "users",
-                    "weight": 176,
+                    "weight": 165,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-status.md",
@@ -36915,7 +37028,7 @@
                 "x-appwrite": {
                     "method": "listTargets",
                     "group": "targets",
-                    "weight": 174,
+                    "weight": 163,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/list-targets.md",
@@ -36998,7 +37111,7 @@
                 "x-appwrite": {
                     "method": "createTarget",
                     "group": "targets",
-                    "weight": 166,
+                    "weight": 155,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-target.md",
@@ -37111,7 +37224,7 @@
                 "x-appwrite": {
                     "method": "getTarget",
                     "group": "targets",
-                    "weight": 170,
+                    "weight": 159,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/get-target.md",
@@ -37181,7 +37294,7 @@
                 "x-appwrite": {
                     "method": "updateTarget",
                     "group": "targets",
-                    "weight": 185,
+                    "weight": 174,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-target.md",
@@ -37273,7 +37386,7 @@
                 "x-appwrite": {
                     "method": "deleteTarget",
                     "group": "targets",
-                    "weight": 197,
+                    "weight": 186,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/delete-target.md",
@@ -37345,7 +37458,7 @@
                 "x-appwrite": {
                     "method": "createToken",
                     "group": "sessions",
-                    "weight": 193,
+                    "weight": 182,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/create-token.md",
@@ -37390,13 +37503,15 @@
                                     "type": "integer",
                                     "description": "Token length in characters. The default length is 6 characters",
                                     "default": 6,
-                                    "x-example": 4
+                                    "x-example": 4,
+                                    "format": "int32"
                                 },
                                 "expire": {
                                     "type": "integer",
                                     "description": "Token expiration period in seconds. The default expiration is 15 minutes.",
                                     "default": 900,
-                                    "x-example": 60
+                                    "x-example": 60,
+                                    "format": "int32"
                                 }
                             }
                         }
@@ -37430,7 +37545,7 @@
                 "x-appwrite": {
                     "method": "updateEmailVerification",
                     "group": "users",
-                    "weight": 183,
+                    "weight": 172,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-email-verification.md",
@@ -37512,7 +37627,7 @@
                 "x-appwrite": {
                     "method": "updatePhoneVerification",
                     "group": "users",
-                    "weight": 178,
+                    "weight": 167,
                     "cookies": false,
                     "type": "",
                     "demo": "users\/update-phone-verification.md",
@@ -39105,14 +39220,14 @@
                     "type": "integer",
                     "description": "Minimum value to enforce for new documents.",
                     "x-example": 1,
-                    "format": "int32",
+                    "format": "int64",
                     "x-nullable": true
                 },
                 "max": {
                     "type": "integer",
                     "description": "Maximum value to enforce for new documents.",
                     "x-example": 10,
-                    "format": "int32",
+                    "format": "int64",
                     "x-nullable": true
                 },
                 "default": {
@@ -40555,14 +40670,14 @@
                     "type": "integer",
                     "description": "Minimum value to enforce for new documents.",
                     "x-example": 1,
-                    "format": "int32",
+                    "format": "int64",
                     "x-nullable": true
                 },
                 "max": {
                     "type": "integer",
                     "description": "Maximum value to enforce for new documents.",
                     "x-example": 10,
-                    "format": "int32",
+                    "format": "int64",
                     "x-nullable": true
                 },
                 "default": {
@@ -43054,6 +43169,16 @@
                     "description": "Total number of chunks uploaded",
                     "x-example": 17890,
                     "format": "int32"
+                },
+                "encryption": {
+                    "type": "boolean",
+                    "description": "Whether file contents are encrypted at rest.",
+                    "x-example": true
+                },
+                "compression": {
+                    "type": "string",
+                    "description": "Compression algorithm used for the file. Will be one of none, [gzip](https:\/\/en.wikipedia.org\/wiki\/Gzip), or [zstd](https:\/\/en.wikipedia.org\/wiki\/Zstd).",
+                    "x-example": "gzip"
                 }
             },
             "required": [
@@ -43067,7 +43192,9 @@
                 "mimeType",
                 "sizeOriginal",
                 "chunksTotal",
-                "chunksUploaded"
+                "chunksUploaded",
+                "encryption",
+                "compression"
             ],
             "example": {
                 "$id": "5e5ea5c16897e",
@@ -43082,7 +43209,9 @@
                 "mimeType": "image\/png",
                 "sizeOriginal": 17890,
                 "chunksTotal": 17890,
-                "chunksUploaded": 17890
+                "chunksUploaded": 17890,
+                "encryption": true,
+                "compression": "gzip"
             }
         },
         "bucket": {
@@ -45232,7 +45361,7 @@
                 "status": {
                     "type": "string",
                     "description": "Status of delivery.",
-                    "x-example": "Message status can be one of the following: draft, processing, scheduled, sent, or failed.",
+                    "x-example": "processing",
                     "enum": [
                         "draft",
                         "processing",
@@ -45278,7 +45407,7 @@
                     "subject": "Welcome to Appwrite",
                     "content": "Hi there, welcome to Appwrite family."
                 },
-                "status": "Message status can be one of the following: draft, processing, scheduled, sent, or failed."
+                "status": "processing"
             }
         },
         "topic": {
