@@ -297,6 +297,7 @@ App::post('/v1/projects')
         if (!$sharedTablesV2) {
             $adapter = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);
+            $dbForProject->setDatabase(APP_DATABASE);
 
             if ($sharedTables) {
                 $dbForProject

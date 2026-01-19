@@ -692,8 +692,8 @@ class RealtimeCustomClientTest extends Scope
 
         $client = $this->getWebsocket(['documents', 'collections'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $session
-        ]);
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null);
 
         $response = json_decode($client->receive(), true);
 
@@ -2963,7 +2963,7 @@ class RealtimeCustomClientTest extends Scope
         sleep(1);
 
         try {
-            $client->receive(1); // 1 second timeout
+            $client->receive();
             $this->fail('Should not receive any event after rollback');
         } catch (TimeoutException $e) {
             // Expected - no event should be triggered

@@ -535,6 +535,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     $database = new Database($adapter, $cache);
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
@@ -565,6 +566,7 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authoriz
     $database = new Database($adapter, $cache);
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
@@ -723,6 +725,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         $configure = (function (Database $database) use ($project, $dsn, $authorization) {
             $database
+                ->setDatabase(APP_DATABASE)
                 ->setAuthorization($authorization)
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
@@ -774,6 +777,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizatio
         $database = new Database($adapter, $cache);
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
@@ -1285,3 +1289,11 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request, A
 App::setResource('transactionState', function (Database $dbForProject, Authorization $authorization) {
     return new TransactionState($dbForProject, $authorization);
 }, ['dbForProject', 'authorization']);
+
+App::setResource('executionsRetentionCount', function (Document $project, array $plan) {
+    if ($project->getId() === 'console' || empty($plan)) {
+        return 0;
+    }
+
+    return (int) ($plan['executionsRetentionCount'] ?? 100);
+}, ['project', 'plan']);

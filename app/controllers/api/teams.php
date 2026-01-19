@@ -23,9 +23,9 @@ use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Teams;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
-use Utopia\Abuse\Abuse;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Proofs\Password;
@@ -103,6 +103,7 @@ App::post('/v1/teams')
                     Permission::update(Role::team($teamId, 'owner')),
                     Permission::delete(Role::team($teamId, 'owner')),
                 ],
+                'labels' => [],
                 'name' => $name,
                 'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
                 'prefs' => new \stdClass(),
@@ -801,26 +802,21 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setRecipients([$phone])
                     ->setProviderType('SMS');
 
-                if (isset($plan['authPhone'])) {
-                    $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
-                    $timelimit
-                        ->setParam('{organizationId}', $project->getAttribute('teamId'));
+                $helper = PhoneNumberUtil::getInstance();
+                try {
+                    $countryCode = $helper->parse($phone)->getCountryCode();
 
-                    $abuse = new Abuse($timelimit);
-                    if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-                        $helper = PhoneNumberUtil::getInstance();
-                        $countryCode = $helper->parse($phone)->getCountryCode();
-
-                        if (!empty($countryCode)) {
-                            $queueForStatsUsage
-                                ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                        }
+                    if (!empty($countryCode)) {
+                        $queueForStatsUsage
+                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                     }
-                    $queueForStatsUsage
-                        ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                        ->setProject($project)
-                        ->trigger();
+                } catch (NumberParseException $e) {
+                    // Ignore invalid phone number for country code stats
                 }
+                $queueForStatsUsage
+                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                    ->setProject($project)
+                    ->trigger();
             }
         }
 

@@ -119,6 +119,7 @@ class Create extends Action
             'sourcePath' => $destination,
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
             'buildCommands' => \implode(' && ', $commands),
+            'startCommand' => $site->getAttribute('startCommand', ''),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),

@@ -382,6 +382,12 @@ $register->set('pools', function () {
         Config::setParam('pools-' . $key, $config);
     }
 
+    $reconnectAttempts = (int) System::getEnv('_APP_CONNECTIONS_RECONNECT_ATTEMPTS', 5);
+    $reconnectSleep = (int) System::getEnv('_APP_CONNECTIONS_RECONNECT_SLEEP', 2);
+
+    $group->setReconnectAttempts($reconnectAttempts);
+    $group->setReconnectSleep($reconnectSleep);
+
     return $group;
 });
 

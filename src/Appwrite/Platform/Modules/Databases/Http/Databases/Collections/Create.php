@@ -193,7 +193,13 @@ class Create extends Action
             $dbForDatabases->getAdapter()->getSupportForVectors(),
             $dbForDatabases->getAdapter()->getSupportForAttributes(),
             $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes()
+            $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
+            $dbForProject->getAdapter()->getSupportForObjectIndexes(),
+            $dbForProject->getAdapter()->getSupportForTrigramIndex(),
+            $dbForProject->getAdapter()->getSupportForSpatialAttributes(),
+            $dbForProject->getAdapter()->getSupportForIndex(),
+            $dbForProject->getAdapter()->getSupportForUniqueIndex(),
+            $dbForProject->getAdapter()->getSupportForFulltextIndex(),
         );
 
         foreach ($collectionIndexes as $indexDoc) {

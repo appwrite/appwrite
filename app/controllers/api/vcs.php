@@ -306,6 +306,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 'resourceType' => $resourceCollection,
                 'entrypoint' => $resource->getAttribute('entrypoint', ''),
                 'buildCommands' => \implode(' && ', $commands),
+                'startCommand' => $resource->getAttribute('startCommand', ''),
                 'buildOutput' => $resource->getAttribute('outputDirectory', ''),
                 'adapter' => $resource->getAttribute('adapter', ''),
                 'fallbackFile' => $resource->getAttribute('fallbackFile', ''),
