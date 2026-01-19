@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Ahc\Jwt\JWT;
+use Appwrite\Event\Delete as DeleteEvent;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\StatsUsage;
@@ -62,7 +63,6 @@ class Create extends Base
             ->label('scope', 'execution.write')
             ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('event', 'functions.[functionId].executions.[executionId].create')
-            ->label('resourceType', RESOURCE_TYPE_FUNCTIONS)
             ->label('sdk', new Method(
                 namespace: 'functions',
                 group: 'executions',
@@ -101,6 +101,8 @@ class Create extends Base
             ->inject('executor')
             ->inject('platform')
             ->inject('authorization')
+            ->inject('queueForDeletes')
+            ->inject('executionsRetentionCount')
             ->callback($this->action(...));
     }
 
@@ -127,6 +129,8 @@ class Create extends Base
         Executor $executor,
         array $platform,
         Authorization $authorization,
+        DeleteEvent $queueForDeletes,
+        int $executionsRetentionCount,
     ) {
         $async = \strval($async) === 'true' || \strval($async) === '1';
 
@@ -164,6 +168,7 @@ class Create extends Base
             throw new Exception($validator->getDescription(), 400);
         }
 
+        /* @var Document $function */
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         $isAPIKey = User::isApp($authorization->getRoles());
@@ -340,6 +345,13 @@ class Create extends Base
                 $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
 
+            $this->enqueueDeletes(
+                $project,
+                $function->getSequence(),
+                $executionsRetentionCount,
+                $queueForDeletes
+            );
+
             return $response
                 ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
                 ->dynamic($execution, Response::MODEL_EXECUTION);
@@ -513,8 +525,32 @@ class Create extends Base
             }
         }
 
+        $this->enqueueDeletes(
+            $project,
+            $function->getSequence(),
+            $executionsRetentionCount,
+            $queueForDeletes
+        );
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($execution, Response::MODEL_EXECUTION);
+    }
+
+    private function enqueueDeletes(
+        Document $project,
+        string $resourceId,
+        int $executionsRetentionCount,
+        DeleteEvent $queueForDeletes
+    ): void {
+        /* cleanup */
+        if ($executionsRetentionCount > 0 && ENABLE_EXECUTIONS_LIMIT_ON_ROUTE) {
+            $queueForDeletes
+                ->setProject($project)
+                ->setResource($resourceId)
+                ->setResourceType(RESOURCE_TYPE_FUNCTIONS)
+                ->setType(DELETE_TYPE_EXECUTIONS_LIMIT)
+                ->trigger();
+        }
     }
 }
