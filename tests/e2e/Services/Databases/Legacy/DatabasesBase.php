@@ -2388,7 +2388,6 @@ trait DatabasesBase
                 Query::select(['title', 'releaseYear', '$id'])->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
-            'cache' => true,
             'ttl' => 30,
         ]);
 
@@ -2414,7 +2413,6 @@ trait DatabasesBase
                 Query::select(['title', 'releaseYear', '$id'])->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
-            'cache' => true,
             'ttl' => 30,
         ]);
 
@@ -2438,7 +2436,7 @@ trait DatabasesBase
                 Query::select(['title', 'releaseYear', '$id'])->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
-            'cache' => true,
+            'ttl' => 30,
             'total' => false,
         ]);
 
@@ -2464,7 +2462,7 @@ trait DatabasesBase
                 Query::select(['title'])->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
-            'cache' => true,
+            'ttl' => 30,
         ]);
 
         $this->assertEquals(200, $documents4['headers']['status-code']);
@@ -2488,7 +2486,6 @@ trait DatabasesBase
                 Query::select(['title', 'releaseYear', '$id'])->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
-            'cache' => false,
         ]);
 
         $this->assertEquals(200, $documents5['headers']['status-code']);
@@ -2508,7 +2505,7 @@ trait DatabasesBase
                 Query::select(['title', 'releaseYear', '$id'])->toString(),
                 Query::orderAsc('releaseYear')->toString(),
             ],
-            'cache' => true,
+            'ttl' => 30,
         ]);
 
         $this->assertEquals(200, $documents6['headers']['status-code']);
