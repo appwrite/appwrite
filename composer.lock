@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "33da844fdf5648d1d1a027dfb6ae42bc",
+    "content-hash": "cfb1d5a7c8f50d37a36732d15f3641b9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "15.1.0",
+            "version": "19.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "c438b3885071ac7c0329199dce5e6f6a24dd215b"
+                "reference": "8738e812062f899c85b2598eef43d6a247f08a56"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/c438b3885071ac7c0329199dce5e6f6a24dd215b",
-                "reference": "c438b3885071ac7c0329199dce5e6f6a24dd215b",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/8738e812062f899c85b2598eef43d6a247f08a56",
+                "reference": "8738e812062f899c85b2598eef43d6a247f08a56",
                 "shasum": ""
             },
             "require": {
@@ -87,7 +87,7 @@
                 "php": ">=7.1.0"
             },
             "require-dev": {
-                "mockery/mockery": "^1.6.6",
+                "mockery/mockery": "^1.6.12",
                 "phpunit/phpunit": "^10"
             },
             "type": "library",
@@ -104,10 +104,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/15.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/19.1.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2025-08-01T04:50:51+00:00"
+            "time": "2025-12-18T08:07:43+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -1360,16 +1360,16 @@
         },
         {
             "name": "open-telemetry/exporter-otlp",
-            "version": "1.3.3",
+            "version": "1.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/exporter-otlp.git",
-                "reference": "07b02bc71838463f6edcc78d3485c04b48fb263d"
+                "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/07b02bc71838463f6edcc78d3485c04b48fb263d",
-                "reference": "07b02bc71838463f6edcc78d3485c04b48fb263d",
+                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
+                "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
                 "shasum": ""
             },
             "require": {
@@ -1420,7 +1420,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-11-13T08:04:37+00:00"
+            "time": "2026-01-15T09:31:34+00:00"
         },
         {
             "name": "open-telemetry/gen-otlp-protobuf",
@@ -1487,16 +1487,16 @@
         },
         {
             "name": "open-telemetry/sdk",
-            "version": "1.10.0",
+            "version": "1.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
-                "reference": "3dfc3d1ad729ec7eb25f1b9a4ae39fe779affa99"
+                "reference": "d91f21addcdb42da9a451c002777f8318432461a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/3dfc3d1ad729ec7eb25f1b9a4ae39fe779affa99",
-                "reference": "3dfc3d1ad729ec7eb25f1b9a4ae39fe779affa99",
+                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/d91f21addcdb42da9a451c002777f8318432461a",
+                "reference": "d91f21addcdb42da9a451c002777f8318432461a",
                 "shasum": ""
             },
             "require": {
@@ -1580,7 +1580,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-11-25T10:59:15+00:00"
+            "time": "2026-01-15T11:21:03+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
@@ -3501,6 +3501,75 @@
             "time": "2026-01-15T02:09:49+00:00"
         },
         {
+            "name": "utopia-php/agents",
+            "version": "dev-chore-bump-fetch",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/agents.git",
+                "reference": "2e6a480a4fd0c08480a0251bd1a5bcab057c89b5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/agents/zipball/2e6a480a4fd0c08480a0251bd1a5bcab057c89b5",
+                "reference": "2e6a480a4fd0c08480a0251bd1a5bcab057c89b5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.3",
+                "utopia-php/fetch": "0.5.*"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.9.x-dev",
+                "phpunit/phpunit": "^9.3",
+                "vimeo/psalm": "4.0.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Agents\\": "src/Agents"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\Agents\\": "tests/Agents"
+                }
+            },
+            "scripts": {
+                "check": [
+                    "./vendor/bin/phpstan analyse --level max src tests"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Utopia PHP",
+                    "email": "team@appwrite.io"
+                }
+            ],
+            "description": "A simple PHP AI agents library",
+            "keywords": [
+                "agents",
+                "ai",
+                "automation",
+                "machine-learning",
+                "php"
+            ],
+            "support": {
+                "source": "https://github.com/utopia-php/agents/tree/chore-bump-fetch",
+                "issues": "https://github.com/utopia-php/agents/issues"
+            },
+            "time": "2026-01-13T09:29:32+00:00"
+        },
+        {
             "name": "utopia-php/analytics",
             "version": "0.10.2",
             "source": {
@@ -3562,7 +3631,7 @@
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/database": "3.*",
+                "utopia-php/database": "4.*",
                 "utopia-php/fetch": "0.5.*",
                 "utopia-php/validators": "0.2.*"
             },
@@ -4511,25 +4580,25 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.4.3",
+            "version": "dev-multitype-db",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "52ca4234d8229b68e27e052248734a08784d9d3d"
+                "reference": "0d0129f15d4daaf6ee14ac361a60036997569382"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/52ca4234d8229b68e27e052248734a08784d9d3d",
-                "reference": "52ca4234d8229b68e27e052248734a08784d9d3d",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0d0129f15d4daaf6ee14ac361a60036997569382",
+                "reference": "0d0129f15d4daaf6ee14ac361a60036997569382",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "15.*",
+                "appwrite/appwrite": "19.*",
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
                 "utopia-php/console": "0.0.*",
-                "utopia-php/database": "3.*",
+                "utopia-php/database": "4.*",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/storage": "0.18.*"
             },
@@ -4546,7 +4615,25 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Migration"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "./vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ],
+                "check": [
+                    "./vendor/bin/phpstan analyse --level 3 src tests --memory-limit 2G"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -4559,10 +4646,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.4.3"
+                "source": "https://github.com/utopia-php/migration/tree/multitype-db",
+                "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-01-13T09:51:08+00:00"
+            "time": "2026-01-19T07:27:18+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8981,9 +9068,25 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/agents",
+            "version": "dev-chore-bump-fetch",
+            "alias": "0.4.7",
+            "alias_normalized": "0.4.7.0"
+        },
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-multitype-db",
+            "alias": "1.4.5",
+            "alias_normalized": "1.4.5.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/agents": 20,
+        "utopia-php/migration": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -9007,5 +9110,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
