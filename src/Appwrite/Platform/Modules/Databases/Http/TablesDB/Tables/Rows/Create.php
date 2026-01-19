@@ -112,6 +112,7 @@ class Create extends DocumentCreate
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('eventProcessor')
             ->callback($this->action(...));
     }
 }
