@@ -166,7 +166,7 @@ class Create extends Action
                 }
 
                 if ($attributeStatus !== 'available') {
-                        throw new Exception($this->getParentNotAvailableException(), params: [$oldAttributes[$attributeIndex]['key']]);
+                    throw new Exception($this->getParentNotAvailableException(), params: [$oldAttributes[$attributeIndex]['key']]);
                 }
 
                 if (empty($lengths[$i])) {
