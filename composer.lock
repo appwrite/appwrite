@@ -1492,16 +1492,16 @@
         },
         {
             "name": "open-telemetry/sdk",
-            "version": "1.10.0",
+            "version": "1.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
-                "reference": "3dfc3d1ad729ec7eb25f1b9a4ae39fe779affa99"
+                "reference": "d91f21addcdb42da9a451c002777f8318432461a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/3dfc3d1ad729ec7eb25f1b9a4ae39fe779affa99",
-                "reference": "3dfc3d1ad729ec7eb25f1b9a4ae39fe779affa99",
+                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/d91f21addcdb42da9a451c002777f8318432461a",
+                "reference": "d91f21addcdb42da9a451c002777f8318432461a",
                 "shasum": ""
             },
             "require": {
@@ -1585,7 +1585,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-11-25T10:59:15+00:00"
+            "time": "2026-01-15T11:21:03+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
@@ -3899,16 +3899,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "4.5.3",
+            "version": "4.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "78f7c97e12872b206c4ee6bc8cdc342654b7568c"
+                "reference": "b5c16caf4f6b12fa2c04d5a48f6e5785c99da8df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/78f7c97e12872b206c4ee6bc8cdc342654b7568c",
-                "reference": "78f7c97e12872b206c4ee6bc8cdc342654b7568c",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b5c16caf4f6b12fa2c04d5a48f6e5785c99da8df",
+                "reference": "b5c16caf4f6b12fa2c04d5a48f6e5785c99da8df",
                 "shasum": ""
             },
             "require": {
@@ -3951,9 +3951,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/4.5.3"
+                "source": "https://github.com/utopia-php/database/tree/4.6.0"
             },
-            "time": "2026-01-16T08:45:47+00:00"
+            "time": "2026-01-16T12:35:16+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -9013,5 +9013,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
