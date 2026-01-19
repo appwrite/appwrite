@@ -9,9 +9,9 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Columns;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Swoole\Response as SwooleResponse;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Boolean;
 
 class XList extends AttributesXList

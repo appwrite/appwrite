@@ -37,7 +37,7 @@ class XList extends TransactionsList
                 group: 'transactions',
                 name: 'listTransactions',
                 description: '/docs/references/documentsdb/list-transactions.md',
-                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

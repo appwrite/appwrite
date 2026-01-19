@@ -77,7 +77,7 @@ class Create extends DocumentCreate
                     name: 'createDocuments',
                     desc: 'Create documents',
                     description: '/docs/references/documentsdb/create-documents.md',
-                    auth: [AuthType::ADMIN, AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,
@@ -109,6 +109,7 @@ class Create extends DocumentCreate
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

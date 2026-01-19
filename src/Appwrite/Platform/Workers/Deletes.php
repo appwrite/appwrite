@@ -552,48 +552,48 @@ class Deletes extends Action
             $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
             $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
 
-        $projectTables = !\in_array($dsn->getHost(), $sharedTables);
-        $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
-        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-        $databaseDSNKeys = ['database','documentsDatabase','vectorDatabase'];
+            $projectTables = !\in_array($dsn->getHost(), $sharedTables);
+            $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
+            $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
+            $databaseDSNKeys = ['database','documentsDatabase','vectorDatabase'];
 
-        $exectionActionPerDatabase = function (string $databaseDSNKey, $callback) use ($getDatabasesDB, $document) {
-            /**
-            * @var Database $dbForDatabases
-            */
-            $dbForDatabases = $getDatabasesDB(new Document(['database' => $document->getAttribute($databaseDSNKey)]), $document);
-            $callback($dbForDatabases);
-        };
+            $exectionActionPerDatabase = function (string $databaseDSNKey, $callback) use ($getDatabasesDB, $document) {
+                /**
+                * @var Database $dbForDatabases
+                */
+                $dbForDatabases = $getDatabasesDB(new Document(['database' => $document->getAttribute($databaseDSNKey)]), $document);
+                $callback($dbForDatabases);
+            };
 
-        batch(array_map(
-            fn ($databaseDSNKey) =>
-                fn () => $exectionActionPerDatabase(
-                    $databaseDSNKey,
-                    function (Database $dbForDatabases) use ($projectTables, $projectCollectionIds) {
-                        $dbForDatabases->foreach(
-                            Database::METADATA,
-                            function (Document $collection) use ($dbForDatabases, $projectTables, $projectCollectionIds) {
-                                try {
-                                    if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds, true)) {
-                                        $dbForDatabases->deleteCollection($collection->getId());
-                                    } else {
-                                        $this->deleteByGroup(
-                                            $collection->getId(),
-                                            [Query::orderAsc()],
-                                            database: $dbForDatabases
+            batch(array_map(
+                fn ($databaseDSNKey) =>
+                    fn () => $exectionActionPerDatabase(
+                        $databaseDSNKey,
+                        function (Database $dbForDatabases) use ($projectTables, $projectCollectionIds) {
+                            $dbForDatabases->foreach(
+                                Database::METADATA,
+                                function (Document $collection) use ($dbForDatabases, $projectTables, $projectCollectionIds) {
+                                    try {
+                                        if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds, true)) {
+                                            $dbForDatabases->deleteCollection($collection->getId());
+                                        } else {
+                                            $this->deleteByGroup(
+                                                $collection->getId(),
+                                                [Query::orderAsc()],
+                                                database: $dbForDatabases
+                                            );
+                                        }
+                                    } catch (Throwable $e) {
+                                        Console::error(
+                                            'Error deleting ' . $collection->getId() . ' ' . $e->getMessage()
                                         );
                                     }
-                                } catch (Throwable $e) {
-                                    Console::error(
-                                        'Error deleting ' . $collection->getId() . ' ' . $e->getMessage()
-                                    );
                                 }
-                            }
-                        );
-                    }
-                ),
-            $databaseDSNKeys
-        ));
+                            );
+                        }
+                    ),
+                $databaseDSNKeys
+            ));
 
             // Delete Platforms
             $this->deleteByGroup('platforms', [
@@ -646,30 +646,30 @@ class Deletes extends Action
                 Query::orderAsc()
             ], $dbForPlatform);
 
-        // Delete metadata table
-        if ($projectTables) {
-            batch(array_map(
-                fn ($databaseDSNKey) => fn () =>
-                    $exectionActionPerDatabase(
-                        $databaseDSNKey,
-                        fn (Database $dbForDatabases) =>
-                            $dbForDatabases->deleteCollection(Database::METADATA)
-                    ),
-                $databaseDSNKeys
-            ));
-        } elseif ($sharedTablesV1) {
-            $this->deleteByGroup(
-                Database::METADATA,
-                [
-                    Query::orderAsc()
-                ],
-                $dbForProject
-            );
-        } elseif ($sharedTablesV2) {
-            $queries = \array_map(
-                fn ($id) => Query::notEqual('$id', $id),
-                $projectCollectionIds
-            );
+            // Delete metadata table
+            if ($projectTables) {
+                batch(array_map(
+                    fn ($databaseDSNKey) => fn () =>
+                        $exectionActionPerDatabase(
+                            $databaseDSNKey,
+                            fn (Database $dbForDatabases) =>
+                                $dbForDatabases->deleteCollection(Database::METADATA)
+                        ),
+                    $databaseDSNKeys
+                ));
+            } elseif ($sharedTablesV1) {
+                $this->deleteByGroup(
+                    Database::METADATA,
+                    [
+                        Query::orderAsc()
+                    ],
+                    $dbForProject
+                );
+            } elseif ($sharedTablesV2) {
+                $queries = \array_map(
+                    fn ($id) => Query::notEqual('$id', $id),
+                    $projectCollectionIds
+                );
 
                 $queries[] = Query::orderAsc();
 

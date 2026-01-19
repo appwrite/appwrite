@@ -141,7 +141,7 @@ class Update extends Action
 
             try {
                 $dbForDatabases = $getDatabasesDB(new Document(['database' => $this->getDatabaseDSN($project)]));
-                $dbForDatabases->withTransaction(function () use ($dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
+                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $dbForProject, $transactionState, $queueForDeletes, $transactionId, &$transaction, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $queueForEvents, $queueForStatsUsage, $queueForRealtime, $queueForFunctions, $queueForWebhooks, $authorization) {
                     $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                         'status' => 'committing',
                     ])));
@@ -301,12 +301,14 @@ class Update extends Action
                     $data = $data->getArrayCopy();
                 }
 
+                // using a dbCache so only one time database is set with databaseInternalId
                 if (!isset($dbCache[$databaseInternalId])) {
-                    $databaseDoc = Authorization::skip(fn () => $dbForProject->findOne('databases', [
+                    $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
                         Query::equal('$sequence', [$databaseInternalId])
                     ]));
                     $dbCache[$databaseInternalId] = $getDatabasesDB($databaseDoc);
                 }
+
                 $dbForDatabases = $dbCache[$databaseInternalId];
 
                 $database = $authorization->skip(fn () => $dbForProject->findOne('databases', [

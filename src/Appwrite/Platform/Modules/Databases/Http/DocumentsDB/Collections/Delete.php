@@ -40,7 +40,7 @@ class Delete extends CollectionDelete
                 group: 'collections',
                 name: 'deleteCollection',
                 description: '/docs/references/documentsdb/delete-collection.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_NOCONTENT,
@@ -56,6 +56,7 @@ class Delete extends CollectionDelete
             ->inject('getDatabasesDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

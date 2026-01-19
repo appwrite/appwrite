@@ -17,6 +17,19 @@ class DatabasesPermissionsGuestTest extends Scope
     use SideClient;
     use DatabasesPermissionsScope;
 
+    private $authorization;
+
+    public function getAuthorization(): Authorization
+    {
+        if (isset($this->authorization)) {
+            return $this->authorization;
+        }
+
+        $this->authorization = new Authorization();
+
+        return $this->authorization;
+    }
+
     public function createCollection(): array
     {
         $database = $this->client->call(Client::METHOD_POST, '/documentsdb', array_merge([
@@ -98,8 +111,8 @@ class DatabasesPermissionsGuestTest extends Scope
         $this->assertEquals(201, $publicResponse['headers']['status-code']);
         $this->assertEquals(201, $privateResponse['headers']['status-code']);
 
-        $roles = Authorization::getRoles();
-        Authorization::cleanRoles();
+        $roles = $this->getAuthorization()->getRoles();
+        $this->getAuthorization()->cleanRoles();
 
         $publicDocuments = $this->client->call(Client::METHOD_GET, '/documentsdb/' . $databaseId . '/collections/' . $publicCollectionId  . '/documents', [
             'content-type' => 'application/json',
@@ -121,7 +134,7 @@ class DatabasesPermissionsGuestTest extends Scope
         }
 
         foreach ($roles as $role) {
-            Authorization::setRole($role);
+            $this->getAuthorization()->addRole($role);
         }
     }
 
@@ -132,8 +145,8 @@ class DatabasesPermissionsGuestTest extends Scope
         $privateCollectionId = $data['privateCollectionId'];
         $databaseId = $data['databaseId'];
 
-        $roles = Authorization::getRoles();
-        Authorization::cleanRoles();
+        $roles = $this->getAuthorization()->getRoles();
+        $this->getAuthorization()->cleanRoles();
 
         $publicResponse = $this->client->call(Client::METHOD_POST, '/documentsdb/' . $databaseId . '/collections/' . $publicCollectionId . '/documents', [
             'content-type' => 'application/json',
@@ -209,7 +222,7 @@ class DatabasesPermissionsGuestTest extends Scope
         $this->assertEquals(401, $privateDocument['headers']['status-code']);
 
         foreach ($roles as $role) {
-            Authorization::setRole($role);
+            $this->getAuthorization()->addRole($role);
         }
     }
 

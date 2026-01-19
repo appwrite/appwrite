@@ -45,7 +45,7 @@ class Delete extends IndexDelete
                 group: $this->getSdkGroup(),
                 name: 'deleteIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/documentsdb/delete-index.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_NOCONTENT,
@@ -61,6 +61,7 @@ class Delete extends IndexDelete
             ->inject('dbForProject')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

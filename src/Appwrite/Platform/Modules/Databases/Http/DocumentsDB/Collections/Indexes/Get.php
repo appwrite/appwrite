@@ -38,7 +38,7 @@ class Get extends IndexGet
                 group: $this->getSdkGroup(),
                 name: 'getIndex', // getName needs to be different from parent action to avoid conflict in path name
                 description: '/docs/references/documentsdb/get-index.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -52,6 +52,7 @@ class Get extends IndexGet
             ->param('key', null, new Key(), 'Index Key.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

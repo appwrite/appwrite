@@ -217,10 +217,16 @@ Server::setResource('getLogsDB', function (Group $pools, Cache $cache, Authoriza
     };
 }, ['pools', 'cache', 'authorization']);
 
-Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register, Document $project) {
-    return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project): Database {
+Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register, Document $project, Authorization $authorization) {
+    return function (Document $database, ?Document $projectDocument = null) use ($cache, $register, $project, $authorization): Database {
         $projectDocument ??= $project;
         $databaseType = $database->getAttribute('database', '');
+
+        // Backwards‑compatibility: older or seeded legacy databases may not have a DSN stored
+        // in the "database" attribute. In that case, fall back to the project's database DSN.
+        if ($databaseType === '') {
+            $databaseType = $projectDocument->getAttribute('database', '');
+        }
 
         try {
             $databaseDSN = new DSN($databaseType);
@@ -240,6 +246,9 @@ Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register
 
         $adapter = new DatabasePool($pool);
         $database = new Database($adapter, $cache);
+        $database
+            ->setDatabase(APP_DATABASE)
+            ->setAuthorization($authorization);
 
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
@@ -258,7 +267,7 @@ Server::setResource('getDatabasesDB', function (Cache $cache, Registry $register
         $database->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_WORKER);
         return $database;
     };
-}, ['cache', 'register', 'project']);
+}, ['cache', 'register', 'project', 'authorization']);
 
 Server::setResource('abuseRetention', function () {
     return time() - (int) System::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400); // 1 day

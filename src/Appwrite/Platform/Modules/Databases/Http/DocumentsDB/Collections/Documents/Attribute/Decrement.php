@@ -67,6 +67,7 @@ class Decrement extends DecrementDocumentAttribute
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

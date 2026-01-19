@@ -30,8 +30,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
-use Utopia\Agents\Adapters\Ollama;
-use Utopia\Agents\Agent;
 use Utopia\App;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
@@ -579,11 +577,12 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authoriz
     return $database;
 }, ['pools', 'cache', 'authorization']);
 
-App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, StatsUsage $queueForStatsUsage) {
+App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Document $project, Request $request, StatsUsage $queueForStatsUsage, Authorization $authorization) {
 
-    return function (Document $database) use ($pools, $cache, $project, $request, $queueForStatsUsage): Database {
+    return function (Document $database) use ($pools, $cache, $project, $request, $queueForStatsUsage, $authorization): Database {
         $databaseDSN = $database->getAttribute('database', '');
         $databaseType = $database->getAttribute('type', '');
+
         try {
             $databaseDSN = new DSN($databaseDSN);
         } catch (\InvalidArgumentException) {
@@ -605,6 +604,8 @@ App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Documen
         $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
 
         $database
+            ->setDatabase(APP_DATABASE)
+            ->setAuthorization($authorization)
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId())
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS_API)
@@ -705,7 +706,7 @@ App::setResource('getDatabasesDB', function (Group $pools, Cache $cache, Documen
         return $database;
     };
 
-}, ['pools','cache','project','request','queueForStatsUsage']);
+}, ['pools','cache','project','request','queueForStatsUsage','authorization']);
 
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform, $cache, Authorization $authorization) {
@@ -1286,9 +1287,9 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request, A
     return new Document([]);
 }, ['project', 'dbForProject', 'request', 'authorization']);
 
-App::setResource('transactionState', function (Database $dbForProject, Authorization $authorization) {
-    return new TransactionState($dbForProject, $authorization);
-}, ['dbForProject', 'authorization']);
+App::setResource('transactionState', function (Database $dbForProject, Authorization $authorization, callable $getDatabasesDB) {
+    return new TransactionState($dbForProject, $authorization, $getDatabasesDB);
+}, ['dbForProject', 'authorization', 'getDatabasesDB']);
 
 App::setResource('executionsRetentionCount', function (Document $project, array $plan) {
     if ($project->getId() === 'console' || empty($plan)) {

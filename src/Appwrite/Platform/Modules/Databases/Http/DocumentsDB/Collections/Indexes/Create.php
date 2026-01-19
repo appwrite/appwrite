@@ -46,7 +46,7 @@ class Create extends IndexCreate
                 group: $this->getSdkGroup(),
                 name: 'createIndex',
                 description: '/docs/references/documentsdb/create-index.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
@@ -67,6 +67,7 @@ class Create extends IndexCreate
             ->inject('getDatabasesDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }
