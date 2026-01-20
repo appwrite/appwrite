@@ -26,6 +26,7 @@ use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
+use Utopia\Migration\Sources\JSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
@@ -578,6 +579,282 @@ App::post('/v1/migrations/csv/exports')
                 'enclosure' => $enclosure,
                 'escape' => $escape,
                 'header' => $header,
+                'notify' => $notify,
+                'userInternalId' => $user->getSequence(),
+            ],
+        ]));
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
+
+        $queueForMigrations
+            ->setMigration($migration)
+            ->setProject($project)
+            ->setPlatform($platform)
+            ->trigger();
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+App::post('/v1/migrations/json/imports')
+    ->groups(['api', 'migrations'])
+    ->desc('Import documents from a JSON')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.[migrationId].create')
+    ->label('audits.event', 'migration.create')
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        group: null,
+        name: 'createJSONImport',
+        description: '/docs/references/migrations/migration-json-import.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
+    ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->inject('project')
+    ->inject('platform')
+    ->inject('deviceForFiles')
+    ->inject('deviceForMigrations')
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (
+        string $bucketId,
+        string $fileId,
+        string $resourceId,
+        bool $internalFile,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Authorization $authorization,
+        Document $project,
+        array $platform,
+        Device $deviceForFiles,
+        Device $deviceForMigrations,
+        Event $queueForEvents,
+        Migration $queueForMigrations
+    ) {
+        $bucket = $authorization->skip(function () use ($internalFile, $dbForPlatform, $dbForProject, $bucketId) {
+            if ($internalFile) {
+                return $dbForPlatform->getDocument('buckets', 'default');
+            }
+            return $dbForProject->getDocument('buckets', $bucketId);
+        });
+
+        if ($bucket->isEmpty()) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $file = $authorization->skip(fn () => $internalFile ? $dbForPlatform->getDocument('bucket_' . $bucket->getSequence(), $fileId) : $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $path = $file->getAttribute('path', '');
+        if (!$deviceForFiles->exists($path)) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
+        }
+
+        // No encryption or compression on files above 20MB.
+        $hasEncryption = !empty($file->getAttribute('openSSLCipher'));
+        $compression = $file->getAttribute('algorithm', Compression::NONE);
+        $hasCompression = $compression !== Compression::NONE;
+
+        $migrationId = ID::unique();
+        $newPath = $deviceForMigrations->getPath($migrationId . '_' . $fileId . '.json');
+
+        if ($hasEncryption || $hasCompression) {
+            $source = $deviceForFiles->read($path);
+
+            if ($hasEncryption) {
+                $source = OpenSSL::decrypt(
+                    $source,
+                    $file->getAttribute('openSSLCipher'),
+                    System::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                    0,
+                    hex2bin($file->getAttribute('openSSLIV')),
+                    hex2bin($file->getAttribute('openSSLTag'))
+                );
+            }
+
+            if ($hasCompression) {
+                switch ($compression) {
+                    case Compression::ZSTD:
+                        $source = (new Zstd())->decompress($source);
+                        break;
+                    case Compression::GZIP:
+                        $source = (new GZIP())->decompress($source);
+                        break;
+                }
+            }
+
+            // Manual write after decryption and/or decompression
+            if (!$deviceForMigrations->write($newPath, $source, 'application/json')) {
+                throw new \Exception('Unable to copy file');
+            }
+        } elseif (!$deviceForFiles->transfer($path, $newPath, $deviceForMigrations)) {
+            throw new \Exception('Unable to copy file');
+        }
+
+        $fileSize = $deviceForMigrations->getFileSize($newPath);
+        $resources = Transfer::extractServices([Transfer::GROUP_DATABASES]);
+
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => $migrationId,
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => JSON::getName(),
+            'destination' => Appwrite::getName(),
+            'resources' => $resources,
+            'resourceId' => $resourceId,
+            'resourceType' => Resource::TYPE_DATABASE,
+            'statusCounters' => '{}',
+            'resourceData' => '{}',
+            'errors' => [],
+            'options' => [
+                'path' => $newPath,
+                'size' => $fileSize,
+            ],
+        ]));
+
+        $queueForEvents->setParam('migrationId', $migration->getId());
+
+        $queueForMigrations
+            ->setMigration($migration)
+            ->setProject($project)
+            ->setProject($project)
+            ->trigger();
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
+            ->dynamic($migration, Response::MODEL_MIGRATION);
+    });
+
+App::post('/v1/migrations/json/exports')
+    ->groups(['api', 'migrations'])
+    ->desc('Export documents to JSON')
+    ->label('scope', 'migrations.write')
+    ->label('event', 'migrations.[migrationId].create')
+    ->label('audits.event', 'migration.create')
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        group: null,
+        name: 'createJSONExport',
+        description: '/docs/references/migrations/migration-json-export.md',
+        auth: [AuthType::ADMIN],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_ACCEPTED,
+                model: Response::MODEL_MIGRATION,
+            )
+        ]
+    ))
+    ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database to export.')
+    ->param('filename', '', new Text(255), 'The name of the file to be created for the export, excluding the .csv extension.')
+    ->param('columns', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of attributes to export. If empty, all attributes will be exported. You can use the `*` wildcard to export all attributes from the collection.', true)
+    ->param('queries', [], new ArrayList(new Text(0)), 'Array of query strings generated using the Query class provided by the SDK to filter documents to export. [Learn more about queries](https://appwrite.io/docs/databases#querying-documents). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('delimiter', ',', new Text(1), 'The character that separates each column value. Default is comma.', true)
+    ->param('enclosure', '"', new Text(1), 'The character that encloses each column value. Default is double quotes.', true)
+    ->param('escape', '"', new Text(1), 'The escape character for the enclosure character. Default is double quotes.', true)
+    ->param('header', true, new Boolean(), 'Whether to include the header row with column names. Default is true.', true)
+    ->param('notify', true, new Boolean(), 'Set to true to receive an email when the export is complete. Default is true.', true)
+    ->inject('user')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForPlatform')
+    ->inject('authorization')
+    ->inject('project')
+    ->inject('platform')
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (
+        string $resourceId,
+        string $filename,
+        array $columns,
+        array $queries,
+        string $delimiter,
+        string $enclosure,
+        string $escape,
+        bool $header,
+        bool $notify,
+        Document $user,
+        Response $response,
+        Database $dbForProject,
+        Database $dbForPlatform,
+        Authorization $authorization,
+        Document $project,
+        array $platform,
+        Event $queueForEvents,
+        Migration $queueForMigrations
+    ) {
+        try {
+            $parsedQueries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'default'));
+        if ($bucket->isEmpty()) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        [$databaseId, $collectionId] = \explode(':', $resourceId, 2);
+        if (empty($databaseId)) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+        if (empty($collectionId)) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $validator = new Documents(
+            attributes: $collection->getAttribute('attributes', []),
+            indexes: $collection->getAttribute('indexes', []),
+            idAttributeType: $dbForProject->getAdapter()->getIdAttributeType(),
+        );
+
+        if (!$validator->isValid($parsedQueries)) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+        }
+
+        $migration = $dbForProject->createDocument('migrations', new Document([
+            '$id' => ID::unique(),
+            'status' => 'pending',
+            'stage' => 'init',
+            'source' => Appwrite::getName(),
+            'destination' => JSON::getName(),
+            'resources' => Transfer::extractServices([Transfer::GROUP_DATABASES]),
+            'resourceId' => $resourceId,
+            'resourceType' => Resource::TYPE_DATABASE,
+            'statusCounters' => '{}',
+            'resourceData' => '{}',
+            'errors' => [],
+            'options' => [
+                'bucketId' => 'default', // Always use internal bucket
+                'filename' => $filename,
+                'columns' => $columns,
+                'queries' => $queries,
                 'notify' => $notify,
                 'userInternalId' => $user->getSequence(),
             ],
