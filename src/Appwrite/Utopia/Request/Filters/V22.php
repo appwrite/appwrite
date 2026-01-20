@@ -76,8 +76,7 @@ class V22 extends Filter
                     foreach ($selects as $select) {
                         $queries[] = Query::select($select);
                     }
-                }
-                else {
+                } else {
                     $queries[] = $query;
                 }
 
