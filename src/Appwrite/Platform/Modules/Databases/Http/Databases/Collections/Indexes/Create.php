@@ -206,7 +206,6 @@ class Create extends Action
             $dbForDatabases->getAdapter()->getSupportForAttributes(),
             $dbForDatabases->getAdapter()->getSupportForMultipleFulltextIndexes(),
             $dbForDatabases->getAdapter()->getSupportForIdenticalIndexes(),
-            $dbForDatabases->getAdapter()->getSupportForObject(),
             $dbForProject->getAdapter()->getSupportForObjectIndexes(),
             $dbForProject->getAdapter()->getSupportForTrigramIndex(),
             $dbForProject->getAdapter()->getSupportForSpatialAttributes(),

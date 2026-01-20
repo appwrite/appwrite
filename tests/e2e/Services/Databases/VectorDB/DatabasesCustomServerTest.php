@@ -589,29 +589,31 @@ class DatabasesCustomServerTest extends Scope
         $collectionId = $col['body']['$id'];
 
         // Success: two embeddings
-        $ok = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'model' => 'embeddinggemma',
-            'texts' => [
-                'hello world',
-                'second sentence',
-            ],
-        ]);
-        $this->assertEquals(200, $ok['headers']['status-code']);
-        $this->assertIsInt($ok['body']['total'] ?? 0);
-        $this->assertEquals(2, $ok['body']['total']);
-        $this->assertIsArray($ok['body']['embeddings']);
-        $this->assertCount(2, $ok['body']['embeddings']);
-        foreach ($ok['body']['embeddings'] as $embed) {
-            $this->assertIsString($embed['model']);
-            $this->assertIsInt($embed['dimension']);
-            $this->assertIsArray($embed['embedding']);
-            $this->assertGreaterThan(0, count($embed['embedding']));
-            $this->assertArrayHasKey('error', $embed);
-        }
+        $this->assertEventually(function () {
+            $ok = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'model' => 'embeddinggemma',
+                'texts' => [
+                    'hello world',
+                    'second sentence',
+                ],
+            ]);
+            $this->assertEquals(200, $ok['headers']['status-code']);
+            $this->assertIsInt($ok['body']['total'] ?? 0);
+            $this->assertEquals(2, $ok['body']['total']);
+            $this->assertIsArray($ok['body']['embeddings']);
+            $this->assertCount(2, $ok['body']['embeddings']);
+            foreach ($ok['body']['embeddings'] as $embed) {
+                $this->assertIsString($embed['model']);
+                $this->assertIsInt($embed['dimension']);
+                $this->assertIsArray($embed['embedding']);
+                $this->assertGreaterThan(0, count($embed['embedding']));
+                $this->assertArrayHasKey('error', $embed);
+            }
+        }, 3000, 100);
 
         // Error: missing texts payload
         $missingTexts = $this->client->call(Client::METHOD_POST, "/vectordb/embeddings/text", [
