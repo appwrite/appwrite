@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\VectorDB\Collections;
 
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Action as CollectionAction;
 use Appwrite\SDK\AuthType;
@@ -9,6 +10,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
@@ -67,12 +69,13 @@ class Update extends CollectionAction
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, ?string $name, ?int $dimensions, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, \Utopia\Database\Database $dbForProject, callable $getDatabasesDB, \Appwrite\Event\Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, ?string $name, ?int $dimensions, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }

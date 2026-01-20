@@ -31,6 +31,8 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
+use Utopia\Agents\Adapters\Ollama;
+use Utopia\Agents\Agent;
 use Utopia\App;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
@@ -1537,3 +1539,9 @@ App::setResource('executionsRetentionCount', function (Document $project, array 
 
     return (int) ($plan['executionsRetentionCount'] ?? 100);
 }, ['project', 'plan']);
+
+App::setResource('embeddingAgent', function ($register) {
+    $adapter = new Ollama();
+    $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://ollama:11434/api/embed'));
+    return new Agent($adapter);
+}, ['register']);

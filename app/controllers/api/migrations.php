@@ -439,7 +439,7 @@ App::post('/v1/migrations/csv/imports')
         // getting databasetype
         $resources = explode(':', $resourceId);
         $databaseId = $resources[0];
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $databaseType = $database->getAttribute('type');
         if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database type not supported for csv');
@@ -577,7 +577,7 @@ App::post('/v1/migrations/csv/exports')
         // getting databasetype
         $resources = explode(':', $resourceId);
         $databaseId = $resources[0];
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $databaseType = $database->getAttribute('type');
         if (!in_array($databaseType, CSV_ALLOWED_DATABASE_TYPES)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Database type not supported for csv');

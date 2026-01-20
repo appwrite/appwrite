@@ -56,6 +56,7 @@ class Delete extends CollectionDelete
             ->inject('getDatabasesDB')
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }
