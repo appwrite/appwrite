@@ -1,5 +1,10 @@
 # Change Log
 
+## 13.0.1
+
+- Fix `project init` command leading to Cannot convert to BigInt error
+- Fix filter out unwanted attributes being pulled in the config file
+
 ## 13.0.0
 
 - Mark release as stable

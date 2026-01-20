@@ -10,12 +10,12 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
-use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\SDK\Method;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
@@ -31,7 +31,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
-use Utopia\Queue\Publisher;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
@@ -73,171 +72,6 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
         }
     }
     return $label;
-};
-
-/**
- * Get database type prefixed metric
- * Prefixes the metric with database type if it's not legacy or tablesdb
- *
- * @param string $databaseType Database type (e.g., 'documentsdb', 'tablesdb', 'legacy', '')
- * @param string $metric Base metric constant (e.g., METRIC_DATABASES, METRIC_COLLECTIONS)
- * @return string Prefixed metric or original metric if no prefix needed
- */
-$getDatabaseTypePrefixedMetric = function (string $databaseType, string $metric): string {
-    return implode('.', array_filter([$databaseType, $metric]));
-};
-
-/**
- * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
- *
- * Accounts can be created in many ways beyond `createAccount`
- * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
- */
-$eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
-    // Only trigger events for user creation with the database listener.
-    if ($document->getCollection() !== 'users') {
-        return;
-    }
-
-    $queueForEvents
-        ->setEvent('users.[userId].create')
-        ->setParam('userId', $document->getId())
-        ->setPayload($response->output($document, Response::MODEL_USER));
-
-    // Trigger functions, webhooks, and realtime events
-    $queueForFunctions
-        ->from($queueForEvents)
-        ->trigger();
-
-
-    /** Trigger webhooks events only if a project has them enabled */
-    if (!empty($project->getAttribute('webhooks'))) {
-        $queueForWebhooks
-            ->from($queueForEvents)
-            ->trigger();
-    }
-
-    /** Trigger realtime events only for non console events */
-    if ($queueForEvents->getProject()->getId() !== 'console') {
-        $queueForRealtime
-            ->from($queueForEvents)
-            ->trigger();
-    }
-};
-
-$usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage, string $databaseType) use ($getDatabaseTypePrefixedMetric) {
-    $value = 1;
-
-    switch ($event) {
-        case Database::EVENT_DOCUMENT_DELETE:
-            $value = -1;
-            break;
-        case Database::EVENT_DOCUMENTS_DELETE:
-            $value = -1 * $document->getAttribute('modified', 0);
-            break;
-        case Database::EVENT_DOCUMENTS_CREATE:
-            $value = $document->getAttribute('modified', 0);
-            break;
-        case Database::EVENT_DOCUMENTS_UPSERT:
-            $value = $document->getAttribute('created', 0);
-            break;
-    }
-
-    switch (true) {
-        case $document->getCollection() === 'teams':
-            $queueForStatsUsage->addMetric(METRIC_TEAMS, $value); // per project
-            break;
-        case $document->getCollection() === 'users':
-            $queueForStatsUsage->addMetric(METRIC_USERS, $value); // per project
-            if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage->addReduce($document);
-            }
-            break;
-        case $document->getCollection() === 'sessions': // sessions
-            $queueForStatsUsage->addMetric(METRIC_SESSIONS, $value); //per project
-            break;
-        case $document->getCollection() === 'databases': // databases
-            $metric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASES);
-            $queueForStatsUsage->addMetric($metric, $value); // per project
-
-            if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage->addReduce($document);
-            }
-            break;
-        case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
-            $parts = explode('_', $document->getCollection());
-            $databaseInternalId = $parts[1] ?? 0;
-            $collectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_COLLECTIONS);
-            $databaseIdCollectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTIONS);
-            $queueForStatsUsage
-                ->addMetric($collectionMetric, $value) // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdCollectionMetric), $value);
-
-            if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage->addReduce($document);
-            }
-            break;
-            // for databases route documents are getting created via getDatabasesDB and stats are maintained in the resources
-            // but keeping it since other routes might created documents still directly via dbForProject
-        case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): //documents
-            $parts = explode('_', $document->getCollection());
-            $databaseInternalId   = $parts[1] ?? 0;
-            $collectionInternalId = $parts[3] ?? 0;
-            $documentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DOCUMENTS);
-            $databaseIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_DOCUMENTS);
-            $databaseIdCollectionIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
-            $queueForStatsUsage
-                ->addMetric($documentsMetric, $value)  // per project
-                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
-                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
-            break;
-        case $document->getCollection() === 'buckets': //buckets
-            $queueForStatsUsage
-                ->addMetric(METRIC_BUCKETS, $value); // per project
-            if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage
-                    ->addReduce($document);
-            }
-            break;
-        case str_starts_with($document->getCollection(), 'bucket_'): // files
-            $parts = explode('_', $document->getCollection());
-            $bucketInternalId  = $parts[1];
-            $queueForStatsUsage
-                ->addMetric(METRIC_FILES, $value) // per project
-                ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value) // per project
-                ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES), $value) // per bucket
-                ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value); // per bucket
-            break;
-        case $document->getCollection() === 'functions':
-            $queueForStatsUsage
-                ->addMetric(METRIC_FUNCTIONS, $value); // per project
-
-            if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage
-                    ->addReduce($document);
-            }
-            break;
-        case $document->getCollection() === 'sites':
-            $queueForStatsUsage
-                ->addMetric(METRIC_SITES, $value); // per project
-
-            if ($event === Database::EVENT_DOCUMENT_DELETE) {
-                $queueForStatsUsage
-                    ->addReduce($document);
-            }
-            break;
-        case $document->getCollection() === 'deployments':
-            $queueForStatsUsage
-                ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
-                ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
-                ->addMetric(str_replace(['{resourceType}'], [$document->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value) // per function
-                ->addMetric(str_replace(['{resourceType}'], [$document->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value)
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $value) // per function
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
-            break;
-        default:
-            break;
-    }
 };
 
 App::init()
@@ -509,9 +343,6 @@ App::init()
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('publisher')
-    ->inject('publisherFunctions')
-    ->inject('publisherWebhooks')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForAudits')
@@ -521,7 +352,6 @@ App::init()
     ->inject('queueForStatsUsage')
     ->inject('queueForFunctions')
     ->inject('queueForMails')
-    ->inject('queueForMigrations')
     ->inject('dbForProject')
     ->inject('timelimit')
     ->inject('resourceToken')
@@ -532,7 +362,7 @@ App::init()
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Migration $queueForMigrations, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) use ($usageDatabaseListener, $eventDatabaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
 
         $route = $utopia->getRoute();
         $path = $route->getMatchedPath();
@@ -660,30 +490,6 @@ App::init()
         $queueForBuilds->setPlatform($platform);
         $queueForMails->setPlatform($platform);
 
-        // Clone the queues, to prevent events triggered by the database listener
-        // from overwriting the events that are supposed to be triggered in the shutdown hook.
-        $queueForEventsClone = new Event($publisher);
-        $queueForFunctions = new Func($publisherFunctions);
-        $queueForWebhooks = new Webhook($publisherWebhooks);
-        $queueForRealtime = new Realtime();
-
-        // to get consumed in the stats worker without calling to database
-        $queueForStatsUsage->setContext('database', new Document(['type' => $databaseType]));
-        $dbForProject
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
-            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
-            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
-            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage, $databaseType))
-            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
-                $project,
-                $document,
-                $response,
-                $queueForEventsClone->from($queueForEvents),
-                $queueForFunctions->from($queueForEvents),
-                $queueForWebhooks->from($queueForEvents),
-                $queueForRealtime->from($queueForEvents)
-            ));
 
         $useCache = $route->getLabel('cache', false);
         $storageCacheOperationsCounter = $telemetry->createCounter('storage.cache.operations.load');
@@ -848,7 +654,8 @@ App::shutdown()
     ->inject('dbForProject')
     ->inject('authorization')
     ->inject('timelimit')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit) use ($parseLabel) {
+    ->inject('eventProcessor')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -857,9 +664,15 @@ App::shutdown()
                 $queueForEvents->setPayload($responsePayload);
             }
 
-            $queueForFunctions
-                ->from($queueForEvents)
-                ->trigger();
+            // Get project and function/webhook events (cached)
+            $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
+            $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
+
+            // Generate events for this operation
+            $generatedEvents = Event::generateEvents(
+                $queueForEvents->getEvent(),
+                $queueForEvents->getParams()
+            );
 
             if ($project->getId() !== 'console') {
                 $queueForRealtime
@@ -867,15 +680,28 @@ App::shutdown()
                     ->trigger();
             }
 
-            /** Trigger webhooks events only if a project has them enabled
-             * A future optimisation is to only trigger webhooks if the webhook is "enabled"
-             * But it might have performance implications on the API due to the number of webhooks etc.
-             * Some profiling is needed to see if this is a problem.
-            */
-            if (!empty($project->getAttribute('webhooks'))) {
-                $queueForWebhooks
-                    ->from($queueForEvents)
-                    ->trigger();
+            // Only trigger functions if there are matching function events
+            if (!empty($functionsEvents)) {
+                foreach ($generatedEvents as $event) {
+                    if (isset($functionsEvents[$event])) {
+                        $queueForFunctions
+                            ->from($queueForEvents)
+                            ->trigger();
+                        break;
+                    }
+                }
+            }
+
+            // Only trigger webhooks if there are matching webhook events
+            if (!empty($webhooksEvents)) {
+                foreach ($generatedEvents as $event) {
+                    if (isset($webhooksEvents[$event])) {
+                        $queueForWebhooks
+                            ->from($queueForEvents)
+                            ->trigger();
+                        break;
+                    }
+                }
             }
         }
 
