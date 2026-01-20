@@ -15334,7 +15334,7 @@
                 "tags": [
                     "health"
                 ],
-                "description": false,
+                "description": "Get the number of audits that are waiting to be processed in the Appwrite internal queue server.",
                 "responses": {
                     "200": {
                         "description": "Health Queue",
@@ -15365,6 +15365,7 @@
                     ],
                     "packaging": false,
                     "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/health\/get-queue-audits.md",
                     "auth": {
                         "Project": [],
                         "Key": []
