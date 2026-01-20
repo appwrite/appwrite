@@ -5,53 +5,81 @@ namespace Appwrite\GraphQL;
 use Appwrite\GraphQL\Types\Assoc;
 use Appwrite\GraphQL\Types\InputFile;
 use Appwrite\GraphQL\Types\Json;
-use Appwrite\GraphQL\Types\Registry;
 use GraphQL\Type\Definition\Type;
+use Swoole\Lock;
 
 class Types
 {
+    private static ?Json $json = null;
+    private static ?Assoc $assoc = null;
+    private static ?InputFile $inputFile = null;
+    private static ?Lock $lock = null;
+
     /**
-     * Get the JSON type.
-     *
-     * @return Json
+     * Get or create the shared lock for thread-safe initialization.
+     */
+    private static function getLock(): Lock
+    {
+        if (self::$lock === null) {
+            self::$lock = new Lock(SWOOLE_MUTEX);
+        }
+        return self::$lock;
+    }
+
+    /**
+     * Get the JSON type (thread-safe).
      */
     public static function json(): Type
     {
-        if (Registry::has(Json::class)) {
-            return Registry::get(Json::class);
+        if (self::$json === null) {
+            self::getLock()->lock();
+            try {
+                // Double-check after acquiring lock
+                if (self::$json === null) {
+                    self::$json = new Json();
+                }
+            } finally {
+                self::getLock()->unlock();
+            }
         }
-        $type = new Json();
-        Registry::set(Json::class, $type);
-        return $type;
+        return self::$json;
     }
 
     /**
-     * Get the JSON type.
-     *
-     * @return Json
+     * Get the Assoc type (thread-safe).
      */
     public static function assoc(): Type
     {
-        if (Registry::has(Assoc::class)) {
-            return Registry::get(Assoc::class);
+        if (self::$assoc === null) {
+            self::getLock()->lock();
+            try {
+                // Double-check after acquiring lock
+                if (self::$assoc === null) {
+                    self::$assoc = new Assoc();
+                }
+            } finally {
+                self::getLock()->unlock();
+            }
         }
-        $type = new Assoc();
-        Registry::set(Assoc::class, $type);
-        return $type;
+        return self::$assoc;
     }
 
     /**
-     * Get the InputFile type.
-     *
-     * @return InputFile
+     * Get the InputFile type (thread-safe).
      */
     public static function inputFile(): Type
     {
-        if (Registry::has(InputFile::class)) {
-            return Registry::get(InputFile::class);
+        if (self::$inputFile === null) {
+            self::getLock()->lock();
+            try {
+                // Double-check after acquiring lock
+                if (self::$inputFile === null) {
+                    self::$inputFile = new InputFile();
+                }
+            } finally {
+                self::getLock()->unlock();
+            }
         }
-        $type = new InputFile();
-        Registry::set(InputFile::class, $type);
-        return $type;
+        return self::$inputFile;
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
+use Appwrite\GraphQL\Cache as GraphQLCache;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
@@ -385,6 +386,17 @@ $register->set('passwordsDictionary', function () {
 $register->set('promiseAdapter', function () {
     return new Swoole();
 });
+
+$register->set('graphqlCache', function () {
+    $maxMB = (int) System::getEnv('_APP_GRAPHQL_SCHEMA_CACHE_MB', 50);
+    return new GraphQLCache($maxMB);
+});
+
+$register->set('graphqlAPISchema', function () {
+    // Container for API queries/mutations lazy init
+    return new \stdClass();
+});
+
 $register->set('hooks', function () {
     return new Hooks();
 });

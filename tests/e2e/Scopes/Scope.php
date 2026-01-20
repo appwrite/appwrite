@@ -140,6 +140,33 @@ abstract class Scope extends TestCase
     }
 
     /**
+     * Wait for all attributes in a collection to be available.
+     *
+     * @param string $databaseId
+     * @param string $collectionId
+     * @param int $timeoutMs Maximum time to wait in milliseconds
+     * @param int $waitMs Time between polling attempts in milliseconds
+     */
+    protected function waitForAttributes(string $databaseId, string $collectionId, ?string $projectId = null, ?string $apiKey = null, int $timeoutMs = 10000, int $waitMs = 100): void
+    {
+        $projectId = $projectId ?? $this->getProject()['$id'];
+        $headers = $apiKey ? ['x-appwrite-key' => $apiKey] : $this->getHeaders();
+
+        $this->assertEventually(function () use ($databaseId, $collectionId, $projectId, $headers) {
+            $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ], $headers));
+
+            $this->assertEquals(200, $collection['headers']['status-code']);
+
+            foreach ($collection['body']['attributes'] ?? [] as $attribute) {
+                $this->assertEquals('available', $attribute['status'], 'Attribute ' . $attribute['key'] . ' not available');
+            }
+        }, $timeoutMs, $waitMs);
+    }
+
+    /**
      * @return array
      */
     abstract public function getHeaders(bool $devKey = true): array;

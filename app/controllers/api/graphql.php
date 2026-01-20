@@ -2,8 +2,8 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\GraphQL\Cache as GraphQLCache;
 use Appwrite\GraphQL\Promises\Adapter;
-use Appwrite\GraphQL\Schema;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
@@ -332,6 +332,7 @@ function processResult($result, $debugFlags): array
 App::shutdown()
     ->groups(['schema'])
     ->inject('project')
-    ->action(function (Document $project) {
-        Schema::setDirty($project->getId());
+    ->inject('graphqlCache')
+    ->action(function (Document $project, GraphQLCache $graphqlCache) {
+        $graphqlCache->setDirty($project->getId());
     });
