@@ -67,19 +67,8 @@ class V17 extends Filter
         $parsed = [];
         foreach ($content['queries'] as $query) {
             try {
-                /** @var Query|Query[] $queries */
-                $queries = $this->parseQuery($query);
-
-                /**
-                 * select query will return as an array of select queries
-                 */
-                if ($queries instanceof Query) {
-                    $queries = [$queries];
-                }
-
-                foreach ($queries as $q) {
-                    $parsed[] = json_encode(array_filter($q->toArray()));
-                }
+                $query = $this->parseQuery($query);
+                $parsed[] = \json_encode(\array_filter($query->toArray()));
             } catch (\Throwable $th) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $th->getMessage());
             }
@@ -91,13 +80,7 @@ class V17 extends Filter
     }
 
     // 1.4 query parser
-
-    /**
-     * @param string $filter
-     * @return Query|array
-     * @throws \Utopia\Database\Exception\Query
-     */
-    public function parseQuery(string $filter): Query|array
+    public function parseQuery(string $filter): Query
     {
         // Init empty vars we fill later
         $method = '';
@@ -272,15 +255,18 @@ class V17 extends Filter
                 ]);
 
             case Query::TYPE_BETWEEN:
-                return Query::between($parsedParams[0], $parsedParams[1], $parsedParams[2]);
+                return Query::parseQuery([
+                    'method' => $method,
+                    'attribute' => $parsedParams[0],
+                    'values' => [$parsedParams[1], $parsedParams[2]],
+                ]);
+
 
             case Query::TYPE_SELECT:
-                $selects = [];
-                foreach ($parsedParams[0] as $attribute) {
-                    $selects[] = Query::select($attribute);
-                }
-
-                return $selects;
+                return Query::parseQuery([
+                    'method' => $method,
+                    'values' => $parsedParams[0],
+                ]);
 
             case Query::TYPE_ORDER_ASC:
             case Query::TYPE_ORDER_DESC:
