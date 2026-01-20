@@ -772,7 +772,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setPreview($preview)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name', ''))
-                    ->setVariables($emailVariables)
+                    ->appendVariables($emailVariables)
                     ->trigger();
             } elseif (!empty($phone)) {
                 if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {

@@ -365,15 +365,14 @@ class Mail extends Event
     }
 
     /**
-     * Add a variable to the email event.
-     
-     * @param string $key
-     * @param mixed $value
+     * Append variables to the email event.
+     *
+     * @param array $variables
      * @return self
      */
-    public function addVariable(string $key, mixed $value): self
+    public function appendVariables(array $variables): self
     {
-        $this->variables[$key] = $value;
+        $this->variables = \array_merge($this->variables, $variables);
         return $this;
     }
 
