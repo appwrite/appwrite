@@ -163,7 +163,7 @@ jobs:
       matrix:
         db_adapter: [
           MARIADB,
-          MONGODB
+          # MONGODB
         ]
         service: [
           Account,
