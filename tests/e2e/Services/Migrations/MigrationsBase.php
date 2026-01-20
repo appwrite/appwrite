@@ -1501,7 +1501,7 @@ trait MigrationsBase
             $this->assertEquals('Appwrite', $migration['body']['destination']);
             $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
 
-            /* fails in batch create documents */
+            /* fails in batch create documents unlike csv which checks headers first! */
             $this->assertArrayHasKey(Resource::TYPE_ROW, $migration['body']['statusCounters']);
             $this->assertGreaterThan(0, $migration['body']['statusCounters'][Resource::TYPE_ROW]['error']);
 
