@@ -1541,7 +1541,7 @@ App::setResource('executionsRetentionCount', function (Document $project, array 
 }, ['project', 'plan']);
 
 App::setResource('embeddingAgent', function ($register) {
-    $adapter = new Ollama(150);
+    $adapter = new Ollama();
     $adapter->setEndpoint(System::getEnv('_APP_EMBEDDING_ENDPOINT', 'http://ollama:11434/api/embed'));
     return new Agent($adapter);
 }, ['register']);
