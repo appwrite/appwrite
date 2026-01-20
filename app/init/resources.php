@@ -521,7 +521,8 @@ App::setResource('authorization', function () {
     return new Authorization();
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, StatsUsage $queueForStatsUsage, Authorization $authorization) {
+// TODO: check here do we really need the database listener for the dbForProject?
+App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, StatsUsage $queueForStatsUsage, Authorization $authorization, Request $request) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForPlatform;
     }
@@ -624,7 +625,31 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
         $dbForProject->getCache()->purge($cacheKey);
     };
 
-    $usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) {
+    /**
+     * Prefix metrics with database type when applicable.
+     * Avoids prefixing for legacy and tablesdb types to preserve historical metrics.
+     */
+    $getDatabaseTypePrefixedMetric = function (string $databaseType, string $metric): string {
+        if (
+            $databaseType === '' ||
+            $databaseType === DATABASE_TYPE_LEGACY ||
+            $databaseType === DATABASE_TYPE_TABLESDB
+        ) {
+            return $metric;
+        }
+
+        return $databaseType . '.' . $metric;
+    };
+
+    // Determine database type from request path, similar to api.php
+    $path = $request->getURI();
+    $databaseType = match (true) {
+        str_contains($path, '/documentsdb') => DATABASE_TYPE_DOCUMENTSDB,
+        str_contains($path, '/vectordb') => DATABASE_TYPE_VECTORDB,
+        default => '',
+    };
+
+    $usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) use ($getDatabaseTypePrefixedMetric, $databaseType) {
         $value = 1;
 
         switch ($event) {
@@ -656,7 +681,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
                 $queueForStatsUsage->addMetric(METRIC_SESSIONS, $value); //per project
                 break;
             case $document->getCollection() === 'databases': // databases
-                $queueForStatsUsage->addMetric(METRIC_DATABASES, $value); // per project
+                $metric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASES);
+                $queueForStatsUsage->addMetric($metric, $value); // per project
 
                 if ($event === Database::EVENT_DOCUMENT_DELETE) {
                     $queueForStatsUsage->addReduce($document);
@@ -665,9 +691,11 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
             case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
                 $parts = explode('_', $document->getCollection());
                 $databaseInternalId = $parts[1] ?? 0;
+                $collectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_COLLECTIONS);
+                $databaseIdCollectionMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTIONS);
                 $queueForStatsUsage
-                    ->addMetric(METRIC_COLLECTIONS, $value) // per project
-                    ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value);
+                    ->addMetric($collectionMetric, $value) // per project
+                    ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdCollectionMetric), $value);
 
                 if ($event === Database::EVENT_DOCUMENT_DELETE) {
                     $queueForStatsUsage->addReduce($document);
@@ -677,10 +705,13 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
                 $parts = explode('_', $document->getCollection());
                 $databaseInternalId   = $parts[1] ?? 0;
                 $collectionInternalId = $parts[3] ?? 0;
+                $documentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DOCUMENTS);
+                $databaseIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_DOCUMENTS);
+                $databaseIdCollectionIdDocumentsMetric = $getDatabaseTypePrefixedMetric($databaseType, METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS);
                 $queueForStatsUsage
-                    ->addMetric(METRIC_DOCUMENTS, $value)  // per project
-                    ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
-                    ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+                    ->addMetric($documentsMetric, $value)  // per project
+                    ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, $databaseIdDocumentsMetric), $value) // per database
+                    ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], $databaseIdCollectionIdDocumentsMetric), $value);  // per collection
                 break;
             case $document->getCollection() === 'buckets': //buckets
                 $queueForStatsUsage
@@ -738,6 +769,9 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     $queueForWebhooks = new Webhook($publisherWebhooks);
     $queueForRealtime = new Realtime();
 
+    // to get consumed in the stats worker without calling to database
+    $queueForStatsUsage->setContext('database', new Document(['type' => $databaseType]));
+
 
     $database
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
@@ -761,7 +795,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
 
 
     return $database;
-}, ['pools', 'dbForPlatform', 'cache', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'queueForFunctions', 'queueForWebhooks', 'queueForRealtime', 'queueForStatsUsage', 'authorization']);
+}, ['pools', 'dbForPlatform', 'cache', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'queueForFunctions', 'queueForWebhooks', 'queueForRealtime', 'queueForStatsUsage', 'authorization', 'request']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authorization $authorization) {
 
