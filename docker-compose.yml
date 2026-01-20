@@ -98,7 +98,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
-      - ./vendor:/usr/src/code/vendor
+      
 
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
@@ -409,7 +409,7 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor:/usr/src/code/vendor
+      
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -465,7 +465,7 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor:/usr/src/code/vendor
+      
     depends_on:
       - redis
       - ${_APP_DB_HOST:-mongodb}
@@ -823,7 +823,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./tests:/usr/src/code/tests
-      - ./vendor:/usr/src/code/vendor
+      
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - postgresql
