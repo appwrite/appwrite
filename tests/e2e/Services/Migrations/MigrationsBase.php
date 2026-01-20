@@ -1355,4 +1355,429 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]);
     }
+
+    /**
+     * Import documents from a JSON file.
+     */
+    public function testCreateJSONImport(): void
+    {
+        // Make a database
+        $response = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database'
+        ]);
+
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('Test Database', $response['body']['name']);
+
+        $databaseId = $response['body']['$id'];
+
+        // make a table
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Test table',
+            'tableId' => ID::unique(),
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($response['body']['name'], 'Test table');
+
+        $tableId = $response['body']['$id'];
+
+        // make columns
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertEquals($response['body']['key'], 'name');
+        $this->assertEquals($response['body']['type'], 'string');
+        $this->assertEquals($response['body']['size'], 256);
+        $this->assertEquals($response['body']['required'], true);
+
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'age',
+            'min' => 18,
+            'max' => 65,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $response['headers']['status-code']);
+        $this->assertEquals($response['body']['key'], 'age');
+        $this->assertEquals($response['body']['type'], 'integer');
+        $this->assertEquals($response['body']['min'], 18);
+        $this->assertEquals($response['body']['max'], 65);
+        $this->assertEquals($response['body']['required'], true);
+
+        // make a bucket, upload a file to it!
+        $bucketOne = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ['json'],
+            'compression' => 'gzip',
+            'encryption' => true
+        ]);
+        $this->assertEquals(201, $bucketOne['headers']['status-code']);
+        $this->assertNotEmpty($bucketOne['body']['$id']);
+
+        $bucketOneId = $bucketOne['body']['$id'];
+
+        $bucketIds = [
+            'default' => $bucketOneId,
+            'missing-column' => $bucketOneId,
+            'irrelevant-column' => $bucketOneId,
+            'documents-internals' => $bucketOneId,
+        ];
+
+        $fileIds = [];
+
+        foreach ($bucketIds as $label => $bucketId) {
+            $jsonFileName = match ($label) {
+                'missing-column',
+                'irrelevant-column',
+                'documents-internals' => "$label.json",
+                default => 'documents.json',
+            };
+
+            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+                'content-type' => 'multipart/form-data',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'fileId' => ID::unique(),
+                'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/json/'.$jsonFileName), 'application/json', $jsonFileName),
+            ]);
+
+            $this->assertEquals(201, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']['$id']);
+            $this->assertEquals($jsonFileName, $response['body']['name']);
+            $this->assertEquals('application/json', $response['body']['mimeType']);
+
+            $fileIds[$label] = $response['body']['$id'];
+        }
+
+        // missing column, fail in worker.
+        $missingColumn = $this->performJsonMigration(
+            [
+                'fileId' => $fileIds['missing-column'],
+                'bucketId' => $bucketIds['missing-column'],
+                'resourceId' => $databaseId . ':' . $tableId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($missingColumn) {
+            $migrationId = $missingColumn['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('failed', $migration['body']['status']);
+            $this->assertEquals('JSON', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
+
+            /* fails in batch create documents */
+            $this->assertArrayHasKey(Resource::TYPE_ROW, $migration['body']['statusCounters']);
+            $this->assertGreaterThan(0, $migration['body']['statusCounters'][Resource::TYPE_ROW]['error']);
+
+            $this->assertThat(
+                implode("\n", $migration['body']['errors']),
+                $this->stringContains('Missing required attribute')
+            );
+            $this->assertThat(
+                implode("\n", $migration['body']['errors']),
+                $this->stringContains('age')
+            );
+        }, 60_000, 500);
+
+        // irrelevant column - email, success.
+        $irrelevantColumn = $this->performJsonMigration(
+            [
+                'fileId' => $fileIds['irrelevant-column'],
+                'bucketId' => $bucketIds['irrelevant-column'],
+                'resourceId' => $databaseId . ':' . $tableId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($irrelevantColumn) {
+            $migrationId = $irrelevantColumn['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('completed', $migration['body']['status']);
+            $this->assertEquals('JSON', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
+            $this->assertArrayHasKey(Resource::TYPE_ROW, $migration['body']['statusCounters']);
+            $this->assertEquals(100, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
+        }, 10_000, 500);
+
+        // all data exists, pass.
+        $migration = $this->performJsonMigration(
+            [
+                'endpoint' => $this->endpoint,
+                'fileId' => $fileIds['default'],
+                'bucketId' => $bucketIds['default'],
+                'resourceId' => $databaseId . ':' . $tableId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($migration, $databaseId, $tableId) {
+            $migrationId = $migration['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('completed', $migration['body']['status']);
+            $this->assertEquals('JSON', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
+            $this->assertArrayHasKey(Resource::TYPE_ROW, $migration['body']['statusCounters']);
+            $this->assertEquals(100, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
+        }, 10_000, 500);
+
+        // get rows count
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/'.$databaseId.'/tables/'.$tableId.'/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(250)->toString()
+            ]
+        ]);
+
+        $this->assertEquals(200, $rows['headers']['status-code']);
+        $this->assertIsArray($rows['body']['rows']);
+        $this->assertIsNumeric($rows['body']['total']);
+        $this->assertEquals(200, $rows['body']['total']);
+
+        // all data exists and includes internals, pass.
+        $migration = $this->performJsonMigration(
+            [
+                'endpoint' => $this->endpoint,
+                'fileId' => $fileIds['documents-internals'],
+                'bucketId' => $bucketIds['documents-internals'],
+                'resourceId' => $databaseId . ':' . $tableId,
+            ]
+        );
+
+        $this->assertEventually(function () use ($migration) {
+            $migrationId = $migration['body']['$id'];
+            $migration = $this->client->call(Client::METHOD_GET, '/migrations/'.$migrationId, array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+
+            $this->assertEquals(200, $migration['headers']['status-code']);
+            $this->assertEquals('finished', $migration['body']['stage']);
+            $this->assertEquals('completed', $migration['body']['status']);
+            $this->assertEquals('JSON', $migration['body']['source']);
+            $this->assertEquals('Appwrite', $migration['body']['destination']);
+            $this->assertContains(Resource::TYPE_ROW, $migration['body']['resources']);
+            $this->assertArrayHasKey(Resource::TYPE_ROW, $migration['body']['statusCounters']);
+            $this->assertEquals(25, $migration['body']['statusCounters'][Resource::TYPE_ROW]['success']);
+        }, 10_000, 500);
+    }
+
+    private function performJsonMigration(array $body): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/migrations/json/imports', [
+            'content-type' => 'application/json',
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $body);
+    }
+
+    /**
+     * Test JSON export with email notification
+     */
+    public function testCreateJSONExport(): void
+    {
+        // Create a database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Export Database'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        // Create a collection
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'Test Export Collection',
+            'permissions' => []
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Create a simple attribute like the basic test
+        $name = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'name',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $name['headers']['status-code']);
+
+        // Create a simple attribute like the basic test
+        $email = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'email',
+            'size' => 255,
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $email['headers']['status-code']);
+
+        \sleep(3);
+
+        // Create sample documents
+        for ($i = 1; $i <= 10; $i++) {
+            $doc = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'name' => 'Test User ' . $i,
+                    'email' => 'user' . $i . '@appwrite.io'
+                ]
+            ]);
+
+            $this->assertEquals(201, $doc['headers']['status-code'], 'Failed to create document ' . $i);
+        }
+
+        // Verify documents were created
+        $docs = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(200, $docs['headers']['status-code']);
+        $this->assertEquals(10, $docs['body']['total'], 'Expected 10 documents but got ' . $docs['body']['total']);
+
+        // Perform JSON export with notification enabled (uses internal bucket)
+        $migration = $this->client->call(Client::METHOD_POST, '/migrations/json/exports', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'resourceId' => $databaseId . ':' . $collectionId,
+            'filename' => 'test-json-export',
+            'columns' => [],
+            'queries' => [],
+            'notify' => true
+        ]);
+
+        $this->assertEquals(202, $migration['headers']['status-code']);
+        $this->assertNotEmpty($migration['body']['$id']);
+        $migrationId = $migration['body']['$id'];
+
+        $this->assertEventually(function () use ($migrationId) {
+            $response = $this->client->call(Client::METHOD_GET, '/migrations/' . $migrationId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals('finished', $response['body']['stage']);
+            $this->assertEquals('completed', $response['body']['status']);
+            $this->assertEquals('Appwrite', $response['body']['source']);
+            $this->assertEquals('JSON', $response['body']['destination']);
+
+            return true;
+        }, 30_000, 500);
+
+        // Check that email was sent with download link
+        $lastEmail = $this->getLastEmail();
+        $this->assertNotEmpty($lastEmail);
+        $this->assertEquals('Your JSON export is ready', $lastEmail['subject']);
+        $this->assertStringContainsStringIgnoringCase('Your data export has been completed successfully', $lastEmail['text']);
+
+        // Extract download URL from email HTML
+        \preg_match('/href="([^"]*\/storage\/buckets\/[^"]*\/push[^"]*)"/', $lastEmail['html'], $matches);
+        $this->assertNotEmpty($matches[1], 'Download URL not found in email');
+        $downloadUrl = html_entity_decode($matches[1]);
+
+        // Parse the URL to extract components
+        $components = \parse_url($downloadUrl);
+        $this->assertNotEmpty($components);
+        \parse_str($components['query'] ?? '', $queryParams);
+        $this->assertArrayHasKey('jwt', $queryParams, 'JWT not found in download URL');
+        $this->assertNotEmpty($queryParams['jwt']);
+        $this->assertArrayHasKey('project', $queryParams, 'Project not found in download URL');
+        $this->assertStringContainsString('/storage/buckets/default/files/', $downloadUrl);
+
+        // Test download with JWT
+        $path = \str_replace('/v1', '', $components['path']);
+        $downloadWithJwt = $this->client->call(Client::METHOD_GET, $path . '?project=' . $queryParams['project'] . '&jwt=' . $queryParams['jwt']);
+        $this->assertEquals(200, $downloadWithJwt['headers']['status-code'], 'Failed to download file with JWT');
+
+        // Verify the downloaded content is valid JSON
+        $jsonData = $downloadWithJwt['body'];
+        $this->assertNotEmpty($jsonData, 'JSON export should not be empty');
+        $decoded = json_decode($jsonData, true);
+        $this->assertIsArray($decoded, 'JSON should be valid and decodable');
+        $this->assertCount(10, $decoded, 'JSON should contain 10 documents');
+        $this->assertArrayHasKey('name', $decoded[0], 'JSON documents should contain name field');
+        $this->assertArrayHasKey('email', $decoded[0], 'JSON documents should contain email field');
+        $this->assertStringContainsString('Test User', $decoded[0]['name'], 'JSON should contain test data');
+
+        // Cleanup
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+    }
 }

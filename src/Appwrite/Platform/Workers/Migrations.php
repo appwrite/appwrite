@@ -699,6 +699,7 @@ class Migrations extends Action
             'terms' => $platform['termsUrl'],
             'privacy' => $platform['privacyUrl'],
             'platform' => $platform['platformName'],
+            'type' => $this->dataExportType,
         ];
 
         $queueForMails
