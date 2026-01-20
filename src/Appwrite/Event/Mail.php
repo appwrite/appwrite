@@ -365,6 +365,19 @@ class Mail extends Event
     }
 
     /**
+     * Add a variable to the email event.
+     
+     * @param string $key
+     * @param mixed $value
+     * @return self
+     */
+    public function addVariable(string $key, mixed $value): self
+    {
+        $this->variables[$key] = $value;
+        return $this;
+    }
+
+    /**
      * Set attachment
      * @param string $content
      * @param string $filename
