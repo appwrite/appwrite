@@ -195,7 +195,7 @@ class XList extends Action
                         $total = 0;
                     }
 
-                    $response->addHeader('X-Appwrite-Cache', $documentsCacheHit ? 'hit' : 'miss')
+                    $response->addHeader('X-Appwrite-Cache', $documentsCacheHit ? 'hit' : 'miss');
 
                 } else {
                     // has selects, allow relationship on documents
