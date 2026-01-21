@@ -9,7 +9,8 @@ use GraphQL\Executor\Promise\Promise as GQLPromise;
 class Swoole extends Adapter
 {
     /**
-     * Synchronously wait for promise completion by running the task queue.
+     * Wait for promise completion and return the result.
+     * Since callbacks are executed synchronously, the promise should already be settled.
      *
      * @param GQLPromise $promise
      * @return mixed
@@ -19,14 +20,6 @@ class Swoole extends Adapter
     {
         /** @var SwoolePromise $swoolePromise */
         $swoolePromise = $promise->adoptedPromise;
-        $taskQueue = SwoolePromise::getQueue();
-
-        while (
-            $swoolePromise->state === SwoolePromise::PENDING
-            && !$taskQueue->isEmpty()
-        ) {
-            SwoolePromise::runQueue();
-        }
 
         if ($swoolePromise->state === SwoolePromise::FULFILLED) {
             return $swoolePromise->result;
@@ -36,7 +29,8 @@ class Swoole extends Adapter
             throw $swoolePromise->result;
         }
 
-        throw new \Exception('Could not resolve promise');
+        // Promise should already be settled in synchronous mode
+        throw new \Exception('Could not resolve promise - still pending');
     }
 
     public function create(callable $resolver): GQLPromise

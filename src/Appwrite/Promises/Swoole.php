@@ -3,8 +3,8 @@
 namespace Appwrite\Promises;
 
 /**
- * Swoole-compatible promise implementation that uses a task queue
- * for deferred callback execution, similar to graphql-php's SyncPromise.
+ * Swoole-compatible promise implementation that executes callbacks synchronously.
+ * This works with Swoole's WaitGroup pattern used in the GraphQL controller.
  */
 class Swoole extends Promise
 {
@@ -22,46 +22,21 @@ class Swoole extends Promise
      */
     protected array $waiting = [];
 
-    /**
-     * Run all tasks in the queue
-     */
-    public static function runQueue(): void
-    {
-        $q = self::getQueue();
-        while (!$q->isEmpty()) {
-            $task = $q->dequeue();
-            $task();
-        }
-    }
-
-    /**
-     * Get the shared task queue
-     *
-     * @return \SplQueue<callable(): void>
-     */
-    public static function getQueue(): \SplQueue
-    {
-        static $queue;
-
-        return $queue ??= new \SplQueue();
-    }
-
     public function __construct(?callable $executor = null)
     {
         if ($executor === null) {
             return;
         }
 
-        self::getQueue()->enqueue(function () use ($executor): void {
-            try {
-                $executor(
-                    fn ($value) => $this->resolve($value),
-                    fn ($reason) => $this->reject($reason)
-                );
-            } catch (\Throwable $e) {
-                $this->reject($e);
-            }
-        });
+        // Execute the executor synchronously
+        try {
+            $executor(
+                fn ($value) => $this->resolve($value),
+                fn ($reason) => $this->reject($reason)
+            );
+        } catch (\Throwable $e) {
+            $this->reject($e);
+        }
     }
 
     protected function execute(
@@ -69,7 +44,7 @@ class Swoole extends Promise
         callable $resolve,
         callable $reject
     ): void {
-        // Not used - we use the task queue mechanism instead
+        // Not used - we execute synchronously in constructor
     }
 
     /**
@@ -92,7 +67,7 @@ class Swoole extends Promise
 
         $this->state = self::FULFILLED;
         $this->result = $value;
-        $this->enqueueWaitingPromises();
+        $this->processWaiting();
 
         return $this;
     }
@@ -108,36 +83,34 @@ class Swoole extends Promise
 
         $this->state = self::REJECTED;
         $this->result = $reason;
-        $this->enqueueWaitingPromises();
+        $this->processWaiting();
 
         return $this;
     }
 
     /**
-     * Enqueue callbacks for waiting promises
+     * Process waiting callbacks immediately (synchronously)
      */
-    protected function enqueueWaitingPromises(): void
+    protected function processWaiting(): void
     {
         foreach ($this->waiting as [$promise, $onFulfilled, $onRejected]) {
-            self::getQueue()->enqueue(function () use ($promise, $onFulfilled, $onRejected): void {
-                if ($this->state === self::FULFILLED) {
-                    try {
-                        $promise->resolve($onFulfilled === null ? $this->result : $onFulfilled($this->result));
-                    } catch (\Throwable $e) {
-                        $promise->reject($e);
-                    }
-                } elseif ($this->state === self::REJECTED) {
-                    try {
-                        if ($onRejected === null) {
-                            $promise->reject($this->result);
-                        } else {
-                            $promise->resolve($onRejected($this->result));
-                        }
-                    } catch (\Throwable $e) {
-                        $promise->reject($e);
-                    }
+            if ($this->state === self::FULFILLED) {
+                try {
+                    $promise->resolve($onFulfilled === null ? $this->result : $onFulfilled($this->result));
+                } catch (\Throwable $e) {
+                    $promise->reject($e);
                 }
-            });
+            } elseif ($this->state === self::REJECTED) {
+                try {
+                    if ($onRejected === null) {
+                        $promise->reject($this->result);
+                    } else {
+                        $promise->resolve($onRejected($this->result));
+                    }
+                } catch (\Throwable $e) {
+                    $promise->reject($e);
+                }
+            }
         }
 
         $this->waiting = [];
@@ -156,10 +129,29 @@ class Swoole extends Promise
         }
 
         $promise = new self();
-        $this->waiting[] = [$promise, $onFulfilled, $onRejected];
 
-        if ($this->state !== self::PENDING) {
-            $this->enqueueWaitingPromises();
+        if ($this->state === self::PENDING) {
+            // Promise not settled yet - queue the callbacks
+            $this->waiting[] = [$promise, $onFulfilled, $onRejected];
+        } else {
+            // Promise already settled - execute callback immediately
+            if ($this->state === self::FULFILLED) {
+                try {
+                    $promise->resolve($onFulfilled === null ? $this->result : $onFulfilled($this->result));
+                } catch (\Throwable $e) {
+                    $promise->reject($e);
+                }
+            } else {
+                try {
+                    if ($onRejected === null) {
+                        $promise->reject($this->result);
+                    } else {
+                        $promise->resolve($onRejected($this->result));
+                    }
+                } catch (\Throwable $e) {
+                    $promise->reject($e);
+                }
+            }
         }
 
         return $promise;
@@ -201,9 +193,10 @@ class Swoole extends Promise
 
         $count = 0;
         $result = [];
+        $rejected = false;
 
-        $resolveAllWhenFinished = static function () use (&$count, $total, $all, &$result): void {
-            if ($count === $total) {
+        $resolveAllWhenFinished = static function () use (&$count, $total, $all, &$result, &$rejected): void {
+            if (!$rejected && $count === $total) {
                 $all->resolve($result);
             }
         };
@@ -217,7 +210,12 @@ class Swoole extends Promise
                         ++$count;
                         $resolveAllWhenFinished();
                     },
-                    [$all, 'reject']
+                    static function ($error) use (&$rejected, $all) {
+                        if (!$rejected) {
+                            $rejected = true;
+                            $all->reject($error);
+                        }
+                    }
                 );
             } else {
                 $result[$index] = $promiseOrValue;
@@ -228,5 +226,19 @@ class Swoole extends Promise
         $resolveAllWhenFinished();
 
         return $all;
+    }
+
+    /**
+     * Static queue methods for graphql-php compatibility (not used in sync mode)
+     */
+    public static function runQueue(): void
+    {
+        // No-op in synchronous mode
+    }
+
+    public static function getQueue(): \SplQueue
+    {
+        static $queue;
+        return $queue ??= new \SplQueue();
     }
 }
