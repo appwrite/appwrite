@@ -17,13 +17,14 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (projectId && bucketId) {
+      // Ensure bucket and files are loaded before rendering to prevent layout shifts
       await Promise.all([
-        queryClient.prefetchQuery({
+        queryClient.ensureQueryData({
           queryKey: ['bucket', 'project', projectId, bucketId],
           queryFn: () => fetchBucket(projectId, bucketId),
           staleTime: 30 * 1000,
         }),
-        queryClient.prefetchQuery({
+        queryClient.ensureQueryData({
           queryKey: [
             'files',
             'project',

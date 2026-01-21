@@ -26,43 +26,42 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
       staleTime: 5 * 60 * 1000, // 5 minutes
     })
 
-    // Prefetch projects for the organization (initial page, no search)
+    // Ensure critical data is loaded before rendering to prevent layout shifts
     if (orgId) {
-      // Prefetch organization plan
-      await queryClient.prefetchQuery({
-        queryKey: ['organization', 'plan', orgId],
-        queryFn: () => fetchOrganizationPlan(orgId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
-
-      // Prefetch projects for the organization (initial page, no search)
-      await queryClient.prefetchQuery({
-        queryKey: ['projects', 'active', 0, '', orgId],
-        queryFn: () => fetchActiveProjects(orgId, 0, PROJECTS_PER_PAGE, ''),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-
-      // Prefetch total count for limit checking
-      await queryClient.prefetchQuery({
-        queryKey: ['projects', 'active', 'total', orgId],
-        queryFn: () => fetchActiveProjects(orgId, 0, 1, ''),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-
-      // Prefetch memberships for the organization (initial page, no search)
-      await queryClient.prefetchQuery({
-        queryKey: [
-          'memberships',
-          'organization',
-          orgId,
-          0,
-          MEMBERSHIPS_PER_PAGE,
-          '',
-        ],
-        queryFn: () =>
-          fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
-        staleTime: 30 * 1000, // 30 seconds
-      })
+      await Promise.all([
+        // Ensure organization plan is loaded
+        queryClient.ensureQueryData({
+          queryKey: ['organization', 'plan', orgId],
+          queryFn: () => fetchOrganizationPlan(orgId),
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        }),
+        // Ensure projects are loaded
+        queryClient.ensureQueryData({
+          queryKey: ['projects', 'active', 0, '', orgId],
+          queryFn: () => fetchActiveProjects(orgId, 0, PROJECTS_PER_PAGE, ''),
+          staleTime: 30 * 1000, // 30 seconds
+        }),
+        // Ensure memberships are loaded
+        queryClient.ensureQueryData({
+          queryKey: [
+            'memberships',
+            'organization',
+            orgId,
+            0,
+            MEMBERSHIPS_PER_PAGE,
+            '',
+          ],
+          queryFn: () =>
+            fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
+          staleTime: 30 * 1000, // 30 seconds
+        }),
+        // Prefetch total count for limit checking (optional)
+        queryClient.prefetchQuery({
+          queryKey: ['projects', 'active', 'total', orgId],
+          queryFn: () => fetchActiveProjects(orgId, 0, 1, ''),
+          staleTime: 30 * 1000, // 30 seconds
+        }),
+      ])
     }
   },
   component: OrgOverviewIndexPage,

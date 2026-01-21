@@ -2,8 +2,36 @@ import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
+import { fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
+  loader: async ({ params, context }) => {
+    // Only run on client side (SDK requires browser environment)
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const { projectId } = params
+    const { queryClient } = context
+
+    if (projectId) {
+      // Ensure project is loaded before rendering (needed for header/sidebar)
+      const projectData = await queryClient.ensureQueryData({
+        queryKey: ['project', projectId],
+        queryFn: () => fetchProject(projectId),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      })
+
+      // Prefetch organization plan if we have a teamId (for header)
+      if (projectData?.teamId) {
+        await queryClient.prefetchQuery({
+          queryKey: ['organization', 'plan', projectData.teamId],
+          queryFn: () => fetchOrganizationPlan(projectData.teamId),
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        })
+      }
+    }
+  },
   component: ProjectLayout,
 })
 

@@ -114,7 +114,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000, // 30 seconds
       })
 
-      // Prefetch indexes (optional data)
+      // Prefetch indexes (optional data, not critical for rows tab)
       const indexesPromise = queryClient.prefetchQuery({
         queryKey: ['indexes', 'project', projectId, databaseId, tableId],
         queryFn: () => fetchProjectTableIndexes(projectId, databaseId, tableId),

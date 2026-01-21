@@ -19,34 +19,35 @@ export const Route = createFileRoute(
     const { projectId, databaseId } = params
     const { queryClient } = context
 
-    // Prefetch database and tables
+    // Ensure database and tables are loaded before rendering to prevent layout shifts
     if (projectId && databaseId) {
-      await queryClient.prefetchQuery({
-        queryKey: ['database', 'project', projectId, databaseId],
-        queryFn: () => fetchProjectDatabase(projectId, databaseId),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-
-      await queryClient.prefetchQuery({
-        queryKey: [
-          'tables',
-          'project',
-          projectId,
-          databaseId,
-          0,
-          TABLES_PER_PAGE,
-          undefined,
-        ],
-        queryFn: () =>
-          fetchProjectTables(
+      await Promise.all([
+        queryClient.ensureQueryData({
+          queryKey: ['database', 'project', projectId, databaseId],
+          queryFn: () => fetchProjectDatabase(projectId, databaseId),
+          staleTime: 30 * 1000, // 30 seconds
+        }),
+        queryClient.ensureQueryData({
+          queryKey: [
+            'tables',
+            'project',
             projectId,
             databaseId,
             0,
             TABLES_PER_PAGE,
             undefined,
-          ),
-        staleTime: 30 * 1000, // 30 seconds
-      })
+          ],
+          queryFn: () =>
+            fetchProjectTables(
+              projectId,
+              databaseId,
+              0,
+              TABLES_PER_PAGE,
+              undefined,
+            ),
+          staleTime: 30 * 1000, // 30 seconds
+        }),
+      ])
     }
   },
   component: DatabaseIndexPage,

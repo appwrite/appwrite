@@ -58,8 +58,8 @@ export const Route = createFileRoute(
         queryFn: () => fetchProjectTableColumns(projectId, databaseId, tableId),
         staleTime: 30 * 1000, // 30 seconds
       }),
-      // Prefetch indexes (optional data)
-      queryClient.prefetchQuery({
+      // Ensure indexes are loaded (critical for indexes tab)
+      queryClient.ensureQueryData({
         queryKey: ['indexes', 'project', projectId, databaseId, tableId],
         queryFn: () => fetchProjectTableIndexes(projectId, databaseId, tableId),
         staleTime: 30 * 1000, // 30 seconds

@@ -20,43 +20,43 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/')(
       const { queryClient } = context
 
       if (projectId) {
-        // Prefetch project to get teamId
-        const projectData = await queryClient.fetchQuery({
+        // Ensure project is loaded to get teamId
+        const projectData = await queryClient.ensureQueryData({
           queryKey: ['project', projectId],
           queryFn: () => fetchProject(projectId),
           staleTime: 5 * 60 * 1000, // 5 minutes
         })
 
-        // Prefetch organization plan if we have a teamId
-        if (projectData?.teamId) {
-          await queryClient.prefetchQuery({
-            queryKey: ['organization', 'plan', projectData.teamId],
-            queryFn: () => fetchOrganizationPlan(projectData.teamId),
-            staleTime: 5 * 60 * 1000, // 5 minutes
-          })
-        }
-
-        // Prefetch functions for the project (initial page, no search)
-        await queryClient.ensureQueryData({
-          queryKey: [
-            'functions',
-            'project',
-            projectId,
-            0,
-            FUNCTIONS_PER_PAGE,
-            undefined,
-          ],
-          queryFn: () =>
-            fetchProjectFunctions(projectId, 0, FUNCTIONS_PER_PAGE, undefined),
-          staleTime: 30 * 1000, // 30 seconds
-        })
-
-        // Prefetch total count for limit checking
-        await queryClient.prefetchQuery({
-          queryKey: ['functions', 'project', projectId, 'total'],
-          queryFn: () => fetchProjectFunctions(projectId, 0, 1, ''),
-          staleTime: 30 * 1000, // 30 seconds
-        })
+        // Ensure functions are loaded before rendering to prevent layout shifts
+        await Promise.all([
+          queryClient.ensureQueryData({
+            queryKey: [
+              'functions',
+              'project',
+              projectId,
+              0,
+              FUNCTIONS_PER_PAGE,
+              undefined,
+            ],
+            queryFn: () =>
+              fetchProjectFunctions(projectId, 0, FUNCTIONS_PER_PAGE, undefined),
+            staleTime: 30 * 1000, // 30 seconds
+          }),
+          // Prefetch organization plan if we have a teamId (optional, for limit checking)
+          projectData?.teamId
+            ? queryClient.prefetchQuery({
+                queryKey: ['organization', 'plan', projectData.teamId],
+                queryFn: () => fetchOrganizationPlan(projectData.teamId),
+                staleTime: 5 * 60 * 1000, // 5 minutes
+              })
+            : Promise.resolve(),
+          // Prefetch total count for limit checking (optional)
+          queryClient.prefetchQuery({
+            queryKey: ['functions', 'project', projectId, 'total'],
+            queryFn: () => fetchProjectFunctions(projectId, 0, 1, ''),
+            staleTime: 30 * 1000, // 30 seconds
+          }),
+        ])
       }
     },
     component: FunctionsIndexPage,

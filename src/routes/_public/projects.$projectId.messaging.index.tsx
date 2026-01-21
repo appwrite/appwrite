@@ -20,43 +20,43 @@ export const Route = createFileRoute('/_public/projects/$projectId/messaging/')(
       const { queryClient } = context
 
       if (projectId) {
-        // Prefetch project to get teamId (needed for plan limits)
-        const projectData = await queryClient.fetchQuery({
+        // Ensure project is loaded to get teamId
+        const projectData = await queryClient.ensureQueryData({
           queryKey: ['project', projectId],
           queryFn: () => fetchProject(projectId),
           staleTime: 5 * 60 * 1000, // 5 minutes
         })
 
-        // Prefetch organization plan if we have a teamId (for limit checking)
-        if (projectData?.teamId) {
-          await queryClient.prefetchQuery({
-            queryKey: ['organization', 'plan', projectData.teamId],
-            queryFn: () => fetchOrganizationPlan(projectData.teamId),
-            staleTime: 5 * 60 * 1000, // 5 minutes
-          })
-        }
-
-        // Prefetch initial page of messages (page 0, no search)
-        await queryClient.ensureQueryData({
-          queryKey: [
-            'messages',
-            'project',
-            projectId,
-            0,
-            MESSAGES_PER_PAGE,
-            '',
-          ],
-          queryFn: () =>
-            fetchProjectMessages(projectId, 0, MESSAGES_PER_PAGE, ''),
-          staleTime: 30 * 1000, // 30 seconds
-        })
-
-        // Prefetch total count for limit checking (separate from search query)
-        await queryClient.prefetchQuery({
-          queryKey: ['messages', 'project', projectId, 'total'],
-          queryFn: () => fetchProjectMessages(projectId, 0, 1, ''),
-          staleTime: 30 * 1000, // 30 seconds
-        })
+        // Ensure messages are loaded before rendering to prevent layout shifts
+        await Promise.all([
+          queryClient.ensureQueryData({
+            queryKey: [
+              'messages',
+              'project',
+              projectId,
+              0,
+              MESSAGES_PER_PAGE,
+              '',
+            ],
+            queryFn: () =>
+              fetchProjectMessages(projectId, 0, MESSAGES_PER_PAGE, ''),
+            staleTime: 30 * 1000, // 30 seconds
+          }),
+          // Prefetch organization plan if we have a teamId (optional, for limit checking)
+          projectData?.teamId
+            ? queryClient.prefetchQuery({
+                queryKey: ['organization', 'plan', projectData.teamId],
+                queryFn: () => fetchOrganizationPlan(projectData.teamId),
+                staleTime: 5 * 60 * 1000, // 5 minutes
+              })
+            : Promise.resolve(),
+          // Prefetch total count for limit checking (optional)
+          queryClient.prefetchQuery({
+            queryKey: ['messages', 'project', projectId, 'total'],
+            queryFn: () => fetchProjectMessages(projectId, 0, 1, ''),
+            staleTime: 30 * 1000, // 30 seconds
+          }),
+        ])
       }
     },
     component: MessagingIndexPage,

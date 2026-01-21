@@ -8,7 +8,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
     const { queryClient } = context
 
     if (projectId) {
-      await queryClient.prefetchQuery({
+      // Ensure project is loaded before rendering to prevent layout shifts
+      await queryClient.ensureQueryData({
         queryKey: ['project', projectId],
         queryFn: () => fetchProject(projectId),
         staleTime: 5 * 60 * 1000, // 5 minutes

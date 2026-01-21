@@ -33,26 +33,27 @@ export const Route = createFileRoute('/_public/account/$tab')({
     const { tab } = params
     const { queryClient } = context
 
-    // Prefetch data based on tab
+    // Ensure critical data is loaded before rendering to prevent layout shifts
     if (tab === 'sessions') {
-      await queryClient.prefetchQuery({
+      await queryClient.ensureQueryData({
         queryKey: ['sessions', 'account'],
         queryFn: fetchAccountSessions,
         staleTime: 30 * 1000, // 30 seconds
       })
     } else if (tab === 'payments') {
-      // Prefetch payment data in parallel
+      // Ensure payment data is loaded before rendering
       await Promise.all([
-        queryClient.prefetchQuery({
+        queryClient.ensureQueryData({
           queryKey: ['payment-methods', 'account'],
           queryFn: fetchPaymentMethods,
           staleTime: 30 * 1000,
         }),
-        queryClient.prefetchQuery({
+        queryClient.ensureQueryData({
           queryKey: ['billing-addresses', 'account'],
           queryFn: fetchBillingAddresses,
           staleTime: 30 * 1000,
         }),
+        // Prefetch supporting data (optional)
         queryClient.prefetchQuery({
           queryKey: ['countries', 'console'],
           queryFn: fetchCountries,
