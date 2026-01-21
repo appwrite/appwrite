@@ -54,7 +54,7 @@ class Base extends Types
         Query::TYPE_NOT_TOUCHES,
         Query::TYPE_VECTOR_DOT,
         Query::TYPE_VECTOR_COSINE,
-        Query::TYPE_VECTOR_EUCLIDEAN
+        Query::TYPE_VECTOR_EUCLIDEAN,
     ];
 
     /**

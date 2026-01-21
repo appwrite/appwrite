@@ -1589,16 +1589,16 @@
         },
         {
             "name": "open-telemetry/sem-conv",
-            "version": "1.37.0",
+            "version": "1.38.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sem-conv.git",
-                "reference": "8da7ec497c881e39afa6657d72586e27efbd29a1"
+                "reference": "e613bc640a407def4991b8a936a9b27edd9a3240"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/8da7ec497c881e39afa6657d72586e27efbd29a1",
-                "reference": "8da7ec497c881e39afa6657d72586e27efbd29a1",
+                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/e613bc640a407def4991b8a936a9b27edd9a3240",
+                "reference": "e613bc640a407def4991b8a936a9b27edd9a3240",
                 "shasum": ""
             },
             "require": {
@@ -1638,11 +1638,11 @@
             ],
             "support": {
                 "chat": "https://app.slack.com/client/T08PSQ7BQ/C01NFPCV44V",
-                "docs": "https://opentelemetry.io/docs/php",
+                "docs": "https://opentelemetry.io/docs/languages/php",
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-09-03T12:08:10+00:00"
+            "time": "2026-01-21T04:14:03+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -3903,12 +3903,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "240a123e57fe9677224b4314fff81ce0d22baebd"
+                "reference": "b1c88dd6f624026f9a39634870b3b933e0d5cf3d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/240a123e57fe9677224b4314fff81ce0d22baebd",
-                "reference": "240a123e57fe9677224b4314fff81ce0d22baebd",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b1c88dd6f624026f9a39634870b3b933e0d5cf3d",
+                "reference": "b1c88dd6f624026f9a39634870b3b933e0d5cf3d",
                 "shasum": ""
             },
             "require": {
@@ -3953,7 +3953,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/joins8"
             },
-            "time": "2026-01-19T11:25:09+00:00"
+            "time": "2026-01-21T09:24:33+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -5482,16 +5482,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.17",
+            "version": "1.8.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "1bc5a39bf87d3c2064f2f8d45fa712340338bc41"
+                "reference": "2775d5956a8bb65a94022255b2a68eb55f000abb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/1bc5a39bf87d3c2064f2f8d45fa712340338bc41",
-                "reference": "1bc5a39bf87d3c2064f2f8d45fa712340338bc41",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2775d5956a8bb65a94022255b2a68eb55f000abb",
+                "reference": "2775d5956a8bb65a94022255b2a68eb55f000abb",
                 "shasum": ""
             },
             "require": {
@@ -5527,9 +5527,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.17"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.18"
             },
-            "time": "2026-01-19T12:13:41+00:00"
+            "time": "2026-01-20T16:16:38+00:00"
         },
         {
             "name": "doctrine/annotations",

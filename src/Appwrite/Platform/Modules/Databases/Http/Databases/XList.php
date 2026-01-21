@@ -18,6 +18,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Action;
 use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Validator;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 

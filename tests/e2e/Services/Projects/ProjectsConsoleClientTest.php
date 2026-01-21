@@ -433,6 +433,40 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
+
+        /**
+         * Test select queries
+         */
+        /**
+         * Check old version selects converted to list of selects
+         */
+        $list = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                '{"method":"select","values":["name", "$createdAt","enabled"]}',
+            ]
+        ]);
+        $this->assertEquals(400, $list['headers']['status-code']);
+        $this->assertEquals('Invalid `queries` param: Invalid query: Select queries attribute is empty', $list['body']['message']);
+
+        $list = $this->client->call(Client::METHOD_GET, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-response-format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'queries' => [
+                '{"method":"select","values":["name", "$createdAt","enabled"]}',
+            ]
+        ]);
+
+        var_dump('{"method":"select","values":["name", "$createdAt"]}');
+        var_dump($list['databases'][0]['$createdAt']);
+        var_dump($list['databases'][0]['$updatedAt']);
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertEquals(999, $list['headers']['status-code']);
+
         return $data;
     }
 
