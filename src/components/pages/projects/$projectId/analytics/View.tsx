@@ -330,7 +330,7 @@ export function AnalyticsView() {
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         createLabel="Add Website"
-        onCreate={() => console.log('Create website')}
+        onCreate={() => {}}
         showFilters
         fullWidthBorder
         rightContent={<ViewToggle />}

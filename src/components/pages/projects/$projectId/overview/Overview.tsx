@@ -192,7 +192,6 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
   const handleConnectPlatform = (platformType?: string) => {
     // TODO: Implement platform connection logic
     // This will trigger the connect platform flow
-    console.log('Connect platform clicked', platformType)
   }
 
   const handleCreateApiKey = () => {
@@ -397,7 +396,6 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
           )
           setUpdateKeyData(key || null)
         } catch (error) {
-          console.error('Failed to fetch key data:', error)
           setUpdateKeyData(null)
         }
       }

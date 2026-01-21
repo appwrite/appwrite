@@ -65,14 +65,48 @@ export function useUploadQueue(projectId?: string, bucketId?: string) {
 
     setupListeners()
 
-    // Poll for new uploads periodically
-    const interval = setInterval(() => {
-      loadUploads()
-    }, 2000)
+    // Only poll when there are active uploads
+    // Use a longer interval (5 seconds) to reduce CPU usage
+    let interval: NodeJS.Timeout | null = null
+
+    const pollIfNeeded = async () => {
+      if (!mounted) return
+      
+      const items = await uploadManager.getBucketUploads(projectId, bucketId)
+      if (!mounted) return
+      
+      const hasActive = items.some(
+        (u) => u.status === 'pending' || u.status === 'uploading'
+      )
+      
+      if (hasActive && !interval) {
+        // Start polling
+        interval = setInterval(() => {
+          if (mounted) {
+            loadUploads()
+          }
+        }, 5000) // 5 seconds instead of 2
+      } else if (!hasActive && interval) {
+        // Stop polling when no active uploads
+        clearInterval(interval)
+        interval = null
+      }
+    }
+
+    // Check periodically if we need to start/stop polling
+    const checkInterval = setInterval(() => {
+      pollIfNeeded()
+    }, 10000) // Check every 10 seconds
+
+    // Initial check
+    pollIfNeeded()
 
     return () => {
       mounted = false
-      clearInterval(interval)
+      if (interval) {
+        clearInterval(interval)
+      }
+      clearInterval(checkInterval)
       unsubscribes.forEach((unsubscribe) => unsubscribe())
     }
   }, [projectId, bucketId])

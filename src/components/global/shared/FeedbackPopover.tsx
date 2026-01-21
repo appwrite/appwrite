@@ -76,7 +76,6 @@ export function FeedbackPopover() {
     await new Promise((resolve) => setTimeout(resolve, 800))
 
     // Here you would typically send the feedback to your backend
-    console.log('Feedback submitted:', { type: selectedType, message })
 
     setIsSubmitting(false)
     setIsSubmitted(true)

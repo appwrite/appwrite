@@ -24,6 +24,7 @@ export function useActiveUploads() {
 
   useEffect(() => {
     let mounted = true
+    let interval: NodeJS.Timeout | null = null
 
     // Initial load
     loadActiveUploads()
@@ -48,16 +49,46 @@ export function useActiveUploads() {
 
     setupListeners()
 
-    // Poll for new uploads periodically
-    const interval = setInterval(() => {
-      if (mounted) {
-        loadActiveUploads()
+    // Only poll when there are active uploads
+    // Use a longer interval (5 seconds) to reduce CPU usage
+    const pollIfNeeded = async () => {
+      if (!mounted) return
+      
+      const uploads = await uploadManager.getActiveUploads()
+      if (!mounted) return
+      
+      const hasActive = uploads.some(
+        (u) => u.status === 'pending' || u.status === 'uploading'
+      )
+      
+      if (hasActive && !interval) {
+        // Start polling
+        interval = setInterval(() => {
+          if (mounted) {
+            loadActiveUploads()
+          }
+        }, 5000) // 5 seconds instead of 2
+      } else if (!hasActive && interval) {
+        // Stop polling when no active uploads
+        clearInterval(interval)
+        interval = null
       }
-    }, 2000)
+    }
+
+    // Check periodically if we need to start/stop polling
+    const checkInterval = setInterval(() => {
+      pollIfNeeded()
+    }, 10000) // Check every 10 seconds
+
+    // Initial check
+    pollIfNeeded()
 
     return () => {
       mounted = false
-      clearInterval(interval)
+      if (interval) {
+        clearInterval(interval)
+      }
+      clearInterval(checkInterval)
       unsubscribes.forEach((unsubscribe) => unsubscribe())
     }
   }, [loadActiveUploads])

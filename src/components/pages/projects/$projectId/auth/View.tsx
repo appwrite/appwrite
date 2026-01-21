@@ -491,8 +491,6 @@ export function AuthView() {
       setCreateUserDialogOpen(true)
     } else if (activeTab === 'teams') {
       setCreateTeamDialogOpen(true)
-    } else {
-      console.log('Create', activeTab)
     }
   }
 

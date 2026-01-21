@@ -403,9 +403,9 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
         showFilters
         onFilterClick={() => setShowFilters(!showFilters)}
         showRefresh
-        onRefresh={() => console.log('Refresh activities')}
+        onRefresh={() => {}}
         showExport
-        onExport={() => console.log('Export activities')}
+        onExport={() => {}}
         fullWidthBorder
         fullWidth
         rightContent={
@@ -444,7 +444,6 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
                           className="font-medium underline hover:no-underline"
                           onClick={(e) => {
                             e.preventDefault()
-                            console.log('Upgrade plan')
                           }}
                         >
                           Upgrade
@@ -455,7 +454,6 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
                           className="font-medium underline hover:no-underline"
                           onClick={(e) => {
                             e.preventDefault()
-                            console.log('Contact sales')
                           }}
                         >
                           contact sales
@@ -592,7 +590,7 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
                       index === paginatedActivities.length - 1 &&
                         'border-b border-border',
                     )}
-                    onClick={() => console.log('View activity', activity.$id)}
+                    onClick={() => {}}
                   >
                     <TableCell className="pl-6 sm:pl-8">
                       <div className="flex items-center gap-2.5">

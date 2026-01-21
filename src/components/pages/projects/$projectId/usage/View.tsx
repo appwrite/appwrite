@@ -447,8 +447,7 @@ export function UsageView({ plan = 'pro', className }: UsageViewProps) {
 
   // Handle export
   const handleExport = () => {
-    // In a real app, this would trigger a CSV/JSON export
-    console.log('Exporting usage data...')
+    // TODO: Implement CSV/JSON export
   }
 
   // Render based on state

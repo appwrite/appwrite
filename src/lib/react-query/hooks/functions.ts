@@ -245,10 +245,6 @@ export async function fetchFunctionVariables(
     }
   } catch (error) {
     // If queries aren't supported, fall back to fetching all and paginating client-side
-    console.warn(
-      'Function variables API does not support queries, falling back to client-side pagination:',
-      error,
-    )
     const response = await projectSdk.functions.listVariables({ functionId })
     const allVariables = (response.variables || []).sort((a, b) => {
       const aTime = new Date(a.$createdAt || 0).getTime()

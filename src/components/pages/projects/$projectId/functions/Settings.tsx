@@ -516,7 +516,6 @@ export function FunctionSettings() {
                             onClick={(e) => {
                               e.preventDefault()
                               // TODO: Navigate to upgrade or contact sales
-                              console.log('Upgrade or contact sales')
                             }}
                           >
                             Upgrade your plan

@@ -55,7 +55,6 @@ export async function fetchProjectDatabases(
       search?.trim() || undefined,
     )
   } catch (err) {
-    console.warn('Failed to fetch databases:', err)
     response = { databases: [], total: 0 }
   }
 
@@ -125,7 +124,6 @@ export async function fetchProjectDatabase(
       backupPolicyCount: number
     }
   } catch (err) {
-    console.error('[fetchProjectDatabase] Failed to fetch database:', err)
     return null
   }
 }
@@ -152,6 +150,35 @@ export async function createProjectDatabase(
       : ID.unique()
   return await (projectSdk.tablesDB as any).create({
     databaseId,
+    name: data.name.trim(),
+  })
+}
+
+/**
+ * Create a new table (collection) in a database
+ *
+ * @param projectId - The project ID
+ * @param databaseId - The database ID
+ * @param data - The table data (tableId and name)
+ * @returns Created table
+ */
+export async function createProjectTable(
+  projectId: string,
+  databaseId: string,
+  data: { tableId?: string | null; name: string },
+) {
+  if (!projectId || !databaseId) {
+    throw new Error('Project ID and Database ID are required')
+  }
+  const projectSdk = sdk.forProject(projectId)
+  const tableId =
+    data.tableId && data.tableId.trim() !== ''
+      ? data.tableId.trim()
+      : ID.unique()
+
+  return await (projectSdk.tablesDB as any).createTable({
+    databaseId,
+    tableId,
     name: data.name.trim(),
   })
 }
@@ -195,7 +222,6 @@ export async function fetchProjectTables(
       search?.trim() || undefined,
     )
   } catch (err) {
-    console.warn('Failed to fetch tables:', err)
     response = { tables: [], total: 0 }
   }
 
@@ -237,7 +263,6 @@ export async function fetchAllProjectTablesForVisualizer(
       undefined,
     )
   } catch (err) {
-    console.warn('Failed to fetch tables for visualizer:', err)
     response = { tables: [] }
   }
 
@@ -298,7 +323,6 @@ export async function fetchProjectTableRows(
       response = { rows: [], total: 0 }
     }
   } catch (err) {
-    console.warn('Failed to fetch rows:', err)
     response = { rows: [], total: 0 }
   }
 
@@ -348,7 +372,6 @@ export async function fetchProjectTableColumns(
       response = { attributes: [] }
     }
   } catch (err) {
-    console.warn('Failed to fetch columns:', err)
     response = { attributes: [] }
   }
 
@@ -394,7 +417,6 @@ export async function fetchProjectTableIndexes(
       response = { indexes: [] }
     }
   } catch (err) {
-    console.warn('Failed to fetch indexes:', err)
     response = { indexes: [] }
   }
 
@@ -457,7 +479,6 @@ export async function fetchProjectTable(
         response.$updatedAt || response.$createdAt || new Date().toISOString(),
     }
   } catch (err) {
-    console.error('[fetchProjectTable] Failed to fetch table:', err)
     return null
   }
 }
@@ -648,10 +669,6 @@ export async function createProjectTableRows(
       created = rows.length
     } catch (error) {
       // If bulk insert fails, fall back to individual inserts
-      console.warn(
-        'Bulk insert failed, falling back to individual inserts:',
-        error,
-      )
     }
   }
 

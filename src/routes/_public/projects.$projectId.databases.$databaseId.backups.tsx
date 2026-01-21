@@ -88,7 +88,6 @@ export const Route = createFileRoute(
       }
     } catch (error) {
       // Silently fail - component will handle error state
-      console.error('Failed to load backups data:', error)
     }
   },
   component: DatabaseOverviewBackups,

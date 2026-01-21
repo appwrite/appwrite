@@ -130,15 +130,15 @@ export function BillingTab() {
   }
 
   const handleEditAddress = () => {
-    console.log('Open edit address modal')
+    // TODO: Open edit address modal
   }
 
   const handleEditTaxId = () => {
-    console.log('Open edit tax ID modal')
+    // TODO: Open edit tax ID modal
   }
 
   const handleAddCredits = () => {
-    console.log('Open add credits modal')
+    // TODO: Open add credits modal
   }
 
   return (

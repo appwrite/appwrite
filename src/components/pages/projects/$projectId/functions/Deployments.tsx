@@ -1340,7 +1340,6 @@ export function FunctionDeployments() {
                       onClick={(e) => {
                         e.preventDefault()
                         // TODO: Navigate to upgrade or contact sales
-                        console.log('Upgrade or contact sales')
                       }}
                     >
                       Upgrade your plan
@@ -1352,7 +1351,6 @@ export function FunctionDeployments() {
                       onClick={(e) => {
                         e.preventDefault()
                         // TODO: Navigate to contact sales
-                        console.log('Contact sales')
                       }}
                     >
                       contact sales

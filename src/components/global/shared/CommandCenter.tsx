@@ -280,7 +280,6 @@ export function CommandCenter({
         shortcut: 'C P',
         keywords: ['new', 'add'],
         action: () => {
-          console.log('Create project')
           onOpenChange(false)
         },
       },
@@ -293,7 +292,6 @@ export function CommandCenter({
         shortcut: 'C T',
         keywords: ['new', 'add', 'organization'],
         action: () => {
-          console.log('Create team')
           onOpenChange(false)
         },
       },
@@ -306,7 +304,6 @@ export function CommandCenter({
         shortcut: 'C M',
         keywords: ['new', 'add', 'user'],
         action: () => {
-          console.log('Invite member')
           onOpenChange(false)
         },
       },
@@ -1335,7 +1332,6 @@ export function CommandCenter({
                       key={fn.$id}
                       value={fn.name}
                       onSelect={() => {
-                        console.log('Execute function:', fn.name)
                         onOpenChange(false)
                       }}
                       className="group flex cursor-pointer items-center gap-3 rounded-md px-3 py-2.5 text-muted-foreground data-[selected=true]:bg-accent data-[selected=true]:text-foreground"

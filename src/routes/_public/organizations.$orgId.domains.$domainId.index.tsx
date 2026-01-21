@@ -37,8 +37,7 @@ export const Route = createFileRoute(
           staleTime: 30 * 1000, // 30 seconds
         })
       } catch (error) {
-        // Log error but don't block rendering
-        console.error('Error prefetching domain data:', error)
+        // Silently fail - component will handle error state
       }
 
       // Prefetch DNS records (initial page) - use ensureQueryData to prevent layout shifts
@@ -49,8 +48,7 @@ export const Route = createFileRoute(
           staleTime: 30 * 1000, // 30 seconds
         })
       } catch (error) {
-        // Log error but don't block rendering
-        console.error('Error prefetching DNS records:', error)
+        // Silently fail - component will handle error state
       }
     }
   },

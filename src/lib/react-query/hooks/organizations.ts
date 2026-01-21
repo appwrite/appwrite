@@ -295,7 +295,6 @@ export async function fetchBillingPlans() {
       total: response.total || 0,
     }
   } catch (error) {
-    console.warn('Failed to fetch billing plans:', error)
     return { plans: {}, total: 0 }
   }
 }
@@ -323,7 +322,6 @@ export async function fetchCouponAccount(couponCode: string) {
     }
     return null
   } catch (error) {
-    console.warn('Failed to fetch coupon:', error)
     return null
   }
 }
@@ -351,7 +349,6 @@ export async function fetchOrganizationUsage(organizationId: string) {
     }
     return undefined
   } catch (error) {
-    console.warn('Failed to fetch organization usage:', error)
     return undefined
   }
 }
@@ -376,7 +373,6 @@ export async function fetchOrganizationProjects(organizationId: string) {
       total: response.total || 0,
     }
   } catch (error) {
-    console.warn('Failed to fetch organization projects:', error)
     return { projects: [], total: 0 }
   }
 }
@@ -415,7 +411,6 @@ export async function fetchEstimationCreateOrganization(
     }
     return null
   } catch (error) {
-    console.warn('Failed to fetch estimation:', error)
     return null
   }
 }
@@ -445,7 +440,6 @@ export async function fetchEstimationUpdatePlan(
     if (couponId) {
       // Ensure it's a string, not an object or array
       if (typeof couponId !== 'string') {
-        console.warn('Invalid couponId type:', typeof couponId, couponId)
         couponParam = undefined
       } else {
         const trimmed = couponId.trim()
@@ -481,7 +475,6 @@ export async function fetchEstimationUpdatePlan(
     }
     return null
   } catch (error) {
-    console.warn('Failed to fetch estimation:', error)
     return null
   }
 }
@@ -762,7 +755,6 @@ export async function createDowngradeFeedback(params: {
     })
   } catch (error) {
     // Don't throw - feedback is optional
-    console.warn('Failed to create downgrade feedback:', error)
   }
 }
 

@@ -76,7 +76,6 @@ export async function fetchOrganizationMemberships(
         total: response.total || 0,
       }
     } catch (fallbackErr) {
-      console.warn('Failed to fetch memberships:', fallbackErr)
       return { memberships: [], total: 0 }
     }
   }

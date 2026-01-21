@@ -22,8 +22,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000,
       })
     } catch (error) {
-      // Log error but don't block rendering - let component handle error state
-      console.error('Error prefetching function data:', error)
+      // Silently fail - component will handle error state
     }
   },
   component: FunctionLayout,

@@ -138,7 +138,6 @@ export async function fetchProjectVariables(
       total: response.total || 0,
     }
   } catch (error) {
-    console.warn('Failed to fetch project variables:', error)
     return { variables: [], total: 0 }
   }
 }

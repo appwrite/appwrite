@@ -29,8 +29,7 @@ export const Route = createFileRoute(
           }),
         ])
       } catch (error) {
-        // Log error but don't block rendering - let component handle error state
-        console.error('Error prefetching user data:', error)
+        // Silently fail - component will handle error state
       }
     }
   },

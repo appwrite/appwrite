@@ -77,7 +77,7 @@ export function ImagineView() {
 
   const handleSubmit = () => {
     if (!prompt.trim() || isTyping) return
-    console.log('Submitting prompt:', prompt)
+    // TODO: Submit prompt
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

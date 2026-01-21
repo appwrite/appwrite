@@ -43,8 +43,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000,
       })
     } catch (error) {
-      // Log error but don't block rendering
-      console.error('Error prefetching function data:', error)
+      // Silently fail - component will handle error state
     }
 
     // Prefetch active deployment if function has a deploymentId
@@ -64,8 +63,7 @@ export const Route = createFileRoute(
           staleTime: 30 * 1000,
         })
       } catch (error) {
-        // Log error but don't block rendering
-        console.error('Error prefetching active deployment:', error)
+        // Silently fail - component will handle error state
       }
     }
 
@@ -86,8 +84,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000,
       })
     } catch (error) {
-      // Log error but don't block rendering
-      console.error('Error prefetching domains:', error)
+      // Silently fail - component will handle error state
     }
 
     // Prefetch deployments list for the requested page
@@ -113,8 +110,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000,
       })
     } catch (error) {
-      // Log error but don't block rendering
-      console.error('Error prefetching deployments:', error)
+      // Silently fail - component will handle error state
     }
   },
   component: FunctionDeployments,

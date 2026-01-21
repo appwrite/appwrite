@@ -164,12 +164,6 @@ export function UserDetailView() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // Temporary test to verify component is rendering
-  console.log('UserDetailView component called', {
-    projectId,
-    userId,
-    pathname: location.pathname,
-  })
 
   // Early return if missing required params
   if (!projectId || !userId) {
@@ -204,28 +198,6 @@ export function UserDetailView() {
   } = useUser(projectId, userId)
   const { data: mfaFactors } = useUserMFAFactors(projectId, userId)
 
-  // Debug: Log to verify component is rendering
-  useEffect(() => {
-    console.log('UserDetailView rendering:', {
-      projectId,
-      userId,
-      userLoading,
-      isFetching,
-      isError,
-      hasUser: !!user,
-      error: userError,
-      pathname: location.pathname,
-    })
-  }, [
-    projectId,
-    userId,
-    userLoading,
-    isFetching,
-    isError,
-    user,
-    userError,
-    location.pathname,
-  ])
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {

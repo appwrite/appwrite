@@ -47,12 +47,6 @@ export function CreateProjectDialog({
     error: regionsError,
   } = useRegions()
 
-  // Log regions data for debugging
-  useEffect(() => {
-    if (regions.length === 0 && !regionsLoading) {
-      console.log('Regions data:', { regions, regionsError, regionsLoading })
-    }
-  }, [regions, regionsLoading, regionsError])
 
   // Set default region when regions load
   useEffect(() => {

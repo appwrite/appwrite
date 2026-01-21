@@ -40,8 +40,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000,
       })
     } catch (error) {
-      // Log error but don't block rendering
-      console.error('Error prefetching function data:', error)
+      // Silently fail - component will handle error state
     }
 
     // Prefetch executions for the requested page
@@ -66,8 +65,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000,
       })
     } catch (error) {
-      // Log error but don't block rendering
-      console.error('Error prefetching executions:', error)
+      // Silently fail - component will handle error state
     }
   },
   component: FunctionExecutions,

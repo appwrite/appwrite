@@ -400,11 +400,6 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         },
       )
 
-      // Debug: Log project structure if no resources found (only in development)
-      if (resources.length === 0 && process.env.NODE_ENV === 'development') {
-        console.log('Project structure:', project)
-        console.log('Available keys:', Object.keys(project))
-      }
 
       return {
         projectId: project.projectId || project.$id || project.id,

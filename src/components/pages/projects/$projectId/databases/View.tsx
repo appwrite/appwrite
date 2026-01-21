@@ -66,6 +66,7 @@ import {
   useOrganizationPlan,
   fetchProjectDatabases,
   createProjectDatabase,
+  createProjectTable,
 } from '@/lib/react-query/hooks'
 import { ColumnDrawer, ColumnFormData } from './tables/Column'
 import { IndexDrawer, IndexFormData } from './tables/Index'
@@ -76,6 +77,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { BackupsView } from './Backups'
 import { CreateDatabase } from './CreateDatabase'
+import { CreateTable } from './CreateTable'
 import { ComingSoonView } from '../shared/ComingSoon'
 import { ComingSoonCurtain } from '@/components/ui/coming-soon-curtain'
 import { SchemaVisualizer } from './SchemaVisualizer'
@@ -701,7 +703,6 @@ export function DatabasesListView() {
                       onMenuClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
-                        console.log('Menu', db.$id)
                       }}
                     />
                   </Link>
@@ -927,7 +928,10 @@ export function DatabaseDetailLayout({
               ))}
 
               {/* Create Table Button */}
-              <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground">
+              <button
+                onClick={() => setCreateTableDialogOpen(true)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-[13px]">Create table</span>
               </button>
@@ -1019,6 +1023,9 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
   const projectId = params.projectId as string
   const navigate = useNavigate()
 
+  // Fetch all databases for the switcher
+  const { databases: allDatabases } = useProjectDatabases(projectId, 0, 100, '')
+
   // Fetch database
   const { database, isLoading: databaseLoading } = useProjectDatabase(
     projectId,
@@ -1032,6 +1039,15 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
     0,
     100,
   )
+
+  // Sort databases by name in ascending order
+  const sortedDatabases = useMemo(() => {
+    return [...allDatabases].sort((a, b) => {
+      const nameA = a.name?.toLowerCase() || ''
+      const nameB = b.name?.toLowerCase() || ''
+      return nameA.localeCompare(nameB)
+    })
+  }, [allDatabases])
 
   // Sort tables by name in ascending order
   const sortedTables = useMemo(() => {
@@ -1060,6 +1076,8 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
   const minAnimationDuration = 1000 // 1 second for at least one full rotation
   const [hasRows, setHasRows] = useState(true) // Track if table has rows
   const [rowsTotal, setRowsTotal] = useState<number | undefined>(undefined) // Track total row count
+  const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   // Reset rows total when switching tables
   useEffect(() => {
@@ -1101,6 +1119,32 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
     })
   }
 
+  // Create table mutation for TableView
+  const createTableMutation = useMutation({
+    mutationFn: (data: { tableId?: string; name: string }) =>
+      createProjectTable(projectId!, databaseId!, data),
+    onSuccess: async (table) => {
+      toast.success(`${table.name} has been created`)
+      // Refetch tables and wait for it to complete before navigating
+      await queryClient.refetchQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
+      })
+      setCreateTableDialogOpen(false)
+      // Navigate to the new table's rows tab
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: {
+          projectId: projectId!,
+          databaseId: databaseId!,
+          tableId: table.$id,
+        },
+      })
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || 'Failed to create table')
+    },
+  })
+
   // Fetch columns to get the count for tabs
   const { columns: tableColumns } = useProjectTableColumns(
     projectId,
@@ -1119,21 +1163,18 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
     {
       id: 'rows',
       label: 'Rows',
-      count: rowsTotal !== undefined ? rowsTotal : selectedTable?.rows,
       to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
       params: { projectId, databaseId, tableId },
     },
     {
       id: 'columns',
       label: 'Columns',
-      count: tableColumns.length || selectedTable?.columns,
       to: '/projects/$projectId/databases/$databaseId/tables/$tableId/columns',
       params: { projectId, databaseId, tableId },
     },
     {
       id: 'indexes',
       label: 'Indexes',
-      count: selectedTable?.indexes,
       to: '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes',
       params: { projectId, databaseId, tableId },
     },
@@ -1209,7 +1250,32 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
 
         {/* Tables List */}
         <div className="flex-1 overflow-y-auto p-2">
-          {/* Database Link */}
+          {/* Database Dropdown Switcher */}
+          <div className="mb-1 px-2">
+            <Select
+              value={databaseId}
+              onValueChange={(newDatabaseId) => {
+                // Navigate to the database rows view with '-' as tableId
+                navigate({
+                  to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                  params: { projectId, databaseId: newDatabaseId, tableId: '-' },
+                })
+              }}
+            >
+              <SelectTrigger className="h-8 w-full text-[13px]">
+                <SelectValue placeholder="Select database" />
+              </SelectTrigger>
+              <SelectContent>
+                {sortedDatabases.map((db) => (
+                  <SelectItem key={db.$id} value={db.$id} className="text-[13px]">
+                    {db.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Overview Link */}
           <Link
             to="/projects/$projectId/databases/$databaseId/"
             params={{ projectId, databaseId }}
@@ -1217,7 +1283,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
           >
             <Database className="h-3.5 w-3.5 shrink-0" />
             <span className="min-w-0 flex-1 truncate text-[13px]">
-              {database.name}
+              Overview
             </span>
           </Link>
 
@@ -1264,7 +1330,10 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
               ))}
 
               {/* Create Table Button */}
-              <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground">
+              <button
+                onClick={() => setCreateTableDialogOpen(true)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-[13px]">Create table</span>
               </button>
@@ -1363,8 +1432,6 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
               openCreateIndexDialogRef.current
             ) {
               openCreateIndexDialogRef.current()
-            } else {
-              console.log('Create', activeTab)
             }
           }}
           showFilters={activeTab === 'rows' && hasRows}
@@ -1390,9 +1457,9 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
           }}
           isRefreshing={isRefreshingRows}
           showImport={activeTab === 'rows'}
-          onImport={() => console.log('Import data')}
+          onImport={() => {}}
           showExport={activeTab === 'rows'}
-          onExport={() => console.log('Export data')}
+          onExport={() => {}}
           beforeCreateButtons={
             activeTab === 'columns' ? (
               <Button
@@ -1499,9 +1566,9 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
         <div
           className={cn(
             'flex-1',
-            activeTab !== 'settings' &&
-              activeTab !== 'security' &&
-              'overflow-hidden',
+            activeTab === 'settings' || activeTab === 'security'
+              ? 'overflow-y-auto'
+              : 'overflow-hidden',
           )}
         >
           {activeTab === 'rows' && (
@@ -1543,6 +1610,14 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
           {activeTab === 'settings' && <TableSettings table={selectedTable} />}
         </div>
       </div>
+
+      {/* Create Table Dialog */}
+      <CreateTable
+        open={createTableDialogOpen}
+        onOpenChange={setCreateTableDialogOpen}
+        onCreate={(data) => createTableMutation.mutate(data)}
+        isLoading={createTableMutation.isPending}
+      />
     </div>
   )
 }
@@ -1642,7 +1717,10 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           {tablesExpanded && (
             <div className="ml-3 mt-0.5 border-l border-border pl-2">
               {/* Create Table Button */}
-              <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground">
+              <button
+                onClick={() => setCreateTableDialogOpen(true)}
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-[13px]">Create table</span>
               </button>
@@ -1712,8 +1790,8 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             <p className="mb-4 text-[13px] text-muted-foreground">
               Create your first table to get started
             </p>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button onClick={() => setCreateTableDialogOpen(true)}>
+              <Plus className="mr-1.5 h-4 w-4" />
               Create table
             </Button>
           </div>
@@ -1756,6 +1834,7 @@ export function DatabaseOverview({
   const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set())
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
 
   // Convert 1-indexed page to 0-indexed for API
   const currentPageIndexed = currentPage - 1
@@ -1776,16 +1855,6 @@ export function DatabaseOverview({
     }
   }, [database])
 
-  // Debug logging
-  useEffect(() => {
-    console.log('[DatabaseOverview] Component state:', {
-      projectId,
-      databaseId,
-      databaseLoading,
-      hasDatabase: !!database,
-      databaseError: databaseError?.message,
-    })
-  }, [projectId, databaseId, databaseLoading, database, databaseError])
 
   // Fetch tables for the database with pagination
   const {
@@ -2107,6 +2176,32 @@ export function DatabaseOverview({
   }
 
   // Bulk delete mutation for tables
+  // Create table mutation
+  const createTableMutation = useMutation({
+    mutationFn: (data: { tableId?: string; name: string }) =>
+      createProjectTable(projectId!, databaseId!, data),
+    onSuccess: async (table) => {
+      toast.success(`${table.name} has been created`)
+      // Refetch tables and wait for it to complete before navigating
+      await queryClient.refetchQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
+      })
+      setCreateTableDialogOpen(false)
+      // Navigate to the new table's rows tab
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: {
+          projectId: projectId!,
+          databaseId: databaseId!,
+          tableId: table.$id,
+        },
+      })
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || 'Failed to create table')
+    },
+  })
+
   const bulkDeleteTablesMutation = useMutation({
     mutationFn: async (tableIds: string[]) => {
       if (!projectId || !databaseId) {
@@ -2222,7 +2317,7 @@ export function DatabaseOverview({
         onSearchChange={activeTab === 'tables' ? handleSearchChange : undefined}
         createLabel={activeTab === 'tables' ? 'Create table' : undefined}
         onCreate={
-          activeTab === 'tables' ? () => console.log('Create table') : undefined
+          activeTab === 'tables' ? () => setCreateTableDialogOpen(true) : undefined
         }
         beforeCreateButtons={
           activeTab === 'tables' ? (
@@ -2607,10 +2702,10 @@ export function DatabaseOverview({
                     : 'Create your first table to get started'}
                 </p>
                 {!searchValue && (
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create table
-                  </Button>
+                <Button onClick={() => setCreateTableDialogOpen(true)}>
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Create table
+                </Button>
                 )}
               </div>
             )}
@@ -3015,6 +3110,14 @@ export function DatabaseOverview({
         onOpenChange={setExportDialogOpen}
         schema={databaseSchema || null}
         isLoading={schemaLoading}
+      />
+
+      {/* Create Table Dialog */}
+      <CreateTable
+        open={createTableDialogOpen}
+        onOpenChange={setCreateTableDialogOpen}
+        onCreate={(data) => createTableMutation.mutate(data)}
+        isLoading={createTableMutation.isPending}
       />
     </div>
   )
@@ -7451,7 +7554,7 @@ function TableSettings({ table }: SpreadsheetProps) {
             setDisplayNames(savedNames)
           }
         } catch (err) {
-          console.warn('Failed to load display names:', err)
+          // Silently handle display names loading error
         }
       }
       loadDisplayNames()
@@ -7572,7 +7675,7 @@ function TableSettings({ table }: SpreadsheetProps) {
           }
           await sdk.forConsole.teams.updatePrefs(organizationId, updatedPrefs)
         } catch (err) {
-          console.warn('Failed to delete table preferences:', err)
+          // Silently handle preference deletion error
         }
       }
 

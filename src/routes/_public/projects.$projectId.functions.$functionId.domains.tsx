@@ -27,8 +27,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000,
       })
     } catch (error) {
-      // Log error but don't block rendering
-      console.error('Error prefetching function data:', error)
+      // Silently fail - component will handle error state
     }
 
     // Prefetch proxy rules for domains (initial page, no search)
@@ -48,8 +47,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000,
       })
     } catch (error) {
-      // Log error but don't block rendering
-      console.error('Error prefetching domains:', error)
+      // Silently fail - component will handle error state
     }
 
     // Prefetch total count for limit checking (separate from search query)
@@ -60,8 +58,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000,
       })
     } catch (error) {
-      // Log error but don't block rendering
-      console.error('Error prefetching domains total count:', error)
+      // Silently fail - component will handle error state
     }
   },
   component: FunctionDomains,
