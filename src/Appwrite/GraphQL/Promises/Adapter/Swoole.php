@@ -44,54 +44,47 @@ class Swoole extends Adapter
             return $this->createFulfilled([]);
         }
 
-        // Create a promise whose executor uses Channel to wait for all input promises
-        $promise = new SwoolePromise(function ($resolve, $reject) use ($promisesOrValues, $total) {
-            $channel = new \Swoole\Coroutine\Channel($total);
-            $result = [];
-            $error = null;
+        // Create the combined promise without executor
+        $combinedPromise = new SwoolePromise();
 
-            foreach ($promisesOrValues as $index => $promiseOrValue) {
-                if ($promiseOrValue instanceof GQLPromise) {
-                    $result[$index] = null;
-                    // Spawn a coroutine to wait for each promise
-                    \go(function () use ($promiseOrValue, $index, &$result, &$error, $channel) {
-                        /** @var SwoolePromise $adopted */
-                        $adopted = $promiseOrValue->adoptedPromise;
+        $count = 0;
+        $result = [];
+        $rejected = false;
 
-                        // Poll until the promise is settled
-                        while ($adopted->isPending()) {
-                            \Swoole\Coroutine::sleep(0.001);
-                        }
-
-                        if ($adopted->isFulfilled()) {
-                            $result[$index] = $adopted->getResult();
-                        } else {
-                            if ($error === null) {
-                                $error = $adopted->getResult();
-                            }
-                        }
-                        $channel->push(true);
-                    });
-                } else {
-                    $result[$index] = $promiseOrValue;
-                    $channel->push(true);
-                }
-            }
-
-            // Wait for all coroutines to complete
-            for ($i = 0; $i < $total; $i++) {
-                $channel->pop();
-            }
-            $channel->close();
-
-            if ($error !== null) {
-                $reject($error);
-            } else {
+        $checkComplete = static function () use (&$count, $total, &$result, &$rejected, $combinedPromise): void {
+            if (!$rejected && $count === $total) {
                 \ksort($result);
-                $resolve($result);
+                $combinedPromise->resolve($result);
             }
-        });
+        };
 
-        return new GQLPromise($promise, $this);
+        foreach ($promisesOrValues as $index => $promiseOrValue) {
+            if ($promiseOrValue instanceof GQLPromise) {
+                $result[$index] = null;
+                /** @var SwoolePromise $adopted */
+                $adopted = $promiseOrValue->adoptedPromise;
+                $adopted->then(
+                    static function ($value) use (&$result, $index, &$count, $checkComplete) {
+                        $result[$index] = $value;
+                        ++$count;
+                        $checkComplete();
+                        return $value;
+                    },
+                    static function ($error) use (&$rejected, $combinedPromise) {
+                        if (!$rejected) {
+                            $rejected = true;
+                            $combinedPromise->reject($error);
+                        }
+                    }
+                );
+            } else {
+                $result[$index] = $promiseOrValue;
+                ++$count;
+            }
+        }
+
+        $checkComplete();
+
+        return new GQLPromise($combinedPromise, $this);
     }
 }
