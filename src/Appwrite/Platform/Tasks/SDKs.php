@@ -50,7 +50,7 @@ class SDKs extends Action
         'android',
         'graphql',
         'rest',
-        'md',
+        'markdown',
     ];
 
     public static function getName(): string
@@ -83,7 +83,7 @@ class SDKs extends Action
         if (!$sdks) {
             $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
-            if (!\in_array($selectedSDK, $this->supportedSDKS)) {
+            if ($selectedSDK !== '*' && !\in_array($selectedSDK, $this->supportedSDKS)) {
                 throw new \Exception('Unknown SDK "' . $selectedSDK . '" given. Options are: ' . implode(', ', $this->supportedSDKS));
             }
         } else {
@@ -277,8 +277,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'rest':
                         $config = new REST();
                         break;
-                    case 'md':
+                    case 'markdown':
                         $config = new Markdown();
+                        $config->setNPMPackage('@appwrite.io/docs');
                         break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');

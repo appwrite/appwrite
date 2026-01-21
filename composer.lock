@@ -5549,12 +5549,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "27e1240728266c2a3f88651395b126f0b199e1c0"
+                "reference": "e6c700bac81d1f250a97edeeb2007f69e17f29ba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/27e1240728266c2a3f88651395b126f0b199e1c0",
-                "reference": "27e1240728266c2a3f88651395b126f0b199e1c0",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/e6c700bac81d1f250a97edeeb2007f69e17f29ba",
+                "reference": "e6c700bac81d1f250a97edeeb2007f69e17f29ba",
                 "shasum": ""
             },
             "require": {
@@ -5592,7 +5592,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/docs-sdk"
             },
-            "time": "2026-01-21T08:15:45+00:00"
+            "time": "2026-01-21T08:21:48+00:00"
         },
         {
             "name": "doctrine/annotations",

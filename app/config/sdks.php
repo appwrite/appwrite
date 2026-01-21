@@ -251,7 +251,7 @@ return [
                 ],
             ],
             [
-                'key' => 'md',
+                'key' => 'markdown',
                 'name' => 'Markdown',
                 'version' => '0.1.0',
                 'url' => 'https://github.com/appwrite/sdk-for-md.git',
