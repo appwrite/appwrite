@@ -5,7 +5,6 @@ namespace Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\Promises\Swoole as SwoolePromise;
 use GraphQL\Executor\Promise\Promise as GQLPromise;
-use Swoole\Coroutine\Channel;
 
 class Swoole extends Adapter
 {
@@ -39,58 +38,58 @@ class Swoole extends Adapter
     public function all(iterable $promisesOrValues): GQLPromise
     {
         $promisesOrValues = \is_array($promisesOrValues) ? $promisesOrValues : \iterator_to_array($promisesOrValues);
+        $total = \count($promisesOrValues);
 
-        return $this->create(function (callable $resolve, callable $reject) use ($promisesOrValues) {
-            $count = \count($promisesOrValues);
-            if ($count === 0) {
-                $resolve([]);
-                return;
+        if ($total === 0) {
+            return $this->createFulfilled([]);
+        }
+
+        // Shared state across callbacks
+        $count = 0;
+        $result = [];
+        $rejected = false;
+        $resolveCallback = null;
+        $rejectCallback = null;
+
+        $resolveAllWhenFinished = function () use (&$count, $total, &$result, &$rejected, &$resolveCallback): void {
+            if (!$rejected && $count === $total && $resolveCallback !== null) {
+                \ksort($result);
+                $resolveCallback($result);
             }
+        };
 
-            $result = [];
-            $error = null;
-            $channel = new Channel($count);
-
-            foreach ($promisesOrValues as $index => $promiseOrValue) {
-                if ($promiseOrValue instanceof GQLPromise) {
-                    // Spawn a coroutine to wait for each promise
-                    \go(function () use ($promiseOrValue, $index, &$result, &$error, $channel) {
-                        /** @var SwoolePromise $adoptedPromise */
-                        $adoptedPromise = $promiseOrValue->adoptedPromise;
-
-                        // Wait for the promise to resolve using a polling approach
-                        while ($adoptedPromise->isPending()) {
-                            \Swoole\Coroutine::sleep(0.001);
-                        }
-
-                        if ($adoptedPromise->isFulfilled()) {
-                            $result[$index] = $adoptedPromise->getResult();
-                        } else {
-                            if ($error === null) {
-                                $error = $adoptedPromise->getResult();
-                            }
-                        }
-                        $channel->push(true);
-                    });
-                } else {
-                    $result[$index] = $promiseOrValue;
-                    $channel->push(true);
-                }
-            }
-
-            // Wait for all promises to complete
-            for ($i = 0; $i < $count; $i++) {
-                $channel->pop();
-            }
-            $channel->close();
-
-            if ($error !== null) {
-                $reject($error);
-                return;
-            }
-
-            \ksort($result);
-            $resolve($result);
+        // Create the combined promise - the executor captures the resolve/reject callbacks
+        $combinedPromise = new SwoolePromise(function ($resolve, $reject) use (&$resolveCallback, &$rejectCallback) {
+            $resolveCallback = $resolve;
+            $rejectCallback = $reject;
         });
+
+        // Register then callbacks on each input promise
+        foreach ($promisesOrValues as $index => $promiseOrValue) {
+            if ($promiseOrValue instanceof GQLPromise) {
+                $result[$index] = null;
+                $promiseOrValue->then(
+                    static function ($value) use (&$result, $index, &$count, $resolveAllWhenFinished): void {
+                        $result[$index] = $value;
+                        ++$count;
+                        $resolveAllWhenFinished();
+                    },
+                    static function ($error) use (&$rejected, &$rejectCallback): void {
+                        if (!$rejected && $rejectCallback !== null) {
+                            $rejected = true;
+                            $rejectCallback($error);
+                        }
+                    }
+                );
+            } else {
+                $result[$index] = $promiseOrValue;
+                ++$count;
+            }
+        }
+
+        // Check if all non-promise values already resolved everything
+        $resolveAllWhenFinished();
+
+        return new GQLPromise($combinedPromise, $this);
     }
 }
