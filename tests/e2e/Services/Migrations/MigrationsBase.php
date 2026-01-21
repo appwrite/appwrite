@@ -1651,7 +1651,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_DATABASE_DOCUMENTSDB,
             ],
-            'endpoint' => 'http://localhost/v1',
+            'endpoint' => $this->endpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -1713,7 +1713,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_DATABASE_VECTORDB,
             ],
-            'endpoint' => 'http://localhost/v1',
+            'endpoint' => $this->endpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -1774,7 +1774,7 @@ trait MigrationsBase
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_ATTRIBUTE,
             ],
-            'endpoint' => 'http://localhost/v1',
+            'endpoint' => $this->endpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -1838,7 +1838,7 @@ trait MigrationsBase
                 Resource::TYPE_ATTRIBUTE,
                 Resource::TYPE_DOCUMENT,
             ],
-            'endpoint' => 'http://localhost/v1',
+            'endpoint' => $this->endpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -1908,7 +1908,7 @@ trait MigrationsBase
                 Resource::TYPE_DATABASE_DOCUMENTSDB,
                 Resource::TYPE_COLLECTION, // collections in DocumentsDB map to tables in migration
             ],
-            'endpoint' => 'http://localhost/v1',
+            'endpoint' => $this->endpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -1975,7 +1975,7 @@ trait MigrationsBase
                 Resource::TYPE_COLLECTION,
                 Resource::TYPE_DOCUMENT,
             ],
-            'endpoint' => 'http://localhost/v1',
+            'endpoint' => $this->endpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -2310,7 +2310,7 @@ trait MigrationsBase
                 Resource::TYPE_ATTRIBUTE,
                 Resource::TYPE_INDEX,
             ],
-            'endpoint' => 'http://localhost/v1',
+            'endpoint' => $this->endpoint,
             'projectId' => $sourceProject['$id'],
             'apiKey' => $sourceProject['apiKey'],
         ];
