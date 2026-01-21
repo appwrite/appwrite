@@ -10,7 +10,6 @@ class Swoole extends Adapter
 {
     /**
      * Wait for promise completion and return the result.
-     * Since callbacks are executed synchronously, the promise should already be settled.
      *
      * @param GQLPromise $promise
      * @return mixed
@@ -21,6 +20,15 @@ class Swoole extends Adapter
         /** @var SwoolePromise $swoolePromise */
         $swoolePromise = $promise->adoptedPromise;
 
+        // Run any pending queue tasks (for compatibility with graphql-php's deferred execution)
+        $taskQueue = SwoolePromise::getQueue();
+        while (
+            $swoolePromise->state === SwoolePromise::PENDING
+            && !$taskQueue->isEmpty()
+        ) {
+            SwoolePromise::runQueue();
+        }
+
         if ($swoolePromise->state === SwoolePromise::FULFILLED) {
             return $swoolePromise->result;
         }
@@ -29,7 +37,6 @@ class Swoole extends Adapter
             throw $swoolePromise->result;
         }
 
-        // Promise should already be settled in synchronous mode
         throw new \Exception('Could not resolve promise - still pending');
     }
 
