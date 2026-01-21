@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "33da844fdf5648d1d1a027dfb6ae42bc",
+    "content-hash": "d899525d82512d6f8a8b5358b2555200",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -799,6 +799,68 @@
             "time": "2026-01-12T17:58:43+00:00"
         },
         {
+            "name": "halaxa/json-machine",
+            "version": "1.2.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/halaxa/json-machine.git",
+                "reference": "8bf0b0ff6ff60ab480778eaa5ad7d505b442c2d4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/8bf0b0ff6ff60ab480778eaa5ad7d505b442c2d4",
+                "reference": "8bf0b0ff6ff60ab480778eaa5ad7d505b442c2d4",
+                "shasum": ""
+            },
+            "require": {
+                "php": "7.2 - 8.5"
+            },
+            "require-dev": {
+                "ext-json": "*",
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^8.0"
+            },
+            "suggest": {
+                "ext-json": "To run JSON Machine out of the box without custom decoders.",
+                "guzzlehttp/guzzle": "To run example with GuzzleHttp"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/functions.php"
+                ],
+                "psr-4": {
+                    "JsonMachine\\": "src/"
+                },
+                "exclude-from-classmap": [
+                    "src/autoloader.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Filip Halaxa",
+                    "email": "filip@halaxa.cz"
+                }
+            ],
+            "description": "Efficient, easy-to-use and fast JSON pull parser",
+            "support": {
+                "issues": "https://github.com/halaxa/json-machine/issues",
+                "source": "https://github.com/halaxa/json-machine/tree/1.2.6"
+            },
+            "funding": [
+                {
+                    "url": "https://ko-fi.com/G2G57KTE4",
+                    "type": "other"
+                }
+            ],
+            "time": "2025-12-05T14:53:09+00:00"
+        },
+        {
             "name": "league/csv",
             "version": "9.24.1",
             "source": {
@@ -1589,16 +1651,16 @@
         },
         {
             "name": "open-telemetry/sem-conv",
-            "version": "1.37.0",
+            "version": "1.38.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sem-conv.git",
-                "reference": "8da7ec497c881e39afa6657d72586e27efbd29a1"
+                "reference": "e613bc640a407def4991b8a936a9b27edd9a3240"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/8da7ec497c881e39afa6657d72586e27efbd29a1",
-                "reference": "8da7ec497c881e39afa6657d72586e27efbd29a1",
+                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/e613bc640a407def4991b8a936a9b27edd9a3240",
+                "reference": "e613bc640a407def4991b8a936a9b27edd9a3240",
                 "shasum": ""
             },
             "require": {
@@ -1638,11 +1700,11 @@
             ],
             "support": {
                 "chat": "https://app.slack.com/client/T08PSQ7BQ/C01NFPCV44V",
-                "docs": "https://opentelemetry.io/docs/php",
+                "docs": "https://opentelemetry.io/docs/languages/php",
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-09-03T12:08:10+00:00"
+            "time": "2026-01-21T04:14:03+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -4516,22 +4578,23 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.4.4",
+            "version": "1.4.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "3fe751902012d09d323420cd3523be1ed855e868"
+                "reference": "f358db6fb6a01d855bbed39e283387069e4f277d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/3fe751902012d09d323420cd3523be1ed855e868",
-                "reference": "3fe751902012d09d323420cd3523be1ed855e868",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f358db6fb6a01d855bbed39e283387069e4f277d",
+                "reference": "f358db6fb6a01d855bbed39e283387069e4f277d",
                 "shasum": ""
             },
             "require": {
                 "appwrite/appwrite": "19.*",
                 "ext-curl": "*",
                 "ext-openssl": "*",
+                "halaxa/json-machine": "^1.2",
                 "php": ">=8.1",
                 "utopia-php/console": "0.0.*",
                 "utopia-php/database": "4.*",
@@ -4565,9 +4628,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.4.4"
+                "source": "https://github.com/utopia-php/migration/tree/1.4.6"
             },
-            "time": "2026-01-16T10:00:07+00:00"
+            "time": "2026-01-20T11:07:17+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5482,16 +5545,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.17",
+            "version": "dev-docs-sdk",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "1bc5a39bf87d3c2064f2f8d45fa712340338bc41"
+                "reference": "27e1240728266c2a3f88651395b126f0b199e1c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/1bc5a39bf87d3c2064f2f8d45fa712340338bc41",
-                "reference": "1bc5a39bf87d3c2064f2f8d45fa712340338bc41",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/27e1240728266c2a3f88651395b126f0b199e1c0",
+                "reference": "27e1240728266c2a3f88651395b126f0b199e1c0",
                 "shasum": ""
             },
             "require": {
@@ -5527,9 +5590,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.17"
+                "source": "https://github.com/appwrite/sdk-generator/tree/docs-sdk"
             },
-            "time": "2026-01-19T12:13:41+00:00"
+            "time": "2026-01-21T08:15:45+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -8988,7 +9051,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -9012,5 +9077,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
