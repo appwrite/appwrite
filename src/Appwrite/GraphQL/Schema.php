@@ -48,10 +48,10 @@ class Schema
             $sanitized = '_' . $sanitized;
         }
 
-        // If the name starts with double underscore, prefix with single underscore
-        // to avoid collision with GraphQL introspection types
+        // If the name starts with double underscore, prefix with 'u' to avoid
+        // collision with GraphQL introspection types (using '_' would still leave '__')
         if (\str_starts_with($sanitized, '__')) {
-            $sanitized = '_' . $sanitized;
+            $sanitized = 'u' . $sanitized;
         }
 
         // Ensure the name is not empty
