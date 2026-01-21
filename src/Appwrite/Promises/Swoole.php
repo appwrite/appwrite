@@ -30,8 +30,8 @@ class Swoole extends Promise
 
         try {
             $executor(
-                fn($value) => $this->doResolve($value),
-                fn($reason) => $this->doReject($reason)
+                fn ($value) => $this->doResolve($value),
+                fn ($reason) => $this->doReject($reason)
             );
         } catch (\Throwable $e) {
             $this->doReject($e);
@@ -55,8 +55,8 @@ class Swoole extends Promise
         // Handle thenable values
         if (\is_object($value) && \method_exists($value, 'then')) {
             $value->then(
-                fn($v) => $this->doResolve($v),
-                fn($r) => $this->doReject($r)
+                fn ($v) => $this->doResolve($v),
+                fn ($r) => $this->doReject($r)
             );
             return;
         }
