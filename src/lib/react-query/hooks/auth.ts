@@ -453,3 +453,68 @@ export function useAccountSessions() {
   })
 }
 
+// ============================================================================
+// ACCOUNT PREFERENCES - FEATURE NOTIFICATIONS
+// ============================================================================
+
+/**
+ * Mutation function to update account preferences
+ */
+export async function updateAccountPrefs(prefs: Record<string, any>) {
+  return await sdk.forConsole.account.updatePrefs({ prefs })
+}
+
+/**
+ * Hook to toggle a feature notification preference
+ * 
+ * Manages the 'featureNotifications' string in user preferences.
+ * Uses a comma-separated string to store all feature IDs.
+ * If the feature ID exists, it removes it. If it doesn't exist, it adds it.
+ */
+export function useToggleFeatureNotification() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (featureId: string) => {
+      // Get current account data from cache
+      const account = queryClient.getQueryData<any>(['account', 'console'])
+      
+      if (!account) {
+        throw new Error('Account data not available')
+      }
+
+      // Get current feature notifications (handle both string and legacy array formats)
+      const currentNotificationsRaw = account.prefs?.featureNotifications
+      
+      // Parse into an array, handling different data types
+      let currentNotifications: string[] = []
+      if (typeof currentNotificationsRaw === 'string') {
+        currentNotifications = currentNotificationsRaw ? currentNotificationsRaw.split(',').filter(Boolean) : []
+      } else if (Array.isArray(currentNotificationsRaw)) {
+        // Handle legacy array format
+        currentNotifications = currentNotificationsRaw
+      }
+      
+      // Toggle: if feature exists, remove it; otherwise add it
+      const updatedNotifications = currentNotifications.includes(featureId)
+        ? currentNotifications.filter((id: string) => id !== featureId)
+        : [...currentNotifications, featureId]
+
+      // Convert back to comma-separated string
+      const updatedNotificationsStr = updatedNotifications.join(',')
+
+      // Update preferences with the new string
+      const updatedPrefs = {
+        ...account.prefs,
+        featureNotifications: updatedNotificationsStr,
+      }
+
+      return await updateAccountPrefs(updatedPrefs)
+    },
+    onSuccess: () => {
+      // Invalidate account query to refetch with new prefs
+      queryClient.invalidateQueries({ queryKey: ['account', 'console'] })
+    },
+  })
+}
+

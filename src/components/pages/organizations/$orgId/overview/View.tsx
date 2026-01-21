@@ -91,6 +91,7 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { InviteMembersDialog } from './InviteMembers'
 import { CreateOrganizationDialog } from './CreateOrganization'
+import { CreateProjectDialog } from './CreateProjectDialog'
 import { useCreateOrganization } from '@/lib/react-query/hooks'
 import {
   Table,
@@ -293,6 +294,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null)
   const [selectedRole, setSelectedRole] = useState<'owner' | 'developer' | 'editor' | 'analyst' | 'billing'>('developer')
   const [createOrgDialogOpen, setCreateOrgDialogOpen] = useState(false)
+  const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
 
   // Command center shortcut (Cmd+K / Ctrl+K)
   useKeyboardShortcut('meta+k', () => {
@@ -1236,6 +1238,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         <Button
                           className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
                           style={{ backgroundColor: '#f02e65' }}
+                          onClick={() => setCreateProjectDialogOpen(true)}
                         >
                           <Plus className="h-4 w-4" />
                           Create project
@@ -1258,6 +1261,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                 className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ backgroundColor: '#f02e65' }}
                                 disabled={isAtLimit}
+                                onClick={() => setCreateProjectDialogOpen(true)}
                               >
                                 <Plus className="h-4 w-4" />
                                 Create project
@@ -2256,6 +2260,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           }
         }}
         isLoading={createOrgMutation.isPending}
+      />
+
+      {/* Create Project Dialog */}
+      <CreateProjectDialog
+        open={createProjectDialogOpen}
+        onOpenChange={setCreateProjectDialogOpen}
+        teamId={orgTeamId}
+        organizationPlan={organizationPlan}
+        currentProjectsCount={totalProjectsCount}
       />
     </>
   )

@@ -47,9 +47,9 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
-      // If no tables exist, redirect to tables view
+      // If no tables exist, redirect to database index (tables view)
       throw redirect({
-        to: '/projects/$projectId/databases/$databaseId/tables',
+        to: '/projects/$projectId/databases/$databaseId/',
         params: { projectId, databaseId },
         replace: true,
       })
@@ -59,10 +59,10 @@ export const Route = createFileRoute(
       // Check if table exists and if there are any tables
       const tablesData = await tablesPromise
       
-      // If no tables exist, redirect to tables view
+      // If no tables exist, redirect to database index (tables view)
       if (!tablesData.tables || tablesData.tables.length === 0) {
         throw redirect({
-          to: '/projects/$projectId/databases/$databaseId/tables',
+          to: '/projects/$projectId/databases/$databaseId/',
           params: { projectId, databaseId },
           replace: true,
         })
@@ -71,9 +71,9 @@ export const Route = createFileRoute(
       // Check if the requested table exists in the tables list
       const tableExists = tablesData.tables.some((table: any) => table.$id === tableId)
       if (!tableExists) {
-        // Table not found, redirect to tables view
+        // Table not found, redirect to database index (tables view)
         throw redirect({
-          to: '/projects/$projectId/databases/$databaseId/tables',
+          to: '/projects/$projectId/databases/$databaseId/',
           params: { projectId, databaseId },
           replace: true,
         })

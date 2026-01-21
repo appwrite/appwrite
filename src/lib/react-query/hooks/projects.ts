@@ -6,7 +6,7 @@
 
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query } from '@appwrite.io/console'
+import { Query, ID } from '@appwrite.io/console'
 import type { Project } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, LONG_STALE_TIME, DEFAULT_PAGE_SIZE, SMALL_PAGE_SIZE, keepPreviousData } from './constants'
@@ -643,3 +643,53 @@ export function useDeleteProjectVariable(projectId: string | null | undefined) {
   })
 }
 
+/**
+ * Hook to create a new project
+ * 
+ * @param teamId - The team/organization ID to create the project in
+ */
+export function useCreateProject(teamId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      name,
+      region,
+    }: {
+      projectId?: string
+      name: string
+      region?: string
+    }) => {
+      if (!teamId) {
+        throw new Error('Team ID is required')
+      }
+      if (!name.trim()) {
+        throw new Error('Project name is required')
+      }
+
+      const finalProjectId = projectId || ID.unique()
+      
+      return await sdk.forConsole.projects.create({
+        projectId: finalProjectId,
+        name: name.trim(),
+        teamId,
+        region,
+      })
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate projects list for the team
+      queryClient.invalidateQueries({
+        queryKey: ['projects', 'team', teamId],
+      })
+      // Invalidate organization projects
+      queryClient.invalidateQueries({
+        queryKey: ['organization-projects'],
+      })
+      // Invalidate projects list (general)
+      queryClient.invalidateQueries({
+        queryKey: ['projects'],
+      })
+    },
+  })
+}

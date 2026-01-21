@@ -1,5 +1,5 @@
-import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
-import { DatabaseOverview } from '@/components/pages/projects/$projectId/databases/View'
+import { createFileRoute, Outlet, useLocation, useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { fetchProjectDatabase, fetchProjectTables } from '@/lib/react-query/hooks'
 
 const TABLES_PER_PAGE = 25
@@ -35,21 +35,31 @@ export const Route = createFileRoute(
   component: TablesLayout,
 })
 
-// Layout that shows overview when no tableId, or renders child routes
+// Layout: when path is exactly /tables (no $tableId), redirect to database index; otherwise render child routes
 function TablesLayout() {
-  const { databaseId } = Route.useParams()
+  const { projectId, databaseId } = Route.useParams()
   const location = useLocation()
-  
+  const navigate = useNavigate()
+
   // Check if we're on a child route (has /tables/$tableId in path)
   const pathParts = location.pathname.split('/')
   const tableIdIndex = pathParts.indexOf('tables') + 1
   const hasTableId = tableIdIndex > 0 && tableIdIndex < pathParts.length && pathParts[tableIdIndex] !== ''
-  
-  // If we're on a child route (like /tables/$tableId/rows), render outlet
-  if (hasTableId) {
-    return <Outlet />
+
+  // If exactly /tables with no $tableId, redirect to database index (main tables view)
+  useEffect(() => {
+    if (!hasTableId) {
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId/',
+        params: { projectId, databaseId },
+        replace: true,
+      })
+    }
+  }, [hasTableId, navigate, projectId, databaseId])
+
+  if (!hasTableId) {
+    return null
   }
-  
-  // Otherwise, show the tables overview
-  return <DatabaseOverview databaseId={databaseId} activeTab="tables" />
+
+  return <Outlet />
 }

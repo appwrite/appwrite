@@ -36,4 +36,5 @@ export * from './locale'
 export * from './vcs'
 export * from './messaging'
 export * from './realtime'
+export * from './regions'
 

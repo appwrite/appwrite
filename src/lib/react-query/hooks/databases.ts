@@ -6,7 +6,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query } from '@appwrite.io/console'
+import { Query, ID } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './constants'
@@ -109,6 +109,29 @@ export async function fetchProjectDatabase(
     console.error('[fetchProjectDatabase] Failed to fetch database:', err)
     return null
   }
+}
+
+/**
+ * Create a new database in a project.
+ * Uses TablesDB.create. When databaseId is omitted or empty, generates one via ID.unique().
+ *
+ * @param projectId - The project ID
+ * @param data - { databaseId?: string; name: string }
+ * @returns The created database (Models.Database)
+ */
+export async function createProjectDatabase(
+  projectId: string,
+  data: { databaseId?: string | null; name: string },
+) {
+  if (!projectId) {
+    throw new Error('Project ID is required')
+  }
+  const projectSdk = sdk.forProject(projectId)
+  const databaseId = (data.databaseId && data.databaseId.trim() !== '') ? data.databaseId.trim() : ID.unique()
+  return await (projectSdk.tablesDB as any).create({
+    databaseId,
+    name: data.name.trim(),
+  })
 }
 
 /**

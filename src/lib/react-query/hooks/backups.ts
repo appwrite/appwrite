@@ -76,11 +76,12 @@ export async function fetchBackupArchives(
 export function useBackupPolicies(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
+  options?: { enabled?: boolean }
 ) {
   return useQuery({
     queryKey: ['backup-policies', 'project', projectId, 'database', databaseId],
     queryFn: () => fetchBackupPolicies(projectId!, databaseId!),
-    enabled: !!projectId && !!databaseId,
+    enabled: !!projectId && !!databaseId && (options?.enabled ?? true),
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
   })
@@ -94,11 +95,12 @@ export function useBackupArchives(
   databaseId: string | null | undefined,
   page: number = 0,
   limit: number = TINY_PAGE_SIZE,
+  options?: { enabled?: boolean }
 ) {
   return useQuery({
     queryKey: ['backup-archives', 'project', projectId, 'database', databaseId, page, limit],
     queryFn: () => fetchBackupArchives(projectId!, databaseId!, page, limit),
-    enabled: !!projectId && !!databaseId,
+    enabled: !!projectId && !!databaseId && (options?.enabled ?? true),
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
   })

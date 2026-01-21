@@ -28,36 +28,44 @@ export const Route = createFileRoute(
       })
 
       // Then fetch organization plan if we have a teamId
-      const planPromises: Promise<any>[] = []
+      let plan = null
       if (project?.teamId) {
-        planPromises.push(
-          queryClient.ensureQueryData({
-            queryKey: ['organization', 'plan', project.teamId],
-            queryFn: () => fetchOrganizationPlan(project.teamId),
-            staleTime: 5 * 60 * 1000, // 5 minutes
-          })
-        )
+        plan = await queryClient.ensureQueryData({
+          queryKey: ['organization', 'plan', project.teamId],
+          queryFn: () => fetchOrganizationPlan(project.teamId),
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        })
       }
 
-      // Fetch all data in parallel
-      await Promise.all([
-        queryClient.ensureQueryData({
+      // Only fetch backup data if backups are enabled in the plan
+      const backupsEnabled = plan?.backupsEnabled ?? false
+      if (backupsEnabled) {
+        // Fetch all backup data in parallel
+        await Promise.all([
+          queryClient.ensureQueryData({
+            queryKey: ['database', 'project', projectId, databaseId],
+            queryFn: () => fetchProjectDatabase(projectId, databaseId),
+            staleTime: 30 * 1000,
+          }),
+          queryClient.ensureQueryData({
+            queryKey: ['backup-policies', 'project', projectId, 'database', databaseId],
+            queryFn: () => fetchBackupPolicies(projectId, databaseId),
+            staleTime: 30 * 1000,
+          }),
+          queryClient.ensureQueryData({
+            queryKey: ['backup-archives', 'project', projectId, 'database', databaseId, 0, 10],
+            queryFn: () => fetchBackupArchives(projectId, databaseId, 0, 10),
+            staleTime: 30 * 1000,
+          }),
+        ])
+      } else {
+        // Still fetch database for metadata even if backups are disabled
+        await queryClient.ensureQueryData({
           queryKey: ['database', 'project', projectId, databaseId],
           queryFn: () => fetchProjectDatabase(projectId, databaseId),
           staleTime: 30 * 1000,
-        }),
-        queryClient.ensureQueryData({
-          queryKey: ['backup-policies', 'project', projectId, 'database', databaseId],
-          queryFn: () => fetchBackupPolicies(projectId, databaseId),
-          staleTime: 30 * 1000,
-        }),
-        queryClient.ensureQueryData({
-          queryKey: ['backup-archives', 'project', projectId, 'database', databaseId, 0, 10],
-          queryFn: () => fetchBackupArchives(projectId, databaseId, 0, 10),
-          staleTime: 30 * 1000,
-        }),
-        ...planPromises,
-      ])
+        })
+      }
     } catch (error) {
       // Silently fail - component will handle error state
       console.error('Failed to load backups data:', error)

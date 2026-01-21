@@ -14,7 +14,7 @@ function DatabaseOverviewIndexRedirect() {
 
   useEffect(() => {
     navigate({
-      to: '/projects/$projectId/databases/$databaseId/tables',
+      to: '/projects/$projectId/databases/$databaseId/',
       params: { projectId, databaseId },
       replace: true,
     })

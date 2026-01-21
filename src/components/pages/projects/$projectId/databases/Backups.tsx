@@ -55,8 +55,9 @@ import {
   Lock,
 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import { UpgradeCurtain } from '@/components/ui/upgrade-curtain'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
@@ -98,16 +99,18 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const backupsEnabled = organizationPlan?.backupsEnabled ?? false
   const backupPoliciesLimit = organizationPlan?.backupPolicies ?? 0
 
-  // Fetch policies and archives
+  // Fetch policies and archives - only if backups are enabled
   const { data: policiesData, isLoading: policiesLoading } = useBackupPolicies(
     projectId,
     databaseId,
+    { enabled: backupsEnabled },
   )
   const { data: archivesData, isLoading: archivesLoading } = useBackupArchives(
     projectId,
     databaseId,
     backupsPage - 1,
     backupsPageSize,
+    { enabled: backupsEnabled },
   )
 
   const policies: Models.BackupPolicy[] = policiesData?.policies || []
@@ -361,18 +364,34 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
   if (isBackupsDisabled) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
-        <Card className="border-border">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Backups</CardTitle>
+      <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+        <UpgradeCurtain
+          isLocked={true}
+          orgId={project?.teamId}
+          message="Backups are available on Appwrite Cloud Pro and higher plans."
+        >
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <div className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-[15px] font-semibold text-foreground">Backups</h3>
+              </div>
+              <p className="text-[13px] text-muted-foreground mt-2">
+                Automated backup policies and manual backups to ensure your data stays safe.
+              </p>
             </div>
-            <CardDescription>
-              Backups are not available on your current plan. Upgrade to enable automated backups.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4 min-h-[400px] flex flex-col items-center justify-center">
+              <Archive className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-[14px] font-medium text-foreground mb-1">
+                Ensure your data stays safe
+              </p>
+              <p className="text-[13px] text-muted-foreground text-center max-w-md">
+                Create backup policies to automate regular and secure data protection for your databases.
+              </p>
+            </div>
+          </div>
+        </UpgradeCurtain>
       </div>
     )
   }

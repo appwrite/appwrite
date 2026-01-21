@@ -14,8 +14,9 @@ import {
 } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
-import { useTeams, useProject, useProjectsForTeamInfinite } from '@/lib/react-query/hooks'
+import { useTeams, useProject, useProjectsForTeamInfinite, useOrganizationPlan, useProjectsForTeam } from '@/lib/react-query/hooks'
 import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
+import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
 
 interface ProjectSelectorProps {
   className?: string
@@ -32,6 +33,7 @@ export function ProjectSelector({
   isMobile,
 }: ProjectSelectorProps) {
   const [open, setOpen] = useState(false)
+  const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
 
   // Fetch organizations and teams (for team selector)
   // Note: We only fetch teams/organizations here, NOT all projects
@@ -114,6 +116,16 @@ export function ProjectSelector({
     return organizations.find((org) => org.$id === currentProjectTeam.orgId) || null
   }, [currentProjectTeam, organizations])
 
+  // Get organization plan and project count for selected team
+  // These hooks must be called before any early returns to follow Rules of Hooks
+  const selectedTeamOrg = useMemo(() => {
+    if (!selectedTeam) return null
+    return organizations.find((org) => org.$id === selectedTeam.orgId) || null
+  }, [selectedTeam, organizations])
+
+  const { plan: organizationPlan } = useOrganizationPlan(selectedTeamOrg?.$id)
+  const { total: projectsCount } = useProjectsForTeam(selectedTeam?.$id, 0, 1, '')
+
   const filteredTeams = useMemo(() => {
     if (!teams.length) return []
     if (!teamSearch) return teams
@@ -170,44 +182,55 @@ export function ProjectSelector({
 
   if (collapsed) {
     return (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-md bg-accent text-[11px] font-medium text-muted-foreground transition-colors hover:bg-accent/80',
-              className,
-            )}
+      <>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-md bg-accent text-[11px] font-medium text-muted-foreground transition-colors hover:bg-accent/80',
+                className,
+              )}
+            >
+              {(currentProject?.name || selectedProject.name).charAt(0).toUpperCase()}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            side="right"
+            align="start"
+            sideOffset={12}
+            className="w-[520px] border-border bg-popover p-0"
           >
-            {(currentProject?.name || selectedProject.name).charAt(0).toUpperCase()}
-          </button>
-        </PopoverTrigger>
-        <PopoverContent
-          side="right"
-          align="start"
-          sideOffset={12}
-          className="w-[520px] border-border bg-popover p-0"
-        >
-          <ProjectSelectorContent
-            selectedTeam={selectedTeam}
-            setSelectedTeam={setSelectedTeam}
-            selectedProject={selectedProject}
-            handleSelectProject={handleSelectProject}
-            teamSearch={teamSearch}
-            setTeamSearch={setTeamSearch}
-            projectSearch={projectSearch}
-            setProjectSearch={setProjectSearch}
-            filteredTeams={filteredTeams}
-            displayProjects={displayProjects}
-            totalProjects={totalProjects}
-            isFetchingNextPage={isFetchingNextPage}
-            hasNextPage={hasNextPage}
-            fetchNextPage={fetchNextPage}
-            projectsLoading={projectsLoading}
-            organizations={organizations}
-            currentProjectId={projectId}
-          />
-        </PopoverContent>
-      </Popover>
+            <ProjectSelectorContent
+              selectedTeam={selectedTeam}
+              setSelectedTeam={setSelectedTeam}
+              selectedProject={selectedProject}
+              handleSelectProject={handleSelectProject}
+              teamSearch={teamSearch}
+              setTeamSearch={setTeamSearch}
+              projectSearch={projectSearch}
+              setProjectSearch={setProjectSearch}
+              filteredTeams={filteredTeams}
+              displayProjects={displayProjects}
+              totalProjects={totalProjects}
+              isFetchingNextPage={isFetchingNextPage}
+              hasNextPage={hasNextPage}
+              fetchNextPage={fetchNextPage}
+              projectsLoading={projectsLoading}
+              organizations={organizations}
+              currentProjectId={projectId}
+              onCreateProject={() => setCreateProjectDialogOpen(true)}
+            />
+          </PopoverContent>
+        </Popover>
+
+        <CreateProjectDialog
+          open={createProjectDialogOpen}
+          onOpenChange={setCreateProjectDialogOpen}
+          teamId={selectedTeam?.$id}
+          organizationPlan={organizationPlan}
+          currentProjectsCount={projectsCount}
+        />
+      </>
     )
   }
 
@@ -274,76 +297,97 @@ export function ProjectSelector({
               projectSearch={projectSearch}
               setProjectSearch={setProjectSearch}
               filteredTeams={filteredTeams}
+              displayProjects={displayProjects}
+              totalProjects={totalProjects}
+              isFetchingNextPage={isFetchingNextPage}
+              hasNextPage={hasNextPage}
+              fetchNextPage={fetchNextPage}
+              projectsLoading={projectsLoading}
+              organizations={organizations}
+              currentProjectId={projectId}
+              onCreateProject={() => setCreateProjectDialogOpen(true)}
+            />
+          </DialogContent>
+        </Dialog>
+
+        <CreateProjectDialog
+          open={createProjectDialogOpen}
+          onOpenChange={setCreateProjectDialogOpen}
+          teamId={selectedTeam?.$id}
+          organizationPlan={organizationPlan}
+          currentProjectsCount={projectsCount}
+        />
+      </>
+    )
+  }
+
+  return (
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            className={cn(
+              'flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
+              className,
+            )}
+          >
+            <InitialsAvatar name={currentProject?.name || selectedProject.name} size="sm" />
+            <div className="min-w-0 flex items-center gap-2">
+              <p className="truncate text-[13px] font-medium text-foreground">
+                {currentProjectTeam?.name || selectedTeam.name} / {currentProject?.name || selectedProject.name}
+              </p>
+              {currentProjectOrg && (
+                <span
+                  className={cn(
+                    'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
+                    getPlanBadgeColor(currentProjectOrg.plan),
+                  )}
+                >
+                  {currentProjectOrg.plan}
+                </span>
+              )}
+            </div>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent
+          side="bottom"
+          align="start"
+          sideOffset={8}
+          className="w-[520px] border-border bg-popover p-0"
+        >
+          <ProjectSelectorContent
+            selectedTeam={selectedTeam}
+            setSelectedTeam={setSelectedTeam}
+            selectedProject={selectedProject}
+            handleSelectProject={handleSelectProject}
+            teamSearch={teamSearch}
+            setTeamSearch={setTeamSearch}
+            projectSearch={projectSearch}
+            setProjectSearch={setProjectSearch}
+            filteredTeams={filteredTeams}
             displayProjects={displayProjects}
             totalProjects={totalProjects}
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}
             fetchNextPage={fetchNextPage}
             projectsLoading={projectsLoading}
-              organizations={organizations}
-              currentProjectId={projectId}
-            />
-          </DialogContent>
-        </Dialog>
-      </>
-    )
-  }
+            organizations={organizations}
+            currentProjectId={projectId}
+            onCreateProject={() => setCreateProjectDialogOpen(true)}
+          />
+        </PopoverContent>
+      </Popover>
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          className={cn(
-            'flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent',
-            className,
-          )}
-        >
-          <InitialsAvatar name={currentProject?.name || selectedProject.name} size="sm" />
-          <div className="min-w-0 flex items-center gap-2">
-            <p className="truncate text-[13px] font-medium text-foreground">
-              {currentProjectTeam?.name || selectedTeam.name} / {currentProject?.name || selectedProject.name}
-            </p>
-            {currentProjectOrg && (
-              <span
-                className={cn(
-                  'shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
-                  getPlanBadgeColor(currentProjectOrg.plan),
-                )}
-              >
-                {currentProjectOrg.plan}
-              </span>
-            )}
-          </div>
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-        </button>
-      </PopoverTrigger>
-      <PopoverContent
-        side="bottom"
-        align="start"
-        sideOffset={8}
-        className="w-[520px] border-border bg-popover p-0"
-      >
-        <ProjectSelectorContent
-          selectedTeam={selectedTeam}
-          setSelectedTeam={setSelectedTeam}
-          selectedProject={selectedProject}
-          handleSelectProject={handleSelectProject}
-          teamSearch={teamSearch}
-          setTeamSearch={setTeamSearch}
-          projectSearch={projectSearch}
-          setProjectSearch={setProjectSearch}
-          filteredTeams={filteredTeams}
-          displayProjects={displayProjects}
-          totalProjects={totalProjects}
-          isFetchingNextPage={isFetchingNextPage}
-          hasNextPage={hasNextPage}
-          fetchNextPage={fetchNextPage}
-          projectsLoading={projectsLoading}
-          organizations={organizations}
-          currentProjectId={projectId}
-        />
-      </PopoverContent>
-    </Popover>
+      {/* Create Project Dialog */}
+      <CreateProjectDialog
+        open={createProjectDialogOpen}
+        onOpenChange={setCreateProjectDialogOpen}
+        teamId={selectedTeam?.$id}
+        organizationPlan={organizationPlan}
+        currentProjectsCount={projectsCount}
+      />
+    </>
   )
 }
 
@@ -365,6 +409,7 @@ interface ProjectSelectorContentProps {
   projectsLoading: boolean
   organizations: Organization[]
   currentProjectId?: string
+  onCreateProject: () => void
 }
 
 function ProjectSelectorContent({
@@ -385,6 +430,7 @@ function ProjectSelectorContent({
   projectsLoading,
   organizations,
   currentProjectId,
+  onCreateProject,
 }: ProjectSelectorContentProps) {
   // Ref for the scrollable container
   const projectsScrollRef = useRef<HTMLDivElement>(null)
@@ -584,7 +630,10 @@ function ProjectSelectorContent({
 
         {/* Create Project - fixed at bottom */}
         <div className="border-t border-border p-1.5">
-          <button className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+          <button 
+            onClick={onCreateProject}
+            className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-dashed border-muted-foreground/50">
               <Plus className="h-3.5 w-3.5" />
             </div>
@@ -615,6 +664,7 @@ function MobileProjectSelectorContent({
   projectsLoading,
   organizations,
   currentProjectId,
+  onCreateProject,
 }: ProjectSelectorContentProps) {
   const [activeTab, setActiveTab] = useState<'teams' | 'projects'>('projects')
   
@@ -855,7 +905,10 @@ function MobileProjectSelectorContent({
 
           {/* Create Project */}
           <div className="border-t border-border p-2">
-            <button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+            <button 
+              onClick={onCreateProject}
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
               <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-dashed border-muted-foreground/50">
                 <Plus className="h-4 w-4" />
               </div>

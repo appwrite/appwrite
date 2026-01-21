@@ -44,12 +44,14 @@ import {
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { useProjectDatabases, useProjectDatabase, useProjectTables, useProjectTableRows, useProjectTableColumns, deleteProjectTableRow, createProjectTableRows, createProjectTableRow, updateProjectTableRow, createProjectTableColumn, updateProjectTableColumn, deleteProjectTableColumn, useProjectTables as useTablesForColumns, useProjectTable, updateProjectTable, deleteProjectTable, useProject, useOrganizationPlan, fetchProjectDatabases } from '@/lib/react-query/hooks'
+import { useProjectDatabases, useProjectDatabase, useProjectTables, useProjectTableRows, useProjectTableColumns, deleteProjectTableRow, createProjectTableRows, createProjectTableRow, updateProjectTableRow, createProjectTableColumn, updateProjectTableColumn, deleteProjectTableColumn, useProjectTables as useTablesForColumns, useProjectTable, updateProjectTable, deleteProjectTable, useProject, useOrganizationPlan, fetchProjectDatabases, createProjectDatabase } from '@/lib/react-query/hooks'
 import { ColumnDrawer, ColumnFormData } from './tables/Column'
 import { IndexDrawer, IndexFormData } from './tables/Index'
 import { createProjectTableIndex, deleteProjectTableIndex, useProjectTableIndexes } from '@/lib/react-query/hooks'
 import { BackupsView } from './Backups'
+import { CreateDatabase } from './CreateDatabase'
 import { ComingSoonView } from '../shared/ComingSoon'
+import { ComingSoonCurtain } from '@/components/ui/coming-soon-curtain'
 import { SchemaVisualizer } from './SchemaVisualizer'
 import { SchemaExportDialog } from './SchemaExport'
 import { fetchDatabaseSchema, formatSchemaAsJSON, formatSchemaAsMarkdown, formatSchemaAsSVG, downloadAsFile, getCursorDeepLink, getLovableDeepLink, getChatGPTDeepLink, getClaudeDeepLink } from '@/lib/utils/database-schema-export'
@@ -151,6 +153,7 @@ export function DatabasesListView() {
   const [pageSize, setPageSize] = useState(25)
   const [selectedDatabases, setSelectedDatabases] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] = useState(false)
 
   // Convert 1-indexed page to 0-indexed for API
   const currentPageIndexed = currentPage - 1
@@ -227,6 +230,26 @@ export function DatabasesListView() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete databases')
+    },
+  })
+
+  // Create database mutation
+  const createDatabaseMutation = useMutation({
+    mutationFn: (data: { databaseId?: string; name: string }) =>
+      createProjectDatabase(projectId!, data),
+    onSuccess: (database) => {
+      toast.success(`${database.name} has been created`)
+      queryClient.invalidateQueries({
+        queryKey: ['databases', 'project', projectId],
+      })
+      setCreateDatabaseDialogOpen(false)
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId/',
+        params: { projectId: projectId!, databaseId: database.$id },
+      })
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || 'Failed to create database')
     },
   })
 
@@ -308,7 +331,7 @@ export function DatabasesListView() {
         searchValue={searchValue}
         onSearchChange={handleSearchChange}
         createLabel="Create database"
-        onCreate={() => console.log('Create database')}
+        onCreate={() => setCreateDatabaseDialogOpen(true)}
         createDisabled={isCreateDisabled}
         showFilters={false}
         fullWidthBorder
@@ -618,6 +641,14 @@ export function DatabasesListView() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <CreateDatabase
+          open={createDatabaseDialogOpen}
+          onOpenChange={setCreateDatabaseDialogOpen}
+          onCreate={(data) => createDatabaseMutation.mutate(data)}
+          isLoading={createDatabaseMutation.isPending}
+          backupsEnabled={organizationPlan?.backupsEnabled}
+        />
       </div>
     </div>
   )
@@ -890,7 +921,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
 
   const handleBackToDatabase = () => {
     navigate({
-      to: '/projects/$projectId/databases/$databaseId/tables',
+      to: '/projects/$projectId/databases/$databaseId/',
       params: { projectId, databaseId },
     })
   }
@@ -1008,7 +1039,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
         <div className="flex-1 overflow-y-auto p-2">
           {/* Database Link */}
           <Link
-            to="/projects/$projectId/databases/$databaseId/tables"
+            to="/projects/$projectId/databases/$databaseId/"
             params={{ projectId, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
@@ -1746,7 +1777,7 @@ export function DatabaseOverview({
       id: 'tables',
       label: 'Tables',
       count: tablesTotal,
-      to: '/projects/$projectId/databases/$databaseId/tables',
+      to: '/projects/$projectId/databases/$databaseId/',
       params: { projectId, databaseId },
     },
     {
@@ -2260,7 +2291,60 @@ export function DatabaseOverview({
 
         {activeTab === 'visualizer' && <SchemaVisualizer databaseId={databaseId} />}
 
-        {activeTab === 'insights' && <ComingSoonView title="Insights" comingSoon />}
+        {activeTab === 'insights' && (
+          <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+            <ComingSoonCurtain
+              featureId="database-insights"
+              message="Get powerful analytics and insights about your database performance and usage patterns."
+            >
+              <div className="space-y-6">
+                {/* Placeholder content for coming soon feature */}
+                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                  <div className="px-6 py-4">
+                    <h3 className="text-[15px] font-semibold text-foreground">
+                      Database Analytics
+                    </h3>
+                    <p className="text-[13px] text-muted-foreground mt-2">
+                      View detailed metrics about your database performance
+                    </p>
+                  </div>
+                  <div className="border-t border-border" />
+                  <div className="px-6 py-4">
+                    <div className="h-64 bg-muted/30 rounded-lg flex items-center justify-center">
+                      <BarChart3 className="h-16 w-16 text-muted-foreground/30" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                    <div className="px-6 py-4">
+                      <h3 className="text-[15px] font-semibold text-foreground">
+                        Query Performance
+                      </h3>
+                    </div>
+                    <div className="border-t border-border" />
+                    <div className="px-6 py-4">
+                      <div className="h-48 bg-muted/30 rounded-lg" />
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                    <div className="px-6 py-4">
+                      <h3 className="text-[15px] font-semibold text-foreground">
+                        Usage Patterns
+                      </h3>
+                    </div>
+                    <div className="border-t border-border" />
+                    <div className="px-6 py-4">
+                      <div className="h-48 bg-muted/30 rounded-lg" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ComingSoonCurtain>
+          </div>
+        )}
 
         {activeTab === 'security' && (
           <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
@@ -6018,7 +6102,7 @@ function TableSettings({ table }: SpreadsheetProps) {
 
       // Navigate to database tables list
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/tables',
+        to: '/projects/$projectId/databases/$databaseId/',
         params: { projectId, databaseId },
         replace: true,
       })
