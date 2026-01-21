@@ -52,10 +52,10 @@ export function useActiveUploads() {
     // Only poll when there are active uploads
     // Use a longer interval (5 seconds) to reduce CPU usage
     const pollIfNeeded = async () => {
-      if (!mounted) return
+      if (!mounted) return false
       
       const uploads = await uploadManager.getActiveUploads()
-      if (!mounted) return
+      if (!mounted) return false
       
       const hasActive = uploads.some(
         (u) => u.status === 'pending' || u.status === 'uploading'
@@ -73,22 +73,51 @@ export function useActiveUploads() {
         clearInterval(interval)
         interval = null
       }
+      
+      return hasActive
     }
 
-    // Check periodically if we need to start/stop polling
-    const checkInterval = setInterval(() => {
-      pollIfNeeded()
-    }, 10000) // Check every 10 seconds
+    // Only check periodically if we have active uploads
+    // This prevents unnecessary checks when idle
+    let checkInterval: NodeJS.Timeout | null = null
+    
+    const startCheckInterval = () => {
+      if (checkInterval || !mounted) return
+      
+      checkInterval = setInterval(async () => {
+        if (!mounted) {
+          if (checkInterval) {
+            clearInterval(checkInterval)
+            checkInterval = null
+          }
+          return
+        }
+        
+        const hasActive = await pollIfNeeded()
+        
+        // If no active uploads, stop checking
+        if (!hasActive && checkInterval) {
+          clearInterval(checkInterval)
+          checkInterval = null
+        }
+      }, 30000) // Check every 30 seconds (less frequent)
+    }
 
-    // Initial check
-    pollIfNeeded()
+    // Initial check - start check interval only if we have active uploads
+    pollIfNeeded().then((hasActive) => {
+      if (hasActive && mounted) {
+        startCheckInterval()
+      }
+    })
 
     return () => {
       mounted = false
       if (interval) {
         clearInterval(interval)
       }
-      clearInterval(checkInterval)
+      if (checkInterval) {
+        clearInterval(checkInterval)
+      }
       unsubscribes.forEach((unsubscribe) => unsubscribe())
     }
   }, [loadActiveUploads])

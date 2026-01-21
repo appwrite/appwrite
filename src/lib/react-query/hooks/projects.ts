@@ -165,6 +165,9 @@ export function useProject(projectId: string | undefined) {
     queryFn: () => fetchProject(projectId!),
     enabled: !!projectId,
     staleTime: LONG_STALE_TIME,
+    retry: false, // Don't retry on error
+    // Don't keep disabled queries in cache
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 
   // Map the API response to our Project type
@@ -225,6 +228,9 @@ export function useProjectsForTeam(
     enabled: !!teamId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
+    retry: false, // Don't retry on error
+    // Don't keep disabled queries in cache
+    gcTime: teamId ? 5 * 60 * 1000 : 0,
   })
 
   // Map projects to our Project type

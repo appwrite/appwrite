@@ -241,7 +241,15 @@ export function useRealtimeStats(
     },
     enabled: !!projectId,
     staleTime: 10000, // 10 seconds
-    refetchInterval: 30000, // 30 seconds
+    // Only refetch when page is visible to reduce CPU usage
+    refetchInterval: (query) => {
+      // Don't refetch if page is hidden
+      if (document.hidden) {
+        return false
+      }
+      // Refetch every 30 seconds when page is visible
+      return 30000
+    },
   })
 }
 

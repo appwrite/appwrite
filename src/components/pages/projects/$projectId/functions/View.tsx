@@ -167,7 +167,7 @@ export function FunctionsView() {
         })
       }
     }
-  }, [projectId, queryClient])
+  }, [projectId]) // queryClient is stable, no need to include in deps
 
   // Handle GitHub redirect
   useEffect(() => {

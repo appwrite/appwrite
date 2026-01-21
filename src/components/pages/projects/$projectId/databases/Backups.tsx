@@ -177,7 +177,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
         })
       }
     }
-  }, [projectId, databaseId, queryClient])
+  }, [projectId, databaseId]) // queryClient is stable, no need to include in deps
 
   // Check if backups are disabled
   // Wait for plan to load before determining if backups are disabled

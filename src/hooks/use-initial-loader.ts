@@ -59,11 +59,14 @@ export function useInitialLoader() {
       timeoutRef.current = null
     }
 
+    // Check hasActiveRequests inside the effect to avoid dependency
+    const currentHasActiveRequests = isFetching > 0 || isMutating > 0
+
     if (effectiveShouldShowLoader) {
       // Check loading state
       // Router status can be: "idle" | "pending" | "loading"
       const isRouterLoading = router.state.status !== 'idle'
-      const isCurrentlyLoading = isRouterLoading || hasActiveRequests
+      const isCurrentlyLoading = isRouterLoading || currentHasActiveRequests
 
       if (isCurrentlyLoading && !wasLoadingRef.current) {
         // Started loading
@@ -89,7 +92,7 @@ export function useInitialLoader() {
       // Don't show loader on public/auth routes
       // But if we're on a public route and haven't completed initial load,
       // mark it as complete (user might have landed on sign-in page)
-      if (!hasActiveRequests && router.state.status === 'idle') {
+      if (!currentHasActiveRequests && router.state.status === 'idle') {
         hasCompletedInitialLoadRef.current = true
       }
       if (wasLoadingRef.current) {
@@ -107,8 +110,9 @@ export function useInitialLoader() {
   }, [
     effectiveShouldShowLoader,
     router.state.status,
-    hasActiveRequests,
     location.pathname,
+    isFetching,
+    isMutating,
   ])
 
   return { isLoading }

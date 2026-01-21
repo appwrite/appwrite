@@ -206,7 +206,7 @@ export function Templates({ projectId }: TemplatesProps) {
     Promise.all(prefetchPromises).catch((error) => {
       console.error('Failed to prefetch some templates:', error)
     })
-  }, [projectId, queryClient])
+  }, [projectId]) // queryClient is stable, no need to include in deps
 
   // Fetch template when type or locale changes
   const {
@@ -238,7 +238,7 @@ export function Templates({ projectId }: TemplatesProps) {
       selectedType,
       selectedLocale,
     ])
-  }, [projectId, selectedType, selectedLocale, queryClient])
+  }, [projectId, selectedType, selectedLocale]) // queryClient is stable, no need to include in deps
 
   // Only show loading if we don't have cached data AND we don't have previous data to display
   const showLoading = isTemplateLoading && !hasCachedData && !displayTemplate

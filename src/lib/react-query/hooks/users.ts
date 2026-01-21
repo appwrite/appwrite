@@ -236,6 +236,9 @@ export function useProjectUsers(
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
+    retry: false, // Don't retry on error
+    // Don't keep disabled queries in cache
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 
   // Map users to our User type
@@ -338,6 +341,9 @@ export function useProjectTeams(
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
+    retry: false, // Don't retry on error
+    // Don't keep disabled queries in cache
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
   })
 
   // Map teams to our extended team type with additional metadata

@@ -1078,6 +1078,8 @@ export function useOrganizationPlan(orgId: string | null | undefined) {
     staleTime: LONG_STALE_TIME,
     retry: false, // Don't retry on error
     refetchOnWindowFocus: false,
+    // Don't keep disabled queries in cache
+    gcTime: !!orgId ? 5 * 60 * 1000 : 0,
   })
 
   return {

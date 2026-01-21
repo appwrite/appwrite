@@ -456,7 +456,7 @@ export function FunctionDeployments() {
         subscription.close().catch(() => {})
       }
     }
-  }, [projectId, functionId, queryClient])
+  }, [projectId, functionId]) // queryClient is stable, no need to include in deps
 
   const isBuilding =
     activeDeployment?.status === 'building' ||
