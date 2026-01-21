@@ -88,7 +88,7 @@ class Create extends CreateDocumentAction
     public function action(array $texts, string $model, UtopiaResponse $response, Document $project, Agent $embeddingAgent, StatsUsage $queueForStatsUsage, Log $log, ?Logger $logger): void
     {
         $results = [];
-        $embeddingAgent->getAdapter()->setModel($model)->setTimeout(150);
+        $embeddingAgent->getAdapter()->setModel($model)->setTimeout(60000);
         $dimension = $embeddingAgent->getAdapter()->getEmbeddingDimension();
 
         $totalDuration = 0;
