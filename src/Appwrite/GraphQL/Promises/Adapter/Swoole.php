@@ -39,19 +39,47 @@ class Swoole extends Adapter
     {
         $promisesOrValues = \is_array($promisesOrValues) ? $promisesOrValues : \iterator_to_array($promisesOrValues);
 
-        // Extract adopted promises from GQLPromises
-        $extracted = [];
-        foreach ($promisesOrValues as $index => $promiseOrValue) {
-            if ($promiseOrValue instanceof GQLPromise) {
-                $extracted[$index] = $promiseOrValue->adoptedPromise;
-            } else {
-                $extracted[$index] = $promiseOrValue;
+        return $this->create(function (callable $resolve, callable $reject) use ($promisesOrValues) {
+            $count = \count($promisesOrValues);
+            if ($count === 0) {
+                $resolve([]);
+                return;
             }
-        }
 
-        // Use SwoolePromise::all to wait for all promises
-        $combinedPromise = SwoolePromise::all($extracted);
+            $result = \array_fill(0, $count, null);
+            $pending = $count;
+            $rejected = false;
 
-        return new GQLPromise($combinedPromise, $this);
+            foreach ($promisesOrValues as $index => $promiseOrValue) {
+                if ($promiseOrValue instanceof GQLPromise) {
+                    $promiseOrValue->then(
+                        function ($value) use ($index, &$result, &$pending, &$rejected, $resolve) {
+                            if ($rejected) {
+                                return;
+                            }
+                            $result[$index] = $value;
+                            $pending--;
+                            if ($pending === 0) {
+                                \ksort($result);
+                                $resolve($result);
+                            }
+                        },
+                        function ($error) use (&$rejected, $reject) {
+                            if (!$rejected) {
+                                $rejected = true;
+                                $reject($error);
+                            }
+                        }
+                    );
+                } else {
+                    $result[$index] = $promiseOrValue;
+                    $pending--;
+                    if ($pending === 0 && !$rejected) {
+                        \ksort($result);
+                        $resolve($result);
+                    }
+                }
+            }
+        });
     }
 }
