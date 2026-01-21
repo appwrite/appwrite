@@ -19,18 +19,18 @@ class Swoole extends Adapter
 
     public function createFulfilled($value = null): GQLPromise
     {
-        $promise = new SwoolePromise(function ($resolve, $reject) use ($value) {
-            $resolve($value);
-        });
+        // Create without executor and resolve immediately (no coroutine)
+        $promise = new SwoolePromise();
+        $promise->resolve($value);
 
         return new GQLPromise($promise, $this);
     }
 
     public function createRejected(\Throwable $reason): GQLPromise
     {
-        $promise = new SwoolePromise(function ($resolve, $reject) use ($reason) {
-            $reject($reason);
-        });
+        // Create without executor and reject immediately (no coroutine)
+        $promise = new SwoolePromise();
+        $promise->reject($reason);
 
         return new GQLPromise($promise, $this);
     }
