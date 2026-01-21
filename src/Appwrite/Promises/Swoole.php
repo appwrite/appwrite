@@ -95,15 +95,13 @@ class Swoole extends Promise
                     $promise->doReject($this->result);
                 }
             } else {
-                // Run callback in a coroutine
-                \go(function () use ($promise, $callback) {
-                    try {
-                        $result = $callback($this->result);
-                        $promise->doResolve($result);
-                    } catch (\Throwable $e) {
-                        $promise->doReject($e);
-                    }
-                });
+                // Run callback synchronously
+                try {
+                    $result = $callback($this->result);
+                    $promise->doResolve($result);
+                } catch (\Throwable $e) {
+                    $promise->doReject($e);
+                }
             }
         }
         $this->waiting = [];
@@ -132,14 +130,13 @@ class Swoole extends Promise
                     $promise->doReject($this->result);
                 }
             } else {
-                \go(function () use ($promise, $callback) {
-                    try {
-                        $result = $callback($this->result);
-                        $promise->doResolve($result);
-                    } catch (\Throwable $e) {
-                        $promise->doReject($e);
-                    }
-                });
+                // Run callback synchronously
+                try {
+                    $result = $callback($this->result);
+                    $promise->doResolve($result);
+                } catch (\Throwable $e) {
+                    $promise->doReject($e);
+                }
             }
         }
 
