@@ -5,7 +5,6 @@ namespace Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\Promises\Swoole as SwoolePromise;
 use GraphQL\Executor\Promise\Promise as GQLPromise;
-use Swoole\Coroutine\Channel;
 
 class Swoole extends Adapter
 {
@@ -40,53 +39,19 @@ class Swoole extends Adapter
     {
         $promisesOrValues = \is_array($promisesOrValues) ? $promisesOrValues : \iterator_to_array($promisesOrValues);
 
-        return $this->create(function (callable $resolve, callable $reject) use ($promisesOrValues) {
-            $total = \count($promisesOrValues);
-            if ($total === 0) {
-                $resolve([]);
-                return;
+        // Extract adopted promises from GQLPromises
+        $extracted = [];
+        foreach ($promisesOrValues as $index => $promiseOrValue) {
+            if ($promiseOrValue instanceof GQLPromise) {
+                $extracted[$index] = $promiseOrValue->adoptedPromise;
+            } else {
+                $extracted[$index] = $promiseOrValue;
             }
+        }
 
-            $result = [];
-            $completed = 0;
-            $rejected = false;
-            $channel = new Channel($total);
+        // Use SwoolePromise::all to wait for all promises
+        $combinedPromise = SwoolePromise::all($extracted);
 
-            foreach ($promisesOrValues as $index => $promiseOrValue) {
-                if ($promiseOrValue instanceof GQLPromise) {
-                    $result[$index] = null;
-                    $promiseOrValue->then(
-                        function ($value) use ($index, &$result, &$completed, $channel) {
-                            $result[$index] = $value;
-                            $completed++;
-                            $channel->push(true);
-                            return $value;
-                        },
-                        function ($error) use (&$rejected, $channel, $reject) {
-                            if (!$rejected) {
-                                $rejected = true;
-                                $reject($error);
-                            }
-                            $channel->push(false);
-                        }
-                    );
-                } else {
-                    $result[$index] = $promiseOrValue;
-                    $completed++;
-                    $channel->push(true);
-                }
-            }
-
-            // Wait for all promises to complete
-            for ($i = 0; $i < $total; $i++) {
-                $channel->pop();
-            }
-            $channel->close();
-
-            if (!$rejected) {
-                \ksort($result);
-                $resolve($result);
-            }
-        });
+        return new GQLPromise($combinedPromise, $this);
     }
 }
