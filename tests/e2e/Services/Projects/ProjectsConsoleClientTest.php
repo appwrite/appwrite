@@ -4783,7 +4783,7 @@ class ProjectsConsoleClientTest extends Scope
      */
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testCreateProjectDevKey(): void
     {
@@ -4844,7 +4844,7 @@ class ProjectsConsoleClientTest extends Scope
 
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testListProjectDevKey(): void
     {
@@ -4935,7 +4935,7 @@ class ProjectsConsoleClientTest extends Scope
 
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testGetProjectDevKey(): void
     {
@@ -4979,7 +4979,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testGetDevKeyWithSdks(): void
     {
@@ -5036,7 +5036,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testNoHostValidationWithDevKey(): void
     {
@@ -5117,7 +5117,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testCorsWithDevKey(): void
     {
@@ -5174,7 +5174,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testNoRateLimitWithDevKey(): void
     {
@@ -5279,7 +5279,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testUpdateProjectDevKey(): void
     {
@@ -5324,7 +5324,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testDeleteProjectDevKey(): void
     {

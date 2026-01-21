@@ -57,13 +57,14 @@ class Update extends IntegerUpdate
             ->param('tableId', '', new UID(), 'Table ID.')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('min', null, new Nullable(new Integer()), 'Minimum value', true)
-            ->param('max', null, new Nullable(new Integer()), 'Maximum value', true)
-            ->param('default', null, new Nullable(new Integer()), 'Default value. Cannot be set when column is required.')
+            ->param('min', null, new Nullable(new Integer(false, 64)), 'Minimum value', true)
+            ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true)
+            ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when column is required.')
             ->param('newKey', null, new Nullable(new Key()), 'New Column Key.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

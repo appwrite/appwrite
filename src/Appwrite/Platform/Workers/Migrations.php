@@ -80,6 +80,7 @@ class Migrations extends Action
             ->inject('deviceForFiles')
             ->inject('queueForMails')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -97,6 +98,7 @@ class Migrations extends Action
         Device $deviceForFiles,
         Mail $queueForMails,
         array $plan,
+        Authorization $authorization,
     ): void {
         $payload = $message->getPayload() ?? [];
         $this->deviceForMigrations = $deviceForMigrations;
@@ -110,8 +112,16 @@ class Migrations extends Action
         $events = $payload['events'] ?? [];
         $migration = new Document($payload['migration'] ?? []);
 
+        if ($migration->isEmpty()) {
+            throw new \Exception('Migration not found');
+        }
+
         if ($project->getId() === 'console') {
             return;
+        }
+
+        if ($project->isEmpty()) {
+            throw new \Exception('Project not found');
         }
 
         $this->dbForProject = $dbForProject;
@@ -126,7 +136,13 @@ class Migrations extends Action
         }
 
         try {
-            $this->processMigration($migration, $queueForRealtime, $queueForMails, $platform);
+            $this->processMigration(
+                $migration,
+                $queueForRealtime,
+                $queueForMails,
+                $platform,
+                $authorization
+            );
         } finally {
             $this->dbForProject = null;
             $this->dbForPlatform = null;
@@ -137,7 +153,7 @@ class Migrations extends Action
             $this->plan = [];
             $this->sourceReport = [];
 
-            gc_collect_cycles();
+            \gc_collect_cycles();
         }
     }
 
@@ -311,8 +327,10 @@ class Migrations extends Action
         Realtime $queueForRealtime,
         Mail $queueForMails,
         array $platform,
+        Authorization $authorization,
     ): void {
-        $project = $this->dbForPlatform->getDocument('projects', $this->project->getId());
+        $project = $this->project;
+
         $tempAPIKey = $this->generateAPIKey($project);
 
         $transfer = $source = $destination = null;
@@ -386,62 +404,59 @@ class Migrations extends Action
             Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
 
-            if (! $migration->isEmpty()) {
-                $migration->setAttribute('status', 'failed');
-                $migration->setAttribute('stage', 'finished');
+            $migration->setAttribute('status', 'failed');
+            $migration->setAttribute('stage', 'finished');
 
-                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
-                    'migrationId' => $migration->getId(),
-                    'source' => $migration->getAttribute('source') ?? '',
-                    'destination' => $migration->getAttribute('destination') ?? '',
-                ]);
+            call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
+                'migrationId' => $migration->getId(),
+                'source' => $migration->getAttribute('source') ?? '',
+                'destination' => $migration->getAttribute('destination') ?? '',
+            ]);
 
-                return;
-            }
-
-            if ($transfer) {
-                $sourceErrors = $source->getErrors();
-                $destinationErrors = $destination->getErrors();
-                $migration->setAttribute('errors', $this->sanitizeErrors($sourceErrors, $destinationErrors));
-            }
         } finally {
-            $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+            try {
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-            if ($migration->getAttribute('status', '') === 'failed') {
-                Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
+                if ($migration->getAttribute('status', '') === 'failed') {
+                    Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
 
-                $sourceErrors = $source?->getErrors() ?? [];
-                $destinationErrors = $destination?->getErrors() ?? [];
+                    $sourceErrors = $source?->getErrors() ?? [];
+                    $destinationErrors = $destination?->getErrors() ?? [];
 
-                foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
-                    /** @var MigrationException $error */
-                    if ($error->getCode() === 0 || $error->getCode() >= 500) {
-                        ($this->logError)($error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                            'migrationId' => $migration->getId(),
-                            'source' => $migration->getAttribute('source') ?? '',
-                            'destination' => $migration->getAttribute('destination') ?? '',
-                            'resourceName' => $error->getResourceName(),
-                            'resourceGroup' => $error->getResourceGroup(),
-                        ]);
+                    foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
+                        /** @var MigrationException $error */
+                        if ($error->getCode() === 0 || $error->getCode() >= 500) {
+                            ($this->logError)($error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                                'migrationId' => $migration->getId(),
+                                'source' => $migration->getAttribute('source') ?? '',
+                                'destination' => $migration->getAttribute('destination') ?? '',
+                                'resourceName' => $error->getResourceName(),
+                                'resourceGroup' => $error->getResourceGroup(),
+                            ]);
+                        }
+                    }
+
+                    $source?->error();
+                    $destination?->error();
+                }
+
+                if ($migration->getAttribute('status', '') === 'completed') {
+                    $destination?->success();
+                    $source?->success();
+
+                    // TODO: Move to CSV hook
+                    if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
+                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
                     }
                 }
+            } finally {
+                $source?->cleanup();
+                $destination?->cleanup();
 
-                $source?->error();
-                $destination?->error();
+                $transfer = null;
+                $source = null;
+                $destination = null;
             }
-
-            if ($migration->getAttribute('status', '') === 'completed') {
-                $destination?->success();
-                $source?->success();
-
-                if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform);
-                }
-            }
-
-            $transfer = null;
-            $source = null;
-            $destination = null;
         }
     }
 
@@ -451,11 +466,10 @@ class Migrations extends Action
      * @param Document $project
      * @param Document $migration
      * @param Mail $queueForMails
+     * @param Realtime $queueForRealtime
+     * @param array $platform
+     * @param Authorization $authorization
      * @return void
-     * @throws AuthorizationException
-     * @throws Structure
-     * @throws \Utopia\Database\Exception
-     * @throws Exception
      */
     protected function handleCSVExportComplete(
         Document $project,
@@ -463,6 +477,7 @@ class Migrations extends Action
         Mail $queueForMails,
         Realtime $queueForRealtime,
         array $platform,
+        Authorization $authorization,
     ): void {
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
@@ -476,7 +491,7 @@ class Migrations extends Action
             throw new \Exception('User ' . $userInternalId . ' not found');
         }
 
-        $bucket = Authorization::skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
+        $bucket = $authorization->skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty()) {
             throw new \Exception('Bucket not found');
         }

@@ -28,11 +28,12 @@ use Utopia\Validator\Text;
 App::init()
     ->groups(['graphql'])
     ->inject('project')
-    ->action(function (Document $project) {
+    ->inject('authorization')
+    ->action(function (Document $project, Authorization $authorization) {
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
+            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
@@ -223,8 +224,11 @@ function execute(
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
 
-    if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if (System::getEnv('_APP_GRAPHQL_INTROSPECTION', 'enabled') === 'disabled') {
         $validations[] = new DisableIntrospection();
+    }
+
+    if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);
     }

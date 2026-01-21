@@ -10,7 +10,8 @@ trait RealtimeBase
     private function getWebsocket(
         array $channels = [],
         array $headers = [],
-        string $projectId = null
+        string $projectId = null,
+        array $queries = []
     ): WebSocketClient {
         if (is_null($projectId)) {
             $projectId = $this->getProject()['$id'];
@@ -19,6 +20,7 @@ trait RealtimeBase
         $query = [
             "project" => $projectId,
             "channels" => $channels,
+            "queries" => $queries
         ];
 
         return new WebSocketClient(

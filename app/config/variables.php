@@ -1286,6 +1286,15 @@ return [
         'description' => '',
         'variables' => [
             [
+                'name' => '_APP_GRAPHQL_INTROSPECTION',
+                'description' => 'Enable or disable GraphQL introspection. Set to \'enabled\' to allow schema introspection, or \'disabled\' to block it. The default value is \'enabled\'.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_GRAPHQL_MAX_BATCH_SIZE',
                 'description' => 'Maximum number of batched queries per request. The default value is 10.',
                 'introduction' => '1.2.0',
