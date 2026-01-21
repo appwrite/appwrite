@@ -441,7 +441,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('keys', [
                 Query::equal('resourceType', ['teams']),
                 Query::equal('resourceInternalId', [$document->getSequence()]),
@@ -456,7 +456,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('keys', [
                 Query::equal('resourceType', ['users']),
                 Query::equal('resourceInternalId', [$document->getSequence()]),
