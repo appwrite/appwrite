@@ -19,7 +19,6 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 

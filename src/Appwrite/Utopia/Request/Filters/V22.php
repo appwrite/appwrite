@@ -11,23 +11,15 @@ class V22 extends Filter
 {
     public function parse(array $content, string $model): array
     {
-        var_dump('=========================');
-        var_dump($model);
-
-        if (isset($content['queries'])){
-            var_dump('=== queries ===');
-            var_dump($content['queries']);
+        if (isset($content['queries'])) {
             $content = $this->convertSelectQueries($content);
         }
 
-        var_dump('=========================');
         return $content;
     }
 
     private function convertSelectQueries(array $content): array
     {
-        var_dump('convertQueries');
-
         if (!isset($content['queries'])) {
             return $content;
         }
