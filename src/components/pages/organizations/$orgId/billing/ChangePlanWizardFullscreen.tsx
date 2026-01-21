@@ -2,11 +2,11 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, useSearch } from '@tanstack/react-router'
 import { BillingPlan } from '@appwrite.io/console'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { X, AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
+import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import {
   useOrganizationById,
   useOrganizationPlan,
@@ -23,7 +23,7 @@ import {
   usePaymentMethods,
   useOrganizations,
 } from '@/lib/react-query/hooks'
-import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
+import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import { PlanSelection } from './change-plan/PlanSelection'
 import { SelectPaymentMethod } from './change-plan/SelectPaymentMethod'
 import { EstimatedTotalBox } from './change-plan/EstimatedTotalBox'
@@ -54,6 +54,11 @@ export function ChangePlanWizardFullscreen() {
   const navigate = useNavigate()
   const search = useSearch({ strict: false })
   const orgId = params.orgId as string | undefined
+
+  // Smart navigation for cancel/close actions
+  const handleCancel = useSmartNavigation({ 
+    fallbackPath: orgId ? `/organizations/${orgId}/billing` : '/' 
+  })
 
   // Fetch data using hooks (data is already prefetched by route loader)
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
@@ -369,11 +374,6 @@ export function ChangePlanWizardFullscreen() {
     }
   }
 
-  // Handle cancel
-  const handleCancel = () => {
-    navigate({ to: '/organizations/$orgId/billing', params: { orgId: orgId! } })
-  }
-
   // Handle payment method added
   const handlePaymentMethodAdded = () => {
     setPaymentModalOpen(false)
@@ -407,221 +407,199 @@ export function ChangePlanWizardFullscreen() {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex h-screen w-screen flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 border-b border-border bg-background">
-        <div className="mx-auto w-full max-w-7xl px-6 py-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-lg font-semibold text-foreground">Change plan</h1>
-            <Button variant="ghost" size="sm" onClick={handleCancel} className="h-8 w-8 p-0">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
+    <WizardLayout
+      title="Change plan"
+      fullscreen
+      fallbackPath={`/organizations/${orgId}/billing`}
+      sidebar={
+        <>
+          {showEstimatedTotal && (
+            <EstimatedTotalBox
+              estimation={estimation.estimation}
+              isLoading={estimation.isLoading}
+              selectedPlan={selectedPlan}
+              billingPlans={billingPlans}
+              coupon={selectedCoupon}
+              onCouponRemove={() => setSelectedCoupon(null)}
+              budget={billingBudget}
+              onBudgetChange={setBillingBudget}
+            />
+          )}
 
-      {/* Main Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="mx-auto w-full max-w-7xl px-6 py-6">
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Left Side - Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Select Plan Section */}
-            <div>
-              <h2 className="text-lg font-semibold text-foreground mb-2">Select plan</h2>
-              <p className="text-[13px] text-muted-foreground mb-4">
-                For more details on our plans, visit our{' '}
-                <a
-                  href="https://appwrite.io/pricing"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:text-foreground"
-                >
-                  pricing page
-                </a>
-                .
-              </p>
-              {plansLoading ? (
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
-                    <p className="text-[13px] text-muted-foreground">Loading plans...</p>
-                  </div>
-                </div>
-              ) : billingPlans && typeof billingPlans === 'object' && Object.keys(billingPlans).length > 0 ? (
-                <PlanSelection
-                  plans={billingPlans}
-                  currentPlan={currentPlanEnum}
-                  selectedPlan={selectedPlan}
-                  onPlanSelect={setSelectedPlan}
-                  selfService={selfService}
-                  hasFreeOrgs={hasFreeOrgs}
-                  variant="inline"
-                />
-              ) : (
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
-                    <p className="text-[13px] text-muted-foreground">No plans available. Please try refreshing the page.</p>
-                  </div>
-                </div>
-              )}
+          {showPlanComparison && (
+            <PlanComparisonBox
+              currentPlan={currentPlanEnum}
+              selectedPlan={selectedPlan}
+              plans={billingPlans}
+            />
+          )}
+        </>
+      }
+      footer={
+        <>
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={updatePlanMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isButtonDisabled}
+          >
+            Change plan
+          </Button>
+        </>
+      }
+    >
+        {/* Select Plan Section */}
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">Select plan</h2>
+          <p className="text-[13px] text-muted-foreground mb-4">
+            For more details on our plans, visit our{' '}
+            <a
+              href="https://appwrite.io/pricing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
+              pricing page
+            </a>
+            .
+          </p>
+          {plansLoading ? (
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className="px-6 py-4">
+                <p className="text-[13px] text-muted-foreground">Loading plans...</p>
+              </div>
             </div>
+          ) : billingPlans && typeof billingPlans === 'object' && Object.keys(billingPlans).length > 0 ? (
+            <PlanSelection
+              plans={billingPlans}
+              currentPlan={currentPlanEnum}
+              selectedPlan={selectedPlan}
+              onPlanSelect={setSelectedPlan}
+              selfService={selfService}
+              hasFreeOrgs={hasFreeOrgs}
+              variant="inline"
+            />
+          ) : (
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className="px-6 py-4">
+                <p className="text-[13px] text-muted-foreground">No plans available. Please try refreshing the page.</p>
+              </div>
+            </div>
+          )}
+        </div>
 
-            {/* Upgrade-specific sections */}
-            {isUpgrade && selectedPlan && (
-              <SelectPaymentMethod
-                paymentMethods={paymentMethods}
-                selectedPaymentMethodId={paymentMethodId}
-                onPaymentMethodSelect={setPaymentMethodId}
-                onAddPaymentMethod={() => setPaymentModalOpen(true)}
-                taxId={taxId}
-                onTaxIdChange={setTaxId}
-                onAddCredits={() => setCouponModalOpen(true)}
-                organizationId={orgId}
-                onPaymentMethodAdded={handlePaymentMethodAdded}
+        {/* Upgrade-specific sections */}
+        {isUpgrade && selectedPlan && (
+          <SelectPaymentMethod
+            paymentMethods={paymentMethods}
+            selectedPaymentMethodId={paymentMethodId}
+            onPaymentMethodSelect={setPaymentMethodId}
+            onAddPaymentMethod={() => setPaymentModalOpen(true)}
+            taxId={taxId}
+            onTaxIdChange={setTaxId}
+            onAddCredits={() => setCouponModalOpen(true)}
+            organizationId={orgId}
+            onPaymentMethodAdded={handlePaymentMethodAdded}
+          />
+        )}
+
+        {/* Downgrade-specific sections */}
+        {isDowngrade && selectedPlan && (
+          <>
+            {/* Project Selection */}
+            {needsProjectSelection && (
+              <OrganizationUsageLimits
+                projects={allProjects}
+                orgUsage={orgUsage}
+                members={members}
+                organization={organization}
+                targetLimit={targetProjectsLimit}
+                onRef={setUsageLimitsComponentRef}
               />
             )}
 
-            {/* Downgrade-specific sections */}
-            {isDowngrade && selectedPlan && (
-              <>
-                {/* Project Selection */}
-                {needsProjectSelection && (
-                  <OrganizationUsageLimits
-                    projects={allProjects}
-                    orgUsage={orgUsage}
-                    members={members}
-                    organization={organization}
-                    targetLimit={targetProjectsLimit}
-                    onRef={setUsageLimitsComponentRef}
-                  />
-                )}
+            {/* Downgrade Alerts */}
+            {selectedPlan === BillingPlan.Tier1 && (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Monthly Charges for Extra Team Members</AlertTitle>
+                <AlertDescription className="mt-2">
+                  {targetPlanInfo?.addons?.seats?.price
+                    ? `You will be charged $${targetPlanInfo.addons.seats.price} per month for each team member beyond the plan limit.`
+                    : 'You will be charged for each team member beyond the plan limit.'}
+                </AlertDescription>
+              </Alert>
+            )}
 
-                {/* Downgrade Alerts */}
-                {selectedPlan === BillingPlan.Tier1 && (
-                  <Alert>
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Monthly Charges for Extra Team Members</AlertTitle>
-                    <AlertDescription className="mt-2">
-                      {targetPlanInfo?.addons?.seats?.price
-                        ? `You will be charged $${targetPlanInfo.addons.seats.price} per month for each team member beyond the plan limit.`
-                        : 'You will be charged for each team member beyond the plan limit.'}
-                    </AlertDescription>
-                  </Alert>
-                )}
+            {selectedPlan === BillingPlan.Tier0 && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Downgrading to Free Plan</AlertTitle>
+                <AlertDescription className="mt-2">
+                  Your plan will change on {organization?.billingPlanDowngrade?.date || 'the end of your billing period'}.
+                  You will lose access to premium features and team members beyond the free limit will be removed.
+                  <a
+                    href="https://appwrite.io/docs/migration"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-1 underline"
+                  >
+                    Learn more about migration
+                  </a>
+                </AlertDescription>
+              </Alert>
+            )}
 
-                {selectedPlan === BillingPlan.Tier0 && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Downgrading to Free Plan</AlertTitle>
-                    <AlertDescription className="mt-2">
-                      Your plan will change on {organization?.billingPlanDowngrade?.date || 'the end of your billing period'}.
-                      You will lose access to premium features and team members beyond the free limit will be removed.
-                      <a
-                        href="https://appwrite.io/docs/migration"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="ml-1 underline"
-                      >
-                        Learn more about migration
-                      </a>
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                {/* Feedback Form for Free Plan */}
-                {selectedPlan === BillingPlan.Tier0 && !hasFreeOrgs && (
+            {/* Feedback Form for Free Plan */}
+            {selectedPlan === BillingPlan.Tier0 && !hasFreeOrgs && (
+              <div>
+                <h2 className="text-lg font-semibold text-foreground mb-2">Why are you downgrading?</h2>
+                <p className="text-[13px] text-muted-foreground mb-4">
+                  Help us improve by sharing your feedback.
+                </p>
+                <div className="space-y-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground mb-2">Why are you downgrading?</h2>
-                    <p className="text-[13px] text-muted-foreground mb-4">
-                      Help us improve by sharing your feedback.
-                    </p>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="downgrade-reason" className="text-[13px] font-medium">
-                          Reason
-                        </Label>
-                        <Select
-                          value={feedbackDowngradeReason}
-                          onValueChange={setFeedbackDowngradeReason}
-                        >
-                          <SelectTrigger id="downgrade-reason" className="mt-2 h-9">
-                            <SelectValue placeholder="Select a reason" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="too-expensive">Too expensive</SelectItem>
-                            <SelectItem value="not-enough-features">Not enough features</SelectItem>
-                            <SelectItem value="switching-platform">Switching to another platform</SelectItem>
-                            <SelectItem value="project-ended">Project ended</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="downgrade-message" className="text-[13px] font-medium">
-                          Additional details (optional)
-                        </Label>
-                        <Textarea
-                          id="downgrade-message"
-                          value={feedbackMessage}
-                          onChange={(e) => setFeedbackMessage(e.target.value)}
-                          placeholder="Tell us more about your decision..."
-                          className="mt-2 min-h-[100px]"
-                        />
-                      </div>
-                    </div>
+                    <Label htmlFor="downgrade-reason" className="text-[13px] font-medium">
+                      Reason
+                    </Label>
+                    <Select
+                      value={feedbackDowngradeReason}
+                      onValueChange={setFeedbackDowngradeReason}
+                    >
+                      <SelectTrigger id="downgrade-reason" className="mt-2 h-9">
+                        <SelectValue placeholder="Select a reason" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="too-expensive">Too expensive</SelectItem>
+                        <SelectItem value="not-enough-features">Not enough features</SelectItem>
+                        <SelectItem value="switching-platform">Switching to another platform</SelectItem>
+                        <SelectItem value="project-ended">Project ended</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-              </>
+                  <div>
+                    <Label htmlFor="downgrade-message" className="text-[13px] font-medium">
+                      Additional details (optional)
+                    </Label>
+                    <Textarea
+                      id="downgrade-message"
+                      value={feedbackMessage}
+                      onChange={(e) => setFeedbackMessage(e.target.value)}
+                      placeholder="Tell us more about your decision..."
+                      className="mt-2 min-h-[100px]"
+                    />
+                  </div>
+                </div>
+              </div>
             )}
-          </div>
-
-          {/* Right Side - Summary Card */}
-          <div className="lg:col-span-1">
-            {showEstimatedTotal && (
-              <EstimatedTotalBox
-                estimation={estimation.estimation}
-                isLoading={estimation.isLoading}
-                selectedPlan={selectedPlan}
-                billingPlans={billingPlans}
-                coupon={selectedCoupon}
-                onCouponRemove={() => setSelectedCoupon(null)}
-                budget={billingBudget}
-                onBudgetChange={setBillingBudget}
-              />
-            )}
-
-            {showPlanComparison && (
-              <PlanComparisonBox
-                currentPlan={currentPlanEnum}
-                selectedPlan={selectedPlan}
-                plans={billingPlans}
-              />
-            )}
-          </div>
-        </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="shrink-0 border-t border-border bg-muted/30">
-        <div className="mx-auto w-full max-w-7xl px-6 py-4">
-          <div className="flex items-center justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={updatePlanMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isButtonDisabled}
-            >
-              Change plan
-            </Button>
-          </div>
-        </div>
-      </div>
+          </>
+        )}
 
       {/* Payment Modal */}
       <PaymentModal
@@ -640,6 +618,6 @@ export function ChangePlanWizardFullscreen() {
           setCouponModalOpen(false)
         }}
       />
-    </div>
+    </WizardLayout>
   )
 }
