@@ -167,7 +167,7 @@ abstract class Promise
      *
      * @return boolean
      */
-    protected function isPending(): bool
+    public function isPending(): bool
     {
         return $this->state == self::STATE_PENDING;
     }
@@ -177,7 +177,7 @@ abstract class Promise
      *
      * @return boolean
      */
-    protected function isFulfilled(): bool
+    public function isFulfilled(): bool
     {
         return $this->state == self::STATE_FULFILLED;
     }
@@ -187,8 +187,18 @@ abstract class Promise
      *
      * @return boolean
      */
-    protected function isRejected(): bool
+    public function isRejected(): bool
     {
         return $this->state == self::STATE_REJECTED;
+    }
+
+    /**
+     * Get the result value (only valid after promise is settled)
+     *
+     * @return mixed
+     */
+    public function getResult(): mixed
+    {
+        return $this->result;
     }
 }
