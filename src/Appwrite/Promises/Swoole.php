@@ -2,11 +2,21 @@
 
 namespace Appwrite\Promises;
 
+/**
+ * Swoole-compatible promise implementation that runs synchronously
+ * but can wait for external async operations via Swoole channels.
+ */
 class Swoole extends Promise
 {
+    public const PENDING = 'pending';
+    public const FULFILLED = 'fulfilled';
+    public const REJECTED = 'rejected';
+
+    public string $promiseState = self::PENDING;
+    public mixed $promiseResult = null;
+
     /**
      * Callbacks waiting for this promise to settle
-     * Each entry is [Promise, callable|null, callable|null]
      *
      * @var array<array{self, callable|null, callable|null}>
      */
@@ -18,14 +28,14 @@ class Swoole extends Promise
             return;
         }
 
-        $resolve = function ($value) {
-            $this->doResolve($value);
-        };
-        $reject = function ($reason) {
-            $this->doReject($reason);
-        };
-
-        $this->execute($executor, $resolve, $reject);
+        try {
+            $executor(
+                fn($value) => $this->doResolve($value),
+                fn($reason) => $this->doReject($reason)
+            );
+        } catch (\Throwable $e) {
+            $this->doReject($e);
+        }
     }
 
     protected function execute(
@@ -33,21 +43,12 @@ class Swoole extends Promise
         callable $resolve,
         callable $reject
     ): void {
-        \go(function () use ($executor, $resolve, $reject) {
-            try {
-                $executor($resolve, $reject);
-            } catch (\Throwable $exception) {
-                $reject($exception);
-            }
-        });
+        // Not used - we execute synchronously in constructor
     }
 
-    /**
-     * Internal resolve that triggers waiting callbacks
-     */
     protected function doResolve(mixed $value): void
     {
-        if ($this->state !== self::STATE_PENDING) {
+        if ($this->promiseState !== self::PENDING) {
             return;
         }
 
@@ -60,44 +61,36 @@ class Swoole extends Promise
             return;
         }
 
-        $this->result = $value;
-        $this->state = self::STATE_FULFILLED;
+        $this->promiseState = self::FULFILLED;
+        $this->promiseResult = $value;
         $this->processWaiting();
     }
 
-    /**
-     * Internal reject that triggers waiting callbacks
-     */
     protected function doReject(mixed $reason): void
     {
-        if ($this->state !== self::STATE_PENDING) {
+        if ($this->promiseState !== self::PENDING) {
             return;
         }
 
-        $this->result = $reason;
-        $this->state = self::STATE_REJECTED;
+        $this->promiseState = self::REJECTED;
+        $this->promiseResult = $reason;
         $this->processWaiting();
     }
 
-    /**
-     * Process all waiting callbacks
-     */
     protected function processWaiting(): void
     {
         foreach ($this->waiting as [$promise, $onFulfilled, $onRejected]) {
-            $callback = $this->state === self::STATE_FULFILLED ? $onFulfilled : $onRejected;
+            $callback = $this->promiseState === self::FULFILLED ? $onFulfilled : $onRejected;
 
             if ($callback === null) {
-                // Pass through the value/reason
-                if ($this->state === self::STATE_FULFILLED) {
-                    $promise->doResolve($this->result);
+                if ($this->promiseState === self::FULFILLED) {
+                    $promise->doResolve($this->promiseResult);
                 } else {
-                    $promise->doReject($this->result);
+                    $promise->doReject($this->promiseResult);
                 }
             } else {
-                // Run callback synchronously
                 try {
-                    $result = $callback($this->result);
+                    $result = $callback($this->promiseResult);
                     $promise->doResolve($result);
                 } catch (\Throwable $e) {
                     $promise->doReject($e);
@@ -107,32 +100,26 @@ class Swoole extends Promise
         $this->waiting = [];
     }
 
-    /**
-     * Override then to use callback-based approach instead of busy-waiting
-     */
     public function then(
         ?callable $onFulfilled = null,
         ?callable $onRejected = null
     ): self {
         $promise = new self();
 
-        if ($this->state === self::STATE_PENDING) {
-            // Queue the callbacks for later
+        if ($this->promiseState === self::PENDING) {
             $this->waiting[] = [$promise, $onFulfilled, $onRejected];
         } else {
-            // Already settled, process immediately
-            $callback = $this->state === self::STATE_FULFILLED ? $onFulfilled : $onRejected;
+            $callback = $this->promiseState === self::FULFILLED ? $onFulfilled : $onRejected;
 
             if ($callback === null) {
-                if ($this->state === self::STATE_FULFILLED) {
-                    $promise->doResolve($this->result);
+                if ($this->promiseState === self::FULFILLED) {
+                    $promise->doResolve($this->promiseResult);
                 } else {
-                    $promise->doReject($this->result);
+                    $promise->doReject($this->promiseResult);
                 }
             } else {
-                // Run callback synchronously
                 try {
-                    $result = $callback($this->result);
+                    $result = $callback($this->promiseResult);
                     $promise->doResolve($result);
                 } catch (\Throwable $e) {
                     $promise->doReject($e);
@@ -143,30 +130,38 @@ class Swoole extends Promise
         return $promise;
     }
 
-    /**
-     * Override resolve to use internal method
-     */
     public function resolve(mixed $value): self
     {
         $this->doResolve($value);
         return $this;
     }
 
-    /**
-     * Override reject to use internal method
-     */
     public function reject(mixed $reason): self
     {
         $this->doReject($reason);
         return $this;
     }
 
-    /**
-     * Returns a promise that completes when all passed in promises complete.
-     *
-     * @param iterable $promisesOrValues Array of promises and/or plain values
-     * @return self
-     */
+    public function isPending(): bool
+    {
+        return $this->promiseState === self::PENDING;
+    }
+
+    public function isFulfilled(): bool
+    {
+        return $this->promiseState === self::FULFILLED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->promiseState === self::REJECTED;
+    }
+
+    public function getResult(): mixed
+    {
+        return $this->promiseResult;
+    }
+
     public static function all(iterable $promisesOrValues): self
     {
         $promisesOrValues = \is_array($promisesOrValues)
@@ -185,7 +180,7 @@ class Swoole extends Promise
         $result = [];
         $rejected = false;
 
-        $resolveIfDone = static function () use (&$count, $total, &$result, &$rejected, $promise): void {
+        $checkComplete = static function () use (&$count, $total, &$result, &$rejected, $promise): void {
             if (!$rejected && $count === $total) {
                 \ksort($result);
                 $promise->doResolve($result);
@@ -193,13 +188,13 @@ class Swoole extends Promise
         };
 
         foreach ($promisesOrValues as $index => $promiseOrValue) {
-            if ($promiseOrValue instanceof Promise) {
+            if ($promiseOrValue instanceof self) {
                 $result[$index] = null;
                 $promiseOrValue->then(
-                    static function ($value) use (&$result, $index, &$count, $resolveIfDone) {
+                    static function ($value) use (&$result, $index, &$count, $checkComplete) {
                         $result[$index] = $value;
                         ++$count;
-                        $resolveIfDone();
+                        $checkComplete();
                         return $value;
                     },
                     static function ($error) use (&$rejected, $promise) {
@@ -215,7 +210,7 @@ class Swoole extends Promise
             }
         }
 
-        $resolveIfDone();
+        $checkComplete();
 
         return $promise;
     }
