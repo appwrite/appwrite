@@ -49,7 +49,7 @@ class Delete extends DocumentDelete
                 group: $this->getSdkGroup(),
                 name: 'deleteDocument',
                 description: '/docs/references/documentsdb/delete-document.md',
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_NOCONTENT,

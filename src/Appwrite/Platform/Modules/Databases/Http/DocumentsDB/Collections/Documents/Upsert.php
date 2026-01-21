@@ -47,7 +47,7 @@ class Upsert extends DocumentUpsert
                     group: $this->getSdkGroup(),
                     name: 'upsertDocument',
                     description: '/docs/references/documentsdb/upsert-document.md',
-                    auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,
