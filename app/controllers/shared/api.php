@@ -234,14 +234,14 @@ App::init()
                 }
 
                 if (!$updates->isEmpty()) {
-                    Authorization::skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
+                    $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
 
                     if (!empty($apiKey->getProjectId())) {
-                        Authorization::skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
                     } elseif (!empty($apiKey->getUserId())) {
-                        Authorization::skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
                     } elseif (!empty($apiKey->getTeamId())) {
-                        Authorization::skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
                     }
                 }
 

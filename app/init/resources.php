@@ -455,7 +455,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
             throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
         }
 
-        $accountKeyUser = Authorization::skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
+        $accountKeyUser = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
         if (!$accountKeyUser->isEmpty()) {
             $key = $accountKeyUser->find(
                 key: 'secret',
