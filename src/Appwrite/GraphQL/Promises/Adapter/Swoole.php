@@ -95,21 +95,15 @@ class Swoole extends Adapter
         foreach ($promisesOrValues as $index => $promiseOrValue) {
             if ($promiseOrValue instanceof GQLPromise) {
                 $result[$index] = null;
-                /** @var SwoolePromise $adopted */
-                $adopted = $promiseOrValue->adoptedPromise;
-                $adopted->then(
-                    static function ($value) use (&$result, $index, &$count, $checkComplete) {
+                // Use GQLPromise::then() which goes through adapter->then()
+                // This matches SyncPromiseAdapter's behavior
+                $promiseOrValue->then(
+                    static function ($value) use (&$result, $index, &$count, $checkComplete): void {
                         $result[$index] = $value;
                         ++$count;
                         $checkComplete();
-                        return $value;
                     },
-                    static function ($error) use (&$rejected, $combinedPromise) {
-                        if (!$rejected) {
-                            $rejected = true;
-                            $combinedPromise->reject($error);
-                        }
-                    }
+                    [$combinedPromise, 'reject']
                 );
             } else {
                 $result[$index] = $promiseOrValue;
