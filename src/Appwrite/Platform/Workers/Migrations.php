@@ -24,12 +24,14 @@ use Utopia\Locale\Locale;
 use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
+use Utopia\Migration\Destinations\JSON as DestinationJSON;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
+use Utopia\Migration\Sources\JSON;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
@@ -58,13 +60,16 @@ class Migrations extends Action
      */
     protected $logError = null;
 
+    /* either CSV or JSON */
+    private string|null $dataExportType = null;
+
     public static function getName(): string
     {
         return 'migrations';
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function __construct()
     {
@@ -85,7 +90,7 @@ class Migrations extends Action
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function action(
         Message $message,
@@ -135,30 +140,17 @@ class Migrations extends Action
             return;
         }
 
-        try {
-            $this->processMigration(
-                $migration,
-                $queueForRealtime,
-                $queueForMails,
-                $platform,
-                $authorization
-            );
-        } finally {
-            $this->dbForProject = null;
-            $this->dbForPlatform = null;
-            $this->project = null;
-            $this->logError = null;
-            $this->deviceForMigrations = null;
-            $this->deviceForFiles = null;
-            $this->plan = [];
-            $this->sourceReport = [];
-
-            \gc_collect_cycles();
-        }
+        $this->processMigration(
+            $migration,
+            $queueForRealtime,
+            $queueForMails,
+            $platform,
+            $authorization
+        );
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected function processSource(Document $migration, array $platform): Source
     {
@@ -171,7 +163,13 @@ class Migrations extends Action
         $database = null;
         $queries = [];
 
-        if ($source === Appwrite::getName() && $destination === DestinationCSV::getName()) {
+        $this->dataExportType = match ($destination) {
+            DestinationCSV::getName() => 'CSV',
+            DestinationJSON::getName() => 'JSON',
+            default => null /* there are other valid exports, so we don't throw */
+        };
+
+        if ($source === Appwrite::getName() && ($destination === DestinationCSV::getName() || $destination === DestinationJSON::getName())) {
             $dataSource = Appwrite::SOURCE_DATABASE;
             $database = $this->dbForProject;
             $queries = Query::parseQueries($migrationOptions['queries']);
@@ -213,6 +211,12 @@ class Migrations extends Action
                 $this->deviceForMigrations,
                 $this->dbForProject
             ),
+            JSON::getName() => new JSON(
+                $resourceId,
+                $migrationOptions['path'],
+                $this->deviceForMigrations,
+                $this->dbForProject
+            ),
             default => throw new \Exception('Invalid source type'),
         };
 
@@ -223,7 +227,7 @@ class Migrations extends Action
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected function processDestination(Document $migration, string $apiKey, array $platform): Destination
     {
@@ -251,6 +255,13 @@ class Migrations extends Action
                 $options['escape'],
                 $options['header'],
             ),
+            DestinationJSON::getName() => new DestinationJSON(
+                $this->deviceForFiles,
+                $migration->getAttribute('resourceId'),
+                $options['bucketId'],
+                $options['filename'],
+                $options['columns'],
+            ),
             default => throw new \Exception('Invalid destination type'),
         };
     }
@@ -260,7 +271,7 @@ class Migrations extends Action
      * @throws Structure
      * @throws Conflict
      * @throws \Utopia\Database\Exception
-     * @throws Exception
+     * @throws \Exception
      */
     protected function updateMigrationDocument(Document $migration, Document $project, Realtime $queueForRealtime): Document
     {
@@ -280,7 +291,7 @@ class Migrations extends Action
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     protected function generateAPIKey(Document $project): string
     {
@@ -320,7 +331,7 @@ class Migrations extends Action
      * @throws Restricted
      * @throws Structure
      * @throws \Utopia\Database\Exception
-     * @throws Exception
+     * @throws \Exception
      */
     protected function processMigration(
         Document $migration,
@@ -444,9 +455,17 @@ class Migrations extends Action
                     $destination?->success();
                     $source?->success();
 
-                    // TODO: Move to CSV hook
-                    if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
+                    // TODO: Move to CSV|JSON hook
+                    $destinationName = $migration->getAttribute('destination');
+                    if ($destinationName === DestinationCSV::getName() || $destinationName === DestinationJSON::getName()) {
+                        $this->handleDataExportComplete(
+                            $project,
+                            $migration,
+                            $queueForMails,
+                            $queueForRealtime,
+                            $platform,
+                            $authorization
+                        );
                     }
                 }
             } finally {
@@ -461,7 +480,7 @@ class Migrations extends Action
     }
 
     /**
-     * Handle actions to be performed when a CSV export migration is successfully completed
+     * Handle actions to be performed when a data export migration is successfully completed
      *
      * @param Document $project
      * @param Document $migration
@@ -471,7 +490,7 @@ class Migrations extends Action
      * @param Authorization $authorization
      * @return void
      */
-    protected function handleCSVExportComplete(
+    protected function handleDataExportComplete(
         Document $project,
         Document $migration,
         Mail $queueForMails,
@@ -496,7 +515,8 @@ class Migrations extends Action
             throw new \Exception('Bucket not found');
         }
 
-        $path = $this->deviceForFiles->getPath($bucketId . '/' . $this->sanitizeFilename($filename) . '.csv');
+        $ext = strtolower($this->dataExportType);
+        $path = $this->deviceForFiles->getPath($bucketId . '/' . $this->sanitizeFilename($filename) . '.' . $ext);
         $size = $this->deviceForFiles->getFileSize($path);
         $mime = $this->deviceForFiles->getFileMimeType($path);
         $hash = $this->deviceForFiles->getFileHash($path);
@@ -521,7 +541,7 @@ class Migrations extends Action
                     Document::SET_TYPE_APPEND,
                 ));
 
-                $this->sendCSVEmail(
+                $this->sendDataExportEmail(
                     success: false,
                     project: $project,
                     user: $user,
@@ -576,12 +596,12 @@ class Migrations extends Action
         // Generate download URL with JWT
         $endpoint = System::getEnv('_APP_DOMAIN', '');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled' ? 'https' : 'http';
-        $downloadUrl = "{$protocol}://{$endpoint}/v1/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
+        $downloadUrl = "$protocol://$endpoint/v1/storage/buckets/$bucketId/files/$fileId/push?project={$project->getId()}&jwt=$jwt";
         $options['downloadUrl'] = $downloadUrl;
         $migration->setAttribute('options', $options);
         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-        $this->sendCSVEmail(
+        $this->sendDataExportEmail(
             success: true,
             project: $project,
             user: $user,
@@ -593,7 +613,7 @@ class Migrations extends Action
     }
 
     /**
-     * Send CSV export notification email
+     * Send data export notification email
      *
      * @param bool $success Whether the export was successful
      * @param Document $project
@@ -606,7 +626,7 @@ class Migrations extends Action
      * @return void
      * @throws \Exception
      */
-    protected function sendCSVEmail(
+    protected function sendDataExportEmail(
         bool $success,
         Document $project,
         Document $user,
@@ -621,7 +641,7 @@ class Migrations extends Action
         }
 
         if ($user->isEmpty()) {
-            Console::warning("User not found for CSV export notification: {$user->getSequence()}");
+            Console::warning("User not found for $this->dataExportType export notification: {$user->getSequence()}");
             return;
         }
 
@@ -633,14 +653,14 @@ class Migrations extends Action
             : 'failure';
 
         // Get localized email content
-        $subject = $locale->getText("emails.csvExport.{$emailType}.subject");
-        $preview = $locale->getText("emails.csvExport.{$emailType}.preview");
-        $hello = $locale->getText("emails.csvExport.{$emailType}.hello");
-        $body = $locale->getText("emails.csvExport.{$emailType}.body");
-        $footer = $locale->getText("emails.csvExport.{$emailType}.footer");
-        $thanks = $locale->getText("emails.csvExport.{$emailType}.thanks");
-        $signature = $locale->getText("emails.csvExport.{$emailType}.signature");
-        $buttonText = $success ? $locale->getText("emails.csvExport.{$emailType}.buttonText") : '';
+        $subject = $locale->getText("emails.dataExport.$emailType.subject");
+        $preview = $locale->getText("emails.dataExport.$emailType.preview");
+        $hello = $locale->getText("emails.dataExport.$emailType.hello");
+        $body = $locale->getText("emails.dataExport.$emailType.body");
+        $footer = $locale->getText("emails.dataExport.$emailType.footer");
+        $thanks = $locale->getText("emails.dataExport.$emailType.thanks");
+        $signature = $locale->getText("emails.dataExport.$emailType.signature");
+        $buttonText = $success ? $locale->getText("emails.dataExport.$emailType.buttonText") : '';
 
         // Build email body using appropriate template
         $templatePath = $success
@@ -656,7 +676,10 @@ class Migrations extends Action
             ->setParam('{{direction}}', $locale->getText('settings.direction'))
             ->setParam('{{project}}', $project->getAttribute('name'))
             ->setParam('{{user}}', $user->getAttribute('name', $user->getAttribute('email')))
-            ->setParam('{{size}}', $success ? '' : (string)$sizeMB);
+            ->setParam('{{size}}', $success ? '' : (string)$sizeMB)
+            ->setParam('{{type}}', $this->dataExportType)
+            ->setParam('{{platform}}', $platform['platformName'])
+        ;
 
         if ($success) {
             $message
@@ -676,6 +699,7 @@ class Migrations extends Action
             'terms' => $platform['termsUrl'],
             'privacy' => $platform['privacyUrl'],
             'platform' => $platform['platformName'],
+            'type' => $this->dataExportType,
         ];
 
         $queueForMails
@@ -689,7 +713,7 @@ class Migrations extends Action
             ->setSenderName($platform['emailSenderName'])
             ->trigger();
 
-        Console::info("CSV export {$emailType} notification email sent to " . $user->getAttribute('email'));
+        Console::info("$this->dataExportType export $emailType notification email sent to " . $user->getAttribute('email'));
     }
 
     /**
