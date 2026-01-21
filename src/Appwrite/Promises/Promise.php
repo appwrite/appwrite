@@ -201,4 +201,36 @@ abstract class Promise
     {
         return $this->result;
     }
+
+    /**
+     * Resolve the promise with a value
+     *
+     * @param mixed $value
+     * @return self
+     */
+    public function resolve(mixed $value): self
+    {
+        if ($this->state !== self::STATE_PENDING) {
+            return $this;
+        }
+        $this->setResult($value);
+        $this->setState(self::STATE_FULFILLED);
+        return $this;
+    }
+
+    /**
+     * Reject the promise with a reason
+     *
+     * @param mixed $reason
+     * @return self
+     */
+    public function reject(mixed $reason): self
+    {
+        if ($this->state !== self::STATE_PENDING) {
+            return $this;
+        }
+        $this->setResult($reason);
+        $this->setState(self::STATE_REJECTED);
+        return $this;
+    }
 }

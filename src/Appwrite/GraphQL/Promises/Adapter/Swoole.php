@@ -44,25 +44,20 @@ class Swoole extends Adapter
             return $this->createFulfilled([]);
         }
 
+        // Create the combined promise without an executor (won't start a coroutine)
+        $combinedPromise = new SwoolePromise();
+
         // Shared state across callbacks
         $count = 0;
         $result = [];
         $rejected = false;
-        $resolveCallback = null;
-        $rejectCallback = null;
 
-        $resolveAllWhenFinished = function () use (&$count, $total, &$result, &$rejected, &$resolveCallback): void {
-            if (!$rejected && $count === $total && $resolveCallback !== null) {
+        $resolveAllWhenFinished = static function () use (&$count, $total, &$result, &$rejected, $combinedPromise): void {
+            if (!$rejected && $count === $total) {
                 \ksort($result);
-                $resolveCallback($result);
+                $combinedPromise->resolve($result);
             }
         };
-
-        // Create the combined promise - the executor captures the resolve/reject callbacks
-        $combinedPromise = new SwoolePromise(function ($resolve, $reject) use (&$resolveCallback, &$rejectCallback) {
-            $resolveCallback = $resolve;
-            $rejectCallback = $reject;
-        });
 
         // Register then callbacks on each input promise
         foreach ($promisesOrValues as $index => $promiseOrValue) {
@@ -74,10 +69,10 @@ class Swoole extends Adapter
                         ++$count;
                         $resolveAllWhenFinished();
                     },
-                    static function ($error) use (&$rejected, &$rejectCallback): void {
-                        if (!$rejected && $rejectCallback !== null) {
+                    static function ($error) use (&$rejected, $combinedPromise): void {
+                        if (!$rejected) {
                             $rejected = true;
-                            $rejectCallback($error);
+                            $combinedPromise->reject($error);
                         }
                     }
                 );
