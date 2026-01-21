@@ -41,9 +41,18 @@ class Swoole extends Adapter
 
     public function create(callable $resolver): GQLPromise
     {
-        $promise = new SwoolePromise(function ($resolve, $reject) use ($resolver) {
-            $resolver($resolve, $reject);
-        });
+        // Create without executor - don't enqueue anything
+        $promise = new SwoolePromise();
+
+        try {
+            // Call resolver synchronously - it may call resolve/reject
+            $resolver(
+                [$promise, 'resolve'],
+                [$promise, 'reject']
+            );
+        } catch (\Throwable $e) {
+            $promise->reject($e);
+        }
 
         return new GQLPromise($promise, $this);
     }
