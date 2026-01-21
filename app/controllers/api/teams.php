@@ -103,6 +103,7 @@ App::post('/v1/teams')
                     Permission::update(Role::team($teamId, 'owner')),
                     Permission::delete(Role::team($teamId, 'owner')),
                 ],
+                'labels' => [],
                 'name' => $name,
                 'total' => ($isPrivilegedUser || $isAppUser) ? 0 : 1,
                 'prefs' => new \stdClass(),
