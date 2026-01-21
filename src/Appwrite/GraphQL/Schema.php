@@ -29,6 +29,41 @@ class Schema
     ];
 
     /**
+     * Sanitize a string to be a valid GraphQL name.
+     *
+     * GraphQL names must match /^[_A-Za-z][_0-9A-Za-z]*$/
+     * - Must start with a letter or underscore
+     * - Can only contain letters, digits, and underscores
+     * - Cannot start with two underscores (reserved for introspection)
+     *
+     * @param string $name The name to sanitize
+     * @return string The sanitized name
+     */
+    private function sanitizeGraphQLName(string $name): string
+    {
+        // Replace any non-alphanumeric characters with underscores
+        $sanitized = \preg_replace('/[^A-Za-z0-9_]/', '_', $name);
+
+        // If the name starts with a digit, prefix with underscore
+        if (\preg_match('/^[0-9]/', $sanitized)) {
+            $sanitized = '_' . $sanitized;
+        }
+
+        // If the name starts with double underscore, prefix with single underscore
+        // to avoid collision with GraphQL introspection types
+        if (\str_starts_with($sanitized, '__')) {
+            $sanitized = '_' . $sanitized;
+        }
+
+        // Ensure the name is not empty
+        if (empty($sanitized)) {
+            $sanitized = '_unnamed';
+        }
+
+        return $sanitized;
+    }
+
+    /**
      * Create a new Schema instance.
      *
      * @param string $projectId The project ID for this schema
@@ -271,7 +306,9 @@ class Schema
             $typeParams = $params[$databaseType] ?? $params['legacy'];
 
             // Create unique type name for this project's collection
-            $typeName = $this->projectId . \ucfirst($collectionId);
+            $sanitizedProjectId = $this->sanitizeGraphQLName($this->projectId);
+            $sanitizedCollectionId = $this->sanitizeGraphQLName($collectionId);
+            $typeName = $sanitizedProjectId . \ucfirst($sanitizedCollectionId);
 
             if (\in_array($typeName, self::RESERVED_TYPES)) {
                 throw new \Exception("Type name collision with reserved type: {$typeName}");
@@ -294,8 +331,8 @@ class Schema
                 $this->mapper->args('mutate')
             );
 
-            // Prefix field names with collection ID to avoid conflicts
-            $queryFields[$collectionId . 'Get'] = [
+            // Prefix field names with sanitized collection ID to avoid conflicts
+            $queryFields[$sanitizedCollectionId . 'Get'] = [
                 'type' => $objectType,
                 'args' => $this->mapper->args('id'),
                 'resolve' => Resolvers::documentGet(
@@ -311,7 +348,7 @@ class Schema
                 ? 'rows'
                 : 'documents';
 
-            $queryFields[$collectionId . 'List'] = [
+            $queryFields[$sanitizedCollectionId . 'List'] = [
                 'type' => Type::listOf($objectType),
                 'args' => $this->mapper->args('list'),
                 'resolve' => Resolvers::documentList(
@@ -325,7 +362,7 @@ class Schema
                 'complexity' => $complexity,
             ];
 
-            $mutationFields[$collectionId . 'Create'] = [
+            $mutationFields[$sanitizedCollectionId . 'Create'] = [
                 'type' => $objectType,
                 'args' => $mutateAttributes,
                 'resolve' => Resolvers::documentCreate(
@@ -336,7 +373,7 @@ class Schema
                     $typeParams['create'],
                 )
             ];
-            $mutationFields[$collectionId . 'Update'] = [
+            $mutationFields[$sanitizedCollectionId . 'Update'] = [
                 'type' => $objectType,
                 'args' => \array_merge(
                     $this->mapper->args('id'),
@@ -353,7 +390,7 @@ class Schema
                     $typeParams['update'],
                 )
             ];
-            $mutationFields[$collectionId . 'Delete'] = [
+            $mutationFields[$sanitizedCollectionId . 'Delete'] = [
                 'type' => $this->mapper->model('none'),
                 'args' => $this->mapper->args('id'),
                 'resolve' => Resolvers::documentDelete(
