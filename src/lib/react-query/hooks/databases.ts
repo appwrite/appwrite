@@ -643,21 +643,107 @@ export async function createProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const { key, type, required = false, array = false, xdefault, size, min, max, elements, encrypt } = columnData
   
-  if (typeof (projectSdk.tablesDB as any).createAttribute === 'function') {
-    return await (projectSdk.tablesDB as any).createAttribute({
-      databaseId,
-      tableId,
-      ...columnData,
-    })
-  } else if (typeof (projectSdk.tablesDB as any).createColumn === 'function') {
-    return await (projectSdk.tablesDB as any).createColumn({
-      databaseId,
-      tableId,
-      ...columnData,
-    })
-  } else {
-    throw new Error('Create column method not available')
+  // Call the appropriate method based on column type
+  switch (type) {
+    case 'string':
+      return await projectSdk.tablesDB.createStringColumn({
+        databaseId,
+        tableId,
+        key,
+        size: size || 255,
+        required,
+        xdefault,
+        array,
+        encrypt,
+      })
+    case 'integer':
+      return await projectSdk.tablesDB.createIntegerColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        min,
+        max,
+        xdefault,
+        array,
+      })
+    case 'double':
+    case 'float':
+      return await projectSdk.tablesDB.createFloatColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        min,
+        max,
+        xdefault,
+        array,
+      })
+    case 'boolean':
+      return await projectSdk.tablesDB.createBooleanColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+        array,
+      })
+    case 'datetime':
+      return await projectSdk.tablesDB.createDatetimeColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+        array,
+      })
+    case 'email':
+      return await projectSdk.tablesDB.createEmailColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+        array,
+      })
+    case 'ip':
+      return await projectSdk.tablesDB.createIpColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+        array,
+      })
+    case 'url':
+      return await projectSdk.tablesDB.createUrlColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+        array,
+      })
+    case 'enum':
+      return await projectSdk.tablesDB.createEnumColumn({
+        databaseId,
+        tableId,
+        key,
+        elements: elements || [],
+        required,
+        xdefault,
+        array,
+      })
+    case 'relationship':
+      return await projectSdk.tablesDB.createRelationshipColumn({
+        databaseId,
+        tableId,
+        ...columnData,
+      })
+    default:
+      throw new Error(`Unsupported column type: ${type}`)
   }
 }
 
@@ -682,23 +768,135 @@ export async function updateProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  const { type, required = false, xdefault, size, min, max, elements, newKey } = columnData
   
-  if (typeof (projectSdk.tablesDB as any).updateAttribute === 'function') {
-    return await (projectSdk.tablesDB as any).updateAttribute({
-      databaseId,
-      tableId,
-      key: columnKey,
-      ...columnData,
-    })
-  } else if (typeof (projectSdk.tablesDB as any).updateColumn === 'function') {
-    return await (projectSdk.tablesDB as any).updateColumn({
-      databaseId,
-      tableId,
-      key: columnKey,
-      ...columnData,
-    })
-  } else {
-    throw new Error('Update column method not available')
+  // Call the appropriate update method based on column type
+  switch (type) {
+    case 'string':
+      return await projectSdk.tablesDB.updateStringColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        size,
+        newKey,
+      })
+    case 'integer':
+      return await projectSdk.tablesDB.updateIntegerColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        min,
+        max,
+        xdefault,
+        newKey,
+      })
+    case 'double':
+    case 'float':
+      return await projectSdk.tablesDB.updateFloatColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        min,
+        max,
+        xdefault,
+        newKey,
+      })
+    case 'boolean':
+      return await projectSdk.tablesDB.updateBooleanColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
+    case 'datetime':
+      return await projectSdk.tablesDB.updateDatetimeColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
+    case 'email':
+      return await projectSdk.tablesDB.updateEmailColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
+    case 'ip':
+      return await projectSdk.tablesDB.updateIpColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
+    case 'url':
+      return await projectSdk.tablesDB.updateUrlColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
+    case 'enum':
+      return await projectSdk.tablesDB.updateEnumColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        elements: elements || [],
+        required,
+        xdefault,
+        newKey,
+      })
+    case 'relationship':
+      return await projectSdk.tablesDB.updateRelationshipColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        onDelete: columnData.onDelete,
+        newKey,
+      })
+    case 'point':
+      return await projectSdk.tablesDB.updatePointColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
+    case 'linestring':
+      return await projectSdk.tablesDB.updateLineColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
+    case 'polygon':
+      return await projectSdk.tablesDB.updatePolygonColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
+    default:
+      throw new Error(`Unsupported column type for update: ${type}`)
   }
 }
 

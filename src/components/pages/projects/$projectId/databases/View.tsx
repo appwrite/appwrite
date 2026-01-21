@@ -33,6 +33,7 @@ import {
   FileText,
   Code,
   Copy,
+  Pencil,
 } from 'lucide-react'
 import {
   databases,
@@ -61,6 +62,34 @@ interface IndexColumnEntry {
   order: 'ASC' | 'DESC' | null
   length: number | null
 }
+
+// Helper function for column type colors
+const getColumnTypeColor = (type: string) => {
+  const colors: Record<string, string> = {
+    string: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    integer: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+    float: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+    boolean: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20',
+    datetime: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+    email: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20',
+    ip: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
+    url: 'bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20',
+    enum: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+    relationship: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
+  }
+  return colors[type] || 'bg-muted text-muted-foreground border-border'
+}
+
+// Helper function for index type colors
+const getIndexTypeColor = (type: string) => {
+  const colors: Record<string, string> = {
+    key: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    unique: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+    fulltext: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+  }
+  return colors[type] || 'bg-muted text-muted-foreground border-border'
+}
+
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -893,7 +922,9 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
   const rowsRefetchRef = useRef<(() => Promise<any>) | null>(null)
   const openCreateRowDrawerRef = useRef<(() => void) | null>(null)
   const openCreateColumnDialogRef = useRef<(() => void) | null>(null)
+  const openSuggestColumnsDialogRef = useRef<(() => void) | null>(null)
   const openCreateIndexDialogRef = useRef<(() => void) | null>(null)
+  const openSuggestIndexesDialogRef = useRef<(() => void) | null>(null)
   const [isRefreshingRows, setIsRefreshingRows] = useState(false)
   const refreshStartTimeRef = useRef<number | null>(null)
   const minAnimationDuration = 1000 // 1 second for at least one full rotation
@@ -1197,6 +1228,37 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
           onImport={() => console.log('Import data')}
           showExport={activeTab === 'rows'}
           onExport={() => console.log('Export data')}
+          beforeCreateButtons={
+            activeTab === 'columns' ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (openSuggestColumnsDialogRef.current) {
+                    openSuggestColumnsDialogRef.current()
+                  }
+                }}
+                className="h-9"
+              >
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                Suggest columns
+              </Button>
+            ) : activeTab === 'indexes' ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (openSuggestIndexesDialogRef.current) {
+                    openSuggestIndexesDialogRef.current()
+                  }
+                }}
+                className="h-9"
+              >
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                Suggest indexes
+              </Button>
+            ) : undefined
+          }
           collapsible
           fullWidthBorder
           fullWidth
@@ -1285,6 +1347,9 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
               onCreateReady={(openDialog) => {
                 openCreateColumnDialogRef.current = openDialog
               }}
+              onSuggestReady={(openDialog) => {
+                openSuggestColumnsDialogRef.current = openDialog
+              }}
             />
           )}
           {activeTab === 'indexes' && (
@@ -1292,6 +1357,9 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
               table={selectedTable}
               onCreateReady={(openDialog) => {
                 openCreateIndexDialogRef.current = openDialog
+              }}
+              onSuggestReady={(openDialog) => {
+                openSuggestIndexesDialogRef.current = openDialog
               }}
             />
           )}
@@ -3589,6 +3657,7 @@ interface SpreadsheetProps {
   onCreateRowReady?: (openCreateDrawer: () => void) => void
   onCreateColumnReady?: (() => void) | null
   onCreateReady?: (openDialog: () => void) => void
+  onSuggestReady?: (openDialog: () => void) => void
   onRowsCountChange?: (count: number) => void
 }
 
@@ -4530,7 +4599,7 @@ function RowsSpreadsheet({ table, onRefetchReady, onCreateRowReady, onCreateColu
 }
 
 // Spreadsheet-like view for Columns
-function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
+function ColumnsSpreadsheet({ table, onCreateReady, onSuggestReady }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
   })
@@ -4542,6 +4611,9 @@ function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
   const [selectedColumn, setSelectedColumn] = useState<any>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [columnToDelete, setColumnToDelete] = useState<string | null>(null)
+  const [contextDialogOpen, setContextDialogOpen] = useState(false)
+  const [suggestedColumns, setSuggestedColumns] = useState<any[]>([])
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
 
   const queryClient = useQueryClient()
 
@@ -4608,12 +4680,137 @@ function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
     setColumnDialogOpen(true)
   }
 
+  const handleGenerateSuggestions = async (context: string) => {
+    setIsLoadingSuggestions(true)
+    try {
+      const projectSdk = sdk.forProject(projectId)
+      const result = await projectSdk.console.suggestColumns({
+        databaseId,
+        tableId,
+        context: context || undefined,
+        min: 3,
+        max: 7,
+      })
+
+      // Map API suggestions to display format with suggestion flag
+      const mapped = result.columns.map((col: any) => ({
+        key: col.key || col.name || col.$id || 'unnamed',
+        type: col.type || 'string',
+        // String fields
+        size: col.size,
+        encrypt: col.encrypt,
+        // Number fields
+        min: col.min,
+        max: col.max,
+        // Enum fields
+        elements: col.elements,
+        // Relationship fields
+        relatedTableId: col.relatedTableId,
+        relationshipType: col.relationshipType,
+        twoWay: col.twoWay,
+        twoWayKey: col.twoWayKey,
+        onDelete: col.onDelete,
+        // Common fields
+        required: col.required ?? false,
+        array: col.array ?? false,
+        xdefault: col.default ?? col.xdefault,
+        default: col.default, // Keep for backward compatibility
+        isSuggestion: true,
+        originalData: col,
+      }))
+
+      setSuggestedColumns(mapped)
+      setContextDialogOpen(false)
+      toast.success(`Generated ${mapped.length} column suggestions`)
+      
+      // Scroll to first suggestion after DOM updates
+      setTimeout(() => {
+        const firstSuggestionRow = document.querySelector('[data-suggestion-row="true"]')
+        if (firstSuggestionRow) {
+          firstSuggestionRow.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
+    } catch (error) {
+      toast.error(getErrorMessage(error))
+      setContextDialogOpen(false)
+    } finally {
+      setIsLoadingSuggestions(false)
+    }
+  }
+
+  const handleApproveSuggestion = async (suggestionKey: string) => {
+    try {
+      // Get the current suggestion data from state (in case it was edited)
+      const suggestion = suggestedColumns.find(s => s.key === suggestionKey)
+      if (!suggestion) {
+        toast.error('Suggestion not found')
+        return
+      }
+
+      // Extract all relevant fields, ensuring we get updated values
+      const columnData: ColumnFormData = {
+        key: suggestion.key,
+        type: suggestion.type as ColumnType,
+        required: suggestion.required ?? false,
+        array: suggestion.array ?? false,
+        // Type-specific fields
+        size: suggestion.size,
+        encrypt: suggestion.encrypt,
+        min: suggestion.min,
+        max: suggestion.max,
+        elements: suggestion.elements,
+        xdefault: suggestion.xdefault ?? suggestion.default,
+        // Relationship fields
+        relatedTableId: suggestion.relatedTableId,
+        relationshipType: suggestion.relationshipType,
+        twoWay: suggestion.twoWay,
+        twoWayKey: suggestion.twoWayKey,
+        onDelete: suggestion.onDelete,
+      }
+
+      await createColumnMutation.mutateAsync(columnData)
+      
+      // Remove from suggestions
+      setSuggestedColumns(prev => prev.filter(s => s.key !== suggestionKey))
+      
+      toast.success(`Column "${suggestion.key}" created successfully`)
+    } catch (error) {
+      toast.error(getErrorMessage(error))
+    }
+  }
+
+  const handleRemoveSuggestion = (key: string) => {
+    setSuggestedColumns(prev => prev.filter(s => s.key !== key))
+  }
+
+  const handleEditSuggestion = (suggestion: any) => {
+    setSelectedColumn({ ...suggestion, isSuggestion: true })
+    setColumnDialogOpen(true)
+  }
+
+  const handleSuggestionSubmit = (key: string, data: ColumnFormData) => {
+    // Update the suggestion in the list, ensuring all fields are properly merged
+    setSuggestedColumns(prev =>
+      prev.map(s => (s.key === key ? { ...s, ...data, isSuggestion: true } : s))
+    )
+    setColumnDialogOpen(false)
+    setSelectedColumn(null)
+    toast.success('Suggestion updated')
+  }
+
   // Expose create function to parent
   useEffect(() => {
     if (onCreateReady) {
       onCreateReady(handleCreateColumn)
     }
   }, [onCreateReady])
+
+  // Expose suggest function to parent
+  useEffect(() => {
+    if (onSuggestReady) {
+      onSuggestReady(() => setContextDialogOpen(true))
+    }
+  }, [onSuggestReady])
 
   const handleEditColumn = (column: any) => {
     setSelectedColumn(column)
@@ -4626,7 +4823,10 @@ function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
   }
 
   const handleColumnSubmit = async (data: ColumnFormData) => {
-    if (selectedColumn) {
+    if (selectedColumn?.isSuggestion) {
+      // Update suggestion in place
+      handleSuggestionSubmit(selectedColumn.key, data)
+    } else if (selectedColumn) {
       await updateColumnMutation.mutateAsync({
         columnKey: selectedColumn.key || selectedColumn.name || selectedColumn.$id,
         data,
@@ -4646,10 +4846,27 @@ function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
   const columns = apiColumns.map((col: any) => ({
     key: col.key || col.name || col.$id,
     type: col.type || 'string',
+    // String fields
     size: col.size || null,
+    encrypt: col.encrypt || false,
+    // Number fields
+    min: col.min,
+    max: col.max,
+    // Enum fields
+    elements: col.elements || null,
+    // Relationship fields
+    relatedTableId: col.relatedTableId,
+    relationshipType: col.relationshipType,
+    twoWay: col.twoWay,
+    twoWayKey: col.twoWayKey,
+    onDelete: col.onDelete,
+    // Common fields
     required: col.required || false,
     array: col.array || false,
     default: col.default || null,
+    xdefault: col.xdefault || col.default || null,
+    // Keep reference to original for debugging
+    $id: col.$id,
   }))
 
   // Generate mock columns based on table (fallback if no API columns)
@@ -5117,6 +5334,9 @@ function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
 
   // Use API columns if available, otherwise fallback to mock
   const displayColumns = columns.length > 0 ? columns : generateMockColumns()
+  
+  // Combine regular columns with suggestions
+  const allColumns = [...displayColumns, ...suggestedColumns]
 
   if (columnsLoading) {
     return (
@@ -5127,8 +5347,11 @@ function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-auto overscroll-contain touch-pan-y">
+    <div className="flex h-full flex-col relative">
+      <div className={cn(
+        "flex-1 overflow-auto overscroll-contain touch-pan-y",
+        suggestedColumns.length > 0 && "pb-24"
+      )}>
         <table className="w-full border-collapse">
           <thead className={stickyTheadClass}>
             <tr>
@@ -5196,36 +5419,75 @@ function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
             </tr>
           </thead>
           <tbody>
-            {displayColumns.map((col: { key: string; type: string; size: number | null; required: boolean; array: boolean; default: string | null }) => {
+            {allColumns.map((col: any) => {
               const Icon = getColumnIcon(col.type)
-              const isSystem = col.key.startsWith('$')
+              const isSystem = col.key ? col.key.startsWith('$') : false
+              const isSuggestion = col.isSuggestion
               return (
                 <tr
                   key={col.key}
+                  data-suggestion-row={isSuggestion ? 'true' : undefined}
                   className={cn(
                     'group transition-colors hover:bg-muted/50',
                     isSystem && 'bg-muted/30',
+                    isSuggestion && 'bg-amber-500/5',
                   )}
                 >
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                      <code
-                        className={cn(
-                          'font-mono text-[12px]',
-                          isSystem
-                            ? 'text-muted-foreground'
-                            : 'text-foreground',
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <code
+                          className={cn(
+                            'font-mono text-[12px]',
+                            isSystem
+                              ? 'text-muted-foreground'
+                              : 'text-foreground',
+                          )}
+                        >
+                          {col.key || 'unnamed'}
+                        </code>
+                        {isSuggestion && (
+                          <span className="inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                            Suggested
+                          </span>
                         )}
-                      >
-                        {col.key}
-                      </code>
+                      </div>
+                      {isSuggestion && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleApproveSuggestion(col.key)}
+                            className="flex h-6 w-6 items-center justify-center rounded bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                          >
+                            <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                          </button>
+                          <button
+                            onClick={() => handleRemoveSuggestion(col.key)}
+                            className="flex h-6 w-6 items-center justify-center rounded bg-destructive/10 hover:bg-destructive/20 transition-colors cursor-pointer"
+                          >
+                            <X className="h-3.5 w-3.5 text-destructive" />
+                          </button>
+                          <div className="h-4 w-px bg-border mx-0.5" />
+                          <button
+                            onClick={() => handleEditSuggestion(col)}
+                            className="flex h-6 w-6 items-center justify-center rounded bg-blue-500/10 hover:bg-blue-500/20 transition-colors cursor-pointer"
+                          >
+                            <Pencil className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
+                        'text-[11px] font-medium border',
+                        getColumnTypeColor(col.type)
+                      )}
+                    >
                       {col.type}
-                    </span>
+                    </Badge>
                   </td>
                   <td
                     className={cn(
@@ -5259,7 +5521,7 @@ function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
                     </code>
                   </td>
                   <td className={cn('px-2 py-2', lastCellBorderClass)}>
-                    {!isSystem && (
+                    {!isSuggestion && !isSystem && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="rounded p-1 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100">
@@ -5298,13 +5560,60 @@ function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
             <span>Create column</span>
           </button>
         </div>
-        <span>{columns.length} columns</span>
+        <div className="flex items-center gap-4">
+          {suggestedColumns.length > 0 && (
+            <span className="text-amber-600 dark:text-amber-400">
+              {suggestedColumns.length} suggestion{suggestedColumns.length !== 1 ? 's' : ''}
+            </span>
+          )}
+          <span>{columns.length} column{columns.length !== 1 ? 's' : ''}</span>
+        </div>
       </div>
+
+      {/* Bulk Action Bar for Suggestions */}
+      {suggestedColumns.length > 0 && (
+        <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2">
+          <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+            <Badge variant="secondary" className="h-6 px-2.5">
+              <Sparkles className="h-3 w-3 mr-1.5" />
+              {suggestedColumns.length} suggestion{suggestedColumns.length !== 1 ? 's' : ''}
+            </Badge>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSuggestedColumns([])}
+                className="h-8"
+              >
+                Clear all
+              </Button>
+              <Button
+                size="sm"
+                onClick={async () => {
+                  for (const suggestion of suggestedColumns) {
+                    await handleApproveSuggestion(suggestion.key)
+                  }
+                }}
+                disabled={createColumnMutation.isPending}
+                className="h-8"
+              >
+                <Check className="h-3.5 w-3.5 mr-1.5" />
+                Approve all
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Column Form Dialog */}
       <ColumnDrawer
         open={columnDialogOpen}
-        onOpenChange={setColumnDialogOpen}
+        onOpenChange={(open) => {
+          setColumnDialogOpen(open)
+          if (!open && selectedColumn?.isSuggestion) {
+            setSelectedColumn(null)
+          }
+        }}
         onSubmit={handleColumnSubmit}
         column={selectedColumn}
         availableTables={availableTables.map(t => ({ $id: t.$id, name: t.name }))}
@@ -5341,12 +5650,87 @@ function ColumnsSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Context Input Dialog */}
+      <Dialog open={contextDialogOpen} onOpenChange={(open) => {
+        if (!isLoadingSuggestions) {
+          setContextDialogOpen(open)
+        }
+      }}>
+        <DialogContent className="sm:max-w-md p-0">
+          {isLoadingSuggestions ? (
+            <>
+              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+                <DialogTitle>Generating suggestions</DialogTitle>
+                <DialogDescription className="text-[13px] mt-2">
+                  AI is analyzing your table structure and generating column suggestions...
+                </DialogDescription>
+              </DialogHeader>
+              <div className="border-t border-border" />
+              <div className="px-6 pb-4 pt-0 mt-8 mb-4 flex flex-col items-center justify-center gap-4">
+                <div className="relative">
+                  <Sparkles className="h-12 w-12 text-amber-500 animate-pulse" />
+                  <div className="absolute inset-0 bg-amber-500/20 rounded-full animate-ping" />
+                </div>
+                <p className="text-[13px] text-muted-foreground text-center">
+                  This may take a few seconds...
+                </p>
+              </div>
+            </>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const formData = new FormData(e.currentTarget)
+                const context = formData.get('context') as string
+                handleGenerateSuggestions(context)
+              }}
+            >
+              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+                <DialogTitle>AI column suggestions</DialogTitle>
+                <DialogDescription className="text-[13px] mt-2">
+                  Provide optional context or instructions to help generate better column suggestions for "{table.name}".
+                </DialogDescription>
+              </DialogHeader>
+              <div className="border-t border-border" />
+              <div className="px-6 pb-4 pt-0">
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="context" className="text-[12px] font-medium">
+                    Context (Optional)
+                  </Label>
+                  <Textarea
+                    id="context"
+                    name="context"
+                    placeholder="E.g., This is a social media app with user posts and comments..."
+                    className="min-h-[100px] text-[13px]"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    The AI will analyze your table name and existing database structure to suggest relevant columns.
+                  </p>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setContextDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                  <Button type="submit">
+                    Generate suggestions
+                  </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
 
 // Spreadsheet-like view for Indexes
-function IndexesSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
+function IndexesSpreadsheet({ table, onCreateReady, onSuggestReady }: SpreadsheetProps) {
   const params = useParams({
     strict: false,
   })
@@ -5358,6 +5742,9 @@ function IndexesSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
   const [selectedIndex, setSelectedIndex] = useState<any>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [indexToDelete, setIndexToDelete] = useState<string | null>(null)
+  const [contextDialogOpen, setContextDialogOpen] = useState(false)
+  const [suggestedIndexes, setSuggestedIndexes] = useState<any[]>([])
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
 
   const queryClient = useQueryClient()
 
@@ -5375,16 +5762,29 @@ function IndexesSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
   // Create index mutation
   const createIndexMutation = useMutation({
     mutationFn: async (data: IndexFormData) => {
-      // Transform form data to API format
+      // Transform form data to API format - arrays must correspond to columns
       const apiData: any = {
         key: data.key,
         type: data.type,
         columns: data.columns.map((c: IndexColumnEntry) => c.column),
-        orders: data.columns.map((c: IndexColumnEntry) => c.order).filter((o: string | null) => o !== null) as string[],
       }
+      
+      // Orders array must match columns array length
+      const allOrders = data.columns.map((c: IndexColumnEntry) => c.order)
+      const hasAnyOrders = allOrders.some(o => o !== null)
+      if (hasAnyOrders) {
+        apiData.orders = allOrders
+      }
+      
+      // Lengths array must match columns array length (only for key indexes)
       if (data.type === 'key') {
-        apiData.lengths = data.columns.map((c: IndexColumnEntry) => c.length).filter((l: number | null) => l !== null)
+        const allLengths = data.columns.map((c: IndexColumnEntry) => c.length)
+        const hasAnyLengths = allLengths.some(l => l !== null && l > 0)
+        if (hasAnyLengths) {
+          apiData.lengths = allLengths
+        }
       }
+      
       return await createProjectTableIndex(projectId, databaseId, tableId, apiData)
     },
     onSuccess: () => {
@@ -5434,6 +5834,155 @@ function IndexesSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
     }
   }
 
+  // AI Suggestion handlers
+  const handleGenerateSuggestions = async (context: string) => {
+    setIsLoadingSuggestions(true)
+    try {
+      const projectSdk = sdk.forProject(projectId)
+      const result = await projectSdk.console.suggestIndexes({
+        databaseId,
+        tableId,
+        min: 3,
+        max: 5,
+      })
+
+      // Map API suggestions to display format with suggestion flag
+      const mapped = result.indexes.map((idx: any) => ({
+        key: idx.key || 'unnamed',
+        type: idx.type || 'key',
+        columns: idx.columns || [],
+        orders: idx.orders || [],
+        lengths: idx.lengths || [],
+        isSuggestion: true,
+        originalData: idx,
+      }))
+
+      setSuggestedIndexes(mapped)
+      setContextDialogOpen(false)
+      toast.success(`Generated ${mapped.length} index suggestions`)
+      
+      // Scroll to first suggestion after DOM updates
+      setTimeout(() => {
+        const firstSuggestionRow = document.querySelector('[data-suggestion-row="true"]')
+        if (firstSuggestionRow) {
+          firstSuggestionRow.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+      }, 100)
+    } catch (error) {
+      toast.error(getErrorMessage(error))
+      setContextDialogOpen(false)
+    } finally {
+      setIsLoadingSuggestions(false)
+    }
+  }
+
+  const handleApproveSuggestion = async (suggestionKey: string) => {
+    try {
+      // Get the current suggestion data from state (in case it was edited)
+      const suggestion = suggestedIndexes.find(s => s.key === suggestionKey)
+      if (!suggestion) {
+        toast.error('Suggestion not found')
+        return
+      }
+
+      // Map columns and filter out invalid ones
+      const validColumns = suggestion.columns
+        .map((col: string, idx: number) => {
+          // Find the column definition
+          const columnDef = availableColumns.find(c => c.key === col)
+          
+          // Skip array columns - they're not supported for indexes
+          if (columnDef?.array) {
+            return null
+          }
+          
+          const columnType = columnDef?.type
+          
+          // Only key indexes on string columns support length
+          const supportsLength = suggestion.type === 'key' && columnType === 'string'
+          
+          // Cap length at maximum of 767
+          let length = suggestion.lengths?.[idx] || null
+          if (length && length > 767) {
+            length = 767
+          }
+          
+          return {
+            column: col,
+            order: suggestion.orders?.[idx] || null,
+            length: supportsLength ? length : null,
+          }
+        })
+        .filter(Boolean) // Remove null entries (array columns)
+
+      // Validate that we still have columns after filtering
+      if (validColumns.length === 0) {
+        toast.error('Cannot create index: Array columns are not supported for indexes')
+        return
+      }
+
+      const indexData: IndexFormData = {
+        key: suggestion.key,
+        type: suggestion.type,
+        columns: validColumns,
+      }
+
+      await createIndexMutation.mutateAsync(indexData)
+      
+      // Remove from suggestions
+      setSuggestedIndexes(prev => prev.filter(s => s.key !== suggestionKey))
+      
+      toast.success(`Index "${suggestion.key}" created successfully`)
+    } catch (error) {
+      toast.error(getErrorMessage(error))
+    }
+  }
+
+  const handleRemoveSuggestion = (suggestionKey: string) => {
+    setSuggestedIndexes(prev => prev.filter(s => s.key !== suggestionKey))
+  }
+
+  const handleEditSuggestion = (suggestion: any) => {
+    // Pass suggestion as-is with isSuggestion flag
+    // IndexDrawer will handle the conversion from columns array to IndexColumnEntry objects
+    setSelectedIndex({
+      ...suggestion,
+      isSuggestion: true,
+    })
+    setIndexDialogOpen(true)
+  }
+
+  const handleSuggestionSubmit = (key: string, data: IndexFormData) => {
+    // Update the suggestion in the list, ensuring all fields are properly merged
+    setSuggestedIndexes(prev =>
+      prev.map(s => (s.key === key ? {
+        ...s,
+        key: data.key,
+        type: data.type,
+        columns: data.columns.map(c => c.column),
+        orders: data.columns.map(c => c.order), // Keep nulls to maintain array indices
+        lengths: data.columns.map(c => c.length), // Keep nulls to maintain array indices
+        isSuggestion: true,
+      } : s))
+    )
+    setIndexDialogOpen(false)
+    setSelectedIndex(null)
+    toast.success('Suggestion updated')
+  }
+
+  const handleIndexSubmitWrapper = async (data: IndexFormData) => {
+    if (selectedIndex?.isSuggestion) {
+      // Update suggestion in place
+      handleSuggestionSubmit(selectedIndex.key, data)
+    } else {
+      await createIndexMutation.mutateAsync(data)
+    }
+  }
+
+  const handleOpenSuggestDialog = () => {
+    setContextDialogOpen(true)
+  }
+
   // Expose create function to parent
   useEffect(() => {
     if (onCreateReady) {
@@ -5441,8 +5990,26 @@ function IndexesSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
     }
   }, [onCreateReady])
 
-  // Use API indexes if available, otherwise fallback to mock
-  const indexes = apiIndexes.length > 0 ? apiIndexes : [
+  // Expose suggest function to parent
+  useEffect(() => {
+    if (onSuggestReady) {
+      onSuggestReady(handleOpenSuggestDialog)
+    }
+  }, [onSuggestReady])
+
+  // Map API indexes to ensure all fields are present
+  const mappedIndexes = apiIndexes.map((idx: any) => ({
+    key: idx.key,
+    type: idx.type,
+    columns: idx.columns || [],
+    orders: idx.orders || [],
+    lengths: idx.lengths || [],
+    status: idx.status || 'available',
+    $id: idx.$id,
+  }))
+
+  // Use mapped indexes if available, otherwise fallback to mock
+  const displayIndexes = mappedIndexes.length > 0 ? mappedIndexes : [
     {
       key: '_key_$id',
       type: 'unique',
@@ -5513,9 +6080,15 @@ function IndexesSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
       : []),
   ]
 
+  // Combine regular indexes with suggestions
+  const allIndexes = [...displayIndexes, ...suggestedIndexes]
+
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y">
+    <div className="flex h-full flex-col relative">
+      <div className={cn(
+        "flex-1 overflow-y-auto overscroll-contain touch-pan-y",
+        suggestedIndexes.length > 0 && "pb-24"
+      )}>
         <table className="w-full border-collapse">
           <thead className={stickyTheadClass}>
             <tr>
@@ -5541,22 +6114,12 @@ function IndexesSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
               </th>
               <th
                 className={cn(
-                  'min-w-[200px] px-3 py-2 text-left',
+                  'min-w-[300px] px-3 py-2 text-left',
                   headerCellBorderClass,
                 )}
               >
                 <span className="text-[12px] font-medium text-foreground">
                   Columns
-                </span>
-              </th>
-              <th
-                className={cn(
-                  'min-w-[120px] px-3 py-2 text-left',
-                  headerCellBorderClass,
-                )}
-              >
-                <span className="text-[12px] font-medium text-foreground">
-                  Order
                 </span>
               </th>
               <th
@@ -5573,94 +6136,118 @@ function IndexesSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
             </tr>
           </thead>
           <tbody>
-            {indexes.map((index: any) => {
-              const isSystem = index.key.startsWith('_key_')
+            {allIndexes.map((index: any) => {
+              const isSystem = index.key?.startsWith('_key_')
+              const isSuggestion = index.isSuggestion === true
               return (
                 <tr
-                  key={index.key}
+                  key={index.key || 'unnamed'}
+                  data-suggestion-row={isSuggestion ? 'true' : undefined}
                   className={cn(
                     'group transition-colors hover:bg-muted/50',
                     isSystem && 'bg-muted/30',
+                    isSuggestion && 'bg-amber-500/5',
                   )}
                 >
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <div className="flex items-center gap-2">
-                      <Key className="h-3.5 w-3.5 text-muted-foreground" />
-                      <code
-                        className={cn(
-                          'font-mono text-[12px]',
-                          isSystem
-                            ? 'text-muted-foreground'
-                            : 'text-foreground',
-                        )}
-                      >
-                        {index.key}
-                      </code>
-                    </div>
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <span
-                      className={cn(
-                        'inline-flex items-center gap-1 text-[11px]',
-                        index.type === 'unique'
-                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                          : 'bg-muted text-muted-foreground',
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'h-1.5 w-1.5 rounded-full',
-                          index.status === 'available'
-                            ? 'bg-emerald-500'
-                            : 'bg-amber-500',
-                        )}
-                      />
-                      {index.type}
-                    </span>
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <div className="flex flex-wrap gap-1">
-                      {index.columns.map((col: string) => (
+                    <div className="flex items-center gap-2 justify-between">
+                      <div className="flex items-center gap-2">
+                        <Key className="h-3.5 w-3.5 text-muted-foreground" />
                         <code
-                          key={col}
-                          className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+                          className={cn(
+                            'font-mono text-[12px]',
+                            isSystem
+                              ? 'text-muted-foreground'
+                              : 'text-foreground',
+                          )}
                         >
-                          {col}
+                          {index.key || 'unnamed'}
                         </code>
-                      ))}
+                        {isSuggestion && (
+                          <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                            Suggested
+                          </Badge>
+                        )}
+                      </div>
+                      {isSuggestion && (
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleApproveSuggestion(index.key)}
+                            className="h-6 w-6 p-0 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 cursor-pointer"
+                            title="Approve"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemoveSuggestion(index.key)}
+                            className="h-6 w-6 p-0 rounded bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 cursor-pointer"
+                            title="Reject"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                          <div className="h-4 w-px bg-border mx-0.5" />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditSuggestion(index)}
+                            className="h-6 w-6 p-0 rounded bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 cursor-pointer"
+                            title="Edit"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </td>
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <div className="flex gap-1">
-                      {(index.orders || []).map((order: string, i: number) => (
-                        <span
-                          key={i}
-                          className="text-[11px] text-muted-foreground"
-                        >
-                          {order}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
-                    <span
+                    <Badge 
+                      variant="outline" 
                       className={cn(
-                        'inline-flex items-center gap-1 text-[11px]',
-                        index.status === 'available'
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-amber-600 dark:text-amber-400',
+                        'text-[11px] font-medium border',
+                        getIndexTypeColor(index.type)
                       )}
                     >
-                      <span
-                        className={cn(
-                          'h-1.5 w-1.5 rounded-full',
-                          index.status === 'available'
-                            ? 'bg-emerald-500'
-                            : 'bg-amber-500',
-                        )}
-                      />
+                      {index.type}
+                    </Badge>
+                  </td>
+                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                    <div className="flex flex-wrap gap-2">
+                      {index.columns.map((col: string, i: number) => {
+                        const order = index.orders?.[i]
+                        const length = index.lengths?.[i]
+                        // Ensure length is a number and greater than 0
+                        const hasLength = length != null && Number(length) > 0
+                        return (
+                          <div key={i} className="flex items-center gap-1">
+                            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                              {col}
+                            </code>
+                            {order && (
+                              <span className="text-[10px] text-muted-foreground/70">
+                                {order}
+                              </span>
+                            )}
+                            {hasLength && (
+                              <span className="text-[10px] text-muted-foreground/70">
+                                ({length})
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </td>
+                  <td className={cn('px-3 py-2', bodyCellBorderClass)}>
+                    <Badge 
+                      variant={index.status === 'available' ? 'success' : 'processing'} 
+                      className="text-[11px] font-medium capitalize"
+                    >
                       {index.status}
-                    </span>
+                    </Badge>
                   </td>
                   <td className={cn('px-2 py-2', lastCellBorderClass)}>
                     {!isSystem && (
@@ -5699,24 +6286,36 @@ function IndexesSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
             <span>Create index</span>
           </button>
         </div>
-        <span>{indexes.length} indexes</span>
+        <div className="flex items-center gap-2">
+          {suggestedIndexes.length > 0 && (
+            <span className="text-amber-600 dark:text-amber-400">
+              {suggestedIndexes.length} suggestion{suggestedIndexes.length !== 1 ? 's' : ''}
+            </span>
+          )}
+          <span>{displayIndexes.length} index{displayIndexes.length !== 1 ? 'es' : ''}</span>
+        </div>
       </div>
 
       {/* Index Form Dialog */}
         <IndexDrawer
         open={indexDialogOpen}
-        onOpenChange={setIndexDialogOpen}
-        onSubmit={handleIndexSubmit}
+        onOpenChange={(open) => {
+          setIndexDialogOpen(open)
+          if (!open && selectedIndex?.isSuggestion) {
+            setSelectedIndex(null)
+          }
+        }}
+        onSubmit={handleIndexSubmitWrapper}
         index={selectedIndex}
         availableColumns={availableColumns}
-        existingIndexes={indexes.map((i: { key: string }) => ({ key: i.key }))}
+        existingIndexes={displayIndexes.map((i: { key: string }) => ({ key: i.key }))}
         isLoading={createIndexMutation.isPending}
       />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete index</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               Are you sure you want to delete the index "{indexToDelete}"? This action cannot be undone.
@@ -5742,6 +6341,116 @@ function IndexesSpreadsheet({ table, onCreateReady }: SpreadsheetProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Context Input Dialog */}
+      <Dialog open={contextDialogOpen} onOpenChange={(open) => {
+        if (!isLoadingSuggestions) {
+          setContextDialogOpen(open)
+        }
+      }}>
+        <DialogContent className="sm:max-w-md p-0">
+          {isLoadingSuggestions ? (
+            <>
+              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+                <DialogTitle>Generating suggestions</DialogTitle>
+                <DialogDescription className="text-[13px] mt-2">
+                  AI is analyzing your table structure and generating index suggestions...
+                </DialogDescription>
+              </DialogHeader>
+              <div className="border-t border-border" />
+              <div className="px-6 pb-4 pt-0 mt-8 mb-4 flex flex-col items-center justify-center gap-4">
+                <div className="relative">
+                  <Sparkles className="h-12 w-12 text-amber-500 animate-pulse" />
+                  <div className="absolute inset-0 bg-amber-500/20 rounded-full animate-ping" />
+                </div>
+                <p className="text-[13px] text-muted-foreground text-center">
+                  This may take a few seconds...
+                </p>
+              </div>
+            </>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const formData = new FormData(e.currentTarget)
+                const context = formData.get('context') as string
+                handleGenerateSuggestions(context)
+              }}
+            >
+              <DialogHeader className="px-6 pt-6 pb-4 text-left">
+                <DialogTitle>AI index suggestions</DialogTitle>
+                <DialogDescription className="text-[13px] mt-2">
+                  Provide optional context or instructions to help generate better index suggestions for "{table.name}".
+                </DialogDescription>
+              </DialogHeader>
+              <div className="border-t border-border" />
+              <div className="px-6 pb-4 pt-0">
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="context" className="text-[12px] font-medium">
+                    Context (Optional)
+                  </Label>
+                  <Textarea
+                    id="context"
+                    name="context"
+                    placeholder="E.g., This table will have millions of records and needs optimized search..."
+                    className="min-h-[100px] text-[13px]"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    The AI will analyze your table columns and structure to suggest relevant indexes.
+                  </p>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setContextDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Generate suggestions
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Action Bar for Suggestions */}
+      {suggestedIndexes.length > 0 && (
+        <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2">
+          <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+            <Badge variant="secondary" className="h-6 px-2.5">
+              <Sparkles className="h-3 w-3 mr-1.5" />
+              {suggestedIndexes.length} suggestion{suggestedIndexes.length !== 1 ? 's' : ''}
+            </Badge>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSuggestedIndexes([])}
+                className="h-8"
+              >
+                Clear all
+              </Button>
+              <Button
+                size="sm"
+                onClick={async () => {
+                  for (const suggestion of suggestedIndexes) {
+                    await handleApproveSuggestion(suggestion.key)
+                  }
+                }}
+                disabled={createIndexMutation.isPending}
+                className="h-8"
+              >
+                <Check className="h-3.5 w-3.5 mr-1.5" />
+                Approve all
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

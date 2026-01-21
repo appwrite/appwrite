@@ -90,14 +90,16 @@ export function IndexDrawer({
   // Get filtered columns based on index type
   const filteredColumns = useMemo(() => {
     if (formData.type === 'spatial') {
-      // Only spatial columns
+      // Only spatial columns (non-array)
       return availableColumns.filter(
-        col => ['point', 'linestring', 'polygon'].includes(col.type)
+        col => ['point', 'linestring', 'polygon'].includes(col.type) && !col.array
       )
     } else {
-      // All non-relationship, non-spatial columns + system fields
+      // All non-relationship, non-spatial, non-array columns + system fields
       const regularColumns = availableColumns.filter(
-        col => col.type !== 'relationship' && !['point', 'linestring', 'polygon'].includes(col.type)
+        col => col.type !== 'relationship' && 
+               !['point', 'linestring', 'polygon'].includes(col.type) &&
+               !col.array  // Exclude array columns - not supported for indexes
       )
       return [...SYSTEM_FIELDS.map(sf => ({ ...sf, required: true, array: false })), ...regularColumns]
     }
@@ -243,7 +245,10 @@ export function IndexDrawer({
 
       await onSubmit(submitData)
       handleOpenChange(false)
-      toast.success(isEditMode ? 'Index updated successfully' : 'Index created successfully')
+      // Don't show toast for suggestions - parent handles it
+      if (!(index as any)?.isSuggestion) {
+        toast.success(isEditMode ? 'Index updated successfully' : 'Index created successfully')
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save index')
     }
@@ -458,22 +463,36 @@ export function IndexDrawer({
                       </div>
                     )}
 
-                    {showLength && (
-                      <div className="space-y-2">
-                        <Label className="text-[11px] text-muted-foreground">Length (Optional)</Label>
-                        <Input
-                          type="number"
-                          value={columnEntry.length ?? ''}
-                          onChange={(e) => {
-                            const value = e.target.value === '' ? null : parseInt(e.target.value)
-                            updateColumn(index, 'length', value)
-                          }}
-                          placeholder="Enter length"
-                          min={1}
-                          disabled={isLoading}
-                        />
-                      </div>
-                    )}
+                    {showLength && (() => {
+                      // Only show length for string columns
+                      const selectedColumn = availableColumns?.find(col => col.key === columnEntry.column)
+                      const isStringColumn = selectedColumn?.type === 'string'
+                      
+                      if (!isStringColumn) {
+                        return null
+                      }
+                      
+                      return (
+                        <div className="space-y-2">
+                          <Label className="text-[11px] text-muted-foreground">Length (Optional)</Label>
+                          <Input
+                            type="number"
+                            value={columnEntry.length ?? ''}
+                            onChange={(e) => {
+                              const value = e.target.value === '' ? null : parseInt(e.target.value)
+                              updateColumn(index, 'length', value)
+                            }}
+                            placeholder="Max 767"
+                            max={767}
+                            min={1}
+                            disabled={isLoading}
+                          />
+                          <p className="text-[10px] text-muted-foreground">
+                            Only applicable to string columns
+                          </p>
+                        </div>
+                      )
+                    })()}
                   </div>
 
                   {formData.columns.length > 1 && (

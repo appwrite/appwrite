@@ -100,20 +100,24 @@ const { account, isAuthenticated } = useAuth()
 ### Modal/Dialog Structure
 ```tsx
 <DialogContent className="sm:max-w-md p-0">
-  <DialogHeader className="px-6 pt-6 text-left">
-    <DialogTitle>Title</DialogTitle>
-    <DialogDescription className="text-[13px] mt-2">Description above separator</DialogDescription>
-  </DialogHeader>
-  <div className="border-t border-border" />
-  <div className="px-6 pb-4 pt-0">{/* Content */}</div>
-  <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-    <Button variant="outline">Cancel</Button>
-    <Button>Confirm</Button>
-  </div>
+ <DialogHeader className="px-6 pt-6 pb-4 text-left">
+ <DialogTitle>Title in sentence case</DialogTitle>
+ <DialogDescription className="text-[13px] mt-2">Description above separator</DialogDescription>
+ </DialogHeader>
+ <div className="border-t border-border" />
+ <div className="px-6 pb-4 pt-0">{/* Content */}</div>
+ <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+ <Button variant="outline">Cancel</Button>
+ <Button>Confirm</Button>
+ </div>
 </DialogContent>
 ```
 
-**Exception**: No-content modals skip content section, go directly from header to footer.
+**Rules**:
+- **Title**: Use sentence case (only first letter capitalized)
+- **Header spacing**: Include `pb-4` for proper spacing before separator
+- **CTA buttons**: No icons in primary action buttons
+- **Exception**: No-content modals skip content section, go directly from header to footer
 
 ### Settings Card Structure
 ```tsx

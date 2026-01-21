@@ -281,7 +281,10 @@ export function ColumnDrawer({
 
       await onSubmit(submitData)
       handleOpenChange(false)
-      toast.success(isEditMode ? 'Column updated successfully' : 'Column created successfully')
+      // Don't show toast for suggestions - parent handles it
+      if (!(column as any)?.isSuggestion) {
+        toast.success(isEditMode ? 'Column updated successfully' : 'Column created successfully')
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save column')
     }
