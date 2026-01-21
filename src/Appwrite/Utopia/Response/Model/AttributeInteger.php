@@ -25,6 +25,7 @@ class AttributeInteger extends Attribute
             ])
             ->addRule('min', [
                 'type' => self::TYPE_INTEGER,
+                'format' => 'int64',
                 'description' => 'Minimum value to enforce for new documents.',
                 'default' => null,
                 'required' => false,
@@ -32,6 +33,7 @@ class AttributeInteger extends Attribute
             ])
             ->addRule('max', [
                 'type' => self::TYPE_INTEGER,
+                'format' => 'int64',
                 'description' => 'Maximum value to enforce for new documents.',
                 'default' => null,
                 'required' => false,

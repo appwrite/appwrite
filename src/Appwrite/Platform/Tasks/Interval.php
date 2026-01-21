@@ -24,21 +24,29 @@ class Interval extends Action
         $this
           ->desc('Schedules tasks on regular intervals by publishing them to our queues')
           ->inject('dbForPlatform')
+          ->inject('getProjectDB')
           ->inject('queueForCertificates')
           ->callback($this->action(...));
     }
 
-    public function action(Database $dbForPlatform, Certificate $queueForCertificates): void
+    public function action(Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates): void
     {
         Console::title('Interval V1');
         Console::success(APP_NAME . ' interval process v1 has started');
 
         $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '60'); // 1 minute
+        $intervalCleanupStaleExecutions = (int) System::getEnv('_APP_INTERVAL_CLEANUP_STALE_EXECUTIONS', '300'); // 5 minutes
 
         \go(function () use ($dbForPlatform, $queueForCertificates, $intervalDomainVerification) {
             Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
                 $this->verifyDomain($dbForPlatform, $queueForCertificates);
             }, $intervalDomainVerification);
+        });
+
+        \go(function () use ($dbForPlatform, $getProjectDB, $intervalCleanupStaleExecutions) {
+            Console::loop(function () use ($dbForPlatform, $getProjectDB) {
+                $this->cleanupStaleExecutions($dbForPlatform, $getProjectDB);
+            }, $intervalCleanupStaleExecutions);
         });
     }
 
@@ -71,5 +79,48 @@ class Interval extends Action
                 ->setAction(Certificate::ACTION_DOMAIN_VERIFICATION)
                 ->trigger();
         }
+    }
+
+    private function cleanupStaleExecutions(Database $dbForPlatform, callable $getProjectDB): void
+    {
+        $time = DatabaseDateTime::now();
+        $staleThreshold = DatabaseDateTime::addSeconds(new DateTime(), -1200); // 20 minutes ago
+
+        Console::info("[{$time}] Starting cleanup of stale executions");
+
+        $dbForPlatform->foreach(
+            'projects',
+            function (Document $project) use ($getProjectDB, $time, $staleThreshold) {
+                try {
+                    $dbForProject = $getProjectDB($project);
+
+                    $staleExecutions = $dbForProject->find('executions', [
+                        Query::equal('status', ['processing']),
+                        Query::lessThan('$createdAt', $staleThreshold),
+                        Query::limit(100),
+                    ]);
+
+                    if (\count($staleExecutions) === 0) {
+                        return;
+                    }
+
+                    Console::info("[{$time}] Found " . \count($staleExecutions) . " stale executions in project {$project->getId()}");
+
+                    foreach ($staleExecutions as $execution) {
+                        $execution->setAttribute('status', 'failed');
+                        $execution->setAttribute('errors', 'Execution timed out');
+                        $dbForProject->updateDocument('executions', $execution->getId(), $execution);
+                    }
+                } catch (\Throwable $th) {
+                    Console::error("[{$time}] Failed to cleanup stale executions for project {$project->getId()}: " . $th->getMessage());
+                }
+            },
+            [
+                Query::equal('region', [System::getEnv('_APP_REGION', 'default')]),
+                Query::limit(100),
+            ]
+        );
+
+        Console::info("[{$time}] Completed cleanup of stale executions");
     }
 }

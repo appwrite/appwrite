@@ -204,6 +204,7 @@ App::post('/v1/projects')
                 'accessedAt' => DateTime::now(),
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
+                'labels' => [],
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
@@ -226,6 +227,7 @@ App::post('/v1/projects')
         if (!$sharedTablesV2) {
             $adapter = new DatabasePool($pools->get($dsn->getHost()));
             $dbForProject = new Database($adapter, $cache);
+            $dbForProject->setDatabase(APP_DATABASE);
 
             if ($sharedTables) {
                 $dbForProject
@@ -1500,6 +1502,7 @@ App::post('/v1/projects/:projectId/keys')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
+            // TODO: @hmacr Remove `projectInternalId` and `projectId` column writes before deleting the column.
             'projectInternalId' => $project->getSequence(),
             'projectId' => $project->getId(),
             'resourceInternalId' => $project->getSequence(),
@@ -1552,13 +1555,8 @@ App::get('/v1/projects/:projectId/keys')
         }
 
         $keys = $dbForPlatform->find('keys', [
-            Query::or([
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::and([
-                    Query::equal('resourceType', ['projects']),
-                    Query::equal('resourceInternalId', [$project->getSequence()]),
-                ])
-            ]),
+            Query::equal('resourceType', ['projects']),
+            Query::equal('resourceInternalId', [$project->getSequence()]),
             Query::limit(5000),
         ]);
 
@@ -1599,13 +1597,8 @@ App::get('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::or([
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::and([
-                    Query::equal('resourceType', ['projects']),
-                    Query::equal('resourceInternalId', [$project->getSequence()]),
-                ])
-            ])
+            Query::equal('resourceType', ['projects']),
+            Query::equal('resourceInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
@@ -1649,13 +1642,8 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::or([
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::and([
-                    Query::equal('resourceType', ['projects']),
-                    Query::equal('resourceInternalId', [$project->getSequence()]),
-                ])
-            ])
+            Query::equal('resourceType', ['projects']),
+            Query::equal('resourceInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {
@@ -1706,13 +1694,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $key = $dbForPlatform->findOne('keys', [
             Query::equal('$id', [$keyId]),
-            Query::or([
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::and([
-                    Query::equal('resourceType', ['projects']),
-                    Query::equal('resourceInternalId', [$project->getSequence()]),
-                ])
-            ])
+            Query::equal('resourceType', ['projects']),
+            Query::equal('resourceInternalId', [$project->getSequence()]),
         ]);
 
         if ($key->isEmpty()) {

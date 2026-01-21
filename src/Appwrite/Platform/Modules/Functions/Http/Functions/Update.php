@@ -104,6 +104,7 @@ class Update extends Base
             ->inject('dbForPlatform')
             ->inject('gitHub')
             ->inject('executor')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -134,7 +135,8 @@ class Update extends Base
         Build $queueForBuilds,
         Database $dbForPlatform,
         GitHub $github,
-        Executor $executor
+        Executor $executor,
+        Authorization $authorization
     ) {
         // TODO: If only branch changes, re-deploy
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -259,6 +261,8 @@ class Update extends Base
             'entrypoint' => $entrypoint,
             'commands' => $commands,
             'scopes' => $scopes,
+            'deploymentRetention' => 0,
+            'startCommand' => '',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
             'providerRepositoryId' => $providerRepositoryId,
@@ -268,6 +272,8 @@ class Update extends Base
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
             'specification' => $specification,
+            'buildSpecification' => $specification,
+            'runtimeSpecification' => $specification,
             'search' => implode(' ', [$functionId, $name, $runtime]),
         ])));
 
@@ -282,7 +288,7 @@ class Update extends Base
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deploymentId')));
-        Authorization::skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
+        $authorization->skip(fn () => $dbForPlatform->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForEvents->setParam('functionId', $function->getId());
 
