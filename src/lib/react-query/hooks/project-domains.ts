@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Domains (Proxy Rules)
- * 
+ *
  * Handles domain/proxy rule fetching, creation, verification, and deletion.
  */
 
@@ -16,7 +16,7 @@ import { DEFAULT_STALE_TIME } from './constants'
 
 /**
  * Query function to fetch proxy rules (domains) for a project
- * 
+ *
  * @param projectId - The project ID
  * @param region - The project region
  * @param search - Optional search query
@@ -32,10 +32,7 @@ export async function fetchProjectDomains(
   }
 
   const projectSdk = sdk.forProject(projectId, region)
-  const queries = [
-    Query.equal('type', 'api'),
-    Query.equal('trigger', 'manual'),
-  ]
+  const queries = [Query.equal('type', 'api'), Query.equal('trigger', 'manual')]
 
   const response = await projectSdk.proxy.listRules({
     queries,
@@ -54,7 +51,7 @@ export async function fetchProjectDomains(
 
 /**
  * Hook to fetch proxy rules (domains) for a project
- * 
+ *
  * @param projectId - The project ID
  * @param region - The project region
  * @param search - Optional search query
@@ -83,7 +80,7 @@ export function useProjectDomains(
 
 /**
  * Hook to get a single domain (proxy rule)
- * 
+ *
  * @param projectId - The project ID
  * @param region - The project region
  * @param ruleId - The rule ID
@@ -116,11 +113,14 @@ export function useProjectDomain(
 
 /**
  * Hook to create a domain (API proxy rule)
- * 
+ *
  * @param projectId - The project ID
  * @param region - The project region
  */
-export function useCreateDomain(projectId: string | null | undefined, region?: string) {
+export function useCreateDomain(
+  projectId: string | null | undefined,
+  region?: string,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -150,11 +150,14 @@ export function useCreateDomain(projectId: string | null | undefined, region?: s
 
 /**
  * Hook to verify a domain
- * 
+ *
  * @param projectId - The project ID
  * @param region - The project region
  */
-export function useVerifyDomain(projectId: string | null | undefined, region?: string) {
+export function useVerifyDomain(
+  projectId: string | null | undefined,
+  region?: string,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -182,11 +185,14 @@ export function useVerifyDomain(projectId: string | null | undefined, region?: s
 
 /**
  * Hook to delete a domain
- * 
+ *
  * @param projectId - The project ID
  * @param region - The project region
  */
-export function useDeleteDomain(projectId: string | null | undefined, region?: string) {
+export function useDeleteDomain(
+  projectId: string | null | undefined,
+  region?: string,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -211,4 +217,3 @@ export function useDeleteDomain(projectId: string | null | undefined, region?: s
     },
   })
 }
-

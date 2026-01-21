@@ -1,5 +1,14 @@
 import { useState, useMemo } from 'react'
-import { X, Plus, Mail, Shield, Code, Edit, Eye, CreditCard } from 'lucide-react'
+import {
+  X,
+  Plus,
+  Mail,
+  Shield,
+  Code,
+  Edit,
+  Eye,
+  CreditCard,
+} from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -100,7 +109,10 @@ export function InviteMembersDialog({
   const isValid = useMemo(() => {
     return (
       invites.length > 0 &&
-      invites.every((invite) => invite.email.trim() !== '' && isValidEmail(invite.email.trim())) &&
+      invites.every(
+        (invite) =>
+          invite.email.trim() !== '' && isValidEmail(invite.email.trim()),
+      ) &&
       canAddMore
     )
   }, [invites, canAddMore])
@@ -110,10 +122,10 @@ export function InviteMembersDialog({
     mutationFn: async (invite: InviteMember) => {
       // Map role to array format (Appwrite expects roles as array)
       const roles = [invite.role]
-      
+
       // Construct the redirect URL for accepting the invitation
       const acceptUrl = `${window.location.origin}/join`
-      
+
       return await sdk.forConsole.teams.createMembership({
         teamId: organizationId,
         email: invite.email.trim(),
@@ -130,7 +142,7 @@ export function InviteMembersDialog({
     try {
       // Invite all members sequentially
       const results = await Promise.allSettled(
-        invites.map((invite) => createMembershipMutation.mutateAsync(invite))
+        invites.map((invite) => createMembershipMutation.mutateAsync(invite)),
       )
 
       // Count successes and failures
@@ -139,17 +151,20 @@ export function InviteMembersDialog({
 
       if (successes > 0) {
         toast.success(
-          `Successfully invited ${successes} member${successes !== 1 ? 's' : ''}`
+          `Successfully invited ${successes} member${successes !== 1 ? 's' : ''}`,
         )
       }
 
       if (failures > 0) {
         const errors = results
           .filter((r) => r.status === 'rejected')
-          .map((r) => (r as PromiseRejectedResult).reason?.message || 'Unknown error')
-        
+          .map(
+            (r) =>
+              (r as PromiseRejectedResult).reason?.message || 'Unknown error',
+          )
+
         toast.error(
-          `Failed to invite ${failures} member${failures !== 1 ? 's' : ''}: ${errors[0]}`
+          `Failed to invite ${failures} member${failures !== 1 ? 's' : ''}: ${errors[0]}`,
         )
       }
 
@@ -163,14 +178,18 @@ export function InviteMembersDialog({
       onOpenChange(false)
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Failed to invite members'
+        error instanceof Error ? error.message : 'Failed to invite members',
       )
     }
   }
 
   // Add new invite row
   const handleAddInvite = () => {
-    if (memberLimit !== null && memberLimit > 0 && currentMemberCount + invites.length >= memberLimit) {
+    if (
+      memberLimit !== null &&
+      memberLimit > 0 &&
+      currentMemberCount + invites.length >= memberLimit
+    ) {
       toast.error('Member limit reached')
       return
     }
@@ -188,7 +207,10 @@ export function InviteMembersDialog({
   }
 
   // Update invite
-  const handleUpdateInvite = (index: number, updates: Partial<InviteMember>) => {
+  const handleUpdateInvite = (
+    index: number,
+    updates: Partial<InviteMember>,
+  ) => {
     const newInvites = [...invites]
     newInvites[index] = { ...newInvites[index], ...updates }
     setInvites(newInvites)
@@ -209,32 +231,48 @@ export function InviteMembersDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Invite Members</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Invite team members to your organization. They'll receive an email invitation to join.
+            Invite team members to your organization. They'll receive an email
+            invitation to join.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
 
         <div className="px-6 pb-4 pt-0 max-h-[60vh] overflow-y-auto">
           {/* Member Limit Warning */}
-          {memberLimit !== null && memberLimit > 0 && remainingSlots !== null && remainingSlots <= 3 && (
-            <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-              <p className="text-[12px] text-amber-600 dark:text-amber-400">
-                {remainingSlots === 0
-                  ? 'You have reached your member limit. Upgrade your plan to invite more members.'
-                  : `You have ${remainingSlots} member slot${remainingSlots !== 1 ? 's' : ''} remaining.`}
-              </p>
-            </div>
-          )}
+          {memberLimit !== null &&
+            memberLimit > 0 &&
+            remainingSlots !== null &&
+            remainingSlots <= 3 && (
+              <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <p className="text-[12px] text-amber-600 dark:text-amber-400">
+                  {remainingSlots === 0
+                    ? 'You have reached your member limit. Upgrade your plan to invite more members.'
+                    : `You have ${remainingSlots} member slot${remainingSlots !== 1 ? 's' : ''} remaining.`}
+                </p>
+              </div>
+            )}
 
           {/* Invite List */}
           <div className="space-y-3">
             {invites.map((invite, index) => {
               const isTouched = touchedFields.has(index)
-              const isEmailValid = invite.email.trim() === '' || isValidEmail(invite.email.trim())
-              const isDuplicate = invites.filter((i, idx) => i.email.trim() === invite.email.trim() && idx !== index && i.email.trim() !== '').length > 0
-              const selectedRole = ROLE_OPTIONS.find((r) => r.value === invite.role)
+              const isEmailValid =
+                invite.email.trim() === '' || isValidEmail(invite.email.trim())
+              const isDuplicate =
+                invites.filter(
+                  (i, idx) =>
+                    i.email.trim() === invite.email.trim() &&
+                    idx !== index &&
+                    i.email.trim() !== '',
+                ).length > 0
+              const selectedRole = ROLE_OPTIONS.find(
+                (r) => r.value === invite.role,
+              )
               const RoleIcon = selectedRole?.icon || Shield
-              const showEmailError = isTouched && invite.email.trim() !== '' && (!isEmailValid || isDuplicate)
+              const showEmailError =
+                isTouched &&
+                invite.email.trim() !== '' &&
+                (!isEmailValid || isDuplicate)
 
               return (
                 <div
@@ -259,17 +297,21 @@ export function InviteMembersDialog({
                           'h-9 pl-10 text-[13px]',
                           showEmailError
                             ? 'border-red-500/50 focus:border-red-500/50'
-                            : ''
+                            : '',
                         )}
                       />
                     </div>
                     {showEmailError && (
                       <>
                         {!isEmailValid && (
-                          <p className="text-[11px] text-red-500">Invalid email address</p>
+                          <p className="text-[11px] text-red-500">
+                            Invalid email address
+                          </p>
                         )}
                         {isDuplicate && isEmailValid && (
-                          <p className="text-[11px] text-red-500">Duplicate email</p>
+                          <p className="text-[11px] text-red-500">
+                            Duplicate email
+                          </p>
                         )}
                       </>
                     )}
@@ -279,28 +321,34 @@ export function InviteMembersDialog({
                   <div className="w-36 shrink-0">
                     <Select
                       value={invite.role}
-                      onValueChange={(value: 'owner' | 'developer' | 'editor' | 'analyst' | 'billing') =>
-                        handleUpdateInvite(index, { role: value })
-                      }
+                      onValueChange={(
+                        value:
+                          | 'owner'
+                          | 'developer'
+                          | 'editor'
+                          | 'analyst'
+                          | 'billing',
+                      ) => handleUpdateInvite(index, { role: value })}
                     >
                       <SelectTrigger className="h-9 text-[13px] w-full">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <RoleIcon className="h-3.5 w-3.5 shrink-0" />
-                          <span className="truncate">{selectedRole?.label || 'Select role'}</span>
+                          <span className="truncate">
+                            {selectedRole?.label || 'Select role'}
+                          </span>
                         </div>
                       </SelectTrigger>
                       <SelectContent className="min-w-[240px]">
                         {ROLE_OPTIONS.map((role) => {
                           const Icon = role.icon
                           return (
-                            <SelectItem 
-                              key={role.value} 
-                              value={role.value}
-                            >
+                            <SelectItem key={role.value} value={role.value}>
                               <div className="flex items-start gap-2 w-full">
                                 <Icon className="h-4 w-4 shrink-0 mt-0.5" />
                                 <div className="flex flex-col min-w-0 flex-1">
-                                  <span className="text-[13px] font-medium">{role.label}</span>
+                                  <span className="text-[13px] font-medium">
+                                    {role.label}
+                                  </span>
                                   <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
                                     {role.description}
                                   </span>
@@ -369,4 +417,3 @@ export function InviteMembersDialog({
     </Dialog>
   )
 }
-

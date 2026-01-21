@@ -12,7 +12,9 @@ import { ChangePlanWizardFullscreen } from '@/components/pages/organizations/$or
 
 const MEMBERSHIPS_PER_PAGE = 25
 
-export const Route = createFileRoute('/_public/organizations/$orgId/change-plan')({
+export const Route = createFileRoute(
+  '/_public/organizations/$orgId/change-plan',
+)({
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -30,53 +32,75 @@ export const Route = createFileRoute('/_public/organizations/$orgId/change-plan'
     try {
       await Promise.all([
         // Organizations list
-        queryClient.prefetchQuery({
-          queryKey: ['organizations', 'console'],
-          queryFn: fetchOrganizations,
-          staleTime: 5 * 60 * 1000, // 5 minutes
-        }).catch(() => {}),
+        queryClient
+          .prefetchQuery({
+            queryKey: ['organizations', 'console'],
+            queryFn: fetchOrganizations,
+            staleTime: 5 * 60 * 1000, // 5 minutes
+          })
+          .catch(() => {}),
 
         // Organization details
-        queryClient.prefetchQuery({
-          queryKey: ['organization', orgId],
-          queryFn: () => fetchOrganizationById(orgId),
-          staleTime: 5 * 60 * 1000, // 5 minutes
-        }).catch(() => {}),
+        queryClient
+          .prefetchQuery({
+            queryKey: ['organization', orgId],
+            queryFn: () => fetchOrganizationById(orgId),
+            staleTime: 5 * 60 * 1000, // 5 minutes
+          })
+          .catch(() => {}),
 
         // Organization plan
-        queryClient.prefetchQuery({
-          queryKey: ['organization', 'plan', orgId],
-          queryFn: () => fetchOrganizationPlan(orgId),
-          staleTime: 5 * 60 * 1000, // 5 minutes
-        }).catch(() => {}),
+        queryClient
+          .prefetchQuery({
+            queryKey: ['organization', 'plan', orgId],
+            queryFn: () => fetchOrganizationPlan(orgId),
+            staleTime: 5 * 60 * 1000, // 5 minutes
+          })
+          .catch(() => {}),
 
         // Organization memberships
-        queryClient.prefetchQuery({
-          queryKey: ['memberships', 'organization', orgId, 0, MEMBERSHIPS_PER_PAGE, ''],
-          queryFn: () => fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
-          staleTime: 30 * 1000, // 30 seconds
-        }).catch(() => {}),
+        queryClient
+          .prefetchQuery({
+            queryKey: [
+              'memberships',
+              'organization',
+              orgId,
+              0,
+              MEMBERSHIPS_PER_PAGE,
+              '',
+            ],
+            queryFn: () =>
+              fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
+            staleTime: 30 * 1000, // 30 seconds
+          })
+          .catch(() => {}),
 
         // Billing plans
-        queryClient.prefetchQuery({
-          queryKey: ['billing-plans'],
-          queryFn: fetchBillingPlans,
-          staleTime: 5 * 60 * 1000, // 5 minutes
-        }).catch(() => {}),
+        queryClient
+          .prefetchQuery({
+            queryKey: ['billing-plans'],
+            queryFn: fetchBillingPlans,
+            staleTime: 5 * 60 * 1000, // 5 minutes
+          })
+          .catch(() => {}),
 
         // Organization usage
-        queryClient.prefetchQuery({
-          queryKey: ['organization-usage', orgId],
-          queryFn: () => fetchOrganizationUsage(orgId),
-          staleTime: 30 * 1000, // 30 seconds
-        }).catch(() => {}),
+        queryClient
+          .prefetchQuery({
+            queryKey: ['organization-usage', orgId],
+            queryFn: () => fetchOrganizationUsage(orgId),
+            staleTime: 30 * 1000, // 30 seconds
+          })
+          .catch(() => {}),
 
         // Organization projects
-        queryClient.prefetchQuery({
-          queryKey: ['organization-projects', orgId],
-          queryFn: () => fetchOrganizationProjects(orgId),
-          staleTime: 30 * 1000, // 30 seconds
-        }).catch(() => {}),
+        queryClient
+          .prefetchQuery({
+            queryKey: ['organization-projects', orgId],
+            queryFn: () => fetchOrganizationProjects(orgId),
+            staleTime: 30 * 1000, // 30 seconds
+          })
+          .catch(() => {}),
       ])
     } catch (error) {
       // Don't block rendering if prefetch fails

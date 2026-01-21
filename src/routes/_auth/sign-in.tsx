@@ -25,10 +25,12 @@ function isValidRelativeRedirect(url: string): boolean {
 }
 
 const searchSchema = z.object({
-  redirect: z.string().optional().refine(
-    (val) => !val || isValidRelativeRedirect(val),
-    { message: 'Redirect must be a relative URL' }
-  ),
+  redirect: z
+    .string()
+    .optional()
+    .refine((val) => !val || isValidRelativeRedirect(val), {
+      message: 'Redirect must be a relative URL',
+    }),
 })
 
 export const Route = createFileRoute('/_auth/sign-in')({
@@ -46,9 +48,10 @@ function SignInPage() {
     setIsGitHubLoading(true)
     try {
       // Build success and failure URLs
-      const successUrl = search.redirect && isValidRelativeRedirect(search.redirect)
-        ? `${window.location.origin}${search.redirect}`
-        : `${window.location.origin}/`
+      const successUrl =
+        search.redirect && isValidRelativeRedirect(search.redirect)
+          ? `${window.location.origin}${search.redirect}`
+          : `${window.location.origin}/`
       const failureUrl = `${window.location.origin}/sign-in${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
       // Store GitHub as last login method before redirecting
@@ -81,13 +84,16 @@ function SignInPage() {
           email: data.email,
           password: data.password,
         })
-        
+
         // After session creation, check if we can get account (MFA might be required)
         // This will throw if MFA is required
         await sdk.forConsole.account.get()
       } catch (error: any) {
         // Check for MFA requirement - this is the key check
-        if (error instanceof AppwriteException && error.type === 'user_more_factors_required') {
+        if (
+          error instanceof AppwriteException &&
+          error.type === 'user_more_factors_required'
+        ) {
           // Re-throw with a special marker so onError can handle it
           throw { ...error, isMfaRequired: true }
         }
@@ -108,10 +114,15 @@ function SignInPage() {
     },
     onError: async (error: any) => {
       // Handle MFA requirement - redirect to MFA page
-      if (error?.isMfaRequired || (error instanceof AppwriteException && error.type === 'user_more_factors_required')) {
-        const redirectUrl = search.redirect && isValidRelativeRedirect(search.redirect)
-          ? search.redirect
-          : undefined
+      if (
+        error?.isMfaRequired ||
+        (error instanceof AppwriteException &&
+          error.type === 'user_more_factors_required')
+      ) {
+        const redirectUrl =
+          search.redirect && isValidRelativeRedirect(search.redirect)
+            ? search.redirect
+            : undefined
         navigate({
           to: '/mfa',
           search: redirectUrl ? { redirect: redirectUrl } : undefined,
@@ -139,11 +150,17 @@ function SignInPage() {
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
           By clicking continue, you agree to our{' '}
-          <a href="#" className="underline underline-offset-4 hover:text-primary">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Terms of Service
           </a>{' '}
           and{' '}
-          <a href="#" className="underline underline-offset-4 hover:text-primary">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Privacy Policy
           </a>
           .

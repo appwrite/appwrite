@@ -19,7 +19,11 @@ interface DateTooltipProps {
  * Formats a date to show relative time with detailed popover
  * showing precise breakdown, UTC time, and local time
  */
-export function DateTooltip({ date, className, showFormattedDate = false }: DateTooltipProps) {
+export function DateTooltip({
+  date,
+  className,
+  showFormattedDate = false,
+}: DateTooltipProps) {
   const dateObj = typeof date === 'string' ? new Date(date) : date
 
   // Calculate relative time
@@ -38,10 +42,10 @@ export function DateTooltip({ date, className, showFormattedDate = false }: Date
   // Simple relative time for display
   const getSimpleRelativeTime = (): string => {
     if (diffSeconds < 60) return 'Just now'
-    
+
     // Find the most appropriate unit to display, skipping zero values
     let timeStr: string
-    
+
     if (diffYears > 0) {
       timeStr = `${diffYears} year${diffYears !== 1 ? 's' : ''}`
     } else if (diffMonths > 0) {
@@ -55,7 +59,7 @@ export function DateTooltip({ date, className, showFormattedDate = false }: Date
     } else {
       timeStr = `${diffMinutes} minute${diffMinutes !== 1 ? 's' : ''}`
     }
-    
+
     return isFuture ? `in ${timeStr}` : `${timeStr} ago`
   }
 
@@ -104,15 +108,16 @@ export function DateTooltip({ date, className, showFormattedDate = false }: Date
     // Add parts starting from the first non-zero unit, up to 3 parts max
     for (let i = startIndex; i < timeUnits.length && parts.length < 3; i++) {
       const unit = timeUnits[i]
-      if (unit.value > 0 || (i === timeUnits.length - 1 && parts.length === 0)) {
+      if (
+        unit.value > 0 ||
+        (i === timeUnits.length - 1 && parts.length === 0)
+      ) {
         const plural = unit.value !== 1 ? 's' : ''
         parts.push(`${unit.value} ${unit.label}${plural}`)
       }
     }
 
-    return isFuture 
-      ? `in ${parts.join(', ')}` 
-      : `${parts.join(', ')} ago`
+    return isFuture ? `in ${parts.join(', ')}` : `${parts.join(', ')} ago`
   }
 
   // Format date in international format: "Dec 11, 2025, 07:22"
@@ -141,7 +146,9 @@ export function DateTooltip({ date, className, showFormattedDate = false }: Date
           onMouseEnter={() => setIsOpen(true)}
           onMouseLeave={() => setIsOpen(false)}
         >
-          {showFormattedDate ? formatDateTime(dateObj) : getSimpleRelativeTime()}
+          {showFormattedDate
+            ? formatDateTime(dateObj)
+            : getSimpleRelativeTime()}
         </span>
       </PopoverTrigger>
       <PopoverContent

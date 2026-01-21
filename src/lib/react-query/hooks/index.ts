@@ -1,9 +1,9 @@
 /**
  * React Query Hooks - Organized by Domain
- * 
+ *
  * This index file re-exports all hooks from domain-specific modules.
  * The hooks are organized by resource type for better maintainability.
- * 
+ *
  * All hooks have been migrated from the monolithic hooks.ts file into
  * domain-specific modules. This barrel file provides a single import point
  * for all hooks while maintaining clear organization.
@@ -37,4 +37,3 @@ export * from './vcs'
 export * from './messaging'
 export * from './realtime'
 export * from './regions'
-

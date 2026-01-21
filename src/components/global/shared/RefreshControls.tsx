@@ -10,7 +10,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-export type RefreshInterval = 'off' | 'auto' | '30s' | '1m' | '5m' | '15m' | '30m' | '1h' | '2h' | '1d'
+export type RefreshInterval =
+  | 'off'
+  | 'auto'
+  | '30s'
+  | '1m'
+  | '5m'
+  | '15m'
+  | '30m'
+  | '1h'
+  | '2h'
+  | '1d'
 
 export const REFRESH_INTERVALS: Record<RefreshInterval, number | null> = {
   off: null,
@@ -42,12 +52,14 @@ export function RefreshControls({
   defaultInterval = '30s',
   className,
 }: RefreshControlsProps) {
-  const [internalRefreshInterval, setInternalRefreshInterval] = useState<RefreshInterval>(defaultInterval)
+  const [internalRefreshInterval, setInternalRefreshInterval] =
+    useState<RefreshInterval>(defaultInterval)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Use controlled or internal state
   const refreshInterval = controlledRefreshInterval ?? internalRefreshInterval
-  const setRefreshInterval = onRefreshIntervalChange ?? setInternalRefreshInterval
+  const setRefreshInterval =
+    onRefreshIntervalChange ?? setInternalRefreshInterval
 
   // Auto-refresh logic
   useEffect(() => {
@@ -72,7 +84,12 @@ export function RefreshControls({
   }
 
   return (
-    <div className={cn('inline-flex items-center rounded-md border border-input bg-background shadow-sm', className)}>
+    <div
+      className={cn(
+        'inline-flex items-center rounded-md border border-input bg-background shadow-sm',
+        className,
+      )}
+    >
       <Button
         variant="ghost"
         size="sm"
@@ -80,9 +97,7 @@ export function RefreshControls({
         disabled={isRefreshing}
         className="h-9 gap-2 rounded-r-none border-r border-input px-3 text-[13px] hover:bg-accent"
       >
-        <RefreshCw
-          className={cn('h-4 w-4', isRefreshing && 'animate-spin')}
-        />
+        <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
         Refresh
       </Button>
       <Select

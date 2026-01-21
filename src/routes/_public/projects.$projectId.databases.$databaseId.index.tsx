@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { DatabaseOverview } from '@/components/pages/projects/$projectId/databases/View'
-import { fetchProjectDatabase, fetchProjectTables } from '@/lib/react-query/hooks'
+import {
+  fetchProjectDatabase,
+  fetchProjectTables,
+} from '@/lib/react-query/hooks'
 
 const TABLES_PER_PAGE = 25
 
@@ -25,8 +28,23 @@ export const Route = createFileRoute(
       })
 
       await queryClient.prefetchQuery({
-        queryKey: ['tables', 'project', projectId, databaseId, 0, TABLES_PER_PAGE, undefined],
-        queryFn: () => fetchProjectTables(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+        queryKey: [
+          'tables',
+          'project',
+          projectId,
+          databaseId,
+          0,
+          TABLES_PER_PAGE,
+          undefined,
+        ],
+        queryFn: () =>
+          fetchProjectTables(
+            projectId,
+            databaseId,
+            0,
+            TABLES_PER_PAGE,
+            undefined,
+          ),
         staleTime: 30 * 1000, // 30 seconds
       })
     }

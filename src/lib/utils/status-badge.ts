@@ -1,6 +1,6 @@
 /**
  * Status Badge Utilities
- * 
+ *
  * Provides standardized colors and variants for status badges across the application.
  * All status badges should use these utilities for consistency.
  */
@@ -146,7 +146,13 @@ export function getUsageStatusColor(status: UsageStatus): string {
 /**
  * Backup status types
  */
-export type BackupStatus = 'pending' | 'completed' | 'processing' | 'failed' | 'uploading' | 'downloading'
+export type BackupStatus =
+  | 'pending'
+  | 'completed'
+  | 'processing'
+  | 'failed'
+  | 'uploading'
+  | 'downloading'
 
 /**
  * Get backup status badge variant
@@ -214,5 +220,3 @@ export function getDomainStatusVariant(
       return 'secondary'
   }
 }
-
-

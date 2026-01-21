@@ -23,7 +23,13 @@ interface RequestItem {
 
 // Mock data for top requests
 const topRequests: RequestItem[] = [
-  { id: '507f1f77bcf86cd799439400', method: 'GET', statusCode: 503, path: '/rest/v1', count: 240 },
+  {
+    id: '507f1f77bcf86cd799439400',
+    method: 'GET',
+    statusCode: 503,
+    path: '/rest/v1',
+    count: 240,
+  },
   {
     id: '507f1f77bcf86cd799439401',
     method: 'GET',

@@ -5,6 +5,7 @@ This script generates the `apple-touch-icon.png` file required for iOS devices (
 ## Quick Start
 
 1. Install the required dependency:
+
    ```bash
    bun add -d sharp
    # or

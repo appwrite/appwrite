@@ -68,7 +68,9 @@ export function DateRangePicker({
   className,
 }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
-  const [selectedPreset, setSelectedPreset] = React.useState<string | null>(null)
+  const [selectedPreset, setSelectedPreset] = React.useState<string | null>(
+    null,
+  )
 
   const handlePresetSelect = (preset: DateRangePreset) => {
     const range = preset.getRange()
@@ -91,7 +93,6 @@ export function DateRangePicker({
     }
     return `${format(range.from, 'MMM d')} - ${format(range.to, 'MMM d, yyyy')}`
   }
-
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>

@@ -1,6 +1,17 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { FileCode, Search, X, Download, Github, ExternalLink, Bell, Clock, Key, ArrowRight } from 'lucide-react'
+import {
+  FileCode,
+  Search,
+  X,
+  Download,
+  Github,
+  ExternalLink,
+  Bell,
+  Clock,
+  Key,
+  ArrowRight,
+} from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
@@ -20,7 +31,10 @@ import {
 } from '@/components/ui/tooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
-import { useFunctionTemplates, fetchFunctionTemplates } from '@/lib/react-query/hooks'
+import {
+  useFunctionTemplates,
+  fetchFunctionTemplates,
+} from '@/lib/react-query/hooks'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
 import { Separator } from '@/components/ui/separator'
@@ -111,7 +125,7 @@ function mapRuntimeKeyToApiNames(
   allTemplates: Models.TemplateFunction[],
 ): string[] {
   const apiNames = new Set<string>()
-  
+
   for (const template of allTemplates) {
     for (const runtime of template.runtimes) {
       const key = mapRuntimeNameToKey(runtime.name)
@@ -120,7 +134,7 @@ function mapRuntimeKeyToApiNames(
       }
     }
   }
-  
+
   return Array.from(apiNames)
 }
 
@@ -133,14 +147,14 @@ function mapCategoryToUseCases(
   allTemplates: Models.TemplateFunction[],
 ): string[] {
   const useCases = new Set<string>()
-  
+
   for (const template of allTemplates) {
     const templateCategory = mapUseCaseToCategory(template.useCases || [])
     if (templateCategory === category) {
       template.useCases?.forEach((uc) => useCases.add(uc))
     }
   }
-  
+
   return Array.from(useCases)
 }
 
@@ -166,54 +180,94 @@ function mapUseCaseToCategory(useCases: string[]): Category {
   if (useCases.length === 0) {
     return 'Starter'
   }
-  
+
   const useCaseLower = useCases[0].toLowerCase()
-  
+
   // Map common use cases to categories
-  if (useCaseLower.includes('email') || useCaseLower.includes('sms') || useCaseLower.includes('notification')) {
+  if (
+    useCaseLower.includes('email') ||
+    useCaseLower.includes('sms') ||
+    useCaseLower.includes('notification')
+  ) {
     return 'Communication'
   }
-  if (useCaseLower.includes('payment') || useCaseLower.includes('stripe') || useCaseLower.includes('paypal')) {
+  if (
+    useCaseLower.includes('payment') ||
+    useCaseLower.includes('stripe') ||
+    useCaseLower.includes('paypal')
+  ) {
     return 'Payments'
   }
-  if (useCaseLower.includes('image') || useCaseLower.includes('media') || useCaseLower.includes('video') || useCaseLower.includes('pdf')) {
+  if (
+    useCaseLower.includes('image') ||
+    useCaseLower.includes('media') ||
+    useCaseLower.includes('video') ||
+    useCaseLower.includes('pdf')
+  ) {
     return 'Media'
   }
-  if (useCaseLower.includes('database') || useCaseLower.includes('backup') || useCaseLower.includes('export') || useCaseLower.includes('data')) {
+  if (
+    useCaseLower.includes('database') ||
+    useCaseLower.includes('backup') ||
+    useCaseLower.includes('export') ||
+    useCaseLower.includes('data')
+  ) {
     return 'Data'
   }
-  if (useCaseLower.includes('webhook') || useCaseLower.includes('integration') || useCaseLower.includes('api')) {
+  if (
+    useCaseLower.includes('webhook') ||
+    useCaseLower.includes('integration') ||
+    useCaseLower.includes('api')
+  ) {
     return 'Integration'
   }
-  if (useCaseLower.includes('auth') || useCaseLower.includes('security') || useCaseLower.includes('oauth')) {
+  if (
+    useCaseLower.includes('auth') ||
+    useCaseLower.includes('security') ||
+    useCaseLower.includes('oauth')
+  ) {
     return 'Security'
   }
-  if (useCaseLower.includes('analytics') || useCaseLower.includes('log') || useCaseLower.includes('event')) {
+  if (
+    useCaseLower.includes('analytics') ||
+    useCaseLower.includes('log') ||
+    useCaseLower.includes('event')
+  ) {
     return 'Analytics'
   }
-  if (useCaseLower.includes('schedule') || useCaseLower.includes('cron') || useCaseLower.includes('automation') || useCaseLower.includes('queue')) {
+  if (
+    useCaseLower.includes('schedule') ||
+    useCaseLower.includes('cron') ||
+    useCaseLower.includes('automation') ||
+    useCaseLower.includes('queue')
+  ) {
     return 'Automation'
   }
-  
+
   return 'Starter'
 }
 
 /**
  * Converts API TemplateFunction to our Template interface
  */
-function mapApiTemplateToTemplate(apiTemplate: Models.TemplateFunction): Template {
+function mapApiTemplateToTemplate(
+  apiTemplate: Models.TemplateFunction,
+): Template {
   const mappedRuntimes = apiTemplate.runtimes
     .map((rt) => mapRuntimeNameToKey(rt.name))
     .filter((key): key is RuntimeKey => key !== null)
-  
+
   // Remove duplicates
   const uniqueRuntimes = Array.from(new Set(mappedRuntimes))
-  
+
   // Build repo URL from VCS provider info
-  const repoUrl = apiTemplate.vcsProvider && apiTemplate.providerOwner && apiTemplate.providerRepositoryId
-    ? `https://${apiTemplate.vcsProvider === 'github' ? 'github.com' : apiTemplate.vcsProvider}.com/${apiTemplate.providerOwner}/${apiTemplate.providerRepositoryId}`
-    : 'https://github.com/appwrite/templates'
-  
+  const repoUrl =
+    apiTemplate.vcsProvider &&
+    apiTemplate.providerOwner &&
+    apiTemplate.providerRepositoryId
+      ? `https://${apiTemplate.vcsProvider === 'github' ? 'github.com' : apiTemplate.vcsProvider}.com/${apiTemplate.providerOwner}/${apiTemplate.providerRepositoryId}`
+      : 'https://github.com/appwrite/templates'
+
   return {
     id: apiTemplate.id,
     name: apiTemplate.name,
@@ -660,13 +714,16 @@ export function TemplatesView() {
   const [templateSearchValue, setTemplateSearchValue] = useState<string>('')
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
   const [selectedRuntimes, setSelectedRuntimes] = useState<RuntimeKey[]>([])
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
+    null,
+  )
   const [templatesPage, setTemplatesPage] = useState(0) // 0-indexed like org view
   const [templatesPageSize, setTemplatesPageSize] = useState(12)
 
   // Fetch all templates only when we need them for mapping (when filters are active)
-  const needsAllTemplates = selectedRuntimes.length > 0 || selectedCategories.length > 0
-  
+  const needsAllTemplates =
+    selectedRuntimes.length > 0 || selectedCategories.length > 0
+
   // Fetch all templates for mapping (only when filters are active)
   // Use a separate query with enabled flag to prevent unnecessary calls
   // Use a different query key prefix to avoid conflicts with paginated queries
@@ -677,37 +734,42 @@ export function TemplatesView() {
       'project',
       projectId,
     ],
-    queryFn: () => fetchFunctionTemplates(projectId!, undefined, undefined, 100, 0, false),
+    queryFn: () =>
+      fetchFunctionTemplates(projectId!, undefined, undefined, 100, 0, false),
     enabled: !!projectId && needsAllTemplates,
     staleTime: 5 * 60 * 1000,
   })
-  
+
   // Use all templates for mapping when filters are active, otherwise use empty array
-  const allApiTemplates = needsAllTemplates ? (allApiTemplatesForMapping?.templates || []) : []
+  const allApiTemplates = needsAllTemplates
+    ? allApiTemplatesForMapping?.templates || []
+    : []
 
   // Map runtime keys to API runtime names (only when runtimes are selected)
   const apiRuntimeNames = useMemo(() => {
-    if (selectedRuntimes.length === 0 || allApiTemplates.length === 0) return undefined
-    
+    if (selectedRuntimes.length === 0 || allApiTemplates.length === 0)
+      return undefined
+
     const allNames = new Set<string>()
     selectedRuntimes.forEach((key) => {
       const names = mapRuntimeKeyToApiNames(key, allApiTemplates)
       names.forEach((name) => allNames.add(name))
     })
-    
+
     return Array.from(allNames)
   }, [selectedRuntimes, allApiTemplates])
 
   // Map categories to useCases (only when categories are selected)
   const apiUseCases = useMemo(() => {
-    if (selectedCategories.length === 0 || allApiTemplates.length === 0) return undefined
-    
+    if (selectedCategories.length === 0 || allApiTemplates.length === 0)
+      return undefined
+
     const allUseCases = new Set<string>()
     selectedCategories.forEach((category) => {
       const useCases = mapCategoryToUseCases(category, allApiTemplates)
       useCases.forEach((uc) => allUseCases.add(uc))
     })
-    
+
     return Array.from(allUseCases)
   }, [selectedCategories, allApiTemplates])
 
@@ -737,7 +799,7 @@ export function TemplatesView() {
     if (!templateSearchValue.trim()) {
       return templates
     }
-    
+
     const searchLower = templateSearchValue.toLowerCase()
     return templates.filter(
       (t) =>
@@ -752,8 +814,9 @@ export function TemplatesView() {
   // Extract unique categories from all available templates
   // Note: We use allApiTemplates when available, otherwise apiTemplates
   // Counts are not shown as they can't be accurate without fetching all templates
-  const templatesForCategories = allApiTemplates.length > 0 ? allApiTemplates : apiTemplates
-  
+  const templatesForCategories =
+    allApiTemplates.length > 0 ? allApiTemplates : apiTemplates
+
   const availableCategories = useMemo(() => {
     const cats = new Set<Category>()
     templatesForCategories.forEach((t: Models.TemplateFunction) => {
@@ -816,7 +879,9 @@ export function TemplatesView() {
     return (
       <div className="flex h-full items-center justify-center py-16">
         <div className="text-center">
-          <p className="mb-1 text-sm font-medium text-foreground">Failed to load templates</p>
+          <p className="mb-1 text-sm font-medium text-foreground">
+            Failed to load templates
+          </p>
           <p className="text-sm text-muted-foreground">
             {error instanceof Error ? error.message : 'An error occurred'}
           </p>
@@ -895,7 +960,11 @@ export function TemplatesView() {
                         onCheckedChange={() => toggleRuntime(runtimeKey)}
                         className="h-4 w-4"
                       />
-                      <LanguageIcon language={runtimeKey} size="sm" className="h-5 w-5" />
+                      <LanguageIcon
+                        language={runtimeKey}
+                        size="sm"
+                        className="h-5 w-5"
+                      />
                       <span className="text-[13px] text-foreground">
                         {runtime.name}
                       </span>
@@ -960,10 +1029,7 @@ export function TemplatesView() {
               {paginatedTemplates.map((template) => {
                 const IconComponent = template.icon
                 const maxVisible = 5
-                const visibleRuntimes = template.runtimes.slice(
-                  0,
-                  maxVisible,
-                )
+                const visibleRuntimes = template.runtimes.slice(0, maxVisible)
                 const remainingCount = template.runtimes.length - maxVisible
 
                 return (
@@ -996,7 +1062,11 @@ export function TemplatesView() {
                               <Tooltip key={runtimeKey}>
                                 <TooltipTrigger asChild>
                                   <div className="flex h-6 w-6 items-center justify-center">
-                                    <LanguageIcon language={runtimeKey} size="sm" className="h-6 w-6" />
+                                    <LanguageIcon
+                                      language={runtimeKey}
+                                      size="sm"
+                                      className="h-6 w-6"
+                                    />
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent
@@ -1015,10 +1085,7 @@ export function TemplatesView() {
                                   +{remainingCount}
                                 </div>
                               </TooltipTrigger>
-                              <TooltipContent
-                                side="bottom"
-                                className="text-xs"
-                              >
+                              <TooltipContent side="bottom" className="text-xs">
                                 {template.runtimes
                                   .slice(maxVisible)
                                   .map((key) => runtimesMap[key].name)
@@ -1072,7 +1139,10 @@ export function TemplatesView() {
                   Become a Technology Partner
                 </h3>
                 <p className="text-[13px] leading-relaxed text-muted-foreground">
-                  Add your function templates to Appwrite and help developers build faster. Join our Partners Program to distribute your templates, get co-marketing opportunities, and access dedicated support from our engineering team.
+                  Add your function templates to Appwrite and help developers
+                  build faster. Join our Partners Program to distribute your
+                  templates, get co-marketing opportunities, and access
+                  dedicated support from our engineering team.
                 </p>
               </div>
               <Button
@@ -1100,7 +1170,11 @@ export function TemplatesView() {
         open={!!selectedTemplate}
         onOpenChange={(open) => !open && setSelectedTemplate(null)}
       >
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg" side="right" showCloseButton={false}>
+        <SheetContent
+          className="w-full overflow-y-auto sm:max-w-lg"
+          side="right"
+          showCloseButton={false}
+        >
           {selectedTemplate &&
             (() => {
               const TemplateIcon = selectedTemplate.icon
@@ -1146,7 +1220,9 @@ export function TemplatesView() {
                         </h4>
                         <div
                           className="text-[13px] leading-relaxed text-muted-foreground [&_p]:mb-2 [&_ul]:list-disc [&_ul]:ml-4 [&_ul]:mb-2 [&_ol]:list-decimal [&_ol]:ml-4 [&_ol]:mb-2 [&_li]:mb-1 [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[12px] [&_code]:font-mono [&_pre]:bg-muted [&_pre]:p-2 [&_pre]:rounded [&_pre]:overflow-x-auto [&_pre]:text-[12px] [&_pre]:font-mono [&_a]:text-primary [&_a]:underline [&_h1]:text-[16px] [&_h1]:font-semibold [&_h1]:mb-2 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h2]:mb-2 [&_h3]:text-[14px] [&_h3]:font-semibold [&_h3]:mb-2"
-                          dangerouslySetInnerHTML={{ __html: selectedTemplate.instructions }}
+                          dangerouslySetInnerHTML={{
+                            __html: selectedTemplate.instructions,
+                          }}
                         />
                       </div>
                     )}
@@ -1168,112 +1244,136 @@ export function TemplatesView() {
 
                     {/* Configuration Details Accordion */}
                     <Accordion type="single" collapsible className="w-full">
-                        {/* Required Scopes */}
-                        <AccordionItem value="scopes">
-                          <AccordionTrigger className="text-[13px] font-medium py-3 hover:no-underline">
-                            <div className="flex items-center gap-2">
-                              <span>Required Scopes</span>
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                {selectedTemplate.scopes.length}
-                              </Badge>
+                      {/* Required Scopes */}
+                      <AccordionItem value="scopes">
+                        <AccordionTrigger className="text-[13px] font-medium py-3 hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <span>Required Scopes</span>
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] px-1.5 py-0"
+                            >
+                              {selectedTemplate.scopes.length}
+                            </Badge>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <p className="text-[12px] text-muted-foreground mb-3">
+                            Permissions required for the function to access
+                            Appwrite resources.
+                          </p>
+                          {selectedTemplate.scopes.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {selectedTemplate.scopes.map((scope) => (
+                                <Badge
+                                  key={scope}
+                                  variant="outline"
+                                  className="text-[12px] font-mono"
+                                >
+                                  {scope}
+                                </Badge>
+                              ))}
                             </div>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <p className="text-[12px] text-muted-foreground mb-3">
-                              Permissions required for the function to access Appwrite resources.
+                          ) : (
+                            <p className="text-[12px] text-muted-foreground">
+                              No scopes required for this template.
                             </p>
-                            {selectedTemplate.scopes.length > 0 ? (
-                              <div className="flex flex-wrap gap-2">
-                                {selectedTemplate.scopes.map((scope) => (
-                                  <Badge
-                                    key={scope}
-                                    variant="outline"
-                                    className="text-[12px] font-mono"
-                                  >
-                                    {scope}
-                                  </Badge>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-[12px] text-muted-foreground">
-                                No scopes required for this template.
-                              </p>
-                            )}
-                          </AccordionContent>
-                        </AccordionItem>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
 
-                        {/* Trigger Events */}
-                        <AccordionItem value="events">
-                          <AccordionTrigger className="text-[13px] font-medium py-3 hover:no-underline">
-                            <div className="flex items-center gap-2">
-                              <span>Trigger Events</span>
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                {selectedTemplate.events.length}
-                              </Badge>
+                      {/* Trigger Events */}
+                      <AccordionItem value="events">
+                        <AccordionTrigger className="text-[13px] font-medium py-3 hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <span>Trigger Events</span>
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] px-1.5 py-0"
+                            >
+                              {selectedTemplate.events.length}
+                            </Badge>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <p className="text-[12px] text-muted-foreground mb-3">
+                            Events that will trigger the function to execute
+                            automatically.
+                          </p>
+                          {selectedTemplate.events.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {selectedTemplate.events.map((event) => (
+                                <Badge
+                                  key={event}
+                                  variant="secondary"
+                                  className="text-[12px] gap-1.5"
+                                >
+                                  <Bell className="h-3 w-3" />
+                                  {event}
+                                </Badge>
+                              ))}
                             </div>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <p className="text-[12px] text-muted-foreground mb-3">
-                              Events that will trigger the function to execute automatically.
+                          ) : (
+                            <p className="text-[12px] text-muted-foreground">
+                              No trigger events configured for this template.
                             </p>
-                            {selectedTemplate.events.length > 0 ? (
-                              <div className="flex flex-wrap gap-2">
-                                {selectedTemplate.events.map((event) => (
-                                  <Badge
-                                    key={event}
-                                    variant="secondary"
-                                    className="text-[12px] gap-1.5"
-                                  >
-                                    <Bell className="h-3 w-3" />
-                                    {event}
-                                  </Badge>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-[12px] text-muted-foreground">
-                                No trigger events configured for this template.
-                              </p>
-                            )}
-                          </AccordionContent>
-                        </AccordionItem>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
 
-                        {/* Required Variables */}
-                        <AccordionItem value="variables">
-                          <AccordionTrigger className="text-[13px] font-medium py-3 hover:no-underline">
-                            <div className="flex items-center gap-2">
-                              <span>Required Variables</span>
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                                {selectedTemplate.variables.length}
-                              </Badge>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <p className="text-[12px] text-muted-foreground mb-3">
-                              Environment variables that need to be configured for the function to work properly.
-                            </p>
-                            {selectedTemplate.variables.length > 0 ? (
-                              <div className="space-y-4">
-                                {selectedTemplate.variables.map((variable, index) => (
+                      {/* Required Variables */}
+                      <AccordionItem value="variables">
+                        <AccordionTrigger className="text-[13px] font-medium py-3 hover:no-underline">
+                          <div className="flex items-center gap-2">
+                            <span>Required Variables</span>
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] px-1.5 py-0"
+                            >
+                              {selectedTemplate.variables.length}
+                            </Badge>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <p className="text-[12px] text-muted-foreground mb-3">
+                            Environment variables that need to be configured for
+                            the function to work properly.
+                          </p>
+                          {selectedTemplate.variables.length > 0 ? (
+                            <div className="space-y-4">
+                              {selectedTemplate.variables.map(
+                                (variable, index) => (
                                   <div key={variable.name}>
-                                    {index > 0 && <Separator className="my-4" />}
+                                    {index > 0 && (
+                                      <Separator className="my-4" />
+                                    )}
                                     <div className="space-y-2">
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <code className="text-[13px] font-mono font-semibold text-foreground">
                                           {variable.name}
                                         </code>
                                         {variable.required && (
-                                          <Badge variant="outline" className="text-[10px]">
+                                          <Badge
+                                            variant="outline"
+                                            className="text-[10px]"
+                                          >
                                             Required
                                           </Badge>
                                         )}
                                         {variable.secret && (
-                                          <Badge variant="secondary" className="text-[10px] gap-1">
+                                          <Badge
+                                            variant="secondary"
+                                            className="text-[10px] gap-1"
+                                          >
                                             <Key className="h-2.5 w-2.5" />
                                             Secret
                                           </Badge>
                                         )}
                                         {variable.type && (
-                                          <Badge variant="outline" className="text-[10px] font-mono">
+                                          <Badge
+                                            variant="outline"
+                                            className="text-[10px] font-mono"
+                                          >
                                             {variable.type}
                                           </Badge>
                                         )}
@@ -1281,31 +1381,38 @@ export function TemplatesView() {
                                       {variable.description && (
                                         <div
                                           className="text-[12px] leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_a]:font-semibold"
-                                          dangerouslySetInnerHTML={{ __html: variable.description }}
+                                          dangerouslySetInnerHTML={{
+                                            __html: variable.description,
+                                          }}
                                         />
                                       )}
-                                      {(variable.placeholder || variable.value) && (
+                                      {(variable.placeholder ||
+                                        variable.value) && (
                                         <div className="flex items-center gap-2">
                                           <span className="text-[11px] text-muted-foreground">
-                                            {variable.value ? 'Default:' : 'Placeholder:'}
+                                            {variable.value
+                                              ? 'Default:'
+                                              : 'Placeholder:'}
                                           </span>
                                           <code className="text-[11px] font-mono text-foreground bg-muted px-2 py-1 rounded">
-                                            {variable.value || variable.placeholder}
+                                            {variable.value ||
+                                              variable.placeholder}
                                           </code>
                                         </div>
                                       )}
                                     </div>
                                   </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-[12px] text-muted-foreground">
-                                No variables required for this template.
-                              </p>
-                            )}
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
+                                ),
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-[12px] text-muted-foreground">
+                              No variables required for this template.
+                            </p>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
 
                     {/* Supported runtimes */}
                     <div>
@@ -1320,7 +1427,11 @@ export function TemplatesView() {
                               key={runtimeKey}
                               className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5"
                             >
-                              <LanguageIcon language={runtimeKey} size="sm" className="h-5 w-5" />
+                              <LanguageIcon
+                                language={runtimeKey}
+                                size="sm"
+                                className="h-5 w-5"
+                              />
                               <span className="text-[12px] font-medium text-foreground">
                                 {runtime.name}
                               </span>
@@ -1378,4 +1489,3 @@ export function TemplatesView() {
     </>
   )
 }
-

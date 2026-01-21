@@ -1,11 +1,17 @@
 /**
  * AddressModal Component
- * 
+ *
  * Modal for creating or editing a billing address.
  */
 
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -136,18 +142,25 @@ export function AddressModal({
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save billing address')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to save billing address',
+      )
     }
   }
 
-  const isLoading = createAddressMutation.isPending || updateAddressMutation.isPending
+  const isLoading =
+    createAddressMutation.isPending || updateAddressMutation.isPending
   const countries = countriesData?.countries || []
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 text-left">
-          <DialogTitle>{isEditing ? 'Update billing address' : 'Add billing address'}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? 'Update billing address' : 'Add billing address'}
+          </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {isEditing
               ? 'Update your billing address information.'
@@ -162,7 +175,10 @@ export function AddressModal({
               <Label htmlFor="country" className="text-[13px]">
                 Country <span className="text-red-500">*</span>
               </Label>
-              <Popover open={countryPopoverOpen} onOpenChange={setCountryPopoverOpen}>
+              <Popover
+                open={countryPopoverOpen}
+                onOpenChange={setCountryPopoverOpen}
+              >
                 <PopoverTrigger asChild>
                   <Button
                     id="country"
@@ -174,15 +190,22 @@ export function AddressModal({
                   >
                     <span className="truncate">
                       {country
-                        ? countries.find((c) => c.code === country)?.name || 'Select a country'
+                        ? countries.find((c) => c.code === country)?.name ||
+                          'Select a country'
                         : 'Select a country'}
                     </span>
                     <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <PopoverContent
+                  className="w-[--radix-popover-trigger-width] p-0"
+                  align="start"
+                >
                   <Command>
-                    <CommandInput placeholder="Search countries..." className="h-9" />
+                    <CommandInput
+                      placeholder="Search countries..."
+                      className="h-9"
+                    />
                     <CommandList>
                       <CommandEmpty>No country found.</CommandEmpty>
                       <CommandGroup>
@@ -199,7 +222,9 @@ export function AddressModal({
                             <Check
                               className={cn(
                                 'mr-2 h-4 w-4',
-                                country === c.code ? 'opacity-100' : 'opacity-0',
+                                country === c.code
+                                  ? 'opacity-100'
+                                  : 'opacity-0',
                               )}
                             />
                             {c.name}
@@ -296,7 +321,9 @@ export function AddressModal({
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || !country || !streetAddress || !city || !state}
+              disabled={
+                isLoading || !country || !streetAddress || !city || !state
+              }
             >
               {isEditing ? 'Update' : 'Add'}
             </Button>

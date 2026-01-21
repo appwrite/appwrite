@@ -1,10 +1,16 @@
 /**
  * DeleteAddressModal Component
- * 
+ *
  * Modal for deleting a billing address with warnings if linked to organizations.
  */
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
@@ -40,7 +46,11 @@ export function DeleteAddressModal({
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete billing address')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete billing address',
+      )
     }
   }
 

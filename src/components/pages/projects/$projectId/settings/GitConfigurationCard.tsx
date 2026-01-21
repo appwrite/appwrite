@@ -13,7 +13,10 @@ import { useQuery } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useVcsInstallations, useDeleteVcsInstallation } from '@/lib/react-query/hooks/vcs'
+import {
+  useVcsInstallations,
+  useDeleteVcsInstallation,
+} from '@/lib/react-query/hooks/vcs'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -77,7 +80,11 @@ export function GitConfigurationCard({
   isSelfHosted = false,
   isVcsEnabled = true,
 }: GitConfigurationCardProps) {
-  const { data: installationsData, isLoading } = useVcsInstallations(projectId, page, limit)
+  const { data: installationsData, isLoading } = useVcsInstallations(
+    projectId,
+    page,
+    limit,
+  )
   const deleteMutation = useDeleteVcsInstallation(projectId)
 
   const installations = installationsData?.installations || []
@@ -85,11 +92,18 @@ export function GitConfigurationCard({
 
   // State for disconnect modal
   const [disconnectModalOpen, setDisconnectModalOpen] = useState(false)
-  const [selectedInstallation, setSelectedInstallation] = useState<Models.Installation | null>(null)
+  const [selectedInstallation, setSelectedInstallation] =
+    useState<Models.Installation | null>(null)
 
   // Fetch affected functions and sites when modal opens
   const { data: affectedFunctions, isLoading: functionsLoading } = useQuery({
-    queryKey: ['functions', 'project', projectId, 'installation', selectedInstallation?.$id],
+    queryKey: [
+      'functions',
+      'project',
+      projectId,
+      'installation',
+      selectedInstallation?.$id,
+    ],
     queryFn: async () => {
       if (!projectId || !selectedInstallation?.$id) {
         return { functions: [], total: 0 }
@@ -109,7 +123,13 @@ export function GitConfigurationCard({
   })
 
   const { data: affectedSites, isLoading: sitesLoading } = useQuery({
-    queryKey: ['sites', 'project', projectId, 'installation', selectedInstallation?.$id],
+    queryKey: [
+      'sites',
+      'project',
+      projectId,
+      'installation',
+      selectedInstallation?.$id,
+    ],
     queryFn: async () => {
       if (!projectId || !selectedInstallation?.$id) {
         return { sites: [], total: 0 }
@@ -133,7 +153,9 @@ export function GitConfigurationCard({
 
     try {
       await deleteMutation.mutateAsync(selectedInstallation.$id)
-      toast.success(`${selectedInstallation.organization} has been disconnected from this project`)
+      toast.success(
+        `${selectedInstallation.organization} has been disconnected from this project`,
+      )
       setDisconnectModalOpen(false)
       setSelectedInstallation(null)
     } catch (error: any) {
@@ -165,13 +187,15 @@ export function GitConfigurationCard({
     return (
       <div className="rounded-xl border border-dashed border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Git configuration</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Git configuration
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-4">
-            Add a Git installation to your project so you can connect repositories later through your
-            function or site settings.
+            Add a Git installation to your project so you can connect
+            repositories later through your function or site settings.
           </p>
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
@@ -183,7 +207,12 @@ export function GitConfigurationCard({
             <p className="mb-4 text-[13px] text-muted-foreground">
               Add an installation to connect repositories
             </p>
-            <Button variant="secondary" size="sm" className="h-9 text-[13px]" asChild>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 text-[13px]"
+              asChild
+            >
               <a href={getGitHubAuthUrl()} target="_blank" rel="noreferrer">
                 <GitHubIcon className="mr-1.5 h-4 w-4" />
                 Connect to GitHub
@@ -200,7 +229,9 @@ export function GitConfigurationCard({
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Git configuration</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Git configuration
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
@@ -209,9 +240,14 @@ export function GitConfigurationCard({
             <AlertDescription className="text-[13px]">
               <strong>Installing Git on a self-hosted instance</strong>
               <br />
-              Before installing Git in a locally hosted Appwrite project, ensure your environment
-              variables are configured.{' '}
-              <Button variant="link" size="sm" className="h-auto p-0 text-[13px] font-medium underline" asChild>
+              Before installing Git in a locally hosted Appwrite project, ensure
+              your environment variables are configured.{' '}
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-[13px] font-medium underline"
+                asChild
+              >
                 <a
                   href="https://appwrite.io/docs/advanced/self-hosting/configuration/version-control"
                   target="_blank"
@@ -232,7 +268,9 @@ export function GitConfigurationCard({
     <>
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Git configuration</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Git configuration
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 @container">
@@ -240,11 +278,11 @@ export function GitConfigurationCard({
             {/* Left side - Description */}
             <div className="@[600px]:w-64 shrink-0">
               <p className="text-[13px] text-muted-foreground">
-                Add a Git installation to your project so you can connect repositories later through your
-                function or site settings.
+                Add a Git installation to your project so you can connect
+                repositories later through your function or site settings.
               </p>
             </div>
-            
+
             {/* Right side - Content */}
             <div className="flex-1 min-w-0">
               {isLoading ? (
@@ -261,15 +299,24 @@ export function GitConfigurationCard({
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="min-w-[150px] max-w-[500px]">Owner</TableHead>
-                          <TableHead className="min-w-[150px] max-w-[500px]">Created</TableHead>
-                          <TableHead className="min-w-[150px] max-w-[500px]">Updated</TableHead>
+                          <TableHead className="min-w-[150px] max-w-[500px]">
+                            Owner
+                          </TableHead>
+                          <TableHead className="min-w-[150px] max-w-[500px]">
+                            Created
+                          </TableHead>
+                          <TableHead className="min-w-[150px] max-w-[500px]">
+                            Updated
+                          </TableHead>
                           <TableHead className="w-[60px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {installations.map((installation) => {
-                          const providerUrl = getProviderUrl(installation.provider, installation.organization)
+                          const providerUrl = getProviderUrl(
+                            installation.provider,
+                            installation.organization,
+                          )
                           return (
                             <TableRow key={installation.$id}>
                               <TableCell>
@@ -302,7 +349,11 @@ export function GitConfigurationCard({
                               <TableCell>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-7 w-7 p-0"
+                                    >
                                       <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
@@ -319,7 +370,9 @@ export function GitConfigurationCard({
                                       </a>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem
-                                      onClick={() => handleOpenDisconnectModal(installation)}
+                                      onClick={() =>
+                                        handleOpenDisconnectModal(installation)
+                                      }
                                       className="text-destructive"
                                     >
                                       <XCircle className="mr-2 h-4 w-4" />
@@ -354,7 +407,12 @@ export function GitConfigurationCard({
           </div>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
-          <Button variant="secondary" size="sm" className="h-9 text-[13px]" asChild>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-9 text-[13px]"
+            asChild
+          >
             <a href={getGitHubAuthUrl()} target="_blank" rel="noreferrer">
               <Plus className="mr-1.5 h-4 w-4" />
               Add installation
@@ -386,17 +444,23 @@ export function GitConfigurationCard({
               <>
                 {affectedSites && affectedSites.total > 0 && (
                   <div className="mb-4">
-                    <p className="text-[12px] font-medium text-foreground mb-2">Sites</p>
+                    <p className="text-[12px] font-medium text-foreground mb-2">
+                      Sites
+                    </p>
                     <div className="space-y-2">
                       {affectedSites.sites.map((site) => (
-                        <div key={site.$id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
+                        <div
+                          key={site.$id}
+                          className="flex items-center gap-2 p-2 rounded-lg bg-muted/30"
+                        >
                           <Globe className="h-4 w-4 text-muted-foreground" />
                           <div className="flex-1 min-w-0">
                             <p className="text-[13px] font-medium text-foreground truncate">
                               {site.name}
                             </p>
                             <p className="text-[12px] text-muted-foreground">
-                              Last deployed: <DateTooltip date={site.$updatedAt} />
+                              Last deployed:{' '}
+                              <DateTooltip date={site.$updatedAt} />
                             </p>
                           </div>
                         </div>
@@ -407,17 +471,23 @@ export function GitConfigurationCard({
 
                 {affectedFunctions && affectedFunctions.total > 0 && (
                   <div>
-                    <p className="text-[12px] font-medium text-foreground mb-2">Functions</p>
+                    <p className="text-[12px] font-medium text-foreground mb-2">
+                      Functions
+                    </p>
                     <div className="space-y-2">
                       {affectedFunctions.functions.map((func) => (
-                        <div key={func.$id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
+                        <div
+                          key={func.$id}
+                          className="flex items-center gap-2 p-2 rounded-lg bg-muted/30"
+                        >
                           <Zap className="h-4 w-4 text-muted-foreground" />
                           <div className="flex-1 min-w-0">
                             <p className="text-[13px] font-medium text-foreground truncate">
                               {func.name}
                             </p>
                             <p className="text-[12px] text-muted-foreground">
-                              Last deployed: <DateTooltip date={func.$updatedAt} />
+                              Last deployed:{' '}
+                              <DateTooltip date={func.$updatedAt} />
                             </p>
                           </div>
                         </div>
@@ -456,4 +526,3 @@ export function GitConfigurationCard({
     </>
   )
 }
-

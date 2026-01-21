@@ -276,4 +276,3 @@ export function KeyboardIndicator({ className }: { className?: string }) {
     </AnimatePresence>
   )
 }
-

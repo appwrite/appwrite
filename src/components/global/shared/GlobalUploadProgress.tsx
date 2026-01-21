@@ -8,7 +8,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useActiveUploads } from '@/hooks/use-active-uploads'
 import { UploadProgress } from './UploadProgress'
 import { uploadManager } from '@/lib/upload-queue/upload-manager'
-import type { UploadProgress as UploadProgressType, UploadItem } from '@/lib/upload-queue/types'
+import type {
+  UploadProgress as UploadProgressType,
+  UploadItem,
+} from '@/lib/upload-queue/types'
 
 export function GlobalUploadProgress() {
   const { activeUploads } = useActiveUploads()
@@ -21,7 +24,7 @@ export function GlobalUploadProgress() {
   useEffect(() => {
     activeUploads.forEach((upload) => {
       uploadItemsRef.current.set(upload.id, upload)
-      
+
       // Check if upload just completed
       const previousStatus = previousStatusRef.current.get(upload.id)
       if (
@@ -30,17 +33,23 @@ export function GlobalUploadProgress() {
         !invalidatedUploadsRef.current.has(upload.id)
       ) {
         queryClient.invalidateQueries({
-          queryKey: ['files', 'project', upload.projectId, 'bucket', upload.bucketId],
+          queryKey: [
+            'files',
+            'project',
+            upload.projectId,
+            'bucket',
+            upload.bucketId,
+          ],
         })
         invalidatedUploadsRef.current.add(upload.id)
-        
+
         setTimeout(() => {
           invalidatedUploadsRef.current.delete(upload.id)
           uploadItemsRef.current.delete(upload.id)
           previousStatusRef.current.delete(upload.id)
         }, 10000)
       }
-      
+
       previousStatusRef.current.set(upload.id, upload.status)
     })
   }, [activeUploads, queryClient])
@@ -52,29 +61,41 @@ export function GlobalUploadProgress() {
     const setupListeners = async () => {
       // Get all active uploads and listen to their progress
       const uploads = await uploadManager.getActiveUploads()
-      
+
       uploads.forEach((upload) => {
         // Store the upload item for later use
         uploadItemsRef.current.set(upload.id, upload)
-        
-        const unsubscribe = uploadManager.onProgress(upload.id, (progress: UploadProgressType) => {
-          // When upload completes, invalidate files query for that bucket
-          if (progress.status === 'completed' && !invalidatedUploadsRef.current.has(progress.id)) {
-            const item = uploadItemsRef.current.get(progress.id)
-            if (item) {
-              queryClient.invalidateQueries({
-                queryKey: ['files', 'project', item.projectId, 'bucket', item.bucketId],
-              })
-              invalidatedUploadsRef.current.add(progress.id)
-              
-              // Clean up after a delay (uploads are removed from DB after 5 seconds)
-              setTimeout(() => {
-                invalidatedUploadsRef.current.delete(progress.id)
-                uploadItemsRef.current.delete(progress.id)
-              }, 10000)
+
+        const unsubscribe = uploadManager.onProgress(
+          upload.id,
+          (progress: UploadProgressType) => {
+            // When upload completes, invalidate files query for that bucket
+            if (
+              progress.status === 'completed' &&
+              !invalidatedUploadsRef.current.has(progress.id)
+            ) {
+              const item = uploadItemsRef.current.get(progress.id)
+              if (item) {
+                queryClient.invalidateQueries({
+                  queryKey: [
+                    'files',
+                    'project',
+                    item.projectId,
+                    'bucket',
+                    item.bucketId,
+                  ],
+                })
+                invalidatedUploadsRef.current.add(progress.id)
+
+                // Clean up after a delay (uploads are removed from DB after 5 seconds)
+                setTimeout(() => {
+                  invalidatedUploadsRef.current.delete(progress.id)
+                  uploadItemsRef.current.delete(progress.id)
+                }, 10000)
+              }
             }
-          }
-        })
+          },
+        )
         unsubscribes.push(unsubscribe)
       })
     }
@@ -98,4 +119,3 @@ export function GlobalUploadProgress() {
     />
   )
 }
-

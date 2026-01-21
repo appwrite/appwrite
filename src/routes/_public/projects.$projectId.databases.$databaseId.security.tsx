@@ -30,5 +30,3 @@ function DatabaseOverviewSecurity() {
   const { databaseId } = Route.useParams()
   return <DatabaseOverview databaseId={databaseId} activeTab="security" />
 }
-
-

@@ -14,7 +14,13 @@ import {
 } from '@/components/ui/popover'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
-import { useTeams, useProject, useProjectsForTeamInfinite, useOrganizationPlan, useProjectsForTeam } from '@/lib/react-query/hooks'
+import {
+  useTeams,
+  useProject,
+  useProjectsForTeamInfinite,
+  useOrganizationPlan,
+  useProjectsForTeam,
+} from '@/lib/react-query/hooks'
 import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
 import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
 
@@ -24,7 +30,6 @@ interface ProjectSelectorProps {
   projectId?: string
   isMobile?: boolean
 }
-
 
 export function ProjectSelector({
   className,
@@ -40,7 +45,8 @@ export function ProjectSelector({
   const { teams, organizations, isLoading: orgsLoading } = useTeams()
 
   // Fetch current project separately by ID
-  const { project: currentProject, isLoading: currentProjectLoading } = useProject(projectId)
+  const { project: currentProject, isLoading: currentProjectLoading } =
+    useProject(projectId)
 
   // Infinite scroll state for projects
   const [projectSearch, setProjectSearch] = useState('')
@@ -113,7 +119,9 @@ export function ProjectSelector({
   // Find the organization for the current project's team (for display in trigger)
   const currentProjectOrg = useMemo(() => {
     if (!currentProjectTeam) return null
-    return organizations.find((org) => org.$id === currentProjectTeam.orgId) || null
+    return (
+      organizations.find((org) => org.$id === currentProjectTeam.orgId) || null
+    )
   }, [currentProjectTeam, organizations])
 
   // Get organization plan and project count for selected team
@@ -124,7 +132,12 @@ export function ProjectSelector({
   }, [selectedTeam, organizations])
 
   const { plan: organizationPlan } = useOrganizationPlan(selectedTeamOrg?.$id)
-  const { total: projectsCount } = useProjectsForTeam(selectedTeam?.$id, 0, 1, '')
+  const { total: projectsCount } = useProjectsForTeam(
+    selectedTeam?.$id,
+    0,
+    1,
+    '',
+  )
 
   const filteredTeams = useMemo(() => {
     if (!teams.length) return []
@@ -137,10 +150,8 @@ export function ProjectSelector({
   // Combine current project (at top) with paginated projects, excluding current project from list
   const displayProjects = useMemo(() => {
     if (!selectedTeam) return []
-    
-    const otherProjects = paginatedProjects.filter(
-      (p) => p.$id !== projectId,
-    )
+
+    const otherProjects = paginatedProjects.filter((p) => p.$id !== projectId)
 
     // If we have a current project and it belongs to the selected team, show it at top
     if (currentProject && currentProject.teamId === selectedTeam.$id) {
@@ -166,7 +177,12 @@ export function ProjectSelector({
   }
 
   // Show loading state if data is not ready
-  if (orgsLoading || currentProjectLoading || !selectedProject || !selectedTeam) {
+  if (
+    orgsLoading ||
+    currentProjectLoading ||
+    !selectedProject ||
+    !selectedTeam
+  ) {
     return (
       <div
         className={cn(
@@ -191,7 +207,9 @@ export function ProjectSelector({
                 className,
               )}
             >
-              {(currentProject?.name || selectedProject.name).charAt(0).toUpperCase()}
+              {(currentProject?.name || selectedProject.name)
+                .charAt(0)
+                .toUpperCase()}
             </button>
           </PopoverTrigger>
           <PopoverContent
@@ -245,7 +263,10 @@ export function ProjectSelector({
             className,
           )}
         >
-          <InitialsAvatar name={currentProject?.name || selectedProject.name} size="sm" />
+          <InitialsAvatar
+            name={currentProject?.name || selectedProject.name}
+            size="sm"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] font-medium text-foreground">
               {currentProject?.name || selectedProject.name}
@@ -331,10 +352,14 @@ export function ProjectSelector({
               className,
             )}
           >
-            <InitialsAvatar name={currentProject?.name || selectedProject.name} size="sm" />
+            <InitialsAvatar
+              name={currentProject?.name || selectedProject.name}
+              size="sm"
+            />
             <div className="min-w-0 flex items-center gap-2">
               <p className="truncate text-[13px] font-medium text-foreground">
-                {currentProjectTeam?.name || selectedTeam.name} / {currentProject?.name || selectedProject.name}
+                {currentProjectTeam?.name || selectedTeam.name} /{' '}
+                {currentProject?.name || selectedProject.name}
               </p>
               {currentProjectOrg && (
                 <span
@@ -566,7 +591,7 @@ function ProjectSelectorContent({
         </div>
 
         {/* Projects List - scrollable */}
-        <div 
+        <div
           ref={projectsScrollRef}
           className="min-h-[180px] max-h-[240px] flex-1 overflow-y-auto p-1.5"
         >
@@ -614,9 +639,7 @@ function ProjectSelectorContent({
                   )
                 })}
                 {/* Sentinel element for infinite scroll */}
-                {hasNextPage && (
-                  <div ref={sentinelRef} className="h-1" />
-                )}
+                {hasNextPage && <div ref={sentinelRef} className="h-1" />}
                 {/* Loading indicator when fetching next page */}
                 {isFetchingNextPage && (
                   <div className="px-2 py-2 text-center text-[11px] text-muted-foreground">
@@ -630,7 +653,7 @@ function ProjectSelectorContent({
 
         {/* Create Project - fixed at bottom */}
         <div className="border-t border-border p-1.5">
-          <button 
+          <button
             onClick={onCreateProject}
             className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
           >
@@ -667,7 +690,7 @@ function MobileProjectSelectorContent({
   onCreateProject,
 }: ProjectSelectorContentProps) {
   const [activeTab, setActiveTab] = useState<'teams' | 'projects'>('projects')
-  
+
   // Ref for the scrollable container
   const projectsScrollRef = useRef<HTMLDivElement>(null)
   // Ref for the sentinel element that triggers loading
@@ -677,7 +700,13 @@ function MobileProjectSelectorContent({
   // Only observe when projects tab is active
   useEffect(() => {
     const sentinel = sentinelRef.current
-    if (!sentinel || !hasNextPage || isFetchingNextPage || activeTab !== 'projects') return
+    if (
+      !sentinel ||
+      !hasNextPage ||
+      isFetchingNextPage ||
+      activeTab !== 'projects'
+    )
+      return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -700,7 +729,7 @@ function MobileProjectSelectorContent({
       observer.disconnect()
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, activeTab])
-  
+
   if (!selectedTeam || !selectedProject) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -842,7 +871,7 @@ function MobileProjectSelectorContent({
           </div>
 
           {/* Projects List */}
-          <div 
+          <div
             ref={projectsScrollRef}
             className="min-h-[280px] flex-1 overflow-y-auto p-2"
           >
@@ -870,7 +899,8 @@ function MobileProjectSelectorContent({
                           selectedProject?.$id === project.$id
                             ? 'bg-accent'
                             : 'hover:bg-accent/50',
-                          isCurrentProject && 'bg-primary/10 hover:bg-primary/20',
+                          isCurrentProject &&
+                            'bg-primary/10 hover:bg-primary/20',
                         )}
                       >
                         <InitialsAvatar name={project.name} size="sm" />
@@ -889,9 +919,7 @@ function MobileProjectSelectorContent({
                     )
                   })}
                   {/* Sentinel element for infinite scroll */}
-                  {hasNextPage && (
-                    <div ref={sentinelRef} className="h-1" />
-                  )}
+                  {hasNextPage && <div ref={sentinelRef} className="h-1" />}
                   {/* Loading indicator when fetching next page */}
                   {isFetchingNextPage && (
                     <div className="px-3 py-3 text-center text-[12px] text-muted-foreground">
@@ -905,7 +933,7 @@ function MobileProjectSelectorContent({
 
           {/* Create Project */}
           <div className="border-t border-border p-2">
-            <button 
+            <button
               onClick={onCreateProject}
               className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >

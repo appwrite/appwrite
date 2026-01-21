@@ -42,10 +42,13 @@ function AcceptInvitePage() {
     if (!isLoading && !isAuthenticated) {
       // Get raw query string to preserve all parameters
       // Always use '/join' as the pathname since we're on the join page
-      const rawSearch = typeof window !== 'undefined' ? window.location.search : ''
-      const searchStr = rawSearch.startsWith('?') ? rawSearch.slice(1) : rawSearch
+      const rawSearch =
+        typeof window !== 'undefined' ? window.location.search : ''
+      const searchStr = rawSearch.startsWith('?')
+        ? rawSearch.slice(1)
+        : rawSearch
       const redirectUrl = `/join${searchStr ? `?${searchStr}` : ''}`
-      
+
       // Only redirect if we have a valid relative URL
       if (redirectUrl.startsWith('/') && !redirectUrl.includes('://')) {
         navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
@@ -81,7 +84,8 @@ function AcceptInviteContent() {
   const [teamName, setTeamName] = useState<string | null>(null)
 
   // Check if we have all required parameters
-  const hasAllParams = search.teamId && search.membershipId && search.userId && search.secret
+  const hasAllParams =
+    search.teamId && search.membershipId && search.userId && search.secret
 
   // Verify the invitation and get team name (client-side)
   useEffect(() => {
@@ -93,7 +97,8 @@ function AcceptInviteContent() {
             .listMemberships(search.teamId!, [])
             .then((membershipsResponse) => {
               const matchingMembership = membershipsResponse.memberships?.find(
-                (m: any) => m.$id === search.membershipId && m.userId === search.userId
+                (m: any) =>
+                  m.$id === search.membershipId && m.userId === search.userId,
               )
               if (matchingMembership) {
                 setTeamName(team.name || null)
@@ -126,7 +131,10 @@ function AcceptInviteContent() {
       // Redirect to the organization page after a short delay
       setTimeout(() => {
         if (search.teamId) {
-          navigate({ to: '/organizations/$orgId', params: { orgId: search.teamId } })
+          navigate({
+            to: '/organizations/$orgId',
+            params: { orgId: search.teamId },
+          })
         } else {
           navigate({ to: '/' })
         }
@@ -173,9 +181,7 @@ function AcceptInviteContent() {
                     <h1 className="text-2xl font-semibold tracking-tight">
                       Unable to accept invitation
                     </h1>
-                    <p className="text-sm text-muted-foreground">
-                      {error}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{error}</p>
                   </div>
                   <Button
                     onClick={() => navigate({ to: '/sign-in' })}
@@ -195,7 +201,8 @@ function AcceptInviteContent() {
                       Invalid invitation link
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                      This invitation link is missing required parameters. Please use the link from your invitation email.
+                      This invitation link is missing required parameters.
+                      Please use the link from your invitation email.
                     </p>
                   </div>
                   <Button
@@ -214,11 +221,16 @@ function AcceptInviteContent() {
                     </h1>
                     {teamName ? (
                       <p className="text-sm text-muted-foreground">
-                        You've been invited to join <span className="font-medium text-foreground">{teamName}</span>. Accept the invitation to get started.
+                        You've been invited to join{' '}
+                        <span className="font-medium text-foreground">
+                          {teamName}
+                        </span>
+                        . Accept the invitation to get started.
                       </p>
                     ) : (
                       <p className="text-sm text-muted-foreground">
-                        You've been invited to join an organization. Accept the invitation to get started.
+                        You've been invited to join an organization. Accept the
+                        invitation to get started.
                       </p>
                     )}
                   </div>
@@ -255,11 +267,17 @@ function AcceptInviteContent() {
         </Card>
         <p className="mt-6 text-center text-xs text-muted-foreground">
           By accepting this invitation, you agree to our{' '}
-          <a href="#" className="underline underline-offset-4 hover:text-primary">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Terms of Service
           </a>{' '}
           and{' '}
-          <a href="#" className="underline underline-offset-4 hover:text-primary">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Privacy Policy
           </a>
           .

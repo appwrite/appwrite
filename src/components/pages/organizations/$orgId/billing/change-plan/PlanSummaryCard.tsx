@@ -49,7 +49,7 @@ export function PlanSummaryCard({
   // Get additional charges from estimation
   const additionalCharges = useMemo(() => {
     if (!estimation || !estimation.lineItems) return []
-    
+
     // Filter out the base plan charge and get additional charges
     return estimation.lineItems.filter((item: any) => {
       // Exclude the base plan charge
@@ -75,7 +75,9 @@ export function PlanSummaryCard({
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground">Loading summary...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading summary...
+          </p>
         </div>
       </div>
     )
@@ -85,7 +87,9 @@ export function PlanSummaryCard({
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground">Select a plan to see summary</p>
+          <p className="text-[13px] text-muted-foreground">
+            Select a plan to see summary
+          </p>
         </div>
       </div>
     )
@@ -97,9 +101,7 @@ export function PlanSummaryCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Summary
-        </h3>
+        <h3 className="text-[15px] font-semibold text-foreground">Summary</h3>
       </div>
 
       <div className="border-t border-border" />
@@ -135,7 +137,9 @@ export function PlanSummaryCard({
         {/* Total Due */}
         <div className="pt-2 border-t border-border">
           <div className="flex items-center justify-between">
-            <span className="text-[13px] font-semibold text-foreground">Total due</span>
+            <span className="text-[13px] font-semibold text-foreground">
+              Total due
+            </span>
             <span className="text-[15px] font-semibold text-foreground">
               {formatCurrency(totalDue, currency)}
             </span>
@@ -145,8 +149,15 @@ export function PlanSummaryCard({
         {/* Billing Statement */}
         <div className="pt-2">
           <p className="text-[13px] text-muted-foreground">
-            You'll pay <span className="font-semibold text-foreground">{formatCurrency(totalDue, currency)}</span> now. Then you'll be charged{' '}
-            <span className="font-semibold text-foreground">{formatCurrency(totalDue, currency)}</span> every {billingCycleDays} days.
+            You'll pay{' '}
+            <span className="font-semibold text-foreground">
+              {formatCurrency(totalDue, currency)}
+            </span>{' '}
+            now. Then you'll be charged{' '}
+            <span className="font-semibold text-foreground">
+              {formatCurrency(totalDue, currency)}
+            </span>{' '}
+            every {billingCycleDays} days.
           </p>
         </div>
 
@@ -154,19 +165,26 @@ export function PlanSummaryCard({
         <div className="pt-4 border-t border-border">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Label htmlFor="budget-cap" className="text-[13px] font-medium cursor-pointer">
+              <Label
+                htmlFor="budget-cap"
+                className="text-[13px] font-medium cursor-pointer"
+              >
                 Enable budget cap
               </Label>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button type="button" className="text-muted-foreground hover:text-foreground">
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-foreground"
+                    >
                       <Info className="h-3.5 w-3.5" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
                     <p className="text-[12px]">
-                      Enable budget cap to prevent unexpected charges from additional usage beyond your plan limits.
+                      Enable budget cap to prevent unexpected charges from
+                      additional usage beyond your plan limits.
                     </p>
                   </TooltipContent>
                 </Tooltip>

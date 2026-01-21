@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Migrations
- * 
+ *
  * Handles migration fetching and API key creation for migrations.
  */
 
@@ -15,12 +15,15 @@ import { DEFAULT_STALE_TIME } from './constants'
 
 /**
  * Query function to fetch migrations for a project
- * 
+ *
  * @param projectId - The project ID
  * @param region - The project region
  * @returns Migrations list response from the API
  */
-export async function fetchProjectMigrations(projectId: string, region?: string) {
+export async function fetchProjectMigrations(
+  projectId: string,
+  region?: string,
+) {
   if (!projectId) {
     return { migrations: [], total: 0 }
   }
@@ -47,7 +50,7 @@ export async function fetchProjectMigrations(projectId: string, region?: string)
 
 /**
  * Hook to fetch migrations for a project
- * 
+ *
  * @param projectId - The project ID
  * @param region - The project region
  * @returns Migrations list with loading state
@@ -74,7 +77,7 @@ export function useProjectMigrations(
 
 /**
  * Hook to get a single migration
- * 
+ *
  * @param projectId - The project ID
  * @param region - The project region
  * @param migrationId - The migration ID
@@ -110,7 +113,7 @@ export function useProjectMigration(
 
 /**
  * Hook to create an API key for migration
- * 
+ *
  * @param projectId - The project ID
  */
 export function useCreateMigrationKey(projectId: string | null | undefined) {
@@ -146,4 +149,3 @@ export function useCreateMigrationKey(projectId: string | null | undefined) {
     },
   })
 }
-

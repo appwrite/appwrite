@@ -65,7 +65,13 @@ interface FunctionVariablesCardProps {
 }
 
 // Copyable text component (for both keys and values)
-function CopyableText({ value, hideValue = false }: { value: string; hideValue?: boolean }) {
+function CopyableText({
+  value,
+  hideValue = false,
+}: {
+  value: string
+  hideValue?: boolean
+}) {
   const [copied, setCopied] = useState(false)
   const [showValue, setShowValue] = useState(false)
 
@@ -102,11 +108,7 @@ function CopyableText({ value, hideValue = false }: { value: string; hideValue?:
             )}
           </button>
         )}
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="cursor-pointer"
-        >
+        <button type="button" onClick={handleCopy} className="cursor-pointer">
           {copied ? (
             <Check className="h-3.5 w-3.5 text-emerald-500" />
           ) : (
@@ -125,7 +127,12 @@ export function FunctionVariablesCard({
   const [page, setPage] = useState(0)
   const limit = SMALL_PAGE_SIZE
 
-  const { variables, total, isLoading } = useFunctionVariables(projectId, functionId, page, limit)
+  const { variables, total, isLoading } = useFunctionVariables(
+    projectId,
+    functionId,
+    page,
+    limit,
+  )
 
   const createMutation = useCreateFunctionVariable(projectId, functionId)
   const updateMutation = useUpdateFunctionVariable(projectId, functionId)
@@ -141,9 +148,9 @@ export function FunctionVariablesCard({
   const [selectedVar, setSelectedVar] = useState<any>(null)
 
   // Create form state
-  const [createPairs, setCreatePairs] = useState<Array<{ key: string; value: string }>>([
-    { key: '', value: '' },
-  ])
+  const [createPairs, setCreatePairs] = useState<
+    Array<{ key: string; value: string }>
+  >([{ key: '', value: '' }])
   const [createSecret, setCreateSecret] = useState(false)
 
   // Update form state
@@ -247,7 +254,9 @@ export function FunctionVariablesCard({
         return
       }
       if (pair.value.length > 8192) {
-        toast.error(`Variable ${pair.key} is longer than 8192 allowed characters`)
+        toast.error(
+          `Variable ${pair.key} is longer than 8192 allowed characters`,
+        )
         return
       }
     }
@@ -357,7 +366,9 @@ export function FunctionVariablesCard({
       // Validate values
       for (const [key, value] of Object.entries(parsed)) {
         if (value.length > 8192) {
-          setImportError(`Variable ${key} is longer than 8192 allowed characters`)
+          setImportError(
+            `Variable ${key} is longer than 8192 allowed characters`,
+          )
           return
         }
       }
@@ -416,7 +427,9 @@ export function FunctionVariablesCard({
       // Validate values
       for (const [key, value] of Object.entries(parsed)) {
         if (value.length > 8192) {
-          setEditorError(`Variable ${key} is longer than 8192 allowed characters`)
+          setEditorError(
+            `Variable ${key} is longer than 8192 allowed characters`,
+          )
           return
         }
       }
@@ -463,7 +476,11 @@ export function FunctionVariablesCard({
         }
       }
 
-      await Promise.all([...updatePromises, ...deletePromises, ...createPromises])
+      await Promise.all([
+        ...updatePromises,
+        ...deletePromises,
+        ...createPromises,
+      ])
       toast.success('Variables have been updated.')
       setShowEditorModal(false)
       setEditorContent('')
@@ -591,7 +608,9 @@ export function FunctionVariablesCard({
     <>
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Variables</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Variables
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 @container">
@@ -599,7 +618,8 @@ export function FunctionVariablesCard({
             {/* Left side - Description */}
             <div className="@[600px]:w-64 shrink-0">
               <p className="text-[13px] text-muted-foreground">
-                Set the environment variables or secret keys that will be passed to this function.
+                Set the environment variables or secret keys that will be passed
+                to this function.
               </p>
             </div>
 
@@ -658,8 +678,12 @@ export function FunctionVariablesCard({
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="min-w-[200px] max-w-[400px]">Key</TableHead>
-                          <TableHead className="min-w-[200px] max-w-[400px]">Value</TableHead>
+                          <TableHead className="min-w-[200px] max-w-[400px]">
+                            Key
+                          </TableHead>
+                          <TableHead className="min-w-[200px] max-w-[400px]">
+                            Value
+                          </TableHead>
                           <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -671,11 +695,17 @@ export function FunctionVariablesCard({
                             </TableCell>
                             <TableCell>
                               {variable.secret ? (
-                                <Badge variant="secondary" className="text-[12px]">
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[12px]"
+                                >
                                   Secret
                                 </Badge>
                               ) : (
-                                <CopyableText value={variable.value || ''} hideValue={true} />
+                                <CopyableText
+                                  value={variable.value || ''}
+                                  hideValue={true}
+                                />
                               )}
                             </TableCell>
                             <TableCell>
@@ -753,16 +783,22 @@ export function FunctionVariablesCard({
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Create variable</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Add one or more environment variables. You can add multiple variables at once.
+              Add one or more environment variables. You can add multiple
+              variables at once.
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
           <div className="px-6 pb-4 pt-0 max-h-[60vh] overflow-y-auto">
             <div className="space-y-4">
               {createPairs.map((pair, index) => (
-                <div key={index} className="space-y-3 p-4 border border-border rounded-lg">
+                <div
+                  key={index}
+                  className="space-y-3 p-4 border border-border rounded-lg"
+                >
                   <div className="flex items-center justify-between">
-                    <Label className="text-[13px] font-medium">Variable {index + 1}</Label>
+                    <Label className="text-[13px] font-medium">
+                      Variable {index + 1}
+                    </Label>
                     {createPairs.length > 1 && (
                       <Button
                         type="button"
@@ -770,9 +806,13 @@ export function FunctionVariablesCard({
                         size="sm"
                         className="h-7 w-7 p-0"
                         onClick={() => {
-                          setCreatePairs(createPairs.filter((_, i) => i !== index))
+                          setCreatePairs(
+                            createPairs.filter((_, i) => i !== index),
+                          )
                         }}
-                        disabled={createPairs.length === 1 && !pair.key && !pair.value}
+                        disabled={
+                          createPairs.length === 1 && !pair.key && !pair.value
+                        }
                       >
                         <XCircle className="h-4 w-4" />
                       </Button>
@@ -834,14 +874,20 @@ export function FunctionVariablesCard({
                 <Checkbox
                   id="create-secret"
                   checked={createSecret}
-                  onCheckedChange={(checked) => setCreateSecret(checked === true)}
+                  onCheckedChange={(checked) =>
+                    setCreateSecret(checked === true)
+                  }
                 />
-                <Label htmlFor="create-secret" className="text-[13px] cursor-pointer">
+                <Label
+                  htmlFor="create-secret"
+                  className="text-[13px] cursor-pointer"
+                >
                   Secret
                 </Label>
               </div>
               <p className="text-[12px] text-muted-foreground -mt-2">
-                If selected, you and your team won't be able to read the values after creation.
+                If selected, you and your team won't be able to read the values
+                after creation.
               </p>
             </div>
           </div>
@@ -911,9 +957,14 @@ export function FunctionVariablesCard({
                 <Checkbox
                   id="update-secret"
                   checked={updateSecret}
-                  onCheckedChange={(checked) => setUpdateSecret(checked === true)}
+                  onCheckedChange={(checked) =>
+                    setUpdateSecret(checked === true)
+                  }
                 />
-                <Label htmlFor="update-secret" className="text-[13px] cursor-pointer">
+                <Label
+                  htmlFor="update-secret"
+                  className="text-[13px] cursor-pointer"
+                >
                   Secret
                 </Label>
               </div>
@@ -951,7 +1002,8 @@ export function FunctionVariablesCard({
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete variable</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this variable? This action cannot be undone.
+              Are you sure you want to delete this variable? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           {deleteError && (
@@ -990,7 +1042,8 @@ export function FunctionVariablesCard({
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Mark as secret</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Once marked as secret, you and your team won't be able to read this variable's value. This action cannot be undone.
+              Once marked as secret, you and your team won't be able to read
+              this variable's value. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -1022,7 +1075,8 @@ export function FunctionVariablesCard({
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Import .env file</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Upload a .env file to import variables. Existing variables with the same key will be updated.
+              Upload a .env file to import variables. Existing variables with
+              the same key will be updated.
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -1049,9 +1103,14 @@ export function FunctionVariablesCard({
                 <Checkbox
                   id="import-secret"
                   checked={importSecret}
-                  onCheckedChange={(checked) => setImportSecret(checked === true)}
+                  onCheckedChange={(checked) =>
+                    setImportSecret(checked === true)
+                  }
                 />
-                <Label htmlFor="import-secret" className="text-[13px] cursor-pointer">
+                <Label
+                  htmlFor="import-secret"
+                  className="text-[13px] cursor-pointer"
+                >
                   Mark all as secret
                 </Label>
               </div>
@@ -1076,7 +1135,11 @@ export function FunctionVariablesCard({
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleImport}
-              disabled={!importFile || createMutation.isPending || updateMutation.isPending}
+              disabled={
+                !importFile ||
+                createMutation.isPending ||
+                updateMutation.isPending
+              }
             >
               Import
             </Button>
@@ -1096,9 +1159,12 @@ export function FunctionVariablesCard({
         onSave={handleEditorSave}
         onCopy={handleCopy}
         onDownload={handleDownload}
-        isSaving={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
+        isSaving={
+          createMutation.isPending ||
+          updateMutation.isPending ||
+          deleteMutation.isPending
+        }
       />
     </>
   )
 }
-

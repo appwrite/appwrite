@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Locale
- * 
+ *
  * Handles locale code, countries, and locale information fetching.
  */
 
@@ -14,7 +14,7 @@ import { LONG_STALE_TIME } from './constants'
 
 /**
  * Query function to fetch locale codes
- * 
+ *
  * Uses the console SDK locale service to get all available locale codes.
  * @returns Locale codes from the API
  */
@@ -25,7 +25,7 @@ export async function fetchLocaleCodes() {
 
 /**
  * Query function to fetch countries
- * 
+ *
  * Uses the console SDK locale service to get all available countries.
  * @returns Countries list from the API
  */
@@ -36,7 +36,7 @@ export async function fetchCountries() {
 
 /**
  * Query function to fetch user locale information
- * 
+ *
  * Uses the console SDK locale service to get user's locale information.
  * @returns Locale information from the API
  */
@@ -51,7 +51,7 @@ export async function fetchLocale() {
 
 /**
  * Hook to fetch locale codes
- * 
+ *
  * Uses the console SDK to fetch all available locale codes.
  */
 export function useLocaleCodes() {
@@ -64,7 +64,7 @@ export function useLocaleCodes() {
 
 /**
  * Hook to fetch countries
- * 
+ *
  * Uses the console SDK to fetch all available countries.
  */
 export function useCountries() {
@@ -77,7 +77,7 @@ export function useCountries() {
 
 /**
  * Hook to fetch user locale information
- * 
+ *
  * Uses the console SDK to fetch user's locale information.
  */
 export function useLocale() {
@@ -87,4 +87,3 @@ export function useLocale() {
     staleTime: LONG_STALE_TIME,
   })
 }
-

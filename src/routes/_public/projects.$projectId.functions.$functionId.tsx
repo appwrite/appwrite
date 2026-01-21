@@ -2,7 +2,9 @@ import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { FunctionLayout } from '@/components/pages/projects/$projectId/functions/FunctionLayout'
 import { fetchProjectFunction } from '@/lib/react-query/hooks'
 
-export const Route = createFileRoute('/_public/projects/$projectId/functions/$functionId')({
+export const Route = createFileRoute(
+  '/_public/projects/$projectId/functions/$functionId',
+)({
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -26,4 +28,3 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/$fu
   },
   component: FunctionLayout,
 })
-

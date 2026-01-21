@@ -30,4 +30,3 @@ function BrowserPage() {
   const { databaseId } = Route.useParams()
   return <DatabaseOverview databaseId={databaseId} activeTab="browser" />
 }
-

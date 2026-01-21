@@ -1,2 +1,1 @@
 export { AppwriteLogo } from './Logo'
-

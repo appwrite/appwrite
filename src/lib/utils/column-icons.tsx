@@ -15,7 +15,7 @@ import {
 
 /**
  * Get the appropriate icon component for a column type
- * 
+ *
  * @param type - The column type (e.g., 'string', 'integer', 'point', etc.)
  * @returns The Lucide icon component for that column type
  */
@@ -49,5 +49,3 @@ export function getColumnIcon(type: string): LucideIcon {
       return FileJson
   }
 }
-
-

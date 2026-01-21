@@ -2,7 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { FunctionsView } from '@/components/pages/projects/$projectId/functions/View'
 import { fetchFunctionTemplates } from '@/lib/react-query/hooks'
 
-export const Route = createFileRoute('/_public/projects/$projectId/functions/templates')({
+export const Route = createFileRoute(
+  '/_public/projects/$projectId/functions/templates',
+)({
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -22,7 +24,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/tem
       const page = 0
       const limit = 12
       const offset = page * limit // Calculate offset to match hook format
-      
+
       await queryClient.ensureQueryData({
         queryKey: [
           'function-templates',
@@ -34,7 +36,15 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/tem
           runtimesKey, // Serialized runtimes (null when no filters)
           useCasesKey, // Serialized useCases (null when no filters)
         ],
-        queryFn: () => fetchFunctionTemplates(projectId, undefined, undefined, limit, offset, true),
+        queryFn: () =>
+          fetchFunctionTemplates(
+            projectId,
+            undefined,
+            undefined,
+            limit,
+            offset,
+            true,
+          ),
         staleTime: 30 * 1000, // 30 seconds - matches component behavior
       })
     }
@@ -46,4 +56,3 @@ function FunctionsTemplatesPage() {
   const { projectId } = Route.useParams()
   return <FunctionsView key={`functions-${projectId}-templates`} />
 }
-

@@ -8,5 +8,3 @@ export const Route = createFileRoute('/_public/projects/$projectId/settings/')({
 function SettingsOverviewPage() {
   return <ProjectSettingsView />
 }
-
-

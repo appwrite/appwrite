@@ -30,10 +30,10 @@ interface UpgradeCurtainProps {
 
 /**
  * UpgradeCurtain Component
- * 
+ *
  * A generic component that creates a "curtain" overlay above content
  * when a feature is locked, with a CTA to upgrade.
- * 
+ *
  * Usage:
  * ```tsx
  * <UpgradeCurtain isLocked={!plan.supportsFeature} orgId={orgId}>
@@ -59,7 +59,7 @@ export function UpgradeCurtain({
   const getOrgIdFromUrl = () => {
     if (orgId) return orgId
     const pathParts = window.location.pathname.split('/').filter(Boolean)
-    const orgIndex = pathParts.findIndex(part => part === 'organizations')
+    const orgIndex = pathParts.findIndex((part) => part === 'organizations')
     if (orgIndex >= 0 && pathParts[orgIndex + 1]) {
       return pathParts[orgIndex + 1]
     }
@@ -82,10 +82,12 @@ export function UpgradeCurtain({
   return (
     <div className={cn('relative @container', className)}>
       {/* Content with blur and overlay */}
-      <div className={cn(
-        'transition-opacity',
-        isLocked && 'opacity-40 pointer-events-none select-none blur-sm'
-      )}>
+      <div
+        className={cn(
+          'transition-opacity',
+          isLocked && 'opacity-40 pointer-events-none select-none blur-sm',
+        )}
+      >
         {children}
       </div>
 
@@ -99,7 +101,7 @@ export function UpgradeCurtain({
                 <Lock className="h-3 w-3 @[250px]:h-3.5 @[250px]:w-3.5 @[300px]:h-4 @[300px]:w-4 @[400px]:h-5 @[400px]:w-5 @[500px]:h-6 @[500px]:w-6 text-muted-foreground" />
               </div>
             </div>
-            
+
             {/* Content */}
             <div className="flex-1 text-center @[400px]:text-left space-y-0.5 @[200px]:space-y-1 @[300px]:space-y-1.5 @[400px]:space-y-2 min-w-0">
               <h4 className="text-[12px] @[200px]:text-[13px] @[250px]:text-[14px] @[300px]:text-[15px] font-semibold text-foreground leading-tight">
@@ -109,7 +111,7 @@ export function UpgradeCurtain({
                 {message}
               </p>
             </div>
-            
+
             {/* Button */}
             <div className="flex shrink-0 w-full @[400px]:w-auto">
               <Button
@@ -126,4 +128,3 @@ export function UpgradeCurtain({
     </div>
   )
 }
-

@@ -34,7 +34,9 @@ export function RetryDomainDialog({
     try {
       const updatedRule = await verifyDomainMutation.mutateAsync(rule.$id)
       if (updatedRule.status === 'created') {
-        toast.error('Domain verification failed. Please check your domain settings or try again later.')
+        toast.error(
+          'Domain verification failed. Please check your domain settings or try again later.',
+        )
       } else if (updatedRule.status === 'verified') {
         toast.success(`${rule.domain} has been verified`)
         onRetrySuccess()
@@ -57,11 +59,11 @@ export function RetryDomainDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0">
           <VerifyDomainContent rule={rule} />
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
@@ -83,5 +85,3 @@ export function RetryDomainDialog({
     </Dialog>
   )
 }
-
-

@@ -6,10 +6,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { formatDateTime } from '@/lib/date-utils'
-import {
-  useBackupPolicies,
-  useBackupArchives,
-} from '@/lib/react-query/hooks'
+import { useBackupPolicies, useBackupArchives } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -83,19 +80,23 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const [backupsPage, setBackupsPage] = useState(1)
   const [backupsPageSize, setBackupsPageSize] = useState(10)
   const [createPolicyDialogOpen, setCreatePolicyDialogOpen] = useState(false)
-  const [createManualBackupDialogOpen, setCreateManualBackupDialogOpen] = useState(false)
+  const [createManualBackupDialogOpen, setCreateManualBackupDialogOpen] =
+    useState(false)
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false)
   const [deletePolicyDialogOpen, setDeletePolicyDialogOpen] = useState(false)
   const [deleteBackupDialogOpen, setDeleteBackupDialogOpen] = useState(false)
-  const [selectedPolicy, setSelectedPolicy] = useState<Models.BackupPolicy | null>(null)
-  const [selectedBackup, setSelectedBackup] = useState<Models.BackupArchive | null>(null)
+  const [selectedPolicy, setSelectedPolicy] =
+    useState<Models.BackupPolicy | null>(null)
+  const [selectedBackup, setSelectedBackup] =
+    useState<Models.BackupArchive | null>(null)
   const [selectedBackups, setSelectedBackups] = useState<Set<string>>(new Set())
 
   // Get project to get teamId for organization plan
   const { project } = useProject(projectId)
-  
+
   // Get organization plan to check backups availability
-  const { plan: organizationPlan, isLoading: planLoading } = useOrganizationPlan(project?.teamId)
+  const { plan: organizationPlan, isLoading: planLoading } =
+    useOrganizationPlan(project?.teamId)
   const backupsEnabled = organizationPlan?.backupsEnabled ?? false
   const backupPoliciesLimit = organizationPlan?.backupPolicies ?? 0
 
@@ -118,8 +119,10 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const archivesTotal = archivesData?.total || 0
 
   // Only show loading if we don't have data yet (account for prefetched data from route loader)
-  const isPoliciesActuallyLoading = policiesLoading && policies.length === 0 && !policiesData
-  const isArchivesActuallyLoading = archivesLoading && archives.length === 0 && !archivesData
+  const isPoliciesActuallyLoading =
+    policiesLoading && policies.length === 0 && !policiesData
+  const isArchivesActuallyLoading =
+    archivesLoading && archives.length === 0 && !archivesData
 
   // Real-time subscription
   useEffect(() => {
@@ -129,24 +132,36 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
     const setupSubscription = async () => {
       try {
-        subscription = await sdk.forProject(projectId).realtime.subscribe(
-          [`projects.${projectId}`],
-          (response) => {
+        subscription = await sdk
+          .forProject(projectId)
+          .realtime.subscribe([`projects.${projectId}`], (response) => {
             if (
               response.events?.some(
-                (event) => event.includes('archives.') || event.includes('policies.'),
+                (event) =>
+                  event.includes('archives.') || event.includes('policies.'),
               )
             ) {
               // Invalidate both policies and archives queries for this database
-              queryClient.invalidateQueries({ 
-                queryKey: ['backup-policies', 'project', projectId, 'database', databaseId] 
+              queryClient.invalidateQueries({
+                queryKey: [
+                  'backup-policies',
+                  'project',
+                  projectId,
+                  'database',
+                  databaseId,
+                ],
               })
-              queryClient.invalidateQueries({ 
-                queryKey: ['backup-archives', 'project', projectId, 'database', databaseId] 
+              queryClient.invalidateQueries({
+                queryKey: [
+                  'backup-archives',
+                  'project',
+                  projectId,
+                  'database',
+                  databaseId,
+                ],
               })
             }
-          },
-        )
+          })
       } catch (error) {
         // Silently ignore realtime errors
         console.error('Failed to subscribe to backups realtime:', error)
@@ -166,22 +181,23 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
   // Check if backups are disabled
   // Wait for plan to load before determining if backups are disabled
-  const isBackupsDisabled = 
-    planLoading 
-      ? false // Don't show lock screen while loading
-      : !backupsEnabled
+  const isBackupsDisabled = planLoading
+    ? false // Don't show lock screen while loading
+    : !backupsEnabled
 
   // Policy mutations
   const createPolicyMutation = useMutation({
-    mutationFn: async (policies: Array<{
-      policyId: string
-      services: string[]
-      retention: number
-      schedule: string
-      name?: string
-      resourceId?: string
-      enabled?: boolean
-    }>) => {
+    mutationFn: async (
+      policies: Array<{
+        policyId: string
+        services: string[]
+        retention: number
+        schedule: string
+        name?: string
+        resourceId?: string
+        enabled?: boolean
+      }>,
+    ) => {
       const projectSdk = sdk.forProject(projectId)
       return Promise.all(
         policies.map((policy) =>
@@ -208,8 +224,14 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
         toast.success('Backup policies have been created')
       }
       // Invalidate policies query for this specific database
-      queryClient.invalidateQueries({ 
-        queryKey: ['backup-policies', 'project', projectId, 'database', databaseId] 
+      queryClient.invalidateQueries({
+        queryKey: [
+          'backup-policies',
+          'project',
+          projectId,
+          'database',
+          databaseId,
+        ],
       })
       setCreatePolicyDialogOpen(false)
     },
@@ -226,8 +248,14 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     onSuccess: () => {
       toast.success('Backup policy has been deleted')
       // Invalidate policies query for this specific database
-      queryClient.invalidateQueries({ 
-        queryKey: ['backup-policies', 'project', projectId, 'database', databaseId] 
+      queryClient.invalidateQueries({
+        queryKey: [
+          'backup-policies',
+          'project',
+          projectId,
+          'database',
+          databaseId,
+        ],
       })
       setDeletePolicyDialogOpen(false)
       setSelectedPolicy(null)
@@ -249,8 +277,14 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     onSuccess: () => {
       toast.success('Database backup has started')
       // Invalidate archives query for this specific database (all pages)
-      queryClient.invalidateQueries({ 
-        queryKey: ['backup-archives', 'project', projectId, 'database', databaseId] 
+      queryClient.invalidateQueries({
+        queryKey: [
+          'backup-archives',
+          'project',
+          projectId,
+          'database',
+          databaseId,
+        ],
       })
       setCreateManualBackupDialogOpen(false)
     },
@@ -267,8 +301,14 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     onSuccess: () => {
       toast.success('1 backup deleted')
       // Invalidate archives query for this specific database (all pages)
-      queryClient.invalidateQueries({ 
-        queryKey: ['backup-archives', 'project', projectId, 'database', databaseId] 
+      queryClient.invalidateQueries({
+        queryKey: [
+          'backup-archives',
+          'project',
+          projectId,
+          'database',
+          databaseId,
+        ],
       })
       setDeleteBackupDialogOpen(false)
       setSelectedBackup(null)
@@ -291,8 +331,14 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     onSuccess: () => {
       toast.success('Database restore initiated')
       // Invalidate archives query to refresh backup status
-      queryClient.invalidateQueries({ 
-        queryKey: ['backup-archives', 'project', projectId, 'database', databaseId] 
+      queryClient.invalidateQueries({
+        queryKey: [
+          'backup-archives',
+          'project',
+          projectId,
+          'database',
+          databaseId,
+        ],
       })
       setRestoreDialogOpen(false)
       setSelectedBackup(null)
@@ -314,16 +360,39 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
   // Get backup status badge
   const getBackupStatus = (status: string) => {
-    const statusMap: Record<string, { label: string; icon: typeof Clock; badgeVariant: 'completed' | 'failed' | 'pending' | 'processing' }> = {
+    const statusMap: Record<
+      string,
+      {
+        label: string
+        icon: typeof Clock
+        badgeVariant: 'completed' | 'failed' | 'pending' | 'processing'
+      }
+    > = {
       pending: { label: 'Pending', icon: Clock, badgeVariant: 'pending' },
-      completed: { label: 'Complete', icon: CheckCircle2, badgeVariant: 'completed' },
-      uploading: { label: 'Processing', icon: Loader2, badgeVariant: 'processing' },
-      downloading: { label: 'Processing', icon: Loader2, badgeVariant: 'processing' },
+      completed: {
+        label: 'Complete',
+        icon: CheckCircle2,
+        badgeVariant: 'completed',
+      },
+      uploading: {
+        label: 'Processing',
+        icon: Loader2,
+        badgeVariant: 'processing',
+      },
+      downloading: {
+        label: 'Processing',
+        icon: Loader2,
+        badgeVariant: 'processing',
+      },
       failed: { label: 'Failed', icon: AlertCircle, badgeVariant: 'failed' },
     }
-    
-    const statusInfo = statusMap[status] || { label: 'Waiting', icon: Clock, badgeVariant: 'pending' as const }
-    
+
+    const statusInfo = statusMap[status] || {
+      label: 'Waiting',
+      icon: Clock,
+      badgeVariant: 'pending' as const,
+    }
+
     return {
       label: statusInfo.label,
       badgeVariant: statusInfo.badgeVariant,
@@ -337,7 +406,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     // In production, use a proper cron parser library
     const now = new Date()
     const nextDate = new Date(now)
-    
+
     if (schedule === '0 * * * *') {
       // Hourly - next hour at minute 0
       nextDate.setHours(nextDate.getHours() + 1, 0, 0, 0)
@@ -349,7 +418,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       // For other schedules, return a placeholder
       return 'Calculating...'
     }
-    
+
     return formatDateTime(nextDate)
   }
 
@@ -374,10 +443,13 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
             <div className="px-6 py-4">
               <div className="flex items-center gap-2">
                 <Lock className="h-5 w-5 text-muted-foreground" />
-                <h3 className="text-[15px] font-semibold text-foreground">Backups</h3>
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Backups
+                </h3>
               </div>
               <p className="text-[13px] text-muted-foreground mt-2">
-                Automated backup policies and manual backups to ensure your data stays safe.
+                Automated backup policies and manual backups to ensure your data
+                stays safe.
               </p>
             </div>
             <div className="border-t border-border" />
@@ -387,7 +459,8 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                 Ensure your data stays safe
               </p>
               <p className="text-[13px] text-muted-foreground text-center max-w-md">
-                Create backup policies to automate regular and secure data protection for your databases.
+                Create backup policies to automate regular and secure data
+                protection for your databases.
               </p>
             </div>
           </div>
@@ -403,14 +476,22 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
         <div className="lg:col-span-1">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h3 className="text-[15px] font-semibold text-foreground">Policies</h3>
-              {policies.length > 0 && backupPoliciesLimit > 0 && backupPoliciesLimit < 10000 && (
-                <Badge variant="secondary" className="text-[12px] font-normal">
-                  {policies.length}/{backupPoliciesLimit}
-                </Badge>
-              )}
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Policies
+              </h3>
+              {policies.length > 0 &&
+                backupPoliciesLimit > 0 &&
+                backupPoliciesLimit < 10000 && (
+                  <Badge
+                    variant="secondary"
+                    className="text-[12px] font-normal"
+                  >
+                    {policies.length}/{backupPoliciesLimit}
+                  </Badge>
+                )}
             </div>
-            {backupPoliciesLimit > 0 && policies.length >= backupPoliciesLimit ? (
+            {backupPoliciesLimit > 0 &&
+            policies.length >= backupPoliciesLimit ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
@@ -435,7 +516,10 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
             ) : (
               <Button
                 onClick={() => setCreatePolicyDialogOpen(true)}
-                disabled={backupPoliciesLimit > 0 && policies.length >= backupPoliciesLimit}
+                disabled={
+                  backupPoliciesLimit > 0 &&
+                  policies.length >= backupPoliciesLimit
+                }
                 size="sm"
                 className="h-8 gap-1.5 text-[12px] font-medium text-white hover:opacity-90"
                 style={{ backgroundColor: '#f02e65' }}
@@ -457,9 +541,14 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   Ensure your data stays safe
                 </p>
                 <p className="text-[13px] text-muted-foreground mb-4">
-                  Create a backup policy to automate regular and secure data protection.
+                  Create a backup policy to automate regular and secure data
+                  protection.
                 </p>
-                <Button onClick={() => setCreatePolicyDialogOpen(true)} size="sm" className="h-9 text-[13px]">
+                <Button
+                  onClick={() => setCreatePolicyDialogOpen(true)}
+                  size="sm"
+                  className="h-9 text-[13px]"
+                >
                   <Plus className="mr-1.5 h-4 w-4" />
                   Create policy
                 </Button>
@@ -472,16 +561,16 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                     policy.schedule === '0 * * * *'
                       ? 'Runs hourly'
                       : policy.schedule.includes('* * *')
-                      ? 'Runs daily'
-                      : 'Runs on schedule'
+                        ? 'Runs daily'
+                        : 'Runs on schedule'
                   const retentionText =
                     policy.retention === 36500
                       ? 'Retained forever'
                       : policy.retention === 7
-                      ? 'Retained for 1 week'
-                      : policy.retention === 1
-                      ? 'Retained for 1 day'
-                      : `Retained for ${policy.retention} days`
+                        ? 'Retained for 1 week'
+                        : policy.retention === 1
+                          ? 'Retained for 1 day'
+                          : `Retained for ${policy.retention} days`
 
                   return (
                     <div
@@ -501,7 +590,11 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 shrink-0"
+                            >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -521,7 +614,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                       <div className="border-t border-border my-3" />
                       <div className="grid grid-cols-2 gap-4 text-[13px]">
                         <div>
-                          <div className="text-muted-foreground mb-1.5">Previous</div>
+                          <div className="text-muted-foreground mb-1.5">
+                            Previous
+                          </div>
                           <div className="flex items-center gap-1.5">
                             {previousBackup ? (
                               <>
@@ -531,14 +626,20 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                             ) : (
                               <>
                                 <div className="h-2 w-2 rounded-full bg-muted-foreground shrink-0" />
-                                <span className="text-foreground">No backups yet</span>
+                                <span className="text-foreground">
+                                  No backups yet
+                                </span>
                               </>
                             )}
                           </div>
                         </div>
                         <div>
-                          <div className="text-muted-foreground mb-1.5">Next</div>
-                          <div className="text-foreground">{getNextBackupDate(policy.schedule)}</div>
+                          <div className="text-muted-foreground mb-1.5">
+                            Next
+                          </div>
+                          <div className="text-foreground">
+                            {getNextBackupDate(policy.schedule)}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -575,7 +676,9 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
             ) : archives.length === 0 ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center min-h-[280px] flex flex-col items-center justify-center">
                 <Archive className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="text-[14px] font-medium text-foreground mb-1">No backups yet</p>
+                <p className="text-[14px] font-medium text-foreground mb-1">
+                  No backups yet
+                </p>
                 <p className="text-[13px] text-muted-foreground mb-4">
                   Create a manual backup or set up a policy to get started.
                 </p>
@@ -598,11 +701,15 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                           <Checkbox
                             checked={
                               archives.length > 0 &&
-                              archives.every((archive) => selectedBackups.has(archive.$id))
+                              archives.every((archive) =>
+                                selectedBackups.has(archive.$id),
+                              )
                             }
                             onCheckedChange={(checked) => {
                               if (checked) {
-                                setSelectedBackups(new Set(archives.map((a) => a.$id)))
+                                setSelectedBackups(
+                                  new Set(archives.map((a) => a.$id)),
+                                )
                               } else {
                                 setSelectedBackups(new Set())
                               }
@@ -622,13 +729,19 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                         const status = getBackupStatus(archive.status)
                         const StatusIcon = status.icon
                         // Handle null policyId for manual backups (API may return null even though type says string)
-                        const policyId = archive.policyId as string | null | undefined
+                        const policyId = archive.policyId as
+                          | string
+                          | null
+                          | undefined
                         const policy = policyId
                           ? policies.find((p) => p.$id === policyId)
                           : null
 
                         return (
-                          <TableRow key={archive.$id} className="hover:bg-muted/50">
+                          <TableRow
+                            key={archive.$id}
+                            className="hover:bg-muted/50"
+                          >
                             <TableCell>
                               <Checkbox
                                 checked={selectedBackups.has(archive.$id)}
@@ -645,7 +758,11 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                               />
                             </TableCell>
                             <TableCell>
-                              <CopyableId id={archive.$id} size="sm" maxWidth={180} />
+                              <CopyableId
+                                id={archive.$id}
+                                size="sm"
+                                maxWidth={180}
+                              />
                             </TableCell>
                             <TableCell>
                               <DateTooltip
@@ -659,23 +776,34 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                               </code>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={status.badgeVariant} className="gap-1.5 text-[11px] font-medium">
+                              <Badge
+                                variant={status.badgeVariant}
+                                className="gap-1.5 text-[11px] font-medium"
+                              >
                                 <StatusIcon className="h-3 w-3" />
                                 {status.label}
                               </Badge>
                             </TableCell>
                             <TableCell>
                               {policy ? (
-                                <span className="text-[12px] text-foreground">{policy.name || 'Unnamed Policy'}</span>
+                                <span className="text-[12px] text-foreground">
+                                  {policy.name || 'Unnamed Policy'}
+                                </span>
                               ) : (
-                                <span className="text-[12px] text-muted-foreground">Manual</span>
+                                <span className="text-[12px] text-muted-foreground">
+                                  Manual
+                                </span>
                               )}
                             </TableCell>
                             <TableCell className="text-right pr-4">
                               <div className="flex justify-end">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                    >
                                       <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
@@ -693,8 +821,12 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                     )}
                                     <DropdownMenuItem
                                       onClick={() => {
-                                        navigator.clipboard.writeText(archive.$id)
-                                        toast.success('Backup ID copied to clipboard')
+                                        navigator.clipboard.writeText(
+                                          archive.$id,
+                                        )
+                                        toast.success(
+                                          'Backup ID copied to clipboard',
+                                        )
                                       }}
                                     >
                                       <Copy className="mr-1.5 h-4 w-4" />
@@ -813,15 +945,17 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 interface CreatePolicyDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (policies: Array<{
-    policyId: string
-    services: string[]
-    retention: number
-    schedule: string
-    name?: string
-    resourceId?: string
-    enabled?: boolean
-  }>) => void
+  onSubmit: (
+    policies: Array<{
+      policyId: string
+      services: string[]
+      retention: number
+      schedule: string
+      name?: string
+      resourceId?: string
+      enabled?: boolean
+    }>,
+  ) => void
   isLoading: boolean
   databaseId: string
   existingPoliciesCount: number
@@ -838,16 +972,18 @@ function CreatePolicyDialog({
   backupPoliciesLimit,
 }: CreatePolicyDialogProps) {
   const [selectedPresets, setSelectedPresets] = useState<string[]>([])
-  const [customPolicies, setCustomPolicies] = useState<Array<{
-    frequency: 'hourly' | 'daily' | 'weekly' | 'monthly'
-    time: string
-    dayOfWeek?: number[]
-    dayOfMonth?: 'first' | 'middle' | 'end'
-    retention: number
-    retentionUnit: 'days' | 'weeks' | 'months' | 'years' | 'forever'
-    customRetention?: number
-    name: string
-  }>>([])
+  const [customPolicies, setCustomPolicies] = useState<
+    Array<{
+      frequency: 'hourly' | 'daily' | 'weekly' | 'monthly'
+      time: string
+      dayOfWeek?: number[]
+      dayOfMonth?: 'first' | 'middle' | 'end'
+      retention: number
+      retentionUnit: 'days' | 'weeks' | 'months' | 'years' | 'forever'
+      customRetention?: number
+      name: string
+    }>
+  >([])
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
@@ -920,7 +1056,12 @@ function CreatePolicyDialog({
         const dayOfWeek = custom.dayOfWeek?.[0] || 1
         schedule = `${minute || 0} ${hour || 2} * * ${dayOfWeek}`
       } else if (custom.frequency === 'monthly') {
-        const dayOfMonth = custom.dayOfMonth === 'first' ? 1 : custom.dayOfMonth === 'middle' ? 15 : 28
+        const dayOfMonth =
+          custom.dayOfMonth === 'first'
+            ? 1
+            : custom.dayOfMonth === 'middle'
+              ? 15
+              : 28
         schedule = `${minute || 0} ${hour || 2} ${dayOfMonth} * *`
       }
 
@@ -941,15 +1082,18 @@ function CreatePolicyDialog({
   }
 
   const totalPolicies = selectedPresets.length + customPolicies.length
-  const canCreateCustom = backupPoliciesLimit === 0 || existingPoliciesCount + totalPolicies < backupPoliciesLimit
+  const canCreateCustom =
+    backupPoliciesLimit === 0 ||
+    existingPoliciesCount + totalPolicies < backupPoliciesLimit
   // Pro plan (limit = 1) only supports daily preset, no custom policies
   // Plans with limit > 1 or limit === 0 (unlimited) support custom policies
-  const supportsCustomPolicies = backupPoliciesLimit === 0 || backupPoliciesLimit > 1
+  const supportsCustomPolicies =
+    backupPoliciesLimit === 0 || backupPoliciesLimit > 1
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-2xl p-0 max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="px-6 pt-6 text-left">
+        <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Create backup policy</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {supportsCustomPolicies
@@ -973,7 +1117,9 @@ function CreatePolicyDialog({
                       if (checked) {
                         setSelectedPresets([...selectedPresets, 'hourly'])
                       } else {
-                        setSelectedPresets(selectedPresets.filter((p) => p !== 'hourly'))
+                        setSelectedPresets(
+                          selectedPresets.filter((p) => p !== 'hourly'),
+                        )
                       }
                     }}
                   />
@@ -993,7 +1139,9 @@ function CreatePolicyDialog({
                     if (checked) {
                       setSelectedPresets([...selectedPresets, 'daily'])
                     } else {
-                      setSelectedPresets(selectedPresets.filter((p) => p !== 'daily'))
+                      setSelectedPresets(
+                        selectedPresets.filter((p) => p !== 'daily'),
+                      )
                     }
                   }}
                 />
@@ -1039,13 +1187,17 @@ function CreatePolicyDialog({
                 <Card key={index}>
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-[14px]">Custom Policy {index + 1}</CardTitle>
+                      <CardTitle className="text-[14px]">
+                        Custom Policy {index + 1}
+                      </CardTitle>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          setCustomPolicies(customPolicies.filter((_, i) => i !== index))
+                          setCustomPolicies(
+                            customPolicies.filter((_, i) => i !== index),
+                          )
                         }}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -1057,7 +1209,9 @@ function CreatePolicyDialog({
                       <Label className="text-[13px]">Frequency</Label>
                       <Select
                         value={policy.frequency}
-                        onValueChange={(value: 'hourly' | 'daily' | 'weekly' | 'monthly') => {
+                        onValueChange={(
+                          value: 'hourly' | 'daily' | 'weekly' | 'monthly',
+                        ) => {
                           const updated = [...customPolicies]
                           updated[index].frequency = value
                           setCustomPolicies(updated)
@@ -1122,7 +1276,9 @@ function CreatePolicyDialog({
                         <Label className="text-[13px]">Day of Month</Label>
                         <Select
                           value={policy.dayOfMonth || 'first'}
-                          onValueChange={(value: 'first' | 'middle' | 'end') => {
+                          onValueChange={(
+                            value: 'first' | 'middle' | 'end',
+                          ) => {
                             const updated = [...customPolicies]
                             updated[index].dayOfMonth = value
                             setCustomPolicies(updated)
@@ -1132,8 +1288,12 @@ function CreatePolicyDialog({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="first">First of month</SelectItem>
-                            <SelectItem value="middle">Middle (15th)</SelectItem>
+                            <SelectItem value="first">
+                              First of month
+                            </SelectItem>
+                            <SelectItem value="middle">
+                              Middle (15th)
+                            </SelectItem>
                             <SelectItem value="end">End (28th)</SelectItem>
                           </SelectContent>
                         </Select>
@@ -1144,7 +1304,14 @@ function CreatePolicyDialog({
                       <Label className="text-[13px]">Retention</Label>
                       <Select
                         value={policy.retentionUnit}
-                        onValueChange={(value: 'days' | 'weeks' | 'months' | 'years' | 'forever') => {
+                        onValueChange={(
+                          value:
+                            | 'days'
+                            | 'weeks'
+                            | 'months'
+                            | 'years'
+                            | 'forever',
+                        ) => {
                           const updated = [...customPolicies]
                           updated[index].retentionUnit = value
                           setCustomPolicies(updated)
@@ -1172,7 +1339,8 @@ function CreatePolicyDialog({
                           value={policy.customRetention || 1}
                           onChange={(e) => {
                             const updated = [...customPolicies]
-                            updated[index].customRetention = parseInt(e.target.value) || 1
+                            updated[index].customRetention =
+                              parseInt(e.target.value) || 1
                             setCustomPolicies(updated)
                           }}
                         />
@@ -1199,10 +1367,17 @@ function CreatePolicyDialog({
         </div>
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading}>
+          <Button
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isLoading || totalPolicies === 0}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isLoading || totalPolicies === 0}
+          >
             Create
           </Button>
         </div>
@@ -1231,8 +1406,8 @@ function CreateManualBackupDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Create manual backup</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Manual backups are <b>retained forever</b> unless manually deleted. Use for major data
-            changes or rollback safeguards.
+            Manual backups are <b>retained forever</b> unless manually deleted.
+            Use for major data changes or rollback safeguards.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -1247,7 +1422,11 @@ function CreateManualBackupDialog({
         </div>
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
           <Button onClick={onSubmit} disabled={isLoading}>
@@ -1327,7 +1506,8 @@ function RestoreBackupDialog({
 
   const isDisabled: boolean =
     restoreOption === 'new'
-      ? !newDatabaseName.trim() || Boolean(newDatabaseId && newDatabaseId === databaseId)
+      ? !newDatabaseName.trim() ||
+        Boolean(newDatabaseId && newDatabaseId === databaseId)
       : !confirmSameDbRestore
 
   return (
@@ -1359,24 +1539,33 @@ function RestoreBackupDialog({
               </div>
               <div>
                 <span className="text-muted-foreground">Size: </span>
-                <span className="text-foreground">{formatSize(backup.size)}</span>
+                <span className="text-foreground">
+                  {formatSize(backup.size)}
+                </span>
               </div>
               <div>
                 <span className="text-muted-foreground">Time ago: </span>
                 <span className="text-foreground">
-                  {formatDistanceToNow(new Date(backup.$createdAt), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(backup.$createdAt), {
+                    addSuffix: true,
+                  })}
                 </span>
               </div>
             </CardContent>
           </Card>
 
           {/* Restore Options */}
-          <RadioGroup value={restoreOption} onValueChange={(value) => setRestoreOption(value as 'new' | 'same')}>
+          <RadioGroup
+            value={restoreOption}
+            onValueChange={(value) => setRestoreOption(value as 'new' | 'same')}
+          >
             <div className="space-y-3">
               <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
                 <RadioGroupItem value="new" id="new" className="mt-1" />
                 <Label htmlFor="new" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-[13px] mb-1">Restore in new database</div>
+                  <div className="font-medium text-[13px] mb-1">
+                    Restore in new database
+                  </div>
                   <div className="text-[12px] text-muted-foreground">
                     Duplicate to a new database with a different name
                   </div>
@@ -1386,7 +1575,9 @@ function RestoreBackupDialog({
               <div className="flex items-start space-x-3 rounded-lg border border-border p-4">
                 <RadioGroupItem value="same" id="same" className="mt-1" />
                 <Label htmlFor="same" className="flex-1 cursor-pointer">
-                  <div className="font-medium text-[13px] mb-1">Restore in current database</div>
+                  <div className="font-medium text-[13px] mb-1">
+                    Restore in current database
+                  </div>
                   <div className="text-[12px] text-muted-foreground">
                     Overwrite current database with backup data
                   </div>
@@ -1433,9 +1624,14 @@ function RestoreBackupDialog({
               <Checkbox
                 id="confirm-same-db"
                 checked={confirmSameDbRestore}
-                onCheckedChange={(checked) => setConfirmSameDbRestore(checked === true)}
+                onCheckedChange={(checked) =>
+                  setConfirmSameDbRestore(checked === true)
+                }
               />
-              <Label htmlFor="confirm-same-db" className="flex-1 cursor-pointer text-[13px]">
+              <Label
+                htmlFor="confirm-same-db"
+                className="flex-1 cursor-pointer text-[13px]"
+              >
                 I understand this will overwrite the current database
               </Label>
             </div>
@@ -1443,7 +1639,11 @@ function RestoreBackupDialog({
         </div>
 
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading}>
+          <Button
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isLoading || isDisabled}>
@@ -1477,7 +1677,9 @@ function DeletePolicyDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Delete policy</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to delete the <strong>{policy.name || 'Unnamed Policy'}</strong> policy? This action cannot be undone.
+            Are you sure you want to delete the{' '}
+            <strong>{policy.name || 'Unnamed Policy'}</strong> policy? This
+            action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
@@ -1539,7 +1741,8 @@ function DeleteBackupDialog({
           <DialogTitle>Delete backup</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             Are you sure you want to delete the backup from{' '}
-            <strong>{new Date(backup.$createdAt).toLocaleString()}</strong>? This action cannot be undone.
+            <strong>{new Date(backup.$createdAt).toLocaleString()}</strong>?
+            This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
@@ -1567,4 +1770,3 @@ function DeleteBackupDialog({
     </Dialog>
   )
 }
-

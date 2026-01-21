@@ -4,18 +4,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
-import { ScopeEditor, getAllAvailableScopes } from '@/components/global/shared/ScopeEditor'
+import {
+  ScopeEditor,
+  getAllAvailableScopes,
+} from '@/components/global/shared/ScopeEditor'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
 
 interface ApiKeyDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSubmit: (data: {
-    name: string
-    scopes?: string[]
-    expire?: string
-  }) => void
+  onSubmit: (data: { name: string; scopes?: string[]; expire?: string }) => void
   isLoading?: boolean
   apiKey?: Models.Key | null
 }
@@ -48,7 +47,7 @@ export function ApiKeyDrawer({
   // Calculate expiry date from option
   const getExpiryDateFromOption = (option: string): string => {
     if (option === 'never' || option === 'custom') return ''
-    
+
     const now = new Date()
     switch (option) {
       case '1week':
@@ -70,20 +69,20 @@ export function ApiKeyDrawer({
   // Determine which option matches the current expire value
   const getExpiryOptionFromDate = (dateString?: string): string => {
     if (!dateString) return 'never'
-    
+
     const expireDate = new Date(dateString)
     if (isNaN(expireDate.getTime())) return 'never'
-    
+
     const now = new Date()
     const diffMs = expireDate.getTime() - now.getTime()
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
-    
+
     // Check if it matches a predefined option (with some tolerance)
     if (diffDays >= 6 && diffDays <= 8) return '1week'
     if (diffDays >= 28 && diffDays <= 31) return '1month'
     if (diffDays >= 178 && diffDays <= 186) return '6months'
     if (diffDays >= 365 && diffDays <= 366) return '1year'
-    
+
     return 'custom'
   }
 
@@ -204,7 +203,9 @@ export function ApiKeyDrawer({
                     className={errors.name ? 'border-destructive' : ''}
                   />
                   {errors.name && (
-                    <p className="text-[12px] text-destructive">{errors.name}</p>
+                    <p className="text-[12px] text-destructive">
+                      {errors.name}
+                    </p>
                   )}
                 </div>
 
@@ -247,7 +248,7 @@ export function ApiKeyDrawer({
                               'flex cursor-pointer items-center justify-center rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium transition-all',
                               'hover:border-primary/50 hover:bg-accent/50',
                               isSelected && 'border-primary bg-accent',
-                              isLoading && 'cursor-not-allowed opacity-50'
+                              isLoading && 'cursor-not-allowed opacity-50',
                             )}
                           >
                             {option.label}
@@ -295,7 +296,16 @@ export function ApiKeyDrawer({
                     disabled={isLoading}
                   />
                   <p className="text-[12px] text-muted-foreground">
-                    Select the scopes this API key will have access to. <a href="https://appwrite.io/docs/advanced/platform/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Learn more about API key scopes</a>.
+                    Select the scopes this API key will have access to.{' '}
+                    <a
+                      href="https://appwrite.io/docs/advanced/platform/api-keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      Learn more about API key scopes
+                    </a>
+                    .
                   </p>
                 </div>
               </div>
@@ -320,4 +330,3 @@ export function ApiKeyDrawer({
     </BaseDrawer>
   )
 }
-

@@ -1,5 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate, useLocation, useSearch, Link } from '@tanstack/react-router'
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+  useSearch,
+  Link,
+} from '@tanstack/react-router'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
 import { Plus, Clock, Zap, Play } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
@@ -8,7 +14,13 @@ import { ResourceCard } from '../shared/ResourceCard'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
-import { useProjectFunctions, Dependencies, useProject, useOrganizationPlan, fetchProjectFunctions } from '@/lib/react-query/hooks'
+import {
+  useProjectFunctions,
+  Dependencies,
+  useProject,
+  useOrganizationPlan,
+  fetchProjectFunctions,
+} from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -31,12 +43,11 @@ const FUNCTIONS_PER_PAGE = 25
  */
 function getNextScheduledExecution(func: Models.Function): string | null {
   if (!func.schedule) return null
-  
+
   // cron-parser is not available in client-side code
   // Return null to avoid dependency resolution errors
   return null
 }
-
 
 /**
  * Extract runtime prefix from runtime string (e.g., "node-18.0" -> "node")
@@ -55,8 +66,8 @@ export function FunctionsView() {
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const functionsIndex = pathParts.findIndex(part => part === 'functions')
-    
+    const functionsIndex = pathParts.findIndex((part) => part === 'functions')
+
     if (functionsIndex >= 0) {
       // Check if there's a tab segment after 'functions'
       // pathParts structure: ['projects', 'projectId', 'functions', 'tab?']
@@ -67,7 +78,7 @@ export function FunctionsView() {
         }
       }
     }
-    
+
     // Default to functions for index route (/projects/:projectId/functions or /projects/:projectId/functions/)
     return 'functions'
   }, [location.pathname])
@@ -77,7 +88,10 @@ export function FunctionsView() {
   const [pageSize, setPageSize] = useState(FUNCTIONS_PER_PAGE)
 
   // Get search from URL params
-  const urlSearch = typeof search === 'object' && 'search' in search ? (search.search as string) : undefined
+  const urlSearch =
+    typeof search === 'object' && 'search' in search
+      ? (search.search as string)
+      : undefined
 
   // Initialize search from URL
   useEffect(() => {
@@ -96,28 +110,28 @@ export function FunctionsView() {
 
   // Fetch total count of functions without search (for limit checking)
   // This is separate from the search query so the alert doesn't change when searching
-  const {
-    data: totalFunctionsData,
-    isLoading: totalFunctionsLoading,
-  } = useQuery({
-    queryKey: ['functions', 'project', projectId, 'total'],
-    queryFn: () => fetchProjectFunctions(projectId!, 0, 1, ''), // Only need total, so limit to 1
-    enabled: !!projectId,
-    staleTime: 30 * 1000, // 30 seconds
-  })
+  const { data: totalFunctionsData, isLoading: totalFunctionsLoading } =
+    useQuery({
+      queryKey: ['functions', 'project', projectId, 'total'],
+      queryFn: () => fetchProjectFunctions(projectId!, 0, 1, ''), // Only need total, so limit to 1
+      enabled: !!projectId,
+      staleTime: 30 * 1000, // 30 seconds
+    })
 
   // Get project to get teamId for organization plan
   const { project, isLoading: projectLoading } = useProject(projectId)
-  
+
   // Get organization plan to check limits
-  const { plan: organizationPlan, isLoading: planLoading } = useOrganizationPlan(project?.teamId)
-  
+  const { plan: organizationPlan, isLoading: planLoading } =
+    useOrganizationPlan(project?.teamId)
+
   // Total count of all functions (without search) - for limit checking
   const totalFunctionsCount = totalFunctionsData?.total || 0
-  
+
   // Check if create button should be disabled
   const functionsLimit = organizationPlan?.functions ?? 0
-  const isCreateDisabled = functionsLimit > 0 && totalFunctionsCount >= functionsLimit
+  const isCreateDisabled =
+    functionsLimit > 0 && totalFunctionsCount >= functionsLimit
 
   // Real-time subscription
   useEffect(() => {
@@ -127,20 +141,17 @@ export function FunctionsView() {
 
     const setupSubscription = async () => {
       try {
-        subscription = await sdk.forProject(projectId).realtime.subscribe(
-          [`projects.${projectId}`],
-          (response) => {
+        subscription = await sdk
+          .forProject(projectId)
+          .realtime.subscribe([`projects.${projectId}`], (response) => {
             if (
-              response.events?.some(
-                (event) => event.includes('functions.'),
-              )
+              response.events?.some((event) => event.includes('functions.'))
             ) {
               queryClient.invalidateQueries({
                 queryKey: Dependencies.FUNCTIONS,
               })
             }
-          },
-        )
+          })
       } catch (error) {
         // Silently ignore realtime errors
         console.error('Failed to subscribe to functions realtime:', error)
@@ -160,9 +171,12 @@ export function FunctionsView() {
 
   // Handle GitHub redirect
   useEffect(() => {
-    const searchString = typeof location.search === 'string' 
-      ? location.search 
-      : new URLSearchParams(location.search as Record<string, string>).toString()
+    const searchString =
+      typeof location.search === 'string'
+        ? location.search
+        : new URLSearchParams(
+            location.search as Record<string, string>,
+          ).toString()
     const urlParams = new URLSearchParams(searchString)
     const from = urlParams.get('from')
     const to = urlParams.get('to')
@@ -201,26 +215,28 @@ export function FunctionsView() {
     toast.info('Function creation coming soon')
   }
 
-
   const hasFunctions = total > 0
   const noSearchResults = searchValue && total === 0 && !isLoading
 
   // Update tabs with dynamic function count
-  const tabs: Tab[] = useMemo(() => [
-    { 
-      id: 'functions', 
-      label: 'Functions', 
-      count: totalFunctionsCount,
-      to: '/projects/$projectId/functions/',
-      params: { projectId: projectId as string },
-    },
-    { 
-      id: 'templates', 
-      label: 'Templates',
-      to: '/projects/$projectId/functions/templates',
-      params: { projectId: projectId as string },
-    },
-  ], [totalFunctionsCount, projectId])
+  const tabs: Tab[] = useMemo(
+    () => [
+      {
+        id: 'functions',
+        label: 'Functions',
+        count: totalFunctionsCount,
+        to: '/projects/$projectId/functions/',
+        params: { projectId: projectId as string },
+      },
+      {
+        id: 'templates',
+        label: 'Templates',
+        to: '/projects/$projectId/functions/templates',
+        params: { projectId: projectId as string },
+      },
+    ],
+    [totalFunctionsCount, projectId],
+  )
 
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -238,11 +254,17 @@ export function FunctionsView() {
           title="Functions"
           tabs={tabs}
           activeTab={activeTab}
-          searchPlaceholder={activeTab === 'functions' ? 'Search by name or ID' : undefined}
+          searchPlaceholder={
+            activeTab === 'functions' ? 'Search by name or ID' : undefined
+          }
           searchValue={activeTab === 'functions' ? searchValue : undefined}
-          onSearchChange={activeTab === 'functions' ? handleSearchChange : undefined}
+          onSearchChange={
+            activeTab === 'functions' ? handleSearchChange : undefined
+          }
           createLabel={getCreateLabel()}
-          onCreate={activeTab === 'functions' ? handleCreateFunction : undefined}
+          onCreate={
+            activeTab === 'functions' ? handleCreateFunction : undefined
+          }
           createDisabled={activeTab === 'functions' ? isCreateDisabled : false}
           fullWidthBorder
         />
@@ -263,9 +285,13 @@ export function FunctionsView() {
         title="Functions"
         tabs={tabs}
         activeTab={activeTab}
-        searchPlaceholder={activeTab === 'functions' ? 'Search by name or ID' : undefined}
+        searchPlaceholder={
+          activeTab === 'functions' ? 'Search by name or ID' : undefined
+        }
         searchValue={activeTab === 'functions' ? searchValue : undefined}
-        onSearchChange={activeTab === 'functions' ? handleSearchChange : undefined}
+        onSearchChange={
+          activeTab === 'functions' ? handleSearchChange : undefined
+        }
         createLabel={getCreateLabel()}
         onCreate={activeTab === 'functions' ? handleCreateFunction : undefined}
         createDisabled={activeTab === 'functions' ? isCreateDisabled : false}
@@ -290,163 +316,174 @@ export function FunctionsView() {
         ) : (
           <>
             {isLoading && !hasFunctions ? (
-          <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <p className="text-sm text-muted-foreground">Loading functions...</p>
-          </div>
-        ) : noSearchResults ? (
-          <EmptyState
-            icon={Play}
-            title="No functions found"
-            description={`No functions match "${searchValue}"`}
-            isEmpty={false}
-            hasFilters={true}
-            variant="card"
-          >
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                <Play className="h-5 w-5 text-muted-foreground" />
+              <div className="rounded-lg border border-border bg-card py-12 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Loading functions...
+                </p>
               </div>
-              <p className="mb-1 text-[14px] font-medium text-foreground">
-                No functions found
-              </p>
-              <p className="mb-4 text-[13px] text-muted-foreground">
-                No functions match "{searchValue}"
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setSearchValue('')
-                  setCurrentPage(0)
-                  navigate({
-                    to: location.pathname,
-                    search: (prev) => ({
-                      ...prev,
-                      search: undefined,
-                    }),
-                    replace: true,
-                  })
-                }}
+            ) : noSearchResults ? (
+              <EmptyState
+                icon={Play}
+                title="No functions found"
+                description={`No functions match "${searchValue}"`}
+                isEmpty={false}
+                hasFilters={true}
+                variant="card"
               >
-                Clear search
-              </Button>
-            </div>
-          </EmptyState>
-        ) : !hasFunctions ? (
-          <EmptyState
-            icon={Play}
-            title="Create your first function"
-            description="Deploy and manage serverless functions with Appwrite Functions."
-            isEmpty={true}
-            variant="card"
-          >
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                <Play className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <p className="mb-1 text-[14px] font-medium text-foreground">
-                Create your first function
-              </p>
-              <p className="mb-4 text-[13px] text-muted-foreground">
-                Deploy and manage serverless functions with Appwrite Functions.
-              </p>
-              <div className="flex items-center justify-center gap-2">
-                <Button
-                  variant="outline"
-                  asChild
-                  className="gap-1.5"
-                >
-                  <a
-                    href="https://appwrite.io/docs/functions"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
+                    <Play className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="mb-1 text-[14px] font-medium text-foreground">
+                    No functions found
+                  </p>
+                  <p className="mb-4 text-[13px] text-muted-foreground">
+                    No functions match "{searchValue}"
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchValue('')
+                      setCurrentPage(0)
+                      navigate({
+                        to: location.pathname,
+                        search: (prev) => ({
+                          ...prev,
+                          search: undefined,
+                        }),
+                        replace: true,
+                      })
+                    }}
                   >
-                    Documentation
-                  </a>
-                </Button>
-                <Button onClick={handleCreateFunction} className="gap-1.5">
-                  <Plus className="h-4 w-4" />
-                  Create function
-                </Button>
-              </div>
-            </div>
-          </EmptyState>
-        ) : (
-          <>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {functions.map((func) => {
-                const runtimePrefix = getRuntimePrefix(func.runtime || 'unknown')
-                const nextExecution = func.schedule
-                  ? getNextScheduledExecution(func as Models.Function)
-                  : null
+                    Clear search
+                  </Button>
+                </div>
+              </EmptyState>
+            ) : !hasFunctions ? (
+              <EmptyState
+                icon={Play}
+                title="Create your first function"
+                description="Deploy and manage serverless functions with Appwrite Functions."
+                isEmpty={true}
+                variant="card"
+              >
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
+                    <Play className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="mb-1 text-[14px] font-medium text-foreground">
+                    Create your first function
+                  </p>
+                  <p className="mb-4 text-[13px] text-muted-foreground">
+                    Deploy and manage serverless functions with Appwrite
+                    Functions.
+                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <Button variant="outline" asChild className="gap-1.5">
+                      <a
+                        href="https://appwrite.io/docs/functions"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Documentation
+                      </a>
+                    </Button>
+                    <Button onClick={handleCreateFunction} className="gap-1.5">
+                      <Plus className="h-4 w-4" />
+                      Create function
+                    </Button>
+                  </div>
+                </div>
+              </EmptyState>
+            ) : (
+              <>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {functions.map((func) => {
+                    const runtimePrefix = getRuntimePrefix(
+                      func.runtime || 'unknown',
+                    )
+                    const nextExecution = func.schedule
+                      ? getNextScheduledExecution(func as Models.Function)
+                      : null
 
-                return (
-                  <Link
-                    key={func.$id}
-                    to="/projects/$projectId/functions/$functionId"
-                    params={{ projectId: projectId!, functionId: func.$id }}
-                  >
-                    <ResourceCard
-                      title={func.name || 'Unnamed Function'}
-                      resourceId={func.$id}
-                      customIcon={<RuntimeIcon runtime={func.runtime || ''} size="md" className="h-5 w-5" />}
-                      iconColor="bg-muted text-muted-foreground"
-                      status={func.enabled === false ? 'error' : undefined}
-                      statusLabel={func.enabled === false ? 'Disabled' : undefined}
-                      metadata={[
-                        {
-                          label: 'Runtime',
-                          value: func.runtime || 'unknown',
-                        },
-                        ...(func.schedule
-                          ? [
-                              {
-                                label: 'Schedule',
-                                value: formatCronExpression(func.schedule),
-                              },
-                            ]
-                          : []),
-                        ...(nextExecution
-                          ? [
-                              {
-                                label: 'Next execution',
-                                value: (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <span className="flex items-center gap-1">
-                                          <Clock className="h-3 w-3" />
-                                          {nextExecution}
-                                        </span>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <p>Next execution: {nextExecution}</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                ),
-                              },
-                            ]
-                          : []),
-                      ]}
-                    />
-                  </Link>
-                )
-              })}
-            </div>
+                    return (
+                      <Link
+                        key={func.$id}
+                        to="/projects/$projectId/functions/$functionId"
+                        params={{ projectId: projectId!, functionId: func.$id }}
+                      >
+                        <ResourceCard
+                          title={func.name || 'Unnamed Function'}
+                          resourceId={func.$id}
+                          customIcon={
+                            <RuntimeIcon
+                              runtime={func.runtime || ''}
+                              size="md"
+                              className="h-5 w-5"
+                            />
+                          }
+                          iconColor="bg-muted text-muted-foreground"
+                          status={func.enabled === false ? 'error' : undefined}
+                          statusLabel={
+                            func.enabled === false ? 'Disabled' : undefined
+                          }
+                          metadata={[
+                            {
+                              label: 'Runtime',
+                              value: func.runtime || 'unknown',
+                            },
+                            ...(func.schedule
+                              ? [
+                                  {
+                                    label: 'Schedule',
+                                    value: formatCronExpression(func.schedule),
+                                  },
+                                ]
+                              : []),
+                            ...(nextExecution
+                              ? [
+                                  {
+                                    label: 'Next execution',
+                                    value: (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="flex items-center gap-1">
+                                              <Clock className="h-3 w-3" />
+                                              {nextExecution}
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>
+                                              Next execution: {nextExecution}
+                                            </p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    ),
+                                  },
+                                ]
+                              : []),
+                          ]}
+                        />
+                      </Link>
+                    )
+                  })}
+                </div>
 
-            <Pagination
-              currentPage={currentPage + 1}
-              totalItems={total}
-              pageSize={pageSize}
-              pageSizeOptions={[10, 25, 50, 100]}
-              onPageChange={(page) => setCurrentPage(page - 1)}
-              onPageSizeChange={(size) => {
-                setPageSize(size)
-                setCurrentPage(0)
-              }}
-              itemLabel="functions"
-            />
-          </>
+                <Pagination
+                  currentPage={currentPage + 1}
+                  totalItems={total}
+                  pageSize={pageSize}
+                  pageSizeOptions={[10, 25, 50, 100]}
+                  onPageChange={(page) => setCurrentPage(page - 1)}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size)
+                    setCurrentPage(0)
+                  }}
+                  itemLabel="functions"
+                />
+              </>
             )}
           </>
         )}

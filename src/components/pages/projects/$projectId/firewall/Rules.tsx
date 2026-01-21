@@ -131,13 +131,14 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
 
   const filteredRules = useMemo(() => {
     if (!searchValue.trim()) return rules
-    
+
     const searchLower = searchValue.toLowerCase()
-    return rules.filter(rule =>
-      rule.name.toLowerCase().includes(searchLower) ||
-      rule.description?.toLowerCase().includes(searchLower) ||
-      rule.conditions.ipAddress?.toLowerCase().includes(searchLower) ||
-      rule.conditions.path?.toLowerCase().includes(searchLower)
+    return rules.filter(
+      (rule) =>
+        rule.name.toLowerCase().includes(searchLower) ||
+        rule.description?.toLowerCase().includes(searchLower) ||
+        rule.conditions.ipAddress?.toLowerCase().includes(searchLower) ||
+        rule.conditions.path?.toLowerCase().includes(searchLower),
     )
   }, [rules, searchValue])
 
@@ -161,7 +162,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
         lastTriggered: null,
       },
     }
-    
+
     setRules([...rules, newRule].sort((a, b) => b.priority - a.priority))
     setCreatingRule(false)
     setFormData({
@@ -188,7 +189,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
   const handleUpdateRule = () => {
     if (!editingRule) return
 
-    const updatedRules = rules.map(rule =>
+    const updatedRules = rules.map((rule) =>
       rule.$id === editingRule.$id
         ? {
             ...rule,
@@ -198,12 +199,14 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
             priority: formData.priority,
             enabled: formData.enabled,
             conditions: formData.conditions,
-            rateLimit: formData.rateLimit.enabled ? formData.rateLimit : undefined,
+            rateLimit: formData.rateLimit.enabled
+              ? formData.rateLimit
+              : undefined,
             updatedAt: new Date().toISOString(),
           }
-        : rule
+        : rule,
     )
-    
+
     setRules(updatedRules.sort((a, b) => b.priority - a.priority))
     setEditingRule(null)
     setFormData({
@@ -229,7 +232,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
 
   const handleDeleteRule = () => {
     if (!deletingRule) return
-    setRules(rules.filter(rule => rule.$id !== deletingRule.$id))
+    setRules(rules.filter((rule) => rule.$id !== deletingRule.$id))
     setDeletingRule(null)
   }
 
@@ -257,26 +260,38 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
   }
 
   const handleToggleEnabled = (rule: FirewallRule) => {
-    setRules(rules.map(r =>
-      r.$id === rule.$id
-        ? { ...r, enabled: !r.enabled, updatedAt: new Date().toISOString() }
-        : r
-    ))
+    setRules(
+      rules.map((r) =>
+        r.$id === rule.$id
+          ? { ...r, enabled: !r.enabled, updatedAt: new Date().toISOString() }
+          : r,
+      ),
+    )
   }
 
-  const handlePriorityChange = (rule: FirewallRule, direction: 'up' | 'down') => {
-    const currentIndex = rules.findIndex(r => r.$id === rule.$id)
+  const handlePriorityChange = (
+    rule: FirewallRule,
+    direction: 'up' | 'down',
+  ) => {
+    const currentIndex = rules.findIndex((r) => r.$id === rule.$id)
     if (currentIndex === -1) return
 
-    const newPriority = direction === 'up' 
-      ? rule.priority + 10 
-      : Math.max(0, rule.priority - 10)
+    const newPriority =
+      direction === 'up' ? rule.priority + 10 : Math.max(0, rule.priority - 10)
 
-    setRules(rules.map(r =>
-      r.$id === rule.$id
-        ? { ...r, priority: newPriority, updatedAt: new Date().toISOString() }
-        : r
-    ).sort((a, b) => b.priority - a.priority))
+    setRules(
+      rules
+        .map((r) =>
+          r.$id === rule.$id
+            ? {
+                ...r,
+                priority: newPriority,
+                updatedAt: new Date().toISOString(),
+              }
+            : r,
+        )
+        .sort((a, b) => b.priority - a.priority),
+    )
   }
 
   const copyRuleId = (ruleId: string) => {
@@ -301,13 +316,29 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
   const getActionBadge = (action: string) => {
     switch (action) {
       case 'block':
-        return <Badge variant="destructive" className="text-[11px]">Block</Badge>
+        return (
+          <Badge variant="destructive" className="text-[11px]">
+            Block
+          </Badge>
+        )
       case 'allow':
-        return <Badge variant="default" className="bg-emerald-500 text-[11px]">Allow</Badge>
+        return (
+          <Badge variant="default" className="bg-emerald-500 text-[11px]">
+            Allow
+          </Badge>
+        )
       case 'challenge':
-        return <Badge variant="secondary" className="bg-amber-500 text-[11px]">Challenge</Badge>
+        return (
+          <Badge variant="secondary" className="bg-amber-500 text-[11px]">
+            Challenge
+          </Badge>
+        )
       default:
-        return <Badge variant="outline" className="text-[11px]">{action}</Badge>
+        return (
+          <Badge variant="outline" className="text-[11px]">
+            {action}
+          </Badge>
+        )
     }
   }
 
@@ -412,9 +443,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    {getActionBadge(rule.action)}
-                  </TableCell>
+                  <TableCell>{getActionBadge(rule.action)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <span className="text-[12px] font-mono text-muted-foreground">
@@ -455,7 +484,8 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                       )}
                       {rule.rateLimit && (
                         <span className="text-[11px] text-muted-foreground">
-                          Rate limit: {rule.rateLimit.requests}/{rule.rateLimit.window}s
+                          Rate limit: {rule.rateLimit.requests}/
+                          {rule.rateLimit.window}s
                         </span>
                       )}
                     </div>
@@ -484,7 +514,9 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                         className="text-[12px] text-muted-foreground"
                       />
                     ) : (
-                      <span className="text-[12px] text-muted-foreground">Never</span>
+                      <span className="text-[12px] text-muted-foreground">
+                        Never
+                      </span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -503,7 +535,9 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                           <Edit className="mr-1.5 h-3.5 w-3.5" />
                           Update
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleEnabled(rule)}>
+                        <DropdownMenuItem
+                          onClick={() => handleToggleEnabled(rule)}
+                        >
                           {rule.enabled ? (
                             <>
                               <XCircle className="mr-1.5 h-3.5 w-3.5" />
@@ -557,14 +591,16 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
-          
+
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Rule name</Label>
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="e.g., Block suspicious IPs"
               />
             </div>
@@ -574,7 +610,9 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="Optional description of what this rule does"
                 rows={2}
               />
@@ -606,7 +644,12 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                   id="priority"
                   type="number"
                   value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      priority: parseInt(e.target.value) || 0,
+                    })
+                  }
                   min={0}
                   max={1000}
                 />
@@ -614,8 +657,10 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
             </div>
 
             <div className="space-y-4 border-t border-border pt-4">
-              <h4 className="text-[13px] font-medium text-foreground">Conditions</h4>
-              
+              <h4 className="text-[13px] font-medium text-foreground">
+                Conditions
+              </h4>
+
               <div className="space-y-2">
                 <Label htmlFor="ipAddress">IP Address (optional)</Label>
                 <Input
@@ -624,7 +669,10 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      conditions: { ...formData.conditions, ipAddress: e.target.value },
+                      conditions: {
+                        ...formData.conditions,
+                        ipAddress: e.target.value,
+                      },
                     })
                   }
                   placeholder="e.g., 192.168.1.1 or 192.168.1.0/24"
@@ -639,7 +687,10 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      conditions: { ...formData.conditions, path: e.target.value },
+                      conditions: {
+                        ...formData.conditions,
+                        path: e.target.value,
+                      },
                     })
                   }
                   placeholder="e.g., /api/admin/*"
@@ -679,7 +730,10 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      conditions: { ...formData.conditions, country: e.target.value },
+                      conditions: {
+                        ...formData.conditions,
+                        country: e.target.value,
+                      },
                     })
                   }
                   placeholder="e.g., US, GB, CN (ISO 3166-1 alpha-2)"
@@ -690,7 +744,9 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
             <div className="space-y-4 border-t border-border pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-[13px] font-medium text-foreground">Rate limiting</h4>
+                  <h4 className="text-[13px] font-medium text-foreground">
+                    Rate limiting
+                  </h4>
                   <p className="text-[12px] text-muted-foreground">
                     Limit requests per time window
                   </p>
@@ -767,10 +823,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
           </div>
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setCreatingRule(false)}
-            >
+            <Button variant="outline" onClick={() => setCreatingRule(false)}>
               Cancel
             </Button>
             <Button
@@ -787,7 +840,10 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
       </Dialog>
 
       {/* Update Rule Dialog */}
-      <Dialog open={editingRule !== null} onOpenChange={(open) => !open && setEditingRule(null)}>
+      <Dialog
+        open={editingRule !== null}
+        onOpenChange={(open) => !open && setEditingRule(null)}
+      >
         <DialogContent className="sm:max-w-2xl p-0 max-h-[90vh] overflow-y-auto">
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Update firewall rule</DialogTitle>
@@ -796,7 +852,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
-          
+
           <div className="px-6 pb-4 pt-0 space-y-4">
             {/* Same form fields as create dialog */}
             <div className="space-y-2">
@@ -804,7 +860,9 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
               <Input
                 id="edit-name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="e.g., Block suspicious IPs"
               />
             </div>
@@ -814,7 +872,9 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
               <Textarea
                 id="edit-description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="Optional description of what this rule does"
                 rows={2}
               />
@@ -846,7 +906,12 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                   id="edit-priority"
                   type="number"
                   value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      priority: parseInt(e.target.value) || 0,
+                    })
+                  }
                   min={0}
                   max={1000}
                 />
@@ -854,8 +919,10 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
             </div>
 
             <div className="space-y-4 border-t border-border pt-4">
-              <h4 className="text-[13px] font-medium text-foreground">Conditions</h4>
-              
+              <h4 className="text-[13px] font-medium text-foreground">
+                Conditions
+              </h4>
+
               <div className="space-y-2">
                 <Label htmlFor="edit-ipAddress">IP Address (optional)</Label>
                 <Input
@@ -864,7 +931,10 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      conditions: { ...formData.conditions, ipAddress: e.target.value },
+                      conditions: {
+                        ...formData.conditions,
+                        ipAddress: e.target.value,
+                      },
                     })
                   }
                   placeholder="e.g., 192.168.1.1 or 192.168.1.0/24"
@@ -879,7 +949,10 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      conditions: { ...formData.conditions, path: e.target.value },
+                      conditions: {
+                        ...formData.conditions,
+                        path: e.target.value,
+                      },
                     })
                   }
                   placeholder="e.g., /api/admin/*"
@@ -919,7 +992,10 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      conditions: { ...formData.conditions, country: e.target.value },
+                      conditions: {
+                        ...formData.conditions,
+                        country: e.target.value,
+                      },
                     })
                   }
                   placeholder="e.g., US, GB, CN (ISO 3166-1 alpha-2)"
@@ -930,7 +1006,9 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
             <div className="space-y-4 border-t border-border pt-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-[13px] font-medium text-foreground">Rate limiting</h4>
+                  <h4 className="text-[13px] font-medium text-foreground">
+                    Rate limiting
+                  </h4>
                   <p className="text-[12px] text-muted-foreground">
                     Limit requests per time window
                   </p>
@@ -968,7 +1046,9 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="edit-rateLimitWindow">Window (seconds)</Label>
+                    <Label htmlFor="edit-rateLimitWindow">
+                      Window (seconds)
+                    </Label>
                     <Input
                       id="edit-rateLimitWindow"
                       type="number"
@@ -1007,10 +1087,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
           </div>
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setEditingRule(null)}
-            >
+            <Button variant="outline" onClick={() => setEditingRule(null)}>
               Cancel
             </Button>
             <Button
@@ -1025,26 +1102,24 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
       </Dialog>
 
       {/* Delete Rule Dialog */}
-      <Dialog open={deletingRule !== null} onOpenChange={(open) => !open && setDeletingRule(null)}>
+      <Dialog
+        open={deletingRule !== null}
+        onOpenChange={(open) => !open && setDeletingRule(null)}
+      >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete firewall rule</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete "{deletingRule?.name}"? This action cannot be undone.
+              Are you sure you want to delete "{deletingRule?.name}"? This
+              action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setDeletingRule(null)}
-            >
+            <Button variant="outline" onClick={() => setDeletingRule(null)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteRule}
-            >
+            <Button variant="destructive" onClick={handleDeleteRule}>
               Delete
             </Button>
           </div>
@@ -1053,5 +1128,3 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
     </div>
   )
 }
-
-

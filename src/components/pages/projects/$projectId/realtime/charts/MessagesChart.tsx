@@ -1,5 +1,13 @@
 import { useMemo, useEffect, useRef } from 'react'
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts'
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts'
 import { DateRange } from 'react-day-picker'
 import { format } from 'date-fns'
 import { Info } from 'lucide-react'
@@ -24,7 +32,13 @@ interface RealtimeMessagesChartProps {
   description?: string
 }
 
-const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value: number; payload: MessagesDataPoint }> }) => {
+const CustomTooltip = ({
+  active,
+  payload,
+}: {
+  active?: boolean
+  payload?: Array<{ value: number; payload: MessagesDataPoint }>
+}) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload
     return (
@@ -60,7 +74,8 @@ export function RealtimeMessagesChart({
     }))
   }, [data])
 
-  const currentValue = data.length > 0 ? data[data.length - 1].messagesPerMinute : 0
+  const currentValue =
+    data.length > 0 ? data[data.length - 1].messagesPerMinute : 0
 
   // Allow scroll events to pass through to parent
   useEffect(() => {
@@ -88,8 +103,10 @@ export function RealtimeMessagesChart({
       if (scrollableParent) {
         // Check if we can actually scroll in this direction
         const canScrollUp = scrollableParent.scrollTop > 0
-        const canScrollDown = scrollableParent.scrollTop < scrollableParent.scrollHeight - scrollableParent.clientHeight
-        
+        const canScrollDown =
+          scrollableParent.scrollTop <
+          scrollableParent.scrollHeight - scrollableParent.clientHeight
+
         if ((e.deltaY > 0 && canScrollDown) || (e.deltaY < 0 && canScrollUp)) {
           scrollableParent.scrollTop += e.deltaY
           e.preventDefault()
@@ -129,7 +146,9 @@ export function RealtimeMessagesChart({
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="flex h-64 items-center justify-center text-center p-4">
           <div>
-            <p className="text-[13px] text-muted-foreground">No data available</p>
+            <p className="text-[13px] text-muted-foreground">
+              No data available
+            </p>
             <p className="mt-1 text-[12px] text-muted-foreground/70">
               Select a date range to view messages data
             </p>
@@ -140,7 +159,10 @@ export function RealtimeMessagesChart({
   }
 
   return (
-    <div ref={cardRef} className="rounded-lg border border-border bg-card overflow-hidden">
+    <div
+      ref={cardRef}
+      className="rounded-lg border border-border bg-card overflow-hidden"
+    >
       {/* Header */}
       <div className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1 min-w-0">
@@ -194,13 +216,24 @@ export function RealtimeMessagesChart({
       {/* Chart */}
       <div className="p-4">
         <div className="h-[180px] text-muted-foreground">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+            minWidth={0}
+            minHeight={0}
+          >
             <AreaChart
               data={chartData}
               margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
             >
               <defs>
-                <linearGradient id="messagesGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="messagesGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="0%" stopColor="#10b981" stopOpacity={0.2} />
                   <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
@@ -229,7 +262,8 @@ export function RealtimeMessagesChart({
                   fontSize: 10,
                 }}
                 tickFormatter={(value) => {
-                  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(0)}M`
+                  if (value >= 1_000_000)
+                    return `${(value / 1_000_000).toFixed(0)}M`
                   if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
                   return value.toString()
                 }}

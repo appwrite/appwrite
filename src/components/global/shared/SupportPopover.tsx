@@ -152,8 +152,13 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
                       Support availability
                     </p>
                     <div className="space-y-0.5 text-sm text-muted-foreground">
-                      <p className="font-medium text-foreground">Monday – Friday</p>
-                      <p>{supportHours.startLocal} – {supportHours.endLocal} (your time)</p>
+                      <p className="font-medium text-foreground">
+                        Monday – Friday
+                      </p>
+                      <p>
+                        {supportHours.startLocal} – {supportHours.endLocal}{' '}
+                        (your time)
+                      </p>
                     </div>
                   </div>
                 </div>

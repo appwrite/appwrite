@@ -73,10 +73,7 @@ export function RealtimeView() {
         message="Monitor live connections, channels, and messages in real-time with detailed analytics and insights."
       >
         <div
-          className={cn(
-            'flex-1',
-            isFullWidthTab ? 'w-full px-0' : 'w-full',
-          )}
+          className={cn('flex-1', isFullWidthTab ? 'w-full px-0' : 'w-full')}
         >
           {activeTab === 'overview' && (
             <div className="flex flex-col">
@@ -92,8 +89,12 @@ export function RealtimeView() {
               </div>
             </div>
           )}
-          {activeTab === 'messages' && <RealtimeMessages projectId={projectId} />}
-          {activeTab === 'channels' && <RealtimeChannels projectId={projectId} />}
+          {activeTab === 'messages' && (
+            <RealtimeMessages projectId={projectId} />
+          )}
+          {activeTab === 'channels' && (
+            <RealtimeChannels projectId={projectId} />
+          )}
         </div>
       </ComingSoonCurtain>
     </div>

@@ -1,7 +1,12 @@
 import { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
@@ -66,7 +71,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'databases.write',
-    description: "Access to create, update, and delete your project's databases",
+    description:
+      "Access to create, update, and delete your project's databases",
     category: 'Database',
     icon: Database,
   },
@@ -79,7 +85,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'tables.write',
-    description: "Access to create, update, and delete your project's database tables",
+    description:
+      "Access to create, update, and delete your project's database tables",
     category: 'Database',
     icon: Database,
     legacyScopes: ['collections.write'],
@@ -93,7 +100,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'columns.write',
-    description: "Access to create, update, and delete your project's database table's columns",
+    description:
+      "Access to create, update, and delete your project's database table's columns",
     category: 'Database',
     icon: Database,
     legacyScopes: ['attributes.write'],
@@ -106,7 +114,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'indexes.write',
-    description: "Access to create, update, and delete your project's database table's indexes",
+    description:
+      "Access to create, update, and delete your project's database table's indexes",
     category: 'Database',
     icon: Database,
   },
@@ -119,7 +128,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'rows.write',
-    description: "Access to create, update, and delete your project's database rows",
+    description:
+      "Access to create, update, and delete your project's database rows",
     category: 'Database',
     icon: Database,
     legacyScopes: ['documents.write'],
@@ -170,7 +180,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'functions.write',
-    description: "Access to create, update, and delete your project's functions and code deployments",
+    description:
+      "Access to create, update, and delete your project's functions and code deployments",
     category: 'Functions',
     icon: Zap,
   },
@@ -189,13 +200,15 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   // Storage
   {
     scope: 'files.read',
-    description: "Access to read your project's storage files and preview images",
+    description:
+      "Access to read your project's storage files and preview images",
     category: 'Storage',
     icon: HardDrive,
   },
   {
     scope: 'files.write',
-    description: "Access to create, update, and delete your project's storage files",
+    description:
+      "Access to create, update, and delete your project's storage files",
     category: 'Storage',
     icon: HardDrive,
   },
@@ -207,7 +220,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'buckets.write',
-    description: "Access to create, update, and delete your project's storage buckets",
+    description:
+      "Access to create, update, and delete your project's storage buckets",
     category: 'Storage',
     icon: HardDrive,
   },
@@ -220,7 +234,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'targets.write',
-    description: "Access to create, update, and delete your project's messaging targets",
+    description:
+      "Access to create, update, and delete your project's messaging targets",
     category: 'Messaging',
     icon: MessageSquare,
   },
@@ -232,7 +247,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'providers.write',
-    description: "Access to create, update, and delete your project's messaging providers",
+    description:
+      "Access to create, update, and delete your project's messaging providers",
     category: 'Messaging',
     icon: MessageSquare,
   },
@@ -256,7 +272,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'topics.write',
-    description: "Access to create, update, and delete your project's messaging topics",
+    description:
+      "Access to create, update, and delete your project's messaging topics",
     category: 'Messaging',
     icon: MessageSquare,
   },
@@ -268,7 +285,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'subscribers.write',
-    description: "Access to create, update, and delete your project's messaging topic subscribers",
+    description:
+      "Access to create, update, and delete your project's messaging topic subscribers",
     category: 'Messaging',
     icon: MessageSquare,
   },
@@ -281,7 +299,8 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
   },
   {
     scope: 'sites.write',
-    description: "Access to create, update, and delete your project's sites and deployments",
+    description:
+      "Access to create, update, and delete your project's sites and deployments",
     category: 'Sites',
     icon: Globe,
   },
@@ -343,7 +362,15 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
 ]
 
 // Category order
-const CATEGORY_ORDER = ['Auth', 'Database', 'Functions', 'Storage', 'Messaging', 'Sites', 'Other']
+const CATEGORY_ORDER = [
+  'Auth',
+  'Database',
+  'Functions',
+  'Storage',
+  'Messaging',
+  'Sites',
+  'Other',
+]
 
 // Legacy scope mapping (for backward compatibility)
 const LEGACY_SCOPE_MAP: Record<string, string> = {
@@ -374,8 +401,15 @@ function getScopeVariants(scope: string): string[] {
 // Helper to get all available scopes (including variants)
 export function getAllAvailableScopes(): string[] {
   const isCloud = isCloudEnvironment()
-  const backupScopeList = ['policies.read', 'policies.write', 'archives.read', 'archives.write', 'restorations.read', 'restorations.write']
-  
+  const backupScopeList = [
+    'policies.read',
+    'policies.write',
+    'archives.read',
+    'archives.write',
+    'restorations.read',
+    'restorations.write',
+  ]
+
   const allVariants = new Set<string>()
   SCOPE_CATALOG.forEach((scopeDef) => {
     // Filter out backup scopes if not cloud
@@ -404,22 +438,27 @@ interface ScopeEditorProps {
   disabled?: boolean
 }
 
-export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorProps) {
+export function ScopeEditor({
+  value,
+  onChange,
+  disabled = false,
+}: ScopeEditorProps) {
   const isCloud = isCloudEnvironment()
   const [openCategories, setOpenCategories] = useState<string[]>([])
   const openCategoriesRef = useRef<string[]>([])
   const previousValueRef = useRef<string[]>(value)
   const isUserInteractionRef = useRef(false)
-  
+
   // Keep ref in sync with state
   useEffect(() => {
     openCategoriesRef.current = openCategories
   }, [openCategories])
-  
+
   // Reset accordion state when value changes externally (not from user interaction)
   useEffect(() => {
     // Check if value changed externally (not from our internal handlers)
-    const valueChanged = JSON.stringify(previousValueRef.current) !== JSON.stringify(value)
+    const valueChanged =
+      JSON.stringify(previousValueRef.current) !== JSON.stringify(value)
     if (valueChanged && !isUserInteractionRef.current) {
       // Value changed externally, reset accordion to all closed
       setOpenCategories([])
@@ -462,8 +501,15 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
       grouped[category] = []
     })
 
-    const backupScopeList = ['policies.read', 'policies.write', 'archives.read', 'archives.write', 'restorations.read', 'restorations.write']
-    
+    const backupScopeList = [
+      'policies.read',
+      'policies.write',
+      'archives.read',
+      'archives.write',
+      'restorations.read',
+      'restorations.write',
+    ]
+
     // Separate backup scopes from regular scopes
     const backupScopes: ScopeDefinition[] = []
     const regularScopes: ScopeDefinition[] = []
@@ -489,9 +535,9 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
     // For Database category, insert backup scopes after databases.write
     if (grouped.Database && backupScopes.length > 0) {
       const databasesWriteIndex = grouped.Database.findIndex(
-        (s) => s.scope === 'databases.write'
+        (s) => s.scope === 'databases.write',
       )
-      
+
       if (databasesWriteIndex >= 0) {
         // Insert backup scopes after databases.write
         grouped.Database.splice(databasesWriteIndex + 1, 0, ...backupScopes)
@@ -544,7 +590,7 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
 
   // Track if we're in the middle of a select/deselect all operation
   const isSelectingAllRef = useRef(false)
-  
+
   // Handle select all
   const handleSelectAll = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
@@ -575,7 +621,7 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
       isSelectingAllRef.current = false
     })
   }
-  
+
   // Custom onValueChange that prevents unwanted opens during select/deselect all
   const handleAccordionChange = (newValue: string[]) => {
     // Don't allow accordion to change if we're in the middle of select/deselect all
@@ -585,7 +631,7 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
     setOpenCategories(newValue)
     openCategoriesRef.current = newValue
   }
-  
+
   // Preserve accordion state when scopes change externally
   useLayoutEffect(() => {
     if (isSelectingAllRef.current) {
@@ -595,12 +641,14 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
   }, [value])
 
   // Get category selection state
-  const getCategoryState = (category: string): 'checked' | 'unchecked' | 'indeterminate' => {
+  const getCategoryState = (
+    category: string,
+  ): 'checked' | 'unchecked' | 'indeterminate' => {
     const categoryScopes = scopesByCategory[category] || []
     if (categoryScopes.length === 0) return 'unchecked'
 
     const selectedCount = categoryScopes.filter((scopeDef) =>
-      displayScopes.includes(scopeDef.scope)
+      displayScopes.includes(scopeDef.scope),
     ).length
 
     if (selectedCount === 0) return 'unchecked'
@@ -611,7 +659,9 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
   // Get selected count for category
   const getCategorySelectedCount = (category: string): number => {
     const categoryScopes = scopesByCategory[category] || []
-    return categoryScopes.filter((scopeDef) => displayScopes.includes(scopeDef.scope)).length
+    return categoryScopes.filter((scopeDef) =>
+      displayScopes.includes(scopeDef.scope),
+    ).length
   }
 
   return (
@@ -667,7 +717,9 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
                 className="hover:no-underline"
                 onClick={(e) => {
                   // Prevent accordion toggle when clicking checkbox
-                  if ((e.target as HTMLElement).closest('[data-slot="checkbox"]')) {
+                  if (
+                    (e.target as HTMLElement).closest('[data-slot="checkbox"]')
+                  ) {
                     e.stopPropagation()
                     return
                   }
@@ -684,7 +736,8 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
                         onClick={(e) => e.stopPropagation()}
                         disabled={disabled}
                         className={cn(
-                          categoryState === 'indeterminate' && 'bg-primary border-primary'
+                          categoryState === 'indeterminate' &&
+                            'bg-primary border-primary',
                         )}
                       />
                       {categoryState === 'indeterminate' && (
@@ -711,7 +764,7 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
                         className={cn(
                           'flex items-start gap-3 rounded-md px-3 py-2.5 transition-colors',
                           'hover:bg-accent/50 cursor-pointer',
-                          disabled && 'cursor-not-allowed opacity-50'
+                          disabled && 'cursor-not-allowed opacity-50',
                         )}
                       >
                         <Checkbox
@@ -742,4 +795,3 @@ export function ScopeEditor({ value, onChange, disabled = false }: ScopeEditorPr
     </div>
   )
 }
-

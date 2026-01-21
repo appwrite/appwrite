@@ -397,5 +397,3 @@ function getSimulatedResponse(question: string): string {
 
   return "I'm here to help you with Appwrite! I can assist with:\n\n• Database setup and queries\n• Authentication configuration\n• File storage and management\n• Serverless functions\n• Real-time subscriptions\n• And much more!\n\nWhat would you like to know?"
 }
-
-

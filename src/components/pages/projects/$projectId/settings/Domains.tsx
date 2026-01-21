@@ -1,6 +1,12 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { useProjectDomains, useCreateDomain, useVerifyDomain, useDeleteDomain, useProject } from '@/lib/react-query/hooks'
+import {
+  useProjectDomains,
+  useCreateDomain,
+  useVerifyDomain,
+  useDeleteDomain,
+  useProject,
+} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -17,9 +23,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
-import { getDomainStatusVariant, type DomainStatus } from '@/lib/utils/status-badge'
+import {
+  getDomainStatusVariant,
+  type DomainStatus,
+} from '@/lib/utils/status-badge'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, ExternalLink, AlertCircle, Loader2, FileText, RefreshCw, Trash2 } from 'lucide-react'
+import {
+  MoreHorizontal,
+  ExternalLink,
+  AlertCircle,
+  Loader2,
+  FileText,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -36,7 +53,10 @@ interface DomainsProps {
   searchValue?: string
 }
 
-export function Domains({ projectId, searchValue: searchValueProp = '' }: DomainsProps) {
+export function Domains({
+  projectId,
+  searchValue: searchValueProp = '',
+}: DomainsProps) {
   const navigate = useNavigate()
   const { project } = useProject(projectId)
   const region = project?.region
@@ -48,9 +68,15 @@ export function Domains({ projectId, searchValue: searchValueProp = '' }: Domain
   const [deleteDomainOpen, setDeleteDomainOpen] = useState(false)
   const [viewLogsOpen, setViewLogsOpen] = useState(false)
   const [retryDomainOpen, setRetryDomainOpen] = useState(false)
-  const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(null)
+  const [selectedRule, setSelectedRule] = useState<Models.ProxyRule | null>(
+    null,
+  )
 
-  const { rules, total, isLoading } = useProjectDomains(projectId, region, searchValueProp)
+  const { rules, total, isLoading } = useProjectDomains(
+    projectId,
+    region,
+    searchValueProp,
+  )
 
   // Listen for create event from ServiceHeader
   useEffect(() => {
@@ -68,12 +94,15 @@ export function Domains({ projectId, searchValue: searchValueProp = '' }: Domain
 
   const getStatusBadge = (status: string) => {
     const variant = getDomainStatusVariant(status as DomainStatus)
-    
+
     if (variant === null) {
       return null // No badge for verified domains
     }
 
-    const statusConfig: Record<string, { icon: typeof AlertCircle; label: string; spin?: boolean }> = {
+    const statusConfig: Record<
+      string,
+      { icon: typeof AlertCircle; label: string; spin?: boolean }
+    > = {
       created: { icon: AlertCircle, label: 'Verification failed' },
       verifying: { icon: Loader2, label: 'Generating certificate', spin: true },
       unverified: { icon: AlertCircle, label: 'Certificate generation failed' },
@@ -115,7 +144,9 @@ export function Domains({ projectId, searchValue: searchValueProp = '' }: Domain
   }
 
   const canViewLogs = (rule: Models.ProxyRule) => {
-    return rule.logs && (rule.status === 'verifying' || rule.status === 'unverified')
+    return (
+      rule.logs && (rule.status === 'verifying' || rule.status === 'unverified')
+    )
   }
 
   // Filter rules by search
@@ -170,76 +201,84 @@ export function Domains({ projectId, searchValue: searchValueProp = '' }: Domain
               </TableHeader>
               <TableBody>
                 {paginatedRules.map((rule) => (
-                    <TableRow key={rule.$id}>
-                      <TableCell>
-                        <a
-                          href={`https://${rule.domain}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 font-medium text-foreground hover:underline"
-                        >
-                          {rule.domain}
-                          <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-                        </a>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(rule.status)}
-                          {canRetry(rule.status) && (
-                            <Button
-                              variant="link"
-                              size="sm"
-                              className="h-auto p-0 text-[13px]"
-                              onClick={() => handleRetry(rule)}
-                            >
-                              Retry
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DateTooltip date={rule.$createdAt} />
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {canViewLogs(rule) && (
-                              <DropdownMenuItem onClick={() => handleViewLogs(rule)}>
-                                <FileText className="mr-2 h-4 w-4" />
-                                View logs
-                              </DropdownMenuItem>
-                            )}
-                            {canRetry(rule.status) && (
-                              <DropdownMenuItem onClick={() => handleRetry(rule)}>
-                                <RefreshCw className="mr-2 h-4 w-4" />
-                                Retry
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={() => navigate({
-                              to: '/projects/$projectId/settings/domains/$ruleId',
-                              params: { projectId, ruleId: rule.$id },
-                            })}>
-                              <FileText className="mr-2 h-4 w-4" />
-                              DNS Records
-                            </DropdownMenuItem>
+                  <TableRow key={rule.$id}>
+                    <TableCell>
+                      <a
+                        href={`https://${rule.domain}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 font-medium text-foreground hover:underline"
+                      >
+                        {rule.domain}
+                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(rule.status)}
+                        {canRetry(rule.status) && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-[13px]"
+                            onClick={() => handleRetry(rule)}
+                          >
+                            Retry
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <DateTooltip date={rule.$createdAt} />
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {canViewLogs(rule) && (
                             <DropdownMenuItem
-                              onClick={() => handleDelete(rule)}
+                              onClick={() => handleViewLogs(rule)}
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                              <FileText className="mr-2 h-4 w-4" />
+                              View logs
                             </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                          )}
+                          {canRetry(rule.status) && (
+                            <DropdownMenuItem onClick={() => handleRetry(rule)}>
+                              <RefreshCw className="mr-2 h-4 w-4" />
+                              Retry
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() =>
+                              navigate({
+                                to: '/projects/$projectId/settings/domains/$ruleId',
+                                params: { projectId, ruleId: rule.$id },
+                              })
+                            }
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            DNS Records
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(rule)}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
 
           {filteredRules.length > 0 && (
@@ -328,4 +367,3 @@ export function Domains({ projectId, searchValue: searchValueProp = '' }: Domain
     </div>
   )
 }
-

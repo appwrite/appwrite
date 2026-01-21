@@ -96,7 +96,6 @@ export function BucketSecurity() {
     }
   }
 
-
   if (bucketLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -123,7 +122,16 @@ export function BucketSecurity() {
               Permissions
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Choose who can access your bucket and files. <a href="https://appwrite.io/docs/permissions" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Learn more</a>.
+              Choose who can access your bucket and files.{' '}
+              <a
+                href="https://appwrite.io/docs/permissions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                Learn more
+              </a>
+              .
             </p>
           </div>
           <div className="border-t border-border" />
@@ -167,20 +175,29 @@ export function BucketSecurity() {
                   onCheckedChange={(checked) => setFileSecurity(checked)}
                   disabled={updateFileSecurityMutation.isPending}
                 />
-                <Label htmlFor="file-security" className="text-[13px] text-foreground">
+                <Label
+                  htmlFor="file-security"
+                  className="text-[13px] text-foreground"
+                >
                   File level security
                 </Label>
               </div>
             </div>
             <div className="mt-4 space-y-2">
               <p className="text-[13px] text-muted-foreground">
-                When file security is enabled, users need <strong>both bucket permissions and file permissions</strong> to access files. File permissions are an additional layer, not an alternative to bucket permissions.
+                When file security is enabled, users need{' '}
+                <strong>both bucket permissions and file permissions</strong> to
+                access files. File permissions are an additional layer, not an
+                alternative to bucket permissions.
               </p>
               <p className="text-[13px] text-muted-foreground">
-                <strong>Upload operations</strong> always require bucket-level permissions, regardless of file security settings.
+                <strong>Upload operations</strong> always require bucket-level
+                permissions, regardless of file security settings.
               </p>
               <p className="text-[13px] text-muted-foreground">
-                If file security is disabled, users can access files <strong>only if they have bucket permissions</strong>. File permissions will be ignored.
+                If file security is disabled, users can access files{' '}
+                <strong>only if they have bucket permissions</strong>. File
+                permissions will be ignored.
               </p>
             </div>
           </div>
@@ -188,7 +205,10 @@ export function BucketSecurity() {
             <Button
               size="sm"
               className="h-9 text-[13px]"
-              disabled={fileSecurity === bucket.fileSecurity || updateFileSecurityMutation.isPending}
+              disabled={
+                fileSecurity === bucket.fileSecurity ||
+                updateFileSecurityMutation.isPending
+              }
               onClick={() => {
                 if (fileSecurity !== bucket.fileSecurity) {
                   updateFileSecurityMutation.mutate(fileSecurity)
@@ -203,4 +223,3 @@ export function BucketSecurity() {
     </div>
   )
 }
-

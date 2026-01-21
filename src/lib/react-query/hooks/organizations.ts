@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Organizations
- * 
+ *
  * Handles organizations, plans, and invoices.
  */
 
@@ -10,7 +10,12 @@ import { Query, ID, BillingPlan } from '@appwrite.io/console'
 import type { Organization } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
-import { DEFAULT_STALE_TIME, LONG_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  LONG_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 
 /**
  * Convert a billing plan string to BillingPlan enum value
@@ -20,19 +25,21 @@ function getBillingPlanEnum(planString: string): BillingPlan {
   if (!planString) {
     throw new Error('Billing plan is required')
   }
-  
+
   // The enum values are strings like 'tier-0', 'tier-1', etc.
   // Check if the string matches any enum value
   const enumValues = Object.values(BillingPlan) as string[]
   const normalized = planString.trim()
-  
+
   if (enumValues.includes(normalized)) {
     return normalized as BillingPlan
   }
-  
+
   // If not found, throw an error rather than defaulting
   // This prevents accidentally changing plans or using invalid values
-  throw new Error(`Invalid billing plan: ${planString}. Valid plans: ${enumValues.join(', ')}`)
+  throw new Error(
+    `Invalid billing plan: ${planString}. Valid plans: ${enumValues.join(', ')}`,
+  )
 }
 
 // ============================================================================
@@ -41,23 +48,23 @@ function getBillingPlanEnum(planString: string): BillingPlan {
 
 /**
  * Query function to fetch all organizations (teams) from the console SDK
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @returns Organizations list response from the API
  */
 export async function fetchOrganizations() {
-  const response = await sdk.forConsole.organizations.list(
-    [Query.equal('platform', 'appwrite')],
-  )
+  const response = await sdk.forConsole.organizations.list([
+    Query.equal('platform', 'appwrite'),
+  ])
   return response
 }
 
 /**
  * Query function to fetch a single organization by ID
- * 
+ *
  * This fetches the full organization details including plan information.
- * 
+ *
  * @param orgId - The organization ID to fetch
  * @returns Organization details from the API
  */
@@ -74,9 +81,9 @@ export async function fetchOrganizationById(orgId: string) {
 
 /**
  * Query function to fetch organization plan details
- * 
+ *
  * This fetches the plan information for a specific organization.
- * 
+ *
  * @param orgId - The organization ID to fetch plan for
  * @returns Organization plan details from the API
  */
@@ -90,9 +97,9 @@ export async function fetchOrganizationPlan(orgId: string) {
 
 /**
  * Query function to fetch invoices for an organization
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param organizationId - The organization ID to fetch invoices for
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -115,7 +122,9 @@ export async function fetchOrganizationInvoices(
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const finalQueries = queries ? [...defaultQueries, ...queries] : defaultQueries
+  const finalQueries = queries
+    ? [...defaultQueries, ...queries]
+    : defaultQueries
 
   const response = await sdk.forConsole.organizations.listInvoices({
     organizationId,
@@ -130,7 +139,7 @@ export async function fetchOrganizationInvoices(
 
 /**
  * Query function to fetch billing aggregation for an organization
- * 
+ *
  * @param organizationId - The organization ID to fetch aggregation for
  * @param aggregationId - The billing aggregation ID from the organization
  * @param limit - Limit for project pagination (default: 10)
@@ -166,7 +175,7 @@ export async function fetchOrganizationBillingAggregation(
 
 /**
  * Query function to fetch credits for an organization
- * 
+ *
  * @param organizationId - The organization ID to fetch credits for
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -202,7 +211,7 @@ export async function fetchOrganizationCredits(
 
 /**
  * Query function to fetch payment methods for the current account
- * 
+ *
  * @returns Payment methods list response from the API
  */
 export async function fetchPaymentMethods() {
@@ -215,7 +224,7 @@ export async function fetchPaymentMethods() {
 
 /**
  * Query function to fetch a specific payment method
- * 
+ *
  * @param paymentMethodId - The payment method ID to fetch
  * @returns Payment method details from the API
  */
@@ -231,7 +240,7 @@ export async function fetchPaymentMethod(paymentMethodId: string) {
 
 /**
  * Query function to fetch billing addresses for the current account
- * 
+ *
  * @returns Billing addresses list response from the API
  */
 export async function fetchBillingAddresses() {
@@ -244,7 +253,7 @@ export async function fetchBillingAddresses() {
 
 /**
  * Query function to fetch a specific billing address
- * 
+ *
  * @param billingAddressId - The billing address ID to fetch
  * @returns Billing address details from the API
  */
@@ -260,19 +269,19 @@ export async function fetchBillingAddress(billingAddressId: string) {
 
 /**
  * Query function to fetch all available billing plans
- * 
+ *
  * @returns Plans list response from the API, transformed to object format
  */
 export async function fetchBillingPlans() {
   try {
     // Use console service to fetch plans
     const response = await sdk.forConsole.console.plans()
-    
+
     // Transform array response to object format keyed by plan $id
     // Response format: { total: number, plans: BillingPlan[] }
     // We need: { plans: { [planId]: planData } }
     const plansObject: Record<string, any> = {}
-    
+
     if (response.plans && Array.isArray(response.plans)) {
       response.plans.forEach((plan: any) => {
         if (plan.$id) {
@@ -280,7 +289,7 @@ export async function fetchBillingPlans() {
         }
       })
     }
-    
+
     return {
       plans: plansObject,
       total: response.total || 0,
@@ -293,7 +302,7 @@ export async function fetchBillingPlans() {
 
 /**
  * Query function to get coupon account information
- * 
+ *
  * @param couponCode - The coupon code to validate
  * @returns Coupon details from the API
  */
@@ -308,7 +317,9 @@ export async function fetchCouponAccount(couponCode: string) {
     }
     // Fallback to organizations service
     if ((sdk.forConsole.organizations as any).getCouponAccount) {
-      return await (sdk.forConsole.organizations as any).getCouponAccount(couponCode)
+      return await (sdk.forConsole.organizations as any).getCouponAccount(
+        couponCode,
+      )
     }
     return null
   } catch (error) {
@@ -319,7 +330,7 @@ export async function fetchCouponAccount(couponCode: string) {
 
 /**
  * Query function to fetch organization usage
- * 
+ *
  * @param organizationId - The organization ID
  * @returns Organization usage data
  */
@@ -334,7 +345,9 @@ export async function fetchOrganizationUsage(organizationId: string) {
     }
     // Fallback to organizations service
     if ((sdk.forConsole.organizations as any).listUsage) {
-      return await (sdk.forConsole.organizations as any).listUsage(organizationId)
+      return await (sdk.forConsole.organizations as any).listUsage(
+        organizationId,
+      )
     }
     return undefined
   } catch (error) {
@@ -345,7 +358,7 @@ export async function fetchOrganizationUsage(organizationId: string) {
 
 /**
  * Query function to fetch all projects for an organization
- * 
+ *
  * @param organizationId - The organization ID
  * @returns Projects list
  */
@@ -370,7 +383,7 @@ export async function fetchOrganizationProjects(organizationId: string) {
 
 /**
  * Query function to get cost estimation for creating a new organization
- * 
+ *
  * @param billingPlan - The billing plan
  * @param couponId - Optional coupon ID
  * @param collaborators - Array of collaborator emails
@@ -392,7 +405,9 @@ export async function fetchEstimationCreateOrganization(
     }
     // Fallback to organizations service
     if ((sdk.forConsole.organizations as any).estimationCreateOrganization) {
-      return await (sdk.forConsole.organizations as any).estimationCreateOrganization(
+      return await (
+        sdk.forConsole.organizations as any
+      ).estimationCreateOrganization(
         billingPlan,
         couponId || undefined,
         collaborators,
@@ -407,7 +422,7 @@ export async function fetchEstimationCreateOrganization(
 
 /**
  * Query function to get cost estimation for updating a plan
- * 
+ *
  * @param organizationId - The organization ID
  * @param billingPlan - The billing plan
  * @param couponId - Optional coupon ID
@@ -444,7 +459,7 @@ export async function fetchEstimationUpdatePlan(
         }
       }
     }
-    
+
     // Try billing service first (if it exists)
     if ((sdk.forConsole as any).billing?.estimationUpdatePlan) {
       return await (sdk.forConsole as any).billing.estimationUpdatePlan({
@@ -471,27 +486,24 @@ export async function fetchEstimationUpdatePlan(
   }
 }
 
-
 // ============================================================================
 // MUTATION FUNCTIONS
 // ============================================================================
 
 /**
  * Mutation function to create an organization
- * 
+ *
  * @param orgData - Organization data (organizationId, name)
  * @returns Created organization
  */
-export async function createOrganization(
-  orgData: {
-    organizationId?: string
-    name: string
-  },
-) {
+export async function createOrganization(orgData: {
+  organizationId?: string
+  name: string
+}) {
   if (!orgData.name.trim()) {
     throw new Error('Organization name is required')
   }
-  
+
   const organizationId = orgData.organizationId || ID.unique()
 
   return await sdk.forConsole.organizations.create({
@@ -503,7 +515,7 @@ export async function createOrganization(
 
 /**
  * Mutation function to update organization budget
- * 
+ *
  * @param params - Budget update parameters
  * @returns Updated organization
  */
@@ -517,7 +529,7 @@ export async function updateOrganizationBudget(params: {
 
 /**
  * Mutation function to update organization billing tax ID
- * 
+ *
  * @param params - Tax ID update parameters
  * @returns Updated organization
  */
@@ -528,7 +540,7 @@ export async function updateOrganizationTaxId(params: {
   // Use setBillingTaxId to update tax ID (dedicated method, doesn't require billingPlan)
   // If billingTaxId is undefined or empty, pass empty string to remove it
   const taxId = params.billingTaxId || ''
-  
+
   return await sdk.forConsole.organizations.setBillingTaxId({
     organizationId: params.organizationId,
     taxId,
@@ -537,7 +549,7 @@ export async function updateOrganizationTaxId(params: {
 
 /**
  * Mutation function to update organization payment method
- * 
+ *
  * @param params - Payment method update parameters
  * @returns Updated organization
  */
@@ -561,7 +573,7 @@ export async function updateOrganizationPaymentMethod(params: {
       })
     }
   }
-  
+
   if (params.paymentMethodId !== undefined) {
     if (params.paymentMethodId) {
       // Set default payment method
@@ -576,13 +588,15 @@ export async function updateOrganizationPaymentMethod(params: {
       })
     }
   }
-  
-  throw new Error('Either paymentMethodId or backupPaymentMethodId must be provided')
+
+  throw new Error(
+    'Either paymentMethodId or backupPaymentMethodId must be provided',
+  )
 }
 
 /**
  * Mutation function to update organization billing address
- * 
+ *
  * @param params - Billing address update parameters
  * @returns Updated organization
  */
@@ -595,10 +609,10 @@ export async function updateOrganizationBillingAddress(params: {
   if (!org) {
     throw new Error('Organization not found')
   }
-  
+
   // Convert string billingPlan to BillingPlan enum
   const billingPlan = getBillingPlanEnum(org.billingPlan)
-  
+
   return await sdk.forConsole.organizations.updatePlan({
     organizationId: params.organizationId,
     billingPlan,
@@ -608,7 +622,7 @@ export async function updateOrganizationBillingAddress(params: {
 
 /**
  * Mutation function to update organization billing plan
- * 
+ *
  * @param params - Plan update parameters
  * @returns Updated organization or error response
  */
@@ -654,7 +668,7 @@ export async function updateOrganizationPlan(params: {
 
 /**
  * Mutation function to update selected projects for an organization
- * 
+ *
  * @param organizationId - The organization ID
  * @param projectIds - Array of project IDs to keep
  * @returns Updated organization
@@ -689,7 +703,7 @@ export async function updateSelectedProjects(
 
 /**
  * Mutation function to validate organization after payment
- * 
+ *
  * @param organizationId - The organization ID
  * @param invites - Array of invite emails
  * @returns Validated organization
@@ -724,7 +738,7 @@ export async function validateOrganization(
 
 /**
  * Mutation function to create downgrade feedback
- * 
+ *
  * @param params - Downgrade feedback parameters
  * @returns void
  */
@@ -754,7 +768,7 @@ export async function createDowngradeFeedback(params: {
 
 /**
  * Mutation function to retry invoice payment
- * 
+ *
  * @param params - Invoice retry parameters
  * @returns Payment intent response
  */
@@ -772,9 +786,9 @@ export async function retryInvoicePayment(params: {
 
 /**
  * Mutation function to create a payment method
- * 
+ *
  * Creates an empty payment method record and returns it with a clientSecret for Stripe
- * 
+ *
  * @returns Payment method with clientSecret
  */
 export async function createPaymentMethod() {
@@ -783,9 +797,9 @@ export async function createPaymentMethod() {
 
 /**
  * Mutation function to set payment method provider (link Stripe payment method)
- * 
+ *
  * Links a Stripe payment method to an Appwrite payment method record
- * 
+ *
  * @param params - Payment method provider parameters
  * @returns Updated payment method
  */
@@ -805,7 +819,7 @@ export async function setPaymentMethodProvider(params: {
 
 /**
  * Mutation function to set organization default payment method
- * 
+ *
  * @param params - Payment method assignment parameters
  * @returns Updated organization
  */
@@ -821,7 +835,7 @@ export async function setOrganizationDefaultPaymentMethod(params: {
 
 /**
  * Mutation function to set organization backup payment method
- * 
+ *
  * @param params - Payment method assignment parameters
  * @returns Updated organization
  */
@@ -837,7 +851,7 @@ export async function setOrganizationBackupPaymentMethod(params: {
 
 /**
  * Mutation function to update payment method expiration
- * 
+ *
  * @param params - Payment method update parameters
  * @returns Updated payment method
  */
@@ -857,13 +871,11 @@ export async function updatePaymentMethod(params: {
 
 /**
  * Mutation function to delete a payment method
- * 
+ *
  * @param params - Payment method deletion parameters
  * @returns Empty object
  */
-export async function deletePaymentMethod(params: {
-  paymentMethodId: string
-}) {
+export async function deletePaymentMethod(params: { paymentMethodId: string }) {
   return await sdk.forConsole.account.deletePaymentMethod({
     paymentMethodId: params.paymentMethodId,
   })
@@ -871,7 +883,7 @@ export async function deletePaymentMethod(params: {
 
 /**
  * Mutation function to create a billing address
- * 
+ *
  * @param params - Billing address creation parameters
  * @returns Created billing address
  */
@@ -895,7 +907,7 @@ export async function createBillingAddress(params: {
 
 /**
  * Mutation function to update a billing address
- * 
+ *
  * @param params - Billing address update parameters
  * @returns Updated billing address
  */
@@ -921,7 +933,7 @@ export async function updateBillingAddress(params: {
 
 /**
  * Mutation function to delete a billing address
- * 
+ *
  * @param params - Billing address deletion parameters
  * @returns Empty object
  */
@@ -939,10 +951,10 @@ export async function deleteBillingAddress(params: {
 
 /**
  * Hook to fetch all organizations (teams) from the console SDK
- * 
+ *
  * In Appwrite, organizations are represented as teams, so this fetches all teams
  * that the user has access to.
- * 
+ *
  * @returns Organizations list with loading state
  */
 export function useOrganizations() {
@@ -962,13 +974,15 @@ export function useOrganizations() {
   // Map the API response to our Organization type
   const organizations = useMemo(() => {
     if (!organizationsData?.teams) return []
-    
+
     return organizationsData.teams.map((org: any) => {
       // Map billingPlan to plan name using the filter
       const planName = getPlanNameFromTier(org.billingPlan)
       // Map 'custom' to 'enterprise' for compatibility with Organization type
-      const plan = (planName === 'custom' ? 'enterprise' : planName) as Organization['plan']
-      
+      const plan = (
+        planName === 'custom' ? 'enterprise' : planName
+      ) as Organization['plan']
+
       return {
         $id: org.$id,
         name: org.name,
@@ -988,10 +1002,9 @@ export function useOrganizations() {
   }
 }
 
-
 /**
  * Hook to create an organization
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useCreateOrganization() {
@@ -1010,7 +1023,7 @@ export function useCreateOrganization() {
 
 /**
  * Hook to fetch a single organization by ID with full details including plan
- * 
+ *
  * @param orgId - The organization ID to fetch
  * @returns Organization details with loading state
  */
@@ -1032,10 +1045,12 @@ export function useOrganizationById(orgId: string | null | undefined) {
   // Map the API response to include plan information
   const organization = useMemo(() => {
     if (!orgData) return null
-    
+
     const planName = getPlanNameFromTier(orgData.billingPlan)
-    const plan = (planName === 'custom' ? 'enterprise' : planName) as Organization['plan']
-    
+    const plan = (
+      planName === 'custom' ? 'enterprise' : planName
+    ) as Organization['plan']
+
     return {
       ...orgData,
       plan,
@@ -1054,7 +1069,7 @@ export function useOrganizationById(orgId: string | null | undefined) {
 
 /**
  * Hook to fetch organization plan details
- * 
+ *
  * @param orgId - The organization ID to fetch plan for
  * @returns Organization plan details with loading state
  */
@@ -1083,7 +1098,7 @@ export function useOrganizationPlan(orgId: string | null | undefined) {
 
 /**
  * Hook to fetch invoices for an organization
- * 
+ *
  * @param organizationId - The organization ID to fetch invoices for
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -1096,16 +1111,17 @@ export function useOrganizationInvoices(
   limit: number = DEFAULT_PAGE_SIZE,
   queries?: string[],
 ) {
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isPending,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['invoices', 'organization', organizationId, page, limit, queries ?? null],
-    queryFn: () => fetchOrganizationInvoices(organizationId!, page, limit, queries),
+  const { data, isLoading, isFetching, isPending, error, refetch } = useQuery({
+    queryKey: [
+      'invoices',
+      'organization',
+      organizationId,
+      page,
+      limit,
+      queries ?? null,
+    ],
+    queryFn: () =>
+      fetchOrganizationInvoices(organizationId!, page, limit, queries),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -1125,7 +1141,7 @@ export function useOrganizationInvoices(
 
 /**
  * Hook to fetch billing aggregation for an organization
- * 
+ *
  * @param organizationId - The organization ID to fetch aggregation for
  * @param aggregationId - The billing aggregation ID from the organization
  * @param limit - Limit for project pagination (default: 10)
@@ -1138,14 +1154,22 @@ export function useOrganizationBillingAggregation(
   limit: number = 10,
   offset: number = 0,
 ) {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['billing-aggregation', 'organization', organizationId, aggregationId, limit, offset],
-    queryFn: () => fetchOrganizationBillingAggregation(organizationId!, aggregationId, limit, offset),
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: [
+      'billing-aggregation',
+      'organization',
+      organizationId,
+      aggregationId,
+      limit,
+      offset,
+    ],
+    queryFn: () =>
+      fetchOrganizationBillingAggregation(
+        organizationId!,
+        aggregationId,
+        limit,
+        offset,
+      ),
     enabled: !!organizationId && !!aggregationId,
     staleTime: DEFAULT_STALE_TIME,
   })
@@ -1160,7 +1184,7 @@ export function useOrganizationBillingAggregation(
 
 /**
  * Hook to fetch credits for an organization
- * 
+ *
  * @param organizationId - The organization ID to fetch credits for
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -1171,12 +1195,7 @@ export function useOrganizationCredits(
   page: number = 0,
   limit: number = 5,
 ) {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['credits', 'organization', organizationId, page, limit],
     queryFn: () => fetchOrganizationCredits(organizationId!, page, limit),
     enabled: !!organizationId,
@@ -1195,16 +1214,11 @@ export function useOrganizationCredits(
 
 /**
  * Hook to fetch payment methods for the current account
- * 
+ *
  * @returns Payment methods list with loading state
  */
 export function usePaymentMethods() {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['payment-methods', 'account'],
     queryFn: fetchPaymentMethods,
     staleTime: DEFAULT_STALE_TIME,
@@ -1223,17 +1237,12 @@ export function usePaymentMethods() {
 
 /**
  * Hook to fetch a specific payment method
- * 
+ *
  * @param paymentMethodId - The payment method ID to fetch
  * @returns Payment method details with loading state
  */
 export function usePaymentMethod(paymentMethodId: string | null | undefined) {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['payment-method', paymentMethodId],
     queryFn: () => fetchPaymentMethod(paymentMethodId!),
     enabled: !!paymentMethodId,
@@ -1250,16 +1259,11 @@ export function usePaymentMethod(paymentMethodId: string | null | undefined) {
 
 /**
  * Hook to fetch billing addresses for the current account
- * 
+ *
  * @returns Billing addresses list with loading state
  */
 export function useBillingAddresses() {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['billing-addresses', 'account'],
     queryFn: fetchBillingAddresses,
     staleTime: DEFAULT_STALE_TIME,
@@ -1276,17 +1280,12 @@ export function useBillingAddresses() {
 
 /**
  * Hook to fetch a specific billing address
- * 
+ *
  * @param billingAddressId - The billing address ID to fetch
  * @returns Billing address details with loading state
  */
 export function useBillingAddress(billingAddressId: string | null | undefined) {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['billing-address', billingAddressId],
     queryFn: () => fetchBillingAddress(billingAddressId!),
     enabled: !!billingAddressId,
@@ -1303,7 +1302,7 @@ export function useBillingAddress(billingAddressId: string | null | undefined) {
 
 /**
  * Hook to update organization budget
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useUpdateOrganizationBudget() {
@@ -1317,7 +1316,11 @@ export function useUpdateOrganizationBudget() {
         queryKey: ['organization', variables.organizationId],
       })
       queryClient.invalidateQueries({
-        queryKey: ['billing-aggregation', 'organization', variables.organizationId],
+        queryKey: [
+          'billing-aggregation',
+          'organization',
+          variables.organizationId,
+        ],
       })
     },
   })
@@ -1325,7 +1328,7 @@ export function useUpdateOrganizationBudget() {
 
 /**
  * Hook to update organization tax ID
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useUpdateOrganizationTaxId() {
@@ -1344,7 +1347,7 @@ export function useUpdateOrganizationTaxId() {
 
 /**
  * Hook to update organization payment method
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useUpdateOrganizationPaymentMethod() {
@@ -1363,7 +1366,7 @@ export function useUpdateOrganizationPaymentMethod() {
 
 /**
  * Hook to update organization billing address
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useUpdateOrganizationBillingAddress() {
@@ -1382,7 +1385,7 @@ export function useUpdateOrganizationBillingAddress() {
 
 /**
  * Hook to retry invoice payment
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useRetryInvoicePayment() {
@@ -1405,7 +1408,7 @@ export function useRetryInvoicePayment() {
 
 /**
  * Hook to create a payment method
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useCreatePaymentMethod() {
@@ -1424,7 +1427,7 @@ export function useCreatePaymentMethod() {
 
 /**
  * Hook to set payment method provider (link Stripe payment method)
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useSetPaymentMethodProvider() {
@@ -1447,7 +1450,7 @@ export function useSetPaymentMethodProvider() {
 
 /**
  * Hook to set organization default payment method
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useSetOrganizationDefaultPaymentMethod() {
@@ -1470,7 +1473,7 @@ export function useSetOrganizationDefaultPaymentMethod() {
 
 /**
  * Hook to set organization backup payment method
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useSetOrganizationBackupPaymentMethod() {
@@ -1493,7 +1496,7 @@ export function useSetOrganizationBackupPaymentMethod() {
 
 /**
  * Hook to update payment method expiration
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useUpdatePaymentMethod() {
@@ -1516,7 +1519,7 @@ export function useUpdatePaymentMethod() {
 
 /**
  * Hook to delete a payment method
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useDeletePaymentMethod() {
@@ -1539,7 +1542,7 @@ export function useDeletePaymentMethod() {
 
 /**
  * Hook to create a billing address
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useCreateBillingAddress() {
@@ -1558,7 +1561,7 @@ export function useCreateBillingAddress() {
 
 /**
  * Hook to update a billing address
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useUpdateBillingAddress() {
@@ -1581,7 +1584,7 @@ export function useUpdateBillingAddress() {
 
 /**
  * Hook to delete a billing address
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useDeleteBillingAddress() {
@@ -1604,16 +1607,11 @@ export function useDeleteBillingAddress() {
 
 /**
  * Hook to fetch all available billing plans
- * 
+ *
  * @returns Plans list with loading state
  */
 export function useBillingPlans() {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['billing-plans'],
     queryFn: fetchBillingPlans,
     staleTime: LONG_STALE_TIME,
@@ -1635,17 +1633,12 @@ export function useBillingPlans() {
 
 /**
  * Hook to fetch coupon account information
- * 
+ *
  * @param couponCode - The coupon code to validate
  * @returns Coupon details with loading state
  */
 export function useCouponAccount(couponCode: string | null | undefined) {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['coupon-account', couponCode],
     queryFn: () => fetchCouponAccount(couponCode!),
     enabled: !!couponCode,
@@ -1667,17 +1660,14 @@ export function useCouponAccount(couponCode: string | null | undefined) {
 
 /**
  * Hook to fetch organization usage
- * 
+ *
  * @param organizationId - The organization ID
  * @returns Organization usage data with loading state
  */
-export function useOrganizationUsage(organizationId: string | null | undefined) {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+export function useOrganizationUsage(
+  organizationId: string | null | undefined,
+) {
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['organization-usage', organizationId],
     queryFn: () => fetchOrganizationUsage(organizationId!),
     enabled: !!organizationId,
@@ -1699,17 +1689,14 @@ export function useOrganizationUsage(organizationId: string | null | undefined) 
 
 /**
  * Hook to fetch all projects for an organization
- * 
+ *
  * @param organizationId - The organization ID
  * @returns Projects list with loading state
  */
-export function useOrganizationProjects(organizationId: string | null | undefined) {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+export function useOrganizationProjects(
+  organizationId: string | null | undefined,
+) {
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['organization-projects', organizationId],
     queryFn: () => fetchOrganizationProjects(organizationId!),
     enabled: !!organizationId,
@@ -1732,7 +1719,7 @@ export function useOrganizationProjects(organizationId: string | null | undefine
 
 /**
  * Hook to get cost estimation for creating a new organization
- * 
+ *
  * @param billingPlan - The billing plan
  * @param couponId - Optional coupon ID
  * @param collaborators - Array of collaborator emails
@@ -1750,14 +1737,19 @@ export function useEstimationCreateOrganization(
     return JSON.stringify([...collaborators].sort())
   }, [collaborators])
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['estimation-create-org', billingPlan, couponId, collaboratorsKey],
-    queryFn: () => fetchEstimationCreateOrganization(billingPlan!, couponId || null, collaborators),
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: [
+      'estimation-create-org',
+      billingPlan,
+      couponId,
+      collaboratorsKey,
+    ],
+    queryFn: () =>
+      fetchEstimationCreateOrganization(
+        billingPlan!,
+        couponId || null,
+        collaborators,
+      ),
     enabled: !!billingPlan,
     staleTime: 30 * 1000, // 30 seconds
     // Prevent refetch on window focus to avoid loops
@@ -1778,7 +1770,7 @@ export function useEstimationCreateOrganization(
 
 /**
  * Hook to get cost estimation for updating a plan
- * 
+ *
  * @param organizationId - The organization ID
  * @param billingPlan - The billing plan
  * @param couponId - Optional coupon ID
@@ -1798,14 +1790,21 @@ export function useEstimationUpdatePlan(
     return JSON.stringify([...collaborators].sort())
   }, [collaborators])
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['estimation-update-plan', organizationId, billingPlan, couponId, collaboratorsKey],
-    queryFn: () => fetchEstimationUpdatePlan(organizationId!, billingPlan!, couponId ?? undefined, collaborators),
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: [
+      'estimation-update-plan',
+      organizationId,
+      billingPlan,
+      couponId,
+      collaboratorsKey,
+    ],
+    queryFn: () =>
+      fetchEstimationUpdatePlan(
+        organizationId!,
+        billingPlan!,
+        couponId ?? undefined,
+        collaborators,
+      ),
     enabled: !!organizationId && !!billingPlan,
     staleTime: 30 * 1000, // 30 seconds
     // Prevent refetch on window focus to avoid loops
@@ -1826,7 +1825,7 @@ export function useEstimationUpdatePlan(
 
 /**
  * Hook to update organization billing plan
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useUpdateOrganizationPlan() {
@@ -1851,15 +1850,20 @@ export function useUpdateOrganizationPlan() {
 
 /**
  * Hook to update selected projects for an organization
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useUpdateSelectedProjects() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ organizationId, projectIds }: { organizationId: string; projectIds: string[] }) =>
-      updateSelectedProjects(organizationId, projectIds),
+    mutationFn: ({
+      organizationId,
+      projectIds,
+    }: {
+      organizationId: string
+      projectIds: string[]
+    }) => updateSelectedProjects(organizationId, projectIds),
     onSuccess: (_, variables) => {
       // Invalidate organization query
       queryClient.invalidateQueries({
@@ -1871,15 +1875,20 @@ export function useUpdateSelectedProjects() {
 
 /**
  * Hook to validate organization after payment
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useValidateOrganization() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ organizationId, invites }: { organizationId: string; invites: string[] }) =>
-      validateOrganization(organizationId, invites),
+    mutationFn: ({
+      organizationId,
+      invites,
+    }: {
+      organizationId: string
+      invites: string[]
+    }) => validateOrganization(organizationId, invites),
     onSuccess: (_, variables) => {
       // Invalidate organization query
       queryClient.invalidateQueries({
@@ -1894,7 +1903,7 @@ export function useValidateOrganization() {
 
 /**
  * Hook to create downgrade feedback
- * 
+ *
  * @returns Mutation object with mutate function
  */
 export function useCreateDowngradeFeedback() {
@@ -1902,5 +1911,3 @@ export function useCreateDowngradeFeedback() {
     mutationFn: createDowngradeFeedback,
   })
 }
-
-

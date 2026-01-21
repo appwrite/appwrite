@@ -36,7 +36,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Loader2, Plus, Copy, Trash2, Eye, Check, AlertCircle, MoreHorizontal } from 'lucide-react'
+import {
+  Loader2,
+  Plus,
+  Copy,
+  Trash2,
+  Eye,
+  Check,
+  AlertCircle,
+  MoreHorizontal,
+} from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useProject } from '@/lib/react-query/hooks'
@@ -63,8 +72,12 @@ export function FileSecurity() {
   const [deleteTokenDialogOpen, setDeleteTokenDialogOpen] = useState(false)
   const [tokenToDelete, setTokenToDelete] = useState<string | null>(null)
   const [copyTokenDialogOpen, setCopyTokenDialogOpen] = useState(false)
-  const [tokenForCopy, setTokenForCopy] = useState<Models.ResourceToken | null>(null)
-  const [copyUrlMode, setCopyUrlMode] = useState<'preview' | 'view' | 'download'>('preview')
+  const [tokenForCopy, setTokenForCopy] = useState<Models.ResourceToken | null>(
+    null,
+  )
+  const [copyUrlMode, setCopyUrlMode] = useState<
+    'preview' | 'view' | 'download'
+  >('preview')
   const [tokensPage, setTokensPage] = useState(1)
   const [tokensPageSize, setTokensPageSize] = useState(25)
 
@@ -93,9 +106,14 @@ export function FileSecurity() {
   // Get endpoint from project region
   const projectEndpoint = useMemo(() => {
     if (!currentProject?.region || currentProject.region === 'unknown') {
-      return import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
+      return (
+        import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
+      )
     }
-    const normalizedRegion = currentProject.region.trim().toLowerCase().replace(/\s+/g, '')
+    const normalizedRegion = currentProject.region
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '')
     return `https://${normalizedRegion}.cloud.appwrite.io/v1`
   }, [currentProject?.region])
 
@@ -199,14 +217,19 @@ export function FileSecurity() {
     }
   }
 
-  const viewingToken = tokens.find((t: Models.ResourceToken) => t.$id === viewingTokenId)
+  const viewingToken = tokens.find(
+    (t: Models.ResourceToken) => t.$id === viewingTokenId,
+  )
 
   // Build file URL with token
-  const getFileUrl = (mode: 'preview' | 'view' | 'download', tokenSecret: string): string => {
+  const getFileUrl = (
+    mode: 'preview' | 'view' | 'download',
+    tokenSecret: string,
+  ): string => {
     if (!projectId || !bucketId || !fileId) return ''
     const baseUrl = `${projectEndpoint}/storage/buckets/${bucketId}/files/${fileId}`
     const tokenParam = `token=${tokenSecret}`
-    
+
     if (mode === 'preview') {
       return `${baseUrl}/preview?${tokenParam}`
     } else if (mode === 'view') {
@@ -248,7 +271,16 @@ export function FileSecurity() {
               Permissions
             </h3>
             <p className="text-[13px] text-muted-foreground mt-2">
-              Choose who can access this file. <a href="https://appwrite.io/docs/permissions" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Learn more</a>.
+              Choose who can access this file.{' '}
+              <a
+                href="https://appwrite.io/docs/permissions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                Learn more
+              </a>
+              .
             </p>
           </div>
           <div className="border-t border-border" />
@@ -284,7 +316,19 @@ export function FileSecurity() {
                   Tokens
                 </h3>
                 <p className="text-[13px] text-muted-foreground mt-2">
-                  File tokens allow you to share files publicly with anyone without configuring bucket or file permissions. They work around browser restrictions on third-party cookies and can be set to expire on a specific date or work indefinitely. <a href="https://appwrite.io/docs/products/storage/file-tokens" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Learn more</a>.
+                  File tokens allow you to share files publicly with anyone
+                  without configuring bucket or file permissions. They work
+                  around browser restrictions on third-party cookies and can be
+                  set to expire on a specific date or work indefinitely.{' '}
+                  <a
+                    href="https://appwrite.io/docs/products/storage/file-tokens"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Learn more
+                  </a>
+                  .
                 </p>
               </div>
               <Button
@@ -307,10 +351,16 @@ export function FileSecurity() {
               <div className="space-y-2">
                 {tokens.map((token: Models.ResourceToken) => {
                   const now = new Date()
-                  const expireDate = token.expire ? new Date(token.expire) : null
+                  const expireDate = token.expire
+                    ? new Date(token.expire)
+                    : null
                   const isExpired = expireDate && expireDate < now
-                  const isExpiringSoon = expireDate && !isExpired && expireDate.getTime() - now.getTime() <= 7 * 24 * 60 * 60 * 1000 // 7 days
-                  
+                  const isExpiringSoon =
+                    expireDate &&
+                    !isExpired &&
+                    expireDate.getTime() - now.getTime() <=
+                      7 * 24 * 60 * 60 * 1000 // 7 days
+
                   return (
                     <div
                       key={token.$id}
@@ -334,7 +384,12 @@ export function FileSecurity() {
                                 <Eye className="h-3.5 w-3.5" />
                               </button>
                               <button
-                                onClick={() => copyToClipboard(token.secret, `token-secret-${token.$id}`)}
+                                onClick={() =>
+                                  copyToClipboard(
+                                    token.secret,
+                                    `token-secret-${token.$id}`,
+                                  )
+                                }
                                 className="rounded p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground shrink-0"
                                 title="Copy secret"
                               >
@@ -346,17 +401,21 @@ export function FileSecurity() {
                               </button>
                             </div>
                           )}
-                          
+
                           <div className="flex items-center gap-6 flex-wrap text-[12px]">
                             <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground">Created</span>
+                              <span className="text-muted-foreground">
+                                Created
+                              </span>
                               <DateTooltip
                                 date={token.$createdAt}
                                 className="text-foreground"
                               />
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground">Expires</span>
+                              <span className="text-muted-foreground">
+                                Expires
+                              </span>
                               {token.expire ? (
                                 <div className="flex items-center gap-2">
                                   <DateTooltip
@@ -364,11 +423,17 @@ export function FileSecurity() {
                                     className="text-foreground"
                                   />
                                   {isExpired ? (
-                                    <Badge variant="secondary" className="text-[10px]">
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-[10px]"
+                                    >
                                       Expired
                                     </Badge>
                                   ) : isExpiringSoon ? (
-                                    <Badge variant="warning" className="text-[10px]">
+                                    <Badge
+                                      variant="warning"
+                                      className="text-[10px]"
+                                    >
                                       Expire soon
                                     </Badge>
                                   ) : null}
@@ -378,7 +443,9 @@ export function FileSecurity() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground">Last accessed</span>
+                              <span className="text-muted-foreground">
+                                Last accessed
+                              </span>
                               {token.accessedAt ? (
                                 <DateTooltip
                                   date={token.accessedAt}
@@ -390,7 +457,7 @@ export function FileSecurity() {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2 shrink-0">
                           <Button
                             variant="outline"
@@ -413,7 +480,12 @@ export function FileSecurity() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem
-                                onClick={() => copyToClipboard(token.$id, `token-id-${token.$id}`)}
+                                onClick={() =>
+                                  copyToClipboard(
+                                    token.$id,
+                                    `token-id-${token.$id}`,
+                                  )
+                                }
                               >
                                 {copiedField === `token-id-${token.$id}` ? (
                                   <>
@@ -473,19 +545,26 @@ export function FileSecurity() {
       </div>
 
       {/* Create Token Dialog */}
-      <Dialog open={createTokenDialogOpen} onOpenChange={setCreateTokenDialogOpen}>
+      <Dialog
+        open={createTokenDialogOpen}
+        onOpenChange={setCreateTokenDialogOpen}
+      >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Create file token</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Create a token to share this file publicly. You can optionally set an expiration date.
+              Create a token to share this file publicly. You can optionally set
+              an expiration date.
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
           <div className="px-6 pb-4 pt-0">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="expiration" className="text-[13px] font-medium text-foreground">
+                <Label
+                  htmlFor="expiration"
+                  className="text-[13px] font-medium text-foreground"
+                >
                   Expiration date (optional)
                 </Label>
                 <p className="text-[12px] text-muted-foreground mt-0.5 mb-1.5">
@@ -522,19 +601,25 @@ export function FileSecurity() {
       </Dialog>
 
       {/* Token View Modal */}
-      <Dialog open={viewingTokenId !== null} onOpenChange={(open) => !open && setViewingTokenId(null)}>
+      <Dialog
+        open={viewingTokenId !== null}
+        onOpenChange={(open) => !open && setViewingTokenId(null)}
+      >
         <DialogContent className="sm:max-w-[600px] p-0">
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>File Token</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Copy the full token below. Keep it secure and never share it publicly.
+              Copy the full token below. Keep it secure and never share it
+              publicly.
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
-          
+
           <div className="px-6 pb-4 pt-0">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Token</label>
+              <label className="text-sm font-medium text-foreground">
+                Token
+              </label>
               <textarea
                 readOnly
                 value={viewingToken?.secret || ''}
@@ -543,12 +628,9 @@ export function FileSecurity() {
               />
             </div>
           </div>
-          
+
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setViewingTokenId(null)}
-            >
+            <Button variant="outline" onClick={() => setViewingTokenId(null)}>
               Close
             </Button>
             <Button
@@ -590,10 +672,11 @@ export function FileSecurity() {
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete token</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this token? This action cannot be undone.
+              Are you sure you want to delete this token? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"
@@ -643,12 +726,14 @@ export function FileSecurity() {
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border shrink-0" />
-          
+
           <div className="px-6 pb-4 pt-0 overflow-y-auto flex-1 min-h-0">
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <Label className="text-sm font-medium text-foreground">URL</Label>
+                  <Label className="text-sm font-medium text-foreground">
+                    URL
+                  </Label>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Button
                       variant="outline"
@@ -656,12 +741,16 @@ export function FileSecurity() {
                       onClick={() => {
                         if (tokenForCopy?.secret) {
                           setCopyUrlMode('preview')
-                          copyToClipboard(getFileUrl('preview', tokenForCopy.secret), 'copyUrl')
+                          copyToClipboard(
+                            getFileUrl('preview', tokenForCopy.secret),
+                            'copyUrl',
+                          )
                         }
                       }}
                       className="h-7 text-[11px]"
                     >
-                      {copiedField === 'copyUrl' && copyUrlMode === 'preview' ? (
+                      {copiedField === 'copyUrl' &&
+                      copyUrlMode === 'preview' ? (
                         <>
                           <Check className="h-3 w-3 mr-1 text-emerald-500" />
                           Copied
@@ -679,7 +768,10 @@ export function FileSecurity() {
                       onClick={() => {
                         if (tokenForCopy?.secret) {
                           setCopyUrlMode('view')
-                          copyToClipboard(getFileUrl('view', tokenForCopy.secret), 'copyUrl')
+                          copyToClipboard(
+                            getFileUrl('view', tokenForCopy.secret),
+                            'copyUrl',
+                          )
                         }
                       }}
                       className="h-7 text-[11px]"
@@ -702,12 +794,16 @@ export function FileSecurity() {
                       onClick={() => {
                         if (tokenForCopy?.secret) {
                           setCopyUrlMode('download')
-                          copyToClipboard(getFileUrl('download', tokenForCopy.secret), 'copyUrl')
+                          copyToClipboard(
+                            getFileUrl('download', tokenForCopy.secret),
+                            'copyUrl',
+                          )
                         }
                       }}
                       className="h-7 text-[11px]"
                     >
-                      {copiedField === 'copyUrl' && copyUrlMode === 'download' ? (
+                      {copiedField === 'copyUrl' &&
+                      copyUrlMode === 'download' ? (
                         <>
                           <Check className="h-3 w-3 mr-1 text-emerald-500" />
                           Copied
@@ -723,28 +819,39 @@ export function FileSecurity() {
                 </div>
                 <Textarea
                   readOnly
-                  value={tokenForCopy?.secret ? getFileUrl(copyUrlMode, tokenForCopy.secret) : ''}
+                  value={
+                    tokenForCopy?.secret
+                      ? getFileUrl(copyUrlMode, tokenForCopy.secret)
+                      : ''
+                  }
                   className="font-mono text-[12px] min-h-[80px] resize-none break-all"
                   onClick={(e) => (e.target as HTMLTextAreaElement).select()}
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  {copyUrlMode === 'preview' && 'Apply transformations or filters. Good for thumbnails or previews.'}
-                  {copyUrlMode === 'view' && 'Display the file in the browser. Good for images and documents.'}
-                  {copyUrlMode === 'download' && 'Download the file directly. Good for files that need to be saved.'}
+                  {copyUrlMode === 'preview' &&
+                    'Apply transformations or filters. Good for thumbnails or previews.'}
+                  {copyUrlMode === 'view' &&
+                    'Display the file in the browser. Good for images and documents.'}
+                  {copyUrlMode === 'download' &&
+                    'Download the file directly. Good for files that need to be saved.'}
                 </p>
               </div>
 
               {tokenForCopy && !tokenForCopy.expire && (
-                <Alert variant="destructive" className="bg-destructive/10 border-destructive/20">
+                <Alert
+                  variant="destructive"
+                  className="bg-destructive/10 border-destructive/20"
+                >
                   <AlertCircle className="h-4 w-4 text-destructive" />
                   <AlertDescription className="text-[12px] text-destructive">
-                    <span className="font-semibold">No expiration date.</span> This token doesn't expire. Be cautious when sharing links.
+                    <span className="font-semibold">No expiration date.</span>{' '}
+                    This token doesn't expire. Be cautious when sharing links.
                   </AlertDescription>
                 </Alert>
               )}
             </div>
           </div>
-          
+
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end shrink-0">
             <Button
               variant="outline"
@@ -761,4 +868,3 @@ export function FileSecurity() {
     </div>
   )
 }
-

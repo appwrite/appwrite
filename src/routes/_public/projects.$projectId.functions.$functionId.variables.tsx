@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { FunctionVariables } from '@/components/pages/projects/$projectId/functions/Variables'
-import { fetchProjectFunction, fetchFunctionVariables } from '@/lib/react-query/hooks'
+import {
+  fetchProjectFunction,
+  fetchFunctionVariables,
+} from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/variables',
@@ -40,5 +43,3 @@ export const Route = createFileRoute(
   },
   component: FunctionVariables,
 })
-
-

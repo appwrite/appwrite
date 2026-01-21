@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { FunctionDomains } from '@/components/pages/projects/$projectId/functions/Domains'
-import { fetchProjectFunction, fetchFunctionDomains } from '@/lib/react-query/hooks'
+import {
+  fetchProjectFunction,
+  fetchFunctionDomains,
+} from '@/lib/react-query/hooks'
 
 const DOMAINS_PER_PAGE = 25
 
@@ -31,8 +34,17 @@ export const Route = createFileRoute(
     // Prefetch proxy rules for domains (initial page, no search)
     try {
       await queryClient.ensureQueryData({
-        queryKey: ['proxy-rules', 'function', projectId, functionId, 0, DOMAINS_PER_PAGE, ''],
-        queryFn: () => fetchFunctionDomains(projectId, functionId, 0, DOMAINS_PER_PAGE, ''),
+        queryKey: [
+          'proxy-rules',
+          'function',
+          projectId,
+          functionId,
+          0,
+          DOMAINS_PER_PAGE,
+          '',
+        ],
+        queryFn: () =>
+          fetchFunctionDomains(projectId, functionId, 0, DOMAINS_PER_PAGE, ''),
         staleTime: 30 * 1000,
       })
     } catch (error) {
@@ -54,4 +66,3 @@ export const Route = createFileRoute(
   },
   component: FunctionDomains,
 })
-

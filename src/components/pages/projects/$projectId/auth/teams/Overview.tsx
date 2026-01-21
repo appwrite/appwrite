@@ -1,6 +1,11 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { useTeam, useUpdateTeamName, useUpdateTeamPrefs, useDeleteProjectTeam } from '@/lib/react-query/hooks'
+import {
+  useTeam,
+  useUpdateTeamName,
+  useUpdateTeamPrefs,
+  useDeleteProjectTeam,
+} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,14 +27,16 @@ export function TeamOverview() {
     strict: false,
   })
   const navigate = useNavigate()
-  
+
   const { data: team, isLoading } = useTeam(projectId, teamId)
   const updateNameMutation = useUpdateTeamName(projectId, teamId)
   const updatePrefsMutation = useUpdateTeamPrefs(projectId, teamId)
   const deleteTeamMutation = useDeleteProjectTeam(projectId)
 
   const [teamName, setTeamName] = useState('')
-  const [preferences, setPreferences] = useState<Array<{ key: string; value: string }>>([{ key: '', value: '' }])
+  const [preferences, setPreferences] = useState<
+    Array<{ key: string; value: string }>
+  >([{ key: '', value: '' }])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   // Initialize form values from team data
@@ -37,11 +44,15 @@ export function TeamOverview() {
     if (team) {
       setTeamName(team.name || '')
       // Convert prefs object to array of key-value pairs
-      const prefsArray = Object.entries(team.prefs || {}).map(([key, value]) => ({
-        key,
-        value: String(value),
-      }))
-      setPreferences(prefsArray.length > 0 ? prefsArray : [{ key: '', value: '' }])
+      const prefsArray = Object.entries(team.prefs || {}).map(
+        ([key, value]) => ({
+          key,
+          value: String(value),
+        }),
+      )
+      setPreferences(
+        prefsArray.length > 0 ? prefsArray : [{ key: '', value: '' }],
+      )
     }
   }, [team])
 
@@ -53,14 +64,17 @@ export function TeamOverview() {
   // Check if preferences have changed
   const prefsChanged = useMemo(() => {
     if (!team) return false
-    
+
     const currentPrefs = preferences
       .filter((p) => p.key.trim() && p.value.trim())
-      .reduce((acc, { key, value }) => {
-        acc[key.trim()] = value.trim()
-        return acc
-      }, {} as Record<string, string>)
-    
+      .reduce(
+        (acc, { key, value }) => {
+          acc[key.trim()] = value.trim()
+          return acc
+        },
+        {} as Record<string, string>,
+      )
+
     // Simple comparison using JSON.stringify for flat objects
     return JSON.stringify(currentPrefs) !== JSON.stringify(team.prefs || {})
   }, [preferences, team])
@@ -81,7 +95,9 @@ export function TeamOverview() {
       await updateNameMutation.mutateAsync(teamName.trim())
       toast.success('Name has been updated')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update name')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update name',
+      )
     }
   }
 
@@ -89,16 +105,21 @@ export function TeamOverview() {
     // Filter out empty rows and build prefs object
     const prefs = preferences
       .filter((p) => p.key.trim() && p.value.trim())
-      .reduce((acc, { key, value }) => {
-        acc[key.trim()] = value.trim()
-        return acc
-      }, {} as Record<string, string>)
+      .reduce(
+        (acc, { key, value }) => {
+          acc[key.trim()] = value.trim()
+          return acc
+        },
+        {} as Record<string, string>,
+      )
 
     try {
       await updatePrefsMutation.mutateAsync(prefs)
       toast.success('Preferences have been updated')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update preferences')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update preferences',
+      )
     }
   }
 
@@ -113,7 +134,9 @@ export function TeamOverview() {
         params: { projectId: projectId as string },
       })
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete team')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to delete team',
+      )
       setDeleteDialogOpen(false)
     }
   }
@@ -133,7 +156,11 @@ export function TeamOverview() {
     }
   }
 
-  const handlePreferenceChange = (index: number, field: 'key' | 'value', value: string) => {
+  const handlePreferenceChange = (
+    index: number,
+    field: 'key' | 'value',
+    value: string,
+  ) => {
     const newPrefs = [...preferences]
     newPrefs[index] = { ...newPrefs[index], [field]: value }
     setPreferences(newPrefs)
@@ -169,7 +196,9 @@ export function TeamOverview() {
               </div>
               <div className="space-y-1 text-[13px] text-muted-foreground">
                 <div className="flex items-center gap-1.5">
-                  <span>{totalMembers} member{totalMembers !== 1 ? 's' : ''}</span>
+                  <span>
+                    {totalMembers} member{totalMembers !== 1 ? 's' : ''}
+                  </span>
                 </div>
                 {team.$createdAt && (
                   <div className="flex items-center gap-1.5">
@@ -186,12 +215,19 @@ export function TeamOverview() {
       {/* Update Name */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Update name</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Update name
+          </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
             Update the team's display name.
           </p>
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); handleUpdateName(); }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleUpdateName()
+          }}
+        >
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <div className="space-y-2">
@@ -213,7 +249,9 @@ export function TeamOverview() {
               type="submit"
               size="sm"
               className="h-9 text-[13px]"
-              disabled={!nameChanged || !teamName.trim() || updateNameMutation.isPending}
+              disabled={
+                !nameChanged || !teamName.trim() || updateNameMutation.isPending
+              }
             >
               Update
             </Button>
@@ -224,12 +262,19 @@ export function TeamOverview() {
       {/* Update Preferences */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Update preferences</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Update preferences
+          </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
             Update team preferences as key-value pairs.
           </p>
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); handleUpdatePrefs(); }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleUpdatePrefs()
+          }}
+        >
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <div className="space-y-3">
@@ -239,7 +284,9 @@ export function TeamOverview() {
                     type="text"
                     placeholder="Key"
                     value={pref.key}
-                    onChange={(e) => handlePreferenceChange(index, 'key', e.target.value)}
+                    onChange={(e) =>
+                      handlePreferenceChange(index, 'key', e.target.value)
+                    }
                     disabled={updatePrefsMutation.isPending}
                     className="h-9 flex-1 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                   />
@@ -247,7 +294,9 @@ export function TeamOverview() {
                     type="text"
                     placeholder="Value"
                     value={pref.value}
-                    onChange={(e) => handlePreferenceChange(index, 'value', e.target.value)}
+                    onChange={(e) =>
+                      handlePreferenceChange(index, 'value', e.target.value)
+                    }
                     disabled={updatePrefsMutation.isPending}
                     className="h-9 flex-1 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                   />
@@ -273,9 +322,7 @@ export function TeamOverview() {
                 size="sm"
                 className="h-9 text-[13px]"
                 onClick={handleAddPreference}
-                disabled={
-                  !lastPrefComplete || updatePrefsMutation.isPending
-                }
+                disabled={!lastPrefComplete || updatePrefsMutation.isPending}
               >
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
                 Add preference
@@ -287,7 +334,11 @@ export function TeamOverview() {
               type="submit"
               size="sm"
               className="h-9 text-[13px]"
-              disabled={!prefsChanged || !lastPrefComplete || updatePrefsMutation.isPending}
+              disabled={
+                !prefsChanged ||
+                !lastPrefComplete ||
+                updatePrefsMutation.isPending
+              }
             >
               Update
             </Button>
@@ -298,12 +349,15 @@ export function TeamOverview() {
       {/* Delete Team */}
       <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Delete team</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Delete team
+          </h3>
         </div>
         <div className="border-t border-destructive/20" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            Permanently delete this team from the project. This action cannot be undone.
+            Permanently delete this team from the project. This action cannot be
+            undone.
           </p>
 
           {/* Team Info Summary */}
@@ -321,7 +375,8 @@ export function TeamOverview() {
                   if (team.$createdAt) {
                     parts.push(
                       <>
-                        Created: <DateTooltip date={new Date(team.$createdAt)} />
+                        Created:{' '}
+                        <DateTooltip date={new Date(team.$createdAt)} />
                       </>,
                     )
                   }
@@ -337,10 +392,7 @@ export function TeamOverview() {
           </div>
         </div>
         <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
-          <Dialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-          >
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
               <Button
                 variant="destructive"
@@ -354,7 +406,8 @@ export function TeamOverview() {
               <DialogHeader className="px-6 pt-6 text-left">
                 <DialogTitle>Delete team</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  Are you sure you want to delete <strong>{team.name}</strong>? This action cannot be undone.
+                  Are you sure you want to delete <strong>{team.name}</strong>?
+                  This action cannot be undone.
                 </DialogDescription>
               </DialogHeader>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -385,4 +438,3 @@ export function TeamOverview() {
     </div>
   )
 }
-

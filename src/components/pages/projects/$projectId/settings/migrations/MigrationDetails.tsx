@@ -9,7 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { AlertCircle, CheckCircle2, Loader2, Clock, XCircle } from 'lucide-react'
+import {
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Clock,
+  XCircle,
+} from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 
@@ -61,28 +67,40 @@ export function MigrationDetailsDialog({
     })
   }, [migration.errors])
 
-  const hasErrors = errors.length > 0 || (statusCounters.error && statusCounters.error > 0)
+  const hasErrors =
+    errors.length > 0 || (statusCounters.error && statusCounters.error > 0)
 
   const getStatusIcon = () => {
     if (hasErrors) return <XCircle className="h-4 w-4 text-destructive" />
     if (statusCounters.pending || statusCounters.processing) {
       return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
     }
-    if (statusCounters.success) return <CheckCircle2 className="h-4 w-4 text-green-600" />
+    if (statusCounters.success)
+      return <CheckCircle2 className="h-4 w-4 text-green-600" />
     return <Clock className="h-4 w-4 text-muted-foreground" />
   }
 
   const getResourceStatus = (resource: string) => {
-    const pending = statusCounters[`${resource}_pending` as keyof StatusCounters] || 0
-    const success = statusCounters[`${resource}_success` as keyof StatusCounters] || 0
-    const error = statusCounters[`${resource}_error` as keyof StatusCounters] || 0
-    const processing = statusCounters[`${resource}_processing` as keyof StatusCounters] || 0
+    const pending =
+      statusCounters[`${resource}_pending` as keyof StatusCounters] || 0
+    const success =
+      statusCounters[`${resource}_success` as keyof StatusCounters] || 0
+    const error =
+      statusCounters[`${resource}_error` as keyof StatusCounters] || 0
+    const processing =
+      statusCounters[`${resource}_processing` as keyof StatusCounters] || 0
 
-    if (error > 0) return { icon: XCircle, tone: 'error' as const, count: error }
+    if (error > 0)
+      return { icon: XCircle, tone: 'error' as const, count: error }
     if (processing > 0 || pending > 0) {
-      return { icon: Loader2, tone: 'processing' as const, count: processing + pending }
+      return {
+        icon: Loader2,
+        tone: 'processing' as const,
+        count: processing + pending,
+      }
     }
-    if (success > 0) return { icon: CheckCircle2, tone: 'success' as const, count: success }
+    if (success > 0)
+      return { icon: CheckCircle2, tone: 'success' as const, count: success }
     return { icon: Clock, tone: 'waiting' as const, count: 0 }
   }
 
@@ -91,14 +109,16 @@ export function MigrationDetailsDialog({
       <DialogContent className="sm:max-w-3xl p-0">
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>
-            {migration.status === 'failed' ? 'Resolve migration issues' : 'Migration details'}
+            {migration.status === 'failed'
+              ? 'Resolve migration issues'
+              : 'Migration details'}
           </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             View migration details and logs
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0">
           <Tabs defaultValue="details">
             <TabsList>
@@ -113,7 +133,9 @@ export function MigrationDetailsDialog({
               </div>
               <div className="space-y-2">
                 <p className="text-[13px] font-medium">Source</p>
-                <p className="text-[13px] text-muted-foreground">{migration.source}</p>
+                <p className="text-[13px] text-muted-foreground">
+                  {migration.source}
+                </p>
               </div>
 
               {/* Status Counters */}
@@ -152,9 +174,12 @@ export function MigrationDetailsDialog({
                           />
                         </div>
                         <div className="flex-1">
-                          <p className="text-[13px] font-medium capitalize">{resource}</p>
+                          <p className="text-[13px] font-medium capitalize">
+                            {resource}
+                          </p>
                           <p className="text-[12px] text-muted-foreground">
-                            {status.count} {status.count === 1 ? 'item' : 'items'}
+                            {status.count}{' '}
+                            {status.count === 1 ? 'item' : 'items'}
                           </p>
                         </div>
                         {status.count > 0 && (
@@ -186,7 +211,7 @@ export function MigrationDetailsDialog({
             </TabsContent>
           </Tabs>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close
@@ -196,5 +221,3 @@ export function MigrationDetailsDialog({
     </Dialog>
   )
 }
-
-

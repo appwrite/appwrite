@@ -33,7 +33,8 @@ export function DeleteDomainDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Delete Domain</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to delete <strong>{domain.domain}</strong>? This action cannot be undone.
+            Are you sure you want to delete <strong>{domain.domain}</strong>?
+            This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
@@ -57,4 +58,3 @@ export function DeleteDomainDialog({
     </Dialog>
   )
 }
-

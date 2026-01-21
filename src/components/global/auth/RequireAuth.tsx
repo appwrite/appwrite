@@ -6,19 +6,31 @@ import { ReactNode } from 'react'
 
 // Helper function to check if we're on an auth page
 function isAuthPage(pathname: string): boolean {
-  return pathname === '/sign-in' || pathname === '/sign-up' || pathname === '/recovery' || pathname === '/reset' || pathname === '/join' || pathname === '/mfa'
+  return (
+    pathname === '/sign-in' ||
+    pathname === '/sign-up' ||
+    pathname === '/recovery' ||
+    pathname === '/reset' ||
+    pathname === '/join' ||
+    pathname === '/mfa'
+  )
 }
 
 // Helper function to extract redirect from search params
-function extractRedirectFromSearch(search: string | URLSearchParams | undefined): string | null {
+function extractRedirectFromSearch(
+  search: string | URLSearchParams | undefined,
+): string | null {
   if (!search) return null
-  
-  const searchParams = search instanceof URLSearchParams 
-    ? search 
-    : new URLSearchParams(typeof search === 'string' ? search : '')
-  
+
+  const searchParams =
+    search instanceof URLSearchParams
+      ? search
+      : new URLSearchParams(typeof search === 'string' ? search : '')
+
   const redirect = searchParams.get('redirect')
-  return redirect && redirect.startsWith('/') && !redirect.includes('://') ? redirect : null
+  return redirect && redirect.startsWith('/') && !redirect.includes('://')
+    ? redirect
+    : null
 }
 
 // Helper function to get relative redirect URL from current location
@@ -27,14 +39,24 @@ function getRelativeRedirectUrl(location: any): string | null {
   // If we're already on an auth page, extract the original redirect from search params
   if (isAuthPage(location.pathname)) {
     // Handle TanStack Router's parsed search params
-    if (location.search && typeof location.search === 'object' && 'redirect' in location.search) {
+    if (
+      location.search &&
+      typeof location.search === 'object' &&
+      'redirect' in location.search
+    ) {
       const redirect = location.search.redirect
-      return redirect && typeof redirect === 'string' && isValidRelativeRedirect(redirect) ? redirect : null
+      return redirect &&
+        typeof redirect === 'string' &&
+        isValidRelativeRedirect(redirect)
+        ? redirect
+        : null
     }
     // Fallback to string/URLSearchParams handling
-    return extractRedirectFromSearch(location.search as string | URLSearchParams | undefined)
+    return extractRedirectFromSearch(
+      location.search as string | URLSearchParams | undefined,
+    )
   }
-  
+
   // Otherwise, use the current location as redirect
   // Build search string from parsed params or raw string
   let searchStr = ''
@@ -54,14 +76,14 @@ function getRelativeRedirectUrl(location: any): string | null {
       searchStr = params.toString()
     }
   }
-  
+
   const redirectUrl = `${location.pathname}${searchStr ? `?${searchStr}` : ''}`
-  
+
   // Validate that the redirect is relative (prevents redirect hijacking)
   if (redirectUrl.startsWith('/') && !redirectUrl.includes('://')) {
     return redirectUrl
   }
-  
+
   return null
 }
 
@@ -89,18 +111,20 @@ async function signOut(navigate?: (options: { to: string }) => void) {
     // Get all sessions to find the current one
     const sessionsResponse = await sdk.forConsole.account.listSessions()
     const sessions = sessionsResponse.sessions || []
-    
+
     // Find the current session
-    const currentSession = sessions.find(session => session.current === true)
-    
+    const currentSession = sessions.find((session) => session.current === true)
+
     if (currentSession) {
       // Delete only the current session
-      await sdk.forConsole.account.deleteSession({ sessionId: currentSession.$id })
+      await sdk.forConsole.account.deleteSession({
+        sessionId: currentSession.$id,
+      })
     } else {
       // Fallback: if no current session found, delete all sessions
       await sdk.forConsole.account.deleteSessions()
     }
-    
+
     // Redirect to sign-in after successful sign out
     if (navigate) {
       navigate({ to: '/sign-in' })
@@ -121,16 +145,16 @@ interface RequireAuthProps {
 
 /**
  * Component wrapper that ensures the user is authenticated before rendering children.
- * 
+ *
  * - Automatically checks authentication using the Console SDK
  * - Redirects to /sign-in on 401 errors
  * - Shows loading state while checking auth
  * - Only renders children if authenticated
- * 
+ *
  * Supports two patterns:
  * 1. Simple wrapper (children as ReactNode)
  * 2. Render prop (children as function receiving auth data)
- * 
+ *
  * @example
  * ```tsx
  * // Simple wrapper
@@ -141,7 +165,7 @@ interface RequireAuthProps {
  *     </RequireAuth>
  *   )
  * }
- * 
+ *
  * // Render prop (when you need auth data)
  * function MyPage() {
  *   return (
@@ -176,7 +200,10 @@ export function RequireAuth({
         return accountData
       } catch (err) {
         // Handle MFA requirement - redirect to MFA page
-        if (err instanceof AppwriteException && err.type === 'user_more_factors_required') {
+        if (
+          err instanceof AppwriteException &&
+          err.type === 'user_more_factors_required'
+        ) {
           // Don't redirect if we're already on the MFA page
           if (location.pathname === '/mfa') {
             throw err
@@ -196,7 +223,7 @@ export function RequireAuth({
           // Already on auth page, just throw the error without redirecting
           throw err
         }
-        
+
         const redirectUrl = getRelativeRedirectUrl(location as any)
         if (err instanceof AppwriteException && err.code === 401) {
           if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
@@ -246,25 +273,21 @@ export function RequireAuth({
 
   // User is authenticated - render children
   // Support both regular children and render prop pattern
-  return (
-    <>
-      {typeof children === 'function' ? children(authData) : children}
-    </>
-  )
+  return <>{typeof children === 'function' ? children(authData) : children}</>
 }
 
 /**
  * Hook version for cases where you need auth data but don't need the wrapper component.
  * This is just a re-export of the internal logic for convenience.
- * 
+ *
  * @example
  * ```tsx
  * function MyComponent() {
  *   const { account, isLoading, isAuthenticated } = useAuth()
- *   
+ *
  *   if (isLoading) return <Loading />
  *   if (!isAuthenticated) return null
- *   
+ *
  *   return <div>Welcome {account.name}</div>
  * }
  * ```
@@ -285,7 +308,10 @@ export function useAuth(): AuthData {
         return await sdk.forConsole.account.get()
       } catch (err) {
         // Handle MFA requirement - redirect to MFA page
-        if (err instanceof AppwriteException && err.type === 'user_more_factors_required') {
+        if (
+          err instanceof AppwriteException &&
+          err.type === 'user_more_factors_required'
+        ) {
           // Don't redirect if we're already on the MFA page
           if (location.pathname === '/mfa') {
             throw err
@@ -305,7 +331,7 @@ export function useAuth(): AuthData {
           // Already on auth page, just throw the error without redirecting
           throw err
         }
-        
+
         const redirectUrl = getRelativeRedirectUrl(location as any)
         if (err instanceof AppwriteException && err.code === 401) {
           if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
@@ -340,4 +366,3 @@ export function useAuth(): AuthData {
     signOut: () => signOut(navigate),
   }
 }
-

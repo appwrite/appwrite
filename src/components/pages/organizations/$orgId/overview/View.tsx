@@ -1,4 +1,12 @@
-import { Link, useParams, useNavigate, useLocation, useSearch, Outlet, useMatches } from '@tanstack/react-router'
+import {
+  Link,
+  useParams,
+  useNavigate,
+  useLocation,
+  useSearch,
+  Outlet,
+  useMatches,
+} from '@tanstack/react-router'
 import {
   Plus,
   Globe,
@@ -30,15 +38,20 @@ import {
 } from 'lucide-react'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 import { RegionFlag } from '@/components/global/shared/RegionFlag'
-import {
-  type Organization,
-  type TeamMember,
-} from '@/lib/utils/mock-data'
+import { type Organization, type TeamMember } from '@/lib/utils/mock-data'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { PlatformIcon } from '@/components/global/shared/Icon'
-import { useOrganizationMemberships, fetchOrganizations, fetchActiveProjects, useOrganizationPlan, useResendMembershipInvite, useUpdateMembershipRole, useRemoveTeamMember } from '@/lib/react-query/hooks'
+import {
+  useOrganizationMemberships,
+  fetchOrganizations,
+  fetchActiveProjects,
+  useOrganizationPlan,
+  useResendMembershipInvite,
+  useUpdateMembershipRole,
+  useRemoveTeamMember,
+} from '@/lib/react-query/hooks'
 
 import {
   Popover,
@@ -52,10 +65,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from '@/components/ui/radio-group'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import {
   Dialog,
@@ -105,7 +115,9 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 
 // Environment variables for whitelabeling
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
-const CONTACT_SALES_URL = import.meta.env.VITE_CONTACT_SALES_URL || 'https://appwrite.io/contact-us/enterprise'
+const CONTACT_SALES_URL =
+  import.meta.env.VITE_CONTACT_SALES_URL ||
+  'https://appwrite.io/contact-us/enterprise'
 const LEGAL_EMAIL = import.meta.env.VITE_LEGAL_EMAIL || 'legal@appwrite.io'
 
 // Pagination constants
@@ -147,24 +159,29 @@ const ROLE_OPTIONS = [
 ] as const
 
 // Component to display project platforms and API keys
-function ProjectCardFooter({ 
-  platformsCount, 
-  apiKeysCount 
-}: { 
+function ProjectCardFooter({
+  platformsCount,
+  apiKeysCount,
+}: {
   platformsCount: number
   apiKeysCount: number
 }) {
-
   return (
     <div className="mt-3.5 flex items-center gap-2 border-t border-border/60 pt-3.5">
       {/* Platforms Label */}
       {platformsCount > 0 ? (
-        <Badge variant="secondary" className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0">
+        <Badge
+          variant="secondary"
+          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+        >
           <Globe className="h-3 w-3" />
           {platformsCount} platform{platformsCount !== 1 ? 's' : ''}
         </Badge>
       ) : (
-        <Badge variant="warning" className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0">
+        <Badge
+          variant="warning"
+          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+        >
           <AlertTriangle className="h-3 w-3" />
           No platforms
         </Badge>
@@ -172,12 +189,18 @@ function ProjectCardFooter({
 
       {/* API Keys Label */}
       {apiKeysCount > 0 ? (
-        <Badge variant="secondary" className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0">
+        <Badge
+          variant="secondary"
+          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+        >
           <Key className="h-3 w-3" />
           {apiKeysCount} API key{apiKeysCount !== 1 ? 's' : ''}
         </Badge>
       ) : (
-        <Badge variant="warning" className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0">
+        <Badge
+          variant="warning"
+          className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
+        >
           <AlertTriangle className="h-3 w-3" />
           No API keys
         </Badge>
@@ -200,7 +223,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const search = useSearch({ strict: false })
   const matches = useMatches()
   const [searchQuery, setSearchQuery] = useState('')
-  
+
   // Check if we're on a domain detail route using route matches and pathname (for navigation transitions)
   const isDomainDetailRoute = useMemo(() => {
     // First check route matches (most reliable)
@@ -208,26 +231,32 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       (match) =>
         match.routeId.includes('/domains/$domainId') ||
         match.routeId === '/_public/organizations/$orgId/domains/$domainId' ||
-        match.routeId.startsWith('/_public/organizations/$orgId/domains/$domainId')
+        match.routeId.startsWith(
+          '/_public/organizations/$orgId/domains/$domainId',
+        ),
     )
-    
+
     if (isDetailRouteByMatch) {
       return true
     }
-    
+
     // Fallback: check pathname for detail route pattern (helps during navigation transitions)
     // Pattern: /organizations/:orgId/domains/:domainId
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const orgIndex = pathParts.findIndex(part => part === 'organizations')
-    
-    if (orgIndex >= 0 && pathParts[orgIndex + 2] === 'domains' && pathParts[orgIndex + 3]) {
+    const orgIndex = pathParts.findIndex((part) => part === 'organizations')
+
+    if (
+      orgIndex >= 0 &&
+      pathParts[orgIndex + 2] === 'domains' &&
+      pathParts[orgIndex + 3]
+    ) {
       const domainId = pathParts[orgIndex + 3]
       // If the domainId looks like an ID (long alphanumeric), we're on a detail route
       if (domainId && domainId.length > 10) {
         return true
       }
     }
-    
+
     return false
   }, [matches, location.pathname])
 
@@ -238,19 +267,20 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     if (isDomainDetailRoute) {
       return false
     }
-    
+
     // Check if we're on the domains index route by looking for the index route match
     const isDomainsIndexRoute = matches.some(
-      (match) => match.routeId === '/_public/organizations/$orgId/domains/'
+      (match) => match.routeId === '/_public/organizations/$orgId/domains/',
     )
-    
+
     // Also check pathname as fallback (helps during navigation transitions)
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const orgIndex = pathParts.findIndex(part => part === 'organizations')
-    const isDomainsRouteByPath = orgIndex >= 0 && 
-      pathParts[orgIndex + 2] === 'domains' && 
+    const orgIndex = pathParts.findIndex((part) => part === 'organizations')
+    const isDomainsRouteByPath =
+      orgIndex >= 0 &&
+      pathParts[orgIndex + 2] === 'domains' &&
       !pathParts[orgIndex + 3] // No domainId means we're on the index route
-    
+
     // Only render children if we're on the domains index route
     // The organization layout will handle detail routes by bypassing OrgOverview entirely
     return isDomainsIndexRoute || isDomainsRouteByPath
@@ -259,28 +289,37 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Derive active tab from pathname if prop is not provided
   const activeTab = useMemo(() => {
     if (tabProp) return tabProp
-    
+
     // If we're on a detail route, don't set active tab (let child route handle it)
     if (isDomainDetailRoute) {
       return null
     }
-    
+
     // Extract tab from pathname
     // Pattern: /organizations/:orgId or /organizations/:orgId/:tab
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const orgIndex = pathParts.findIndex(part => part === 'organizations')
-    
+    const orgIndex = pathParts.findIndex((part) => part === 'organizations')
+
     if (orgIndex >= 0) {
       // Check if there's a tab segment after orgId
       // pathParts structure: ['organizations', 'orgId', 'tab?']
       if (pathParts[orgIndex + 2]) {
         const tabFromPath = pathParts[orgIndex + 2]
-        if (['projects', 'members', 'domains', 'billing', 'settings'].includes(tabFromPath)) {
-          return tabFromPath as 'projects' | 'members' | 'domains' | 'billing' | 'settings'
+        if (
+          ['projects', 'members', 'domains', 'billing', 'settings'].includes(
+            tabFromPath,
+          )
+        ) {
+          return tabFromPath as
+            | 'projects'
+            | 'members'
+            | 'domains'
+            | 'billing'
+            | 'settings'
         }
       }
     }
-    
+
     // Default to projects for index route (/organizations/:orgId or /organizations/:orgId/)
     return 'projects'
   }, [tabProp, location.pathname, isDomainDetailRoute])
@@ -292,7 +331,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [updateRoleDialogOpen, setUpdateRoleDialogOpen] = useState(false)
   const [removeMemberDialogOpen, setRemoveMemberDialogOpen] = useState(false)
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null)
-  const [selectedRole, setSelectedRole] = useState<'owner' | 'developer' | 'editor' | 'analyst' | 'billing'>('developer')
+  const [selectedRole, setSelectedRole] = useState<
+    'owner' | 'developer' | 'editor' | 'analyst' | 'billing'
+  >('developer')
   const [createOrgDialogOpen, setCreateOrgDialogOpen] = useState(false)
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
 
@@ -310,33 +351,36 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     e.preventDefault()
     setCommandCenterOpen(true)
   })
-  
+
   // Pagination state
   const [activeProjectsPage, setActiveProjectsPage] = useState(0)
   const [activeMembershipsPage, setActiveMembershipsPage] = useState(0)
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
 
   // Fetch organizations from Console SDK
-  const {
-    data: organizationsData,
-    isLoading: organizationsLoading,
-  } = useQuery({
-    queryKey: ['organizations', 'console'],
-    queryFn: fetchOrganizations,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+  const { data: organizationsData, isLoading: organizationsLoading } = useQuery(
+    {
+      queryKey: ['organizations', 'console'],
+      queryFn: fetchOrganizations,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  )
 
   // Get organizations list and map to our Organization type
   // Note: The API returns "teams" but they are actually organizations
   const organizations = useMemo(() => {
     if (!organizationsData?.teams) return []
-    
+
     return organizationsData.teams.map((org: any) => {
       // Use plan filter utility to normalize plan name from tier or billingPlan
-      const planName = getPlanNameFromTier(org.billingPlan || org.tier || 'free')
+      const planName = getPlanNameFromTier(
+        org.billingPlan || org.tier || 'free',
+      )
       // Map 'custom' to 'enterprise' for compatibility with Organization type
-      const plan = (planName === 'custom' ? 'enterprise' : planName) as Organization['plan']
-      
+      const plan = (
+        planName === 'custom' ? 'enterprise' : planName
+      ) as Organization['plan']
+
       return {
         $id: org.$id,
         name: org.name,
@@ -355,12 +399,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }, [orgId, organizations])
 
   const [orgName, setOrgName] = useState('')
-  
+
   // Update orgName when selectedOrg changes
   useEffect(() => {
     if (selectedOrg) {
-    setOrgName(selectedOrg.name)
-    setDeleteConfirmation('')
+      setOrgName(selectedOrg.name)
+      setDeleteConfirmation('')
       // Reset pagination when org changes
       setActiveProjectsPage(0)
       setActiveMembershipsPage(0)
@@ -370,7 +414,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Check for createOrg search param and open dialog
   useEffect(() => {
-    const shouldCreateOrg = typeof search === 'object' && 'createOrg' in search && search.createOrg === true
+    const shouldCreateOrg =
+      typeof search === 'object' &&
+      'createOrg' in search &&
+      search.createOrg === true
     if (shouldCreateOrg && !organizationsLoading && !createOrgDialogOpen) {
       setCreateOrgDialogOpen(true)
       // Remove the search param from URL
@@ -386,7 +433,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         replace: true,
       })
     }
-  }, [search, organizationsLoading, createOrgDialogOpen, navigate, location.pathname])
+  }, [
+    search,
+    organizationsLoading,
+    createOrgDialogOpen,
+    navigate,
+    location.pathname,
+  ])
 
   // Handle missing organization: redirect to next org or open creation wizard
   useEffect(() => {
@@ -407,7 +460,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         setCreateOrgDialogOpen(true)
       }
     }
-  }, [selectedOrg, organizations, organizationsLoading, orgId, navigate, createOrgDialogOpen])
+  }, [
+    selectedOrg,
+    organizations,
+    organizationsLoading,
+    orgId,
+    navigate,
+    createOrgDialogOpen,
+  ])
 
   // Mutation to update user prefs when switching organizations
   const updateOrgPrefsMutation = useMutation({
@@ -449,13 +509,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       // Invalidate organizations query to refetch the list
       queryClient.invalidateQueries({ queryKey: ['organizations', 'console'] })
       toast.success('Organization deleted successfully')
-      
+
       // Close the dialog and reset confirmation
       setDeleteDialogOpen(false)
       setDeleteConfirmation('')
-      
+
       // Navigate to the first available organization or home
-      const remainingOrgs = organizations.filter((org: Organization) => org.$id !== orgId)
+      const remainingOrgs = organizations.filter(
+        (org: Organization) => org.$id !== orgId,
+      )
       if (remainingOrgs.length > 0) {
         navigate({
           to: '/organizations/$orgId',
@@ -491,7 +553,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     error: activeProjectsError,
   } = useQuery({
     queryKey: ['projects', 'active', activeProjectsPage, searchQuery, orgId],
-    queryFn: () => fetchActiveProjects(orgTeamId!, activeProjectsPage, PROJECTS_PER_PAGE, searchQuery),
+    queryFn: () =>
+      fetchActiveProjects(
+        orgTeamId!,
+        activeProjectsPage,
+        PROJECTS_PER_PAGE,
+        searchQuery,
+      ),
     staleTime: 30 * 1000, // 30 seconds
     enabled: !!orgTeamId, // Always fetch when we have an org ID
     placeholderData: (previousData) => previousData, // Keep previous data visible while loading new data
@@ -499,15 +567,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Fetch total count of projects without search (for limit checking)
   // This is separate from the search query so the alert doesn't change when searching
-  const {
-    data: totalProjectsData,
-    isLoading: totalProjectsLoading,
-  } = useQuery({
-    queryKey: ['projects', 'active', 'total', orgId],
-    queryFn: () => fetchActiveProjects(orgTeamId!, 0, 1, ''), // Only need total, so limit to 1
-    staleTime: 30 * 1000, // 30 seconds
-    enabled: !!orgTeamId, // Always fetch when we have an org ID
-  })
+  const { data: totalProjectsData, isLoading: totalProjectsLoading } = useQuery(
+    {
+      queryKey: ['projects', 'active', 'total', orgId],
+      queryFn: () => fetchActiveProjects(orgTeamId!, 0, 1, ''), // Only need total, so limit to 1
+      staleTime: 30 * 1000, // 30 seconds
+      enabled: !!orgTeamId, // Always fetch when we have an org ID
+    },
+  )
 
   // Fetch archived projects from Console SDK with server-side filtering
   // Use orgId from URL params directly
@@ -535,7 +602,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         // Check if projects container exists and has project elements
         const container = projectsContainerRef.current
         if (container) {
-          const projectElements = container.querySelectorAll('[data-project-card]')
+          const projectElements = container.querySelectorAll(
+            '[data-project-card]',
+          )
           if (projectElements.length > 0) {
             setProjectsRendered(true)
             return true
@@ -560,24 +629,31 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       // Reset when conditions change (e.g., pagination, search, or new org)
       setProjectsRendered(false)
     }
-  }, [activeProjectsLoading, activeProjectsFetching, activeProjectsData, activeProjectsPage, searchQuery, orgId])
+  }, [
+    activeProjectsLoading,
+    activeProjectsFetching,
+    activeProjectsData,
+    activeProjectsPage,
+    searchQuery,
+    orgId,
+  ])
 
   // Get active projects from API (already filtered by team server-side)
   // Extract platforms and API keys count from raw project data
   const activeProjects = useMemo(() => {
     if (!activeProjectsData?.projects) return []
-    
+
     return activeProjectsData.projects.map((project: any) => {
       // Extract platforms count from raw project data
       // platforms is an array in the project document
       const platforms = project.platforms || []
       const platformsCount = Array.isArray(platforms) ? platforms.length : 0
-      
+
       // Extract API keys count from raw project data
       // keys is an array in the project document
       const keys = project.keys || []
       const apiKeysCount = Array.isArray(keys) ? keys.length : 0
-      
+
       return {
         $id: project.$id,
         name: project.name,
@@ -596,35 +672,38 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Since organizations are teams in Appwrite, we group all projects under the organization
   const projectsByTeam = useMemo(() => {
     if (!selectedOrg || activeProjects.length === 0) return []
-    
-    return [{
-      team: {
-        $id: selectedOrg.$id,
-        name: selectedOrg.name,
-        color: 'from-blue-400 to-violet-500',
-        members: selectedOrg.members,
-        orgId: selectedOrg.$id,
+
+    return [
+      {
+        team: {
+          $id: selectedOrg.$id,
+          name: selectedOrg.name,
+          color: 'from-blue-400 to-violet-500',
+          members: selectedOrg.members,
+          orgId: selectedOrg.$id,
+        },
+        projects: activeProjects,
       },
-      projects: activeProjects,
-    }]
+    ]
   }, [selectedOrg, activeProjects])
 
   // Count total projects in this org
   const totalOrgProjects = useMemo(() => {
     return projectsByTeam.reduce(
-    (sum, { projects }) => sum + projects.length,
-    0,
-  )
+      (sum, { projects }) => sum + projects.length,
+      0,
+    )
   }, [projectsByTeam])
 
   // Pagination info (from search results)
   const activeProjectsTotal = activeProjectsData?.total || 0
-  
+
   // Total count of all projects (without search) - for limit checking
   const totalProjectsCount = totalProjectsData?.total || 0
 
   // Fetch organization plan to check if additional members are supported
-  const { plan: organizationPlan, isLoading: planLoading } = useOrganizationPlan(orgId)
+  const { plan: organizationPlan, isLoading: planLoading } =
+    useOrganizationPlan(orgId)
 
   // Check if the plan supports additional members
   // Only disable if seats addon is explicitly disabled with supported = false
@@ -636,14 +715,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Check both addons.seats and plan.members field
   const memberLimit = useMemo(() => {
     if (!organizationPlan) return null
-    
+
     // First check for seats addon
     const seatsLimit = organizationPlan?.addons?.seats?.limit
     const seatsPlanIncluded = organizationPlan?.addons?.seats?.planIncluded
-    
+
     // Then check plan.members field (base plan members)
     const planMembers = (organizationPlan as any)?.members
-    
+
     // Priority: seats addon limit > seats plan included > plan members
     let limitNum: number | null = null
     if (seatsLimit !== undefined && seatsLimit !== null) {
@@ -653,14 +732,14 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     } else if (planMembers !== undefined && planMembers !== null) {
       limitNum = Number(planMembers)
     }
-    
+
     // If limit is 0, it might mean unlimited (check if seats addon is supported)
     if (limitNum === 0 && organizationPlan?.addons?.seats?.supported === true) {
       // If seats addon is supported, 0 might mean unlimited or need to purchase addon
       // For now, treat 0 as unlimited if seats addon is supported
       return null
     }
-    
+
     return isNaN(limitNum as number) ? null : limitNum
   }, [organizationPlan])
 
@@ -687,10 +766,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Resend invitation mutation
   const resendInviteMutation = useResendMembershipInvite(orgId)
-  
+
   // Update membership role mutation
   const updateRoleMutation = useUpdateMembershipRole(orgId)
-  
+
   // Remove team member mutation
   const removeMemberMutation = useRemoveTeamMember(orgId)
 
@@ -702,20 +781,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Org tabs
   const orgTabs = useMemo(() => {
     if (!selectedOrg) return []
-    
-    return [
-    { id: 'projects', label: 'Projects', to: '/organizations/$orgId' },
-    {
-      id: 'members',
-      label: 'Members',
-      to: '/organizations/$orgId/members',
-    },
-    { id: 'domains', label: 'Domains', to: '/organizations/$orgId/domains/' },
-    { id: 'billing', label: 'Billing', to: '/organizations/$orgId/billing' },
-    { id: 'settings', label: 'Settings', to: '/organizations/$orgId/settings' },
-  ]
-  }, [selectedOrg, orgId])
 
+    return [
+      { id: 'projects', label: 'Projects', to: '/organizations/$orgId' },
+      {
+        id: 'members',
+        label: 'Members',
+        to: '/organizations/$orgId/members',
+      },
+      { id: 'domains', label: 'Domains', to: '/organizations/$orgId/domains/' },
+      { id: 'billing', label: 'Billing', to: '/organizations/$orgId/billing' },
+      {
+        id: 'settings',
+        label: 'Settings',
+        to: '/organizations/$orgId/settings',
+      },
+    ]
+  }, [selectedOrg, orgId])
 
   const filteredProjectsByTeam = projectsByTeam
     .map(({ team, projects }) => ({
@@ -734,7 +816,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       billing: '/organizations/$orgId/billing',
       settings: '/organizations/$orgId/settings',
     }
-    
+
     const route = tabRoutes[tab]
     if (route) {
       navigate({
@@ -747,7 +829,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   const handleSelectOrg = async (org: Organization) => {
     setOrgSwitcherOpen(false)
-    
+
     // Navigate to the new organization route, preserving the current tab
     const tabRoutes: Record<string, string> = {
       projects: '/organizations/$orgId',
@@ -756,14 +838,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       billing: '/organizations/$orgId/billing',
       settings: '/organizations/$orgId/settings',
     }
-    
-    const route = (activeTab && tabRoutes[activeTab as keyof typeof tabRoutes]) || '/organizations/$orgId'
+
+    const route =
+      (activeTab && tabRoutes[activeTab as keyof typeof tabRoutes]) ||
+      '/organizations/$orgId'
     navigate({
       to: route as any,
       params: { orgId: org.$id } as any,
       replace: true,
     })
-    
+
     // Update user prefs with the selected organization
     try {
       await updateOrgPrefsMutation.mutateAsync(org.$id)
@@ -772,8 +856,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       // Continue anyway - the org switch still works
     }
   }
-
-
 
   return (
     <>
@@ -785,89 +867,93 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         showFooter
         containerClassName="org-layout-container"
       >
-      {/* Org Header with Switcher */}
-      <div>
-            {/* Title Row with Org Switcher */}
-            <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+        {/* Org Header with Switcher */}
+        <div>
+          {/* Title Row with Org Switcher */}
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
             {/* Left: Org Switcher */}
             <div className="flex items-center gap-2">
               {selectedOrg && (
-              <Popover open={orgSwitcherOpen} onOpenChange={setOrgSwitcherOpen}>
-                <PopoverTrigger asChild>
-                  <button className="group flex min-w-0 h-8 items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent">
-                    <InitialsAvatar name={selectedOrg.name} size="sm" />
-                    <h1 className="truncate text-[13px] font-semibold text-foreground">
-                      {selectedOrg.name}
-                    </h1>
-                    <Badge
-                      className={cn(
-                        'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize shrink-0',
-                        getPlanBadgeColor(selectedOrg.plan),
-                      )}
-                    >
-                      {selectedOrg.plan}
-                    </Badge>
-                    <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="start"
-                  className="w-72 border-border bg-popover p-0"
+                <Popover
+                  open={orgSwitcherOpen}
+                  onOpenChange={setOrgSwitcherOpen}
                 >
-                  <div className="border-b border-border px-3 py-2">
-                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                      Switch organization
-                    </p>
-                  </div>
-                  <div className="max-h-64 overflow-y-auto py-1">
-                    {organizations.map((org) => (
-                      <button
-                        key={org.$id}
-                        onClick={() => handleSelectOrg(org)}
+                  <PopoverTrigger asChild>
+                    <button className="group flex min-w-0 h-8 items-center gap-2 rounded-lg px-2 -ml-2 transition-colors hover:bg-accent">
+                      <InitialsAvatar name={selectedOrg.name} size="sm" />
+                      <h1 className="truncate text-[13px] font-semibold text-foreground">
+                        {selectedOrg.name}
+                      </h1>
+                      <Badge
                         className={cn(
-                          'flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent',
-                          selectedOrg.$id === org.$id && 'bg-accent',
+                          'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize shrink-0',
+                          getPlanBadgeColor(selectedOrg.plan),
                         )}
                       >
-                        <InitialsAvatar name={org.name} size="md" />
-                        <div className="flex-1 min-w-0">
-                          <p className="truncate text-[13px] font-medium text-foreground">
-                            {org.name}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={cn(
-                                'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
-                                getPlanBadgeColor(org.plan),
-                              )}
-                            >
-                              {org.plan}
-                            </span>
-                            <span className="text-[11px] text-muted-foreground">
-                              {org.members} member{org.members !== 1 ? 's' : ''}
-                            </span>
-                          </div>
-                        </div>
-                        {selectedOrg.$id === org.$id && (
-                          <Check className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="border-t border-border p-2">
-                    <button 
-                      onClick={() => {
-                        setOrgSwitcherOpen(false)
-                        setCreateOrgDialogOpen(true)
-                      }}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create organization
+                        {selectedOrg.plan}
+                      </Badge>
+                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
                     </button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="start"
+                    className="w-72 border-border bg-popover p-0"
+                  >
+                    <div className="border-b border-border px-3 py-2">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                        Switch organization
+                      </p>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto py-1">
+                      {organizations.map((org) => (
+                        <button
+                          key={org.$id}
+                          onClick={() => handleSelectOrg(org)}
+                          className={cn(
+                            'flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent',
+                            selectedOrg.$id === org.$id && 'bg-accent',
+                          )}
+                        >
+                          <InitialsAvatar name={org.name} size="md" />
+                          <div className="flex-1 min-w-0">
+                            <p className="truncate text-[13px] font-medium text-foreground">
+                              {org.name}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  'rounded px-1.5 py-0.5 text-[10px] font-medium capitalize',
+                                  getPlanBadgeColor(org.plan),
+                                )}
+                              >
+                                {org.plan}
+                              </span>
+                              <span className="text-[11px] text-muted-foreground">
+                                {org.members} member
+                                {org.members !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+                          </div>
+                          {selectedOrg.$id === org.$id && (
+                            <Check className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="border-t border-border p-2">
+                      <button
+                        onClick={() => {
+                          setOrgSwitcherOpen(false)
+                          setCreateOrgDialogOpen(true)
+                        }}
+                        className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Create organization
+                      </button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               )}
               <Button
                 variant="ghost"
@@ -888,10 +974,16 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   {membershipsLoading ? (
                     // Placeholder skeleton to reserve space while loading - match exact structure of actual avatars
                     <div className="flex -space-x-2">
-                      <div className="relative rounded-full border-2 border-background" style={{ zIndex: 2 }}>
+                      <div
+                        className="relative rounded-full border-2 border-background"
+                        style={{ zIndex: 2 }}
+                      >
                         <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
                       </div>
-                      <div className="relative rounded-full border-2 border-background" style={{ zIndex: 1 }}>
+                      <div
+                        className="relative rounded-full border-2 border-background"
+                        style={{ zIndex: 1 }}
+                      >
                         <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
                       </div>
                     </div>
@@ -902,16 +994,23 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
                       return (
                         <div className="flex -space-x-2">
-                          {displayMembers.map((member: TeamMember, index: number) => (
-                            <div
-                              key={member.$id}
-                              className="relative rounded-full border-2 border-background"
-                              style={{ zIndex: displayMembers.length - index }}
-                              title={member.userName}
-                            >
-                              <InitialsAvatar name={member.userName} size="md" />
-                            </div>
-                          ))}
+                          {displayMembers.map(
+                            (member: TeamMember, index: number) => (
+                              <div
+                                key={member.$id}
+                                className="relative rounded-full border-2 border-background"
+                                style={{
+                                  zIndex: displayMembers.length - index,
+                                }}
+                                title={member.userName}
+                              >
+                                <InitialsAvatar
+                                  name={member.userName}
+                                  size="md"
+                                />
+                              </div>
+                            ),
+                          )}
                           {totalCount > 2 && (
                             <div
                               className="relative flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-[11px] font-medium text-muted-foreground"
@@ -960,7 +1059,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs">
-                      Your current plan does not support additional members. Upgrade your plan to invite team members.
+                      Your current plan does not support additional members.
+                      Upgrade your plan to invite team members.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -1001,195 +1101,220 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         </div>
 
         {/* Plan Limit Alert - After Tabs */}
-        {activeTab === 'members' && (() => {
-          if (!organizationPlan) return null
-          
-          const seatsLimit = organizationPlan?.addons?.seats?.limit
-          const planIncluded = organizationPlan?.addons?.seats?.planIncluded
-          const limitNum = Number(seatsLimit ?? planIncluded)
-          const limit = isNaN(limitNum) ? null : limitNum
-          const planName = organizationPlan?.name || 'plan'
-          
-          // Only show if limit exists and is greater than 0
-          if (limit !== null && limit > 0) {
-            const isAtLimit = membershipsTotal >= limit
-            const isApproachingLimit = membershipsTotal >= limit * 0.5 // Show alert when at 50% of limit
-            
-            // Only show alert if at limit or approaching limit (50%+)
-            if (!isAtLimit && !isApproachingLimit) {
-              return null
-            }
-            
-            const remaining = Math.max(0, limit - membershipsTotal)
-            
-            return (
-              <div className="border-b border-border bg-amber-500/5">
-                <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-                  <Alert variant="default" className="border-amber-500/30 bg-transparent">
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <div className="flex flex-1 items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                          {isAtLimit
-                            ? `You've reached the limit of ${limit} member${limit !== 1 ? 's' : ''}`
-                            : `Approaching member limit`}
-                        </AlertTitle>
-                        <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                          <span className="inline">
-                            {isAtLimit ? (
-                              <>
-                                Your {planName} plan includes up to {limit} member{limit !== 1 ? 's' : ''}.{' '}
-                                <Link
-                                  to="/organizations/$orgId/change-plan"
-                                  params={{ orgId: orgId! } as any}
-                                  className="font-medium underline hover:no-underline"
-                                >
-                                  Upgrade
-                                </Link>
-                                {' '}to unlock more capacity.
-                              </>
-                            ) : (
-                              <>
-                                Your {planName} plan includes up to {limit} member{limit !== 1 ? 's' : ''}. You have {remaining} remaining.{' '}
-                                <Link
-                                  to="/organizations/$orgId/change-plan"
-                                  params={{ orgId: orgId! } as any}
-                                  className="font-medium underline hover:no-underline"
-                                >
-                                  Upgrade
-                                </Link>
-                                {' '}to unlock more capacity.
-                              </>
-                            )}
-                          </span>
-                        </AlertDescription>
-                      </div>
-                      <Button
-                        asChild
-                        size="sm"
-                        className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
-                      >
-                        <Link
-                          to="/organizations/$orgId/change-plan"
-                          params={{ orgId: orgId! } as any}
+        {activeTab === 'members' &&
+          (() => {
+            if (!organizationPlan) return null
+
+            const seatsLimit = organizationPlan?.addons?.seats?.limit
+            const planIncluded = organizationPlan?.addons?.seats?.planIncluded
+            const limitNum = Number(seatsLimit ?? planIncluded)
+            const limit = isNaN(limitNum) ? null : limitNum
+            const planName = organizationPlan?.name || 'plan'
+
+            // Only show if limit exists and is greater than 0
+            if (limit !== null && limit > 0) {
+              const isAtLimit = membershipsTotal >= limit
+              const isApproachingLimit = membershipsTotal >= limit * 0.5 // Show alert when at 50% of limit
+
+              // Only show alert if at limit or approaching limit (50%+)
+              if (!isAtLimit && !isApproachingLimit) {
+                return null
+              }
+
+              const remaining = Math.max(0, limit - membershipsTotal)
+
+              return (
+                <div className="border-b border-border bg-amber-500/5">
+                  <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+                    <Alert
+                      variant="default"
+                      className="border-amber-500/30 bg-transparent"
+                    >
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                      <div className="flex flex-1 items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                            {isAtLimit
+                              ? `You've reached the limit of ${limit} member${limit !== 1 ? 's' : ''}`
+                              : `Approaching member limit`}
+                          </AlertTitle>
+                          <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                            <span className="inline">
+                              {isAtLimit ? (
+                                <>
+                                  Your {planName} plan includes up to {limit}{' '}
+                                  member{limit !== 1 ? 's' : ''}.{' '}
+                                  <Link
+                                    to="/organizations/$orgId/change-plan"
+                                    params={{ orgId: orgId! } as any}
+                                    className="font-medium underline hover:no-underline"
+                                  >
+                                    Upgrade
+                                  </Link>{' '}
+                                  to unlock more capacity.
+                                </>
+                              ) : (
+                                <>
+                                  Your {planName} plan includes up to {limit}{' '}
+                                  member{limit !== 1 ? 's' : ''}. You have{' '}
+                                  {remaining} remaining.{' '}
+                                  <Link
+                                    to="/organizations/$orgId/change-plan"
+                                    params={{ orgId: orgId! } as any}
+                                    className="font-medium underline hover:no-underline"
+                                  >
+                                    Upgrade
+                                  </Link>{' '}
+                                  to unlock more capacity.
+                                </>
+                              )}
+                            </span>
+                          </AlertDescription>
+                        </div>
+                        <Button
+                          asChild
+                          size="sm"
+                          className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                         >
-                          Upgrade
-                        </Link>
-                      </Button>
-                    </div>
-                  </Alert>
+                          <Link
+                            to="/organizations/$orgId/change-plan"
+                            params={{ orgId: orgId! } as any}
+                          >
+                            Upgrade
+                          </Link>
+                        </Button>
+                      </div>
+                    </Alert>
+                  </div>
                 </div>
-              </div>
-            )
-          }
-          return null
-        })()}
+              )
+            }
+            return null
+          })()}
 
         {/* Plan Limit Alert - After Tabs */}
-        {activeTab === 'projects' && (() => {
-          const isAlertLoading = planLoading || totalProjectsLoading
-          
-          // If loading, render placeholder to prevent layout shift
-          if (isAlertLoading) {
-            return (
-              <div className="border-b border-border bg-amber-500/5">
-                <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-                  <div className="relative w-full rounded-lg border border-amber-500/30 px-4 py-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="h-4 w-32 bg-amber-500/20 rounded mb-2" aria-hidden="true" />
-                        <div className="h-3 w-48 bg-amber-500/20 rounded" aria-hidden="true" />
+        {activeTab === 'projects' &&
+          (() => {
+            const isAlertLoading = planLoading || totalProjectsLoading
+
+            // If loading, render placeholder to prevent layout shift
+            if (isAlertLoading) {
+              return (
+                <div className="border-b border-border bg-amber-500/5">
+                  <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+                    <div className="relative w-full rounded-lg border border-amber-500/30 px-4 py-3">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div
+                            className="h-4 w-32 bg-amber-500/20 rounded mb-2"
+                            aria-hidden="true"
+                          />
+                          <div
+                            className="h-3 w-48 bg-amber-500/20 rounded"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <div
+                          className="h-8 w-20 bg-amber-500/20 rounded shrink-0"
+                          aria-hidden="true"
+                        />
                       </div>
-                      <div className="h-8 w-20 bg-amber-500/20 rounded shrink-0" aria-hidden="true" />
                     </div>
                   </div>
                 </div>
-              </div>
-            )
-          }
-          
-          if (!organizationPlan) return null
-          
-          const projectLimit = (organizationPlan?.addons as any)?.projects?.limit
-          const planIncluded = (organizationPlan?.addons as any)?.projects?.planIncluded
-          const limitNum = Number(projectLimit ?? planIncluded)
-          const limit = isNaN(limitNum) ? null : limitNum
-          const planName = organizationPlan?.name || 'plan'
-          
-          // Only show if limit exists and is greater than 0
-          if (limit !== null && limit > 0) {
-            const isAtLimit = totalProjectsCount >= limit
-            const isApproachingLimit = totalProjectsCount >= limit * 0.5 // Show alert when at 50% of limit
-            
-            // Only show alert if at limit or approaching limit (50%+)
-            if (!isAtLimit && !isApproachingLimit) {
-              return null
+              )
             }
-            
-            const remaining = Math.max(0, limit - totalProjectsCount)
-            
-            return (
-              <div className="border-b border-border bg-amber-500/5">
-                <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-                  <Alert variant="default" className="border-amber-500/30 bg-transparent">
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
-                    <div className="flex flex-1 items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                          {isAtLimit
-                            ? `You've reached the limit of ${limit} project${limit !== 1 ? 's' : ''}`
-                            : `Approaching project limit`}
-                        </AlertTitle>
-                        <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                          <span className="inline">
-                            {isAtLimit ? (
-                              <>
-                                Your {planName} plan includes up to {limit} project{limit !== 1 ? 's' : ''}.{' '}
-                                <Link
-                                  to="/organizations/$orgId/change-plan"
-                                  params={{ orgId: orgId! } as any}
-                                  className="font-medium underline hover:no-underline"
-                                >
-                                  Upgrade
-                                </Link>
-                                {' '}to unlock more capacity.
-                              </>
-                            ) : (
-                              <>
-                                Your {planName} plan includes up to {limit} project{limit !== 1 ? 's' : ''}. You have {remaining} remaining.{' '}
-                                <Link
-                                  to="/organizations/$orgId/change-plan"
-                                  params={{ orgId: orgId! } as any}
-                                  className="font-medium underline hover:no-underline"
-                                >
-                                  Upgrade
-                                </Link>
-                                {' '}to unlock more capacity.
-                              </>
-                            )}
-                          </span>
-                        </AlertDescription>
-                      </div>
-                      <Button
-                        asChild
-                        size="sm"
-                        className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
-                      >
-                        <Link
-                          to="/organizations/$orgId/change-plan"
-                          params={{ orgId: orgId! } as any}
+
+            if (!organizationPlan) return null
+
+            const projectLimit = (organizationPlan?.addons as any)?.projects
+              ?.limit
+            const planIncluded = (organizationPlan?.addons as any)?.projects
+              ?.planIncluded
+            const limitNum = Number(projectLimit ?? planIncluded)
+            const limit = isNaN(limitNum) ? null : limitNum
+            const planName = organizationPlan?.name || 'plan'
+
+            // Only show if limit exists and is greater than 0
+            if (limit !== null && limit > 0) {
+              const isAtLimit = totalProjectsCount >= limit
+              const isApproachingLimit = totalProjectsCount >= limit * 0.5 // Show alert when at 50% of limit
+
+              // Only show alert if at limit or approaching limit (50%+)
+              if (!isAtLimit && !isApproachingLimit) {
+                return null
+              }
+
+              const remaining = Math.max(0, limit - totalProjectsCount)
+
+              return (
+                <div className="border-b border-border bg-amber-500/5">
+                  <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+                    <Alert
+                      variant="default"
+                      className="border-amber-500/30 bg-transparent"
+                    >
+                      <AlertCircle className="h-4 w-4 text-amber-500" />
+                      <div className="flex flex-1 items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                            {isAtLimit
+                              ? `You've reached the limit of ${limit} project${limit !== 1 ? 's' : ''}`
+                              : `Approaching project limit`}
+                          </AlertTitle>
+                          <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                            <span className="inline">
+                              {isAtLimit ? (
+                                <>
+                                  Your {planName} plan includes up to {limit}{' '}
+                                  project{limit !== 1 ? 's' : ''}.{' '}
+                                  <Link
+                                    to="/organizations/$orgId/change-plan"
+                                    params={{ orgId: orgId! } as any}
+                                    className="font-medium underline hover:no-underline"
+                                  >
+                                    Upgrade
+                                  </Link>{' '}
+                                  to unlock more capacity.
+                                </>
+                              ) : (
+                                <>
+                                  Your {planName} plan includes up to {limit}{' '}
+                                  project{limit !== 1 ? 's' : ''}. You have{' '}
+                                  {remaining} remaining.{' '}
+                                  <Link
+                                    to="/organizations/$orgId/change-plan"
+                                    params={{ orgId: orgId! } as any}
+                                    className="font-medium underline hover:no-underline"
+                                  >
+                                    Upgrade
+                                  </Link>{' '}
+                                  to unlock more capacity.
+                                </>
+                              )}
+                            </span>
+                          </AlertDescription>
+                        </div>
+                        <Button
+                          asChild
+                          size="sm"
+                          className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
                         >
-                          Upgrade
-                        </Link>
-                      </Button>
-                    </div>
-                  </Alert>
+                          <Link
+                            to="/organizations/$orgId/change-plan"
+                            params={{ orgId: orgId! } as any}
+                          >
+                            Upgrade
+                          </Link>
+                        </Button>
+                      </div>
+                    </Alert>
+                  </div>
                 </div>
-              </div>
-            )
-          }
-          return null
-        })()}
+              )
+            }
+            return null
+          })()}
 
         {/* Main Content */}
         <div className="flex-1">
@@ -1200,835 +1325,948 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
             ) : (
               <>
                 {activeTab === 'projects' && (
-              <>
-                {/* Error State */}
-                {activeProjectsError && (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                      <Search className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-[15px] font-medium text-foreground">
-                      Failed to load projects
-                    </h3>
-                    <p className="mt-1 text-[13px] text-muted-foreground">
-                      {activeProjectsError instanceof Error ? activeProjectsError.message : 'An error occurred'}
-                    </p>
-                  </div>
-                )}
-
-                {/* Projects Content - placeholderData keeps previous data visible while loading */}
-                {!activeProjectsError && (
                   <>
-                    {/* Toolbar: Search + Filters + Create */}
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="relative w-64">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      placeholder="Search by name or ID..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                    />
-                  </div>
-
-
-                  {(() => {
-                    if (!organizationPlan) {
-                      return (
-                        <Button
-                          className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
-                          style={{ backgroundColor: '#f02e65' }}
-                          onClick={() => setCreateProjectDialogOpen(true)}
-                        >
-                          <Plus className="h-4 w-4" />
-                          Create project
-                        </Button>
-                      )
-                    }
-                    
-                    const projectLimit = (organizationPlan?.addons as any)?.projects?.limit
-                    const planIncluded = (organizationPlan?.addons as any)?.projects?.planIncluded
-                    const limitNum = Number(projectLimit ?? planIncluded)
-                    const limit = isNaN(limitNum) ? null : limitNum
-                    const isAtLimit = limit !== null && limit > 0 && totalProjectsCount >= limit
-                    
-                    return (
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="ml-auto">
-                              <Button
-                                className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                                style={{ backgroundColor: '#f02e65' }}
-                                disabled={isAtLimit}
-                                onClick={() => setCreateProjectDialogOpen(true)}
-                              >
-                                <Plus className="h-4 w-4" />
-                                Create project
-                              </Button>
-                            </div>
-                          </TooltipTrigger>
-                          {isAtLimit && (
-                            <TooltipContent side="bottom">
-                              <p>You've reached the limit for projects on your plan</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
-                    )
-                  })()}
-                </div>
-
-                {/* Projects by Team */}
-                <div className="space-y-8" ref={projectsContainerRef}>
-                  {filteredProjectsByTeam.map(({ team, projects }) => (
-                    <div key={team.$id}>
-                      {/* Project Cards Grid */}
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {projects.map((project) => {
-                          return (
-                            <Link
-                              key={project.$id}
-                              to="/projects/$projectId"
-                              params={{ projectId: project.$id }}
-                              data-project-card
-                              className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
-                            >
-                              {/* Hover Arrow - Top Right */}
-                              <ChevronRight className="absolute right-3 top-3 h-4 w-4 text-muted-foreground/50 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
-
-                              <div>
-                                <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                  {project.name}
-                                </h3>
-                                {project.region && (
-                                <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                  <RegionFlag region={project.region} />
-                                  {project.region}
-                                </div>
-                                )}
-                              </div>
-
-                              {/* Platforms and API Keys */}
-                              <ProjectCardFooter 
-                                platformsCount={project.platformsCount || 0}
-                                apiKeysCount={project.apiKeysCount || 0}
-                              />
-                            </Link>
-                          )
-                        })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                {/* Empty State */}
-                {filteredProjectsByTeam.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                      <Search className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-[15px] font-medium text-foreground">
-                      No projects found
-                    </h3>
-                    <p className="mt-1 text-[13px] text-muted-foreground">
-                          {searchQuery ? 'Try adjusting your search query' : 'Create your first project to get started'}
-                    </p>
-                  </div>
-                )}
-
-                    {/* Pagination for Active Projects */}
-                    {activeProjectsTotal > PROJECTS_PER_PAGE && (
-                      <Pagination
-                        currentPage={activeProjectsPage + 1}
-                        totalItems={activeProjectsTotal}
-                        pageSize={PROJECTS_PER_PAGE}
-                        onPageChange={(page: number) => setActiveProjectsPage(page - 1)}
-                        onPageSizeChange={() => {}} // Page size is fixed
-                        itemLabel="projects"
-                      />
-                    )}
-
-                {/* Enterprise Success Manager - Only show if plan supports it */}
-                {supportsSuccessTeam && (
-                  <EnterpriseSuccessManager />
-                )}
-                  </>
-                )}
-              </>
-            )}
-
-            {activeTab === 'members' && (
-              <>
-                {/* Error State */}
-                {membershipsError && (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                      <Users className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-[15px] font-medium text-foreground">
-                      Failed to load members
-                    </h3>
-                    <p className="mt-1 text-[13px] text-muted-foreground">
-                      {membershipsError instanceof Error ? membershipsError.message : 'An error occurred'}
-                    </p>
-                  </div>
-                )}
-
-                {/* Members Content */}
-                {!membershipsError && (
-                  <>
-                    {/* Toolbar: Search + Invite */}
-                    <div className="mb-4 flex items-center gap-3">
-                      <div className="relative w-64">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          placeholder="Search members..."
-                          value={membershipsSearchQuery}
-                          onChange={(e) => setMembershipsSearchQuery(e.target.value)}
-                          className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                        />
-                      </div>
-
-                      {supportsAdditionalMembers ? (
-                        <Button
-                          className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
-                          style={{ backgroundColor: '#f02e65' }}
-                          onClick={() => setInviteDialogOpen(true)}
-                        >
-                          <Plus className="h-4 w-4" />
-                          Invite
-                        </Button>
-                      ) : (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Button
-                                className="ml-auto h-9 gap-2 text-[13px] font-medium text-white cursor-not-allowed opacity-50"
-                                style={{ backgroundColor: '#f02e65' }}
-                                disabled
-                              >
-                                <UserPlus className="h-4 w-4" />
-                                Invite member
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-xs">
-                              Upgrade your plan to invite team members.
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
-
-                    {/* Members List or Empty State */}
-                    {membershipsLoading ? (
+                    {/* Error State */}
+                    {activeProjectsError && (
                       <div className="flex flex-col items-center justify-center py-16 text-center">
                         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                          <Users className="h-6 w-6 text-muted-foreground" />
+                          <Search className="h-6 w-6 text-muted-foreground" />
                         </div>
-                        <p className="text-[13px] text-muted-foreground">Loading members...</p>
+                        <h3 className="text-[15px] font-medium text-foreground">
+                          Failed to load projects
+                        </h3>
+                        <p className="mt-1 text-[13px] text-muted-foreground">
+                          {activeProjectsError instanceof Error
+                            ? activeProjectsError.message
+                            : 'An error occurred'}
+                        </p>
                       </div>
-                    ) : memberships.length > 0 ? (
+                    )}
+
+                    {/* Projects Content - placeholderData keeps previous data visible while loading */}
+                    {!activeProjectsError && (
                       <>
-                        <div className="rounded-lg border border-border bg-card overflow-hidden">
-                          <Table>
-                            <TableHeader>
-                              <TableRow className="hover:bg-transparent border-b border-border">
-                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  Member
-                                </TableHead>
-                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                                  Role
-                                </TableHead>
-                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
-                                  MFA
-                                </TableHead>
-                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right hidden sm:table-cell">
-                                  Joined
-                                </TableHead>
-                                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {memberships.map((member: TeamMember) => (
-                                <TableRow
-                                  key={member.$id}
-                                  className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                        {/* Toolbar: Search + Filters + Create */}
+                        <div className="mb-4 flex items-center gap-3">
+                          <div className="relative w-64">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                              placeholder="Search by name or ID..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                            />
+                          </div>
+
+                          {(() => {
+                            if (!organizationPlan) {
+                              return (
+                                <Button
+                                  className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
+                                  style={{ backgroundColor: '#f02e65' }}
+                                  onClick={() =>
+                                    setCreateProjectDialogOpen(true)
+                                  }
                                 >
-                                  <TableCell className="px-4 py-3">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                      <InitialsAvatar
-                                        name={member.userName || member.userEmail}
-                                        size="sm"
-                                        className="shrink-0"
-                                      />
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 flex-wrap">
-                                          <p className="truncate text-[13px] font-medium text-foreground">
-                                            {member.userName || member.userEmail}
-                                          </p>
-                                          {member.status === 'pending' && (
-                                            <Badge variant="secondary" className="text-[11px] font-medium border px-2 py-0.5 shrink-0">
-                                              Pending
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <div className="mt-0.5">
-                                          <p className="truncate text-[12px] text-muted-foreground">
-                                            {member.userEmail}
-                                          </p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="px-4 py-3">
-                                    <div className="flex items-center justify-center">
-                                      <Badge
-                                        variant="secondary"
-                                        className={cn(
-                                          'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
-                                        )}
+                                  <Plus className="h-4 w-4" />
+                                  Create project
+                                </Button>
+                              )
+                            }
+
+                            const projectLimit = (
+                              organizationPlan?.addons as any
+                            )?.projects?.limit
+                            const planIncluded = (
+                              organizationPlan?.addons as any
+                            )?.projects?.planIncluded
+                            const limitNum = Number(
+                              projectLimit ?? planIncluded,
+                            )
+                            const limit = isNaN(limitNum) ? null : limitNum
+                            const isAtLimit =
+                              limit !== null &&
+                              limit > 0 &&
+                              totalProjectsCount >= limit
+
+                            return (
+                              <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="ml-auto">
+                                      <Button
+                                        className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        style={{ backgroundColor: '#f02e65' }}
+                                        disabled={isAtLimit}
+                                        onClick={() =>
+                                          setCreateProjectDialogOpen(true)
+                                        }
                                       >
-                                        {member.role === 'owner' && (
-                                          <Shield className="h-3 w-3" />
-                                        )}
-                                        {member.role.charAt(0).toUpperCase() +
-                                          member.role.slice(1)}
-                                      </Badge>
+                                        <Plus className="h-4 w-4" />
+                                        Create project
+                                      </Button>
                                     </div>
-                                  </TableCell>
-                                  <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                    <div className="flex items-center justify-center">
-                                      {member.status === 'pending' ? (
-                                        <span className="text-muted-foreground/50 text-[12px]">—</span>
-                                      ) : member.mfaEnabled ? (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <div className="flex items-center justify-center">
-                                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                                            </div>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p className="text-xs">Multi-factor authentication enabled</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      ) : (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <div className="flex items-center justify-center">
-                                              <XCircle className="h-4 w-4 text-muted-foreground/40" />
-                                            </div>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p className="text-xs">Multi-factor authentication not enabled</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      )}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="px-4 py-3 hidden sm:table-cell">
-                                    <div className="text-right">
-                                      {member.status === 'pending' ? (
-                                        <span className="text-[12px] text-muted-foreground/70 italic">Invited</span>
-                                      ) : (
-                                        <DateTooltip
-                                          date={new Date(member.joinedAt)}
-                                          className="text-[12px] text-muted-foreground font-mono"
-                                        />
-                                      )}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="px-4 py-3">
-                                    <div className="flex items-center justify-end">
-                                      {member.status === 'pending' ? (
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                                              <MoreHorizontal className="h-4 w-4" />
-                                            </button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end" className="w-48">
-                                            <DropdownMenuItem
-                                              onClick={async () => {
-                                                try {
-                                                  // Use the roles array from the member object, or fallback to single role
-                                                  const roles = member.roles && member.roles.length > 0 
-                                                    ? member.roles 
-                                                    : [member.role]
-                                                  await resendInviteMutation.mutateAsync({
-                                                    membershipId: member.membershipId || member.$id,
-                                                    email: member.userEmail,
-                                                    roles,
-                                                  })
-                                                  toast.success('Invitation resent successfully')
-                                                } catch (error: any) {
-                                                  toast.error(error?.message || 'Failed to resend invitation')
-                                                }
-                                              }}
-                                              disabled={resendInviteMutation.isPending}
-                                            >
-                                              <Mail className="mr-2 h-4 w-4" />
-                                              {resendInviteMutation.isPending ? 'Resending...' : 'Resend invitation'}
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                              onClick={() => {
-                                                setSelectedMember(member)
-                                                setRemoveMemberDialogOpen(true)
-                                              }}
-                                              className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                            >
-                                              <Trash2 className="mr-2 h-4 w-4" />
-                                              Remove from team
-                                            </DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      ) : (
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-                                              <MoreHorizontal className="h-4 w-4" />
-                                            </button>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="end" className="w-48">
-                                            <DropdownMenuItem
-                                              onClick={() => {
-                                                setSelectedMember(member)
-                                                const role = member.role as 'owner' | 'developer' | 'editor' | 'analyst' | 'billing'
-                                                setSelectedRole(role)
-                                                setUpdateRoleDialogOpen(true)
-                                              }}
-                                            >
-                                              <UserCog className="mr-2 h-4 w-4" />
-                                              Update role
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                              onClick={() => {
-                                                setSelectedMember(member)
-                                                setRemoveMemberDialogOpen(true)
-                                              }}
-                                              className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
-                                            >
-                                              <Trash2 className="mr-2 h-4 w-4" />
-                                              Remove from team
-                                            </DropdownMenuItem>
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      )}
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
+                                  </TooltipTrigger>
+                                  {isAtLimit && (
+                                    <TooltipContent side="bottom">
+                                      <p>
+                                        You've reached the limit for projects on
+                                        your plan
+                                      </p>
+                                    </TooltipContent>
+                                  )}
+                                </Tooltip>
+                              </TooltipProvider>
+                            )
+                          })()}
                         </div>
 
-                        {/* Pagination for Memberships */}
-                        {membershipsTotal > MEMBERSHIPS_PER_PAGE && (
+                        {/* Projects by Team */}
+                        <div className="space-y-8" ref={projectsContainerRef}>
+                          {filteredProjectsByTeam.map(({ team, projects }) => (
+                            <div key={team.$id}>
+                              {/* Project Cards Grid */}
+                              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                {projects.map((project) => {
+                                  return (
+                                    <Link
+                                      key={project.$id}
+                                      to="/projects/$projectId"
+                                      params={{ projectId: project.$id }}
+                                      data-project-card
+                                      className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                    >
+                                      {/* Hover Arrow - Top Right */}
+                                      <ChevronRight className="absolute right-3 top-3 h-4 w-4 text-muted-foreground/50 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
+
+                                      <div>
+                                        <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                          {project.name}
+                                        </h3>
+                                        {project.region && (
+                                          <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                            <RegionFlag
+                                              region={project.region}
+                                            />
+                                            {project.region}
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Platforms and API Keys */}
+                                      <ProjectCardFooter
+                                        platformsCount={
+                                          project.platformsCount || 0
+                                        }
+                                        apiKeysCount={project.apiKeysCount || 0}
+                                      />
+                                    </Link>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Empty State */}
+                        {filteredProjectsByTeam.length === 0 && (
+                          <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                              <Search className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-[15px] font-medium text-foreground">
+                              No projects found
+                            </h3>
+                            <p className="mt-1 text-[13px] text-muted-foreground">
+                              {searchQuery
+                                ? 'Try adjusting your search query'
+                                : 'Create your first project to get started'}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Pagination for Active Projects */}
+                        {activeProjectsTotal > PROJECTS_PER_PAGE && (
                           <Pagination
-                            currentPage={activeMembershipsPage + 1}
-                            totalItems={membershipsTotal}
-                            pageSize={MEMBERSHIPS_PER_PAGE}
-                            onPageChange={(page: number) => setActiveMembershipsPage(page - 1)}
+                            currentPage={activeProjectsPage + 1}
+                            totalItems={activeProjectsTotal}
+                            pageSize={PROJECTS_PER_PAGE}
+                            onPageChange={(page: number) =>
+                              setActiveProjectsPage(page - 1)
+                            }
                             onPageSizeChange={() => {}} // Page size is fixed
-                            itemLabel="members"
+                            itemLabel="projects"
                           />
                         )}
+
+                        {/* Enterprise Success Manager - Only show if plan supports it */}
+                        {supportsSuccessTeam && <EnterpriseSuccessManager />}
                       </>
-                    ) : (
+                    )}
+                  </>
+                )}
+
+                {activeTab === 'members' && (
+                  <>
+                    {/* Error State */}
+                    {membershipsError && (
                       <div className="flex flex-col items-center justify-center py-16 text-center">
                         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
                           <Users className="h-6 w-6 text-muted-foreground" />
                         </div>
                         <h3 className="text-[15px] font-medium text-foreground">
-                          No members found
+                          Failed to load members
                         </h3>
                         <p className="mt-1 text-[13px] text-muted-foreground">
-                          {membershipsSearchQuery ? 'Try adjusting your search query' : 'Invite team members to collaborate on your projects'}
+                          {membershipsError instanceof Error
+                            ? membershipsError.message
+                            : 'An error occurred'}
                         </p>
                       </div>
+                    )}
+
+                    {/* Members Content */}
+                    {!membershipsError && (
+                      <>
+                        {/* Toolbar: Search + Invite */}
+                        <div className="mb-4 flex items-center gap-3">
+                          <div className="relative w-64">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                              placeholder="Search members..."
+                              value={membershipsSearchQuery}
+                              onChange={(e) =>
+                                setMembershipsSearchQuery(e.target.value)
+                              }
+                              className="h-9 border-border bg-accent/50 pl-10 text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                            />
+                          </div>
+
+                          {supportsAdditionalMembers ? (
+                            <Button
+                              className="ml-auto h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90"
+                              style={{ backgroundColor: '#f02e65' }}
+                              onClick={() => setInviteDialogOpen(true)}
+                            >
+                              <Plus className="h-4 w-4" />
+                              Invite
+                            </Button>
+                          ) : (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span>
+                                  <Button
+                                    className="ml-auto h-9 gap-2 text-[13px] font-medium text-white cursor-not-allowed opacity-50"
+                                    style={{ backgroundColor: '#f02e65' }}
+                                    disabled
+                                  >
+                                    <UserPlus className="h-4 w-4" />
+                                    Invite member
+                                  </Button>
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-xs">
+                                  Upgrade your plan to invite team members.
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+
+                        {/* Members List or Empty State */}
+                        {membershipsLoading ? (
+                          <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                              <Users className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                            <p className="text-[13px] text-muted-foreground">
+                              Loading members...
+                            </p>
+                          </div>
+                        ) : memberships.length > 0 ? (
+                          <>
+                            <div className="rounded-lg border border-border bg-card overflow-hidden">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow className="hover:bg-transparent border-b border-border">
+                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                      Member
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                                      Role
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center hidden sm:table-cell">
+                                      MFA
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right hidden sm:table-cell">
+                                      Joined
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {memberships.map((member: TeamMember) => (
+                                    <TableRow
+                                      key={member.$id}
+                                      className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                                    >
+                                      <TableCell className="px-4 py-3">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                          <InitialsAvatar
+                                            name={
+                                              member.userName ||
+                                              member.userEmail
+                                            }
+                                            size="sm"
+                                            className="shrink-0"
+                                          />
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                              <p className="truncate text-[13px] font-medium text-foreground">
+                                                {member.userName ||
+                                                  member.userEmail}
+                                              </p>
+                                              {member.status === 'pending' && (
+                                                <Badge
+                                                  variant="secondary"
+                                                  className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
+                                                >
+                                                  Pending
+                                                </Badge>
+                                              )}
+                                            </div>
+                                            <div className="mt-0.5">
+                                              <p className="truncate text-[12px] text-muted-foreground">
+                                                {member.userEmail}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="px-4 py-3">
+                                        <div className="flex items-center justify-center">
+                                          <Badge
+                                            variant="secondary"
+                                            className={cn(
+                                              'inline-flex items-center gap-1 text-[11px] font-medium border px-2 py-0.5',
+                                            )}
+                                          >
+                                            {member.role === 'owner' && (
+                                              <Shield className="h-3 w-3" />
+                                            )}
+                                            {member.role
+                                              .charAt(0)
+                                              .toUpperCase() +
+                                              member.role.slice(1)}
+                                          </Badge>
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                        <div className="flex items-center justify-center">
+                                          {member.status === 'pending' ? (
+                                            <span className="text-muted-foreground/50 text-[12px]">
+                                              —
+                                            </span>
+                                          ) : member.mfaEnabled ? (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <div className="flex items-center justify-center">
+                                                  <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                                </div>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p className="text-xs">
+                                                  Multi-factor authentication
+                                                  enabled
+                                                </p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          ) : (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <div className="flex items-center justify-center">
+                                                  <XCircle className="h-4 w-4 text-muted-foreground/40" />
+                                                </div>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p className="text-xs">
+                                                  Multi-factor authentication
+                                                  not enabled
+                                                </p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="px-4 py-3 hidden sm:table-cell">
+                                        <div className="text-right">
+                                          {member.status === 'pending' ? (
+                                            <span className="text-[12px] text-muted-foreground/70 italic">
+                                              Invited
+                                            </span>
+                                          ) : (
+                                            <DateTooltip
+                                              date={new Date(member.joinedAt)}
+                                              className="text-[12px] text-muted-foreground font-mono"
+                                            />
+                                          )}
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className="px-4 py-3">
+                                        <div className="flex items-center justify-end">
+                                          {member.status === 'pending' ? (
+                                            <DropdownMenu>
+                                              <DropdownMenuTrigger asChild>
+                                                <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                                                  <MoreHorizontal className="h-4 w-4" />
+                                                </button>
+                                              </DropdownMenuTrigger>
+                                              <DropdownMenuContent
+                                                align="end"
+                                                className="w-48"
+                                              >
+                                                <DropdownMenuItem
+                                                  onClick={async () => {
+                                                    try {
+                                                      // Use the roles array from the member object, or fallback to single role
+                                                      const roles =
+                                                        member.roles &&
+                                                        member.roles.length > 0
+                                                          ? member.roles
+                                                          : [member.role]
+                                                      await resendInviteMutation.mutateAsync(
+                                                        {
+                                                          membershipId:
+                                                            member.membershipId ||
+                                                            member.$id,
+                                                          email:
+                                                            member.userEmail,
+                                                          roles,
+                                                        },
+                                                      )
+                                                      toast.success(
+                                                        'Invitation resent successfully',
+                                                      )
+                                                    } catch (error: any) {
+                                                      toast.error(
+                                                        error?.message ||
+                                                          'Failed to resend invitation',
+                                                      )
+                                                    }
+                                                  }}
+                                                  disabled={
+                                                    resendInviteMutation.isPending
+                                                  }
+                                                >
+                                                  <Mail className="mr-2 h-4 w-4" />
+                                                  {resendInviteMutation.isPending
+                                                    ? 'Resending...'
+                                                    : 'Resend invitation'}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                  onClick={() => {
+                                                    setSelectedMember(member)
+                                                    setRemoveMemberDialogOpen(
+                                                      true,
+                                                    )
+                                                  }}
+                                                  className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                >
+                                                  <Trash2 className="mr-2 h-4 w-4" />
+                                                  Remove from team
+                                                </DropdownMenuItem>
+                                              </DropdownMenuContent>
+                                            </DropdownMenu>
+                                          ) : (
+                                            <DropdownMenu>
+                                              <DropdownMenuTrigger asChild>
+                                                <button className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                                                  <MoreHorizontal className="h-4 w-4" />
+                                                </button>
+                                              </DropdownMenuTrigger>
+                                              <DropdownMenuContent
+                                                align="end"
+                                                className="w-48"
+                                              >
+                                                <DropdownMenuItem
+                                                  onClick={() => {
+                                                    setSelectedMember(member)
+                                                    const role = member.role as
+                                                      | 'owner'
+                                                      | 'developer'
+                                                      | 'editor'
+                                                      | 'analyst'
+                                                      | 'billing'
+                                                    setSelectedRole(role)
+                                                    setUpdateRoleDialogOpen(
+                                                      true,
+                                                    )
+                                                  }}
+                                                >
+                                                  <UserCog className="mr-2 h-4 w-4" />
+                                                  Update role
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                  onClick={() => {
+                                                    setSelectedMember(member)
+                                                    setRemoveMemberDialogOpen(
+                                                      true,
+                                                    )
+                                                  }}
+                                                  className="text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400"
+                                                >
+                                                  <Trash2 className="mr-2 h-4 w-4" />
+                                                  Remove from team
+                                                </DropdownMenuItem>
+                                              </DropdownMenuContent>
+                                            </DropdownMenu>
+                                          )}
+                                        </div>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+
+                            {/* Pagination for Memberships */}
+                            {membershipsTotal > MEMBERSHIPS_PER_PAGE && (
+                              <Pagination
+                                currentPage={activeMembershipsPage + 1}
+                                totalItems={membershipsTotal}
+                                pageSize={MEMBERSHIPS_PER_PAGE}
+                                onPageChange={(page: number) =>
+                                  setActiveMembershipsPage(page - 1)
+                                }
+                                onPageSizeChange={() => {}} // Page size is fixed
+                                itemLabel="members"
+                              />
+                            )}
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                              <Users className="h-6 w-6 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-[15px] font-medium text-foreground">
+                              No members found
+                            </h3>
+                            <p className="mt-1 text-[13px] text-muted-foreground">
+                              {membershipsSearchQuery
+                                ? 'Try adjusting your search query'
+                                : 'Invite team members to collaborate on your projects'}
+                            </p>
+                          </div>
+                        )}
+                      </>
                     )}
                   </>
                 )}
-              </>
-            )}
 
-            {activeTab === 'settings' && (
-              <div className="space-y-6">
-                {/* Update Organization Name */}
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      Organization Name
-                    </h3>
-                  </div>
-                  <div className="border-t border-border" />
-                  <div className="px-6 py-4">
-                    <p className="text-[13px] text-muted-foreground">
-                      Update your organization's display name. This will be
-                      visible to all team members.
-                    </p>
-                    <Input
-                      value={orgName}
-                      onChange={(e) => setOrgName(e.target.value)}
-                      placeholder="Organization name"
-                      className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                    />
-                  </div>
-                  <div className="px-6 py-4 border-t border-border bg-muted/30">
-                    <Button
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      disabled={
-                        !selectedOrg ||
-                        orgName === selectedOrg.name ||
-                        !orgName.trim() ||
-                        updateOrgNameMutation.isPending
-                      }
-                      onClick={() => {
-                        if (selectedOrg && orgName.trim() && orgName !== selectedOrg.name) {
-                          updateOrgNameMutation.mutate({
-                            orgId: selectedOrg.$id,
-                            name: orgName.trim(),
-                          })
-                        }
-                      }}
-                    >
-                      Update
-                    </Button>
-                  </div>
-                </div>
-
-                {/* DPA - Data Processing Agreement */}
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      Data Processing Agreement (DPA)
-                    </h3>
-                  </div>
-                  <div className="border-t border-border" />
-                  <div className="px-6 py-4">
-                    <p className="text-[13px] text-muted-foreground">
-                      A DPA is a legally binding document that outlines how
-                      {COMPANY_NAME} processes personal data on your behalf. It's
-                      required for GDPR compliance when handling EU residents'
-                      data.
-                    </p>
-                    <div className="flex items-start gap-3 mt-3">
-                      <FileText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <p className="text-[13px] text-muted-foreground">
-                        Download the DPA, review it with your legal team, sign
-                        it, and send a copy to{' '}
-                        <span className="font-medium text-foreground">
-                          {LEGAL_EMAIL}
-                        </span>
-                        . We'll countersign and return a fully executed copy
-                        within 5 business days.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 border-t border-border bg-muted/30">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      onClick={() => {
-                        window.open('/legal/dpa.pdf', '_blank', 'noopener,noreferrer')
-                      }}
-                    >
-                      Download DPA
-                    </Button>
-                  </div>
-                </div>
-
-                {/* BAA - Business Associate Agreement */}
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      Business Associate Agreement (BAA)
-                    </h3>
-                  </div>
-                  <div className="border-t border-border" />
-                  <div className="px-6 py-4">
-                    <p className="text-[13px] text-muted-foreground">
-                      A BAA is required under HIPAA when a service provider
-                      handles Protected Health Information (PHI) on behalf of a
-                      covered entity. If your application processes, stores, or
-                      transmits health-related data of US patients, you'll need
-                      a BAA in place.
-                    </p>
-                    <div className="flex items-start gap-3 mt-3">
-                      <ShieldCheck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <p className="text-[13px] text-muted-foreground">
-                        <span className="font-medium text-foreground">
-                          Who needs this:
-                        </span>{' '}
-                        Healthcare providers, health plans, healthcare
-                        clearinghouses, and their business associates building
-                        HIPAA-compliant applications.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 border-t border-border bg-muted/30">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      onClick={() => {
-                        window.open(CONTACT_SALES_URL, '_blank', 'noopener,noreferrer')
-                      }}
-                    >
-                      Contact Sales
-                    </Button>
-                  </div>
-                </div>
-
-                {/* SOC-2 Compliance */}
-                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-[15px] font-semibold text-foreground">
-                        SOC 2 Type II Report
-                      </h3>
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                        Enterprise
-                      </span>
-                    </div>
-                  </div>
-                  <div className="border-t border-border" />
-                  <div className="px-6 py-4">
-                    <p className="text-[13px] text-muted-foreground">
-                      SOC 2 Type II is an auditing standard that verifies a
-                      service provider's security controls over an extended
-                      period. It demonstrates that {COMPANY_NAME} maintains rigorous
-                      security practices for data protection, availability, and
-                      confidentiality.
-                    </p>
-                    <div className="flex items-start gap-3 mt-3">
-                      <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <p className="text-[13px] text-muted-foreground">
-                        <span className="font-medium text-foreground">
-                          Why it matters:
-                        </span>{' '}
-                        Many enterprise customers and regulated industries
-                        require SOC 2 compliance from their vendors. Access to
-                        our SOC 2 report is available on Enterprise plans.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 border-t border-border bg-muted/30">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-9 text-[13px]"
-                      onClick={() => {
-                        window.open(CONTACT_SALES_URL, '_blank', 'noopener,noreferrer')
-                      }}
-                    >
-                      Contact Sales
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Delete Organization */}
-                <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
-                  <div className="px-6 py-4">
-                    <h3 className="text-[15px] font-semibold text-foreground">
-                      Delete Organization
-                    </h3>
-                  </div>
-                  <div className="border-t border-destructive/20" />
-                  <div className="px-6 py-4">
-                    <p className="text-[13px] text-muted-foreground">
-                      Permanently delete this organization and all associated
-                      data. This action cannot be undone.
-                    </p>
-
-                    {/* Organization Info Summary */}
-                    {selectedOrg && (
-                    <div className="flex items-center gap-3 mt-4">
-                      <InitialsAvatar name={selectedOrg.name} size="md" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-medium text-foreground truncate">
-                          {selectedOrg.name}
-                        </p>
-                        <p className="text-[12px] text-muted-foreground">
-                          {membershipsTotal} member
-                          {membershipsTotal !== 1 ? 's' : ''} •{' '}
-                          {totalOrgProjects} project
-                          {totalOrgProjects !== 1 ? 's' : ''}
-                        </p>
+                {activeTab === 'settings' && (
+                  <div className="space-y-6">
+                    {/* Update Organization Name */}
+                    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                      <div className="px-6 py-4">
+                        <h3 className="text-[15px] font-semibold text-foreground">
+                          Organization Name
+                        </h3>
                       </div>
-
-                      {/* Member Avatars */}
-                      {memberships.length > 0 && (
-                        <div className="flex items-center gap-2">
-                          <div className="flex -space-x-2">
-                            {memberships
-                              .slice(0, 4)
-                              .map((member: TeamMember, index: number) => (
-                                <div
-                                  key={member.$id}
-                                  className="relative rounded-full border-2 border-background"
-                                  style={{ zIndex: 4 - index }}
-                                  title={member.userName}
-                                >
-                                  <InitialsAvatar
-                                    name={member.userName}
-                                    size="sm"
-                                  />
-                                </div>
-                              ))}
-                            {membershipsTotal > 4 && (
-                              <div
-                                className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground"
-                                style={{ zIndex: 0 }}
-                              >
-                                +{membershipsTotal - 4}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    )}
-                  </div>
-
-                  <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
-                    <Dialog
-                      open={deleteDialogOpen}
-                      onOpenChange={setDeleteDialogOpen}
-                    >
-                      <DialogTrigger asChild>
+                      <div className="border-t border-border" />
+                      <div className="px-6 py-4">
+                        <p className="text-[13px] text-muted-foreground">
+                          Update your organization's display name. This will be
+                          visible to all team members.
+                        </p>
+                        <Input
+                          value={orgName}
+                          onChange={(e) => setOrgName(e.target.value)}
+                          placeholder="Organization name"
+                          className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        />
+                      </div>
+                      <div className="px-6 py-4 border-t border-border bg-muted/30">
                         <Button
-                          variant="destructive"
                           size="sm"
                           className="h-9 text-[13px]"
+                          disabled={
+                            !selectedOrg ||
+                            orgName === selectedOrg.name ||
+                            !orgName.trim() ||
+                            updateOrgNameMutation.isPending
+                          }
+                          onClick={() => {
+                            if (
+                              selectedOrg &&
+                              orgName.trim() &&
+                              orgName !== selectedOrg.name
+                            ) {
+                              updateOrgNameMutation.mutate({
+                                orgId: selectedOrg.$id,
+                                name: orgName.trim(),
+                              })
+                            }
+                          }}
                         >
-                          Delete organization
+                          Update
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-md p-0">
-                        <DialogHeader className="px-6 pt-6 text-left">
-                          <DialogTitle>
-                            Delete Organization
-                          </DialogTitle>
-                          <DialogDescription className="text-[13px] mt-2">
-                            Are you sure you want to delete{' '}
-                            {selectedOrg && (
+                      </div>
+                    </div>
+
+                    {/* DPA - Data Processing Agreement */}
+                    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                      <div className="px-6 py-4">
+                        <h3 className="text-[15px] font-semibold text-foreground">
+                          Data Processing Agreement (DPA)
+                        </h3>
+                      </div>
+                      <div className="border-t border-border" />
+                      <div className="px-6 py-4">
+                        <p className="text-[13px] text-muted-foreground">
+                          A DPA is a legally binding document that outlines how
+                          {COMPANY_NAME} processes personal data on your behalf.
+                          It's required for GDPR compliance when handling EU
+                          residents' data.
+                        </p>
+                        <div className="flex items-start gap-3 mt-3">
+                          <FileText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                          <p className="text-[13px] text-muted-foreground">
+                            Download the DPA, review it with your legal team,
+                            sign it, and send a copy to{' '}
                             <span className="font-medium text-foreground">
-                              {selectedOrg.name}
-                              </span>
-                            )}{' '}
-                            and all its projects, databases, and files? This action cannot be undone.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="border-t border-border" />
-                        <div className="px-6 pb-4 pt-0">
-                          <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
-                            {selectedOrg && (
-                            <div className="flex items-center gap-3">
-                              <InitialsAvatar
-                                name={selectedOrg.name}
-                                size="sm"
-                              />
-                              <div>
-                                <p className="text-[13px] font-medium text-foreground">
-                                  {selectedOrg.name}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground">
-                                  {membershipsTotal} member
-                                  {membershipsTotal !== 1
-                                    ? 's'
-                                    : ''}{' '}
-                                  will lose access • {activeProjectsTotal} project
-                                  {activeProjectsTotal !== 1 ? 's' : ''} will be deleted
-                                </p>
-                              </div>
-                            </div>
-                            )}
-                          </div>
-                          {activeProjects.length > 0 && (
-                            <div className="mb-4">
+                              {LEGAL_EMAIL}
+                            </span>
+                            . We'll countersign and return a fully executed copy
+                            within 5 business days.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="px-6 py-4 border-t border-border bg-muted/30">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          onClick={() => {
+                            window.open(
+                              '/legal/dpa.pdf',
+                              '_blank',
+                              'noopener,noreferrer',
+                            )
+                          }}
+                        >
+                          Download DPA
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* BAA - Business Associate Agreement */}
+                    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                      <div className="px-6 py-4">
+                        <h3 className="text-[15px] font-semibold text-foreground">
+                          Business Associate Agreement (BAA)
+                        </h3>
+                      </div>
+                      <div className="border-t border-border" />
+                      <div className="px-6 py-4">
+                        <p className="text-[13px] text-muted-foreground">
+                          A BAA is required under HIPAA when a service provider
+                          handles Protected Health Information (PHI) on behalf
+                          of a covered entity. If your application processes,
+                          stores, or transmits health-related data of US
+                          patients, you'll need a BAA in place.
+                        </p>
+                        <div className="flex items-start gap-3 mt-3">
+                          <ShieldCheck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                          <p className="text-[13px] text-muted-foreground">
+                            <span className="font-medium text-foreground">
+                              Who needs this:
+                            </span>{' '}
+                            Healthcare providers, health plans, healthcare
+                            clearinghouses, and their business associates
+                            building HIPAA-compliant applications.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="px-6 py-4 border-t border-border bg-muted/30">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          onClick={() => {
+                            window.open(
+                              CONTACT_SALES_URL,
+                              '_blank',
+                              'noopener,noreferrer',
+                            )
+                          }}
+                        >
+                          Contact Sales
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* SOC-2 Compliance */}
+                    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                      <div className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-[15px] font-semibold text-foreground">
+                            SOC 2 Type II Report
+                          </h3>
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            Enterprise
+                          </span>
+                        </div>
+                      </div>
+                      <div className="border-t border-border" />
+                      <div className="px-6 py-4">
+                        <p className="text-[13px] text-muted-foreground">
+                          SOC 2 Type II is an auditing standard that verifies a
+                          service provider's security controls over an extended
+                          period. It demonstrates that {COMPANY_NAME} maintains
+                          rigorous security practices for data protection,
+                          availability, and confidentiality.
+                        </p>
+                        <div className="flex items-start gap-3 mt-3">
+                          <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                          <p className="text-[13px] text-muted-foreground">
+                            <span className="font-medium text-foreground">
+                              Why it matters:
+                            </span>{' '}
+                            Many enterprise customers and regulated industries
+                            require SOC 2 compliance from their vendors. Access
+                            to our SOC 2 report is available on Enterprise
+                            plans.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="px-6 py-4 border-t border-border bg-muted/30">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          onClick={() => {
+                            window.open(
+                              CONTACT_SALES_URL,
+                              '_blank',
+                              'noopener,noreferrer',
+                            )
+                          }}
+                        >
+                          Contact Sales
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Delete Organization */}
+                    <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+                      <div className="px-6 py-4">
+                        <h3 className="text-[15px] font-semibold text-foreground">
+                          Delete Organization
+                        </h3>
+                      </div>
+                      <div className="border-t border-destructive/20" />
+                      <div className="px-6 py-4">
+                        <p className="text-[13px] text-muted-foreground">
+                          Permanently delete this organization and all
+                          associated data. This action cannot be undone.
+                        </p>
+
+                        {/* Organization Info Summary */}
+                        {selectedOrg && (
+                          <div className="flex items-center gap-3 mt-4">
+                            <InitialsAvatar name={selectedOrg.name} size="md" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[14px] font-medium text-foreground truncate">
+                                {selectedOrg.name}
+                              </p>
                               <p className="text-[12px] text-muted-foreground">
-                                Projects that will be deleted:{' '}
-                                {activeProjects.slice(0, 5).map((project, index) => (
-                                  <span key={project.$id}>
-                                    {index > 0 && ', '}
-                                    <span className="font-medium text-foreground">{project.name}</span>
-                                  </span>
-                                ))}
-                                {activeProjectsTotal > 5 && (
-                                  <span>
-                                    {' '}and {activeProjectsTotal - 5} more
-                                  </span>
-                                )}
+                                {membershipsTotal} member
+                                {membershipsTotal !== 1 ? 's' : ''} •{' '}
+                                {totalOrgProjects} project
+                                {totalOrgProjects !== 1 ? 's' : ''}
                               </p>
                             </div>
-                          )}
 
-                          <label className="text-[13px] text-muted-foreground">
-                            Type{' '}
-                            {selectedOrg && (
-                            <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
-                              {selectedOrg.name}
-                              </span>
-                            )}{' '}
-                            to confirm
-                          </label>
-                          <Input
-                            value={deleteConfirmation}
-                            onChange={(e) =>
-                              setDeleteConfirmation(e.target.value)
-                            }
-                            placeholder="Enter organization name"
-                            className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
-                          />
-                        </div>
+                            {/* Member Avatars */}
+                            {memberships.length > 0 && (
+                              <div className="flex items-center gap-2">
+                                <div className="flex -space-x-2">
+                                  {memberships
+                                    .slice(0, 4)
+                                    .map(
+                                      (member: TeamMember, index: number) => (
+                                        <div
+                                          key={member.$id}
+                                          className="relative rounded-full border-2 border-background"
+                                          style={{ zIndex: 4 - index }}
+                                          title={member.userName}
+                                        >
+                                          <InitialsAvatar
+                                            name={member.userName}
+                                            size="sm"
+                                          />
+                                        </div>
+                                      ),
+                                    )}
+                                  {membershipsTotal > 4 && (
+                                    <div
+                                      className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-medium text-muted-foreground"
+                                      style={{ zIndex: 0 }}
+                                    >
+                                      +{membershipsTotal - 4}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
 
-                        <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 text-[13px]"
-                            onClick={() => {
-                              setDeleteDialogOpen(false)
-                              setDeleteConfirmation('')
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            className="h-9 text-[13px]"
-                            disabled={
-                              !selectedOrg ||
-                              deleteConfirmation !== selectedOrg.name ||
-                              deleteOrgMutation.isPending
-                            }
-                            onClick={() => {
-                              if (selectedOrg && deleteConfirmation === selectedOrg.name) {
-                                deleteOrgMutation.mutate(selectedOrg.$id)
-                              }
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                      <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
+                        <Dialog
+                          open={deleteDialogOpen}
+                          onOpenChange={setDeleteDialogOpen}
+                        >
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="h-9 text-[13px]"
+                            >
+                              Delete organization
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md p-0">
+                            <DialogHeader className="px-6 pt-6 text-left">
+                              <DialogTitle>Delete Organization</DialogTitle>
+                              <DialogDescription className="text-[13px] mt-2">
+                                Are you sure you want to delete{' '}
+                                {selectedOrg && (
+                                  <span className="font-medium text-foreground">
+                                    {selectedOrg.name}
+                                  </span>
+                                )}{' '}
+                                and all its projects, databases, and files? This
+                                action cannot be undone.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="border-t border-border" />
+                            <div className="px-6 pb-4 pt-0">
+                              <div className="rounded-lg border border-border bg-muted/50 p-3 mb-4 mt-2">
+                                {selectedOrg && (
+                                  <div className="flex items-center gap-3">
+                                    <InitialsAvatar
+                                      name={selectedOrg.name}
+                                      size="sm"
+                                    />
+                                    <div>
+                                      <p className="text-[13px] font-medium text-foreground">
+                                        {selectedOrg.name}
+                                      </p>
+                                      <p className="text-[11px] text-muted-foreground">
+                                        {membershipsTotal} member
+                                        {membershipsTotal !== 1 ? 's' : ''} will
+                                        lose access • {activeProjectsTotal}{' '}
+                                        project
+                                        {activeProjectsTotal !== 1
+                                          ? 's'
+                                          : ''}{' '}
+                                        will be deleted
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              {activeProjects.length > 0 && (
+                                <div className="mb-4">
+                                  <p className="text-[12px] text-muted-foreground">
+                                    Projects that will be deleted:{' '}
+                                    {activeProjects
+                                      .slice(0, 5)
+                                      .map((project, index) => (
+                                        <span key={project.$id}>
+                                          {index > 0 && ', '}
+                                          <span className="font-medium text-foreground">
+                                            {project.name}
+                                          </span>
+                                        </span>
+                                      ))}
+                                    {activeProjectsTotal > 5 && (
+                                      <span>
+                                        {' '}
+                                        and {activeProjectsTotal - 5} more
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                              )}
+
+                              <label className="text-[13px] text-muted-foreground">
+                                Type{' '}
+                                {selectedOrg && (
+                                  <span className="font-mono font-medium text-foreground bg-muted px-1.5 py-0.5 rounded">
+                                    {selectedOrg.name}
+                                  </span>
+                                )}{' '}
+                                to confirm
+                              </label>
+                              <Input
+                                value={deleteConfirmation}
+                                onChange={(e) =>
+                                  setDeleteConfirmation(e.target.value)
+                                }
+                                placeholder="Enter organization name"
+                                className="mt-2 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-red-500/50 focus:ring-0"
+                              />
+                            </div>
+
+                            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 text-[13px]"
+                                onClick={() => {
+                                  setDeleteDialogOpen(false)
+                                  setDeleteConfirmation('')
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="h-9 text-[13px]"
+                                disabled={
+                                  !selectedOrg ||
+                                  deleteConfirmation !== selectedOrg.name ||
+                                  deleteOrgMutation.isPending
+                                }
+                                onClick={() => {
+                                  if (
+                                    selectedOrg &&
+                                    deleteConfirmation === selectedOrg.name
+                                  ) {
+                                    deleteOrgMutation.mutate(selectedOrg.$id)
+                                  }
+                                }}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            )}
+                )}
 
-            {activeTab === 'billing' && <BillingTab />}
+                {activeTab === 'billing' && <BillingTab />}
 
-            {activeTab === 'domains' && <DomainsView />}
+                {activeTab === 'domains' && <DomainsView />}
               </>
             )}
           </div>
@@ -2069,7 +2307,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Update Role</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Update the role for {selectedMember?.userName || selectedMember?.userEmail || 'this member'}.
+              Update the role for{' '}
+              {selectedMember?.userName ||
+                selectedMember?.userEmail ||
+                'this member'}
+              .
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -2080,16 +2322,24 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               </label>
               <RadioGroup
                 value={selectedRole}
-                onValueChange={(value: 'owner' | 'developer' | 'editor' | 'analyst' | 'billing') =>
-                  setSelectedRole(value)
-                }
+                onValueChange={(
+                  value:
+                    | 'owner'
+                    | 'developer'
+                    | 'editor'
+                    | 'analyst'
+                    | 'billing',
+                ) => setSelectedRole(value)}
                 className="rounded-lg border border-border bg-card/50 overflow-hidden divide-y divide-border gap-0"
               >
                 {ROLE_OPTIONS.map((role) => {
                   const Icon = role.icon
                   const isSelected = selectedRole === role.value
                   return (
-                    <div key={role.value} className="first:rounded-t-lg last:rounded-b-lg [&:not(:first-child)]:border-t-0">
+                    <div
+                      key={role.value}
+                      className="first:rounded-t-lg last:rounded-b-lg [&:not(:first-child)]:border-t-0"
+                    >
                       <RadioGroupItem
                         value={role.value}
                         id={`role-${role.value}`}
@@ -2100,16 +2350,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         className={cn(
                           'flex cursor-pointer items-start gap-2.5 px-3 py-2.5 transition-colors',
                           'hover:bg-accent',
-                          isSelected && 'bg-accent'
+                          isSelected && 'bg-accent',
                         )}
                       >
                         <div className="mt-0.5 shrink-0">
-                          <div className={cn(
-                            'h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center transition-colors',
-                            isSelected
-                              ? 'border-foreground'
-                              : 'border-muted-foreground'
-                          )}>
+                          <div
+                            className={cn(
+                              'h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center transition-colors',
+                              isSelected
+                                ? 'border-foreground'
+                                : 'border-muted-foreground',
+                            )}
+                          >
                             {isSelected && (
                               <div className="h-1.5 w-1.5 rounded-full bg-foreground" />
                             )}
@@ -2155,7 +2407,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 if (!selectedMember) return
                 try {
                   await updateRoleMutation.mutateAsync({
-                    membershipId: selectedMember.membershipId || selectedMember.$id,
+                    membershipId:
+                      selectedMember.membershipId || selectedMember.$id,
                     roles: [selectedRole],
                   })
                   toast.success('Role updated successfully')
@@ -2185,16 +2438,27 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>
-              {selectedMember?.status === 'pending' ? 'Cancel Invitation' : 'Remove from Team'}
+              {selectedMember?.status === 'pending'
+                ? 'Cancel Invitation'
+                : 'Remove from Team'}
             </DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
               {selectedMember?.status === 'pending' ? (
                 <>
-                  Are you sure you want to cancel the invitation for {selectedMember?.userName || selectedMember?.userEmail || 'this member'}? They will not be able to join the organization.
+                  Are you sure you want to cancel the invitation for{' '}
+                  {selectedMember?.userName ||
+                    selectedMember?.userEmail ||
+                    'this member'}
+                  ? They will not be able to join the organization.
                 </>
               ) : (
                 <>
-                  Are you sure you want to remove {selectedMember?.userName || selectedMember?.userEmail || 'this member'} from the team? They will lose access to all organization resources.
+                  Are you sure you want to remove{' '}
+                  {selectedMember?.userName ||
+                    selectedMember?.userEmail ||
+                    'this member'}{' '}
+                  from the team? They will lose access to all organization
+                  resources.
                 </>
               )}
             </DialogDescription>
@@ -2220,12 +2484,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 if (!selectedMember) return
                 try {
                   await removeMemberMutation.mutateAsync(
-                    selectedMember.membershipId || selectedMember.$id
+                    selectedMember.membershipId || selectedMember.$id,
                   )
                   toast.success(
                     selectedMember.status === 'pending'
                       ? 'Invitation cancelled successfully'
-                      : 'Member removed successfully'
+                      : 'Member removed successfully',
                   )
                   setRemoveMemberDialogOpen(false)
                   setSelectedMember(null)
@@ -2234,7 +2498,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                 }
               }}
             >
-              {selectedMember?.status === 'pending' ? 'Cancel invitation' : 'Remove from team'}
+              {selectedMember?.status === 'pending'
+                ? 'Cancel invitation'
+                : 'Remove from team'}
             </Button>
           </div>
         </DialogContent>

@@ -35,10 +35,19 @@ export function PlanLimitWarning({
           <div className="relative w-full rounded-lg border border-amber-500/30 px-4 py-3">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <div className="h-4 w-32 bg-amber-500/20 rounded mb-2" aria-hidden="true" />
-                <div className="h-3 w-48 bg-amber-500/20 rounded" aria-hidden="true" />
+                <div
+                  className="h-4 w-32 bg-amber-500/20 rounded mb-2"
+                  aria-hidden="true"
+                />
+                <div
+                  className="h-3 w-48 bg-amber-500/20 rounded"
+                  aria-hidden="true"
+                />
               </div>
-              <div className="h-8 w-20 bg-amber-500/20 rounded shrink-0" aria-hidden="true" />
+              <div
+                className="h-8 w-20 bg-amber-500/20 rounded shrink-0"
+                aria-hidden="true"
+              />
             </div>
           </div>
         </div>
@@ -53,12 +62,12 @@ export function PlanLimitWarning({
 
   const isAtLimit = currentCount >= limit
   const isApproachingLimit = currentCount >= limit * 0.5 // Show alert when at 50% of limit
-  
+
   // Only show alert if at limit or approaching limit (50%+)
   if (!isAtLimit && !isApproachingLimit) {
     return null
   }
-  
+
   const remaining = Math.max(0, limit - currentCount)
 
   return (
@@ -77,7 +86,8 @@ export function PlanLimitWarning({
                 <span className="inline">
                   {isAtLimit ? (
                     <>
-                      Your {planName} plan includes up to {limit} {resourceName}.{' '}
+                      Your {planName} plan includes up to {limit} {resourceName}
+                      .{' '}
                       {orgId && (
                         <Link
                           to="/organizations/$orgId/change-plan"
@@ -86,12 +96,13 @@ export function PlanLimitWarning({
                         >
                           Upgrade
                         </Link>
-                      )}
-                      {' '}to unlock more capacity.
+                      )}{' '}
+                      to unlock more capacity.
                     </>
                   ) : (
                     <>
-                      Your {planName} plan includes up to {limit} {resourceName}. You have {remaining} remaining.{' '}
+                      Your {planName} plan includes up to {limit} {resourceName}
+                      . You have {remaining} remaining.{' '}
                       {orgId && (
                         <Link
                           to="/organizations/$orgId/change-plan"
@@ -100,8 +111,8 @@ export function PlanLimitWarning({
                         >
                           Upgrade
                         </Link>
-                      )}
-                      {' '}to unlock more capacity.
+                      )}{' '}
+                      to unlock more capacity.
                     </>
                   )}
                 </span>
@@ -113,10 +124,7 @@ export function PlanLimitWarning({
                 size="sm"
                 className="h-8 shrink-0 bg-amber-500 px-3 text-[12px] font-medium text-amber-950 hover:bg-amber-400 dark:bg-amber-500 dark:text-amber-950 dark:hover:bg-amber-400"
               >
-                <Link
-                  to="/organizations/$orgId/change-plan"
-                  params={{ orgId }}
-                >
+                <Link to="/organizations/$orgId/change-plan" params={{ orgId }}>
                   Upgrade
                 </Link>
               </Button>
@@ -127,4 +135,3 @@ export function PlanLimitWarning({
     </div>
   )
 }
-

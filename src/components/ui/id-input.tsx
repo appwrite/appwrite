@@ -151,15 +151,14 @@ export function IdInput({
                 </span>
               </div>
             </div>
-            {error && (
-              <p className="text-[12px] text-destructive">{error}</p>
-            )}
+            {error && <p className="text-[12px] text-destructive">{error}</p>}
           </div>
 
           <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
             <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
             <p className="text-[12px] text-muted-foreground">
-              Allowed characters: alphanumeric, non-leading hyphen, underscore, period
+              Allowed characters: alphanumeric, non-leading hyphen, underscore,
+              period
             </p>
           </div>
         </div>
@@ -167,4 +166,3 @@ export function IdInput({
     </div>
   )
 }
-

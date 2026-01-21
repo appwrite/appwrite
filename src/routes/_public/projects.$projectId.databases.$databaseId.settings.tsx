@@ -30,6 +30,3 @@ function DatabaseOverviewSettings() {
   const { databaseId } = Route.useParams()
   return <DatabaseOverview databaseId={databaseId} activeTab="settings" />
 }
-
-
-

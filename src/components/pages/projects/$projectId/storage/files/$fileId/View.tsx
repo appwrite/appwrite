@@ -51,11 +51,7 @@ import {
 import { formatBytes } from '@/lib/utils/mock-data'
 import { formatDateTime } from '@/lib/date-utils'
 import { cn } from '@/lib/utils'
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Link } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { ID } from '@appwrite.io/console'
@@ -76,10 +72,7 @@ export function FileView() {
   )
 
   // Fetch bucket data to check file level security
-  const { data: bucket } = useBucket(
-    projectId,
-    bucketId,
-  )
+  const { data: bucket } = useBucket(projectId, bucketId)
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
@@ -92,17 +85,17 @@ export function FileView() {
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const fileIndex = pathParts.findIndex((part, idx) => 
-      part === 'files' && pathParts[idx + 1] === fileId
+    const fileIndex = pathParts.findIndex(
+      (part, idx) => part === 'files' && pathParts[idx + 1] === fileId,
     )
-    
+
     if (fileIndex >= 0 && pathParts[fileIndex + 2]) {
       const tabFromPath = pathParts[fileIndex + 2]
       if (tabFromPath === 'security') {
         return 'security'
       }
     }
-    
+
     // Default to overview for index route
     return 'overview'
   }, [location.pathname, fileId])
@@ -156,7 +149,6 @@ export function FileView() {
     },
   })
 
-
   const handleDeleteFile = () => {
     deleteFileMutation.mutate()
   }
@@ -187,7 +179,6 @@ export function FileView() {
     window.open(urlWithMode, '_blank')
   }
 
-
   if (fileLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -204,7 +195,8 @@ export function FileView() {
     )
   }
 
-  const isPending = file.chunksTotal > 0 && file.chunksUploaded < file.chunksTotal
+  const isPending =
+    file.chunksTotal > 0 && file.chunksUploaded < file.chunksTotal
 
   const handleBack = () => {
     navigate({
@@ -242,22 +234,27 @@ export function FileView() {
           activeTab === 'security' && bucket && !bucket.fileSecurity ? (
             <div className="border-b border-border bg-amber-500/5">
               <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-                <Alert variant="default" className="border-amber-500/30 bg-transparent">
+                <Alert
+                  variant="default"
+                  className="border-amber-500/30 bg-transparent"
+                >
                   <AlertCircle className="h-4 w-4 text-amber-500" />
                   <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
                     File level security is disabled
                   </AlertTitle>
                   <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
                     <span className="inline">
-                      File-level permissions are only effective when file level security is enabled at the bucket level.{' '}
+                      File-level permissions are only effective when file level
+                      security is enabled at the bucket level.{' '}
                       <Link
                         to="/projects/$projectId/storage/$bucketId/security"
                         params={{ projectId: projectId!, bucketId: bucketId! }}
                         className="font-medium underline hover:no-underline inline"
                       >
                         Enable file level security
-                      </Link>
-                      {' '}in the bucket Security tab to apply file-specific permissions.
+                      </Link>{' '}
+                      in the bucket Security tab to apply file-specific
+                      permissions.
                     </span>
                   </AlertDescription>
                 </Alert>
@@ -268,10 +265,14 @@ export function FileView() {
       />
 
       {/* Content */}
-      <div className={cn(
-        "mx-auto w-full max-w-7xl flex-1",
-        activeTab === 'settings' || activeTab === 'security' ? 'overflow-y-auto' : 'overflow-hidden'
-      )}>
+      <div
+        className={cn(
+          'mx-auto w-full max-w-7xl flex-1',
+          activeTab === 'settings' || activeTab === 'security'
+            ? 'overflow-y-auto'
+            : 'overflow-hidden',
+        )}
+      >
         {activeTab === 'overview' && (
           <div className="px-4 py-4 sm:px-6">
             <div className="space-y-6">
@@ -288,28 +289,36 @@ export function FileView() {
                     {/* Preview Image - Left */}
                     {!isPending && file.mimeType?.startsWith('image/') && (
                       <div className="flex-shrink-0 w-full max-w-[300px]">
-                        {projectId && bucketId && fileId && (() => {
-                          const previewUrl = sdk.forProject(projectId).storage.getFilePreview({
-                            bucketId,
-                            fileId,
-                            width: 400,
-                          })
-                          // Add mode=admin for console preview
-                          const urlWithMode = previewUrl + (previewUrl.includes('?') ? '&' : '?') + 'mode=admin'
-                          return (
-                            <div className="aspect-square w-full overflow-hidden rounded-lg border border-border">
-                              <img
-                                src={urlWithMode}
-                                alt={file.name}
-                                onLoad={() => setImageLoaded(true)}
-                                className={cn(
-                                  "h-full w-full object-cover transition-opacity duration-500",
-                                  imageLoaded ? "opacity-100" : "opacity-0"
-                                )}
-                              />
-                            </div>
-                          )
-                        })()}
+                        {projectId &&
+                          bucketId &&
+                          fileId &&
+                          (() => {
+                            const previewUrl = sdk
+                              .forProject(projectId)
+                              .storage.getFilePreview({
+                                bucketId,
+                                fileId,
+                                width: 400,
+                              })
+                            // Add mode=admin for console preview
+                            const urlWithMode =
+                              previewUrl +
+                              (previewUrl.includes('?') ? '&' : '?') +
+                              'mode=admin'
+                            return (
+                              <div className="aspect-square w-full overflow-hidden rounded-lg border border-border">
+                                <img
+                                  src={urlWithMode}
+                                  alt={file.name}
+                                  onLoad={() => setImageLoaded(true)}
+                                  className={cn(
+                                    'h-full w-full object-cover transition-opacity duration-500',
+                                    imageLoaded ? 'opacity-100' : 'opacity-0',
+                                  )}
+                                />
+                              </div>
+                            )
+                          })()}
                       </div>
                     )}
                     {/* Metadata - Right */}
@@ -381,10 +390,11 @@ export function FileView() {
                             {file.compression === 'none' || !file.compression
                               ? 'None'
                               : file.compression === 'gzip'
-                              ? 'Gzip'
-                              : file.compression === 'zstd'
-                              ? 'Zstd'
-                              : file.compression.charAt(0).toUpperCase() + file.compression.slice(1)}
+                                ? 'Gzip'
+                                : file.compression === 'zstd'
+                                  ? 'Zstd'
+                                  : file.compression.charAt(0).toUpperCase() +
+                                    file.compression.slice(1)}
                           </p>
                         </div>
                       </div>
@@ -394,7 +404,11 @@ export function FileView() {
                             MD5 Signature
                           </Label>
                           <div className="mt-1.5">
-                            <CopyableId id={file.signature} size="sm" maxWidth={200} />
+                            <CopyableId
+                              id={file.signature}
+                              size="sm"
+                              maxWidth={200}
+                            />
                           </div>
                         </div>
                       )}
@@ -404,7 +418,8 @@ export function FileView() {
                             Upload Progress
                           </Label>
                           <p className="text-[13px] text-muted-foreground mt-1.5">
-                            {file.chunksUploaded} of {file.chunksTotal} chunks uploaded
+                            {file.chunksUploaded} of {file.chunksTotal} chunks
+                            uploaded
                           </p>
                         </div>
                       )}
@@ -467,9 +482,16 @@ export function FileView() {
                   </div>
                 </div>
                 <div className="px-6 py-4 border-t border-red-500/20 bg-red-500/5">
-                  <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                  <Dialog
+                    open={deleteDialogOpen}
+                    onOpenChange={setDeleteDialogOpen}
+                  >
                     <DialogTrigger asChild>
-                      <Button variant="destructive" size="sm" className="h-9 text-[13px]">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                      >
                         Delete
                       </Button>
                     </DialogTrigger>
@@ -477,7 +499,9 @@ export function FileView() {
                       <DialogHeader className="px-6 pt-6 text-left">
                         <DialogTitle>Delete file</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
-                          Are you sure you want to delete <strong>{file.name}</strong>? This action cannot be undone.
+                          Are you sure you want to delete{' '}
+                          <strong>{file.name}</strong>? This action cannot be
+                          undone.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -508,12 +532,8 @@ export function FileView() {
           </div>
         )}
 
-        {activeTab === 'security' && (
-          <FileSecurity />
-        )}
+        {activeTab === 'security' && <FileSecurity />}
       </div>
-
     </div>
   )
 }
-

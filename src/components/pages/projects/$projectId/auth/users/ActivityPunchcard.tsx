@@ -1,5 +1,13 @@
 import { useMemo } from 'react'
-import { format, startOfYear, endOfYear, eachDayOfInterval, getDay, getMonth, startOfMonth } from 'date-fns'
+import {
+  format,
+  startOfYear,
+  endOfYear,
+  eachDayOfInterval,
+  getDay,
+  getMonth,
+  startOfMonth,
+} from 'date-fns'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
@@ -13,7 +21,10 @@ interface ActivityPunchcardProps {
   className?: string
 }
 
-export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProps) {
+export function ActivityPunchcard({
+  sessions,
+  className,
+}: ActivityPunchcardProps) {
   // Get all days in the current year
   const yearStart = startOfYear(new Date())
   const yearEnd = endOfYear(new Date())
@@ -22,7 +33,7 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
   // Create a map of dates to session counts
   const activityMap = useMemo(() => {
     const map = new Map<string, number>()
-    
+
     sessions.forEach((session) => {
       // Use $createdAt which is standard in Appwrite models
       const dateString = (session as any).$createdAt
@@ -40,7 +51,7 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
         }
       }
     })
-    
+
     return map
   }, [sessions])
 
@@ -48,25 +59,25 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
   const weeks = useMemo(() => {
     const weeksArray: (Date | null)[][] = []
     let currentWeek: (Date | null)[] = []
-    
+
     // Start with Sunday (0)
     const firstDayOfYear = getDay(yearStart)
-    
+
     // Add empty cells for days before the first day of the year
     for (let i = 0; i < firstDayOfYear; i++) {
       currentWeek.push(null)
     }
-    
+
     daysInYear.forEach((day) => {
       currentWeek.push(day)
-      
+
       // If we've filled a week (7 days), start a new week
       if (currentWeek.length === 7) {
         weeksArray.push(currentWeek)
         currentWeek = []
       }
     })
-    
+
     // Add remaining days to the last week
     if (currentWeek.length > 0) {
       // Fill remaining days with null
@@ -75,7 +86,7 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
       }
       weeksArray.push(currentWeek)
     }
-    
+
     return weeksArray
   }, [daysInYear, yearStart])
 
@@ -83,14 +94,14 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
   const monthLabels = useMemo(() => {
     const labels: Array<{ month: string; weekIndex: number }> = []
     const monthsSeen = new Set<number>()
-    
+
     // Find which week each month starts in
     weeks.forEach((week, weekIndex) => {
       week.forEach((day) => {
         if (day) {
           const dayOfMonth = day.getDate()
           const month = getMonth(day)
-          
+
           // If this is the first day of the month and we haven't seen this month yet
           if (dayOfMonth === 1 && !monthsSeen.has(month)) {
             monthsSeen.add(month)
@@ -102,7 +113,7 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
         }
       })
     })
-    
+
     return labels.sort((a, b) => a.weekIndex - b.weekIndex)
   }, [weeks])
 
@@ -111,7 +122,7 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
     if (!date) return 0
     const dateKey = format(date, 'yyyy-MM-dd')
     const count = activityMap.get(dateKey) || 0
-    
+
     // Return activity level (0-4) based on session count
     if (count === 0) return 0
     if (count === 1) return 1
@@ -144,7 +155,7 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
     const dateKey = format(date, 'yyyy-MM-dd')
     const count = activityMap.get(dateKey) || 0
     const formattedDate = format(date, 'MMM d, yyyy')
-    
+
     if (count === 0) {
       return `No activity on ${formattedDate}`
     }
@@ -157,7 +168,12 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
   }, [activityMap])
 
   return (
-    <div className={cn('rounded-xl border border-border bg-card/50 overflow-hidden', className)}>
+    <div
+      className={cn(
+        'rounded-xl border border-border bg-card/50 overflow-hidden',
+        className,
+      )}
+    >
       <div className="px-6 py-4">
         <h3 className="text-[15px] font-semibold text-foreground">Activity</h3>
         <p className="text-[13px] text-muted-foreground mt-2">
@@ -171,11 +187,15 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
           <div className="flex items-center gap-6 text-[13px]">
             <div>
               <span className="text-muted-foreground">Total active days:</span>
-              <span className="ml-1.5 font-medium text-foreground">{totalActiveDays}</span>
+              <span className="ml-1.5 font-medium text-foreground">
+                {totalActiveDays}
+              </span>
             </div>
             <div>
               <span className="text-muted-foreground">Total sessions:</span>
-              <span className="ml-1.5 font-medium text-foreground">{sessions.length}</span>
+              <span className="ml-1.5 font-medium text-foreground">
+                {sessions.length}
+              </span>
             </div>
           </div>
 
@@ -183,18 +203,23 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
           <div className="w-full">
             <div className="flex items-start">
               {/* Week day labels */}
-              <div className="flex flex-col pr-3 shrink-0 gap-[0.25rem]" style={{ paddingTop: '1.25rem' }}>
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-                  <div
-                    key={day}
-                    className={cn(
-                      'h-[11px] w-8 flex items-center text-[10px] text-muted-foreground',
-                      index % 2 === 0 ? 'opacity-100' : 'opacity-0'
-                    )}
-                  >
-                    {index % 2 === 0 ? day : ''}
-                  </div>
-                ))}
+              <div
+                className="flex flex-col pr-3 shrink-0 gap-[0.25rem]"
+                style={{ paddingTop: '1.25rem' }}
+              >
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(
+                  (day, index) => (
+                    <div
+                      key={day}
+                      className={cn(
+                        'h-[11px] w-8 flex items-center text-[10px] text-muted-foreground',
+                        index % 2 === 0 ? 'opacity-100' : 'opacity-0',
+                      )}
+                    >
+                      {index % 2 === 0 ? day : ''}
+                    </div>
+                  ),
+                )}
               </div>
 
               {/* Month labels and weeks */}
@@ -221,22 +246,30 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
                 {/* Weeks grid */}
                 <div className="flex w-full justify-between gap-[0.125rem]">
                   {weeks.map((week, weekIndex) => (
-                    <div key={weekIndex} className="flex flex-col gap-[0.25rem]">
+                    <div
+                      key={weekIndex}
+                      className="flex flex-col gap-[0.25rem]"
+                    >
                       {week.map((day, dayIndex) => {
                         if (!day) {
-                          return <div key={`${weekIndex}-${dayIndex}`} className="h-[11px] w-[11px]" />
+                          return (
+                            <div
+                              key={`${weekIndex}-${dayIndex}`}
+                              className="h-[11px] w-[11px]"
+                            />
+                          )
                         }
-                        
+
                         const activityLevel = getActivityLevel(day)
                         const tooltipText = getTooltipText(day)
-                        
+
                         return (
                           <Tooltip key={`${weekIndex}-${dayIndex}`}>
                             <TooltipTrigger asChild>
                               <div
                                 className={cn(
                                   'h-[11px] w-[11px] rounded-sm border border-border/50 transition-colors cursor-pointer',
-                                  getColorClass(activityLevel)
+                                  getColorClass(activityLevel),
                                 )}
                               />
                             </TooltipTrigger>
@@ -270,4 +303,3 @@ export function ActivityPunchcard({ sessions, className }: ActivityPunchcardProp
     </div>
   )
 }
-

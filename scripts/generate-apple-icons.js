@@ -38,7 +38,7 @@ async function generateAppleIcons() {
 
     // Generate 180x180 PNG (standard iOS size)
     const outputPath = join(rootDir, 'public', 'apple-touch-icon.png')
-    
+
     await sharp(svgBuffer)
       .resize(180, 180, {
         fit: 'contain',

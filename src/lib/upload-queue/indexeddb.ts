@@ -1,6 +1,6 @@
 /**
  * IndexedDB wrapper for upload queue persistence
- * 
+ *
  * Stores upload queue in IndexedDB so uploads can survive page reloads and tab closes.
  */
 
@@ -39,7 +39,9 @@ function openDatabase(): Promise<IDBDatabase> {
   return dbPromise
 }
 
-async function getStore(mode: IDBTransactionMode = 'readonly'): Promise<IDBObjectStore> {
+async function getStore(
+  mode: IDBTransactionMode = 'readonly',
+): Promise<IDBObjectStore> {
   const db = await openDatabase()
   const transaction = db.transaction([STORE_NAME], mode)
   return transaction.objectStore(STORE_NAME)
@@ -145,10 +147,12 @@ export async function updateUploadItem(
 /**
  * Clear completed and failed uploads older than specified time
  */
-export async function clearOldUploads(olderThanMs: number = 24 * 60 * 60 * 1000): Promise<void> {
+export async function clearOldUploads(
+  olderThanMs: number = 24 * 60 * 60 * 1000,
+): Promise<void> {
   const store = await getStore('readwrite')
   const index = store.index('status')
-  
+
   return new Promise((resolve, reject) => {
     const cutoffTime = Date.now() - olderThanMs
     const statuses: UploadStatus[] = ['completed', 'failed', 'cancelled']
@@ -188,4 +192,3 @@ export async function clearOldUploads(olderThanMs: number = 24 * 60 * 60 * 1000)
     })
   })
 }
-

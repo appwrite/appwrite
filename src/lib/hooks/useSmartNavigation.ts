@@ -8,15 +8,17 @@ interface UseSmartNavigationOptions {
 
 /**
  * Hook for smart navigation that prefers browser history with fallback support
- * 
+ *
  * @example
  * ```tsx
  * const goBack = useSmartNavigation({ fallbackPath: '/organizations/123/billing' })
- * 
+ *
  * <Button onClick={goBack}>Cancel</Button>
  * ```
  */
-export function useSmartNavigation({ fallbackPath }: UseSmartNavigationOptions = {}) {
+export function useSmartNavigation({
+  fallbackPath,
+}: UseSmartNavigationOptions = {}) {
   const navigate = useNavigate()
 
   const goBack = useCallback(() => {

@@ -27,7 +27,10 @@ import { format } from 'date-fns'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { mockFirewallAnalytics, type FirewallAnalytics } from '@/lib/utils/mock-data'
+import {
+  mockFirewallAnalytics,
+  type FirewallAnalytics,
+} from '@/lib/utils/mock-data'
 
 interface AnalyticsTabProps {
   projectId: string
@@ -42,7 +45,14 @@ interface StatCardProps {
   className?: string
 }
 
-function StatCard({ label, value, change, icon, trend, className }: StatCardProps) {
+function StatCard({
+  label,
+  value,
+  change,
+  icon,
+  trend,
+  className,
+}: StatCardProps) {
   return (
     <Card className={cn('p-4', className)}>
       <div className="flex items-start justify-between">
@@ -69,7 +79,9 @@ function StatCard({ label, value, change, icon, trend, className }: StatCardProp
                 {change > 0 ? '+' : ''}
                 {change}%
               </span>
-              <span className="text-[11px] text-muted-foreground">vs last period</span>
+              <span className="text-[11px] text-muted-foreground">
+                vs last period
+              </span>
             </div>
           )}
         </div>
@@ -98,7 +110,10 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
         <p className="mb-2 text-[12px] font-medium text-foreground">{label}</p>
         <div className="space-y-1.5">
           {payload.map((entry, index) => (
-            <div key={index} className="flex items-center justify-between gap-6">
+            <div
+              key={index}
+              className="flex items-center justify-between gap-6"
+            >
               <span className="text-[11px] text-muted-foreground capitalize">
                 {entry.dataKey.replace(/([A-Z])/g, ' $1').trim()}
               </span>
@@ -195,7 +210,8 @@ export function AnalyticsTab({ projectId }: AnalyticsTabProps) {
               No analytics data
             </h3>
             <p className="max-w-sm text-[13px] text-muted-foreground">
-              Analytics data will appear here once your firewall rules start processing requests.
+              Analytics data will appear here once your firewall rules start
+              processing requests.
             </p>
           </div>
         </div>
@@ -203,9 +219,10 @@ export function AnalyticsTab({ projectId }: AnalyticsTabProps) {
     )
   }
 
-  const blockRate = analytics.totalRequests > 0
-    ? ((analytics.totalBlocked / analytics.totalRequests) * 100).toFixed(1)
-    : '0.0'
+  const blockRate =
+    analytics.totalRequests > 0
+      ? ((analytics.totalBlocked / analytics.totalRequests) * 100).toFixed(1)
+      : '0.0'
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
@@ -223,7 +240,11 @@ export function AnalyticsTab({ projectId }: AnalyticsTabProps) {
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
-              {range === '24h' ? '24 hours' : range === '7d' ? '7 days' : '30 days'}
+              {range === '24h'
+                ? '24 hours'
+                : range === '7d'
+                  ? '7 days'
+                  : '30 days'}
             </button>
           ))}
         </div>
@@ -436,6 +457,3 @@ export function AnalyticsTab({ projectId }: AnalyticsTabProps) {
     </div>
   )
 }
-
-
-

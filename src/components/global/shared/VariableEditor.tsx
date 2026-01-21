@@ -46,13 +46,17 @@ export function VariableEditor({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Variable editor</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Edit all variables at once. Secret variables are not shown and will not be affected.
+            Edit all variables at once. Secret variables are not shown and will
+            not be affected.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
         <div className="px-6 pb-4 pt-0 flex-1 flex flex-col min-h-0 overflow-hidden">
           <div className="flex items-center justify-between mb-4 shrink-0">
-            <Tabs value={format} onValueChange={(v) => onFormatChange(v as 'env' | 'json')}>
+            <Tabs
+              value={format}
+              onValueChange={(v) => onFormatChange(v as 'env' | 'json')}
+            >
               <TabsList>
                 <TabsTrigger value="env">ENV</TabsTrigger>
                 <TabsTrigger value="json">JSON</TabsTrigger>
@@ -85,12 +89,17 @@ export function VariableEditor({
           {error && (
             <Alert variant="destructive" className="mb-4 shrink-0">
               <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="text-[13px]">{error}</AlertDescription>
+              <AlertDescription className="text-[13px]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
 
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            <Label htmlFor="editor-content" className="text-[13px] mb-2 shrink-0">
+            <Label
+              htmlFor="editor-content"
+              className="text-[13px] mb-2 shrink-0"
+            >
               Content
             </Label>
             <div className="flex-1 min-h-0 overflow-hidden">
@@ -133,4 +142,3 @@ export function VariableEditor({
     </Dialog>
   )
 }
-

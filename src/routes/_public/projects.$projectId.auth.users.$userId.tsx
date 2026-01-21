@@ -41,4 +41,3 @@ function UserDetailPage() {
   const params = Route.useParams()
   return <UserDetailView key={`user-${params.projectId}-${params.userId}`} />
 }
-

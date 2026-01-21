@@ -5,10 +5,30 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Plus, X, Users, User, Building2, Tag, Code } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Card } from '@/components/ui/card'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -38,31 +58,41 @@ type PermissionAction = 'create' | 'read' | 'update' | 'delete'
  */
 function parsePermissions(perms: string[]): Map<string, PermissionActions> {
   const roleMap = new Map<string, PermissionActions>()
-  
+
   if (!Array.isArray(perms)) {
     return roleMap
   }
-  
+
   perms.forEach((perm) => {
     if (typeof perm !== 'string') {
       return
     }
-    
+
     // Match pattern: action("role") or action('role')
     // More flexible regex to handle various quote styles
     const match = perm.match(/(\w+)\(["']([^"']+)["']\)/)
     if (match) {
       const [, action, role] = match
       if (!roleMap.has(role)) {
-        roleMap.set(role, { create: false, read: false, update: false, delete: false })
+        roleMap.set(role, {
+          create: false,
+          read: false,
+          update: false,
+          delete: false,
+        })
       }
       const actions = roleMap.get(role)!
-      if (action === 'create' || action === 'read' || action === 'update' || action === 'delete') {
+      if (
+        action === 'create' ||
+        action === 'read' ||
+        action === 'update' ||
+        action === 'delete'
+      ) {
         actions[action] = true
       }
     }
   })
-  
+
   return roleMap
 }
 
@@ -71,7 +101,7 @@ function parsePermissions(perms: string[]): Map<string, PermissionActions> {
  */
 function exportPermissions(roleMap: Map<string, PermissionActions>): string[] {
   const perms: string[] = []
-  
+
   roleMap.forEach((actions, role) => {
     Object.entries(actions).forEach(([action, enabled]) => {
       if (enabled) {
@@ -79,7 +109,7 @@ function exportPermissions(roleMap: Map<string, PermissionActions>): string[] {
       }
     })
   })
-  
+
   return perms
 }
 
@@ -104,44 +134,56 @@ interface RoleDisplayProps {
 function RoleDisplay({ role, projectId }: RoleDisplayProps) {
   // Special roles
   if (role === 'any') {
-    return (
-      <span className="text-[13px] font-medium text-foreground">Any</span>
-    )
+    return <span className="text-[13px] font-medium text-foreground">Any</span>
   }
-  
+
   if (role === 'guests') {
     return (
-      <span className="text-[13px] font-medium text-foreground">All guests</span>
+      <span className="text-[13px] font-medium text-foreground">
+        All guests
+      </span>
     )
   }
-  
+
   if (role === 'users') {
     return (
       <span className="text-[13px] font-medium text-foreground">All users</span>
     )
   }
-  
+
   // User role: user:userId or user:userId/roleName
   const userMatch = role.match(/^user:([^/]+)(?:\/(.+))?$/)
   if (userMatch) {
     const [, userId, roleName] = userMatch
-    return <UserRoleDisplay userId={userId} roleName={roleName} projectId={projectId} />
+    return (
+      <UserRoleDisplay
+        userId={userId}
+        roleName={roleName}
+        projectId={projectId}
+      />
+    )
   }
-  
+
   // Team role: team:teamId or team:teamId/roleName
   const teamMatch = role.match(/^team:([^/]+)(?:\/(.+))?$/)
   if (teamMatch) {
     const [, teamId, roleName] = teamMatch
-    return <TeamRoleDisplay teamId={teamId} roleName={roleName} projectId={projectId} />
+    return (
+      <TeamRoleDisplay
+        teamId={teamId}
+        roleName={roleName}
+        projectId={projectId}
+      />
+    )
   }
-  
+
   // Label role: label:labelName
   const labelMatch = role.match(/^label:(.+)$/)
   if (labelMatch) {
     const [, labelName] = labelMatch
     return <LabelRoleDisplay labelName={labelName} />
   }
-  
+
   // Custom role (fallback)
   return <CustomRoleDisplay role={role} />
 }
@@ -155,10 +197,14 @@ interface UserRoleDisplayProps {
   projectId?: string
 }
 
-function UserRoleDisplay({ userId, roleName, projectId }: UserRoleDisplayProps) {
+function UserRoleDisplay({
+  userId,
+  roleName,
+  projectId,
+}: UserRoleDisplayProps) {
   const { users } = useProjectUsers(projectId || null, 0, 100, '')
   const user = users.find((u) => u.$id === userId)
-  
+
   const displayName = user?.name || user?.email || user?.phone || userId
   const initials = user?.name
     ? user.name
@@ -170,7 +216,7 @@ function UserRoleDisplay({ userId, roleName, projectId }: UserRoleDisplayProps) 
     : user?.email
       ? user.email[0].toUpperCase()
       : '?'
-  
+
   return (
     <div className="flex items-center gap-2 min-w-0">
       <Avatar className="size-6 shrink-0">
@@ -184,7 +230,10 @@ function UserRoleDisplay({ userId, roleName, projectId }: UserRoleDisplayProps) 
           <span className="text-[13px] font-medium text-foreground truncate">
             {displayName}
           </span>
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
+          <Badge
+            variant="secondary"
+            className="text-[10px] px-1.5 py-0 shrink-0"
+          >
             User
           </Badge>
         </div>
@@ -205,12 +254,16 @@ interface TeamRoleDisplayProps {
   projectId?: string
 }
 
-function TeamRoleDisplay({ teamId, roleName, projectId }: TeamRoleDisplayProps) {
+function TeamRoleDisplay({
+  teamId,
+  roleName,
+  projectId,
+}: TeamRoleDisplayProps) {
   const { teams } = useProjectTeams(projectId || null, 0, 100, '')
   const team = teams.find((t) => t.id === teamId)
-  
+
   const displayName = team?.name || teamId
-  
+
   return (
     <div className="flex items-center gap-2 min-w-0">
       <div className="size-6 shrink-0 rounded-full bg-muted flex items-center justify-center">
@@ -221,7 +274,10 @@ function TeamRoleDisplay({ teamId, roleName, projectId }: TeamRoleDisplayProps) 
           <span className="text-[13px] font-medium text-foreground truncate">
             {displayName}
           </span>
-          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">
+          <Badge
+            variant="secondary"
+            className="text-[10px] px-1.5 py-0 shrink-0"
+          >
             Team
           </Badge>
         </div>
@@ -274,19 +330,30 @@ interface UserSelectionModalProps {
   existingRoles?: Set<string>
 }
 
-function UserSelectionModal({ open, onOpenChange, onSelect, projectId, existingRoles }: UserSelectionModalProps) {
+function UserSelectionModal({
+  open,
+  onOpenChange,
+  onSelect,
+  projectId,
+  existingRoles,
+}: UserSelectionModalProps) {
   const [search, setSearch] = useState('')
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(0)
   const pageSize = 25
-  
-  const { users, total, isLoading } = useProjectUsers(projectId || null, page, pageSize, search)
-  
+
+  const { users, total, isLoading } = useProjectUsers(
+    projectId || null,
+    page,
+    pageSize,
+    search,
+  )
+
   // Check if a user is already in permissions
   const isUserAlreadyAdded = (userId: string) => {
     return existingRoles?.has(`user:${userId}`) || false
   }
-  
+
   const handleToggleUser = (userId: string) => {
     const newSelected = new Set(selectedUserIds)
     if (newSelected.has(userId)) {
@@ -296,7 +363,7 @@ function UserSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
     }
     setSelectedUserIds(newSelected)
   }
-  
+
   const handleAdd = () => {
     const userIds = Array.from(selectedUserIds)
     if (userIds.length > 0) {
@@ -306,13 +373,13 @@ function UserSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
       onOpenChange(false)
     }
   }
-  
+
   const handleCancel = () => {
     setSelectedUserIds(new Set())
     setSearch('')
     onOpenChange(false)
   }
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
@@ -323,7 +390,7 @@ function UserSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <Input
@@ -334,7 +401,7 @@ function UserSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
                 setPage(0)
               }}
             />
-            
+
             <div className="max-h-[300px] overflow-y-auto space-y-1">
               {isLoading ? (
                 <div className="text-center py-8 text-sm text-muted-foreground">
@@ -348,7 +415,8 @@ function UserSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
                 users.map((user) => {
                   const isSelected = selectedUserIds.has(user.$id)
                   const isAlreadyAdded = isUserAlreadyAdded(user.$id)
-                  const displayName = user.name || user.email || user.phone || user.$id
+                  const displayName =
+                    user.name || user.email || user.phone || user.$id
                   const initials = user.name
                     ? user.name
                         .split(' ')
@@ -359,22 +427,24 @@ function UserSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
                     : user.email
                       ? user.email[0].toUpperCase()
                       : '?'
-                  
+
                   return (
                     <div
                       key={user.$id}
-                      onClick={() => !isAlreadyAdded && handleToggleUser(user.$id)}
+                      onClick={() =>
+                        !isAlreadyAdded && handleToggleUser(user.$id)
+                      }
                       className={cn(
                         'flex items-center gap-3 rounded-lg border p-3 transition-colors',
                         isAlreadyAdded
                           ? 'border-border bg-muted/30 opacity-50 cursor-not-allowed'
                           : isSelected
                             ? 'border-primary bg-primary/5 cursor-pointer'
-                            : 'border-border hover:bg-muted/50 cursor-pointer'
+                            : 'border-border hover:bg-muted/50 cursor-pointer',
                       )}
                     >
-                      <Checkbox 
-                        checked={isSelected} 
+                      <Checkbox
+                        checked={isSelected}
                         onCheckedChange={() => {
                           if (!isAlreadyAdded) handleToggleUser(user.$id)
                         }}
@@ -383,15 +453,21 @@ function UserSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
                         className="cursor-pointer"
                       />
                       <Avatar className="size-8">
-                        {user.avatar && <AvatarImage src={user.avatar} alt={displayName} />}
+                        {user.avatar && (
+                          <AvatarImage src={user.avatar} alt={displayName} />
+                        )}
                         <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{displayName}</p>
+                        <p className="text-sm font-medium truncate">
+                          {displayName}
+                        </p>
                         {user.email && (
-                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {user.email}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -401,7 +477,7 @@ function UserSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
             </div>
           </div>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
             Cancel
@@ -426,19 +502,30 @@ interface TeamSelectionModalProps {
   existingRoles?: Set<string>
 }
 
-function TeamSelectionModal({ open, onOpenChange, onSelect, projectId, existingRoles }: TeamSelectionModalProps) {
+function TeamSelectionModal({
+  open,
+  onOpenChange,
+  onSelect,
+  projectId,
+  existingRoles,
+}: TeamSelectionModalProps) {
   const [search, setSearch] = useState('')
   const [selectedTeamIds, setSelectedTeamIds] = useState<Set<string>>(new Set())
   const [page, setPage] = useState(0)
   const pageSize = 25
-  
-  const { teams, total, isLoading } = useProjectTeams(projectId || null, page, pageSize, search)
-  
+
+  const { teams, total, isLoading } = useProjectTeams(
+    projectId || null,
+    page,
+    pageSize,
+    search,
+  )
+
   // Check if a team is already in permissions
   const isTeamAlreadyAdded = (teamId: string) => {
     return existingRoles?.has(`team:${teamId}`) || false
   }
-  
+
   const handleToggleTeam = (teamId: string) => {
     const newSelected = new Set(selectedTeamIds)
     if (newSelected.has(teamId)) {
@@ -448,7 +535,7 @@ function TeamSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
     }
     setSelectedTeamIds(newSelected)
   }
-  
+
   const handleAdd = () => {
     const teamIds = Array.from(selectedTeamIds)
     if (teamIds.length > 0) {
@@ -458,13 +545,13 @@ function TeamSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
       onOpenChange(false)
     }
   }
-  
+
   const handleCancel = () => {
     setSelectedTeamIds(new Set())
     setSearch('')
     onOpenChange(false)
   }
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
@@ -475,7 +562,7 @@ function TeamSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <Input
@@ -486,7 +573,7 @@ function TeamSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
                 setPage(0)
               }}
             />
-            
+
             <div className="max-h-[300px] overflow-y-auto space-y-1">
               {isLoading ? (
                 <div className="text-center py-8 text-sm text-muted-foreground">
@@ -500,22 +587,24 @@ function TeamSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
                 teams.map((team) => {
                   const isSelected = selectedTeamIds.has(team.id)
                   const isAlreadyAdded = isTeamAlreadyAdded(team.id)
-                  
+
                   return (
                     <div
                       key={team.id}
-                      onClick={() => !isAlreadyAdded && handleToggleTeam(team.id)}
+                      onClick={() =>
+                        !isAlreadyAdded && handleToggleTeam(team.id)
+                      }
                       className={cn(
                         'flex items-center gap-3 rounded-lg border p-3 transition-colors',
                         isAlreadyAdded
                           ? 'border-border bg-muted/30 opacity-50 cursor-not-allowed'
                           : isSelected
                             ? 'border-primary bg-primary/5 cursor-pointer'
-                            : 'border-border hover:bg-muted/50 cursor-pointer'
+                            : 'border-border hover:bg-muted/50 cursor-pointer',
                       )}
                     >
-                      <Checkbox 
-                        checked={isSelected} 
+                      <Checkbox
+                        checked={isSelected}
                         onCheckedChange={() => {
                           if (!isAlreadyAdded) handleToggleTeam(team.id)
                         }}
@@ -527,8 +616,12 @@ function TeamSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
                         <Building2 className="size-4 text-muted-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{team.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{team.id}</p>
+                        <p className="text-sm font-medium truncate">
+                          {team.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {team.id}
+                        </p>
                       </div>
                     </div>
                   )
@@ -537,7 +630,7 @@ function TeamSelectionModal({ open, onOpenChange, onSelect, projectId, existingR
             </div>
           </div>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
             Cancel
@@ -562,7 +655,7 @@ interface LabelInputModalProps {
 
 function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
   const [labelName, setLabelName] = useState('')
-  
+
   const handleAdd = () => {
     if (labelName.trim()) {
       onAdd(labelName.trim())
@@ -570,12 +663,12 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
       onOpenChange(false)
     }
   }
-  
+
   const handleCancel = () => {
     setLabelName('')
     onOpenChange(false)
   }
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
@@ -586,7 +679,7 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <div className="space-y-2">
@@ -605,7 +698,7 @@ function LabelInputModal({ open, onOpenChange, onAdd }: LabelInputModalProps) {
             </div>
           </div>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
             Cancel
@@ -628,9 +721,13 @@ interface CustomRoleInputModalProps {
   onAdd: (role: string) => void
 }
 
-function CustomRoleInputModal({ open, onOpenChange, onAdd }: CustomRoleInputModalProps) {
+function CustomRoleInputModal({
+  open,
+  onOpenChange,
+  onAdd,
+}: CustomRoleInputModalProps) {
   const [role, setRole] = useState('')
-  
+
   const handleAdd = () => {
     if (role.trim()) {
       onAdd(role.trim())
@@ -638,12 +735,12 @@ function CustomRoleInputModal({ open, onOpenChange, onAdd }: CustomRoleInputModa
       onOpenChange(false)
     }
   }
-  
+
   const handleCancel = () => {
     setRole('')
     onOpenChange(false)
   }
-  
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
@@ -654,7 +751,7 @@ function CustomRoleInputModal({ open, onOpenChange, onAdd }: CustomRoleInputModa
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <div className="space-y-2">
@@ -673,7 +770,7 @@ function CustomRoleInputModal({ open, onOpenChange, onAdd }: CustomRoleInputModa
             </div>
           </div>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
             Cancel
@@ -698,31 +795,35 @@ export function PermissionsEditor({
 }: PermissionsEditorProps) {
   const params = useParams({ strict: false })
   const projectId = projectIdProp || (params.projectId as string | undefined)
-  
+
   // Internal state
-  const [permissionsMap, setPermissionsMap] = useState<Map<string, PermissionActions>>(new Map())
+  const [permissionsMap, setPermissionsMap] = useState<
+    Map<string, PermissionActions>
+  >(new Map())
   // Track roles that have had at least one permission enabled (to prevent auto-removal of newly added roles)
-  const [rolesWithPermissions, setRolesWithPermissions] = useState<Set<string>>(new Set())
+  const [rolesWithPermissions, setRolesWithPermissions] = useState<Set<string>>(
+    new Set(),
+  )
   // Track newly added roles that haven't had any permissions set yet (prevent removal until user interacts)
   // Use ref to avoid stale closure issues in state updaters
   const newlyAddedRolesRef = useRef<Set<string>>(new Set())
-  
+
   // Modal states
   const [userModalOpen, setUserModalOpen] = useState(false)
   const [teamModalOpen, setTeamModalOpen] = useState(false)
   const [labelModalOpen, setLabelModalOpen] = useState(false)
   const [customModalOpen, setCustomModalOpen] = useState(false)
-  
+
   // Track if this is the initial mount
   const isInitialMountRef = useRef(true)
   // Track the last exported permissions to detect if props changed from our export
   const lastExportedRef = useRef<string>('')
-  
+
   // Initialize permissions map from props (only on mount or when props change externally)
   useEffect(() => {
     // Create a stable string representation of permissions for comparison
     const permissionsStr = JSON.stringify([...permissions].sort())
-    
+
     // On initial mount, always initialize
     if (isInitialMountRef.current) {
       isInitialMountRef.current = false
@@ -735,20 +836,25 @@ export function PermissionsEditor({
       // Initialize rolesWithPermissions with roles that already have permissions
       const rolesWithPerms = new Set<string>()
       newMap.forEach((actions, role) => {
-        if (actions.create || actions.read || actions.update || actions.delete) {
+        if (
+          actions.create ||
+          actions.read ||
+          actions.update ||
+          actions.delete
+        ) {
           rolesWithPerms.add(role)
         }
       })
       setRolesWithPermissions(rolesWithPerms)
       return
     }
-    
+
     // After initial mount, check if this is from our own export
     if (lastExportedRef.current && lastExportedRef.current === permissionsStr) {
       // This is from our own export, don't re-initialize
       return
     }
-    
+
     // If we had empty permissions initially and now have real permissions, initialize
     if (!lastExportedRef.current && permissions.length > 0) {
       lastExportedRef.current = permissionsStr
@@ -757,31 +863,41 @@ export function PermissionsEditor({
       // Initialize rolesWithPermissions
       const rolesWithPerms = new Set<string>()
       newMap.forEach((actions, role) => {
-        if (actions.create || actions.read || actions.update || actions.delete) {
+        if (
+          actions.create ||
+          actions.read ||
+          actions.update ||
+          actions.delete
+        ) {
           rolesWithPerms.add(role)
         }
       })
       setRolesWithPermissions(rolesWithPerms)
       return
     }
-    
+
     // Permissions changed externally - merge with current state to preserve newly added roles
     const newMap = parsePermissions(permissions)
-    
+
     // If current map is empty and we have new permissions, just set them directly
     setPermissionsMap((prevMap) => {
       // If previous map is empty, just use the new map (first time loading permissions)
       if (prevMap.size === 0) {
         const rolesWithPerms = new Set<string>()
         newMap.forEach((actions, role) => {
-          if (actions.create || actions.read || actions.update || actions.delete) {
+          if (
+            actions.create ||
+            actions.read ||
+            actions.update ||
+            actions.delete
+          ) {
             rolesWithPerms.add(role)
           }
         })
         setRolesWithPermissions(rolesWithPerms)
         return newMap
       }
-      
+
       // Otherwise, merge to preserve newly added roles
       const mergedMap = new Map(newMap)
       prevMap.forEach((actions, role) => {
@@ -795,64 +911,79 @@ export function PermissionsEditor({
           mergedMap.set(role, { ...parsedActions })
         }
       })
-      
+
       // Update rolesWithPermissions
       const rolesWithPerms = new Set<string>()
       mergedMap.forEach((actions, role) => {
-        if (actions.create || actions.read || actions.update || actions.delete) {
+        if (
+          actions.create ||
+          actions.read ||
+          actions.update ||
+          actions.delete
+        ) {
           rolesWithPerms.add(role)
         }
       })
       setRolesWithPermissions(rolesWithPerms)
-      
+
       return mergedMap
     })
   }, [permissions])
-  
+
   // Export permissions when map changes (but not during initialization)
   useEffect(() => {
     // Skip export during initial mount
     if (isInitialMountRef.current) {
       return
     }
-    
+
     const exported = exportPermissions(permissionsMap)
     const exportedStr = JSON.stringify([...exported].sort())
-    
+
     // Only export if:
     // 1. Different from current permissions prop
     // 2. Different from what we last exported (prevents loops)
-    if (!permissionsEqual(exported, permissions) && lastExportedRef.current !== exportedStr) {
+    if (
+      !permissionsEqual(exported, permissions) &&
+      lastExportedRef.current !== exportedStr
+    ) {
       lastExportedRef.current = exportedStr
       onPermissionsChange(exported)
     }
   }, [permissionsMap, permissions, onPermissionsChange])
-  
+
   const handlePermissionChange = useCallback(
     (role: string, action: PermissionAction, enabled: boolean) => {
       setPermissionsMap((prev) => {
         const newMap = new Map(prev)
         if (!newMap.has(role)) {
-          newMap.set(role, { create: false, read: false, update: false, delete: false })
+          newMap.set(role, {
+            create: false,
+            read: false,
+            update: false,
+            delete: false,
+          })
         }
         const actions = newMap.get(role)!
-        const hadPermissionsBefore = actions.create || actions.read || actions.update || actions.delete
+        const hadPermissionsBefore =
+          actions.create || actions.read || actions.update || actions.delete
         actions[action] = enabled
-        
+
         // Track if this role has had permissions set
         if (enabled) {
           setRolesWithPermissions((prev) => new Set(prev).add(role))
           // Remove from newly added roles once user sets a permission
           newlyAddedRolesRef.current.delete(role)
         }
-        
+
         // Only remove role if:
         // 1. All permissions are disabled (after the change)
         // 2. It previously had permissions enabled (user had configured it before)
         // 3. It's NOT a newly added role (extra safety check - newly added roles should never be auto-removed)
         const isNewlyAdded = newlyAddedRolesRef.current.has(role)
-        const allDisabled = !actions.create && !actions.read && !actions.update && !actions.delete
-        
+        const allDisabled =
+          !actions.create && !actions.read && !actions.update && !actions.delete
+
         // NEVER remove newly added roles, even if all permissions are disabled
         // Only remove if it had permissions before AND all are now disabled AND it's not newly added
         if (allDisabled && hadPermissionsBefore && !isNewlyAdded) {
@@ -863,13 +994,13 @@ export function PermissionsEditor({
             return newSet
           })
         }
-        
+
         return newMap
       })
     },
-    []
+    [],
   )
-  
+
   const handleRemoveRole = useCallback((role: string) => {
     setPermissionsMap((prev) => {
       const newMap = new Map(prev)
@@ -883,57 +1014,65 @@ export function PermissionsEditor({
     })
     newlyAddedRolesRef.current.delete(role)
   }, [])
-  
-  const handleAddRole = useCallback((role: string) => {
-    if (permissionsMap.has(role)) {
-      return // Don't add duplicate
-    }
-    setPermissionsMap((prev) => {
-      const newMap = new Map(prev)
-      newMap.set(role, { create: false, read: false, update: false, delete: false })
-      return newMap
-    })
-    // Mark as newly added so it won't be removed until user sets at least one permission
-    newlyAddedRolesRef.current.add(role)
-  }, [permissionsMap])
-  
+
+  const handleAddRole = useCallback(
+    (role: string) => {
+      if (permissionsMap.has(role)) {
+        return // Don't add duplicate
+      }
+      setPermissionsMap((prev) => {
+        const newMap = new Map(prev)
+        newMap.set(role, {
+          create: false,
+          read: false,
+          update: false,
+          delete: false,
+        })
+        return newMap
+      })
+      // Mark as newly added so it won't be removed until user sets at least one permission
+      newlyAddedRolesRef.current.add(role)
+    },
+    [permissionsMap],
+  )
+
   const handleAddUsers = useCallback(
     (userIds: string[]) => {
       userIds.forEach((userId) => {
         handleAddRole(`user:${userId}`)
       })
     },
-    [handleAddRole]
+    [handleAddRole],
   )
-  
+
   const handleAddTeams = useCallback(
     (teamIds: string[]) => {
       teamIds.forEach((teamId) => {
         handleAddRole(`team:${teamId}`)
       })
     },
-    [handleAddRole]
+    [handleAddRole],
   )
-  
+
   const handleAddLabel = useCallback(
     (labelName: string) => {
       handleAddRole(`label:${labelName}`)
     },
-    [handleAddRole]
+    [handleAddRole],
   )
-  
+
   const handleAddCustom = useCallback(
     (role: string) => {
       handleAddRole(role)
     },
-    [handleAddRole]
+    [handleAddRole],
   )
-  
+
   const roles = Array.from(permissionsMap.keys())
   const hasAny = permissionsMap.has('any')
   const hasGuests = permissionsMap.has('guests')
   const hasUsers = permissionsMap.has('users')
-  
+
   // Empty state
   if (roles.length === 0) {
     return (
@@ -949,8 +1088,10 @@ export function PermissionsEditor({
           hasUsers={hasUsers}
           emptyState
         />
-        <p className="text-sm text-muted-foreground">Add a role to get started</p>
-        
+        <p className="text-sm text-muted-foreground">
+          Add a role to get started
+        </p>
+
         {/* Modals */}
         <UserSelectionModal
           open={userModalOpen}
@@ -979,7 +1120,7 @@ export function PermissionsEditor({
       </div>
     )
   }
-  
+
   // Table state
   return (
     <div className="space-y-4">
@@ -988,7 +1129,11 @@ export function PermissionsEditor({
           <TableHeader>
             <TableRow>
               <TableHead className="min-w-[220px]">Role</TableHead>
-              {withCreate && <TableHead className="min-w-[64px] text-center">Create</TableHead>}
+              {withCreate && (
+                <TableHead className="min-w-[64px] text-center">
+                  Create
+                </TableHead>
+              )}
               <TableHead className="min-w-[64px] text-center">Read</TableHead>
               <TableHead className="min-w-[64px] text-center">Update</TableHead>
               <TableHead className="min-w-[64px] text-center">Delete</TableHead>
@@ -1008,7 +1153,11 @@ export function PermissionsEditor({
                       <Checkbox
                         checked={actions.create}
                         onCheckedChange={(checked) =>
-                          handlePermissionChange(role, 'create', checked === true)
+                          handlePermissionChange(
+                            role,
+                            'create',
+                            checked === true,
+                          )
                         }
                         aria-label={`Create permission for ${role}`}
                       />
@@ -1058,7 +1207,7 @@ export function PermissionsEditor({
           </TableBody>
         </Table>
       </div>
-      
+
       <AddRoleDropdown
         onAddSpecialRole={handleAddRole}
         onOpenUserModal={() => setUserModalOpen(true)}
@@ -1069,7 +1218,7 @@ export function PermissionsEditor({
         hasGuests={hasGuests}
         hasUsers={hasUsers}
       />
-      
+
       {/* Modals */}
       <UserSelectionModal
         open={userModalOpen}
@@ -1180,4 +1329,3 @@ function AddRoleDropdown({
     </DropdownMenu>
   )
 }
-

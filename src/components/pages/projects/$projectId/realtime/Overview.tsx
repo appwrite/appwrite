@@ -2,7 +2,10 @@ import { useState, useMemo } from 'react'
 import { StatsCard } from '../overview/StatsCard'
 import { DateRangePicker } from '../analytics/DateRangePicker'
 import { DateRange } from 'react-day-picker'
-import { RefreshControls, type RefreshInterval } from '@/components/global/shared/RefreshControls'
+import {
+  RefreshControls,
+  type RefreshInterval,
+} from '@/components/global/shared/RefreshControls'
 import { RealtimeConcurrencyChart } from './charts/ConcurrencyChart'
 import { RealtimeMessagesChart } from './charts/MessagesChart'
 import { RealtimeChannelsChart } from './charts/ChannelsChart'
@@ -23,7 +26,11 @@ function useRealtimeOverviewState(projectId: string | null | undefined) {
   })
   const [refreshInterval, setRefreshInterval] = useState<RefreshInterval>('30s')
 
-  const { data: stats, isLoading, refetch } = useRealtimeStats(projectId, dateRange)
+  const {
+    data: stats,
+    isLoading,
+    refetch,
+  } = useRealtimeStats(projectId, dateRange)
 
   return {
     dateRange,
@@ -91,7 +98,9 @@ export function RealtimeOverviewKPIs({ projectId }: RealtimeOverviewProps) {
   )
 }
 
-export function RealtimeOverviewControlsAndCharts({ projectId }: RealtimeOverviewProps) {
+export function RealtimeOverviewControlsAndCharts({
+  projectId,
+}: RealtimeOverviewProps) {
   const {
     dateRange,
     setDateRange,

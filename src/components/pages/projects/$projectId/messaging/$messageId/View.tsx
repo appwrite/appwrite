@@ -90,12 +90,17 @@ export function MessageDetailView() {
   }, [message?.status, refetchMessage])
 
   // Fetch message targets
-  const {
-    data: targetsData,
-    isLoading: targetsLoading,
-  } = useMessageTargets(projectId, messageId, 0, 100) // Fetch all targets
+  const { data: targetsData, isLoading: targetsLoading } = useMessageTargets(
+    projectId,
+    messageId,
+    0,
+    100,
+  ) // Fetch all targets
 
-  const targets = useMemo(() => targetsData?.targets || [], [targetsData?.targets])
+  const targets = useMemo(
+    () => targetsData?.targets || [],
+    [targetsData?.targets],
+  )
 
   // Fetch all topics in parallel using Promise.allSettled
   const [topicsById, setTopicsById] = useState<Record<string, Models.Topic>>({})
@@ -124,7 +129,9 @@ export function MessageDetailView() {
   }, [projectId, message?.topics])
 
   // Fetch user details for targets and recipients
-  const [usersById, setUsersById] = useState<Record<string, Models.User | null>>({})
+  const [usersById, setUsersById] = useState<
+    Record<string, Models.User | null>
+  >({})
   const [usersLoading, setUsersLoading] = useState(true)
 
   useEffect(() => {
@@ -135,7 +142,7 @@ export function MessageDetailView() {
 
     setUsersLoading(true)
     const userIds = new Set<string>()
-    
+
     // Collect all user IDs from targets
     targets.forEach((target) => {
       if (target.userId) {
@@ -163,8 +170,7 @@ export function MessageDetailView() {
       const usersMap: Record<string, Models.User | null> = {}
       Array.from(userIds).forEach((userId, index) => {
         const result = results[index]
-        usersMap[userId] =
-          result.status === 'fulfilled' ? result.value : null
+        usersMap[userId] = result.status === 'fulfilled' ? result.value : null
       })
       setUsersById(usersMap)
       setUsersLoading(false)
@@ -189,7 +195,9 @@ export function MessageDetailView() {
   const [pushTitle, setPushTitle] = useState('')
   const [pushBody, setPushBody] = useState('')
   const [pushImage, setPushImage] = useState<File | null>(null)
-  const [pushCustomData, setPushCustomData] = useState<Array<{ key: string; value: string }>>([{ key: '', value: '' }])
+  const [pushCustomData, setPushCustomData] = useState<
+    Array<{ key: string; value: string }>
+  >([{ key: '', value: '' }])
 
   // Initialize form state when message loads
   useEffect(() => {
@@ -205,11 +213,15 @@ export function MessageDetailView() {
         setPushBody(message.data?.body || '')
         // Parse custom data object into key-value pairs
         if (message.data?.data && typeof message.data.data === 'object') {
-          const dataPairs = Object.entries(message.data.data).map(([key, value]) => ({
-            key,
-            value: String(value),
-          }))
-          setPushCustomData(dataPairs.length > 0 ? dataPairs : [{ key: '', value: '' }])
+          const dataPairs = Object.entries(message.data.data).map(
+            ([key, value]) => ({
+              key,
+              value: String(value),
+            }),
+          )
+          setPushCustomData(
+            dataPairs.length > 0 ? dataPairs : [{ key: '', value: '' }],
+          )
         } else {
           setPushCustomData([{ key: '', value: '' }])
         }
@@ -218,8 +230,12 @@ export function MessageDetailView() {
   }, [message])
 
   // Selected topics and targets for updates
-  const [selectedTopicIds, setSelectedTopicIds] = useState<Set<string>>(new Set())
-  const [selectedTargetIds, setSelectedTargetIds] = useState<Set<string>>(new Set())
+  const [selectedTopicIds, setSelectedTopicIds] = useState<Set<string>>(
+    new Set(),
+  )
+  const [selectedTargetIds, setSelectedTargetIds] = useState<Set<string>>(
+    new Set(),
+  )
 
   // Initialize selected items from message
   useEffect(() => {
@@ -300,7 +316,7 @@ export function MessageDetailView() {
         throw new Error('Project ID and Message ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
-      
+
       // Filter out empty keys from custom data
       const customData: Record<string, string> = {}
       pushCustomData.forEach(({ key, value }) => {
@@ -346,8 +362,8 @@ export function MessageDetailView() {
       queryClient.invalidateQueries({
         queryKey: ['messages', 'project', projectId],
       })
-      const statusMessage = 
-        message?.status === 'draft' 
+      const statusMessage =
+        message?.status === 'draft'
           ? 'The draft message has been deleted'
           : message?.status === 'scheduled'
             ? 'The scheduled message has been deleted, and its delivery was cancelled'
@@ -428,7 +444,10 @@ export function MessageDetailView() {
       return message.data.subject
     }
     if (message?.providerType === 'sms' && message.data?.content) {
-      return message.data.content.substring(0, 50) + (message.data.content.length > 50 ? '...' : '')
+      return (
+        message.data.content.substring(0, 50) +
+        (message.data.content.length > 50 ? '...' : '')
+      )
     }
     if (message?.providerType === 'push' && message.data?.title) {
       return message.data.title
@@ -440,7 +459,9 @@ export function MessageDetailView() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading message...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading message...
+          </p>
         </div>
       </div>
     )
@@ -489,9 +510,13 @@ export function MessageDetailView() {
 
   const TypeIcon = getMessageTypeIcon()
 
-  const canUpdate = isDraft && (
-    hasEmailChanges || hasSMSChanges || hasPushChanges || hasTopicsChanged || hasTargetsChanged
-  )
+  const canUpdate =
+    isDraft &&
+    (hasEmailChanges ||
+      hasSMSChanges ||
+      hasPushChanges ||
+      hasTopicsChanged ||
+      hasTargetsChanged)
 
   const handleUpdateMessage = () => {
     if (message.providerType === 'email') {
@@ -585,17 +610,26 @@ export function MessageDetailView() {
                     <div className="space-y-1">
                       {message.$createdAt && (
                         <p className="text-[13px] text-muted-foreground">
-                          Created: <span className="text-foreground">{formatDateTime(message.$createdAt)}</span>
+                          Created:{' '}
+                          <span className="text-foreground">
+                            {formatDateTime(message.$createdAt)}
+                          </span>
                         </p>
                       )}
                       {message.scheduledAt && (
                         <p className="text-[13px] text-muted-foreground">
-                          Scheduled at: <span className="text-foreground">{formatDateTime(message.scheduledAt)}</span>
+                          Scheduled at:{' '}
+                          <span className="text-foreground">
+                            {formatDateTime(message.scheduledAt)}
+                          </span>
                         </p>
                       )}
                       {message.deliveredAt && (
                         <p className="text-[13px] text-muted-foreground">
-                          Sent at: <span className="text-foreground">{formatDateTime(message.deliveredAt)}</span>
+                          Sent at:{' '}
+                          <span className="text-foreground">
+                            {formatDateTime(message.deliveredAt)}
+                          </span>
                         </p>
                       )}
                     </div>
@@ -645,7 +679,9 @@ export function MessageDetailView() {
                         className="h-9 text-[13px]"
                         onClick={() => {
                           // TODO: Implement cancel scheduling
-                          toast.info('Cancel scheduling functionality coming soon')
+                          toast.info(
+                            'Cancel scheduling functionality coming soon',
+                          )
                         }}
                       >
                         Cancel scheduling
@@ -684,18 +720,23 @@ export function MessageDetailView() {
           {message.providerType === 'email' && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">Email Message</h3>
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Email Message
+                </h3>
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4">
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   {/* Left Column - Empty for now (could add preview later) */}
                   <div className="lg:col-span-1" />
-                  
+
                   {/* Right Column - Form Fields */}
                   <div className="lg:col-span-2 space-y-4">
                     <div>
-                      <Label htmlFor="email-subject" className="text-[13px] font-medium text-foreground">
+                      <Label
+                        htmlFor="email-subject"
+                        className="text-[13px] font-medium text-foreground"
+                      >
                         Subject
                       </Label>
                       <Input
@@ -708,7 +749,10 @@ export function MessageDetailView() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email-content" className="text-[13px] font-medium text-foreground">
+                      <Label
+                        htmlFor="email-content"
+                        className="text-[13px] font-medium text-foreground"
+                      >
                         Message
                       </Label>
                       <Textarea
@@ -722,11 +766,15 @@ export function MessageDetailView() {
                     </div>
                     <div className="flex items-center justify-between rounded-md border border-border bg-card p-4">
                       <div>
-                        <Label htmlFor="email-html" className="text-[13px] font-medium text-foreground">
+                        <Label
+                          htmlFor="email-html"
+                          className="text-[13px] font-medium text-foreground"
+                        >
                           HTML mode
                         </Label>
                         <p className="text-[12px] text-muted-foreground mt-0.5">
-                          Enable the HTML mode if your message contains HTML tags.
+                          Enable the HTML mode if your message contains HTML
+                          tags.
                         </p>
                       </div>
                       <Switch
@@ -760,20 +808,28 @@ export function MessageDetailView() {
           {message.providerType === 'sms' && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">SMS Message</h3>
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  SMS Message
+                </h3>
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4">
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   {/* Left Column - Phone Preview */}
                   <div className="lg:col-span-1">
-                    <SMSPhonePreview content={smsContent} projectName={project?.name} />
+                    <SMSPhonePreview
+                      content={smsContent}
+                      projectName={project?.name}
+                    />
                   </div>
-                  
+
                   {/* Right Column - Form Fields */}
                   <div className="lg:col-span-2">
                     <div>
-                      <Label htmlFor="sms-content" className="text-[13px] font-medium text-foreground">
+                      <Label
+                        htmlFor="sms-content"
+                        className="text-[13px] font-medium text-foreground"
+                      >
                         Message
                       </Label>
                       <Textarea
@@ -809,20 +865,29 @@ export function MessageDetailView() {
           {message.providerType === 'push' && (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">Push Notification</h3>
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Push Notification
+                </h3>
               </div>
               <div className="border-t border-border" />
               <div className="px-6 py-4">
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                   {/* Left Column - Phone Preview */}
                   <div className="lg:col-span-1">
-                    <PushPhonePreview title={pushTitle} body={pushBody} projectName={project?.name} />
+                    <PushPhonePreview
+                      title={pushTitle}
+                      body={pushBody}
+                      projectName={project?.name}
+                    />
                   </div>
-                  
+
                   {/* Right Column - Form Fields */}
                   <div className="lg:col-span-2 space-y-4">
                     <div>
-                      <Label htmlFor="push-title" className="text-[13px] font-medium text-foreground">
+                      <Label
+                        htmlFor="push-title"
+                        className="text-[13px] font-medium text-foreground"
+                      >
                         Title
                       </Label>
                       <Input
@@ -835,7 +900,10 @@ export function MessageDetailView() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="push-body" className="text-[13px] font-medium text-foreground">
+                      <Label
+                        htmlFor="push-body"
+                        className="text-[13px] font-medium text-foreground"
+                      >
                         Message
                       </Label>
                       <Textarea
@@ -887,7 +955,10 @@ export function MessageDetailView() {
                           size="sm"
                           className="h-7 text-[12px]"
                           onClick={handleAddCustomData}
-                          disabled={!isDraft || !pushCustomData[pushCustomData.length - 1]?.key}
+                          disabled={
+                            !isDraft ||
+                            !pushCustomData[pushCustomData.length - 1]?.key
+                          }
                         >
                           <Plus className="mr-1 h-3.5 w-3.5" />
                           Add data
@@ -899,14 +970,21 @@ export function MessageDetailView() {
                             <Input
                               placeholder="Enter key"
                               value={item.key}
-                              onChange={(e) => handleCustomDataKeyChange(index, e.target.value)}
+                              onChange={(e) =>
+                                handleCustomDataKeyChange(index, e.target.value)
+                              }
                               disabled={!isDraft}
                               className="h-9 text-[13px]"
                             />
                             <Input
                               placeholder="Enter value"
                               value={item.value}
-                              onChange={(e) => handleCustomDataValueChange(index, e.target.value)}
+                              onChange={(e) =>
+                                handleCustomDataValueChange(
+                                  index,
+                                  e.target.value,
+                                )
+                              }
                               disabled={!isDraft}
                               className="h-9 text-[13px]"
                             />
@@ -916,7 +994,12 @@ export function MessageDetailView() {
                               size="sm"
                               className="h-9 w-9 p-0"
                               onClick={() => handleRemoveCustomData(index)}
-                              disabled={!isDraft || (pushCustomData.length === 1 && !item.key && !item.value)}
+                              disabled={
+                                !isDraft ||
+                                (pushCustomData.length === 1 &&
+                                  !item.key &&
+                                  !item.value)
+                              }
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -948,7 +1031,9 @@ export function MessageDetailView() {
           {/* Update Topics Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4 flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold text-foreground">Topics</h3>
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Topics
+              </h3>
               {isDraft && (
                 <Button
                   variant="ghost"
@@ -964,7 +1049,9 @@ export function MessageDetailView() {
             <div className="border-t border-border" />
             <div className="px-6 py-4">
               {topicsLoading ? (
-                <p className="text-[13px] text-muted-foreground">Loading topics...</p>
+                <p className="text-[13px] text-muted-foreground">
+                  Loading topics...
+                </p>
               ) : selectedTopicIds.size > 0 ? (
                 <div className="rounded-lg border border-border bg-card overflow-hidden">
                   <Table>
@@ -984,10 +1071,15 @@ export function MessageDetailView() {
                       {Array.from(selectedTopicIds).map((topicId) => {
                         const topic = topicsById[topicId]
                         const totalSubscribers = topic
-                          ? (topic.emailTotal || 0) + (topic.smsTotal || 0) + (topic.pushTotal || 0)
+                          ? (topic.emailTotal || 0) +
+                            (topic.smsTotal || 0) +
+                            (topic.pushTotal || 0)
                           : 0
                         return (
-                          <TableRow key={topicId} className="border-b border-border/50">
+                          <TableRow
+                            key={topicId}
+                            className="border-b border-border/50"
+                          >
                             <TableCell className="px-4 py-3">
                               {topic ? (
                                 <div>
@@ -1012,7 +1104,9 @@ export function MessageDetailView() {
                                   size="sm"
                                   className="h-7 w-7 p-0"
                                   onClick={() => {
-                                    const newSelected = new Set(selectedTopicIds)
+                                    const newSelected = new Set(
+                                      selectedTopicIds,
+                                    )
                                     newSelected.delete(topicId)
                                     setSelectedTopicIds(newSelected)
                                   }}
@@ -1032,7 +1126,9 @@ export function MessageDetailView() {
                   className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-border bg-card py-8 transition-colors hover:bg-muted/50"
                   onClick={() => setTopicsModalOpen(true)}
                 >
-                  <p className="text-[13px] text-muted-foreground">Add a topic</p>
+                  <p className="text-[13px] text-muted-foreground">
+                    Add a topic
+                  </p>
                 </div>
               ) : (
                 <div className="rounded-lg border border-border bg-card py-8 text-center">
@@ -1047,7 +1143,11 @@ export function MessageDetailView() {
                 <Button
                   size="sm"
                   className="h-9 text-[13px]"
-                  disabled={updateEmailMutation.isPending || updateSMSMutation.isPending || updatePushMutation.isPending}
+                  disabled={
+                    updateEmailMutation.isPending ||
+                    updateSMSMutation.isPending ||
+                    updatePushMutation.isPending
+                  }
                   onClick={handleUpdateMessage}
                 >
                   Update
@@ -1059,7 +1159,9 @@ export function MessageDetailView() {
           {/* Update Targets Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4 flex items-center justify-between">
-              <h3 className="text-[15px] font-semibold text-foreground">Targets</h3>
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Targets
+              </h3>
               {isDraft && (
                 <Button
                   variant="ghost"
@@ -1075,7 +1177,9 @@ export function MessageDetailView() {
             <div className="border-t border-border" />
             <div className="px-6 py-4">
               {targetsLoading || usersLoading ? (
-                <p className="text-[13px] text-muted-foreground">Loading targets...</p>
+                <p className="text-[13px] text-muted-foreground">
+                  Loading targets...
+                </p>
               ) : selectedTargetIds.size > 0 ? (
                 <div className="rounded-lg border border-border bg-card overflow-hidden">
                   <Table>
@@ -1097,9 +1201,14 @@ export function MessageDetailView() {
                     <TableBody>
                       {Array.from(selectedTargetIds).map((targetId) => {
                         const target = targetsById[targetId]
-                        const user = target?.userId ? usersById[target.userId] : null
+                        const user = target?.userId
+                          ? usersById[target.userId]
+                          : null
                         return target ? (
-                          <TableRow key={targetId} className="border-b border-border/50">
+                          <TableRow
+                            key={targetId}
+                            className="border-b border-border/50"
+                          >
                             <TableCell className="px-4 py-3">
                               {target.providerType === 'push' ? (
                                 <span className="text-[13px] text-foreground">
@@ -1117,7 +1226,9 @@ export function MessageDetailView() {
                                   {user.name || user.email}
                                 </span>
                               ) : (
-                                <span className="text-[13px] text-muted-foreground">N/A</span>
+                                <span className="text-[13px] text-muted-foreground">
+                                  N/A
+                                </span>
                               )}
                             </TableCell>
                             {isDraft && (
@@ -1127,7 +1238,9 @@ export function MessageDetailView() {
                                   size="sm"
                                   className="h-7 w-7 p-0"
                                   onClick={() => {
-                                    const newSelected = new Set(selectedTargetIds)
+                                    const newSelected = new Set(
+                                      selectedTargetIds,
+                                    )
                                     newSelected.delete(targetId)
                                     setSelectedTargetIds(newSelected)
                                   }}
@@ -1147,7 +1260,9 @@ export function MessageDetailView() {
                   className="flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-border bg-card py-8 transition-colors hover:bg-muted/50"
                   onClick={() => setTargetsModalOpen(true)}
                 >
-                  <p className="text-[13px] text-muted-foreground">Add a target</p>
+                  <p className="text-[13px] text-muted-foreground">
+                    Add a target
+                  </p>
                 </div>
               ) : (
                 <div className="rounded-lg border border-border bg-card py-8 text-center">
@@ -1162,7 +1277,11 @@ export function MessageDetailView() {
                 <Button
                   size="sm"
                   className="h-9 text-[13px]"
-                  disabled={updateEmailMutation.isPending || updateSMSMutation.isPending || updatePushMutation.isPending}
+                  disabled={
+                    updateEmailMutation.isPending ||
+                    updateSMSMutation.isPending ||
+                    updatePushMutation.isPending
+                  }
                   onClick={handleUpdateMessage}
                 >
                   Update
@@ -1182,7 +1301,8 @@ export function MessageDetailView() {
                   Permanently delete this message. This action cannot be undone.
                   {message.status === 'scheduled' && (
                     <span className="block mt-1">
-                      This is a scheduled message. Deleting it will result in the cancellation of its delivery.
+                      This is a scheduled message. Deleting it will result in
+                      the cancellation of its delivery.
                     </span>
                   )}
                 </p>
@@ -1253,11 +1373,17 @@ export function MessageDetailView() {
             <DialogHeader className="px-6 pt-6 text-left">
               <DialogTitle>Delete message</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete {getMessageDescription() ? `"${getMessageDescription()}"` : 'this message'}?{' '}
-                {message.status === 'draft' && 'This action is irreversible.'}
-                {message.status === 'scheduled' && 'This is a scheduled message. Deleting it will result in the cancellation of its delivery. This action is irreversible.'}
-                {message.status === 'sent' && 'The message has already been sent. After deleting it, you will no longer see it here.'}
-                {message.status === 'failed' && 'The message has been sent with errors. After deleting it, you will no longer see it here.'}
+                Are you sure you want to delete{' '}
+                {getMessageDescription()
+                  ? `"${getMessageDescription()}"`
+                  : 'this message'}
+                ? {message.status === 'draft' && 'This action is irreversible.'}
+                {message.status === 'scheduled' &&
+                  'This is a scheduled message. Deleting it will result in the cancellation of its delivery. This action is irreversible.'}
+                {message.status === 'sent' &&
+                  'The message has already been sent. After deleting it, you will no longer see it here.'}
+                {message.status === 'failed' &&
+                  'The message has been sent with errors. After deleting it, you will no longer see it here.'}
               </DialogDescription>
             </DialogHeader>
 
@@ -1282,7 +1408,10 @@ export function MessageDetailView() {
 
         {/* Error Details Dialog */}
         {message.deliveryErrors && (
-          <Dialog open={errorDetailsDialogOpen} onOpenChange={setErrorDetailsDialogOpen}>
+          <Dialog
+            open={errorDetailsDialogOpen}
+            onOpenChange={setErrorDetailsDialogOpen}
+          >
             <DialogContent className="sm:max-w-2xl p-0">
               <DialogHeader className="px-6 pt-6 text-left">
                 <DialogTitle>Delivery Errors</DialogTitle>
@@ -1313,7 +1442,13 @@ export function MessageDetailView() {
 }
 
 // SMS Phone Preview Component
-function SMSPhonePreview({ content, projectName }: { content: string; projectName?: string }) {
+function SMSPhonePreview({
+  content,
+  projectName,
+}: {
+  content: string
+  projectName?: string
+}) {
   const currentTime = new Date().toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
@@ -1329,7 +1464,7 @@ function SMSPhonePreview({ content, projectName }: { content: string; projectNam
           {/* Speaker */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[54px] h-[6px] bg-[#1a1a1a] rounded-full"></div>
         </div>
-        
+
         {/* Phone Screen Background - Dark with subtle gradient */}
         <div className="absolute inset-[3px] bg-gradient-to-b from-[#000000] to-[#0a0a0a] rounded-[44px] overflow-hidden">
           {/* Status Bar - iPhone style (time only on left) */}
@@ -1344,14 +1479,18 @@ function SMSPhonePreview({ content, projectName }: { content: string; projectNam
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs font-medium">
                 {projectName?.substring(0, 2).toUpperCase() || 'PR'}
               </div>
-              <p className="text-[12px] font-medium text-white/90">{projectName || 'Project'}</p>
+              <p className="text-[12px] font-medium text-white/90">
+                {projectName || 'Project'}
+              </p>
             </div>
 
             {/* Message Bubble */}
             <div className="w-full px-4 mt-auto mb-8">
               <div className="flex items-start gap-2">
                 <div className="flex-1">
-                  <p className="text-[10px] text-white/60 mb-1">Today {currentTime}</p>
+                  <p className="text-[10px] text-white/60 mb-1">
+                    Today {currentTime}
+                  </p>
                   <div className="rounded-[20px] bg-[#e9e9eb] dark:bg-[#333333] px-3 py-1.5 max-h-[80px] overflow-hidden">
                     <p className="text-[13px] text-foreground dark:text-[#e0e0e0] line-clamp-4">
                       {content || 'Message content will appear here'}
@@ -1368,12 +1507,28 @@ function SMSPhonePreview({ content, projectName }: { content: string; projectNam
 }
 
 // Push Phone Preview Component
-function PushPhonePreview({ title, body, projectName }: { title: string; body: string; projectName?: string }) {
+function PushPhonePreview({
+  title,
+  body,
+  projectName,
+}: {
+  title: string
+  body: string
+  projectName?: string
+}) {
   // Get current date and time
   const now = new Date()
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false })
-  
+  const dateStr = now.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  })
+  const timeStr = now.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: false,
+  })
+
   return (
     <div className="relative mx-auto w-[320px] h-[640px]">
       {/* Phone Frame - iPhone-like with realistic proportions */}
@@ -1383,7 +1538,7 @@ function PushPhonePreview({ title, body, projectName }: { title: string; body: s
           {/* Speaker */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[54px] h-[6px] bg-[#1a1a1a] rounded-full"></div>
         </div>
-        
+
         {/* Phone Screen Background - Dark with subtle gradient */}
         <div className="absolute inset-[3px] bg-gradient-to-b from-[#000000] to-[#0a0a0a] rounded-[44px] overflow-hidden">
           {/* Status Bar - iPhone style (time only on left) */}
@@ -1448,11 +1603,18 @@ function TopicsSelectionModal({
   existingTopicIds: Set<string>
 }) {
   const [search, setSearch] = useState('')
-  const [selectedTopicIds, setSelectedTopicIds] = useState<Set<string>>(new Set())
+  const [selectedTopicIds, setSelectedTopicIds] = useState<Set<string>>(
+    new Set(),
+  )
   const [page, setPage] = useState(0)
   const pageSize = 25
 
-  const { topics, total, isLoading } = useProjectTopics(projectId || null, page, pageSize, search)
+  const { topics, total, isLoading } = useProjectTopics(
+    projectId || null,
+    page,
+    pageSize,
+    search,
+  )
 
   // Filter topics by provider type if specified
   const filteredTopics = useMemo(() => {
@@ -1512,7 +1674,7 @@ function TopicsSelectionModal({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0 flex-1 overflow-hidden flex flex-col">
           <div className="space-y-4">
             <Input
@@ -1524,7 +1686,7 @@ function TopicsSelectionModal({
               }}
               className="h-9"
             />
-            
+
             <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
               {isLoading ? (
                 <div className="text-center py-8 text-sm text-muted-foreground">
@@ -1538,23 +1700,28 @@ function TopicsSelectionModal({
                 filteredTopics.map((topic) => {
                   const isSelected = selectedTopicIds.has(topic.$id)
                   const isAlreadyAdded = existingTopicIds.has(topic.$id)
-                  const totalSubscribers = (topic.emailTotal || 0) + (topic.smsTotal || 0) + (topic.pushTotal || 0)
-                  
+                  const totalSubscribers =
+                    (topic.emailTotal || 0) +
+                    (topic.smsTotal || 0) +
+                    (topic.pushTotal || 0)
+
                   return (
                     <div
                       key={topic.$id}
-                      onClick={() => !isAlreadyAdded && handleToggleTopic(topic.$id)}
+                      onClick={() =>
+                        !isAlreadyAdded && handleToggleTopic(topic.$id)
+                      }
                       className={cn(
                         'flex items-center gap-3 rounded-lg border p-3 transition-colors',
                         isAlreadyAdded
                           ? 'border-border bg-muted/30 opacity-50 cursor-not-allowed'
                           : isSelected
                             ? 'border-primary bg-primary/5 cursor-pointer'
-                            : 'border-border hover:bg-muted/50 cursor-pointer'
+                            : 'border-border hover:bg-muted/50 cursor-pointer',
                       )}
                     >
-                      <Checkbox 
-                        checked={isSelected} 
+                      <Checkbox
+                        checked={isSelected}
                         onCheckedChange={() => {
                           if (!isAlreadyAdded) handleToggleTopic(topic.$id)
                         }}
@@ -1563,9 +1730,12 @@ function TopicsSelectionModal({
                         className="cursor-pointer"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{topic.name}</p>
+                        <p className="text-sm font-medium truncate">
+                          {topic.name}
+                        </p>
                         <p className="text-xs text-muted-foreground">
-                          {totalSubscribers} subscriber{totalSubscribers !== 1 ? 's' : ''}
+                          {totalSubscribers} subscriber
+                          {totalSubscribers !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
@@ -1575,7 +1745,7 @@ function TopicsSelectionModal({
             </div>
           </div>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
             Cancel
@@ -1614,7 +1784,12 @@ function TargetsSelectionModal({
 
   // For now, we'll use users - targets will be created from selected users
   // TODO: Implement proper target listing when API supports it
-  const { users, total, isLoading } = useProjectUsers(projectId || null, page, pageSize, search)
+  const { users, total, isLoading } = useProjectUsers(
+    projectId || null,
+    page,
+    pageSize,
+    search,
+  )
 
   const handleToggleUser = (userId: string) => {
     const newSelected = new Set(selectedUserIds)
@@ -1659,11 +1834,12 @@ function TargetsSelectionModal({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Select targets</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Select users to send this message to. Targets will be created from selected users.
+            Select users to send this message to. Targets will be created from
+            selected users.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0 flex-1 overflow-hidden flex flex-col">
           <div className="space-y-4">
             <Input
@@ -1675,7 +1851,7 @@ function TargetsSelectionModal({
               }}
               className="h-9"
             />
-            
+
             <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
               {isLoading ? (
                 <div className="text-center py-8 text-sm text-muted-foreground">
@@ -1688,8 +1864,9 @@ function TargetsSelectionModal({
               ) : (
                 users.map((user) => {
                   const isSelected = selectedUserIds.has(user.$id)
-                  const displayName = user.name || user.email || user.phone || user.$id
-                  
+                  const displayName =
+                    user.name || user.email || user.phone || user.$id
+
                   return (
                     <div
                       key={user.$id}
@@ -1698,19 +1875,23 @@ function TargetsSelectionModal({
                         'flex items-center gap-3 rounded-lg border p-3 transition-colors cursor-pointer',
                         isSelected
                           ? 'border-primary bg-primary/5'
-                          : 'border-border hover:bg-muted/50'
+                          : 'border-border hover:bg-muted/50',
                       )}
                     >
-                      <Checkbox 
-                        checked={isSelected} 
+                      <Checkbox
+                        checked={isSelected}
                         onCheckedChange={() => handleToggleUser(user.$id)}
                         onClick={(e) => e.stopPropagation()}
                         className="cursor-pointer"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{displayName}</p>
+                        <p className="text-sm font-medium truncate">
+                          {displayName}
+                        </p>
                         {user.email && (
-                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {user.email}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -1720,7 +1901,7 @@ function TargetsSelectionModal({
             </div>
           </div>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleCancel}>
             Cancel

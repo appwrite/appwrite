@@ -16,12 +16,12 @@ const sizeClasses = {
 
 function getRuntimeLanguage(runtime: string): string | null {
   if (!runtime) return null
-  
+
   const normalized = runtime.toLowerCase()
-  
+
   // Extract base runtime name (e.g., "node-22.0" -> "node", "python-3.11" -> "python")
   const baseRuntime = normalized.split('-')[0]
-  
+
   // Map runtime names to language icons
   const runtimeToLanguage: Record<string, string> = {
     node: 'node',
@@ -37,22 +37,27 @@ function getRuntimeLanguage(runtime: string): string | null {
     kotlin: 'kotlin',
     dotnet: 'dotnet',
   }
-  
+
   return runtimeToLanguage[baseRuntime] || null
 }
 
-export function RuntimeIcon({ runtime, className, size = 'md' }: RuntimeIconProps) {
+export function RuntimeIcon({
+  runtime,
+  className,
+  size = 'md',
+}: RuntimeIconProps) {
   if (!runtime) {
     return <FileCode className={cn(sizeClasses[size], className)} />
   }
 
   const language = getRuntimeLanguage(runtime)
-  
+
   if (language) {
-    return <LanguageIcon language={language} className={className} size={size} />
+    return (
+      <LanguageIcon language={language} className={className} size={size} />
+    )
   }
-  
+
   // Fallback to Code icon if runtime not recognized
   return <Code className={cn(sizeClasses[size], className)} />
 }
-

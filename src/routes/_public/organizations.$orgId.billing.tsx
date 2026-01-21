@@ -56,7 +56,14 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
 
       // Invoices (first page)
       queryClient.ensureQueryData({
-        queryKey: ['invoices', 'organization', orgId, 0, INVOICES_PER_PAGE, null],
+        queryKey: [
+          'invoices',
+          'organization',
+          orgId,
+          0,
+          INVOICES_PER_PAGE,
+          null,
+        ],
         queryFn: () => fetchOrganizationInvoices(orgId, 0, INVOICES_PER_PAGE),
         staleTime: 30 * 1000, // 30 seconds
       }),
@@ -95,61 +102,85 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
       // Prefetch billing aggregation if aggregationId exists
       if (orgData.billingAggregationId) {
         prefetchPromises.push(
-          queryClient.prefetchQuery({
-            queryKey: ['billing-aggregation', 'organization', orgId, orgData.billingAggregationId, PROJECTS_PER_PAGE, 0],
-            queryFn: () => fetchOrganizationBillingAggregation(orgId, orgData.billingAggregationId, PROJECTS_PER_PAGE, 0),
-            staleTime: 30 * 1000, // 30 seconds
-          }).catch(() => {
-            // Ignore 404 errors for new organizations
-          }),
+          queryClient
+            .prefetchQuery({
+              queryKey: [
+                'billing-aggregation',
+                'organization',
+                orgId,
+                orgData.billingAggregationId,
+                PROJECTS_PER_PAGE,
+                0,
+              ],
+              queryFn: () =>
+                fetchOrganizationBillingAggregation(
+                  orgId,
+                  orgData.billingAggregationId,
+                  PROJECTS_PER_PAGE,
+                  0,
+                ),
+              staleTime: 30 * 1000, // 30 seconds
+            })
+            .catch(() => {
+              // Ignore 404 errors for new organizations
+            }),
         )
       }
 
       // Prefetch primary payment method if exists
       if (orgData.paymentMethodId) {
         prefetchPromises.push(
-          queryClient.prefetchQuery({
-            queryKey: ['payment-method', orgData.paymentMethodId],
-            queryFn: async () => {
-              const { fetchPaymentMethod } = await import('@/lib/react-query/hooks')
-              return fetchPaymentMethod(orgData.paymentMethodId)
-            },
-            staleTime: 5 * 60 * 1000,
-          }).catch(() => {
-            // Ignore errors
-          }),
+          queryClient
+            .prefetchQuery({
+              queryKey: ['payment-method', orgData.paymentMethodId],
+              queryFn: async () => {
+                const { fetchPaymentMethod } =
+                  await import('@/lib/react-query/hooks')
+                return fetchPaymentMethod(orgData.paymentMethodId)
+              },
+              staleTime: 5 * 60 * 1000,
+            })
+            .catch(() => {
+              // Ignore errors
+            }),
         )
       }
 
       // Prefetch backup payment method if exists
       if (orgData.backupPaymentMethodId) {
         prefetchPromises.push(
-          queryClient.prefetchQuery({
-            queryKey: ['payment-method', orgData.backupPaymentMethodId],
-            queryFn: async () => {
-              const { fetchPaymentMethod } = await import('@/lib/react-query/hooks')
-              return fetchPaymentMethod(orgData.backupPaymentMethodId)
-            },
-            staleTime: 5 * 60 * 1000,
-          }).catch(() => {
-            // Ignore errors
-          }),
+          queryClient
+            .prefetchQuery({
+              queryKey: ['payment-method', orgData.backupPaymentMethodId],
+              queryFn: async () => {
+                const { fetchPaymentMethod } =
+                  await import('@/lib/react-query/hooks')
+                return fetchPaymentMethod(orgData.backupPaymentMethodId)
+              },
+              staleTime: 5 * 60 * 1000,
+            })
+            .catch(() => {
+              // Ignore errors
+            }),
         )
       }
 
       // Prefetch billing address if exists
       if (orgData.billingAddressId) {
         prefetchPromises.push(
-          queryClient.prefetchQuery({
-            queryKey: ['billing-address', orgData.billingAddressId],
-            queryFn: async () => {
-              const { fetchBillingAddress } = await import('@/lib/react-query/hooks')
-              return fetchBillingAddress(orgData.billingAddressId)
-            },
-            staleTime: 5 * 60 * 1000,
-          }).catch(() => {
-            // Ignore errors
-          }),
+          queryClient
+            .prefetchQuery({
+              queryKey: ['billing-address', orgData.billingAddressId],
+              queryFn: async () => {
+                const { fetchBillingAddress } =
+                  await import('@/lib/react-query/hooks')
+                return fetchBillingAddress(orgData.billingAddressId)
+              },
+              staleTime: 5 * 60 * 1000,
+            })
+            .catch(() => {
+              // Ignore errors
+            }),
         )
       }
 

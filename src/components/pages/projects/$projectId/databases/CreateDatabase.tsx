@@ -72,7 +72,11 @@ export function CreateDatabase({
       newErrors.name = 'Name is required'
     }
 
-    if (databaseId && databaseId.length > 0 && !validateDatabaseId(databaseId)) {
+    if (
+      databaseId &&
+      databaseId.length > 0 &&
+      !validateDatabaseId(databaseId)
+    ) {
       newErrors.databaseId =
         'Database ID must be 1–36 characters, alphanumeric, underscore, hyphen, or period. Cannot start with a special character.'
     }
@@ -141,18 +145,24 @@ export function CreateDatabase({
                 placeholder="Leave blank to auto-generate"
               />
               {errors.databaseId && (
-                <p className="text-[12px] text-destructive">{errors.databaseId}</p>
+                <p className="text-[12px] text-destructive">
+                  {errors.databaseId}
+                </p>
               )}
             </div>
 
             {backupsEnabled === false && (
-              <Alert variant="default" className="border-amber-500/30 bg-amber-500/5">
+              <Alert
+                variant="default"
+                className="border-amber-500/30 bg-amber-500/5"
+              >
                 <AlertCircle className="h-4 w-4 text-amber-500" />
                 <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
                   Backups not enabled
                 </AlertTitle>
                 <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                  This database will not be backed up on your current plan. Upgrade your plan to enable automated backups.
+                  This database will not be backed up on your current plan.
+                  Upgrade your plan to enable automated backups.
                 </AlertDescription>
               </Alert>
             )}

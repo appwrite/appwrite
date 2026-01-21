@@ -105,7 +105,8 @@ export function ValidateCreditModal({
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-[13px] mt-2">
                   {(() => {
-                    const errorMessage = (error as any)?.message || 'Invalid coupon code'
+                    const errorMessage =
+                      (error as any)?.message || 'Invalid coupon code'
                     if (errorMessage.includes('not_found')) {
                       return 'Coupon not found. Please check the code and try again.'
                     }

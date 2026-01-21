@@ -39,4 +39,3 @@ export const Route = createFileRoute(
 function FileTokensPage() {
   return <FileView />
 }
-

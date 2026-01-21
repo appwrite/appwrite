@@ -79,13 +79,17 @@ export function Recovery({ onSubmit, isLoading, isSuccess }: RecoveryProps) {
       <div className="grid md:grid-cols-2">
         <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-6"
+            >
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight">
                   Reset your password
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Enter your email address and we'll send you a link to reset your password.
+                  Enter your email address and we'll send you a link to reset
+                  your password.
                 </p>
               </div>
 
@@ -118,10 +122,7 @@ export function Recovery({ onSubmit, isLoading, isSuccess }: RecoveryProps) {
 
               <p className="text-center text-sm text-muted-foreground">
                 Remember your password?{' '}
-                <Link
-                  to="/sign-in"
-                  className="text-primary hover:underline"
-                >
+                <Link to="/sign-in" className="text-primary hover:underline">
                   Sign in
                 </Link>
               </p>
@@ -141,5 +142,3 @@ export function Recovery({ onSubmit, isLoading, isSuccess }: RecoveryProps) {
     </Card>
   )
 }
-
-

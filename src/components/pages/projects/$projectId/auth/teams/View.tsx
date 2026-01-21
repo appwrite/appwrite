@@ -16,8 +16,12 @@ export function TeamDetailView() {
   })
   const location = useLocation()
   const navigate = useNavigate()
-  
-  const { data: team, isLoading: teamLoading, error: teamError } = useTeam(projectId, teamId)
+
+  const {
+    data: team,
+    isLoading: teamLoading,
+    error: teamError,
+  } = useTeam(projectId, teamId)
 
   // Early return if missing required params
   if (!projectId || !teamId) {
@@ -27,8 +31,16 @@ export function TeamDetailView() {
           <p className="text-[13px] text-muted-foreground">
             Missing project ID or team ID
           </p>
-          {!projectId && <p className="text-[12px] text-muted-foreground mt-2">Project ID is required</p>}
-          {!teamId && <p className="text-[12px] text-muted-foreground mt-2">Team ID is required</p>}
+          {!projectId && (
+            <p className="text-[12px] text-muted-foreground mt-2">
+              Project ID is required
+            </p>
+          )}
+          {!teamId && (
+            <p className="text-[12px] text-muted-foreground mt-2">
+              Team ID is required
+            </p>
+          )}
         </div>
       </div>
     )
@@ -37,42 +49,44 @@ export function TeamDetailView() {
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const teamIndex = pathParts.findIndex((part, idx) => 
-      part === 'teams' && pathParts[idx + 1] === teamId
+    const teamIndex = pathParts.findIndex(
+      (part, idx) => part === 'teams' && pathParts[idx + 1] === teamId,
     )
-    
+
     if (teamIndex >= 0 && pathParts[teamIndex + 2]) {
       const tabFromPath = pathParts[teamIndex + 2]
       if (['members'].includes(tabFromPath)) {
         return tabFromPath
       }
     }
-    
+
     // Default to overview for index route
     return 'overview'
   }, [location.pathname, teamId])
 
-  const tabs: Tab[] = useMemo(() => [
-    {
-      id: 'overview',
-      label: 'Overview',
-      to: '/projects/$projectId/auth/teams/$teamId',
-      params: {
-        projectId: projectId as string,
-        teamId: teamId as string,
+  const tabs: Tab[] = useMemo(
+    () => [
+      {
+        id: 'overview',
+        label: 'Overview',
+        to: '/projects/$projectId/auth/teams/$teamId',
+        params: {
+          projectId: projectId as string,
+          teamId: teamId as string,
+        },
       },
-    },
-    {
-      id: 'members',
-      label: 'Members',
-      to: '/projects/$projectId/auth/teams/$teamId/members',
-      params: {
-        projectId: projectId as string,
-        teamId: teamId as string,
+      {
+        id: 'members',
+        label: 'Members',
+        to: '/projects/$projectId/auth/teams/$teamId/members',
+        params: {
+          projectId: projectId as string,
+          teamId: teamId as string,
+        },
       },
-    },
-  ], [projectId, teamId])
-
+    ],
+    [projectId, teamId],
+  )
 
   const handleBack = () => {
     navigate({
@@ -93,7 +107,9 @@ export function TeamDetailView() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-destructive mb-2">Error loading team</p>
+          <p className="text-[13px] text-destructive mb-2">
+            Error loading team
+          </p>
           <p className="text-[12px] text-muted-foreground">
             {teamError instanceof Error ? teamError.message : 'Unknown error'}
           </p>
@@ -143,7 +159,7 @@ export function TeamDetailView() {
       />
 
       <div className="flex-1 flex flex-col">
-        <div className={cn("mx-auto w-full max-w-7xl flex-1")}>
+        <div className={cn('mx-auto w-full max-w-7xl flex-1')}>
           {activeTab === 'overview' && (
             <div className="px-4 py-4 sm:px-6">
               <TeamOverview />
@@ -160,4 +176,3 @@ export function TeamDetailView() {
     </div>
   )
 }
-

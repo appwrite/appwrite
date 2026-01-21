@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Messaging
- * 
+ *
  * Handles messages, topics, providers, subscribers, and targets.
  */
 
@@ -9,7 +9,11 @@ import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -377,8 +381,18 @@ export function useTopicSubscribers(
     error,
     refetch,
   } = useQuery({
-    queryKey: ['subscribers', 'project', projectId, 'topic', topicId, page, limit, search],
-    queryFn: () => fetchTopicSubscribers(projectId!, topicId!, page, limit, search),
+    queryKey: [
+      'subscribers',
+      'project',
+      projectId,
+      'topic',
+      topicId,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () =>
+      fetchTopicSubscribers(projectId!, topicId!, page, limit, search),
     enabled: !!projectId && !!topicId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,

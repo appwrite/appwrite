@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 
 /**
  * Polygon Editor Component
- * 
+ *
  * Used for editing polygon spatial data (array of closed rings)
  * Can be used in row editing, default values, and geo queries
  */
@@ -19,16 +19,21 @@ export interface PolygonEditorProps {
   showNullCheckbox?: boolean
 }
 
-export function PolygonEditor({ 
-  value, 
-  onChange, 
-  isRequired = false, 
+export function PolygonEditor({
+  value,
+  onChange,
+  isRequired = false,
   disabled = false,
   showNullCheckbox = true,
 }: PolygonEditorProps) {
   const rings = value || []
 
-  const updatePoint = (ringIndex: number, pointIndex: number, coordIndex: 0 | 1, newValue: string) => {
+  const updatePoint = (
+    ringIndex: number,
+    pointIndex: number,
+    coordIndex: 0 | 1,
+    newValue: string,
+  ) => {
     const newRings = rings.map((ring, ri) => {
       if (ri !== ringIndex) return ring
       const newRing = ring.map((point, pi) => {
@@ -81,7 +86,12 @@ export function PolygonEditor({
   }
 
   const addRing = () => {
-    const newRing: [number, number][] = [[0, 0], [0, 0], [0, 0], [0, 0]] // Closed ring (first = last)
+    const newRing: [number, number][] = [
+      [0, 0],
+      [0, 0],
+      [0, 0],
+      [0, 0],
+    ] // Closed ring (first = last)
     onChange([...rings, newRing])
   }
 
@@ -108,14 +118,20 @@ export function PolygonEditor({
       </div>
       {rings.length === 0 ? (
         <p className="text-[12px] text-muted-foreground py-2 text-center">
-          No rings. Click "Add Ring" to add a ring (minimum 3 points per ring required).
+          No rings. Click "Add Ring" to add a ring (minimum 3 points per ring
+          required).
         </p>
       ) : (
         <div className="space-y-4">
           {rings.map((ring, ringIndex) => (
-            <div key={ringIndex} className="space-y-2 rounded-md border border-border bg-background p-3">
+            <div
+              key={ringIndex}
+              className="space-y-2 rounded-md border border-border bg-background p-3"
+            >
               <div className="flex items-center justify-between">
-                <Label className="text-[11px] font-medium">Ring {ringIndex + 1}</Label>
+                <Label className="text-[11px] font-medium">
+                  Ring {ringIndex + 1}
+                </Label>
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
@@ -152,36 +168,63 @@ export function PolygonEditor({
                     const isLastPoint = pointIndex === ring.length - 1
                     const isFirstPoint = pointIndex === 0
                     return (
-                      <div key={pointIndex} className="flex items-center gap-2 rounded border border-border/50 bg-muted/20 p-2">
+                      <div
+                        key={pointIndex}
+                        className="flex items-center gap-2 rounded border border-border/50 bg-muted/20 p-2"
+                      >
                         <div className="flex-1 grid grid-cols-2 gap-2">
                           <div className="space-y-1">
-                            <Label className="text-[10px] text-muted-foreground">Lon</Label>
+                            <Label className="text-[10px] text-muted-foreground">
+                              Lon
+                            </Label>
                             <Input
                               type="number"
                               step="any"
                               value={point[0] ?? 0}
-                              onChange={(e) => updatePoint(ringIndex, pointIndex, 0, e.target.value)}
+                              onChange={(e) =>
+                                updatePoint(
+                                  ringIndex,
+                                  pointIndex,
+                                  0,
+                                  e.target.value,
+                                )
+                              }
                               placeholder="0.0"
-                              disabled={disabled || (isLastPoint && isFirstPoint)}
+                              disabled={
+                                disabled || (isLastPoint && isFirstPoint)
+                              }
                               className="h-8 text-[12px]"
                             />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-[10px] text-muted-foreground">Lat</Label>
+                            <Label className="text-[10px] text-muted-foreground">
+                              Lat
+                            </Label>
                             <Input
                               type="number"
                               step="any"
                               value={point[1] ?? 0}
-                              onChange={(e) => updatePoint(ringIndex, pointIndex, 1, e.target.value)}
+                              onChange={(e) =>
+                                updatePoint(
+                                  ringIndex,
+                                  pointIndex,
+                                  1,
+                                  e.target.value,
+                                )
+                              }
                               placeholder="0.0"
-                              disabled={disabled || (isLastPoint && isFirstPoint)}
+                              disabled={
+                                disabled || (isLastPoint && isFirstPoint)
+                              }
                               className="h-8 text-[12px]"
                             />
                           </div>
                         </div>
                         {isLastPoint && isFirstPoint ? (
                           <div className="flex items-center px-2">
-                            <span className="text-[10px] text-muted-foreground">(closed)</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              (closed)
+                            </span>
                           </div>
                         ) : (
                           <Button
@@ -189,7 +232,9 @@ export function PolygonEditor({
                             variant="ghost"
                             size="icon"
                             className="h-7 w-7 shrink-0"
-                            onClick={() => removePointFromRing(ringIndex, pointIndex)}
+                            onClick={() =>
+                              removePointFromRing(ringIndex, pointIndex)
+                            }
                             disabled={disabled || ring.length <= 3}
                           >
                             <X className="h-3.5 w-3.5" />
@@ -215,12 +260,26 @@ export function PolygonEditor({
             id="polygon-null"
             checked={value === null}
             onCheckedChange={(checked) => {
-              onChange(checked ? null : [[[0, 0], [0, 0], [0, 0], [0, 0]]])
+              onChange(
+                checked
+                  ? null
+                  : [
+                      [
+                        [0, 0],
+                        [0, 0],
+                        [0, 0],
+                        [0, 0],
+                      ],
+                    ],
+              )
             }}
             disabled={disabled}
             className="h-4 w-4"
           />
-          <label htmlFor="polygon-null" className="text-[11px] text-muted-foreground cursor-pointer select-none">
+          <label
+            htmlFor="polygon-null"
+            className="text-[11px] text-muted-foreground cursor-pointer select-none"
+          >
             Set to NULL
           </label>
         </div>
@@ -228,4 +287,3 @@ export function PolygonEditor({
     </div>
   )
 }
-

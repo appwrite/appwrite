@@ -1,6 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { StorageView } from '@/components/pages/projects/$projectId/storage/View'
-import { fetchProjectBuckets, fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  fetchProjectBuckets,
+  fetchProject,
+  fetchOrganizationPlan,
+} from '@/lib/react-query/hooks'
 
 const BUCKETS_PER_PAGE = 25
 

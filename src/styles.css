@@ -90,7 +90,7 @@ code {
   --sidebar-ring: oklch(0.442 0.017 285.786); */
 
   /* OLD VERSION - Strong black (original) - Uncomment to revert */
-  
+
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.141 0.005 285.823);
@@ -123,7 +123,6 @@ code {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.274 0.006 286.033);
   --sidebar-ring: oklch(0.442 0.017 285.786);
- 
 }
 
 .crazy {
@@ -244,34 +243,34 @@ code {
   body {
     @apply bg-background text-foreground;
   }
-  
+
   /* Mobile touch scrolling improvements */
   html {
     height: 100%;
     height: 100dvh;
   }
-  
+
   /* Ensure body uses proper height and prevents scrolling */
   body {
     height: 100%;
     height: 100dvh;
     overflow: hidden;
   }
-  
+
   /* Smooth touch scrolling on iOS */
-  [class*="overflow-auto"],
-  [class*="overflow-y-auto"] {
+  [class*='overflow-auto'],
+  [class*='overflow-y-auto'] {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
   }
-  
+
   /* Use dynamic viewport height for root container on mobile devices */
   @supports (height: 100dvh) {
     .root-container {
       height: 100dvh;
     }
   }
-  
+
   /* On mobile, ensure flex layout properly accounts for header height */
   @media (max-width: 768px) {
     /* Ensure the root scroll container doesn't scroll */
@@ -282,25 +281,25 @@ code {
       height: 100dvh;
       max-height: 100dvh;
     }
-    
+
     /* Ensure main content area properly calculates available height */
-    main[class*="overflow-y-auto"] {
+    main[class*='overflow-y-auto'] {
       /* Use flex-1 to take remaining space after header */
       flex: 1 1 0%;
       min-height: 0;
       max-height: 100%;
     }
-    
+
     /* Ensure the flex container properly constrains children */
-    .project-layout-container > div[class*="flex"][class*="flex-1"],
-    .org-layout-container > div[class*="flex"][class*="flex-1"],
-    .account-layout-container > div[class*="flex"][class*="flex-1"],
-    .domain-detail-layout-container > div[class*="flex"][class*="flex-1"] {
+    .project-layout-container > div[class*='flex'][class*='flex-1'],
+    .org-layout-container > div[class*='flex'][class*='flex-1'],
+    .account-layout-container > div[class*='flex'][class*='flex-1'],
+    .domain-detail-layout-container > div[class*='flex'][class*='flex-1'] {
       min-height: 0;
       max-height: 100%;
       overflow: hidden;
     }
-    
+
     /* Fix for iOS Safari - ensure layout containers use dvh */
     @supports (height: 100dvh) {
       /* Ensure layout containers use proper height calculation */
@@ -314,7 +313,7 @@ code {
       }
     }
   }
-  
+
   /* Additional iOS-specific fixes */
   @supports (-webkit-touch-callout: none) {
     /* iOS Safari specific */
@@ -323,23 +322,23 @@ code {
         height: 100dvh;
         max-height: 100dvh;
       }
-      
+
       .root-scroll-container {
         height: 100dvh;
         max-height: 100dvh;
       }
-      
+
       .project-layout-container {
         height: 100%;
         max-height: 100dvh;
         overflow: hidden;
       }
-      
+
       /* Ensure main content area doesn't exceed viewport on iOS */
-      main[class*="overflow-y-auto"] {
+      main[class*='overflow-y-auto'] {
         max-height: 100%;
       }
-      
+
       /* Ensure flex containers properly constrain on iOS */
       .project-layout-container,
       .org-layout-container,
@@ -349,21 +348,21 @@ code {
         flex-direction: column;
         position: relative;
       }
-      
-      .project-layout-container > div[class*="flex"][class*="flex-1"],
-      .org-layout-container > div[class*="flex"][class*="flex-1"],
-      .account-layout-container > div[class*="flex"][class*="flex-1"],
-      .domain-detail-layout-container > div[class*="flex"][class*="flex-1"] {
+
+      .project-layout-container > div[class*='flex'][class*='flex-1'],
+      .org-layout-container > div[class*='flex'][class*='flex-1'],
+      .account-layout-container > div[class*='flex'][class*='flex-1'],
+      .domain-detail-layout-container > div[class*='flex'][class*='flex-1'] {
         min-height: 0;
         max-height: 100%;
         overflow: hidden;
         position: relative;
       }
-      
+
       /* Ensure content areas can scroll on iOS */
-      .org-layout-container > div[class*="overflow-y-auto"],
-      .account-layout-container > div[class*="overflow-y-auto"],
-      .domain-detail-layout-container > div[class*="overflow-y-auto"] {
+      .org-layout-container > div[class*='overflow-y-auto'],
+      .account-layout-container > div[class*='overflow-y-auto'],
+      .domain-detail-layout-container > div[class*='overflow-y-auto'] {
         max-height: 100%;
       }
     }
@@ -393,11 +392,16 @@ code {
 }
 
 @keyframes glow {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(37, 99, 235, 0.4), 0 0 12px rgba(37, 99, 235, 0.2);
+  0%,
+  100% {
+    box-shadow:
+      0 0 8px rgba(37, 99, 235, 0.4),
+      0 0 12px rgba(37, 99, 235, 0.2);
   }
   50% {
-    box-shadow: 0 0 12px rgba(37, 99, 235, 0.6), 0 0 18px rgba(37, 99, 235, 0.3);
+    box-shadow:
+      0 0 12px rgba(37, 99, 235, 0.6),
+      0 0 18px rgba(37, 99, 235, 0.3);
   }
 }
 

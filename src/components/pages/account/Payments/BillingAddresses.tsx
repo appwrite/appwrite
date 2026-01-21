@@ -1,6 +1,6 @@
 /**
  * AccountBillingAddresses Component
- * 
+ *
  * Displays and manages billing addresses at the account level.
  * Shows all addresses with their linked organizations.
  */
@@ -44,7 +44,8 @@ import { AddressModal } from './Address'
 import { DeleteAddressModal } from './DeleteAddress'
 
 export function AccountBillingAddresses() {
-  const { addresses: allAddresses, isLoading: addressesLoading } = useBillingAddresses()
+  const { addresses: allAddresses, isLoading: addressesLoading } =
+    useBillingAddresses()
   const { data: countriesData } = useCountries()
   const deleteAddressMutation = useDeleteBillingAddress()
 
@@ -52,9 +53,9 @@ export function AccountBillingAddresses() {
   const { data: organizationsData } = useQuery({
     queryKey: ['organizations', 'console', 'full'],
     queryFn: async () => {
-      const response = await sdk.forConsole.organizations.list(
-        [Query.equal('platform', 'appwrite')],
-      )
+      const response = await sdk.forConsole.organizations.list([
+        Query.equal('platform', 'appwrite'),
+      ])
       return response.teams || []
     },
     staleTime: 30 * 1000,
@@ -65,7 +66,8 @@ export function AccountBillingAddresses() {
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
-  const [selectedAddress, setSelectedAddress] = useState<Models.BillingAddress | null>(null)
+  const [selectedAddress, setSelectedAddress] =
+    useState<Models.BillingAddress | null>(null)
 
   // Get organizations linked to each address
   const getLinkedOrganizations = (addressId: string) => {
@@ -76,7 +78,7 @@ export function AccountBillingAddresses() {
   const countryMap = useMemo(() => {
     if (!countriesData?.countries) return new Map()
     return new Map(
-      countriesData.countries.map((country) => [country.code, country.name])
+      countriesData.countries.map((country) => [country.code, country.name]),
     )
   }, [countriesData])
 
@@ -144,7 +146,9 @@ export function AccountBillingAddresses() {
         </div>
         <div className="border-t border-border -mx-6" />
         <div className="px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading addresses...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading addresses...
+          </p>
         </div>
       </div>
     )
@@ -174,11 +178,7 @@ export function AccountBillingAddresses() {
             variant="default"
           >
             <div className="mt-4">
-              <Button
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={handleAdd}
-              >
+              <Button size="sm" className="h-9 text-[13px]" onClick={handleAdd}>
                 <Plus className="mr-1.5 h-4 w-4" />
                 Add billing address
               </Button>
@@ -202,11 +202,7 @@ export function AccountBillingAddresses() {
                 Manage your billing addresses for invoices and payments.
               </p>
             </div>
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={handleAdd}
-            >
+            <Button size="sm" className="h-9 text-[13px]" onClick={handleAdd}>
               <Plus className="mr-1.5 h-4 w-4" />
               Add billing address
             </Button>
@@ -216,98 +212,104 @@ export function AccountBillingAddresses() {
         <div className="px-6 py-4">
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead>Address</TableHead>
-                <TableHead>Linked to</TableHead>
-                <TableHead className="w-[60px] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {allAddresses.map((address: Models.BillingAddress) => {
-                const linkedOrgs = getLinkedOrganizations(address.$id)
-                const isLinked = linkedOrgs.length > 0
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Address</TableHead>
+                  <TableHead>Linked to</TableHead>
+                  <TableHead className="w-[60px] text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {allAddresses.map((address: Models.BillingAddress) => {
+                  const linkedOrgs = getLinkedOrganizations(address.$id)
+                  const isLinked = linkedOrgs.length > 0
 
-                return (
-                  <TableRow key={address.$id} className="hover:bg-muted/50 transition-colors">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                  return (
+                    <TableRow
+                      key={address.$id}
+                      className="hover:bg-muted/50 transition-colors"
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <p className="text-[13px] text-foreground">
+                            {formatAddress(address)}
+                          </p>
                         </div>
-                        <p className="text-[13px] text-foreground">
-                          {formatAddress(address)}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {isLinked ? (
-                        <Popover>
-                          <PopoverTrigger asChild>
+                      </TableCell>
+                      <TableCell>
+                        {isLinked ? (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-[12px] text-muted-foreground hover:text-foreground -ml-2"
+                              >
+                                <LinkIcon className="mr-1.5 h-3.5 w-3.5" />
+                                {linkedOrgs.length} organization
+                                {linkedOrgs.length > 1 ? 's' : ''}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-64" align="start">
+                              <div className="space-y-2">
+                                <p className="text-[12px] font-medium text-foreground mb-2">
+                                  Linked Organizations
+                                </p>
+                                {linkedOrgs.map((org) => (
+                                  <Link
+                                    key={org.$id}
+                                    to="/organizations/$orgId/billing"
+                                    params={{ orgId: org.$id }}
+                                    className="block rounded-md px-2 py-1.5 text-[12px] text-foreground hover:bg-muted transition-colors"
+                                  >
+                                    {org.name}
+                                  </Link>
+                                ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <span className="text-[12px] text-muted-foreground">
+                            Not linked
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 text-[12px] text-muted-foreground hover:text-foreground -ml-2"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                             >
-                              <LinkIcon className="mr-1.5 h-3.5 w-3.5" />
-                              {linkedOrgs.length} organization{linkedOrgs.length > 1 ? 's' : ''}
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-64" align="start">
-                            <div className="space-y-2">
-                              <p className="text-[12px] font-medium text-foreground mb-2">
-                                Linked Organizations
-                              </p>
-                              {linkedOrgs.map((org) => (
-                                <Link
-                                  key={org.$id}
-                                  to="/organizations/$orgId/billing"
-                                  params={{ orgId: org.$id }}
-                                  className="block rounded-md px-2 py-1.5 text-[12px] text-foreground hover:bg-muted transition-colors"
-                                >
-                                  {org.name}
-                                </Link>
-                              ))}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      ) : (
-                        <span className="text-[12px] text-muted-foreground">Not linked</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem
-                            className="text-[13px]"
-                            onClick={() => handleEdit(address)}
-                          >
-                            Update
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-[13px] text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
-                            onClick={() => handleDelete(address)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem
+                              className="text-[13px]"
+                              onClick={() => handleEdit(address)}
+                            >
+                              Update
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-[13px] text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                              onClick={() => handleDelete(address)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
           </div>
         </div>
       </div>

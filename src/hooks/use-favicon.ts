@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-export type FaviconVariant = 
+export type FaviconVariant =
   | 'default'
   | 'green'
   | 'orange'
@@ -36,8 +36,10 @@ export function useFavicon() {
     }
 
     // Find existing favicon link or create a new one
-    let faviconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement
-    
+    let faviconLink = document.querySelector(
+      "link[rel='icon']",
+    ) as HTMLLinkElement
+
     if (!faviconLink) {
       faviconLink = document.createElement('link')
       faviconLink.rel = 'icon'
@@ -51,7 +53,9 @@ export function useFavicon() {
   const getCurrentFavicon = useCallback((): FaviconVariant | null => {
     if (typeof window === 'undefined') return null
 
-    const faviconLink = document.querySelector("link[rel='icon']") as HTMLLinkElement
+    const faviconLink = document.querySelector(
+      "link[rel='icon']",
+    ) as HTMLLinkElement
     if (!faviconLink) return null
 
     const currentPath = faviconLink.href
@@ -72,5 +76,3 @@ export function useFavicon() {
     getCurrentFavicon,
   }
 }
-
-

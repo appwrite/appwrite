@@ -1,5 +1,18 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { ZoomIn, ZoomOut, Maximize2, Database, HardDrive, Zap, Users, ExternalLink, ArrowUp, ArrowDown, Table2, Folder } from 'lucide-react'
+import {
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Database,
+  HardDrive,
+  Zap,
+  Users,
+  ExternalLink,
+  ArrowUp,
+  ArrowDown,
+  Table2,
+  Folder,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useNavigate, useParams } from '@tanstack/react-router'
@@ -130,12 +143,12 @@ export function Browser({ databaseId }: BrowserProps) {
   const panRef = useRef({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
-  
+
   // Keep refs in sync with state
   useEffect(() => {
     zoomRef.current = zoom
   }, [zoom])
-  
+
   useEffect(() => {
     panRef.current = pan
   }, [pan])
@@ -176,31 +189,33 @@ export function Browser({ databaseId }: BrowserProps) {
   })
 
   // Resource z-index state
-  const [resourceZIndices, setResourceZIndices] = useState<Map<string, number>>(() => {
-    const map = new Map<string, number>()
-    let zIndex = frames.length + 1
-    
-    // Add main resources
-    MOCK_RESOURCES.forEach((resource) => {
-      map.set(resource.id, zIndex++)
-    })
-    
-    // Add tables and buckets (will be duplicated per frame)
-    MOCK_TABLES.forEach((table) => {
-      table.frameIds.forEach((frameId) => {
-        const instanceId = `${table.id}-${frameId}`
-        map.set(instanceId, zIndex++)
+  const [resourceZIndices, setResourceZIndices] = useState<Map<string, number>>(
+    () => {
+      const map = new Map<string, number>()
+      let zIndex = frames.length + 1
+
+      // Add main resources
+      MOCK_RESOURCES.forEach((resource) => {
+        map.set(resource.id, zIndex++)
       })
-    })
-    MOCK_BUCKETS.forEach((bucket) => {
-      bucket.frameIds.forEach((frameId) => {
-        const instanceId = `${bucket.id}-${frameId}`
-        map.set(instanceId, zIndex++)
+
+      // Add tables and buckets (will be duplicated per frame)
+      MOCK_TABLES.forEach((table) => {
+        table.frameIds.forEach((frameId) => {
+          const instanceId = `${table.id}-${frameId}`
+          map.set(instanceId, zIndex++)
+        })
       })
-    })
-    
-    return map
-  })
+      MOCK_BUCKETS.forEach((bucket) => {
+        bucket.frameIds.forEach((frameId) => {
+          const instanceId = `${bucket.id}-${frameId}`
+          map.set(instanceId, zIndex++)
+        })
+      })
+
+      return map
+    },
+  )
 
   // Calculate resource node positions based on frame positions
   const resources = useMemo<ResourceNode[]>(() => {
@@ -214,25 +229,28 @@ export function Browser({ databaseId }: BrowserProps) {
     const childNodeSpacing = 80 // Spacing between child nodes
 
     // Find frame bounds
-    const maxFrameX = Math.max(...frames.map(f => f.x + f.width))
-    const minFrameY = Math.min(...frames.map(f => f.y))
-    
+    const maxFrameX = Math.max(...frames.map((f) => f.x + f.width))
+    const minFrameY = Math.min(...frames.map((f) => f.y))
+
     // Position main resources in a grid to the right of frames
     const cols = 2
     const baseX = maxFrameX + resourceOffset
     const baseY = minFrameY
 
-    const mainResources: ResourceNode[] = MOCK_RESOURCES.map((resource, index) => {
-      const row = Math.floor(index / cols)
-      const col = index % cols
-      
-      return {
-        ...resource,
-        x: baseX + col * (nodeWidth + nodeSpacing),
-        y: baseY + row * (nodeHeight + nodeSpacing),
-        zIndex: resourceZIndices.get(resource.id) || frames.length + index + 1,
-      }
-    })
+    const mainResources: ResourceNode[] = MOCK_RESOURCES.map(
+      (resource, index) => {
+        const row = Math.floor(index / cols)
+        const col = index % cols
+
+        return {
+          ...resource,
+          x: baseX + col * (nodeWidth + nodeSpacing),
+          y: baseY + row * (nodeHeight + nodeSpacing),
+          zIndex:
+            resourceZIndices.get(resource.id) || frames.length + index + 1,
+        }
+      },
+    )
 
     // Add tables and buckets linked to frames
     const childResources: ResourceNode[] = []
@@ -240,15 +258,15 @@ export function Browser({ databaseId }: BrowserProps) {
 
     // Add tables
     MOCK_TABLES.forEach((table) => {
-        table.frameIds.forEach((frameId) => {
-        const frame = frames.find(f => f.id === frameId)
+      table.frameIds.forEach((frameId) => {
+        const frame = frames.find((f) => f.id === frameId)
         if (!frame) return
 
         // Count how many tables come before this one for the same frame
-        const tablesBefore = MOCK_TABLES
-          .filter(t => t.frameIds.includes(frameId))
-          .findIndex(t => t.id === table.id)
-        
+        const tablesBefore = MOCK_TABLES.filter((t) =>
+          t.frameIds.includes(frameId),
+        ).findIndex((t) => t.id === table.id)
+
         const instanceId = `${table.id}-${frameId}`
         childResources.push({
           id: instanceId,
@@ -265,23 +283,28 @@ export function Browser({ databaseId }: BrowserProps) {
     // Add buckets
     MOCK_BUCKETS.forEach((bucket) => {
       bucket.frameIds.forEach((frameId) => {
-        const frame = frames.find(f => f.id === frameId)
+        const frame = frames.find((f) => f.id === frameId)
         if (!frame) return
 
         // Count tables for this frame to position buckets below them
-        const tableCount = MOCK_TABLES.filter(t => t.frameIds.includes(frameId)).length
+        const tableCount = MOCK_TABLES.filter((t) =>
+          t.frameIds.includes(frameId),
+        ).length
         // Count how many buckets come before this one for the same frame
-        const bucketsBefore = MOCK_BUCKETS
-          .filter(b => b.frameIds.includes(frameId))
-          .findIndex(b => b.id === bucket.id)
-        
+        const bucketsBefore = MOCK_BUCKETS.filter((b) =>
+          b.frameIds.includes(frameId),
+        ).findIndex((b) => b.id === bucket.id)
+
         const instanceId = `${bucket.id}-${frameId}`
         childResources.push({
           id: instanceId,
           type: 'bucket',
           name: bucket.name,
           x: frame.x + frame.width + childNodeOffset,
-          y: frame.y + tableCount * (nodeHeight + childNodeSpacing) + bucketsBefore * (nodeHeight + childNodeSpacing),
+          y:
+            frame.y +
+            tableCount * (nodeHeight + childNodeSpacing) +
+            bucketsBefore * (nodeHeight + childNodeSpacing),
           zIndex: resourceZIndices.get(instanceId) || childZIndex++,
           parentFrameId: frameId,
         })
@@ -305,7 +328,7 @@ export function Browser({ databaseId }: BrowserProps) {
     const startY = 100
     const frameWidth = 1200
     const frameHeight = 800
-    
+
     // Appwrite frame position (index 0, row 0, col 0)
     const appwriteX = startX + 0 * (frameWidth + spacing) // = 100
     const appwriteY = startY + 0 * (frameHeight + spacing) // = 100
@@ -327,7 +350,7 @@ export function Browser({ databaseId }: BrowserProps) {
         const fitZoom = Math.min(
           (canvasWidth - padding * 2) / frameWidth,
           (canvasHeight - padding * 2) / frameHeight,
-          1 // Don't zoom in beyond 100%
+          1, // Don't zoom in beyond 100%
         )
 
         // Center the Appwrite frame in the viewport
@@ -339,7 +362,7 @@ export function Browser({ databaseId }: BrowserProps) {
 
         hasAutoFocusedRef.current = true
       })
-      
+
       return () => cancelAnimationFrame(rafId2)
     })
 
@@ -390,7 +413,7 @@ export function Browser({ databaseId }: BrowserProps) {
             width: newWidth,
             height: newHeight,
           }
-        })
+        }),
       )
     }
 
@@ -420,7 +443,10 @@ export function Browser({ databaseId }: BrowserProps) {
       setZoom((currentZoom) => {
         setPan((currentPan) => {
           const delta = e.deltaY > 0 ? -WHEEL_ZOOM_STEP : WHEEL_ZOOM_STEP
-          newZoomValue = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, currentZoom + delta))
+          newZoomValue = Math.max(
+            MIN_ZOOM,
+            Math.min(MAX_ZOOM, currentZoom + delta),
+          )
 
           // Get mouse position relative to canvas
           const rect = canvas.getBoundingClientRect()
@@ -555,7 +581,7 @@ export function Browser({ databaseId }: BrowserProps) {
       const fitZoom = Math.min(
         (canvasWidth - padding * 2) / frame.width,
         (canvasHeight - padding * 2) / frame.height,
-        1 // Don't zoom in beyond 100%
+        1, // Don't zoom in beyond 100%
       )
 
       // Center the frame in the viewport
@@ -580,7 +606,7 @@ export function Browser({ databaseId }: BrowserProps) {
       const fitZoom = Math.min(
         (canvasWidth - padding * 2) / nodeWidth,
         (canvasHeight - padding * 2) / nodeHeight,
-        1 // Don't zoom in beyond 100%
+        1, // Don't zoom in beyond 100%
       )
 
       // Center the resource in the viewport
@@ -606,7 +632,7 @@ export function Browser({ databaseId }: BrowserProps) {
     if (frameId) {
       const frame = frames.find((f) => f.id === frameId)
       if (!frame) return null
-      
+
       switch (side) {
         case 'left':
           return { x: frame.x, y: frame.y + frame.height / 2 }
@@ -620,14 +646,14 @@ export function Browser({ databaseId }: BrowserProps) {
           return null
       }
     }
-    
+
     if (resourceId) {
       const resource = resources.find((r) => r.id === resourceId)
       if (!resource) return null
-      
+
       const nodeWidth = 180
       const nodeHeight = 60
-      
+
       switch (side) {
         case 'left':
           return { x: resource.x, y: resource.y + nodeHeight / 2 }
@@ -641,7 +667,7 @@ export function Browser({ databaseId }: BrowserProps) {
           return null
       }
     }
-    
+
     return null
   }
 
@@ -686,12 +712,15 @@ export function Browser({ databaseId }: BrowserProps) {
   }
 
   // Handle resource node click
-  const handleResourceClick = (resource: ResourceNode, e?: React.MouseEvent) => {
+  const handleResourceClick = (
+    resource: ResourceNode,
+    e?: React.MouseEvent,
+  ) => {
     // Don't navigate if clicking on action bar or buttons
     if (e && (e.target as HTMLElement).closest('[data-action-bar]')) {
       return
     }
-    
+
     // Toggle selection or navigate on double click
     if (e?.detail === 2) {
       // Double click to navigate
@@ -727,7 +756,8 @@ export function Browser({ databaseId }: BrowserProps) {
         const nextFrame = sorted[frameIndex + 1]
         return prevFrames.map((f) => {
           if (f.id === frameId) return { ...f, zIndex: nextFrame.zIndex }
-          if (f.id === nextFrame.id) return { ...f, zIndex: sorted[frameIndex].zIndex }
+          if (f.id === nextFrame.id)
+            return { ...f, zIndex: sorted[frameIndex].zIndex }
           return f
         })
       } else if (direction === 'backward' && frameIndex > 0) {
@@ -735,7 +765,8 @@ export function Browser({ databaseId }: BrowserProps) {
         const prevFrame = sorted[frameIndex - 1]
         return prevFrames.map((f) => {
           if (f.id === frameId) return { ...f, zIndex: prevFrame.zIndex }
-          if (f.id === prevFrame.id) return { ...f, zIndex: sorted[frameIndex].zIndex }
+          if (f.id === prevFrame.id)
+            return { ...f, zIndex: sorted[frameIndex].zIndex }
           return f
         })
       }
@@ -744,7 +775,10 @@ export function Browser({ databaseId }: BrowserProps) {
   }
 
   // Move resource forward/backward
-  const moveResource = (resourceId: string, direction: 'forward' | 'backward') => {
+  const moveResource = (
+    resourceId: string,
+    direction: 'forward' | 'backward',
+  ) => {
     setResourceZIndices((prev) => {
       const newMap = new Map(prev)
       const allZIndices = [
@@ -807,9 +841,9 @@ export function Browser({ databaseId }: BrowserProps) {
       <div
         ref={canvasRef}
         className={cn(
-          "h-full w-full overflow-hidden select-none",
-          isDragging && "cursor-grabbing",
-          !isDragging && !resizing && "cursor-grab"
+          'h-full w-full overflow-hidden select-none',
+          isDragging && 'cursor-grabbing',
+          !isDragging && !resizing && 'cursor-grab',
         )}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -871,20 +905,21 @@ export function Browser({ databaseId }: BrowserProps) {
                 refY="3"
                 orient="auto"
               >
-                <polygon
-                  points="0 0, 10 3, 0 6"
-                  fill="hsl(var(--border))"
-                />
+                <polygon points="0 0, 10 3, 0 6" fill="hsl(var(--border))" />
               </marker>
             </defs>
             <g>
               {/* Main resource connections */}
               {CONNECTIONS.map((conn, index) => {
-                const fromPoint = getConnectionPoint(conn.from, null, conn.fromSide)
+                const fromPoint = getConnectionPoint(
+                  conn.from,
+                  null,
+                  conn.fromSide,
+                )
                 const toPoint = getConnectionPoint(null, conn.to, conn.toSide)
-                
+
                 if (!fromPoint || !toPoint) return null
-                
+
                 return (
                   <line
                     key={`${conn.from}-${conn.to}-${index}`}
@@ -900,21 +935,27 @@ export function Browser({ databaseId }: BrowserProps) {
                   />
                 )
               })}
-              
+
               {/* Table and bucket connections to frames */}
               {resources
-                .filter(r => r.type === 'table' || r.type === 'bucket')
+                .filter((r) => r.type === 'table' || r.type === 'bucket')
                 .map((resource) => {
                   if (!resource.parentFrameId) return null
-                  
-                  const frame = frames.find(f => f.id === resource.parentFrameId)
+
+                  const frame = frames.find(
+                    (f) => f.id === resource.parentFrameId,
+                  )
                   if (!frame) return null
-                  
-                  const fromPoint = getConnectionPoint(resource.parentFrameId, null, 'right')
+
+                  const fromPoint = getConnectionPoint(
+                    resource.parentFrameId,
+                    null,
+                    'right',
+                  )
                   const toPoint = getConnectionPoint(null, resource.id, 'left')
-                  
+
                   if (!fromPoint || !toPoint) return null
-                  
+
                   return (
                     <line
                       key={`${resource.parentFrameId}-${resource.id}`}
@@ -938,7 +979,9 @@ export function Browser({ databaseId }: BrowserProps) {
             .sort((a, b) => a.zIndex - b.zIndex)
             .map((resource) => {
               const Icon = getResourceIcon(resource.type)
-              const isSelected = selectedNode?.type === 'resource' && selectedNode.id === resource.id
+              const isSelected =
+                selectedNode?.type === 'resource' &&
+                selectedNode.id === resource.id
               return (
                 <div key={resource.id}>
                   {/* Action bar */}
@@ -1003,10 +1046,10 @@ export function Browser({ databaseId }: BrowserProps) {
                   <div
                     data-resource
                     className={cn(
-                      "absolute border rounded-lg bg-card shadow-lg p-3 flex items-center gap-3 transition-all cursor-pointer group",
+                      'absolute border rounded-lg bg-card shadow-lg p-3 flex items-center gap-3 transition-all cursor-pointer group',
                       isSelected
-                        ? "border-blue-500 outline outline-2 outline-blue-500 outline-offset-2"
-                        : "border-border hover:border-primary/50 hover:shadow-xl"
+                        ? 'border-blue-500 outline outline-2 outline-blue-500 outline-offset-2'
+                        : 'border-border hover:border-primary/50 hover:shadow-xl',
                     )}
                     style={{
                       left: `${resource.x}px`,
@@ -1019,32 +1062,46 @@ export function Browser({ databaseId }: BrowserProps) {
                       e.stopPropagation()
                       handleResourceClick(resource, e)
                     }}
-                    title={isSelected ? `Double-click to open ${resource.type} page` : `Click to select, double-click to open ${resource.type} page`}
+                    title={
+                      isSelected
+                        ? `Double-click to open ${resource.type} page`
+                        : `Click to select, double-click to open ${resource.type} page`
+                    }
                   >
-                    <div className={cn(
-                      "flex-shrink-0 w-10 h-10 rounded-md bg-muted flex items-center justify-center transition-colors",
-                      !isSelected && "group-hover:bg-primary/10"
-                    )}>
-                      <Icon className={cn(
-                        "h-5 w-5 text-muted-foreground transition-colors",
-                        !isSelected && "group-hover:text-primary"
-                      )} />
+                    <div
+                      className={cn(
+                        'flex-shrink-0 w-10 h-10 rounded-md bg-muted flex items-center justify-center transition-colors',
+                        !isSelected && 'group-hover:bg-primary/10',
+                      )}
+                    >
+                      <Icon
+                        className={cn(
+                          'h-5 w-5 text-muted-foreground transition-colors',
+                          !isSelected && 'group-hover:text-primary',
+                        )}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className={cn(
-                        "text-[12px] font-medium text-foreground truncate transition-colors",
-                        !isSelected && "group-hover:text-primary"
-                      )}>
+                      <div
+                        className={cn(
+                          'text-[12px] font-medium text-foreground truncate transition-colors',
+                          !isSelected && 'group-hover:text-primary',
+                        )}
+                      >
                         {resource.name}
                       </div>
                       <div className="text-[11px] text-muted-foreground capitalize">
                         {resource.type}
                       </div>
                     </div>
-                    <ExternalLink className={cn(
-                      "h-3.5 w-3.5 text-muted-foreground transition-opacity flex-shrink-0",
-                      isSelected ? "opacity-0" : "opacity-0 group-hover:opacity-100"
-                    )} />
+                    <ExternalLink
+                      className={cn(
+                        'h-3.5 w-3.5 text-muted-foreground transition-opacity flex-shrink-0',
+                        isSelected
+                          ? 'opacity-0'
+                          : 'opacity-0 group-hover:opacity-100',
+                      )}
+                    />
                   </div>
                 </div>
               )
@@ -1054,7 +1111,8 @@ export function Browser({ databaseId }: BrowserProps) {
           {frames
             .sort((a, b) => a.zIndex - b.zIndex)
             .map((frame) => {
-              const isSelected = selectedNode?.type === 'frame' && selectedNode.id === frame.id
+              const isSelected =
+                selectedNode?.type === 'frame' && selectedNode.id === frame.id
               return (
                 <div key={frame.id}>
                   {/* Action bar */}
@@ -1103,10 +1161,10 @@ export function Browser({ databaseId }: BrowserProps) {
                   <div
                     data-frame
                     className={cn(
-                      "absolute border rounded-lg overflow-hidden bg-card shadow-lg group",
+                      'absolute border rounded-lg overflow-hidden bg-card shadow-lg group',
                       isSelected
-                        ? "border-blue-500 outline outline-2 outline-blue-500 outline-offset-2"
-                        : "border-border"
+                        ? 'border-blue-500 outline outline-2 outline-blue-500 outline-offset-2'
+                        : 'border-border',
                     )}
                     style={{
                       left: `${frame.x}px`,
@@ -1133,21 +1191,22 @@ export function Browser({ databaseId }: BrowserProps) {
                         </div>
                       </div>
                     </div>
-              {/* Iframe */}
-              <iframe
-                src={frame.url}
-                className="w-full h-[calc(100%-2.5rem)] border-0 pointer-events-none"
-                title={frame.name}
-                sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
-              />
-              
+                    {/* Iframe */}
+                    <iframe
+                      src={frame.url}
+                      className="w-full h-[calc(100%-2.5rem)] border-0 pointer-events-none"
+                      title={frame.name}
+                      sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+                    />
+
                     {/* Resize handles - Edges only */}
                     {/* Top edge */}
                     <div
                       data-resize-handle
                       className={cn(
-                        "absolute -top-1 left-0 right-0 h-2 cursor-ns-resize bg-primary/50 z-10",
-                        resizing?.frameId === frame.id || "opacity-0 group-hover:opacity-100 transition-opacity"
+                        'absolute -top-1 left-0 right-0 h-2 cursor-ns-resize bg-primary/50 z-10',
+                        resizing?.frameId === frame.id ||
+                          'opacity-0 group-hover:opacity-100 transition-opacity',
                       )}
                       onMouseDown={(e) => handleResizeStart(e, frame.id, 'n')}
                     />
@@ -1155,8 +1214,9 @@ export function Browser({ databaseId }: BrowserProps) {
                     <div
                       data-resize-handle
                       className={cn(
-                        "absolute -bottom-1 left-0 right-0 h-2 cursor-ns-resize bg-primary/50 z-10",
-                        resizing?.frameId === frame.id || "opacity-0 group-hover:opacity-100 transition-opacity"
+                        'absolute -bottom-1 left-0 right-0 h-2 cursor-ns-resize bg-primary/50 z-10',
+                        resizing?.frameId === frame.id ||
+                          'opacity-0 group-hover:opacity-100 transition-opacity',
                       )}
                       onMouseDown={(e) => handleResizeStart(e, frame.id, 's')}
                     />
@@ -1164,8 +1224,9 @@ export function Browser({ databaseId }: BrowserProps) {
                     <div
                       data-resize-handle
                       className={cn(
-                        "absolute -left-1 top-0 bottom-0 w-2 cursor-ew-resize bg-primary/50 z-10",
-                        resizing?.frameId === frame.id || "opacity-0 group-hover:opacity-100 transition-opacity"
+                        'absolute -left-1 top-0 bottom-0 w-2 cursor-ew-resize bg-primary/50 z-10',
+                        resizing?.frameId === frame.id ||
+                          'opacity-0 group-hover:opacity-100 transition-opacity',
                       )}
                       onMouseDown={(e) => handleResizeStart(e, frame.id, 'w')}
                     />
@@ -1173,8 +1234,9 @@ export function Browser({ databaseId }: BrowserProps) {
                     <div
                       data-resize-handle
                       className={cn(
-                        "absolute -right-1 top-0 bottom-0 w-2 cursor-ew-resize bg-primary/50 z-10",
-                        resizing?.frameId === frame.id || "opacity-0 group-hover:opacity-100 transition-opacity"
+                        'absolute -right-1 top-0 bottom-0 w-2 cursor-ew-resize bg-primary/50 z-10',
+                        resizing?.frameId === frame.id ||
+                          'opacity-0 group-hover:opacity-100 transition-opacity',
                       )}
                       onMouseDown={(e) => handleResizeStart(e, frame.id, 'e')}
                     />
@@ -1187,4 +1249,3 @@ export function Browser({ databaseId }: BrowserProps) {
     </div>
   )
 }
-

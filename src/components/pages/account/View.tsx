@@ -12,18 +12,18 @@ import { cn } from '@/lib/utils'
 import { useKeyboardShortcut } from '@/hooks/use-keyboard-shortcuts'
 
 const tabs: Tab[] = [
-  { 
-    id: 'overview', 
+  {
+    id: 'overview',
     label: 'Overview',
     to: '/account',
   },
-  { 
-    id: 'sessions', 
+  {
+    id: 'sessions',
     label: 'Sessions',
     to: '/account/sessions',
   },
-  { 
-    id: 'payments', 
+  {
+    id: 'payments',
     label: 'Payments',
     to: '/account/payments',
   },
@@ -56,12 +56,12 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
   // Derive active tab from pathname if prop is not provided
   const activeTab = useMemo(() => {
     if (tabProp) return tabProp
-    
+
     // Extract tab from pathname
     // Pattern: /account or /account/:tab
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const accountIndex = pathParts.findIndex(part => part === 'account')
-    
+    const accountIndex = pathParts.findIndex((part) => part === 'account')
+
     if (accountIndex >= 0) {
       // Check if there's a tab segment after 'account'
       if (pathParts[accountIndex + 1]) {
@@ -71,7 +71,7 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
         }
       }
     }
-    
+
     // Default to overview for index route (/account or /account/)
     return 'overview'
   }, [tabProp, location.pathname])
@@ -113,94 +113,94 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
       >
         {/* Account Header with Tabs */}
         <div>
-            {/* Title Row */}
-            <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-              <h1 className="text-[20px] font-semibold text-foreground">
-                {account?.name || account?.email || 'Account'}
-              </h1>
-              <button
-                onClick={async () => {
-                  await signOut()
-                }}
-                className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </button>
-            </div>
+          {/* Title Row */}
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+            <h1 className="text-[20px] font-semibold text-foreground">
+              {account?.name || account?.email || 'Account'}
+            </h1>
+            <button
+              onClick={async () => {
+                await signOut()
+              }}
+              className="flex items-center gap-2 rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
 
-            {/* Tabs Row */}
-            <div className="border-b border-border">
-              <div
-                className="mx-auto flex w-full max-w-7xl gap-0 overflow-x-auto px-4 sm:px-6"
-                role="tablist"
-              >
-                {tabs.map((tab) => {
-                  const isActive = activeTab === tab.id
-                  return (
-                    <Link
-                      key={tab.id}
-                      to={tab.to as any}
-                      replace
-                      role="tab"
-                      aria-selected={isActive}
-                      className={cn(
-                        'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
-                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                        isActive
-                          ? 'text-foreground'
-                          : 'text-muted-foreground hover:text-foreground/80',
-                      )}
-                    >
-                      {tab.label}
-                      {tab.count !== undefined && (
-                        <span
-                          className={cn(
-                            'rounded-full px-1.5 py-0.5 text-[10px]',
-                            isActive
-                              ? 'bg-accent text-foreground'
-                              : 'bg-muted text-muted-foreground',
-                          )}
-                        >
-                          {tab.count}
-                        </span>
-                      )}
-                      {isActive && (
-                        <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-                      )}
-                    </Link>
-                  )
-                })}
-              </div>
+          {/* Tabs Row */}
+          <div className="border-b border-border">
+            <div
+              className="mx-auto flex w-full max-w-7xl gap-0 overflow-x-auto px-4 sm:px-6"
+              role="tablist"
+            >
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id
+                return (
+                  <Link
+                    key={tab.id}
+                    to={tab.to as any}
+                    replace
+                    role="tab"
+                    aria-selected={isActive}
+                    className={cn(
+                      'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
+                      'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                      isActive
+                        ? 'text-foreground'
+                        : 'text-muted-foreground hover:text-foreground/80',
+                    )}
+                  >
+                    {tab.label}
+                    {tab.count !== undefined && (
+                      <span
+                        className={cn(
+                          'rounded-full px-1.5 py-0.5 text-[10px]',
+                          isActive
+                            ? 'bg-accent text-foreground'
+                            : 'bg-muted text-muted-foreground',
+                        )}
+                      >
+                        {tab.count}
+                      </span>
+                    )}
+                    {isActive && (
+                      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
+                    )}
+                  </Link>
+                )
+              })}
             </div>
           </div>
+        </div>
 
         {/* Main Content */}
         <div className="flex-1">
-            {activeTab === 'overview' ? (
-              <AccountOverview />
-            ) : activeTab === 'sessions' ? (
-              <AccountSessions />
-            ) : activeTab === 'payments' ? (
-              <AccountPayments />
-            ) : (
-              <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
-                <div className="flex h-full min-h-[400px] items-center justify-center">
-                  <div className="text-center">
-                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                      <Icon className="h-6 w-6 text-muted-foreground" />
-                    </div>
-                    <h2 className="mb-1.5 text-[15px] font-medium text-foreground">
-                      {emptyState.title}
-                    </h2>
-                    <p className="text-[13px] text-muted-foreground">
-                      {emptyState.description}
-                    </p>
+          {activeTab === 'overview' ? (
+            <AccountOverview />
+          ) : activeTab === 'sessions' ? (
+            <AccountSessions />
+          ) : activeTab === 'payments' ? (
+            <AccountPayments />
+          ) : (
+            <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+              <div className="flex h-full min-h-[400px] items-center justify-center">
+                <div className="text-center">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted ring-1 ring-border">
+                    <Icon className="h-6 w-6 text-muted-foreground" />
                   </div>
+                  <h2 className="mb-1.5 text-[15px] font-medium text-foreground">
+                    {emptyState.title}
+                  </h2>
+                  <p className="text-[13px] text-muted-foreground">
+                    {emptyState.description}
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
       </ConsoleLayout>
 
       {/* Command Center */}
@@ -211,4 +211,3 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
     </>
   )
 }
-

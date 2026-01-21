@@ -4,7 +4,9 @@ import { fetchTeam, fetchTeamMemberships } from '@/lib/react-query/hooks/users'
 
 const MEMBERSHIPS_PER_PAGE = 25
 
-export const Route = createFileRoute('/_public/projects/$projectId/auth/teams/$teamId/members')({
+export const Route = createFileRoute(
+  '/_public/projects/$projectId/auth/teams/$teamId/members',
+)({
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -23,8 +25,24 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/teams/$t
           staleTime: 30 * 1000,
         }),
         queryClient.ensureQueryData({
-          queryKey: ['team', 'memberships', 'project', projectId, teamId, 0, MEMBERSHIPS_PER_PAGE, ''],
-          queryFn: () => fetchTeamMemberships(projectId, teamId, 0, MEMBERSHIPS_PER_PAGE, ''),
+          queryKey: [
+            'team',
+            'memberships',
+            'project',
+            projectId,
+            teamId,
+            0,
+            MEMBERSHIPS_PER_PAGE,
+            '',
+          ],
+          queryFn: () =>
+            fetchTeamMemberships(
+              projectId,
+              teamId,
+              0,
+              MEMBERSHIPS_PER_PAGE,
+              '',
+            ),
           staleTime: 30 * 1000,
         }),
       ])

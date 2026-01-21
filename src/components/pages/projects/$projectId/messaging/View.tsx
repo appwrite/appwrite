@@ -135,7 +135,11 @@ export function MessagingView() {
   // Get current data based on active tab
   const currentData = useMemo(() => {
     if (activeTab === 'messages') {
-      return { items: messages, total: messagesTotal, isLoading: messagesLoading }
+      return {
+        items: messages,
+        total: messagesTotal,
+        isLoading: messagesLoading,
+      }
     }
     if (activeTab === 'topics') {
       return { items: topics, total: topicsTotal, isLoading: topicsLoading }
@@ -213,7 +217,15 @@ export function MessagingView() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: [activeTab === 'messages' ? 'messages' : activeTab === 'topics' ? 'topics' : 'providers', 'project', projectId],
+        queryKey: [
+          activeTab === 'messages'
+            ? 'messages'
+            : activeTab === 'topics'
+              ? 'topics'
+              : 'providers',
+          'project',
+          projectId,
+        ],
       })
       toast.success(
         `Successfully deleted ${selectedItems.size} ${activeTab.slice(0, -1)}${selectedItems.size > 1 ? 's' : ''}`,
@@ -250,9 +262,7 @@ export function MessagingView() {
     if (selectedItems.size === currentData.items.length) {
       setSelectedItems(new Set())
     } else {
-      setSelectedItems(
-        new Set(currentData.items.map((item: any) => item.$id)),
-      )
+      setSelectedItems(new Set(currentData.items.map((item: any) => item.$id)))
     }
   }
 
@@ -498,7 +508,9 @@ export function MessagingView() {
                   <TableBody>
                     {activeTab === 'messages' &&
                       currentData.items.map((message: Models.Message) => {
-                        const TypeIcon = getMessageTypeIcon(message.providerType)
+                        const TypeIcon = getMessageTypeIcon(
+                          message.providerType,
+                        )
                         return (
                           <TableRow
                             key={message.$id}
@@ -789,7 +801,9 @@ export function MessagingView() {
                                 <div className="flex items-center gap-2">
                                   <MessagingProviderIcon
                                     providerName={provider.name}
-                                    providerType={provider.type as 'email' | 'sms' | 'push'}
+                                    providerType={
+                                      provider.type as 'email' | 'sms' | 'push'
+                                    }
                                     size="sm"
                                     className="h-5 w-5"
                                   />
@@ -913,7 +927,8 @@ export function MessagingView() {
               <DialogDescription className="text-[13px] mt-2">
                 Are you sure you want to delete {selectedItems.size}{' '}
                 {activeTab.slice(0, -1)}
-                {selectedItems.size > 1 ? 's' : ''}? This action cannot be undone.
+                {selectedItems.size > 1 ? 's' : ''}? This action cannot be
+                undone.
               </DialogDescription>
             </DialogHeader>
 

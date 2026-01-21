@@ -1,6 +1,6 @@
 /**
  * Background upload manager
- * 
+ *
  * Handles file uploads in the background, persisting to IndexedDB
  * and continuing even if the tab is closed (when Service Worker is available).
  */
@@ -8,7 +8,11 @@
 import { ID, AppwriteException } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import * as db from './indexeddb'
-import type { UploadItem, UploadProgress, UploadProgressCallback } from './types'
+import type {
+  UploadItem,
+  UploadProgress,
+  UploadProgressCallback,
+} from './types'
 
 class UploadManager {
   private uploads = new Map<string, AbortController>()
@@ -176,13 +180,13 @@ class UploadManager {
 
       // Perform the upload using Appwrite SDK
       const projectSdk = sdk.forProject(item.projectId)
-      
+
       // Track if upload was aborted
       let wasAborted = false
       abortController.signal.addEventListener('abort', () => {
         wasAborted = true
       })
-      
+
       // Use SDK's createFile method which handles chunking automatically
       const uploadPromise = projectSdk.storage.createFile({
         bucketId: item.bucketId,
@@ -194,12 +198,15 @@ class UploadManager {
           if (wasAborted || abortController.signal.aborted) {
             return
           }
-          
+
           // SDK provides progress with chunksUploaded and chunksTotal
-          const uploadProgress = progress.chunksTotal > 0
-            ? Math.round((progress.chunksUploaded / progress.chunksTotal) * 100)
-            : 0
-          
+          const uploadProgress =
+            progress.chunksTotal > 0
+              ? Math.round(
+                  (progress.chunksUploaded / progress.chunksTotal) * 100,
+                )
+              : 0
+
           db.updateUploadItem(item.id, { progress: uploadProgress })
           this.emitProgress({
             id: item.id,
@@ -208,7 +215,7 @@ class UploadManager {
           })
         },
       })
-      
+
       // Wait for upload, but check for abort
       await Promise.race([
         uploadPromise,
@@ -257,7 +264,7 @@ class UploadManager {
         if (shouldRetry) {
           // Retry with exponential backoff
           const delay = Math.min(1000 * Math.pow(2, retryCount), 30000) // Max 30 seconds
-          
+
           await db.updateUploadItem(item.id, {
             status: 'pending',
             retryCount: retryCount + 1,
@@ -284,11 +291,13 @@ class UploadManager {
           // Extract error message from AppwriteException or generic error
           let errorMessage = 'Upload failed'
           if (error instanceof AppwriteException) {
-            errorMessage = error.message || `Upload failed with status ${error.code || 'unknown'}`
+            errorMessage =
+              error.message ||
+              `Upload failed with status ${error.code || 'unknown'}`
           } else if (error.message) {
             errorMessage = error.message
           }
-          
+
           await db.updateUploadItem(item.id, {
             status: 'failed',
             error: errorMessage,
@@ -355,7 +364,6 @@ class UploadManager {
 
     return false
   }
-
 
   /**
    * Cancel an upload
@@ -426,7 +434,9 @@ class UploadManager {
   /**
    * Clear old completed/failed uploads
    */
-  async clearOldUploads(olderThanMs: number = 24 * 60 * 60 * 1000): Promise<void> {
+  async clearOldUploads(
+    olderThanMs: number = 24 * 60 * 60 * 1000,
+  ): Promise<void> {
     await db.clearOldUploads(olderThanMs)
   }
 }
@@ -437,7 +447,7 @@ export const uploadManager = new UploadManager()
 // Resume queue on page load
 if (typeof window !== 'undefined') {
   uploadManager.resumeQueue()
-  
+
   // Clear old uploads on load (once per day)
   const lastClear = localStorage.getItem('upload-queue-last-clear')
   const now = Date.now()
@@ -446,4 +456,3 @@ if (typeof window !== 'undefined') {
     localStorage.setItem('upload-queue-last-clear', now.toString())
   }
 }
-

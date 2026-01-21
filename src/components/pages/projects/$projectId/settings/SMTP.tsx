@@ -1,5 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useProject, useUpdateSMTP, useOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  useProject,
+  useUpdateSMTP,
+  useOrganizationPlan,
+} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -134,8 +138,9 @@ export function SMTP({ projectId }: SMTPProps) {
             Custom SMTP server
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Configure a custom SMTP server to send emails from your own domain. This allows you to
-            customize email templates and prevents emails from being labeled as spam.
+            Configure a custom SMTP server to send emails from your own domain.
+            This allows you to customize email templates and prevents emails
+            from being labeled as spam.
           </p>
         </div>
 
@@ -153,11 +158,15 @@ export function SMTP({ projectId }: SMTPProps) {
               {/* Enable/Disable Toggle */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex-1">
-                  <Label htmlFor="smtp-enabled" className="text-[13px] font-medium text-foreground">
+                  <Label
+                    htmlFor="smtp-enabled"
+                    className="text-[13px] font-medium text-foreground"
+                  >
                     Enable custom SMTP server
                   </Label>
                   <p className="text-[12px] text-muted-foreground mt-0.5">
-                    When enabled, all emails will be sent through your configured SMTP server.
+                    When enabled, all emails will be sent through your
+                    configured SMTP server.
                   </p>
                 </div>
                 <Switch
@@ -179,8 +188,12 @@ export function SMTP({ projectId }: SMTPProps) {
                       </h4>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="sender-name" className="text-[12px] font-medium">
-                            Sender name <span className="text-destructive">*</span>
+                          <Label
+                            htmlFor="sender-name"
+                            className="text-[12px] font-medium"
+                          >
+                            Sender name{' '}
+                            <span className="text-destructive">*</span>
                           </Label>
                           <Input
                             id="sender-name"
@@ -193,8 +206,12 @@ export function SMTP({ projectId }: SMTPProps) {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="sender-email" className="text-[12px] font-medium">
-                            Sender email <span className="text-destructive">*</span>
+                          <Label
+                            htmlFor="sender-email"
+                            className="text-[12px] font-medium"
+                          >
+                            Sender email{' '}
+                            <span className="text-destructive">*</span>
                           </Label>
                           <Input
                             id="sender-email"
@@ -208,7 +225,10 @@ export function SMTP({ projectId }: SMTPProps) {
                         </div>
 
                         <div className="space-y-2 sm:col-span-2">
-                          <Label htmlFor="reply-to" className="text-[12px] font-medium">
+                          <Label
+                            htmlFor="reply-to"
+                            className="text-[12px] font-medium"
+                          >
                             Reply to
                           </Label>
                           <Input
@@ -236,8 +256,12 @@ export function SMTP({ projectId }: SMTPProps) {
                       </h4>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2 sm:col-span-2">
-                          <Label htmlFor="host" className="text-[12px] font-medium">
-                            Server host <span className="text-destructive">*</span>
+                          <Label
+                            htmlFor="host"
+                            className="text-[12px] font-medium"
+                          >
+                            Server host{' '}
+                            <span className="text-destructive">*</span>
                           </Label>
                           <Input
                             id="host"
@@ -250,30 +274,44 @@ export function SMTP({ projectId }: SMTPProps) {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="port" className="text-[12px] font-medium">
-                            Server port <span className="text-destructive">*</span>
+                          <Label
+                            htmlFor="port"
+                            className="text-[12px] font-medium"
+                          >
+                            Server port{' '}
+                            <span className="text-destructive">*</span>
                           </Label>
                           <Input
                             id="port"
                             type="number"
                             placeholder="587"
                             value={port || ''}
-                            onChange={(e) => setPort(parseInt(e.target.value) || 587)}
+                            onChange={(e) =>
+                              setPort(parseInt(e.target.value) || 587)
+                            }
                             disabled={updateSMTPMutation.isPending}
                             className="h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                           />
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="secure" className="text-[12px] font-medium">
+                          <Label
+                            htmlFor="secure"
+                            className="text-[12px] font-medium"
+                          >
                             Secure protocol
                           </Label>
                           <Select
                             value={secure}
-                            onValueChange={(value) => setSecure(value as 'tls' | 'ssl' | 'none')}
+                            onValueChange={(value) =>
+                              setSecure(value as 'tls' | 'ssl' | 'none')
+                            }
                             disabled={updateSMTPMutation.isPending}
                           >
-                            <SelectTrigger id="secure" className="h-9 text-[13px]">
+                            <SelectTrigger
+                              id="secure"
+                              className="h-9 text-[13px]"
+                            >
                               <SelectValue placeholder="Select protocol" />
                             </SelectTrigger>
                             <SelectContent>
@@ -295,7 +333,10 @@ export function SMTP({ projectId }: SMTPProps) {
                       </h4>
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="username" className="text-[12px] font-medium">
+                          <Label
+                            htmlFor="username"
+                            className="text-[12px] font-medium"
+                          >
                             Username
                           </Label>
                           <Input
@@ -309,7 +350,10 @@ export function SMTP({ projectId }: SMTPProps) {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="password" className="text-[12px] font-medium">
+                          <Label
+                            htmlFor="password"
+                            className="text-[12px] font-medium"
+                          >
                             Password
                           </Label>
                           <Input
@@ -338,7 +382,11 @@ export function SMTP({ projectId }: SMTPProps) {
                 size="sm"
                 className="h-9 text-[13px]"
                 onClick={handleUpdate}
-                disabled={!hasChanges || !supportsCustomSmtp || updateSMTPMutation.isPending}
+                disabled={
+                  !hasChanges ||
+                  !supportsCustomSmtp ||
+                  updateSMTPMutation.isPending
+                }
               >
                 Update
               </Button>
@@ -349,4 +397,3 @@ export function SMTP({ projectId }: SMTPProps) {
     </div>
   )
 }
-

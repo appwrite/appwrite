@@ -1,6 +1,6 @@
 /**
  * Dependencies for query invalidation
- * 
+ *
  * Centralized query key prefixes for consistent cache invalidation across the app.
  */
 export const Dependencies = {
@@ -25,5 +25,3 @@ export const Dependencies = {
   FUNCTION_DOMAINS: ['proxy-rules', 'domains', 'function'],
   SITES_DOMAINS: ['proxy-rules', 'domains', 'site'],
 } as const
-
-

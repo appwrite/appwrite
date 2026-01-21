@@ -34,7 +34,7 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth')({
 function AuthPage() {
   const { projectId } = Route.useParams()
   const matches = useMatches()
-  
+
   // Check if we're on a child route (user detail, team detail, etc.)
   const isChildRoute = matches.some(
     (match) =>
@@ -42,8 +42,12 @@ function AuthPage() {
       match.routeId.includes('/auth/teams/') ||
       match.routeId === '/_public/projects/$projectId/auth/users/$userId' ||
       match.routeId === '/_public/projects/$projectId/auth/teams/$teamId' ||
-      match.routeId.startsWith('/_public/projects/$projectId/auth/users/$userId') ||
-      match.routeId.startsWith('/_public/projects/$projectId/auth/teams/$teamId')
+      match.routeId.startsWith(
+        '/_public/projects/$projectId/auth/users/$userId',
+      ) ||
+      match.routeId.startsWith(
+        '/_public/projects/$projectId/auth/teams/$teamId',
+      ),
   )
 
   // If we're on a child route, render the outlet (child route component)
@@ -54,4 +58,3 @@ function AuthPage() {
   // Otherwise, show the main auth view
   return <AuthView key={`auth-${projectId}-users`} />
 }
-

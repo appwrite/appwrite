@@ -1,6 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { DatabaseOverview } from '@/components/pages/projects/$projectId/databases/View'
-import { fetchProjectDatabase, fetchBackupPolicies, fetchBackupArchives, fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  fetchProjectDatabase,
+  fetchBackupPolicies,
+  fetchBackupArchives,
+  fetchProject,
+  fetchOrganizationPlan,
+} from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/backups',
@@ -48,12 +54,26 @@ export const Route = createFileRoute(
             staleTime: 30 * 1000,
           }),
           queryClient.ensureQueryData({
-            queryKey: ['backup-policies', 'project', projectId, 'database', databaseId],
+            queryKey: [
+              'backup-policies',
+              'project',
+              projectId,
+              'database',
+              databaseId,
+            ],
             queryFn: () => fetchBackupPolicies(projectId, databaseId),
             staleTime: 30 * 1000,
           }),
           queryClient.ensureQueryData({
-            queryKey: ['backup-archives', 'project', projectId, 'database', databaseId, 0, 10],
+            queryKey: [
+              'backup-archives',
+              'project',
+              projectId,
+              'database',
+              databaseId,
+              0,
+              10,
+            ],
             queryFn: () => fetchBackupArchives(projectId, databaseId, 0, 10),
             staleTime: 30 * 1000,
           }),
@@ -78,5 +98,3 @@ function DatabaseOverviewBackups() {
   const { databaseId } = Route.useParams()
   return <DatabaseOverview databaseId={databaseId} activeTab="backups" />
 }
-
-

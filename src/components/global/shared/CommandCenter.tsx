@@ -103,7 +103,13 @@ export function CommandCenter({
   const [search, setSearch] = useState('')
   const [pages, setPages] = useState<string[]>([])
   const [searchScope, setSearchScope] = useState<
-    'databases' | 'users' | 'teams' | 'buckets' | 'functions' | 'projects' | null
+    | 'databases'
+    | 'users'
+    | 'teams'
+    | 'buckets'
+    | 'functions'
+    | 'projects'
+    | null
   >(null)
   const currentPage = pages[pages.length - 1]
   const isMobile = useIsMobile()
@@ -116,66 +122,70 @@ export function CommandCenter({
   const isProjectContext = context === 'project'
 
   // Org context: fetch projects (only if searching for projects)
-  const {
-    projects: orgProjects,
-    isLoading: orgProjectsLoading,
-  } = useProjectsForTeam(
-    isOrgContext && orgId && (shouldFetch && searchScope === 'projects') ? orgId : null,
-    0,
-    100,
-    shouldFetch && searchScope === 'projects' ? search : undefined,
-  )
+  const { projects: orgProjects, isLoading: orgProjectsLoading } =
+    useProjectsForTeam(
+      isOrgContext && orgId && shouldFetch && searchScope === 'projects'
+        ? orgId
+        : null,
+      0,
+      100,
+      shouldFetch && searchScope === 'projects' ? search : undefined,
+    )
 
   // Project context: fetch databases, users, teams, buckets, functions (only if searching for that type)
-  const {
-    databases: projectDatabases,
-    isLoading: databasesLoading,
-  } = useProjectDatabases(
-    isProjectContext && projectId && (shouldFetch && searchScope === 'databases') ? projectId : null,
-    0,
-    100,
-    shouldFetch && searchScope === 'databases' ? search : undefined,
-  )
+  const { databases: projectDatabases, isLoading: databasesLoading } =
+    useProjectDatabases(
+      isProjectContext &&
+        projectId &&
+        shouldFetch &&
+        searchScope === 'databases'
+        ? projectId
+        : null,
+      0,
+      100,
+      shouldFetch && searchScope === 'databases' ? search : undefined,
+    )
 
-  const {
-    users: projectUsers,
-    isLoading: usersLoading,
-  } = useProjectUsers(
-    isProjectContext && projectId && (shouldFetch && searchScope === 'users') ? projectId : null,
+  const { users: projectUsers, isLoading: usersLoading } = useProjectUsers(
+    isProjectContext && projectId && shouldFetch && searchScope === 'users'
+      ? projectId
+      : null,
     0,
     100,
     shouldFetch && searchScope === 'users' ? search : undefined,
   )
 
-  const {
-    teams: projectTeams,
-    isLoading: teamsLoading,
-  } = useProjectTeams(
-    isProjectContext && projectId && (shouldFetch && searchScope === 'teams') ? projectId : null,
+  const { teams: projectTeams, isLoading: teamsLoading } = useProjectTeams(
+    isProjectContext && projectId && shouldFetch && searchScope === 'teams'
+      ? projectId
+      : null,
     0,
     100,
     shouldFetch && searchScope === 'teams' ? search : undefined,
   )
 
-  const {
-    buckets: projectBuckets,
-    isLoading: bucketsLoading,
-  } = useProjectBuckets(
-    isProjectContext && projectId && (shouldFetch && searchScope === 'buckets') ? projectId : null,
-    0,
-    100,
-    shouldFetch && searchScope === 'buckets' ? search : undefined,
-  )
+  const { buckets: projectBuckets, isLoading: bucketsLoading } =
+    useProjectBuckets(
+      isProjectContext && projectId && shouldFetch && searchScope === 'buckets'
+        ? projectId
+        : null,
+      0,
+      100,
+      shouldFetch && searchScope === 'buckets' ? search : undefined,
+    )
 
-  const {
-    functions: projectFunctions,
-    isLoading: functionsLoading,
-  } = useProjectFunctions(
-    isProjectContext && projectId && (shouldFetch && searchScope === 'functions') ? projectId : null,
-    0,
-    100,
-    shouldFetch && searchScope === 'functions' ? search : undefined,
-  )
+  const { functions: projectFunctions, isLoading: functionsLoading } =
+    useProjectFunctions(
+      isProjectContext &&
+        projectId &&
+        shouldFetch &&
+        searchScope === 'functions'
+        ? projectId
+        : null,
+      0,
+      100,
+      shouldFetch && searchScope === 'functions' ? search : undefined,
+    )
 
   // Reset state when dialog closes
   useEffect(() => {
@@ -921,45 +931,42 @@ export function CommandCenter({
   )
 
   // Org recent items
-  const orgRecentCommands: CommandItemType[] = useMemo(
-    () => {
-      const items: CommandItemType[] = []
-      
-      // Show up to 2 recent projects if available
-      if (orgProjects && orgProjects.length > 0) {
-        orgProjects.slice(0, 2).forEach((project, index) => {
-          items.push({
-            id: `recent-project-${index + 1}`,
-            label: project.name,
-            description: index === 0 ? 'Opened 1 hour ago' : 'Opened 3 hours ago',
-            icon: Clock,
-            type: 'recent',
-            action: () => {
-              window.location.href = `/projects/${project.$id}`
-            },
-          })
-        })
-      }
-      
-      // If no projects, show placeholder
-      if (items.length === 0) {
+  const orgRecentCommands: CommandItemType[] = useMemo(() => {
+    const items: CommandItemType[] = []
+
+    // Show up to 2 recent projects if available
+    if (orgProjects && orgProjects.length > 0) {
+      orgProjects.slice(0, 2).forEach((project, index) => {
         items.push({
-          id: 'recent-project-placeholder',
-          label: 'No recent projects',
-          description: 'Projects you visit will appear here',
+          id: `recent-project-${index + 1}`,
+          label: project.name,
+          description: index === 0 ? 'Opened 1 hour ago' : 'Opened 3 hours ago',
           icon: Clock,
           type: 'recent',
           action: () => {
-            onOrgNavigate?.('projects')
-            onOpenChange(false)
+            window.location.href = `/projects/${project.$id}`
           },
         })
-      }
-      
-      return items
-    },
-    [orgProjects, onOrgNavigate, onOpenChange],
-  )
+      })
+    }
+
+    // If no projects, show placeholder
+    if (items.length === 0) {
+      items.push({
+        id: 'recent-project-placeholder',
+        label: 'No recent projects',
+        description: 'Projects you visit will appear here',
+        icon: Clock,
+        type: 'recent',
+        action: () => {
+          onOrgNavigate?.('projects')
+          onOpenChange(false)
+        },
+      })
+    }
+
+    return items
+  }, [orgProjects, onOrgNavigate, onOpenChange])
 
   // Keyboard shortcuts reference
   const shortcutGroups =
@@ -1158,7 +1165,7 @@ export function CommandCenter({
         setSearchScope(null)
         return
       }
-      
+
       // Remove scope with Escape
       if (e.key === 'Escape' && searchScope) {
         e.preventDefault()
@@ -1166,9 +1173,14 @@ export function CommandCenter({
         setSearch('')
         return
       }
-      
+
       // Navigate back in pages
-      if (e.key === 'Backspace' && !search && !searchScope && pages.length > 0) {
+      if (
+        e.key === 'Backspace' &&
+        !search &&
+        !searchScope &&
+        pages.length > 0
+      ) {
         e.preventDefault()
         setPages(pages.slice(0, -1))
       }

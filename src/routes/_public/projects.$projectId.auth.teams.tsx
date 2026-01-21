@@ -4,37 +4,41 @@ import { fetchProjectTeams } from '@/lib/react-query/hooks'
 
 const TEAMS_PER_PAGE = 25
 
-export const Route = createFileRoute('/_public/projects/$projectId/auth/teams')({
-  loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
-    }
+export const Route = createFileRoute('/_public/projects/$projectId/auth/teams')(
+  {
+    loader: async ({ params, context }) => {
+      // Only run on client side (SDK requires browser environment)
+      if (typeof window === 'undefined') {
+        return
+      }
 
-    const { projectId } = params
-    const { queryClient } = context
+      const { projectId } = params
+      const { queryClient } = context
 
-    // Prefetch teams for the project (initial page, no search)
-    if (projectId) {
-      await queryClient.ensureQueryData({
-        queryKey: ['teams', 'project', projectId, 0, TEAMS_PER_PAGE, ''],
-        queryFn: () => fetchProjectTeams(projectId, 0, TEAMS_PER_PAGE, ''),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-    }
+      // Prefetch teams for the project (initial page, no search)
+      if (projectId) {
+        await queryClient.ensureQueryData({
+          queryKey: ['teams', 'project', projectId, 0, TEAMS_PER_PAGE, ''],
+          queryFn: () => fetchProjectTeams(projectId, 0, TEAMS_PER_PAGE, ''),
+          staleTime: 30 * 1000, // 30 seconds
+        })
+      }
+    },
+    component: AuthTeamsPage,
   },
-  component: AuthTeamsPage,
-})
+)
 
 function AuthTeamsPage() {
   const { projectId } = Route.useParams()
   const matches = useMatches()
-  
+
   // Check if we're on a child route (team detail, etc.)
   const isChildRoute = matches.some(
     (match) =>
       match.routeId.includes('/auth/teams/$teamId') ||
-      match.routeId.startsWith('/_public/projects/$projectId/auth/teams/$teamId')
+      match.routeId.startsWith(
+        '/_public/projects/$projectId/auth/teams/$teamId',
+      ),
   )
 
   // If we're on a child route, render the outlet (child route component)

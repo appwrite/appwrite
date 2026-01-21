@@ -1,14 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import {
-  ArrowLeft,
-  Mail,
-  Phone,
-  Bell,
-  Trash2,
-  Settings,
-} from 'lucide-react'
+import { ArrowLeft, Mail, Phone, Bell, Trash2, Settings } from 'lucide-react'
 import { useProvider, useProject } from '@/lib/react-query/hooks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader } from '../../../shared/ServiceHeader'
@@ -50,10 +43,10 @@ export function ProviderDetailView() {
   const queryClient = useQueryClient()
 
   // Fetch provider
-  const {
-    data: provider,
-    isLoading: providerLoading,
-  } = useProvider(projectId, providerId)
+  const { data: provider, isLoading: providerLoading } = useProvider(
+    projectId,
+    providerId,
+  )
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [name, setName] = useState('')
@@ -121,10 +114,10 @@ export function ProviderDetailView() {
         throw new Error('Project ID and Provider ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
-      
+
       // Map provider-specific parameters based on provider type
       const params: any = { providerId }
-      
+
       if (provider?.type === 'sms') {
         // SMS Providers (Twilio, Msg91, Telesign, Textmagic, Vonage)
         params.credentials = settings.credentials || {}
@@ -169,7 +162,9 @@ export function ProviderDetailView() {
       toast.success('Provider settings updated successfully')
     },
     onError: (error: Error) => {
-      toast.error(getErrorMessage(error) || 'Failed to update provider settings')
+      toast.error(
+        getErrorMessage(error) || 'Failed to update provider settings',
+      )
     },
   })
 
@@ -215,7 +210,9 @@ export function ProviderDetailView() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading provider...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading provider...
+          </p>
         </div>
       </div>
     )
@@ -225,7 +222,9 @@ export function ProviderDetailView() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">Provider not found</p>
+          <p className="text-[13px] text-muted-foreground">
+            Provider not found
+          </p>
         </div>
       </div>
     )
@@ -236,7 +235,7 @@ export function ProviderDetailView() {
   // Extract provider settings from credentials and options
   const getProviderSettings = () => {
     const settings: any = {}
-    
+
     if (provider.type === 'sms') {
       // SMS providers
       settings.credentials = provider.credentials || {}
@@ -263,7 +262,7 @@ export function ProviderDetailView() {
         settings.bundleId = provider.credentials?.bundleId || ''
       }
     }
-    
+
     return settings
   }
 
@@ -290,292 +289,346 @@ export function ProviderDetailView() {
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
         <div className="space-y-6">
-        {/* Update Name Section - First Card */}
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4">
-            <p className="text-[13px] text-muted-foreground">
-              Update your provider's display name. This will be visible to all team members.
-            </p>
-            <Input
-              id="provider-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Provider name"
-              className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-            />
-          </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30">
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              disabled={
-                name.trim() === provider.name ||
-                !name.trim() ||
-                updateNameMutation.isPending
-              }
-              onClick={() => updateNameMutation.mutate(name)}
-            >
-              Update
-            </Button>
-          </div>
-        </div>
-
-        {/* Update Status Section */}
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              {provider.name}
-            </h3>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Switch
-                  id="toggle"
-                  checked={enabled ?? false}
-                  onCheckedChange={setEnabled}
-                  disabled={updateStatusMutation.isPending}
-                />
-                <Label htmlFor="toggle" className="text-[13px] text-foreground">
-                  {enabled ? 'Enabled' : 'Disabled'}
-                </Label>
-              </div>
+          {/* Update Name Section - First Card */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Name
+              </h3>
             </div>
-            <div className="mt-4 space-y-1">
+            <div className="border-t border-border" />
+            <div className="px-6 py-4">
               <p className="text-[13px] text-muted-foreground">
-                Provider ID: <span className="ml-1.5"><CopyableId id={provider.$id} size="sm" /></span>
+                Update your provider's display name. This will be visible to all
+                team members.
               </p>
-              <p className="text-[13px] text-muted-foreground">
-                Type: <span className="text-foreground capitalize">{provider.type}</span>
-              </p>
-              {provider.$createdAt && (
-                <p className="text-[13px] text-muted-foreground">
-                  Created: <DateTooltip date={provider.$createdAt} showFormattedDate className="text-foreground" />
-                </p>
-              )}
-              <p className="text-[13px] text-muted-foreground">
-                Last updated: <DateTooltip date={provider.$updatedAt || provider.$createdAt} showFormattedDate className="text-foreground" />
-              </p>
+              <Input
+                id="provider-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Provider name"
+                className="mt-3 h-9 max-w-sm border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+              />
             </div>
-          </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30">
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              disabled={enabled === provider.enabled || updateStatusMutation.isPending}
-              onClick={() => {
-                if (enabled !== provider.enabled) {
-                  updateStatusMutation.mutate(enabled)
+            <div className="px-6 py-4 border-t border-border bg-muted/30">
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={
+                  name.trim() === provider.name ||
+                  !name.trim() ||
+                  updateNameMutation.isPending
                 }
-              }}
-            >
-              Update
-            </Button>
-          </div>
-        </div>
-
-        {/* Update Settings Section */}
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">Settings</h3>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4">
-            <div className="space-y-4">
-              {provider.type === 'email' && (
-                <>
-                  <div>
-                    <Label htmlFor="from-email" className="text-[13px] font-medium text-foreground">
-                      From Email
-                    </Label>
-                    <Input
-                      id="from-email"
-                      defaultValue={providerSettings.fromEmail}
-                      className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      placeholder="sender@example.com"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="from-name" className="text-[13px] font-medium text-foreground">
-                      From Name
-                    </Label>
-                    <Input
-                      id="from-name"
-                      defaultValue={providerSettings.fromName}
-                      className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      placeholder="Sender Name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="reply-to-email" className="text-[13px] font-medium text-foreground">
-                      Reply To Email
-                    </Label>
-                    <Input
-                      id="reply-to-email"
-                      defaultValue={providerSettings.replyToEmail}
-                      className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      placeholder="reply@example.com"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="reply-to-name" className="text-[13px] font-medium text-foreground">
-                      Reply To Name
-                    </Label>
-                    <Input
-                      id="reply-to-name"
-                      defaultValue={providerSettings.replyToName}
-                      className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      placeholder="Reply Name"
-                    />
-                  </div>
-                </>
-              )}
-              {provider.type === 'push' && provider.name === 'fcm' && (
-                <div>
-                  <Label htmlFor="service-account-json" className="text-[13px] font-medium text-foreground">
-                    Service Account JSON
-                  </Label>
-                  <Textarea
-                    id="service-account-json"
-                    defaultValue={providerSettings.serviceAccountJSON}
-                    className="mt-1.5 font-mono text-xs border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                    rows={10}
-                    placeholder='{"type": "service_account", ...}'
-                  />
-                </div>
-              )}
-              {provider.type === 'push' && provider.name === 'apns' && (
-                <>
-                  <div>
-                    <Label htmlFor="auth-key" className="text-[13px] font-medium text-foreground">
-                      Auth Key
-                    </Label>
-                    <Input
-                      id="auth-key"
-                      defaultValue={providerSettings.authKey}
-                      className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      placeholder="Auth key"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="auth-key-id" className="text-[13px] font-medium text-foreground">
-                      Auth Key ID
-                    </Label>
-                    <Input
-                      id="auth-key-id"
-                      defaultValue={providerSettings.authKeyId}
-                      className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      placeholder="Auth key ID"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="team-id" className="text-[13px] font-medium text-foreground">
-                      Team ID
-                    </Label>
-                    <Input
-                      id="team-id"
-                      defaultValue={providerSettings.teamId}
-                      className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      placeholder="Team ID"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="bundle-id" className="text-[13px] font-medium text-foreground">
-                      Bundle ID
-                    </Label>
-                    <Input
-                      id="bundle-id"
-                      defaultValue={providerSettings.bundleId}
-                      className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                      placeholder="Bundle ID"
-                    />
-                  </div>
-                </>
-              )}
+                onClick={() => updateNameMutation.mutate(name)}
+              >
+                Update
+              </Button>
             </div>
           </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30">
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => {
-                // TODO: Collect form values and call updateSettingsMutation
-                toast.info('Settings update functionality coming soon')
-              }}
-              disabled={updateSettingsMutation.isPending}
-            >
-              Update
-            </Button>
-          </div>
-        </div>
 
-        {/* Overview Section */}
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              Overview
-            </h3>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4">
-            <div className="space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                    Provider ID
-                  </p>
-                  <CopyableId id={provider.$id} size="sm" />
+          {/* Update Status Section */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                {provider.name}
+              </h3>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Switch
+                    id="toggle"
+                    checked={enabled ?? false}
+                    onCheckedChange={setEnabled}
+                    disabled={updateStatusMutation.isPending}
+                  />
+                  <Label
+                    htmlFor="toggle"
+                    className="text-[13px] text-foreground"
+                  >
+                    {enabled ? 'Enabled' : 'Disabled'}
+                  </Label>
                 </div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                    Created
+              <div className="mt-4 space-y-1">
+                <p className="text-[13px] text-muted-foreground">
+                  Provider ID:{' '}
+                  <span className="ml-1.5">
+                    <CopyableId id={provider.$id} size="sm" />
+                  </span>
+                </p>
+                <p className="text-[13px] text-muted-foreground">
+                  Type:{' '}
+                  <span className="text-foreground capitalize">
+                    {provider.type}
+                  </span>
+                </p>
+                {provider.$createdAt && (
+                  <p className="text-[13px] text-muted-foreground">
+                    Created:{' '}
+                    <DateTooltip
+                      date={provider.$createdAt}
+                      showFormattedDate
+                      className="text-foreground"
+                    />
                   </p>
-                  {provider.$createdAt ? (
-                    <DateTooltip 
-                      date={provider.$createdAt} 
+                )}
+                <p className="text-[13px] text-muted-foreground">
+                  Last updated:{' '}
+                  <DateTooltip
+                    date={provider.$updatedAt || provider.$createdAt}
+                    showFormattedDate
+                    className="text-foreground"
+                  />
+                </p>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30">
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                disabled={
+                  enabled === provider.enabled || updateStatusMutation.isPending
+                }
+                onClick={() => {
+                  if (enabled !== provider.enabled) {
+                    updateStatusMutation.mutate(enabled)
+                  }
+                }}
+              >
+                Update
+              </Button>
+            </div>
+          </div>
+
+          {/* Update Settings Section */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Settings
+              </h3>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4">
+              <div className="space-y-4">
+                {provider.type === 'email' && (
+                  <>
+                    <div>
+                      <Label
+                        htmlFor="from-email"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        From Email
+                      </Label>
+                      <Input
+                        id="from-email"
+                        defaultValue={providerSettings.fromEmail}
+                        className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        placeholder="sender@example.com"
+                      />
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="from-name"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        From Name
+                      </Label>
+                      <Input
+                        id="from-name"
+                        defaultValue={providerSettings.fromName}
+                        className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        placeholder="Sender Name"
+                      />
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="reply-to-email"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Reply To Email
+                      </Label>
+                      <Input
+                        id="reply-to-email"
+                        defaultValue={providerSettings.replyToEmail}
+                        className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        placeholder="reply@example.com"
+                      />
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="reply-to-name"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Reply To Name
+                      </Label>
+                      <Input
+                        id="reply-to-name"
+                        defaultValue={providerSettings.replyToName}
+                        className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        placeholder="Reply Name"
+                      />
+                    </div>
+                  </>
+                )}
+                {provider.type === 'push' && provider.name === 'fcm' && (
+                  <div>
+                    <Label
+                      htmlFor="service-account-json"
+                      className="text-[13px] font-medium text-foreground"
+                    >
+                      Service Account JSON
+                    </Label>
+                    <Textarea
+                      id="service-account-json"
+                      defaultValue={providerSettings.serviceAccountJSON}
+                      className="mt-1.5 font-mono text-xs border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                      rows={10}
+                      placeholder='{"type": "service_account", ...}'
+                    />
+                  </div>
+                )}
+                {provider.type === 'push' && provider.name === 'apns' && (
+                  <>
+                    <div>
+                      <Label
+                        htmlFor="auth-key"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Auth Key
+                      </Label>
+                      <Input
+                        id="auth-key"
+                        defaultValue={providerSettings.authKey}
+                        className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        placeholder="Auth key"
+                      />
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="auth-key-id"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Auth Key ID
+                      </Label>
+                      <Input
+                        id="auth-key-id"
+                        defaultValue={providerSettings.authKeyId}
+                        className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        placeholder="Auth key ID"
+                      />
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="team-id"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Team ID
+                      </Label>
+                      <Input
+                        id="team-id"
+                        defaultValue={providerSettings.teamId}
+                        className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        placeholder="Team ID"
+                      />
+                    </div>
+                    <div>
+                      <Label
+                        htmlFor="bundle-id"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Bundle ID
+                      </Label>
+                      <Input
+                        id="bundle-id"
+                        defaultValue={providerSettings.bundleId}
+                        className="mt-1.5 h-9 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
+                        placeholder="Bundle ID"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30">
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={() => {
+                  // TODO: Collect form values and call updateSettingsMutation
+                  toast.info('Settings update functionality coming soon')
+                }}
+                disabled={updateSettingsMutation.isPending}
+              >
+                Update
+              </Button>
+            </div>
+          </div>
+
+          {/* Overview Section */}
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Overview
+              </h3>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4">
+              <div className="space-y-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
+                      Provider ID
+                    </p>
+                    <CopyableId id={provider.$id} size="sm" />
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
+                      Created
+                    </p>
+                    {provider.$createdAt ? (
+                      <DateTooltip
+                        date={provider.$createdAt}
+                        className="text-[13px] text-foreground"
+                        showFormattedDate
+                      />
+                    ) : (
+                      <span className="text-[13px] text-muted-foreground/50 italic">
+                        N/A
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
+                      Updated
+                    </p>
+                    <DateTooltip
+                      date={provider.$updatedAt || provider.$createdAt}
                       className="text-[13px] text-foreground"
                       showFormattedDate
                     />
-                  ) : (
-                    <span className="text-[13px] text-muted-foreground/50 italic">
-                      N/A
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
-                    Updated
-                  </p>
-                  <DateTooltip 
-                    date={provider.$updatedAt || provider.$createdAt} 
-                    className="text-[13px] text-foreground"
-                    showFormattedDate
-                  />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Delete Provider Card */}
-        <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              Delete provider
-            </h3>
-            <p className="text-[13px] text-muted-foreground mt-2">
-              The provider's instance will be permanently deleted. This action is irreversible.
-            </p>
-          </div>
-          <div className="border-t border-red-500/20" />
-          <div className="px-6 py-4">
+          {/* Delete Provider Card */}
+          <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Delete provider
+              </h3>
+              <p className="text-[13px] text-muted-foreground mt-2">
+                The provider's instance will be permanently deleted. This action
+                is irreversible.
+              </p>
+            </div>
+            <div className="border-t border-red-500/20" />
+            <div className="px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
                   <MessagingProviderIcon
@@ -596,20 +649,20 @@ export function ProviderDetailView() {
                   )}
                 </div>
               </div>
+            </div>
+            <div className="px-6 py-4 border-t border-red-500/20 bg-destructive/5">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={deleteProviderMutation.isPending}
+              >
+                <Trash2 className="mr-1.5 h-4 w-4" />
+                Delete
+              </Button>
+            </div>
           </div>
-          <div className="px-6 py-4 border-t border-red-500/20 bg-destructive/5">
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setDeleteDialogOpen(true)}
-              disabled={deleteProviderMutation.isPending}
-            >
-              <Trash2 className="mr-1.5 h-4 w-4" />
-              Delete
-            </Button>
-          </div>
-        </div>
         </div>
 
         {/* Delete Confirmation Dialog */}
@@ -618,7 +671,8 @@ export function ProviderDetailView() {
             <DialogHeader className="px-6 pt-6 text-left">
               <DialogTitle>Delete Provider</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete {provider.name} from '{project?.name || projectId}'?
+                Are you sure you want to delete {provider.name} from '
+                {project?.name || projectId}'?
               </DialogDescription>
             </DialogHeader>
 

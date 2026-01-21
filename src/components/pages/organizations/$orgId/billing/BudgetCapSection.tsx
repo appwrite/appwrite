@@ -5,7 +5,11 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { formatCurrency } from './utils'
-import { useOrganizationById, useOrganizationPlan, useUpdateOrganizationBudget } from '@/lib/react-query/hooks'
+import {
+  useOrganizationById,
+  useOrganizationPlan,
+  useUpdateOrganizationBudget,
+} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 
 /**
@@ -32,14 +36,18 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
   const updateBudgetMutation = useUpdateOrganizationBudget()
-  
+
   const [budget, setBudget] = useState<string>('')
   const [hasChanges, setHasChanges] = useState(false)
 
   // Initialize from organization
   useEffect(() => {
     if (organization?.billingBudget !== undefined) {
-      setBudget(organization.billingBudget > 0 ? organization.billingBudget.toString() : '')
+      setBudget(
+        organization.billingBudget > 0
+          ? organization.billingBudget.toString()
+          : '',
+      )
       setHasChanges(false)
     }
   }, [organization?.billingBudget])
@@ -54,7 +62,7 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
     if (!orgId) return
 
     const newBudget = checked ? (budget ? parseFloat(budget) : 100) : 0
-    
+
     try {
       await updateBudgetMutation.mutateAsync({
         organizationId: orgId,
@@ -65,7 +73,9 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
       setHasChanges(false)
       toast.success(checked ? 'Budget cap enabled' : 'Budget cap disabled')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update budget cap')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update budget cap',
+      )
     }
   }
 
@@ -83,7 +93,7 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
     if (!orgId) return
 
     const budgetValue = budget ? parseFloat(budget) : 0
-    
+
     if (budgetValue <= 0) {
       toast.error('Budget cap must be greater than 0')
       return
@@ -98,7 +108,9 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
       toast.success('Budget cap updated')
       setHasChanges(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update budget cap')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update budget cap',
+      )
     }
   }
 
@@ -158,7 +170,8 @@ export function BudgetCapSection({ orgId }: BudgetCapSectionProps) {
                 Enable budget cap
               </p>
               <p className="text-[12px] text-muted-foreground mt-0.5">
-                Budget cap applies only to additional usage beyond your plan limits
+                Budget cap applies only to additional usage beyond your plan
+                limits
               </p>
             </div>
           </div>

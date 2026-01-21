@@ -13,7 +13,10 @@ export function FunctionSecurity() {
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
 
-  const { data: func, isLoading: funcLoading } = useProjectFunction(projectId, functionId)
+  const { data: func, isLoading: funcLoading } = useProjectFunction(
+    projectId,
+    functionId,
+  )
 
   const [execute, setExecute] = useState<string[]>([])
   const [scopes, setScopes] = useState<string[] | null>(null)
@@ -29,7 +32,8 @@ export function FunctionSecurity() {
   // Update function mutation
   const updateFunctionMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Function>) => {
-      if (!projectId || !functionId || !func) throw new Error('Project ID, Function ID, and Function are required')
+      if (!projectId || !functionId || !func)
+        throw new Error('Project ID, Function ID, and Function are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.update({
         functionId,
@@ -77,10 +81,10 @@ export function FunctionSecurity() {
     if (scopes === null || !func?.scopes) return false
     const original = new Set(func.scopes || [])
     const current = new Set(scopes)
-    
+
     // Check if sets are different
     if (original.size !== current.size) return true
-    
+
     // Check if any element is different
     for (const scope of original) {
       if (!current.has(scope)) return true
@@ -88,14 +92,16 @@ export function FunctionSecurity() {
     for (const scope of current) {
       if (!original.has(scope)) return true
     }
-    
+
     return false
   }, [scopes, func?.scopes])
 
   if (funcLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading security settings...</p>
+        <p className="text-[13px] text-muted-foreground">
+          Loading security settings...
+        </p>
       </div>
     )
   }
@@ -107,7 +113,9 @@ export function FunctionSecurity() {
           {/* Permissions Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">Permissions</h3>
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Permissions
+              </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
                 Choose who can execute this function
               </p>
@@ -124,7 +132,10 @@ export function FunctionSecurity() {
               <Button
                 size="sm"
                 className="h-9 text-[13px]"
-                disabled={arraysEqual(execute, func?.execute || []) || updateFunctionMutation.isPending}
+                disabled={
+                  arraysEqual(execute, func?.execute || []) ||
+                  updateFunctionMutation.isPending
+                }
                 onClick={handleSaveExecute}
               >
                 Update
@@ -135,9 +146,13 @@ export function FunctionSecurity() {
           {/* Scopes Card */}
           <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
             <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">Scopes</h3>
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Scopes
+              </h3>
               <p className="text-[13px] text-muted-foreground mt-2">
-                Select scopes to grant the dynamic key generated temporarily for your function. It is best practice to allow only necessary permissions.{' '}
+                Select scopes to grant the dynamic key generated temporarily for
+                your function. It is best practice to allow only necessary
+                permissions.{' '}
                 <a
                   href="https://appwrite.io/docs/advanced/platform/api-keys#scopes"
                   target="_blank"
@@ -157,14 +172,20 @@ export function FunctionSecurity() {
                   disabled={updateFunctionMutation.isPending}
                 />
               ) : (
-                <p className="text-[13px] text-muted-foreground">Loading scopes...</p>
+                <p className="text-[13px] text-muted-foreground">
+                  Loading scopes...
+                </p>
               )}
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30">
               <Button
                 size="sm"
                 className="h-9 text-[13px]"
-                disabled={!scopesChanged || scopes === null || updateFunctionMutation.isPending}
+                disabled={
+                  !scopesChanged ||
+                  scopes === null ||
+                  updateFunctionMutation.isPending
+                }
                 onClick={handleSaveScopes}
               >
                 Update
@@ -176,4 +197,3 @@ export function FunctionSecurity() {
     </div>
   )
 }
-

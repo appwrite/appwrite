@@ -61,7 +61,11 @@ export function ApiKeysView() {
   // Delete mutation
   const deleteMutation = useDeleteApiKey(projectId)
 
-  const handleCreate = (data: { name: string; scopes?: string[]; expire?: string }) => {
+  const handleCreate = (data: {
+    name: string
+    scopes?: string[]
+    expire?: string
+  }) => {
     createMutation.mutate(data, {
       onSuccess: () => {
         toast.success('API key created successfully')
@@ -78,7 +82,11 @@ export function ApiKeysView() {
     setUpdateDrawerOpen(true)
   }
 
-  const handleUpdateSubmit = (data: { name: string; scopes?: string[]; expire?: string }) => {
+  const handleUpdateSubmit = (data: {
+    name: string
+    scopes?: string[]
+    expire?: string
+  }) => {
     if (!selectedKeyId) return
 
     updateMutation.mutate(
@@ -138,7 +146,9 @@ export function ApiKeysView() {
       const fetchKeyData = async () => {
         try {
           const response = await fetchApiKeys(projectId!)
-          const key = response.keys.find((k: Models.Key) => k.$id === selectedKeyId)
+          const key = response.keys.find(
+            (k: Models.Key) => k.$id === selectedKeyId,
+          )
           setUpdateKeyData(key || null)
         } catch (error) {
           console.error('Failed to fetch key data:', error)

@@ -51,7 +51,9 @@ export function PaymentMethodDropdown({
           >
             <SelectTrigger className="h-9 text-[13px]">
               <SelectValue placeholder="Select payment method">
-                {selectedMethod ? getDisplayText(selectedMethod) : 'Select payment method'}
+                {selectedMethod
+                  ? getDisplayText(selectedMethod)
+                  : 'Select payment method'}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>

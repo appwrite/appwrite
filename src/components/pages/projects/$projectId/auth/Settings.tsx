@@ -2,14 +2,29 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useProject, useUpdateAuthMethod, useUpdateOAuth2Provider } from '@/lib/react-query/hooks'
+import {
+  useProject,
+  useUpdateAuthMethod,
+  useUpdateOAuth2Provider,
+} from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
-import { Loader2, Mail, Key, Smartphone, UserPlus, Lock, Copy, Check, ExternalLink, Search } from 'lucide-react'
+import {
+  Loader2,
+  Mail,
+  Key,
+  Smartphone,
+  UserPlus,
+  Lock,
+  Copy,
+  Check,
+  ExternalLink,
+  Search,
+} from 'lucide-react'
 import {
   Drawer,
   DrawerContent,
@@ -20,7 +35,6 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { cn } from '@/lib/utils'
 import { AuthMethod, OAuthProvider } from '@appwrite.io/console'
-
 
 interface AuthSettingsProps {
   projectId: string
@@ -105,7 +119,8 @@ const OAUTH_PROVIDER_CONFIG: Record<
     key: OAuthProvider.Autodesk,
     name: 'Autodesk',
     icon: 'autodesk.svg',
-    docsUrl: 'https://forge.autodesk.com/en/docs/oauth/v2/developers_guide/overview/',
+    docsUrl:
+      'https://forge.autodesk.com/en/docs/oauth/v2/developers_guide/overview/',
   },
   [OAuthProvider.Bitbucket]: {
     key: OAuthProvider.Bitbucket,
@@ -254,7 +269,8 @@ const OAUTH_PROVIDER_CONFIG: Record<
     key: OAuthProvider.Spotify,
     name: 'Spotify',
     icon: 'spotify.svg',
-    docsUrl: 'https://developer.spotify.com/documentation/general/guides/authorization-guide/',
+    docsUrl:
+      'https://developer.spotify.com/documentation/general/guides/authorization-guide/',
   },
   [OAuthProvider.Stripe]: {
     key: OAuthProvider.Stripe,
@@ -341,12 +357,22 @@ function StandardProviderForm({
   error,
 }: {
   formData: { enabled: boolean; appId: string; secret: string }
-  setFormData: (data: { enabled: boolean; appId: string; secret: string }) => void
+  setFormData: (data: {
+    enabled: boolean
+    appId: string
+    secret: string
+  }) => void
   redirectUri: string
   providerName: string
   error: string
 }) {
-  const CopyableInput = ({ value, label }: { value: string; label: string }) => {
+  const CopyableInput = ({
+    value,
+    label,
+  }: {
+    value: string
+    label: string
+  }) => {
     const [copied, setCopied] = useState(false)
     const handleCopy = () => {
       navigator.clipboard.writeText(value)
@@ -355,11 +381,7 @@ function StandardProviderForm({
     }
     return (
       <div className="relative">
-        <Input
-          value={value}
-          readOnly
-          className="pr-10 font-mono text-[13px]"
-        />
+        <Input value={value} readOnly className="pr-10 font-mono text-[13px]" />
         <button
           type="button"
           onClick={handleCopy}
@@ -381,17 +403,24 @@ function StandardProviderForm({
       <div className="rounded-lg border border-border bg-muted/30 p-4">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label htmlFor="provider-enabled" className="text-[13px] font-semibold text-foreground">
+            <Label
+              htmlFor="provider-enabled"
+              className="text-[13px] font-semibold text-foreground"
+            >
               {formData.enabled ? 'Enabled' : 'Disabled'}
             </Label>
             <p className="text-[12px] text-muted-foreground">
-              {formData.enabled ? 'This provider is currently active' : 'This provider is currently inactive'}
+              {formData.enabled
+                ? 'This provider is currently active'
+                : 'This provider is currently inactive'}
             </p>
           </div>
           <Switch
             id="provider-enabled"
             checked={formData.enabled}
-            onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked })}
+            onCheckedChange={(checked) =>
+              setFormData({ ...formData, enabled: checked })
+            }
           />
         </div>
       </div>
@@ -426,7 +455,8 @@ function StandardProviderForm({
         <CopyableInput value={redirectUri} label="Redirect URI" />
         <Alert>
           <AlertDescription className="text-[12px]">
-            To complete set up, add this OAuth2 redirect URI to your {providerName} app configuration.
+            To complete set up, add this OAuth2 redirect URI to your{' '}
+            {providerName} app configuration.
           </AlertDescription>
         </Alert>
       </div>
@@ -455,7 +485,13 @@ function SpecialProviderForm({
   providerName: string
   error: string
 }) {
-  const CopyableInput = ({ value, label }: { value: string; label: string }) => {
+  const CopyableInput = ({
+    value,
+    label,
+  }: {
+    value: string
+    label: string
+  }) => {
     const [copied, setCopied] = useState(false)
     const handleCopy = () => {
       navigator.clipboard.writeText(value)
@@ -464,11 +500,7 @@ function SpecialProviderForm({
     }
     return (
       <div className="relative">
-        <Input
-          value={value}
-          readOnly
-          className="pr-10 font-mono text-[13px]"
-        />
+        <Input value={value} readOnly className="pr-10 font-mono text-[13px]" />
         <button
           type="button"
           onClick={handleCopy}
@@ -496,11 +528,16 @@ function SpecialProviderForm({
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="apple-enabled" className="text-[13px] font-semibold text-foreground">
+                <Label
+                  htmlFor="apple-enabled"
+                  className="text-[13px] font-semibold text-foreground"
+                >
                   {formData.enabled ? 'Enabled' : 'Disabled'}
                 </Label>
                 <p className="text-[12px] text-muted-foreground">
-                  {formData.enabled ? 'This provider is currently active' : 'This provider is currently inactive'}
+                  {formData.enabled
+                    ? 'This provider is currently active'
+                    : 'This provider is currently inactive'}
                 </p>
               </div>
               <Switch
@@ -564,13 +601,16 @@ function SpecialProviderForm({
             <CopyableInput value={redirectUri} label="Redirect URI" />
             <Alert>
               <AlertDescription className="text-[12px]">
-                To complete set up, add this OAuth2 redirect URI to your {providerName} app configuration.
+                To complete set up, add this OAuth2 redirect URI to your{' '}
+                {providerName} app configuration.
               </AlertDescription>
             </Alert>
           </div>
           {error && (
             <Alert variant="destructive">
-              <AlertDescription className="text-[13px]">{error}</AlertDescription>
+              <AlertDescription className="text-[13px]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -582,11 +622,16 @@ function SpecialProviderForm({
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="auth0-enabled" className="text-[13px] font-semibold text-foreground">
+                <Label
+                  htmlFor="auth0-enabled"
+                  className="text-[13px] font-semibold text-foreground"
+                >
                   {formData.enabled ? 'Enabled' : 'Disabled'}
                 </Label>
                 <p className="text-[12px] text-muted-foreground">
-                  {formData.enabled ? 'This provider is currently active' : 'This provider is currently inactive'}
+                  {formData.enabled
+                    ? 'This provider is currently active'
+                    : 'This provider is currently inactive'}
                 </p>
               </div>
               <Switch
@@ -639,13 +684,16 @@ function SpecialProviderForm({
             <CopyableInput value={redirectUri} label="Redirect URI" />
             <Alert>
               <AlertDescription className="text-[12px]">
-                To complete set up, add this OAuth2 redirect URI to your {providerName} app configuration.
+                To complete set up, add this OAuth2 redirect URI to your{' '}
+                {providerName} app configuration.
               </AlertDescription>
             </Alert>
           </div>
           {error && (
             <Alert variant="destructive">
-              <AlertDescription className="text-[13px]">{error}</AlertDescription>
+              <AlertDescription className="text-[13px]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -657,11 +705,16 @@ function SpecialProviderForm({
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="authentik-enabled" className="text-[13px] font-semibold text-foreground">
+                <Label
+                  htmlFor="authentik-enabled"
+                  className="text-[13px] font-semibold text-foreground"
+                >
                   {formData.enabled ? 'Enabled' : 'Disabled'}
                 </Label>
                 <p className="text-[12px] text-muted-foreground">
-                  {formData.enabled ? 'This provider is currently active' : 'This provider is currently inactive'}
+                  {formData.enabled
+                    ? 'This provider is currently active'
+                    : 'This provider is currently inactive'}
                 </p>
               </div>
               <Switch
@@ -714,13 +767,16 @@ function SpecialProviderForm({
             <CopyableInput value={redirectUri} label="Redirect URI" />
             <Alert>
               <AlertDescription className="text-[12px]">
-                To complete set up, add this OAuth2 redirect URI to your {providerName} app configuration.
+                To complete set up, add this OAuth2 redirect URI to your{' '}
+                {providerName} app configuration.
               </AlertDescription>
             </Alert>
           </div>
           {error && (
             <Alert variant="destructive">
-              <AlertDescription className="text-[13px]">{error}</AlertDescription>
+              <AlertDescription className="text-[13px]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -732,11 +788,16 @@ function SpecialProviderForm({
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="gitlab-enabled" className="text-[13px] font-semibold text-foreground">
+                <Label
+                  htmlFor="gitlab-enabled"
+                  className="text-[13px] font-semibold text-foreground"
+                >
                   {formData.enabled ? 'Enabled' : 'Disabled'}
                 </Label>
                 <p className="text-[12px] text-muted-foreground">
-                  {formData.enabled ? 'This provider is currently active' : 'This provider is currently inactive'}
+                  {formData.enabled
+                    ? 'This provider is currently active'
+                    : 'This provider is currently inactive'}
                 </p>
               </div>
               <Switch
@@ -792,13 +853,16 @@ function SpecialProviderForm({
             <CopyableInput value={redirectUri} label="Redirect URI" />
             <Alert>
               <AlertDescription className="text-[12px]">
-                To complete set up, add this OAuth2 redirect URI to your {providerName} app configuration.
+                To complete set up, add this OAuth2 redirect URI to your{' '}
+                {providerName} app configuration.
               </AlertDescription>
             </Alert>
           </div>
           {error && (
             <Alert variant="destructive">
-              <AlertDescription className="text-[13px]">{error}</AlertDescription>
+              <AlertDescription className="text-[13px]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -810,11 +874,16 @@ function SpecialProviderForm({
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="google-enabled" className="text-[13px] font-semibold text-foreground">
+                <Label
+                  htmlFor="google-enabled"
+                  className="text-[13px] font-semibold text-foreground"
+                >
                   {formData.enabled ? 'Enabled' : 'Disabled'}
                 </Label>
                 <p className="text-[12px] text-muted-foreground">
-                  {formData.enabled ? 'This provider is currently active' : 'This provider is currently inactive'}
+                  {formData.enabled
+                    ? 'This provider is currently active'
+                    : 'This provider is currently inactive'}
                 </p>
               </div>
               <Switch
@@ -855,13 +924,17 @@ function SpecialProviderForm({
             <CopyableInput value={redirectUri} label="Redirect URI" />
             <Alert>
               <AlertDescription className="text-[12px]">
-                To complete the setup, create an OAuth2 client ID with "Web application" as the application type, then add this redirect URI to your {providerName} configuration.
+                To complete the setup, create an OAuth2 client ID with "Web
+                application" as the application type, then add this redirect URI
+                to your {providerName} configuration.
               </AlertDescription>
             </Alert>
           </div>
           {error && (
             <Alert variant="destructive">
-              <AlertDescription className="text-[13px]">{error}</AlertDescription>
+              <AlertDescription className="text-[13px]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -873,11 +946,16 @@ function SpecialProviderForm({
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="microsoft-enabled" className="text-[13px] font-semibold text-foreground">
+                <Label
+                  htmlFor="microsoft-enabled"
+                  className="text-[13px] font-semibold text-foreground"
+                >
                   {formData.enabled ? 'Enabled' : 'Disabled'}
                 </Label>
                 <p className="text-[12px] text-muted-foreground">
-                  {formData.enabled ? 'This provider is currently active' : 'This provider is currently inactive'}
+                  {formData.enabled
+                    ? 'This provider is currently active'
+                    : 'This provider is currently inactive'}
                 </p>
               </div>
               <Switch
@@ -888,13 +966,19 @@ function SpecialProviderForm({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="microsoft-application-client-id" className="text-[12px]">
-              Application (client) ID <span className="text-destructive">*</span>
+            <Label
+              htmlFor="microsoft-application-client-id"
+              className="text-[12px]"
+            >
+              Application (client) ID{' '}
+              <span className="text-destructive">*</span>
             </Label>
             <Input
               id="microsoft-application-client-id"
               value={formData.applicationClientId || ''}
-              onChange={(e) => updateField('applicationClientId', e.target.value)}
+              onChange={(e) =>
+                updateField('applicationClientId', e.target.value)
+              }
               placeholder="Enter ID"
               autoFocus
               className="text-[13px]"
@@ -925,7 +1009,8 @@ function SpecialProviderForm({
               className="text-[13px]"
             />
             <p className="text-[11px] text-muted-foreground">
-              Optional. Use 'common', 'organizations', 'consumers', or a specific Tenant ID
+              Optional. Use 'common', 'organizations', 'consumers', or a
+              specific Tenant ID
             </p>
           </div>
           <div className="space-y-2">
@@ -933,13 +1018,16 @@ function SpecialProviderForm({
             <CopyableInput value={redirectUri} label="Redirect URI" />
             <Alert>
               <AlertDescription className="text-[12px]">
-                To complete set up, add this OAuth2 redirect URI to your {providerName} app configuration.
+                To complete set up, add this OAuth2 redirect URI to your{' '}
+                {providerName} app configuration.
               </AlertDescription>
             </Alert>
           </div>
           {error && (
             <Alert variant="destructive">
-              <AlertDescription className="text-[13px]">{error}</AlertDescription>
+              <AlertDescription className="text-[13px]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -951,11 +1039,16 @@ function SpecialProviderForm({
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="oidc-enabled" className="text-[13px] font-semibold text-foreground">
+                <Label
+                  htmlFor="oidc-enabled"
+                  className="text-[13px] font-semibold text-foreground"
+                >
                   {formData.enabled ? 'Enabled' : 'Disabled'}
                 </Label>
                 <p className="text-[12px] text-muted-foreground">
-                  {formData.enabled ? 'This provider is currently active' : 'This provider is currently inactive'}
+                  {formData.enabled
+                    ? 'This provider is currently active'
+                    : 'This provider is currently inactive'}
                 </p>
               </div>
               <Switch
@@ -1013,7 +1106,9 @@ function SpecialProviderForm({
             <Input
               id="oidc-authorization"
               value={formData.authorizationEndpoint || ''}
-              onChange={(e) => updateField('authorizationEndpoint', e.target.value)}
+              onChange={(e) =>
+                updateField('authorizationEndpoint', e.target.value)
+              }
               placeholder="https://example.com/authorize"
               className="text-[13px]"
             />
@@ -1042,7 +1137,9 @@ function SpecialProviderForm({
               className="text-[13px]"
             />
             <p className="text-[11px] text-muted-foreground">
-              Required if Well-Known endpoint is not provided. All three endpoints (Authorization, Token, User Info) must be provided together.
+              Required if Well-Known endpoint is not provided. All three
+              endpoints (Authorization, Token, User Info) must be provided
+              together.
             </p>
           </div>
           <div className="space-y-2">
@@ -1050,13 +1147,16 @@ function SpecialProviderForm({
             <CopyableInput value={redirectUri} label="Redirect URI" />
             <Alert>
               <AlertDescription className="text-[12px]">
-                To complete set up, add this OAuth2 redirect URI to your {providerName} app configuration.
+                To complete set up, add this OAuth2 redirect URI to your{' '}
+                {providerName} app configuration.
               </AlertDescription>
             </Alert>
           </div>
           {error && (
             <Alert variant="destructive">
-              <AlertDescription className="text-[13px]">{error}</AlertDescription>
+              <AlertDescription className="text-[13px]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -1068,11 +1168,16 @@ function SpecialProviderForm({
           <div className="rounded-lg border border-border bg-muted/30 p-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="okta-enabled" className="text-[13px] font-semibold text-foreground">
+                <Label
+                  htmlFor="okta-enabled"
+                  className="text-[13px] font-semibold text-foreground"
+                >
                   {formData.enabled ? 'Enabled' : 'Disabled'}
                 </Label>
                 <p className="text-[12px] text-muted-foreground">
-                  {formData.enabled ? 'This provider is currently active' : 'This provider is currently inactive'}
+                  {formData.enabled
+                    ? 'This provider is currently active'
+                    : 'This provider is currently inactive'}
                 </p>
               </div>
               <Switch
@@ -1121,13 +1226,19 @@ function SpecialProviderForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="okta-authorization-server-id" className="text-[12px]">
-              Authorization Server ID <span className="text-destructive">*</span>
+            <Label
+              htmlFor="okta-authorization-server-id"
+              className="text-[12px]"
+            >
+              Authorization Server ID{' '}
+              <span className="text-destructive">*</span>
             </Label>
             <Input
               id="okta-authorization-server-id"
               value={formData.authorizationServerId || ''}
-              onChange={(e) => updateField('authorizationServerId', e.target.value)}
+              onChange={(e) =>
+                updateField('authorizationServerId', e.target.value)
+              }
               placeholder="default"
               className="text-[13px]"
             />
@@ -1137,13 +1248,16 @@ function SpecialProviderForm({
             <CopyableInput value={redirectUri} label="Redirect URI" />
             <Alert>
               <AlertDescription className="text-[12px]">
-                To complete set up, add this OAuth2 redirect URI to your {providerName} app configuration.
+                To complete set up, add this OAuth2 redirect URI to your{' '}
+                {providerName} app configuration.
               </AlertDescription>
             </Alert>
           </div>
           {error && (
             <Alert variant="destructive">
-              <AlertDescription className="text-[13px]">{error}</AlertDescription>
+              <AlertDescription className="text-[13px]">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -1173,7 +1287,7 @@ function isSpecialProvider(providerKey: string): boolean {
 export function AuthSettings({ projectId }: AuthSettingsProps) {
   const queryClient = useQueryClient()
   const { project, isLoading: projectLoading } = useProject(projectId)
-  
+
   // Get raw project data for auth methods and OAuth providers
   const { data: rawProjectData } = useQuery({
     queryKey: ['project', projectId],
@@ -1186,19 +1300,22 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   })
 
   // State for optimistic auth method updates (only stores changes, not full state)
-  const [optimisticAuthMethods, setOptimisticAuthMethods] = useState<Record<string, boolean>>({})
-  const [updatingAuthMethods, setUpdatingAuthMethods] = useState<Set<string>>(new Set())
+  const [optimisticAuthMethods, setOptimisticAuthMethods] = useState<
+    Record<string, boolean>
+  >({})
+  const [updatingAuthMethods, setUpdatingAuthMethods] = useState<Set<string>>(
+    new Set(),
+  )
   // Track last submitted values to prevent layout shifts
   const lastSubmittedAuthMethods = useRef<Record<string, boolean>>({})
 
   // State for OAuth provider search
   const [providerSearch, setProviderSearch] = useState('')
 
-
   // State for OAuth provider drawer
   const [selectedProvider, setSelectedProvider] = useState<string | null>(null)
   const [providerDrawerOpen, setProviderDrawerOpen] = useState(false)
-  
+
   // Standard form data
   const [standardFormData, setStandardFormData] = useState<{
     enabled: boolean
@@ -1209,10 +1326,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
     appId: '',
     secret: '',
   })
-  
+
   // Special form data (for providers with custom forms)
   const [specialFormData, setSpecialFormData] = useState<any>({})
-  
+
   const [providerError, setProviderError] = useState('')
 
   // Compute base auth methods from project data (instant, no delay)
@@ -1244,16 +1361,17 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   useEffect(() => {
     Object.keys(lastSubmittedAuthMethods.current).forEach((method) => {
       const expectedValue = lastSubmittedAuthMethods.current[method]
-      const serverValue = baseAuthMethods[method as keyof typeof baseAuthMethods]
-      
+      const serverValue =
+        baseAuthMethods[method as keyof typeof baseAuthMethods]
+
       // If server value matches what we expect, clear the optimistic update
       if (serverValue === expectedValue) {
-        setOptimisticAuthMethods(prev => {
+        setOptimisticAuthMethods((prev) => {
           const next = { ...prev }
           delete next[method]
           return next
         })
-        setUpdatingAuthMethods(prev => {
+        setUpdatingAuthMethods((prev) => {
           const next = new Set(prev)
           next.delete(method)
           return next
@@ -1272,9 +1390,14 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   // Get project endpoint for redirect URI
   const projectEndpoint = useMemo(() => {
     if (!project?.region || project.region === 'unknown') {
-      return import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
+      return (
+        import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
+      )
     }
-    const normalizedRegion = project.region.trim().toLowerCase().replace(/\s+/g, '')
+    const normalizedRegion = project.region
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '')
     return `https://${normalizedRegion}.cloud.appwrite.io/v1`
   }, [project?.region])
 
@@ -1287,8 +1410,8 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   // Handle auth method toggle
   const handleAuthMethodToggle = (method: string, checked: boolean) => {
     // Optimistically update UI
-    setOptimisticAuthMethods(prev => ({ ...prev, [method]: checked }))
-    setUpdatingAuthMethods(prev => new Set(prev).add(method))
+    setOptimisticAuthMethods((prev) => ({ ...prev, [method]: checked }))
+    setUpdatingAuthMethods((prev) => new Set(prev).add(method))
     // Track the value we're submitting
     lastSubmittedAuthMethods.current[method] = checked
 
@@ -1296,7 +1419,8 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
       { method, status: checked },
       {
         onSuccess: () => {
-          const methodLabel = AUTH_METHODS.find(m => m.key === method)?.label || method
+          const methodLabel =
+            AUTH_METHODS.find((m) => m.key === method)?.label || method
           toast.success(`${methodLabel} authentication has been updated`)
           queryClient.invalidateQueries({ queryKey: ['project', projectId] })
           // Don't clear optimistic update here - let the useEffect handle it when server value matches
@@ -1305,12 +1429,12 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         onError: (error: Error) => {
           toast.error(error.message || 'Failed to update authentication method')
           // Revert optimistic update on error
-          setOptimisticAuthMethods(prev => {
+          setOptimisticAuthMethods((prev) => {
             const next = { ...prev }
             delete next[method]
             return next
           })
-          setUpdatingAuthMethods(prev => {
+          setUpdatingAuthMethods((prev) => {
             const next = new Set(prev)
             next.delete(method)
             return next
@@ -1318,7 +1442,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
           // Remove from tracking
           delete lastSubmittedAuthMethods.current[method]
         },
-      }
+      },
     )
   }
 
@@ -1326,10 +1450,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const handleProviderClick = (providerKey: string) => {
     const projectData = rawProjectData as any
     const providerData = getProviderData(projectData, providerKey)
-    
+
     setSelectedProvider(providerKey)
     setProviderError('')
-    
+
     if (isSpecialProvider(providerKey)) {
       // Load special form data based on provider type
       loadSpecialFormData(providerKey, providerData)
@@ -1341,10 +1465,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         secret: providerData?.secret || '',
       })
     }
-    
+
     setProviderDrawerOpen(true)
   }
-  
+
   // Load special form data based on provider type
   const loadSpecialFormData = (providerKey: string, providerData: any) => {
     if (!providerData) {
@@ -1423,12 +1547,12 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
       }
       return
     }
-    
+
     // Parse existing provider data
     const enabled = providerData.enabled ?? false
     const appId = providerData.appId || ''
     let secret = providerData.secret || ''
-    
+
     // Try to parse secret as JSON for special providers
     let secretData: any = {}
     if (secret) {
@@ -1439,7 +1563,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         secretData = { clientSecret: secret }
       }
     }
-    
+
     switch (providerKey) {
       case OAuthProvider.Apple:
         setSpecialFormData({
@@ -1536,7 +1660,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
 
     if (isSpecialProvider(selectedProvider)) {
       // Validate and serialize special provider data
-      const result = validateAndSerializeSpecialProvider(selectedProvider, specialFormData)
+      const result = validateAndSerializeSpecialProvider(
+        selectedProvider,
+        specialFormData,
+      )
       if (!result.valid) {
         setProviderError(result.error || 'Validation failed')
         return
@@ -1581,28 +1708,48 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         onError: (error: Error) => {
           setProviderError(error.message || 'Failed to update OAuth provider')
         },
-      }
+      },
     )
   }
-  
+
   // Validate and serialize special provider data
   const validateAndSerializeSpecialProvider = (
     providerKey: string,
-    formData: any
+    formData: any,
   ): { valid: boolean; appId: string; secret: string; error?: string } => {
     switch (providerKey) {
       case OAuthProvider.Apple:
         if (!formData.servicesId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Services ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Services ID is required',
+          }
         }
         if (!formData.keyId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Key ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Key ID is required',
+          }
         }
         if (!formData.teamId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Team ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Team ID is required',
+          }
         }
         if (!formData.p8?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'P8 file is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'P8 file is required',
+          }
         }
         return {
           valid: true,
@@ -1613,16 +1760,31 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             p8: formData.p8.trim(),
           }),
         }
-      
+
       case OAuthProvider.Auth0:
         if (!formData.clientId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Client ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Client ID is required',
+          }
         }
         if (!formData.clientSecret?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Client Secret is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Client Secret is required',
+          }
         }
         if (!formData.auth0Domain?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Auth0 Domain is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Auth0 Domain is required',
+          }
         }
         return {
           valid: true,
@@ -1632,16 +1794,31 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             auth0Domain: formData.auth0Domain.trim(),
           }),
         }
-      
+
       case OAuthProvider.Authentik:
         if (!formData.clientId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Client ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Client ID is required',
+          }
         }
         if (!formData.clientSecret?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Client Secret is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Client Secret is required',
+          }
         }
         if (!formData.authentikDomain?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Authentik Base-Domain is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Authentik Base-Domain is required',
+          }
         }
         return {
           valid: true,
@@ -1651,13 +1828,23 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             authentikDomain: formData.authentikDomain.trim(),
           }),
         }
-      
+
       case OAuthProvider.Gitlab:
         if (!formData.appId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'App ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'App ID is required',
+          }
         }
         if (!formData.appSecret?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'App Secret is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'App Secret is required',
+          }
         }
         const gitlabSecret: any = {
           clientSecret: formData.appSecret.trim(),
@@ -1670,26 +1857,46 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
           appId: formData.appId.trim(),
           secret: JSON.stringify(gitlabSecret),
         }
-      
+
       case OAuthProvider.Google:
         if (!formData.appId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'App ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'App ID is required',
+          }
         }
         if (!formData.appSecret?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'App Secret is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'App Secret is required',
+          }
         }
         return {
           valid: true,
           appId: formData.appId.trim(),
           secret: formData.appSecret.trim(), // Google uses plain string
         }
-      
+
       case OAuthProvider.Microsoft:
         if (!formData.applicationClientId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Application (client) ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Application (client) ID is required',
+          }
         }
         if (!formData.clientSecret?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Client Secret is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Client Secret is required',
+          }
         }
         const microsoftSecret: any = {
           clientSecret: formData.clientSecret.trim(),
@@ -1702,36 +1909,48 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
           appId: formData.applicationClientId.trim(),
           secret: JSON.stringify(microsoftSecret),
         }
-      
+
       case OAuthProvider.Oidc:
         if (!formData.clientId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Client ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Client ID is required',
+          }
         }
         if (!formData.clientSecret?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Client Secret is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Client Secret is required',
+          }
         }
         const hasWellKnown = formData.wellKnownEndpoint?.trim()
         const hasAllEndpoints =
           formData.authorizationEndpoint?.trim() &&
           formData.tokenEndpoint?.trim() &&
           formData.userinfoEndpoint?.trim()
-        
+
         if (!hasWellKnown && !hasAllEndpoints) {
           return {
             valid: false,
             appId: '',
             secret: '',
-            error: 'Either Well-Known endpoint or all three endpoints (Authorization, Token, User Info) are required',
+            error:
+              'Either Well-Known endpoint or all three endpoints (Authorization, Token, User Info) are required',
           }
         }
-        
+
         const oidcSecret: any = {
           clientSecret: formData.clientSecret.trim(),
         }
         if (hasWellKnown) {
           oidcSecret.wellKnownEndpoint = formData.wellKnownEndpoint.trim()
         } else {
-          oidcSecret.authorizationEndpoint = formData.authorizationEndpoint.trim()
+          oidcSecret.authorizationEndpoint =
+            formData.authorizationEndpoint.trim()
           oidcSecret.tokenEndpoint = formData.tokenEndpoint.trim()
           oidcSecret.userinfoEndpoint = formData.userinfoEndpoint.trim()
         }
@@ -1740,19 +1959,39 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
           appId: formData.clientId.trim(),
           secret: JSON.stringify(oidcSecret),
         }
-      
+
       case OAuthProvider.Okta:
         if (!formData.clientId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Client ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Client ID is required',
+          }
         }
         if (!formData.clientSecret?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Client Secret is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Client Secret is required',
+          }
         }
         if (!formData.oktaDomain?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Okta Domain is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Okta Domain is required',
+          }
         }
         if (!formData.authorizationServerId?.trim()) {
-          return { valid: false, appId: '', secret: '', error: 'Authorization Server ID is required' }
+          return {
+            valid: false,
+            appId: '',
+            secret: '',
+            error: 'Authorization Server ID is required',
+          }
         }
         return {
           valid: true,
@@ -1763,9 +2002,14 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             authorizationServerId: formData.authorizationServerId.trim(),
           }),
         }
-      
+
       default:
-        return { valid: false, appId: '', secret: '', error: 'Unknown provider type' }
+        return {
+          valid: false,
+          appId: '',
+          secret: '',
+          error: 'Unknown provider type',
+        }
     }
   }
 
@@ -1774,7 +2018,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
     if (!selectedProvider) return false
     const projectData = rawProjectData as any
     const providerData = getProviderData(projectData, selectedProvider)
-    
+
     if (!providerData) {
       // If no existing data, check if form has any values
       if (isSpecialProvider(selectedProvider)) {
@@ -1791,13 +2035,13 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         )
       }
     }
-    
+
     if (isSpecialProvider(selectedProvider)) {
       // Compare special form data with existing provider data
       const enabled = providerData.enabled ?? false
       const appId = providerData.appId || ''
       let secret = providerData.secret || ''
-      
+
       // Parse secret
       let secretData: any = {}
       if (secret) {
@@ -1807,7 +2051,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
           secretData = { clientSecret: secret }
         }
       }
-      
+
       // Compare based on provider type
       switch (selectedProvider) {
         case OAuthProvider.Apple:
@@ -1830,7 +2074,8 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             specialFormData.enabled !== enabled ||
             specialFormData.clientId !== appId ||
             specialFormData.clientSecret !== (secretData.clientSecret || '') ||
-            specialFormData.authentikDomain !== (secretData.authentikDomain || '')
+            specialFormData.authentikDomain !==
+              (secretData.authentikDomain || '')
           )
         case OAuthProvider.Gitlab:
           return (
@@ -1849,26 +2094,34 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
           return (
             specialFormData.enabled !== enabled ||
             specialFormData.applicationClientId !== appId ||
-            specialFormData.clientSecret !== (secretData.clientSecret || secret) ||
+            specialFormData.clientSecret !==
+              (secretData.clientSecret || secret) ||
             specialFormData.targetTenant !== (secretData.tenantID || '')
           )
         case OAuthProvider.Oidc:
           return (
             specialFormData.enabled !== enabled ||
             specialFormData.clientId !== appId ||
-            specialFormData.clientSecret !== (secretData.clientSecret || secret) ||
-            specialFormData.wellKnownEndpoint !== (secretData.wellKnownEndpoint || '') ||
-            specialFormData.authorizationEndpoint !== (secretData.authorizationEndpoint || '') ||
-            specialFormData.tokenEndpoint !== (secretData.tokenEndpoint || '') ||
-            specialFormData.userinfoEndpoint !== (secretData.userinfoEndpoint || '')
+            specialFormData.clientSecret !==
+              (secretData.clientSecret || secret) ||
+            specialFormData.wellKnownEndpoint !==
+              (secretData.wellKnownEndpoint || '') ||
+            specialFormData.authorizationEndpoint !==
+              (secretData.authorizationEndpoint || '') ||
+            specialFormData.tokenEndpoint !==
+              (secretData.tokenEndpoint || '') ||
+            specialFormData.userinfoEndpoint !==
+              (secretData.userinfoEndpoint || '')
           )
         case OAuthProvider.Okta:
           return (
             specialFormData.enabled !== enabled ||
             specialFormData.clientId !== appId ||
-            specialFormData.clientSecret !== (secretData.clientSecret || secret) ||
+            specialFormData.clientSecret !==
+              (secretData.clientSecret || secret) ||
             specialFormData.oktaDomain !== (secretData.oktaDomain || '') ||
-            specialFormData.authorizationServerId !== (secretData.authorizationServerId || '')
+            specialFormData.authorizationServerId !==
+              (secretData.authorizationServerId || '')
           )
         default:
           return false
@@ -1886,31 +2139,31 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   // Get OAuth providers filtered and sorted (popular first, then enabled, then others)
   const filteredAndSortedProviders = useMemo(() => {
     const projectData = rawProjectData as any
-    
+
     // Filter by search query
-    const filtered = OAUTH_PROVIDERS.filter(provider =>
-      provider.name.toLowerCase().includes(providerSearch.toLowerCase())
+    const filtered = OAUTH_PROVIDERS.filter((provider) =>
+      provider.name.toLowerCase().includes(providerSearch.toLowerCase()),
     )
-    
+
     // Sort: popular first, then enabled, then others
     return filtered.sort((a, b) => {
       const aIsPopular = a.popular ?? false
       const bIsPopular = b.popular ?? false
-      
+
       // Popular providers first
       if (aIsPopular && !bIsPopular) return -1
       if (!aIsPopular && bIsPopular) return 1
-      
+
       // Within popular/non-popular groups, sort by enabled status
       const aProviderData = getProviderData(projectData, a.key)
       const bProviderData = getProviderData(projectData, b.key)
       const aEnabled = aProviderData?.enabled ?? false
       const bEnabled = bProviderData?.enabled ?? false
-      
+
       if (aEnabled !== bEnabled) {
         return aEnabled ? -1 : 1
       }
-      
+
       // Finally, sort alphabetically
       return a.name.localeCompare(b.name)
     })
@@ -1920,15 +2173,15 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const { popularProviders, otherProviders } = useMemo(() => {
     const popular: typeof OAUTH_PROVIDERS = []
     const other: typeof OAUTH_PROVIDERS = []
-    
-    filteredAndSortedProviders.forEach(provider => {
+
+    filteredAndSortedProviders.forEach((provider) => {
       if (provider.popular) {
         popular.push(provider)
       } else {
         other.push(provider)
       }
     })
-    
+
     return { popularProviders: popular, otherProviders: other }
   }, [filteredAndSortedProviders])
 
@@ -1955,7 +2208,9 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
       {/* Auth Methods Section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Auth methods</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Auth methods
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
@@ -1974,7 +2229,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                   className={cn(
                     'rounded-lg border border-border bg-card/50 p-4 transition-colors',
                     isUpdating && 'opacity-75',
-                    !isUpdating && 'hover:bg-card'
+                    !isUpdating && 'hover:bg-card',
                   )}
                 >
                   <div className="flex items-center justify-between">
@@ -1994,7 +2249,9 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                       <Switch
                         id={method.key}
                         checked={enabled}
-                        onCheckedChange={(checked) => handleAuthMethodToggle(method.key, checked)}
+                        onCheckedChange={(checked) =>
+                          handleAuthMethodToggle(method.key, checked)
+                        }
                         disabled={isUpdating}
                       />
                     </div>
@@ -2009,14 +2266,16 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
       {/* OAuth2 Providers Section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">OAuth2 providers</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            OAuth2 providers
+          </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-4">
             Configure OAuth2 providers for social login authentication.
           </p>
-          
+
           {/* Search Input */}
           <div className="mb-6">
             <div className="relative">
@@ -2034,11 +2293,16 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
           {/* Popular Providers */}
           {popularProviders.length > 0 && (
             <div className="mb-6">
-              <h4 className="text-[13px] font-medium text-foreground mb-3">Popular</h4>
+              <h4 className="text-[13px] font-medium text-foreground mb-3">
+                Popular
+              </h4>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {popularProviders.map((provider) => {
                   const projectData = rawProjectData as any
-                  const providerData = getProviderData(projectData, provider.key)
+                  const providerData = getProviderData(
+                    projectData,
+                    provider.key,
+                  )
                   const enabled = providerData?.enabled ?? false
 
                   return (
@@ -2066,7 +2330,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                             'text-[11px]',
                             enabled
                               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                              : 'bg-muted text-muted-foreground'
+                              : 'bg-muted text-muted-foreground',
                           )}
                         >
                           {enabled ? 'enabled' : 'disabled'}
@@ -2096,7 +2360,10 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {otherProviders.map((provider) => {
                   const projectData = rawProjectData as any
-                  const providerData = getProviderData(projectData, provider.key)
+                  const providerData = getProviderData(
+                    projectData,
+                    provider.key,
+                  )
                   const enabled = providerData?.enabled ?? false
 
                   return (
@@ -2124,7 +2391,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
                             'text-[11px]',
                             enabled
                               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                              : 'bg-muted text-muted-foreground'
+                              : 'bg-muted text-muted-foreground',
                           )}
                         >
                           {enabled ? 'enabled' : 'disabled'}
@@ -2149,27 +2416,36 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
       </div>
 
       {/* OAuth Provider Configuration Drawer */}
-      <Drawer open={providerDrawerOpen} onOpenChange={setProviderDrawerOpen} direction="right">
+      <Drawer
+        open={providerDrawerOpen}
+        onOpenChange={setProviderDrawerOpen}
+        direction="right"
+      >
         <DrawerContent className="h-full p-0 flex flex-col">
           <DrawerHeader className="px-6 pt-6 text-left shrink-0">
-            <DrawerTitle className="text-[15px]">{selectedProviderName} OAuth2 settings</DrawerTitle>
+            <DrawerTitle className="text-[15px]">
+              {selectedProviderName} OAuth2 settings
+            </DrawerTitle>
             <DrawerDescription className="text-[13px] mt-2">
-              To use {selectedProviderName} authentication in your application, first fill in this form.
-              {selectedProvider && getProviderConfig(selectedProvider)?.docsUrl && (
-                <>
-                  {' '}For more info you can visit the{' '}
-                  <a
-                    href={getProviderConfig(selectedProvider)!.docsUrl!}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-foreground underline hover:no-underline inline-flex items-center gap-1"
-                  >
-                    docs
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                  .
-                </>
-              )}
+              To use {selectedProviderName} authentication in your application,
+              first fill in this form.
+              {selectedProvider &&
+                getProviderConfig(selectedProvider)?.docsUrl && (
+                  <>
+                    {' '}
+                    For more info you can visit the{' '}
+                    <a
+                      href={getProviderConfig(selectedProvider)!.docsUrl!}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-foreground underline hover:no-underline inline-flex items-center gap-1"
+                    >
+                      docs
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                    .
+                  </>
+                )}
             </DrawerDescription>
           </DrawerHeader>
           <div className="border-t border-border shrink-0" />
@@ -2198,10 +2474,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleProviderSubmit}
-              disabled={
-                updateOAuth2Mutation.isPending ||
-                !hasProviderChanges
-              }
+              disabled={updateOAuth2Mutation.isPending || !hasProviderChanges}
             >
               Update
             </Button>
@@ -2220,4 +2493,3 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
     </div>
   )
 }
-

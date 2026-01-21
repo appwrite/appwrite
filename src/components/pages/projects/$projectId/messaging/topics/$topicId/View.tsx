@@ -54,10 +54,7 @@ export function TopicDetailView() {
   const queryClient = useQueryClient()
 
   // Fetch topic
-  const {
-    data: topic,
-    isLoading: topicLoading,
-  } = useTopic(projectId, topicId)
+  const { data: topic, isLoading: topicLoading } = useTopic(projectId, topicId)
 
   const [searchValue, setSearchValue] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -79,9 +76,10 @@ export function TopicDetailView() {
     searchValue,
   )
 
-
   // Fetch users for subscribers (from target.userId)
-  const [usersById, setUsersById] = useState<Record<string, Models.User | null>>({})
+  const [usersById, setUsersById] = useState<
+    Record<string, Models.User | null>
+  >({})
   const [usersLoading, setUsersLoading] = useState(true)
 
   useEffect(() => {
@@ -113,8 +111,7 @@ export function TopicDetailView() {
       const usersMap: Record<string, Models.User | null> = {}
       Array.from(userIds).forEach((userId, index) => {
         const result = userResults[index]
-        usersMap[userId] =
-          result.status === 'fulfilled' ? result.value : null
+        usersMap[userId] = result.status === 'fulfilled' ? result.value : null
       })
       setUsersById(usersMap)
       setUsersLoading(false)
@@ -256,9 +253,7 @@ export function TopicDetailView() {
               }
             : undefined
         }
-        createLabel={
-          activeTab === 'subscribers' ? 'Add subscriber' : undefined
-        }
+        createLabel={activeTab === 'subscribers' ? 'Add subscriber' : undefined}
         onCreate={
           activeTab === 'subscribers'
             ? () => {
@@ -331,7 +326,9 @@ export function TopicDetailView() {
                             </TableCell>
                             <TableCell className="px-4 py-3">
                               <span className="text-[13px] text-muted-foreground">
-                                {target?.identifier || target?.name || subscriber.targetId}
+                                {target?.identifier ||
+                                  target?.name ||
+                                  subscriber.targetId}
                               </span>
                             </TableCell>
                             <TableCell className="px-4 py-3">

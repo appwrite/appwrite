@@ -71,15 +71,24 @@ export function UploadFileDialog({
     const newErrors: Record<string, string> = {}
 
     // Check file extension if allowed extensions are set
-    if (bucket?.allowedFileExtensions && bucket.allowedFileExtensions.length > 0) {
+    if (
+      bucket?.allowedFileExtensions &&
+      bucket.allowedFileExtensions.length > 0
+    ) {
       const fileExtension = fileToValidate.name.split('.').pop()?.toLowerCase()
-      if (!fileExtension || !bucket.allowedFileExtensions.includes(fileExtension)) {
+      if (
+        !fileExtension ||
+        !bucket.allowedFileExtensions.includes(fileExtension)
+      ) {
         newErrors.file = `Only ${bucket.allowedFileExtensions.join(', ')} files allowed`
       }
     }
 
     // Check file size
-    if (bucket?.maximumFileSize && fileToValidate.size > bucket.maximumFileSize) {
+    if (
+      bucket?.maximumFileSize &&
+      fileToValidate.size > bucket.maximumFileSize
+    ) {
       const maxSizeMB = (bucket.maximumFileSize / (1000 * 1000)).toFixed(2)
       newErrors.file = `File size exceeds maximum of ${maxSizeMB} MB`
     }
@@ -195,9 +204,7 @@ export function UploadFileDialog({
                 >
                   <Upload className="h-8 w-8 text-muted-foreground" />
                   <span className="text-[13px] text-foreground">
-                    {file
-                      ? file.name
-                      : 'Click to upload or drag and drop'}
+                    {file ? file.name : 'Click to upload or drag and drop'}
                   </span>
                   {bucket?.allowedFileExtensions &&
                     bucket.allowedFileExtensions.length > 0 && (
@@ -289,4 +296,3 @@ export function UploadFileDialog({
     </Dialog>
   )
 }
-

@@ -84,7 +84,7 @@ export function SchemaExportDialog({
 
     const extension = extensions[format]
     const filename = `${schema.database.name.replace(/[^a-zA-Z0-9]/g, '_')}_schema.${extension}`
-    
+
     const mimeTypes = {
       json: 'application/json',
       markdown: 'text/markdown',
@@ -113,7 +113,8 @@ export function SchemaExportDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Export Database Schema</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Export your database structure in a format suitable for AI agents and IDEs like Cursor or Lovable.
+            Export your database structure in a format suitable for AI agents
+            and IDEs like Cursor or Lovable.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -125,28 +126,45 @@ export function SchemaExportDialog({
             </div>
           ) : !schema ? (
             <div className="flex h-64 items-center justify-center">
-              <div className="text-muted-foreground">No schema data available</div>
+              <div className="text-muted-foreground">
+                No schema data available
+              </div>
             </div>
           ) : (
             <div className="space-y-4 flex-1 min-h-0 flex flex-col">
               {/* Format Selection */}
-              <Tabs value={format} onValueChange={(value) => setFormat(value as ExportFormat)}>
+              <Tabs
+                value={format}
+                onValueChange={(value) => setFormat(value as ExportFormat)}
+              >
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="json" className="flex items-center gap-1.5">
+                  <TabsTrigger
+                    value="json"
+                    className="flex items-center gap-1.5"
+                  >
                     <FileJson className="h-3.5 w-3.5" />
                     JSON
                   </TabsTrigger>
-                  <TabsTrigger value="markdown" className="flex items-center gap-1.5">
+                  <TabsTrigger
+                    value="markdown"
+                    className="flex items-center gap-1.5"
+                  >
                     <FileText className="h-3.5 w-3.5" />
                     Markdown
                   </TabsTrigger>
-                  <TabsTrigger value="typescript" className="flex items-center gap-1.5">
+                  <TabsTrigger
+                    value="typescript"
+                    className="flex items-center gap-1.5"
+                  >
                     <Code className="h-3.5 w-3.5" />
                     TypeScript
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value={format} className="mt-4 flex-1 min-h-0 flex flex-col">
+                <TabsContent
+                  value={format}
+                  className="mt-4 flex-1 min-h-0 flex flex-col"
+                >
                   <div className="space-y-3 flex-1 min-h-0 flex flex-col">
                     <div className="flex items-center justify-between">
                       <span className="text-[13px] text-muted-foreground">
@@ -213,4 +231,3 @@ export function SchemaExportDialog({
     </Dialog>
   )
 }
-

@@ -1,6 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { UserDetailView } from '@/components/pages/projects/$projectId/auth/users/View'
-import { fetchUser, fetchUserIdentities, fetchUserMFAFactors } from '@/lib/react-query/hooks/users'
+import {
+  fetchUser,
+  fetchUserIdentities,
+  fetchUserMFAFactors,
+} from '@/lib/react-query/hooks/users'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/auth/users/$userId/identities',
@@ -22,7 +26,16 @@ export const Route = createFileRoute(
           staleTime: 30 * 1000,
         }),
         queryClient.prefetchQuery({
-          queryKey: ['user', 'identities', 'project', projectId, userId, 0, 25, ''],
+          queryKey: [
+            'user',
+            'identities',
+            'project',
+            projectId,
+            userId,
+            0,
+            25,
+            '',
+          ],
           queryFn: () => fetchUserIdentities(projectId, userId, 0, 25, ''),
           staleTime: 30 * 1000,
         }),
@@ -40,4 +53,3 @@ export const Route = createFileRoute(
 function UserIdentitiesPage() {
   return <UserDetailView />
 }
-

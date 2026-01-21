@@ -107,18 +107,20 @@ export function ExportDataDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0 space-y-4">
           <Alert>
             <AlertDescription className="text-[13px]">
-              API key creation - By initiating the transfer, an API key will be automatically
-              generated in the background, which you can delete after completion
+              API key creation - By initiating the transfer, an API key will be
+              automatically generated in the background, which you can delete
+              after completion
             </AlertDescription>
           </Alert>
 
           <div className="space-y-2">
             <Label htmlFor="endpoint" className="text-[12px] font-medium">
-              Endpoint self-hosted instance <span className="text-destructive">*</span>
+              Endpoint self-hosted instance{' '}
+              <span className="text-destructive">*</span>
             </Label>
             <Input
               id="endpoint"
@@ -130,7 +132,8 @@ export function ExportDataDialog({
             />
             {endpointUrl && !isValidEndpoint && (
               <p className="text-[12px] text-destructive">
-                Please enter a valid URL with protocol and hostname (no path or query string)
+                Please enter a valid URL with protocol and hostname (no path or
+                query string)
               </p>
             )}
           </div>
@@ -148,7 +151,8 @@ export function ExportDataDialog({
               rows={3}
             />
             <p className="text-[13px] text-muted-foreground">
-              Share your feedback: why our self-hosted solution works better for you
+              Share your feedback: why our self-hosted solution works better for
+              you
             </p>
           </div>
 
@@ -156,7 +160,7 @@ export function ExportDataDialog({
             You will be redirected to your self-hosted instance
           </p>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
@@ -178,4 +182,3 @@ export function ExportDataDialog({
     </Dialog>
   )
 }
-

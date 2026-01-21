@@ -23,9 +23,18 @@ const getConsoleVariables = () => {
   // In a real implementation, this would fetch from sdk.forConsole.console.getVariables()
   // For now, return defaults
   return {
-    cname: '_APP_DOMAIN_TARGET_CNAME' in (globalThis as any) ? (globalThis as any)._APP_DOMAIN_TARGET_CNAME : 'appwrite.example.com',
-    a: '_APP_DOMAIN_TARGET_A' in (globalThis as any) ? (globalThis as any)._APP_DOMAIN_TARGET_A : '1.2.3.4',
-    aaaa: '_APP_DOMAIN_TARGET_AAAA' in (globalThis as any) ? (globalThis as any)._APP_DOMAIN_TARGET_AAAA : '2001:db8::1',
+    cname:
+      '_APP_DOMAIN_TARGET_CNAME' in (globalThis as any)
+        ? (globalThis as any)._APP_DOMAIN_TARGET_CNAME
+        : 'appwrite.example.com',
+    a:
+      '_APP_DOMAIN_TARGET_A' in (globalThis as any)
+        ? (globalThis as any)._APP_DOMAIN_TARGET_A
+        : '1.2.3.4',
+    aaaa:
+      '_APP_DOMAIN_TARGET_AAAA' in (globalThis as any)
+        ? (globalThis as any)._APP_DOMAIN_TARGET_AAAA
+        : '2001:db8::1',
   }
 }
 
@@ -33,7 +42,9 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('cname')
   const vars = getConsoleVariables()
-  const isCloud = typeof window !== 'undefined' && window.location.hostname.includes('cloud.appwrite.io')
+  const isCloud =
+    typeof window !== 'undefined' &&
+    window.location.hostname.includes('cloud.appwrite.io')
 
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
@@ -89,15 +100,11 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
       {/* Verification tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
-          {vars.cname && (
-            <TabsTrigger value="cname">CNAME</TabsTrigger>
-          )}
+          {vars.cname && <TabsTrigger value="cname">CNAME</TabsTrigger>}
           {isCloud && (
             <TabsTrigger value="nameservers">Nameservers</TabsTrigger>
           )}
-          {!isCloud && vars.a && (
-            <TabsTrigger value="a">A</TabsTrigger>
-          )}
+          {!isCloud && vars.a && <TabsTrigger value="a">A</TabsTrigger>}
         </TabsList>
 
         {vars.cname && (
@@ -116,8 +123,12 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
                 <TableBody>
                   <TableRow>
                     <TableCell>CNAME</TableCell>
-                    <TableCell className="font-mono text-[13px]">{rule.domain}</TableCell>
-                    <TableCell className="font-mono text-[13px]">{vars.cname}</TableCell>
+                    <TableCell className="font-mono text-[13px]">
+                      {rule.domain}
+                    </TableCell>
+                    <TableCell className="font-mono text-[13px]">
+                      {vars.cname}
+                    </TableCell>
                     <TableCell>3600</TableCell>
                     <TableCell>
                       <Button
@@ -138,7 +149,8 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
               </Table>
             </div>
             <p className="text-[13px] text-muted-foreground">
-              Add a CNAME record pointing {rule.domain} to {vars.cname} in your DNS settings.
+              Add a CNAME record pointing {rule.domain} to {vars.cname} in your
+              DNS settings.
             </p>
           </TabsContent>
         )}
@@ -155,7 +167,9 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-mono text-[13px]">ns1.appwrite.io</TableCell>
+                    <TableCell className="font-mono text-[13px]">
+                      ns1.appwrite.io
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"
@@ -172,7 +186,9 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-mono text-[13px]">ns2.appwrite.io</TableCell>
+                    <TableCell className="font-mono text-[13px]">
+                      ns2.appwrite.io
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant="ghost"
@@ -192,7 +208,8 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
               </Table>
             </div>
             <p className="text-[13px] text-muted-foreground">
-              Update your domain's nameservers to Appwrite's nameservers in your domain registrar settings.
+              Update your domain's nameservers to Appwrite's nameservers in your
+              domain registrar settings.
             </p>
           </TabsContent>
         )}
@@ -213,8 +230,12 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
                 <TableBody>
                   <TableRow>
                     <TableCell>A</TableCell>
-                    <TableCell className="font-mono text-[13px]">{rule.domain}</TableCell>
-                    <TableCell className="font-mono text-[13px]">{vars.a}</TableCell>
+                    <TableCell className="font-mono text-[13px]">
+                      {rule.domain}
+                    </TableCell>
+                    <TableCell className="font-mono text-[13px]">
+                      {vars.a}
+                    </TableCell>
                     <TableCell>3600</TableCell>
                     <TableCell>
                       <Button
@@ -235,7 +256,8 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
               </Table>
             </div>
             <p className="text-[13px] text-muted-foreground">
-              Add an A record pointing {rule.domain} to {vars.a} in your DNS settings.
+              Add an A record pointing {rule.domain} to {vars.a} in your DNS
+              settings.
             </p>
           </TabsContent>
         )}
@@ -243,4 +265,3 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
     </div>
   )
 }
-

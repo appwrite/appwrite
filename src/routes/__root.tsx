@@ -8,7 +8,10 @@ import appCss from '../styles.css?url'
 import type { QueryClient } from '@tanstack/react-query'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
-import { AIChatProvider, AIChatPanel } from '@/components/global/providers/AIChat'
+import {
+  AIChatProvider,
+  AIChatPanel,
+} from '@/components/global/providers/AIChat'
 import { DebugMenu } from '@/components/global/providers/DebugMenu'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
@@ -100,7 +103,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <AIChatProvider>
               <PromoBannerProvider>
                 <div className="flex h-screen w-screen overflow-hidden root-container">
-                  <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">{children}</div>
+                  <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                    {children}
+                  </div>
                   <AIChatPanel />
                 </div>
                 <DebugMenu />

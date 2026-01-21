@@ -48,7 +48,8 @@ const COMPARISON_OPTIONS: Array<{
     getRange: (mainRange) => {
       if (!mainRange?.from || !mainRange?.to) return undefined
       const daysDiff = Math.ceil(
-        (mainRange.to.getTime() - mainRange.from.getTime()) / (1000 * 60 * 60 * 24),
+        (mainRange.to.getTime() - mainRange.from.getTime()) /
+          (1000 * 60 * 60 * 24),
       )
       return {
         from: startOfDay(subDays(mainRange.from, daysDiff + 1)),
@@ -89,7 +90,9 @@ export function ComparisonSelector({
   onComparisonRangeChange,
   className,
 }: ComparisonSelectorProps) {
-  const selectedOption = COMPARISON_OPTIONS.find((opt) => opt.value === comparisonType)
+  const selectedOption = COMPARISON_OPTIONS.find(
+    (opt) => opt.value === comparisonType,
+  )
 
   // Calculate comparison range when date range or comparison type changes
   React.useEffect(() => {
@@ -98,7 +101,9 @@ export function ComparisonSelector({
       return
     }
 
-    const option = COMPARISON_OPTIONS.find((opt) => opt.value === comparisonType)
+    const option = COMPARISON_OPTIONS.find(
+      (opt) => opt.value === comparisonType,
+    )
     if (option) {
       const comparisonRange = option.getRange(dateRange)
       onComparisonRangeChange(comparisonRange)

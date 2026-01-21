@@ -99,12 +99,14 @@ export function CreateWebhookDialog({
           <DialogTitle>Create webhook</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
             {currentStep === 'name-url' && 'Enter the webhook name and URL'}
-            {currentStep === 'events' && 'Select the events that will trigger your webhook'}
-            {currentStep === 'security' && 'Configure security settings for your webhook'}
+            {currentStep === 'events' &&
+              'Select the events that will trigger your webhook'}
+            {currentStep === 'security' &&
+              'Configure security settings for your webhook'}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0">
           {/* Step 1: Name and URL */}
           {currentStep === 'name-url' && (
@@ -187,12 +189,13 @@ export function CreateWebhookDialog({
                 </Label>
               </div>
               <p className="text-[13px] text-muted-foreground">
-                Set an optional basic HTTP authentication username and password to protect your endpoint from unauthorized access.
+                Set an optional basic HTTP authentication username and password
+                to protect your endpoint from unauthorized access.
               </p>
             </div>
           )}
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           {currentStep !== 'name-url' && (
             <Button
@@ -231,4 +234,3 @@ export function CreateWebhookDialog({
     </Dialog>
   )
 }
-

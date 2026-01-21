@@ -25,7 +25,12 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { someUtility } from '@/lib/utils/some-utility'
 
 // 6. Constants and shared hooks
-import { DEFAULT_STALE_TIME, LONG_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  LONG_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 import { Dependencies } from './dependencies'
 import { useSomeHook } from './other-module'
 ```
@@ -198,9 +203,9 @@ All exported functions should have JSDoc comments:
 ```typescript
 /**
  * Query function to fetch resources for a project
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -229,5 +234,3 @@ All exported functions should have JSDoc comments:
    - domains.ts
    - backups.ts
    - locale.ts
-
-

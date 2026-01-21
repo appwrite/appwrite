@@ -22,7 +22,10 @@ interface WebhooksProps {
   searchValue?: string
 }
 
-export function Webhooks({ projectId, searchValue: searchValueProp = '' }: WebhooksProps) {
+export function Webhooks({
+  projectId,
+  searchValue: searchValueProp = '',
+}: WebhooksProps) {
   const navigate = useNavigate()
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
@@ -97,53 +100,55 @@ export function Webhooks({ projectId, searchValue: searchValueProp = '' }: Webho
               </TableHeader>
               <TableBody>
                 {paginatedWebhooks.map((webhook) => (
-                    <TableRow
-                      key={webhook.$id}
-                      className="cursor-pointer"
-                      onClick={() =>
-                        navigate({
-                          to: '/projects/$projectId/settings/webhooks/$webhookId',
-                          params: { projectId, webhookId: webhook.$id },
-                        })
-                      }
-                    >
-                      <TableCell>
-                        <code className="text-[13px] font-mono text-muted-foreground">
-                          {webhook.$id.slice(0, 8)}...
-                        </code>
-                      </TableCell>
-                      <TableCell className="font-medium">{webhook.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="text-[12px]">
-                          {webhook.events?.length || 0} events
+                  <TableRow
+                    key={webhook.$id}
+                    className="cursor-pointer"
+                    onClick={() =>
+                      navigate({
+                        to: '/projects/$projectId/settings/webhooks/$webhookId',
+                        params: { projectId, webhookId: webhook.$id },
+                      })
+                    }
+                  >
+                    <TableCell>
+                      <code className="text-[13px] font-mono text-muted-foreground">
+                        {webhook.$id.slice(0, 8)}...
+                      </code>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {webhook.name}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-[12px]">
+                        {webhook.events?.length || 0} events
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="truncate text-[13px] text-muted-foreground">
+                        {webhook.url}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {webhook.enabled ? (
+                        <Badge variant="default" className="text-[12px]">
+                          Enabled
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="truncate text-[13px] text-muted-foreground">
-                          {webhook.url}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {webhook.enabled ? (
-                          <Badge variant="default" className="text-[12px]">
-                            Enabled
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="text-[12px]">
-                            Disabled
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <DateTooltip date={webhook.$createdAt} />
-                      </TableCell>
-                      <TableCell>
-                        <DateTooltip date={webhook.$updatedAt} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      ) : (
+                        <Badge variant="secondary" className="text-[12px]">
+                          Disabled
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <DateTooltip date={webhook.$createdAt} />
+                    </TableCell>
+                    <TableCell>
+                      <DateTooltip date={webhook.$updatedAt} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
 
           {filteredWebhooks.length > 0 && (
@@ -178,4 +183,3 @@ export function Webhooks({ projectId, searchValue: searchValueProp = '' }: Webho
     </div>
   )
 }
-

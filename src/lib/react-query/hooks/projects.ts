@@ -1,15 +1,26 @@
 /**
  * React Query hooks for Projects
- * 
+ *
  * Handles projects, project variables, and API keys.
  */
 
-import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
 import type { Project } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, LONG_STALE_TIME, DEFAULT_PAGE_SIZE, SMALL_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  LONG_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  SMALL_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -17,9 +28,9 @@ import { DEFAULT_STALE_TIME, LONG_STALE_TIME, DEFAULT_PAGE_SIZE, SMALL_PAGE_SIZE
 
 /**
  * Query function to fetch a single project by ID
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID to fetch
  * @returns Project data from the API
  */
@@ -33,9 +44,9 @@ export async function fetchProject(projectId: string) {
 
 /**
  * Query function to fetch active (non-archived) projects for a team/organization
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param teamId - The team/organization ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -55,10 +66,7 @@ export async function fetchActiveProjects(
   const response = await sdk.forConsole.projects.list({
     queries: [
       Query.equal('teamId', teamId),
-      Query.or([
-        Query.isNull('status'),
-        Query.notEqual('status', 'archived'),
-      ]),
+      Query.or([Query.isNull('status'), Query.notEqual('status', 'archived')]),
       Query.orderDesc('$createdAt'),
       Query.limit(limit),
       Query.offset(page * limit),
@@ -75,9 +83,9 @@ export async function fetchActiveProjects(
 
 /**
  * Query function to fetch API keys for a project
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @returns API keys response from the API
  */
@@ -92,9 +100,9 @@ export async function fetchApiKeys(projectId: string) {
 
 /**
  * Query function to fetch project variables
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -117,7 +125,9 @@ export async function fetchProjectVariables(
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const finalQueries = queries ? [...defaultQueries, ...queries] : defaultQueries
+  const finalQueries = queries
+    ? [...defaultQueries, ...queries]
+    : defaultQueries
 
   try {
     const response = await projectSdk.projectApi.listVariables({
@@ -139,9 +149,9 @@ export async function fetchProjectVariables(
 
 /**
  * Hook to fetch a single project by ID
- * 
+ *
  * This is useful for project-scoped pages that need the current project data.
- * 
+ *
  * @param projectId - The project ID to fetch
  * @returns Project data with loading state
  */
@@ -161,10 +171,11 @@ export function useProject(projectId: string | undefined) {
   // Map the API response to our Project type
   const project = useMemo(() => {
     if (!projectData) return null
-    
+
     // Include platforms/clients from the raw API response
-    const platforms = (projectData as any).platforms || (projectData as any).clients || []
-    
+    const platforms =
+      (projectData as any).platforms || (projectData as any).clients || []
+
     return {
       $id: projectData.$id,
       name: projectData.name,
@@ -187,10 +198,10 @@ export function useProject(projectId: string | undefined) {
 
 /**
  * Hook to fetch paginated projects for a specific team
- * 
+ *
  * This is useful for the project selector when you need to paginate through
  * projects for a specific team/organization.
- * 
+ *
  * @param teamId - The team/organization ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -220,7 +231,7 @@ export function useProjectsForTeam(
   // Map projects to our Project type
   const projects = useMemo(() => {
     if (!projectsData?.projects) return []
-    
+
     return projectsData.projects.map((project: any) => ({
       $id: project.$id,
       name: project.name,
@@ -250,10 +261,10 @@ export function useProjectsForTeam(
 
 /**
  * Hook to fetch projects for a specific team with infinite scroll
- * 
+ *
  * This is useful for the project selector when you need infinite scrolling
  * through projects for a specific team/organization.
- * 
+ *
  * @param teamId - The team/organization ID
  * @param limit - Number of items per page
  * @param search - Optional search query
@@ -274,12 +285,16 @@ export function useProjectsForTeamInfinite(
     refetch,
   } = useInfiniteQuery({
     queryKey: ['projects', 'team', 'infinite', teamId, limit, search],
-    queryFn: ({ pageParam = 0 }) => fetchActiveProjects(teamId!, pageParam, limit, search),
+    queryFn: ({ pageParam = 0 }) =>
+      fetchActiveProjects(teamId!, pageParam, limit, search),
     enabled: !!teamId,
     staleTime: DEFAULT_STALE_TIME,
     getNextPageParam: (lastPage, allPages) => {
       // If we have more items than what we've loaded, return next page number
-      const loadedCount = allPages.reduce((sum, page) => sum + (page.projects?.length || 0), 0)
+      const loadedCount = allPages.reduce(
+        (sum, page) => sum + (page.projects?.length || 0),
+        0,
+      )
       if (lastPage.total && loadedCount < lastPage.total) {
         return allPages.length // Return next page index (0-indexed)
       }
@@ -291,9 +306,9 @@ export function useProjectsForTeamInfinite(
   // Flatten all pages into a single array and map to our Project type
   const projects = useMemo(() => {
     if (!data?.pages) return []
-    
+
     const allProjects = data.pages.flatMap((page) => page.projects || [])
-    
+
     return allProjects.map((project: any) => ({
       $id: project.$id,
       name: project.name,
@@ -323,7 +338,7 @@ export function useProjectsForTeamInfinite(
 
 /**
  * Hook to fetch API keys for a project
- * 
+ *
  * @param projectId - The project ID
  * @returns API keys list with loading state
  */
@@ -343,10 +358,10 @@ export function useApiKeys(projectId: string | undefined) {
   // Map the API response to our ApiKey type
   const apiKeys = useMemo(() => {
     if (!apiKeysData) return []
-    
+
     // Use the keys array from KeyList response
     const keys = apiKeysData.keys || []
-    
+
     return keys.map((key: any) => ({
       id: key.$id || key.id || '',
       name: key.name || 'Unnamed Key',
@@ -368,7 +383,7 @@ export function useApiKeys(projectId: string | undefined) {
 
 /**
  * Hook to create an API key
- * 
+ *
  * @param projectId - The project ID
  */
 export function useCreateApiKey(projectId: string | null | undefined) {
@@ -411,7 +426,7 @@ export function useCreateApiKey(projectId: string | null | undefined) {
 
 /**
  * Hook to update an API key
- * 
+ *
  * @param projectId - The project ID
  */
 export function useUpdateApiKey(projectId: string | null | undefined) {
@@ -460,7 +475,7 @@ export function useUpdateApiKey(projectId: string | null | undefined) {
 
 /**
  * Hook to delete an API key
- * 
+ *
  * @param projectId - The project ID
  */
 export function useDeleteApiKey(projectId: string | null | undefined) {
@@ -493,7 +508,7 @@ export function useDeleteApiKey(projectId: string | null | undefined) {
 
 /**
  * Hook to fetch project variables
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -522,7 +537,7 @@ export function useProjectVariables(
 
 /**
  * Hook to create a project variable
- * 
+ *
  * @param projectId - The project ID
  */
 export function useCreateProjectVariable(projectId: string | null | undefined) {
@@ -545,7 +560,9 @@ export function useCreateProjectVariable(projectId: string | null | undefined) {
         throw new Error('Variable key is required')
       }
       if (value.length > 8192) {
-        throw new Error(`Variable ${key} is longer than 8192 allowed characters`)
+        throw new Error(
+          `Variable ${key} is longer than 8192 allowed characters`,
+        )
       }
 
       const projectSdk = sdk.forProject(projectId)
@@ -568,7 +585,7 @@ export function useCreateProjectVariable(projectId: string | null | undefined) {
 
 /**
  * Hook to update a project variable
- * 
+ *
  * @param projectId - The project ID
  */
 export function useUpdateProjectVariable(projectId: string | null | undefined) {
@@ -593,7 +610,9 @@ export function useUpdateProjectVariable(projectId: string | null | undefined) {
         throw new Error('Variable key is required')
       }
       if (value.length > 8192) {
-        throw new Error(`Variable ${key} is longer than 8192 allowed characters`)
+        throw new Error(
+          `Variable ${key} is longer than 8192 allowed characters`,
+        )
       }
 
       const projectSdk = sdk.forProject(projectId)
@@ -617,7 +636,7 @@ export function useUpdateProjectVariable(projectId: string | null | undefined) {
 
 /**
  * Hook to delete a project variable
- * 
+ *
  * @param projectId - The project ID
  */
 export function useDeleteProjectVariable(projectId: string | null | undefined) {
@@ -645,7 +664,7 @@ export function useDeleteProjectVariable(projectId: string | null | undefined) {
 
 /**
  * Hook to create a new project
- * 
+ *
  * @param teamId - The team/organization ID to create the project in
  */
 export function useCreateProject(teamId: string | null | undefined) {
@@ -669,7 +688,7 @@ export function useCreateProject(teamId: string | null | undefined) {
       }
 
       const finalProjectId = projectId || ID.unique()
-      
+
       return await sdk.forConsole.projects.create({
         projectId: finalProjectId,
         name: name.trim(),

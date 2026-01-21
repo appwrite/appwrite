@@ -37,7 +37,11 @@ function generateStringValue(column: Column): string {
   }
 
   // Smart name matching
-  if (columnName.includes('name') && !columnName.includes('username') && !columnName.includes('domain')) {
+  if (
+    columnName.includes('name') &&
+    !columnName.includes('username') &&
+    !columnName.includes('domain')
+  ) {
     return faker.person.fullName()
   }
   if (columnName.includes('email')) {
@@ -73,7 +77,7 @@ function generateStringValue(column: Column): string {
  */
 function generateIntegerValue(column: Column): number {
   let min = column.min ?? 0
-  let max = column.max ?? (min + 100)
+  let max = column.max ?? min + 100
 
   // If no max specified, use a reasonable default
   if (column.max === null || column.max === undefined) {
@@ -92,7 +96,7 @@ function generateIntegerValue(column: Column): number {
  */
 function generateDoubleValue(column: Column): number {
   let min = column.min ?? 0
-  let max = column.max ?? (min + 100)
+  let max = column.max ?? min + 100
 
   // If no max specified, use a reasonable default
   if (column.max === null || column.max === undefined) {
@@ -103,7 +107,9 @@ function generateDoubleValue(column: Column): number {
   max = Math.min(max, Number.MAX_SAFE_INTEGER)
   min = Math.max(min, -Number.MAX_SAFE_INTEGER)
 
-  return parseFloat(faker.number.float({ min, max, fractionDigits: 4 }).toFixed(4))
+  return parseFloat(
+    faker.number.float({ min, max, fractionDigits: 4 }).toFixed(4),
+  )
 }
 
 /**
@@ -164,18 +170,26 @@ function generateArrayValue(column: Column, baseType: string): any[] {
 
   switch (baseType) {
     case 'string':
-      return Array.from({ length: itemCount }, () => generateStringValue(baseColumn))
+      return Array.from({ length: itemCount }, () =>
+        generateStringValue(baseColumn),
+      )
     case 'integer':
-      return Array.from({ length: itemCount }, () => generateIntegerValue(baseColumn))
+      return Array.from({ length: itemCount }, () =>
+        generateIntegerValue(baseColumn),
+      )
     case 'float':
     case 'double':
-      return Array.from({ length: itemCount }, () => generateDoubleValue(baseColumn))
+      return Array.from({ length: itemCount }, () =>
+        generateDoubleValue(baseColumn),
+      )
     case 'boolean':
       return Array.from({ length: itemCount }, () => generateBooleanValue())
     case 'datetime':
       return Array.from({ length: itemCount }, () => generateDatetimeValue())
     default:
-      return Array.from({ length: itemCount }, () => generateStringValue(baseColumn))
+      return Array.from({ length: itemCount }, () =>
+        generateStringValue(baseColumn),
+      )
   }
 }
 
@@ -188,21 +202,19 @@ export function generateSampleRow(columns: Column[]): Record<string, any> {
   }
 
   // Filter columns: exclude relationship columns and system columns, include available columns (or columns without status set)
-  const validColumns = columns.filter(
-    (col) => {
-      const colKey = col.key
-      // Exclude system columns (starting with $)
-      if (colKey && colKey.startsWith('$')) {
-        return false
-      }
-      // Exclude relationship columns
-      if (col.type === 'relationship') {
-        return false
-      }
-      // Include columns that are available or don't have a status field (default to available)
-      return !col.status || col.status === 'available'
-    },
-  )
+  const validColumns = columns.filter((col) => {
+    const colKey = col.key
+    // Exclude system columns (starting with $)
+    if (colKey && colKey.startsWith('$')) {
+      return false
+    }
+    // Exclude relationship columns
+    if (col.type === 'relationship') {
+      return false
+    }
+    // Include columns that are available or don't have a status field (default to available)
+    return !col.status || col.status === 'available'
+  })
 
   for (const column of validColumns) {
     let value: any
@@ -266,7 +278,9 @@ export function generateSampleRow(columns: Column[]): Record<string, any> {
 /**
  * Generate multiple rows of sample data
  */
-export function generateSampleRows(columns: Column[], count: number): Record<string, any>[] {
+export function generateSampleRows(
+  columns: Column[],
+  count: number,
+): Record<string, any>[] {
   return Array.from({ length: count }, () => generateSampleRow(columns))
 }
-

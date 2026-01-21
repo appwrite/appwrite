@@ -30,5 +30,3 @@ function DatabaseOverviewInsights() {
   const { databaseId } = Route.useParams()
   return <DatabaseOverview databaseId={databaseId} activeTab="insights" />
 }
-
-

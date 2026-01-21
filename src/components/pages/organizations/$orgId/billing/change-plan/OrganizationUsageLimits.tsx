@@ -1,4 +1,11 @@
-import { useState, useImperativeHandle, forwardRef, useEffect, useCallback, useRef } from 'react'
+import {
+  useState,
+  useImperativeHandle,
+  forwardRef,
+  useEffect,
+  useCallback,
+  useRef,
+} from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -19,13 +26,22 @@ export const OrganizationUsageLimits = forwardRef<
   { getSelectedProjects: () => string[] },
   OrganizationUsageLimitsProps
 >(({ projects, orgUsage, members, organization, targetLimit, onRef }, ref) => {
-  const [selectedProjects, setSelectedProjects] = useState<Set<string>>(new Set())
+  const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
+    new Set(),
+  )
 
-  const getSelectedProjects = useCallback(() => Array.from(selectedProjects), [selectedProjects])
+  const getSelectedProjects = useCallback(
+    () => Array.from(selectedProjects),
+    [selectedProjects],
+  )
 
-  useImperativeHandle(ref, () => ({
-    getSelectedProjects,
-  }), [getSelectedProjects])
+  useImperativeHandle(
+    ref,
+    () => ({
+      getSelectedProjects,
+    }),
+    [getSelectedProjects],
+  )
 
   // Also call onRef callback with the ref object (only when selectedProjects changes)
   // Use a ref to store the callback to avoid recreating it
@@ -65,8 +81,9 @@ export const OrganizationUsageLimits = forwardRef<
           Select Projects to Keep
         </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          You have {projects.length} projects, but the selected plan allows only {targetLimit}.
-          Please select {targetLimit} project{targetLimit !== 1 ? 's' : ''} to keep.
+          You have {projects.length} projects, but the selected plan allows only{' '}
+          {targetLimit}. Please select {targetLimit} project
+          {targetLimit !== 1 ? 's' : ''} to keep.
         </p>
       </div>
 
@@ -78,7 +95,8 @@ export const OrganizationUsageLimits = forwardRef<
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Invalid Selection</AlertTitle>
             <AlertDescription className="mt-2">
-              Please select exactly {targetLimit} project{targetLimit !== 1 ? 's' : ''}.
+              Please select exactly {targetLimit} project
+              {targetLimit !== 1 ? 's' : ''}.
             </AlertDescription>
           </Alert>
         )}

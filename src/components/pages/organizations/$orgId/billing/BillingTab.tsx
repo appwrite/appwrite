@@ -12,7 +12,11 @@ import { TaxIdSection } from './TaxIdSection'
 import { BudgetCapSection } from './BudgetCapSection'
 import { BillingAlertsSection } from './BillingAlertsSection'
 import { AvailableCreditsSection } from './AvailableCreditsSection'
-import { useOrganizationById, usePaymentMethod, useRetryInvoicePayment } from '@/lib/react-query/hooks'
+import {
+  useOrganizationById,
+  usePaymentMethod,
+  useRetryInvoicePayment,
+} from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 
@@ -42,11 +46,13 @@ export function BillingTab() {
 
   // Fetch organization data for alerts
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
-  
+
   // Fetch payment methods for alert checking
   const primaryPaymentMethod = usePaymentMethod(organization?.paymentMethodId)
-  const backupPaymentMethod = usePaymentMethod(organization?.backupPaymentMethodId)
-  
+  const backupPaymentMethod = usePaymentMethod(
+    organization?.backupPaymentMethodId,
+  )
+
   const retryPaymentMutation = useRetryInvoicePayment()
 
   // Check for failed invoice
@@ -56,14 +62,15 @@ export function BillingTab() {
   // Check for expired payment method
   const primaryFailed = primaryPaymentMethod.paymentMethod?.failed === true
   const backupFailed = backupPaymentMethod.paymentMethod?.failed === true
-  const hasExpiredPaymentMethod = primaryFailed && !organization?.backupPaymentMethodId
+  const hasExpiredPaymentMethod =
+    primaryFailed && !organization?.backupPaymentMethodId
 
   // Check for plan downgrade
   const hasPlanDowngrade = !!organization?.billingPlanDowngrade
 
   const handleRetryPayment = async () => {
     if (!orgId || !failedInvoice) return
-    
+
     try {
       // Determine which payment method to use
       let paymentMethodId = organization.paymentMethodId
@@ -73,13 +80,18 @@ export function BillingTab() {
       if (!paymentMethodId) {
         // Get first available payment method from account
         const paymentMethods = await sdk.forConsole.account.listPaymentMethods()
-        if (paymentMethods.paymentMethods && paymentMethods.paymentMethods.length > 0) {
+        if (
+          paymentMethods.paymentMethods &&
+          paymentMethods.paymentMethods.length > 0
+        ) {
           paymentMethodId = paymentMethods.paymentMethods[0].$id
         }
       }
 
       if (!paymentMethodId) {
-        toast.error('No payment method available. Please add a payment method first.')
+        toast.error(
+          'No payment method available. Please add a payment method first.',
+        )
         return
       }
 
@@ -88,10 +100,12 @@ export function BillingTab() {
         invoiceId: failedInvoice.$id,
         paymentMethodId,
       })
-      
+
       toast.success('Payment retry initiated')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to retry payment')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to retry payment',
+      )
     }
   }
 
@@ -138,7 +152,8 @@ export function BillingTab() {
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Payment Failed</AlertTitle>
               <AlertDescription className="mt-2">
-                {failedInvoice.lastError || 'Your last payment attempt failed. Please update your payment method and try again.'}
+                {failedInvoice.lastError ||
+                  'Your last payment attempt failed. Please update your payment method and try again.'}
                 <div className="mt-3">
                   <Button
                     size="sm"
@@ -160,7 +175,9 @@ export function BillingTab() {
               <CreditCard className="h-4 w-4" />
               <AlertTitle>Payment Method Failed</AlertTitle>
               <AlertDescription className="mt-2">
-                Your default payment method has failed and you don't have a backup method. Please add a new payment method to continue using our services.
+                Your default payment method has failed and you don't have a
+                backup method. Please add a new payment method to continue using
+                our services.
               </AlertDescription>
             </Alert>
           )}
@@ -171,7 +188,8 @@ export function BillingTab() {
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Plan Downgrade Scheduled</AlertTitle>
               <AlertDescription className="mt-2">
-                Your plan will change at the end of your current billing period. You'll keep access to your current plan features until then.
+                Your plan will change at the end of your current billing period.
+                You'll keep access to your current plan features until then.
               </AlertDescription>
             </Alert>
           )}
@@ -185,7 +203,10 @@ export function BillingTab() {
       <PaymentHistory />
 
       {/* Payment Methods */}
-      <PaymentMethods onAddPaymentMethod={handleAddPaymentMethod} orgId={orgId} />
+      <PaymentMethods
+        onAddPaymentMethod={handleAddPaymentMethod}
+        orgId={orgId}
+      />
 
       {/* Billing Address */}
       <BillingAddressSection onEditAddress={handleEditAddress} orgId={orgId} />

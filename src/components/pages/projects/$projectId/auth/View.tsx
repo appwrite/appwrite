@@ -1,5 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useParams, useLocation, Link, useNavigate } from '@tanstack/react-router'
+import {
+  useParams,
+  useLocation,
+  Link,
+  useNavigate,
+} from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
   Users,
@@ -11,9 +16,18 @@ import {
   Mail,
   Phone,
 } from 'lucide-react'
-import { useProjectUsers, useProjectTeams, useCreateProjectUser, useCreateProjectTeam, useProject } from '@/lib/react-query/hooks'
+import {
+  useProjectUsers,
+  useProjectTeams,
+  useCreateProjectUser,
+  useCreateProjectTeam,
+  useProject,
+} from '@/lib/react-query/hooks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { deleteProjectUser, deleteProjectTeam } from '@/lib/react-query/hooks/users'
+import {
+  deleteProjectUser,
+  deleteProjectTeam,
+} from '@/lib/react-query/hooks/users'
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ResourceCard } from '../shared/ResourceCard'
@@ -54,9 +68,6 @@ import { AuthSettings } from './Settings'
 import { Templates } from './Templates'
 import { toast } from 'sonner'
 
-
-
-
 export function AuthView() {
   const { projectId } = useParams({
     strict: false,
@@ -64,19 +75,27 @@ export function AuthView() {
   const location = useLocation()
   const navigate = useNavigate()
   const { isDebugModeOpen } = useDebugMode()
-  
+
   // Check if we're on a user detail route - if so, don't render this component
   const isUserDetailRoute = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const authIndex = pathParts.findIndex(part => part === 'auth')
-    return authIndex >= 0 && pathParts[authIndex + 1] === 'users' && pathParts[authIndex + 2]
+    const authIndex = pathParts.findIndex((part) => part === 'auth')
+    return (
+      authIndex >= 0 &&
+      pathParts[authIndex + 1] === 'users' &&
+      pathParts[authIndex + 2]
+    )
   }, [location.pathname])
 
   // Check if we're on a team detail route - if so, don't render this component
   const isTeamDetailRoute = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const authIndex = pathParts.findIndex(part => part === 'auth')
-    return authIndex >= 0 && pathParts[authIndex + 1] === 'teams' && pathParts[authIndex + 2]
+    const authIndex = pathParts.findIndex((part) => part === 'auth')
+    return (
+      authIndex >= 0 &&
+      pathParts[authIndex + 1] === 'teams' &&
+      pathParts[authIndex + 2]
+    )
   }, [location.pathname])
 
   // Don't render if we're on a detail route (those have their own components)
@@ -87,19 +106,21 @@ export function AuthView() {
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const authIndex = pathParts.findIndex(part => part === 'auth')
-    
+    const authIndex = pathParts.findIndex((part) => part === 'auth')
+
     if (authIndex >= 0) {
       // Check if there's a tab segment after 'auth'
       // pathParts structure: ['projects', 'projectId', 'auth', 'tab?']
       if (pathParts[authIndex + 1]) {
         const tabFromPath = pathParts[authIndex + 1]
-        if (['teams', 'security', 'templates', 'settings'].includes(tabFromPath)) {
+        if (
+          ['teams', 'security', 'templates', 'settings'].includes(tabFromPath)
+        ) {
           return tabFromPath
         }
       }
     }
-    
+
     // Default to users for index route (/projects/:projectId/auth or /projects/:projectId/auth/)
     return 'users'
   }, [location.pathname])
@@ -117,7 +138,7 @@ export function AuthView() {
   // Pagination state for users (1-indexed for UI)
   const [usersPage, setUsersPage] = useState(1)
   const [usersPageSize, setUsersPageSize] = useState(25)
-  
+
   const queryClient = useQueryClient()
 
   // Clear selection when navigating between pages/routes or when search changes
@@ -140,7 +161,12 @@ export function AuthView() {
     users: apiUsers,
     total: usersTotal,
     isLoading: usersLoading,
-  } = useProjectUsers(projectId, usersPageIndexed, usersPageSize, usersSearchValue)
+  } = useProjectUsers(
+    projectId,
+    usersPageIndexed,
+    usersPageSize,
+    usersSearchValue,
+  )
 
   // Pagination state for teams (1-indexed for UI)
   const teamsPageIndexed = teamsPage - 1
@@ -150,7 +176,12 @@ export function AuthView() {
     teams: apiTeams,
     total: teamsTotal,
     isLoading: teamsLoading,
-  } = useProjectTeams(projectId, teamsPageIndexed, teamsPageSize, teamsSearchValue)
+  } = useProjectTeams(
+    projectId,
+    teamsPageIndexed,
+    teamsPageSize,
+    teamsSearchValue,
+  )
 
   // Mutation to create a user
   const createUserMutation = useCreateProjectUser(projectId)
@@ -164,7 +195,7 @@ export function AuthView() {
       // Determine provider from user data (check for OAuth providers)
       // For now, default to 'email' - this could be enhanced to check user.labels or other fields
       const provider = 'email' // TODO: Extract from user.labels or user.providers if available
-      
+
       return {
         ...user,
         provider,
@@ -175,7 +206,6 @@ export function AuthView() {
       }
     })
   }, [apiUsers])
-
 
   // Paginated data - users and teams are already paginated by the API
   const paginatedUsers = extendedUsers
@@ -269,13 +299,13 @@ export function AuthView() {
     const now = new Date()
     const diffMs = now.getTime() - date.getTime()
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-    
+
     // Check if it's today (same calendar day)
-    const isToday = 
+    const isToday =
       date.getDate() === now.getDate() &&
       date.getMonth() === now.getMonth() &&
       date.getFullYear() === now.getFullYear()
-    
+
     // Check if it's yesterday (previous calendar day)
     const yesterday = new Date(now)
     yesterday.setDate(yesterday.getDate() - 1)
@@ -283,7 +313,7 @@ export function AuthView() {
       date.getDate() === yesterday.getDate() &&
       date.getMonth() === yesterday.getMonth() &&
       date.getFullYear() === yesterday.getFullYear()
-    
+
     if (isToday) {
       return 'Today'
     } else if (isYesterday) {
@@ -375,40 +405,43 @@ export function AuthView() {
   }
 
   // Update tabs with dynamic user and team counts and route paths
-  const tabs: Tab[] = useMemo(() => [
-    { 
-      id: 'users', 
-      label: 'Users', 
-      count: usersTotal,
-      to: '/projects/$projectId/auth/',
-      params: { projectId: projectId as string },
-    },
-    { 
-      id: 'teams', 
-      label: 'Teams', 
-      count: teamsTotal,
-      to: '/projects/$projectId/auth/teams',
-      params: { projectId: projectId as string },
-    },
-    { 
-      id: 'security', 
-      label: 'Security',
-      to: '/projects/$projectId/auth/security',
-      params: { projectId: projectId as string },
-    },
-    { 
-      id: 'templates', 
-      label: 'Templates',
-      to: '/projects/$projectId/auth/templates',
-      params: { projectId: projectId as string },
-    },
-    { 
-      id: 'settings', 
-      label: 'Settings',
-      to: '/projects/$projectId/auth/settings',
-      params: { projectId: projectId as string },
-    },
-  ], [usersTotal, teamsTotal, projectId])
+  const tabs: Tab[] = useMemo(
+    () => [
+      {
+        id: 'users',
+        label: 'Users',
+        count: usersTotal,
+        to: '/projects/$projectId/auth/',
+        params: { projectId: projectId as string },
+      },
+      {
+        id: 'teams',
+        label: 'Teams',
+        count: teamsTotal,
+        to: '/projects/$projectId/auth/teams',
+        params: { projectId: projectId as string },
+      },
+      {
+        id: 'security',
+        label: 'Security',
+        to: '/projects/$projectId/auth/security',
+        params: { projectId: projectId as string },
+      },
+      {
+        id: 'templates',
+        label: 'Templates',
+        to: '/projects/$projectId/auth/templates',
+        params: { projectId: projectId as string },
+      },
+      {
+        id: 'settings',
+        label: 'Settings',
+        to: '/projects/$projectId/auth/settings',
+        params: { projectId: projectId as string },
+      },
+    ],
+    [usersTotal, teamsTotal, projectId],
+  )
 
   const getCreateLabel = () => {
     switch (activeTab) {
@@ -441,10 +474,7 @@ export function AuthView() {
     })
   }
 
-  const handleCreateTeam = (teamData: {
-    teamId?: string
-    name: string
-  }) => {
+  const handleCreateTeam = (teamData: { teamId?: string; name: string }) => {
     createTeamMutation.mutate(teamData, {
       onSuccess: () => {
         toast.success('Team created successfully')
@@ -471,31 +501,35 @@ export function AuthView() {
   const isSmtpEnabled = (project as any)?.smtpEnabled ?? false
 
   // SMTP alert for templates tab
-  const smtpAlert = activeTab === 'templates' && !isSmtpEnabled ? (
-    <div className="border-b border-border bg-amber-500/5">
-      <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-        <Alert variant="default" className="border-amber-500/30 bg-transparent">
-          <AlertCircle className="h-4 w-4 text-amber-500" />
-          <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-            SMTP server required
-          </AlertTitle>
-          <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-            <span className="inline">
-              Custom SMTP server is required to edit email templates.{' '}
-              <Link
-                to="/projects/$projectId/settings/smtp"
-                params={{ projectId: projectId as string }}
-                className="font-medium underline hover:no-underline inline"
-              >
-                Set up SMTP server
-              </Link>
-              {' '}to customize your email templates.
-            </span>
-          </AlertDescription>
-        </Alert>
+  const smtpAlert =
+    activeTab === 'templates' && !isSmtpEnabled ? (
+      <div className="border-b border-border bg-amber-500/5">
+        <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+          <Alert
+            variant="default"
+            className="border-amber-500/30 bg-transparent"
+          >
+            <AlertCircle className="h-4 w-4 text-amber-500" />
+            <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+              SMTP server required
+            </AlertTitle>
+            <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+              <span className="inline">
+                Custom SMTP server is required to edit email templates.{' '}
+                <Link
+                  to="/projects/$projectId/settings/smtp"
+                  params={{ projectId: projectId as string }}
+                  className="font-medium underline hover:no-underline inline"
+                >
+                  Set up SMTP server
+                </Link>{' '}
+                to customize your email templates.
+              </span>
+            </AlertDescription>
+          </Alert>
+        </div>
       </div>
-    </div>
-  ) : undefined
+    ) : undefined
 
   const ViewToggle = ({
     viewMode,
@@ -541,7 +575,9 @@ export function AuthView() {
         tabs={tabs}
         activeTab={activeTab}
         searchPlaceholder={
-          activeTab === 'security' || activeTab === 'settings' || activeTab === 'templates'
+          activeTab === 'security' ||
+          activeTab === 'settings' ||
+          activeTab === 'templates'
             ? undefined
             : `Search ${activeTab}...`
         }
@@ -579,10 +615,15 @@ export function AuthView() {
         }
       />
 
-      <div className={cn(
-        "mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6",
-        (activeTab === 'security' || activeTab === 'templates' || activeTab === 'settings') && "pt-4 sm:pt-6"
-      )}>
+      <div
+        className={cn(
+          'mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6',
+          (activeTab === 'security' ||
+            activeTab === 'templates' ||
+            activeTab === 'settings') &&
+            'pt-4 sm:pt-6',
+        )}
+      >
         {activeTab === 'users' && (
           <>
             {isDebugModeOpen && <LightningCollectorGame />}
@@ -633,7 +674,7 @@ export function AuthView() {
                           const isBlocked = user.status === false
                           const hasEmail = !!user.email
                           const hasPhone = !!user.phone
-                          
+
                           return (
                             <TableRow
                               key={user.$id}
@@ -655,11 +696,17 @@ export function AuthView() {
                                 }
                                 navigate({
                                   to: '/projects/$projectId/auth/users/$userId',
-                                  params: { projectId: projectId!, userId: user.$id },
+                                  params: {
+                                    projectId: projectId!,
+                                    userId: user.$id,
+                                  },
                                 })
                               }}
                             >
-                              <TableCell onClick={(e) => e.stopPropagation()} className="px-4 py-3">
+                              <TableCell
+                                onClick={(e) => e.stopPropagation()}
+                                className="px-4 py-3"
+                              >
                                 <Checkbox
                                   checked={selectedUsers.has(user.$id)}
                                   onCheckedChange={() => toggleUser(user.$id)}
@@ -668,7 +715,10 @@ export function AuthView() {
                               <TableCell className="px-4 py-3">
                                 <Link
                                   to="/projects/$projectId/auth/users/$userId"
-                                  params={{ projectId: projectId!, userId: user.$id }}
+                                  params={{
+                                    projectId: projectId!,
+                                    userId: user.$id,
+                                  }}
                                   className="block group"
                                 >
                                   <div className="flex items-center gap-3 min-w-0">
@@ -682,10 +732,7 @@ export function AuthView() {
                                         {user.name || 'No name'}
                                       </p>
                                       <div className="mt-0.5">
-                                        <CopyableId 
-                                          id={user.$id} 
-                                          size="xs"
-                                        />
+                                        <CopyableId id={user.$id} size="xs" />
                                       </div>
                                     </div>
                                   </div>
@@ -694,7 +741,10 @@ export function AuthView() {
                               <TableCell className="px-4 py-3">
                                 <Link
                                   to="/projects/$projectId/auth/users/$userId"
-                                  params={{ projectId: projectId!, userId: user.$id }}
+                                  params={{
+                                    projectId: projectId!,
+                                    userId: user.$id,
+                                  }}
                                   className="block"
                                 >
                                   <div className="space-y-1">
@@ -715,7 +765,9 @@ export function AuthView() {
                                       </div>
                                     )}
                                     {!hasEmail && !hasPhone && (
-                                      <span className="text-[12px] text-muted-foreground">-</span>
+                                      <span className="text-[12px] text-muted-foreground">
+                                        -
+                                      </span>
                                     )}
                                   </div>
                                 </Link>
@@ -723,7 +775,10 @@ export function AuthView() {
                               <TableCell className="px-4 py-3">
                                 <Link
                                   to="/projects/$projectId/auth/users/$userId"
-                                  params={{ projectId: projectId!, userId: user.$id }}
+                                  params={{
+                                    projectId: projectId!,
+                                    userId: user.$id,
+                                  }}
                                   className="block"
                                 >
                                   <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -740,7 +795,11 @@ export function AuthView() {
                                           <Tooltip>
                                             <TooltipTrigger asChild>
                                               <Badge
-                                                variant={emailVerified ? 'success' : 'secondary'}
+                                                variant={
+                                                  emailVerified
+                                                    ? 'success'
+                                                    : 'secondary'
+                                                }
                                                 className="text-[11px] font-medium border px-2 py-0.5"
                                               >
                                                 {emailVerified ? (
@@ -753,7 +812,10 @@ export function AuthView() {
                                             </TooltipTrigger>
                                             <TooltipContent>
                                               <p className="text-xs">
-                                                Email {emailVerified ? 'verified' : 'unverified'}
+                                                Email{' '}
+                                                {emailVerified
+                                                  ? 'verified'
+                                                  : 'unverified'}
                                               </p>
                                             </TooltipContent>
                                           </Tooltip>
@@ -762,7 +824,11 @@ export function AuthView() {
                                           <Tooltip>
                                             <TooltipTrigger asChild>
                                               <Badge
-                                                variant={phoneVerified ? 'success' : 'secondary'}
+                                                variant={
+                                                  phoneVerified
+                                                    ? 'success'
+                                                    : 'secondary'
+                                                }
                                                 className="text-[11px] font-medium border px-2 py-0.5"
                                               >
                                                 {phoneVerified ? (
@@ -775,13 +841,18 @@ export function AuthView() {
                                             </TooltipTrigger>
                                             <TooltipContent>
                                               <p className="text-xs">
-                                                Phone {phoneVerified ? 'verified' : 'unverified'}
+                                                Phone{' '}
+                                                {phoneVerified
+                                                  ? 'verified'
+                                                  : 'unverified'}
                                               </p>
                                             </TooltipContent>
                                           </Tooltip>
                                         )}
                                         {!hasEmail && !hasPhone && (
-                                          <span className="text-[11px] text-muted-foreground">-</span>
+                                          <span className="text-[11px] text-muted-foreground">
+                                            -
+                                          </span>
                                         )}
                                       </>
                                     )}
@@ -792,7 +863,10 @@ export function AuthView() {
                                 <div className="flex items-center justify-center">
                                   <Link
                                     to="/projects/$projectId/auth/users/$userId"
-                                    params={{ projectId: projectId!, userId: user.$id }}
+                                    params={{
+                                      projectId: projectId!,
+                                      userId: user.$id,
+                                    }}
                                     className="block"
                                   >
                                     {user.mfaEnabled ? (
@@ -803,7 +877,9 @@ export function AuthView() {
                                           </div>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          <p className="text-xs">Multi-factor authentication enabled</p>
+                                          <p className="text-xs">
+                                            Multi-factor authentication enabled
+                                          </p>
                                         </TooltipContent>
                                       </Tooltip>
                                     ) : (
@@ -814,7 +890,10 @@ export function AuthView() {
                                           </div>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          <p className="text-xs">Multi-factor authentication not enabled</p>
+                                          <p className="text-xs">
+                                            Multi-factor authentication not
+                                            enabled
+                                          </p>
                                         </TooltipContent>
                                       </Tooltip>
                                     )}
@@ -824,7 +903,10 @@ export function AuthView() {
                               <TableCell className="px-4 py-3">
                                 <Link
                                   to="/projects/$projectId/auth/users/$userId"
-                                  params={{ projectId: projectId!, userId: user.$id }}
+                                  params={{
+                                    projectId: projectId!,
+                                    userId: user.$id,
+                                  }}
                                   className="block text-right"
                                 >
                                   <DateTooltip
@@ -836,7 +918,10 @@ export function AuthView() {
                               <TableCell className="px-4 py-3">
                                 <Link
                                   to="/projects/$projectId/auth/users/$userId"
-                                  params={{ projectId: projectId!, userId: user.$id }}
+                                  params={{
+                                    projectId: projectId!,
+                                    userId: user.$id,
+                                  }}
                                   className="block text-right"
                                 >
                                   {user.accessedAt ? (
@@ -844,7 +929,9 @@ export function AuthView() {
                                       {formatLastAccessed(user.accessedAt)}
                                     </span>
                                   ) : (
-                                    <span className="text-[12px] text-muted-foreground/50 italic">Never</span>
+                                    <span className="text-[12px] text-muted-foreground/50 italic">
+                                      Never
+                                    </span>
                                   )}
                                 </Link>
                               </TableCell>
@@ -880,11 +967,11 @@ export function AuthView() {
                   {paginatedUsers.map((user) => {
                     const verification = getUserVerificationStatus(user)
                     const cardStatus =
-                      verification.tone === 'warning'
-                        ? 'warning'
-                        : 'active'
+                      verification.tone === 'warning' ? 'warning' : 'active'
 
-                    const subtitle = [user.email, user.phone].filter(Boolean).join(' • ') || undefined
+                    const subtitle =
+                      [user.email, user.phone].filter(Boolean).join(' • ') ||
+                      undefined
 
                     return (
                       <Link
@@ -939,13 +1026,14 @@ export function AuthView() {
                 />
               </div>
             )}
-            
+
             {/* Bulk Delete Action Bar */}
             {selectedUsers.size > 0 && (
               <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
                 <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
                   <Badge variant="secondary" className="h-6 px-2.5">
-                    {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''} selected
+                    {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''}{' '}
+                    selected
                   </Badge>
                   <div className="flex items-center gap-2">
                     <Button
@@ -976,10 +1064,12 @@ export function AuthView() {
                 <DialogHeader className="px-6 pt-6 text-left">
                   <DialogTitle>Delete Users</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
-                    Are you sure you want to delete {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''}? This action cannot be undone.
+                    Are you sure you want to delete {selectedUsers.size} user
+                    {selectedUsers.size > 1 ? 's' : ''}? This action cannot be
+                    undone.
                   </DialogDescription>
                 </DialogHeader>
-                
+
                 <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button
                     variant="outline"
@@ -1053,11 +1143,17 @@ export function AuthView() {
                               }
                               navigate({
                                 to: '/projects/$projectId/auth/teams/$teamId',
-                                params: { projectId: projectId!, teamId: team.id },
+                                params: {
+                                  projectId: projectId!,
+                                  teamId: team.id,
+                                },
                               })
                             }}
                           >
-                            <TableCell onClick={(e) => e.stopPropagation()} className="px-4 py-3">
+                            <TableCell
+                              onClick={(e) => e.stopPropagation()}
+                              className="px-4 py-3"
+                            >
                               <Checkbox
                                 checked={selectedTeams.has(team.id)}
                                 onCheckedChange={() => toggleTeam(team.id)}
@@ -1066,11 +1162,18 @@ export function AuthView() {
                             <TableCell className="px-4 py-3">
                               <Link
                                 to="/projects/$projectId/auth/teams/$teamId"
-                                params={{ projectId: projectId!, teamId: team.id }}
+                                params={{
+                                  projectId: projectId!,
+                                  teamId: team.id,
+                                }}
                                 className="block group"
                               >
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <InitialsAvatar name={team.name || ''} size="sm" className="shrink-0" />
+                                  <InitialsAvatar
+                                    name={team.name || ''}
+                                    size="sm"
+                                    className="shrink-0"
+                                  />
                                   <div className="flex-1 min-w-0">
                                     <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
                                       {team.name || 'No name'}
@@ -1085,7 +1188,10 @@ export function AuthView() {
                             <TableCell className="px-4 py-3">
                               <Link
                                 to="/projects/$projectId/auth/teams/$teamId"
-                                params={{ projectId: projectId!, teamId: team.id }}
+                                params={{
+                                  projectId: projectId!,
+                                  teamId: team.id,
+                                }}
                                 className="block text-right"
                               >
                                 <DateTooltip
@@ -1177,7 +1283,8 @@ export function AuthView() {
               <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
                 <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
                   <Badge variant="secondary" className="h-6 px-2.5">
-                    {selectedTeams.size} team{selectedTeams.size > 1 ? 's' : ''} selected
+                    {selectedTeams.size} team{selectedTeams.size > 1 ? 's' : ''}{' '}
+                    selected
                   </Badge>
                   <div className="flex items-center gap-2">
                     <Button
@@ -1203,15 +1310,20 @@ export function AuthView() {
             )}
 
             {/* Bulk Delete Teams Confirmation Dialog */}
-            <Dialog open={deleteTeamDialogOpen} onOpenChange={setDeleteTeamDialogOpen}>
+            <Dialog
+              open={deleteTeamDialogOpen}
+              onOpenChange={setDeleteTeamDialogOpen}
+            >
               <DialogContent className="sm:max-w-md p-0">
                 <DialogHeader className="px-6 pt-6 text-left">
                   <DialogTitle>Delete Teams</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
-                    Are you sure you want to delete {selectedTeams.size} team{selectedTeams.size > 1 ? 's' : ''}? This action cannot be undone.
+                    Are you sure you want to delete {selectedTeams.size} team
+                    {selectedTeams.size > 1 ? 's' : ''}? This action cannot be
+                    undone.
                   </DialogDescription>
                 </DialogHeader>
-                
+
                 <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <Button
                     variant="outline"

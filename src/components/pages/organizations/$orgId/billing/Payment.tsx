@@ -1,12 +1,18 @@
 /**
  * PaymentModal Component
- * 
+ *
  * Modal for adding a new payment method using Stripe Elements.
  * Handles card input, US state selection, and payment method creation.
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,7 +26,10 @@ import {
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Stripe, StripeElements, PaymentElement } from '@stripe/stripe-js'
-import { getStripeInstance, getStripeAppearanceFromTheme } from '@/lib/utils/stripe'
+import {
+  getStripeInstance,
+  getStripeAppearanceFromTheme,
+} from '@/lib/utils/stripe'
 import { useTheme } from 'next-themes'
 import {
   useCreatePaymentMethod,
@@ -116,7 +125,8 @@ export function PaymentModal({
 
   const createPaymentMethodMutation = useCreatePaymentMethod()
   const setPaymentMethodProviderMutation = useSetPaymentMethodProvider()
-  const setDefaultPaymentMethodMutation = useSetOrganizationDefaultPaymentMethod()
+  const setDefaultPaymentMethodMutation =
+    useSetOrganizationDefaultPaymentMethod()
   const setBackupPaymentMethodMutation = useSetOrganizationBackupPaymentMethod()
   const { paymentMethods: allPaymentMethods } = usePaymentMethods()
 
@@ -124,10 +134,14 @@ export function PaymentModal({
   const appearance = getStripeAppearanceFromTheme(theme)
 
   // Check if Stripe is available
-  const isCloud = typeof window !== 'undefined' && window.location.hostname.includes('cloud.appwrite.io')
-  const stripePublishableKey = typeof window !== 'undefined' 
-    ? (import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || (window as any).__STRIPE_PUBLISHABLE_KEY__)
-    : undefined
+  const isCloud =
+    typeof window !== 'undefined' &&
+    window.location.hostname.includes('cloud.appwrite.io')
+  const stripePublishableKey =
+    typeof window !== 'undefined'
+      ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+        (window as any).__STRIPE_PUBLISHABLE_KEY__
+      : undefined
   // Allow Stripe in development or on cloud
   const hasStripePublicKey = !!stripePublishableKey
 
@@ -159,7 +173,8 @@ export function PaymentModal({
 
         // Check for existing incomplete payment method using the hook data
         const existingIncomplete = allPaymentMethods?.find(
-          (method: Models.PaymentMethod) => method.clientSecret && !method.providerMethodId
+          (method: Models.PaymentMethod) =>
+            method.clientSecret && !method.providerMethodId,
         )
 
         let paymentMethod: Models.PaymentMethod
@@ -226,7 +241,10 @@ export function PaymentModal({
         }
       } catch (err) {
         if (mounted) {
-          const errorMessage = err instanceof Error ? err.message : 'Failed to initialize payment form'
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : 'Failed to initialize payment form'
           setError(errorMessage)
           setIsStripeLoading(false)
           console.error('Stripe initialization error:', err)
@@ -244,7 +262,7 @@ export function PaymentModal({
       clearTimeout(timeoutId)
       hasInitialized = false
       mounted = false
-      
+
       // Clean up Stripe Elements
       // Use requestAnimationFrame to ensure this happens in the right order
       requestAnimationFrame(() => {
@@ -281,7 +299,7 @@ export function PaymentModal({
       setPaymentMethodId(null)
       setClientSecret(null)
       setIsStripeLoading(true)
-      
+
       // Note: Stripe Elements cleanup is handled in the initialization effect's cleanup
       // We don't clean up here to avoid conflicts with React's DOM removal
     }
@@ -300,7 +318,12 @@ export function PaymentModal({
       return
     }
 
-    if (!stripeRef.current || !elementsRef.current || !clientSecret || !paymentMethodId) {
+    if (
+      !stripeRef.current ||
+      !elementsRef.current ||
+      !clientSecret ||
+      !paymentMethodId
+    ) {
       setError('Payment form not ready. Please try again.')
       return
     }
@@ -312,20 +335,24 @@ export function PaymentModal({
       await elementsRef.current.submit()
 
       // Confirm setup intent
-      const { setupIntent, error: stripeError } = await stripeRef.current.confirmSetup({
-        elements: elementsRef.current,
-        clientSecret,
-        confirmParams: {
-          return_url: typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '',
-          payment_method_data: {
-            billing_details: {
-              name: cardholderName.trim(),
+      const { setupIntent, error: stripeError } =
+        await stripeRef.current.confirmSetup({
+          elements: elementsRef.current,
+          clientSecret,
+          confirmParams: {
+            return_url:
+              typeof window !== 'undefined'
+                ? `${window.location.origin}${window.location.pathname}`
+                : '',
+            payment_method_data: {
+              billing_details: {
+                name: cardholderName.trim(),
+              },
             },
+            expand: ['payment_method'],
           },
-          expand: ['payment_method'],
-        },
-        redirect: 'if_required',
-      })
+          redirect: 'if_required',
+        })
 
       if (stripeError) {
         throw new Error(stripeError.message)
@@ -349,7 +376,10 @@ export function PaymentModal({
       // Link payment method to Appwrite
       await setPaymentMethodProviderMutation.mutateAsync({
         paymentMethodId,
-        providerMethodId: typeof stripePaymentMethod === 'object' ? stripePaymentMethod.id : stripePaymentMethod,
+        providerMethodId:
+          typeof stripePaymentMethod === 'object'
+            ? stripePaymentMethod.id
+            : stripePaymentMethod,
         name: cardholderName.trim(),
         state: selectedState || undefined,
       })
@@ -372,13 +402,15 @@ export function PaymentModal({
       toast.success(
         organizationId
           ? `Payment method has been added to your organization`
-          : 'A new payment method has been added to your account'
+          : 'A new payment method has been added to your account',
       )
 
       onOpenChange(false)
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add payment method')
+      setError(
+        err instanceof Error ? err.message : 'Failed to add payment method',
+      )
     }
   }
 
@@ -398,8 +430,8 @@ export function PaymentModal({
             {!hasStripePublicKey
               ? 'Payment method setup is not available. Please contact support.'
               : showStatePicker
-              ? 'Please select your state to complete the payment method setup.'
-              : 'Enter your card details to add a new payment method.'}
+                ? 'Please select your state to complete the payment method setup.'
+                : 'Enter your card details to add a new payment method.'}
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -409,7 +441,8 @@ export function PaymentModal({
             <div className="px-6 pb-4 pt-0">
               <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 px-3 py-2">
                 <p className="text-[12px] text-yellow-600 dark:text-yellow-400">
-                  Stripe payment processing is not configured. Please ensure VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.
+                  Stripe payment processing is not configured. Please ensure
+                  VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.
                 </p>
               </div>
             </div>
@@ -445,14 +478,15 @@ export function PaymentModal({
                   <div>
                     {/* Use key to force React to recreate container on open/close */}
                     <div
-                      key={open ? `stripe-${paymentMethodId || 'new'}` : 'stripe-closed'}
+                      key={
+                        open
+                          ? `stripe-${paymentMethodId || 'new'}`
+                          : 'stripe-closed'
+                      }
                       className="min-h-[200px] relative"
                     >
                       {/* Always render container, show loading overlay */}
-                      <div
-                        ref={stripeContainerRef}
-                        className="min-h-[200px]"
-                      />
+                      <div ref={stripeContainerRef} className="min-h-[200px]" />
                       {isStripeLoading && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/80">
                           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -490,7 +524,9 @@ export function PaymentModal({
 
               {error && (
                 <div className="rounded-md bg-red-500/10 border border-red-500/20 px-3 py-2">
-                  <p className="text-[12px] text-red-600 dark:text-red-400">{error}</p>
+                  <p className="text-[12px] text-red-600 dark:text-red-400">
+                    {error}
+                  </p>
                 </div>
               )}
             </div>
@@ -504,9 +540,13 @@ export function PaymentModal({
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 type="submit"
-                disabled={isLoading || !cardholderName.trim() || (showStatePicker && !selectedState)}
+                disabled={
+                  isLoading ||
+                  !cardholderName.trim() ||
+                  (showStatePicker && !selectedState)
+                }
               >
                 {isLoading ? (
                   <>

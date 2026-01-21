@@ -11,7 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useOrganizationById, useOrganizationPlan, useOrganizationCredits } from '@/lib/react-query/hooks'
+import {
+  useOrganizationById,
+  useOrganizationPlan,
+  useOrganizationCredits,
+} from '@/lib/react-query/hooks'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import type { Models } from '@appwrite.io/console'
@@ -49,7 +53,11 @@ export function AvailableCreditsSection({
   const [currentPage, setCurrentPage] = useState(0)
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
-  const { credits, total: creditsTotal, isLoading: creditsLoading } = useOrganizationCredits(orgId, currentPage, ITEMS_PER_PAGE)
+  const {
+    credits,
+    total: creditsTotal,
+    isLoading: creditsLoading,
+  } = useOrganizationCredits(orgId, currentPage, ITEMS_PER_PAGE)
 
   const isLoading = orgLoading || planLoading || creditsLoading
 
@@ -59,7 +67,7 @@ export function AvailableCreditsSection({
   // Calculate total available credit
   const totalAvailableCredit = useMemo(() => {
     if (!credits || credits.length === 0) return 0
-    
+
     const now = new Date()
     return credits.reduce((sum, credit) => {
       if (credit.expiresAt && new Date(credit.expiresAt) > now) {
@@ -72,13 +80,13 @@ export function AvailableCreditsSection({
   // Process credits for display (sort: non-expired first, then by expiration)
   const processedCredits = useMemo(() => {
     if (!credits) return []
-    
+
     const now = new Date()
     return credits
       .map((credit) => {
         const expiresAt = credit.expiresAt ? new Date(credit.expiresAt) : null
         const isExpired = expiresAt ? expiresAt < now : false
-        
+
         return {
           ...credit,
           isExpired,
@@ -121,7 +129,9 @@ export function AvailableCreditsSection({
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading credits...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading credits...
+          </p>
         </div>
       </div>
     )
@@ -157,7 +167,10 @@ export function AvailableCreditsSection({
             Available Credits
           </h3>
           {hasCredits && (
-            <Badge variant="secondary" className="h-6 px-2.5 text-[11px] font-medium">
+            <Badge
+              variant="secondary"
+              className="h-6 px-2.5 text-[11px] font-medium"
+            >
               Balance: {formatCurrency(totalAvailableCredit)}
             </Badge>
           )}
@@ -245,18 +258,24 @@ export function AvailableCreditsSection({
                         </code>
                       </TableCell>
                       <TableCell className="py-2.5 text-right text-[13px] text-muted-foreground">
-                        {formatCurrency(credit.total || 0, credit.currency || 'USD')}
+                        {formatCurrency(
+                          credit.total || 0,
+                          credit.currency || 'USD',
+                        )}
                       </TableCell>
                       <TableCell className="py-2.5 text-right">
                         <span
                           className={cn(
                             'text-[13px] font-medium',
-                            (isFullyUsed || isExpired)
+                            isFullyUsed || isExpired
                               ? 'text-muted-foreground line-through'
                               : 'text-foreground',
                           )}
                         >
-                          {formatCurrency(credit.remaining || 0, credit.currency || 'USD')}
+                          {formatCurrency(
+                            credit.remaining || 0,
+                            credit.currency || 'USD',
+                          )}
                         </span>
                       </TableCell>
                       <TableCell className="py-2.5 text-right">
@@ -273,7 +292,10 @@ export function AvailableCreditsSection({
                               {formatDate(credit.expiresAt)}
                             </span>
                             {isExpired && (
-                              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
+                              <Badge
+                                variant="secondary"
+                                className="h-5 px-1.5 text-[10px]"
+                              >
                                 Expired
                               </Badge>
                             )}

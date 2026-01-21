@@ -1,6 +1,13 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { TableView } from '@/components/pages/projects/$projectId/databases/View'
-import { fetchProjectTables, fetchProjectDatabase, fetchProjectTableColumns, fetchProjectTableRows, fetchProjectTable } from '@/lib/react-query/hooks'
+import {
+  fetchProjectTables,
+  fetchProjectDatabase,
+  fetchProjectTableColumns,
+  fetchProjectTableIndexes,
+  fetchProjectTableRows,
+  fetchProjectTable,
+} from '@/lib/react-query/hooks'
 
 const TABLES_PER_PAGE = 100
 const ROWS_PER_PAGE = 25
@@ -23,8 +30,23 @@ export const Route = createFileRoute(
 
     // Resolve all required data before rendering to avoid intermediate empty states
     const tablesPromise = queryClient.ensureQueryData({
-      queryKey: ['tables', 'project', projectId, databaseId, 0, TABLES_PER_PAGE, undefined],
-      queryFn: () => fetchProjectTables(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+      queryKey: [
+        'tables',
+        'project',
+        projectId,
+        databaseId,
+        0,
+        TABLES_PER_PAGE,
+        undefined,
+      ],
+      queryFn: () =>
+        fetchProjectTables(
+          projectId,
+          databaseId,
+          0,
+          TABLES_PER_PAGE,
+          undefined,
+        ),
       staleTime: 30 * 1000, // 30 seconds
     })
 
@@ -38,7 +60,7 @@ export const Route = createFileRoute(
         return nameA.localeCompare(nameB)
       })
       const firstTable = sortedTables[0]
-      
+
       if (firstTable?.$id) {
         // Redirect to the first table with replace to update URL history
         throw redirect({
@@ -58,7 +80,7 @@ export const Route = createFileRoute(
     if (tableId) {
       // Check if table exists and if there are any tables
       const tablesData = await tablesPromise
-      
+
       // If no tables exist, redirect to database index (tables view)
       if (!tablesData.tables || tablesData.tables.length === 0) {
         throw redirect({
@@ -67,9 +89,11 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
-      
+
       // Check if the requested table exists in the tables list
-      const tableExists = tablesData.tables.some((table: any) => table.$id === tableId)
+      const tableExists = tablesData.tables.some(
+        (table: any) => table.$id === tableId,
+      )
       if (!tableExists) {
         // Table not found, redirect to database index (tables view)
         throw redirect({
@@ -90,9 +114,33 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000, // 30 seconds
       })
 
+      // Prefetch indexes (optional data)
+      const indexesPromise = queryClient.prefetchQuery({
+        queryKey: ['indexes', 'project', projectId, databaseId, tableId],
+        queryFn: () => fetchProjectTableIndexes(projectId, databaseId, tableId),
+        staleTime: 30 * 1000, // 30 seconds
+      })
+
       const rowsPromise = queryClient.ensureQueryData({
-        queryKey: ['rows', 'project', projectId, databaseId, tableId, 0, ROWS_PER_PAGE, ''],
-        queryFn: () => fetchProjectTableRows(projectId, databaseId, tableId, 0, ROWS_PER_PAGE, ''),
+        queryKey: [
+          'rows',
+          'project',
+          projectId,
+          databaseId,
+          tableId,
+          0,
+          ROWS_PER_PAGE,
+          '',
+        ],
+        queryFn: () =>
+          fetchProjectTableRows(
+            projectId,
+            databaseId,
+            tableId,
+            0,
+            ROWS_PER_PAGE,
+            '',
+          ),
         staleTime: 30 * 1000, // 30 seconds
       })
 
@@ -102,7 +150,14 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000, // 30 seconds
       })
 
-      await Promise.all([tablesPromise, databasePromise, columnsPromise, rowsPromise, tablePromise])
+      await Promise.all([
+        tablesPromise,
+        databasePromise,
+        columnsPromise,
+        indexesPromise,
+        rowsPromise,
+        tablePromise,
+      ])
     } else {
       await tablesPromise
     }

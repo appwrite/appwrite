@@ -71,10 +71,8 @@ export function InputDigits({
       maxLength={length}
       className={cn(
         'text-center text-2xl tracking-widest font-mono',
-        className
+        className,
       )}
     />
   )
 }
-
-

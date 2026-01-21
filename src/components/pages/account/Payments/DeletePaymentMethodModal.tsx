@@ -1,10 +1,16 @@
 /**
  * DeletePaymentMethodModal Component
- * 
+ *
  * Modal for deleting a payment method with warnings if linked to organizations.
  */
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertTriangle } from 'lucide-react'
@@ -40,7 +46,11 @@ export function DeletePaymentMethodModal({
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete payment method')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete payment method',
+      )
     }
   }
 

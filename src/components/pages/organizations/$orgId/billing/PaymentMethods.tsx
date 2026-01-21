@@ -1,4 +1,11 @@
-import { CreditCard, Plus, MoreHorizontal, Building2, AlertCircle, Info } from 'lucide-react'
+import {
+  CreditCard,
+  Plus,
+  MoreHorizontal,
+  Building2,
+  AlertCircle,
+  Info,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -19,7 +26,12 @@ import {
 } from '@/components/ui/tooltip'
 import { formatCardExpiry, maskCardNumber } from './utils'
 import { cn } from '@/lib/utils'
-import { useOrganizationById, usePaymentMethods, usePaymentMethod, useUpdateOrganizationPaymentMethod } from '@/lib/react-query/hooks'
+import {
+  useOrganizationById,
+  usePaymentMethods,
+  usePaymentMethod,
+  useUpdateOrganizationPaymentMethod,
+} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 
@@ -47,15 +59,23 @@ interface PaymentMethodsProps {
   orgId?: string
 }
 
-export function PaymentMethods({ onAddPaymentMethod, orgId }: PaymentMethodsProps) {
+export function PaymentMethods({
+  onAddPaymentMethod,
+  orgId,
+}: PaymentMethodsProps) {
   const { organization } = useOrganizationById(orgId)
-  const { paymentMethods: allPaymentMethods, isLoading: methodsLoading } = usePaymentMethods()
+  const { paymentMethods: allPaymentMethods, isLoading: methodsLoading } =
+    usePaymentMethods()
   const primaryPaymentMethod = usePaymentMethod(organization?.paymentMethodId)
-  const backupPaymentMethod = usePaymentMethod(organization?.backupPaymentMethodId)
+  const backupPaymentMethod = usePaymentMethod(
+    organization?.backupPaymentMethodId,
+  )
   const updatePaymentMethodMutation = useUpdateOrganizationPaymentMethod()
 
   // Filter payment methods to only show completed cards (with last4)
-  const completedPaymentMethods = allPaymentMethods.filter((pm: Models.PaymentMethod) => pm.last4)
+  const completedPaymentMethods = allPaymentMethods.filter(
+    (pm: Models.PaymentMethod) => pm.last4,
+  )
 
   // Get primary and backup methods
   const primaryMethod = primaryPaymentMethod.paymentMethod
@@ -70,7 +90,7 @@ export function PaymentMethods({ onAddPaymentMethod, orgId }: PaymentMethodsProp
 
   const handleSetPrimary = async (paymentMethodId: string) => {
     if (!orgId) return
-    
+
     try {
       await updatePaymentMethodMutation.mutateAsync({
         organizationId: orgId,
@@ -78,13 +98,17 @@ export function PaymentMethods({ onAddPaymentMethod, orgId }: PaymentMethodsProp
       })
       toast.success('Primary payment method updated')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update payment method')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update payment method',
+      )
     }
   }
 
   const handleSetBackup = async (paymentMethodId: string) => {
     if (!orgId) return
-    
+
     try {
       await updatePaymentMethodMutation.mutateAsync({
         organizationId: orgId,
@@ -92,15 +116,23 @@ export function PaymentMethods({ onAddPaymentMethod, orgId }: PaymentMethodsProp
       })
       toast.success('Backup payment method updated')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update backup payment method')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update backup payment method',
+      )
     }
   }
 
   const handleRemove = async (isPrimary: boolean) => {
     if (!orgId) return
-    
+
     // Can't remove if it's the only method and not on free plan
-    if (isPrimary && !organization?.backupPaymentMethodId && organization?.billingPlan !== 'tier0') {
+    if (
+      isPrimary &&
+      !organization?.backupPaymentMethodId &&
+      organization?.billingPlan !== 'tier0'
+    ) {
       toast.error('Cannot remove the only payment method on a paid plan')
       return
     }
@@ -122,12 +154,20 @@ export function PaymentMethods({ onAddPaymentMethod, orgId }: PaymentMethodsProp
       }
       toast.success('Payment method removed')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to remove payment method')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to remove payment method',
+      )
     }
   }
 
   // Check if any payment method has errors
-  const hasErrors = primaryMethod?.failed || primaryMethod?.expired || backupMethod?.failed || backupMethod?.expired
+  const hasErrors =
+    primaryMethod?.failed ||
+    primaryMethod?.expired ||
+    backupMethod?.failed ||
+    backupMethod?.expired
 
   if (methodsLoading) {
     return (
@@ -138,7 +178,9 @@ export function PaymentMethods({ onAddPaymentMethod, orgId }: PaymentMethodsProp
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading payment methods...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading payment methods...
+          </p>
         </div>
       </div>
     )
@@ -232,7 +274,8 @@ export function PaymentMethods({ onAddPaymentMethod, orgId }: PaymentMethodsProp
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-[12px]">
-                      A backup payment method ensures uninterrupted service if your primary method fails.
+                      A backup payment method ensures uninterrupted service if
+                      your primary method fails.
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -319,12 +362,15 @@ function PaymentMethodCard({
   availableMethods,
   onAddPaymentMethod,
 }: PaymentMethodCardProps) {
-  const isExpiringSoon = method.expiryMonth && method.expiryYear
-    ? isCardExpiringSoon(method.expiryMonth, method.expiryYear)
-    : false
+  const isExpiringSoon =
+    method.expiryMonth && method.expiryYear
+      ? isCardExpiringSoon(method.expiryMonth, method.expiryYear)
+      : false
 
   const hasError = method.failed || method.expired
-  const errorMessage = method.lastError || (method.expired ? 'Card expired' : method.failed ? 'Payment failed' : null)
+  const errorMessage =
+    method.lastError ||
+    (method.expired ? 'Card expired' : method.failed ? 'Payment failed' : null)
 
   return (
     <div className="flex items-center justify-between px-6 py-4 hover:bg-accent/50 transition-colors">
@@ -395,7 +441,8 @@ function PaymentMethodCard({
               Set as primary
             </DropdownMenuItem>
           )}
-          {((isPrimary && onReplacePrimary) || (!isPrimary && onReplaceBackup)) && (
+          {((isPrimary && onReplacePrimary) ||
+            (!isPrimary && onReplaceBackup)) && (
             <>
               {!isPrimary && onSetPrimary && <DropdownMenuSeparator />}
               <DropdownMenuSub>

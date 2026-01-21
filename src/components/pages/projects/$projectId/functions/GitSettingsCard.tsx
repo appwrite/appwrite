@@ -32,7 +32,15 @@ import {
   useRepositories,
   useRepositoryContents,
 } from '@/lib/react-query/hooks'
-import { GitBranch, Lock, ExternalLink, FolderOpen, ChevronRight, Loader2, X } from 'lucide-react'
+import {
+  GitBranch,
+  Lock,
+  ExternalLink,
+  FolderOpen,
+  ChevronRight,
+  Loader2,
+  X,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
@@ -64,12 +72,17 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
 
   // Form state
-  const [selectedBranch, setSelectedBranch] = useState(func.providerBranch || '')
-  const [selectedDir, setSelectedDir] = useState(func.providerRootDirectory || '')
+  const [selectedBranch, setSelectedBranch] = useState(
+    func.providerBranch || '',
+  )
+  const [selectedDir, setSelectedDir] = useState(
+    func.providerRootDirectory || '',
+  )
   const [silentMode, setSilentMode] = useState(func.providerSilentMode ?? false)
 
   // Connect repository modal state
-  const [selectedInstallationId, setSelectedInstallationId] = useState<string>('')
+  const [selectedInstallationId, setSelectedInstallationId] =
+    useState<string>('')
   const [selectedRepositoryId, setSelectedRepositoryId] = useState<string>('')
   const [repositorySearch, setRepositorySearch] = useState('')
   const [repositoryPage, setRepositoryPage] = useState(0)
@@ -82,8 +95,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   >(new Map())
 
   // Fetch repository details if connected
-  const hasRepository =
-    func.installationId && func.providerRepositoryId
+  const hasRepository = func.installationId && func.providerRepositoryId
 
   const { data: repository, isLoading: repositoryLoading } = useRepository(
     projectId,
@@ -91,24 +103,26 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     func.providerRepositoryId || null,
   )
 
-  const { data: branchesData, isLoading: branchesLoading } = useRepositoryBranches(
-    projectId,
-    func.installationId || null,
-    func.providerRepositoryId || null,
-  )
+  const { data: branchesData, isLoading: branchesLoading } =
+    useRepositoryBranches(
+      projectId,
+      func.installationId || null,
+      func.providerRepositoryId || null,
+    )
 
   // Fetch installations for connect modal
   const { data: installationsData } = useVcsInstallations(projectId)
 
   // Fetch repositories for selected installation
-  const { data: repositoriesData, isLoading: repositoriesLoading } = useRepositories(
-    projectId,
-    selectedInstallationId || null,
-    VCSDetectionType.Runtime,
-    repositoryPage,
-    5,
-    debouncedSearch || undefined,
-  )
+  const { data: repositoriesData, isLoading: repositoriesLoading } =
+    useRepositories(
+      projectId,
+      selectedInstallationId || null,
+      VCSDetectionType.Runtime,
+      repositoryPage,
+      5,
+      debouncedSearch || undefined,
+    )
 
   // Debounce search
   useEffect(() => {
@@ -121,7 +135,11 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
 
   // Initialize selected installation when installations load
   useEffect(() => {
-    if (installationsData?.installations && installationsData.installations.length > 0 && !selectedInstallationId) {
+    if (
+      installationsData?.installations &&
+      installationsData.installations.length > 0 &&
+      !selectedInstallationId
+    ) {
       setSelectedInstallationId(installationsData.installations[0].$id)
     }
   }, [installationsData, selectedInstallationId])
@@ -148,7 +166,8 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   // Update function mutation
   const updateFunctionMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Function>) => {
-      if (!projectId || !func.$id) throw new Error('Project ID and Function ID are required')
+      if (!projectId || !func.$id)
+        throw new Error('Project ID and Function ID are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.update({
         functionId: func.$id,
@@ -174,10 +193,22 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       // Refresh repository data if connected
       if (hasRepository) {
         queryClient.invalidateQueries({
-          queryKey: ['vcs', 'repository', projectId, func.installationId, func.providerRepositoryId],
+          queryKey: [
+            'vcs',
+            'repository',
+            projectId,
+            func.installationId,
+            func.providerRepositoryId,
+          ],
         })
         queryClient.invalidateQueries({
-          queryKey: ['vcs', 'branches', projectId, func.installationId, func.providerRepositoryId],
+          queryKey: [
+            'vcs',
+            'branches',
+            projectId,
+            func.installationId,
+            func.providerRepositoryId,
+          ],
         })
       }
     },
@@ -189,7 +220,12 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   // Connect repository mutation
   const connectRepositoryMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId || !func.$id || !selectedInstallationId || !selectedRepositoryId) {
+      if (
+        !projectId ||
+        !func.$id ||
+        !selectedInstallationId ||
+        !selectedRepositoryId
+      ) {
         throw new Error('Installation and Repository are required')
       }
       const projectSdk = sdk.forProject(projectId)
@@ -229,7 +265,8 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   // Disconnect repository mutation
   const disconnectRepositoryMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId || !func.$id) throw new Error('Project ID and Function ID are required')
+      if (!projectId || !func.$id)
+        throw new Error('Project ID and Function ID are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.update({
         functionId: func.$id,
@@ -297,118 +334,139 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   }
 
   // Root directory picker functions
-  const loadDirectoryContents = useCallback(async (path: string): Promise<void> => {
-    if (!projectId || !func.installationId || !func.providerRepositoryId) return
-    if (directoryCache.has(path)) return
+  const loadDirectoryContents = useCallback(
+    async (path: string): Promise<void> => {
+      if (!projectId || !func.installationId || !func.providerRepositoryId)
+        return
+      if (directoryCache.has(path)) return
 
-    try {
-      const contents = await queryClient.fetchQuery({
-        queryKey: [
-          'vcs',
-          'contents',
-          projectId,
-          func.installationId,
-          func.providerRepositoryId,
-          path,
-          selectedBranch || 'main',
-        ],
-        queryFn: async () => {
-          const projectSdk = sdk.forProject(projectId)
-          // Normalize path: API expects './' for root, or path without './' prefix for nested
-          let normalizedPath: string | undefined
-          if (path === './') {
-            normalizedPath = './'
-          } else {
-            // Remove leading ./ for nested directories
-            normalizedPath = path.replace(/^\.\//, '')
-            // If empty after removing ./, use undefined
-            if (normalizedPath === '') {
-              normalizedPath = undefined
+      try {
+        const contents = await queryClient.fetchQuery({
+          queryKey: [
+            'vcs',
+            'contents',
+            projectId,
+            func.installationId,
+            func.providerRepositoryId,
+            path,
+            selectedBranch || 'main',
+          ],
+          queryFn: async () => {
+            const projectSdk = sdk.forProject(projectId)
+            // Normalize path: API expects './' for root, or path without './' prefix for nested
+            let normalizedPath: string | undefined
+            if (path === './') {
+              normalizedPath = './'
+            } else {
+              // Remove leading ./ for nested directories
+              normalizedPath = path.replace(/^\.\//, '')
+              // If empty after removing ./, use undefined
+              if (normalizedPath === '') {
+                normalizedPath = undefined
+              }
             }
-          }
-          const response = await projectSdk.vcs.getRepositoryContents({
-            installationId: func.installationId!,
-            providerRepositoryId: func.providerRepositoryId!,
-            providerRootDirectory: normalizedPath,
-            providerReference: selectedBranch || 'main',
-          })
-          return response
-        },
-        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-      })
-
-      setDirectoryCache((prev) => {
-        const newCache = new Map(prev)
-        newCache.set(path, { contents: contents.contents })
-        
-        // Preload all subdirectories found in this directory
-        const subdirectories = contents.contents.filter((item) => item.isDirectory)
-        subdirectories.forEach((dir) => {
-          // Construct path for subdirectory
-          let subdirPath: string
-          if (path === './') {
-            subdirPath = `./${dir.name}`
-          } else if (path.startsWith('./')) {
-            subdirPath = `${path}/${dir.name}`
-          } else {
-            subdirPath = `./${path}/${dir.name}`
-          }
-          
-          // Preload subdirectory contents if not already cached
-          if (!newCache.has(subdirPath)) {
-            // Load asynchronously without blocking
-            queryClient.fetchQuery({
-              queryKey: [
-                'vcs',
-                'contents',
-                projectId,
-                func.installationId,
-                func.providerRepositoryId,
-                subdirPath,
-                selectedBranch || 'main',
-              ],
-              queryFn: async () => {
-                const projectSdk = sdk.forProject(projectId)
-                let normalizedPath: string | undefined
-                if (subdirPath === './') {
-                  normalizedPath = './'
-                } else {
-                  normalizedPath = subdirPath.replace(/^\.\//, '')
-                  if (normalizedPath === '') {
-                    normalizedPath = undefined
-                  }
-                }
-                return await projectSdk.vcs.getRepositoryContents({
-                  installationId: func.installationId!,
-                  providerRepositoryId: func.providerRepositoryId!,
-                  providerRootDirectory: normalizedPath,
-                  providerReference: selectedBranch || 'main',
-                })
-              },
-              staleTime: 5 * 60 * 1000,
-            }).then((subdirContents) => {
-              // Update cache with preloaded subdirectory contents
-              setDirectoryCache((currentCache) => {
-                const updatedCache = new Map(currentCache)
-                updatedCache.set(subdirPath, { contents: subdirContents.contents })
-                return updatedCache
-              })
-            }).catch((error) => {
-              console.error(`Failed to preload subdirectory ${subdirPath}:`, error)
+            const response = await projectSdk.vcs.getRepositoryContents({
+              installationId: func.installationId!,
+              providerRepositoryId: func.providerRepositoryId!,
+              providerRootDirectory: normalizedPath,
+              providerReference: selectedBranch || 'main',
             })
-          }
+            return response
+          },
+          staleTime: 5 * 60 * 1000, // Cache for 5 minutes
         })
-        
-        return newCache
-      })
-    } catch (error) {
-      console.error('Failed to load directory contents:', error)
-    }
-  }, [projectId, func.installationId, func.providerRepositoryId, selectedBranch, directoryCache, queryClient])
+
+        setDirectoryCache((prev) => {
+          const newCache = new Map(prev)
+          newCache.set(path, { contents: contents.contents })
+
+          // Preload all subdirectories found in this directory
+          const subdirectories = contents.contents.filter(
+            (item) => item.isDirectory,
+          )
+          subdirectories.forEach((dir) => {
+            // Construct path for subdirectory
+            let subdirPath: string
+            if (path === './') {
+              subdirPath = `./${dir.name}`
+            } else if (path.startsWith('./')) {
+              subdirPath = `${path}/${dir.name}`
+            } else {
+              subdirPath = `./${path}/${dir.name}`
+            }
+
+            // Preload subdirectory contents if not already cached
+            if (!newCache.has(subdirPath)) {
+              // Load asynchronously without blocking
+              queryClient
+                .fetchQuery({
+                  queryKey: [
+                    'vcs',
+                    'contents',
+                    projectId,
+                    func.installationId,
+                    func.providerRepositoryId,
+                    subdirPath,
+                    selectedBranch || 'main',
+                  ],
+                  queryFn: async () => {
+                    const projectSdk = sdk.forProject(projectId)
+                    let normalizedPath: string | undefined
+                    if (subdirPath === './') {
+                      normalizedPath = './'
+                    } else {
+                      normalizedPath = subdirPath.replace(/^\.\//, '')
+                      if (normalizedPath === '') {
+                        normalizedPath = undefined
+                      }
+                    }
+                    return await projectSdk.vcs.getRepositoryContents({
+                      installationId: func.installationId!,
+                      providerRepositoryId: func.providerRepositoryId!,
+                      providerRootDirectory: normalizedPath,
+                      providerReference: selectedBranch || 'main',
+                    })
+                  },
+                  staleTime: 5 * 60 * 1000,
+                })
+                .then((subdirContents) => {
+                  // Update cache with preloaded subdirectory contents
+                  setDirectoryCache((currentCache) => {
+                    const updatedCache = new Map(currentCache)
+                    updatedCache.set(subdirPath, {
+                      contents: subdirContents.contents,
+                    })
+                    return updatedCache
+                  })
+                })
+                .catch((error) => {
+                  console.error(
+                    `Failed to preload subdirectory ${subdirPath}:`,
+                    error,
+                  )
+                })
+            }
+          })
+
+          return newCache
+        })
+      } catch (error) {
+        console.error('Failed to load directory contents:', error)
+      }
+    },
+    [
+      projectId,
+      func.installationId,
+      func.providerRepositoryId,
+      selectedBranch,
+      directoryCache,
+      queryClient,
+    ],
+  )
 
   const toggleDirectory = async (path: string) => {
     const isCurrentlyExpanded = expandedPaths.has(path)
-    
+
     if (isCurrentlyExpanded) {
       // Collapse: remove from expanded paths
       setExpandedPaths((prev) => {
@@ -448,7 +506,9 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     if (rootDirectoryDialogOpen && hasRepository) {
       const rootContents = directoryCache.get('./')
       if (rootContents) {
-        const firstLevelDirs = rootContents.contents.filter((item) => item.isDirectory)
+        const firstLevelDirs = rootContents.contents.filter(
+          (item) => item.isDirectory,
+        )
         // Preload all first-level directories in parallel
         firstLevelDirs.forEach((dir) => {
           const dirPath = `./${dir.name}`
@@ -461,7 +521,12 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
         })
       }
     }
-  }, [rootDirectoryDialogOpen, hasRepository, directoryCache, loadDirectoryContents])
+  }, [
+    rootDirectoryDialogOpen,
+    hasRepository,
+    directoryCache,
+    loadDirectoryContents,
+  ])
 
   const repositories = useMemo(() => {
     return repositoriesData?.runtimeProviderRepositories || []
@@ -478,7 +543,9 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Git Repository</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Git Repository
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Connect your function to a Git repository for automatic deployments
         </p>
@@ -497,7 +564,10 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
             <p className="mb-4 text-[13px] text-muted-foreground">
               Connect a repository to enable automatic deployments
             </p>
-            <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
+            <Dialog
+              open={connectDialogOpen}
+              onOpenChange={setConnectDialogOpen}
+            >
               <DialogTrigger asChild>
                 <Button size="sm" className="h-9 text-[13px]">
                   Connect repository
@@ -507,7 +577,8 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 <DialogHeader className="px-6 pt-6 text-left">
                   <DialogTitle>Connect Repository</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
-                    Select a Git installation and repository to connect to this function
+                    Select a Git installation and repository to connect to this
+                    function
                   </DialogDescription>
                 </DialogHeader>
                 <div className="border-t border-border" />
@@ -518,25 +589,35 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                       <Label htmlFor="installation" className="text-[13px]">
                         Installation
                       </Label>
-                      {installationsData?.installations && installationsData.installations.length > 0 ? (
+                      {installationsData?.installations &&
+                      installationsData.installations.length > 0 ? (
                         <Select
                           value={selectedInstallationId}
                           onValueChange={setSelectedInstallationId}
                         >
-                          <SelectTrigger id="installation" className="mt-2 h-9 border-border bg-background text-[13px]">
+                          <SelectTrigger
+                            id="installation"
+                            className="mt-2 h-9 border-border bg-background text-[13px]"
+                          >
                             <SelectValue placeholder="Select installation" />
                           </SelectTrigger>
                           <SelectContent>
-                            {installationsData.installations.map((installation) => (
-                              <SelectItem key={installation.$id} value={installation.$id}>
-                                {installation.organization}
-                              </SelectItem>
-                            ))}
+                            {installationsData.installations.map(
+                              (installation) => (
+                                <SelectItem
+                                  key={installation.$id}
+                                  value={installation.$id}
+                                >
+                                  {installation.organization}
+                                </SelectItem>
+                              ),
+                            )}
                           </SelectContent>
                         </Select>
                       ) : (
                         <p className="mt-2 text-[13px] text-muted-foreground">
-                          No installations available. Please add an installation in project settings.
+                          No installations available. Please add an installation
+                          in project settings.
                         </p>
                       )}
                     </div>
@@ -566,12 +647,16 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                                 onClick={() => setSelectedRepositoryId(repo.id)}
                                 className={cn(
                                   'flex w-full items-center gap-3 rounded-md border border-border bg-background px-3 py-2 text-left transition-colors hover:bg-accent',
-                                  selectedRepositoryId === repo.id && 'bg-accent',
+                                  selectedRepositoryId === repo.id &&
+                                    'bg-accent',
                                 )}
                               >
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted">
                                   {repo.runtime ? (
-                                    <RuntimeIcon runtime={repo.runtime} className="h-4 w-4" />
+                                    <RuntimeIcon
+                                      runtime={repo.runtime}
+                                      className="h-4 w-4"
+                                    />
                                   ) : (
                                     <GitHubIcon className="h-4 w-4 text-muted-foreground" />
                                   )}
@@ -617,7 +702,11 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                   </Button>
                   <Button
                     onClick={handleConnectRepository}
-                    disabled={!selectedInstallationId || !selectedRepositoryId || connectRepositoryMutation.isPending}
+                    disabled={
+                      !selectedInstallationId ||
+                      !selectedRepositoryId ||
+                      connectRepositoryMutation.isPending
+                    }
                   >
                     Connect
                   </Button>
@@ -666,7 +755,10 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                       </a>
                     </Button>
                   )}
-                  <Dialog open={disconnectDialogOpen} onOpenChange={setDisconnectDialogOpen}>
+                  <Dialog
+                    open={disconnectDialogOpen}
+                    onOpenChange={setDisconnectDialogOpen}
+                  >
                     <DialogTrigger asChild>
                       <Button
                         variant="outline"
@@ -681,7 +773,13 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                       <DialogHeader className="px-6 pt-6 text-left">
                         <DialogTitle>Disconnect Repository</DialogTitle>
                         <DialogDescription className="text-[13px] mt-2">
-                          Are you sure you want to disconnect <span className="font-medium text-foreground">{repository.organization}/{repository.name}</span> from this function? This will remove all Git configuration and you will need to reconnect the repository to enable automatic deployments.
+                          Are you sure you want to disconnect{' '}
+                          <span className="font-medium text-foreground">
+                            {repository.organization}/{repository.name}
+                          </span>{' '}
+                          from this function? This will remove all Git
+                          configuration and you will need to reconnect the
+                          repository to enable automatic deployments.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -707,8 +805,10 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
             ) : null}
 
             <fieldset className="rounded-lg border border-border p-4 space-y-4">
-              <legend className="text-[13px] font-medium text-foreground px-2">Branch Settings</legend>
-              
+              <legend className="text-[13px] font-medium text-foreground px-2">
+                Branch Settings
+              </legend>
+
               {/* Branch selector */}
               <div>
                 <Label htmlFor="branch" className="text-[13px]">
@@ -717,11 +817,19 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 {branchesLoading ? (
                   <div className="mt-2 flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <p className="text-[13px] text-muted-foreground">Loading branches...</p>
+                    <p className="text-[13px] text-muted-foreground">
+                      Loading branches...
+                    </p>
                   </div>
                 ) : sortedBranches.length > 0 ? (
-                  <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                    <SelectTrigger id="branch" className="mt-2 h-9 border-border bg-background text-[13px]">
+                  <Select
+                    value={selectedBranch}
+                    onValueChange={setSelectedBranch}
+                  >
+                    <SelectTrigger
+                      id="branch"
+                      className="mt-2 h-9 border-border bg-background text-[13px]"
+                    >
                       <SelectValue placeholder="Select branch" />
                     </SelectTrigger>
                     <SelectContent>
@@ -759,9 +867,16 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                     placeholder="./"
                     className="h-9 font-mono border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                   />
-                  <Dialog open={rootDirectoryDialogOpen} onOpenChange={setRootDirectoryDialogOpen}>
+                  <Dialog
+                    open={rootDirectoryDialogOpen}
+                    onOpenChange={setRootDirectoryDialogOpen}
+                  >
                     <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-9 text-[13px]">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                      >
                         Select
                       </Button>
                     </DialogTrigger>
@@ -831,7 +946,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
                 />
               </div>
             </fieldset>
-
           </div>
         )}
       </div>
@@ -883,10 +997,11 @@ function DirectoryTree({
 }: DirectoryTreeProps) {
   const isExpanded = expandedPaths.has(path)
   const contents = directoryCache.get(path)
-  const directories = contents?.contents.filter((item) => item.isDirectory) || []
+  const directories =
+    contents?.contents.filter((item) => item.isDirectory) || []
   const hasSubdirectories = directories.length > 0
   const hasContents = !!contents
-  
+
   // Load contents when expanded if not already loaded
   useEffect(() => {
     if (isExpanded && !hasContents) {
@@ -932,7 +1047,7 @@ function DirectoryTree({
         ) : (
           <div className="w-3.5 shrink-0" />
         )}
-        <div 
+        <div
           className="directory-select flex items-center gap-2 flex-1 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation()
@@ -978,4 +1093,3 @@ function DirectoryTree({
     </div>
   )
 }
-

@@ -2,7 +2,12 @@
  * Types for background file upload queue system
  */
 
-export type UploadStatus = 'pending' | 'uploading' | 'completed' | 'failed' | 'cancelled'
+export type UploadStatus =
+  | 'pending'
+  | 'uploading'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
 
 export interface UploadItem {
   id: string
@@ -33,4 +38,3 @@ export interface UploadProgress {
 }
 
 export type UploadProgressCallback = (progress: UploadProgress) => void
-

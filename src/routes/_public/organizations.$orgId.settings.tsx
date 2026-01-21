@@ -24,4 +24,3 @@ export const Route = createFileRoute('/_public/organizations/$orgId/settings')({
 function SettingsPage() {
   return null
 }
-

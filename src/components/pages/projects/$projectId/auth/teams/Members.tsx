@@ -1,6 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
-import { useTeamMemberships, useCreateTeamMembership, useDeleteTeamMembership } from '@/lib/react-query/hooks'
+import {
+  useTeamMemberships,
+  useCreateTeamMembership,
+  useDeleteTeamMembership,
+} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,15 +44,21 @@ export function TeamMembers() {
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
-  const [selectedMemberships, setSelectedMemberships] = useState<Set<string>>(new Set())
+  const [selectedMemberships, setSelectedMemberships] = useState<Set<string>>(
+    new Set(),
+  )
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [membershipToDelete, setMembershipToDelete] = useState<Models.Membership | null>(null)
+  const [membershipToDelete, setMembershipToDelete] =
+    useState<Models.Membership | null>(null)
 
-  const {
-    data: membershipsData,
-    isLoading,
-  } = useTeamMemberships(projectId, teamId, page - 1, MEMBERSHIPS_PER_PAGE, search)
+  const { data: membershipsData, isLoading } = useTeamMemberships(
+    projectId,
+    teamId,
+    page - 1,
+    MEMBERSHIPS_PER_PAGE,
+    search,
+  )
 
   const createMembershipMutation = useCreateTeamMembership(projectId, teamId)
   const deleteMembershipMutation = useDeleteTeamMembership(projectId, teamId)
@@ -69,7 +79,7 @@ export function TeamMembers() {
     if (!teamId) return
 
     const url = `${window.location.origin}/invite`
-    
+
     try {
       await createMembershipMutation.mutateAsync({
         email: data.email,
@@ -77,12 +87,14 @@ export function TeamMembers() {
         roles: data.roles,
         url,
       })
-      
+
       const successName = data.name || data.email
       toast.success(`${successName} created successfully`)
       setCreateDialogOpen(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to create membership')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to create membership',
+      )
     }
   }
 
@@ -96,7 +108,9 @@ export function TeamMembers() {
       setMembershipToDelete(null)
       setSelectedMemberships(new Set())
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete membership')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to delete membership',
+      )
     }
   }
 
@@ -106,13 +120,17 @@ export function TeamMembers() {
     try {
       await Promise.all(
         Array.from(selectedMemberships).map((membershipId) =>
-          deleteMembershipMutation.mutateAsync(membershipId)
-        )
+          deleteMembershipMutation.mutateAsync(membershipId),
+        ),
       )
-      toast.success(`Deleted ${selectedMemberships.size} member${selectedMemberships.size !== 1 ? 's' : ''}`)
+      toast.success(
+        `Deleted ${selectedMemberships.size} member${selectedMemberships.size !== 1 ? 's' : ''}`,
+      )
       setSelectedMemberships(new Set())
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete members')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to delete members',
+      )
     }
   }
 
@@ -191,7 +209,7 @@ export function TeamMembers() {
                   const userName = membership.userName || '-'
                   const userEmail = membership.userEmail || ''
                   const roles = membership.roles || []
-                  
+
                   return (
                     <TableRow
                       key={membership.$id}
@@ -205,13 +223,18 @@ export function TeamMembers() {
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <Checkbox
                           checked={selectedMemberships.has(membership.$id)}
-                          onCheckedChange={() => toggleMembership(membership.$id)}
+                          onCheckedChange={() =>
+                            toggleMembership(membership.$id)
+                          }
                         />
                       </TableCell>
                       <TableCell>
                         <Link
                           to="/projects/$projectId/auth/$userId"
-                          params={{ projectId: projectId as string, userId: membership.userId }}
+                          params={{
+                            projectId: projectId as string,
+                            userId: membership.userId,
+                          }}
                           className="flex items-center gap-3 min-w-0"
                         >
                           <InitialsAvatar
@@ -243,7 +266,9 @@ export function TeamMembers() {
                               </Badge>
                             ))
                           ) : (
-                            <span className="text-[12px] text-muted-foreground">-</span>
+                            <span className="text-[12px] text-muted-foreground">
+                              -
+                            </span>
                           )}
                         </div>
                       </TableCell>
@@ -276,7 +301,8 @@ export function TeamMembers() {
           {selectedMemberships.size > 0 && (
             <div className="mt-4 flex items-center justify-between rounded-lg border border-border bg-card p-4">
               <span className="text-[13px] text-foreground">
-                {selectedMemberships.size} member{selectedMemberships.size !== 1 ? 's' : ''} selected
+                {selectedMemberships.size} member
+                {selectedMemberships.size !== 1 ? 's' : ''} selected
               </span>
               <Button
                 variant="destructive"
@@ -383,7 +409,7 @@ function CreateMembershipDialog({
           <DialogTitle>Create membership</DialogTitle>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <div className="space-y-2">
@@ -464,7 +490,8 @@ function CreateMembershipDialog({
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-[12px]">
-                  Roles are used to manage access permissions. You can create any role you want.
+                  Roles are used to manage access permissions. You can create
+                  any role you want.
                 </AlertDescription>
               </Alert>
             </div>
@@ -516,10 +543,14 @@ function DeleteMembershipDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Delete member</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to delete <strong>{userName} · {teamName}</strong>? This action cannot be undone.
+            Are you sure you want to delete{' '}
+            <strong>
+              {userName} · {teamName}
+            </strong>
+            ? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="outline"
@@ -544,4 +575,3 @@ function DeleteMembershipDialog({
     </Dialog>
   )
 }
-

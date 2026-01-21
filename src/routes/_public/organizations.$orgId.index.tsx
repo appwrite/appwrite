@@ -1,5 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { fetchOrganizationMemberships, fetchOrganizations, fetchActiveProjects, fetchOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  fetchOrganizationMemberships,
+  fetchOrganizations,
+  fetchActiveProjects,
+  fetchOrganizationPlan,
+} from '@/lib/react-query/hooks'
 
 const PROJECTS_PER_PAGE = 25
 const MEMBERSHIPS_PER_PAGE = 25
@@ -46,8 +51,16 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
 
       // Prefetch memberships for the organization (initial page, no search)
       await queryClient.prefetchQuery({
-        queryKey: ['memberships', 'organization', orgId, 0, MEMBERSHIPS_PER_PAGE, ''],
-        queryFn: () => fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
+        queryKey: [
+          'memberships',
+          'organization',
+          orgId,
+          0,
+          MEMBERSHIPS_PER_PAGE,
+          '',
+        ],
+        queryFn: () =>
+          fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
         staleTime: 30 * 1000, // 30 seconds
       })
     }
@@ -59,4 +72,3 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
 function OrgOverviewIndexPage() {
   return null
 }
-

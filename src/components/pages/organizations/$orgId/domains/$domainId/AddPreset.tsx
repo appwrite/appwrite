@@ -28,7 +28,7 @@ const PRESETS = [
   { id: 'icloud', label: 'iCloud' },
 ] as const
 
-type PresetType = typeof PRESETS[number]['id']
+type PresetType = (typeof PRESETS)[number]['id']
 
 export function AddPresetDialog({
   open,
@@ -69,7 +69,9 @@ export function AddPresetDialog({
         ),
       )
 
-      toast.success(`Successfully added ${presetRecords.dnsRecords.length} DNS records from ${PRESETS.find(p => p.id === selectedPreset)?.label}`)
+      toast.success(
+        `Successfully added ${presetRecords.dnsRecords.length} DNS records from ${PRESETS.find((p) => p.id === selectedPreset)?.label}`,
+      )
       onAdd()
       onOpenChange(false)
       setSelectedPreset(null)
@@ -95,7 +97,8 @@ export function AddPresetDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Add preset records</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Select an email provider preset to automatically add the required DNS records.
+            Select an email provider preset to automatically add the required
+            DNS records.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -117,7 +120,9 @@ export function AddPresetDialog({
           {selectedPreset && presetRecords && (
             <div className="mt-4 rounded-lg border border-border bg-muted/30 p-3">
               <p className="text-[12px] text-muted-foreground mb-1">
-                This will add {presetRecords.dnsRecords?.length || 0} DNS record{(presetRecords.dnsRecords?.length || 0) !== 1 ? 's' : ''} for {selectedPresetLabel}
+                This will add {presetRecords.dnsRecords?.length || 0} DNS record
+                {(presetRecords.dnsRecords?.length || 0) !== 1 ? 's' : ''} for{' '}
+                {selectedPresetLabel}
               </p>
             </div>
           )}
@@ -133,7 +138,11 @@ export function AddPresetDialog({
           </Button>
           <Button
             onClick={handleAddPreset}
-            disabled={!selectedPreset || createRecordMutation.isPending || isLoadingPresets}
+            disabled={
+              !selectedPreset ||
+              createRecordMutation.isPending ||
+              isLoadingPresets
+            }
             className="gap-2"
           >
             {createRecordMutation.isPending && (
@@ -146,4 +155,3 @@ export function AddPresetDialog({
     </Dialog>
   )
 }
-

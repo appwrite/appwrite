@@ -1,12 +1,15 @@
 /**
  * Database Schema Export Utility
- * 
+ *
  * Generates database schema in various formats for AI agents and IDEs
  */
 
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { fetchProjectTableColumns, fetchProjectTableIndexes } from '@/lib/react-query/hooks/databases'
+import {
+  fetchProjectTableColumns,
+  fetchProjectTableIndexes,
+} from '@/lib/react-query/hooks/databases'
 
 export interface DatabaseSchema {
   database: {
@@ -56,17 +59,17 @@ export async function fetchDatabaseSchema(
   databaseId: string,
 ): Promise<DatabaseSchema> {
   const projectSdk = sdk.forProject(projectId)
-  
+
   // Fetch database
   const db = await (projectSdk.tablesDB as any).get(databaseId)
-  
+
   // Fetch all tables
   const tablesResponse = await (projectSdk.tablesDB as any).listTables(
     databaseId,
     [],
-    undefined
+    undefined,
   )
-  
+
   const tables: TableSchema[] = await Promise.all(
     (tablesResponse.tables || []).map(async (table: any) => {
       // Fetch columns and indexes for each table
@@ -74,30 +77,34 @@ export async function fetchDatabaseSchema(
         fetchProjectTableColumns(projectId, databaseId, table.$id),
         fetchProjectTableIndexes(projectId, databaseId, table.$id),
       ])
-      
-      const columns: ColumnSchema[] = (columnsResponse.columns || []).map((col: any) => ({
-        key: col.key || col.$id,
-        type: col.type || 'string',
-        required: col.required === true,
-        array: col.array === true,
-        size: col.size ?? null,
-        default: col.default ?? null,
-        format: col.format || undefined,
-        elements: col.elements || undefined,
-        min: col.min ?? null,
-        max: col.max ?? null,
-        relatedTable: col.relatedTable || col.relatedCollection || undefined,
-        relatedColumn: col.relatedColumn || col.relatedAttribute || undefined,
-        relationType: col.relationType || col.relation || undefined,
-      }))
-      
-      const indexes: IndexSchema[] = (indexesResponse.indexes || []).map((idx: any) => ({
-        key: idx.key || idx.$id,
-        type: idx.type || 'key',
-        attributes: idx.attributes || [],
-        orders: idx.orders || undefined,
-      }))
-      
+
+      const columns: ColumnSchema[] = (columnsResponse.columns || []).map(
+        (col: any) => ({
+          key: col.key || col.$id,
+          type: col.type || 'string',
+          required: col.required === true,
+          array: col.array === true,
+          size: col.size ?? null,
+          default: col.default ?? null,
+          format: col.format || undefined,
+          elements: col.elements || undefined,
+          min: col.min ?? null,
+          max: col.max ?? null,
+          relatedTable: col.relatedTable || col.relatedCollection || undefined,
+          relatedColumn: col.relatedColumn || col.relatedAttribute || undefined,
+          relationType: col.relationType || col.relation || undefined,
+        }),
+      )
+
+      const indexes: IndexSchema[] = (indexesResponse.indexes || []).map(
+        (idx: any) => ({
+          key: idx.key || idx.$id,
+          type: idx.type || 'key',
+          attributes: idx.attributes || [],
+          orders: idx.orders || undefined,
+        }),
+      )
+
       return {
         id: table.$id,
         name: table.name || 'Unnamed Table',
@@ -106,9 +113,9 @@ export async function fetchDatabaseSchema(
         columns,
         indexes,
       }
-    })
+    }),
   )
-  
+
   return {
     database: {
       id: db.$id,
@@ -132,30 +139,30 @@ export function formatSchemaAsMarkdown(schema: DatabaseSchema): string {
   let markdown = `# Database Schema: ${schema.database.name}\n\n`
   markdown += `**Database ID:** \`${schema.database.id}\`\n\n`
   markdown += `## Tables\n\n`
-  
+
   if (schema.tables.length === 0) {
     markdown += `No tables found.\n`
     return markdown
   }
-  
+
   for (const table of schema.tables) {
     markdown += `### ${table.name}\n\n`
     markdown += `**Table ID:** \`${table.id}\`\n\n`
     markdown += `**Status:** ${table.enabled ? 'Enabled' : 'Disabled'}  \n`
     markdown += `**Row Security:** ${table.rowSecurity ? 'Enabled' : 'Disabled'}\n\n`
-    
+
     if (table.columns.length > 0) {
       markdown += `#### Columns\n\n`
       markdown += `| Column | Type | Required | Default | Size | Format | Description |\n`
       markdown += `|--------|------|----------|---------|------|--------|------------|\n`
-      
+
       for (const col of table.columns) {
         const typeDisplay = col.array ? `${col.type}[]` : col.type
         const requiredDisplay = col.required ? 'Yes' : 'No'
         const defaultDisplay = col.default !== null ? `\`${col.default}\`` : '-'
         const sizeDisplay = col.size ? col.size.toString() : '-'
         const formatDisplay = col.format || '-'
-        
+
         let description = ''
         if (col.relatedTable) {
           description = `Relation to \`${col.relatedTable}\``
@@ -166,29 +173,29 @@ export function formatSchemaAsMarkdown(schema: DatabaseSchema): string {
             description += ` (${col.relationType})`
           }
         }
-        
+
         markdown += `| \`${col.key}\` | ${typeDisplay} | ${requiredDisplay} | ${defaultDisplay} | ${sizeDisplay} | ${formatDisplay} | ${description || '-'} |\n`
       }
-      
+
       markdown += `\n`
     }
-    
+
     if (table.indexes.length > 0) {
       markdown += `#### Indexes\n\n`
       markdown += `| Index | Type | Attributes |\n`
       markdown += `|-------|------|------------|\n`
-      
+
       for (const idx of table.indexes) {
         const attributesDisplay = idx.attributes.join(', ')
         markdown += `| \`${idx.key}\` | ${idx.type} | ${attributesDisplay} |\n`
       }
-      
+
       markdown += `\n`
     }
-    
+
     markdown += `---\n\n`
   }
-  
+
   return markdown
 }
 
@@ -199,25 +206,25 @@ export function formatSchemaAsTypeScript(schema: DatabaseSchema): string {
   let typescript = `// Database Schema: ${schema.database.name}\n`
   typescript += `// Database ID: ${schema.database.id}\n\n`
   typescript += `import type { Models } from '@appwrite.io/console'\n\n`
-  
+
   if (schema.tables.length === 0) {
     typescript += `// No tables found.\n`
     return typescript
   }
-  
+
   for (const table of schema.tables) {
     const typeName = `${toPascalCase(table.name)}Row`
     typescript += `export type ${typeName} = Models.Row & {\n`
-    
+
     for (const col of table.columns) {
       const tsType = getTypeScriptType(col)
       const optional = col.required ? '' : '?'
       typescript += `  ${col.key}${optional}: ${tsType}\n`
     }
-    
+
     typescript += `}\n\n`
   }
-  
+
   return typescript
 }
 
@@ -228,7 +235,7 @@ function toPascalCase(str: string): string {
   return str
     .replace(/[^a-zA-Z0-9]/g, ' ')
     .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join('')
     .replace(/^[a-z]/, (char) => char.toUpperCase())
 }
@@ -238,7 +245,7 @@ function toPascalCase(str: string): string {
  */
 function getTypeScriptType(col: ColumnSchema): string {
   let baseType = 'string'
-  
+
   switch (col.type) {
     case 'string':
       baseType = 'string'
@@ -264,15 +271,15 @@ function getTypeScriptType(col: ColumnSchema): string {
     default:
       baseType = 'any'
   }
-  
+
   if (col.array) {
     return `${baseType}[]`
   }
-  
+
   if (!col.required) {
     return `${baseType} | null`
   }
-  
+
   return baseType
 }
 
@@ -280,27 +287,28 @@ function getTypeScriptType(col: ColumnSchema): string {
  * Formats schema as SVG diagram
  */
 export function formatSchemaAsSVG(schema: DatabaseSchema): string {
-  const isDark = typeof window !== 'undefined' && (
-    document.documentElement.classList.contains('dark') ||
-    window.matchMedia('(prefers-color-scheme: dark)').matches
-  )
-  
+  const isDark =
+    typeof window !== 'undefined' &&
+    (document.documentElement.classList.contains('dark') ||
+      window.matchMedia('(prefers-color-scheme: dark)').matches)
+
   const cardColor = isDark ? '#242424' : '#ffffff'
   const foregroundColor = isDark ? '#ffffff' : '#000000'
   const borderColor = isDark ? '#444444' : '#b3b3b3'
   const headerBgColor = isDark ? '#2a2a2a' : '#f0f0f0'
-  
+
   const tableWidth = 250
   const tableHeight = 200
   const tableSpacing = 50
   const padding = 50
-  
+
   // Calculate grid layout
   const cols = Math.ceil(Math.sqrt(schema.tables.length))
   const rows = Math.ceil(schema.tables.length / cols)
   const totalWidth = cols * tableWidth + (cols - 1) * tableSpacing + padding * 2
-  const totalHeight = rows * tableHeight + (rows - 1) * tableSpacing + padding * 2
-  
+  const totalHeight =
+    rows * tableHeight + (rows - 1) * tableSpacing + padding * 2
+
   let svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${totalWidth}" height="${totalHeight}" xmlns="http://www.w3.org/2000/svg">
   <defs>
@@ -316,23 +324,23 @@ export function formatSchemaAsSVG(schema: DatabaseSchema): string {
     ${escapeXml(schema.database.name)}
   </text>
 `
-  
+
   schema.tables.forEach((table, index) => {
     const col = index % cols
     const row = Math.floor(index / cols)
     const x = padding + col * (tableWidth + tableSpacing)
     const y = padding + 60 + row * (tableHeight + tableSpacing)
-    
+
     // Table box
     svg += `  <rect x="${x}" y="${y}" width="${tableWidth}" height="${tableHeight}" rx="8" fill="${cardColor}" stroke="${borderColor}" stroke-width="1" />\n`
-    
+
     // Header
     svg += `  <rect x="${x}" y="${y}" width="${tableWidth}" height="40" rx="8" fill="${headerBgColor}" />\n`
     svg += `  <line x1="${x}" y1="${y + 40}" x2="${x + tableWidth}" y2="${y + 40}" stroke="${borderColor}" stroke-width="1" />\n`
-    
+
     // Table name
     svg += `  <text x="${x + 12}" y="${y + 26}" class="table-header" fill="${foregroundColor}">${escapeXml(table.name)}</text>\n`
-    
+
     // Columns (show first 5)
     const visibleColumns = table.columns.slice(0, 5)
     visibleColumns.forEach((col, colIndex) => {
@@ -340,14 +348,14 @@ export function formatSchemaAsSVG(schema: DatabaseSchema): string {
       svg += `  <text x="${x + 12}" y="${colY}" class="column-name" fill="${foregroundColor}">${escapeXml(col.key)}</text>\n`
       svg += `  <text x="${x + tableWidth - 12}" y="${colY}" class="column-type" text-anchor="end" fill="${foregroundColor}">${escapeXml(col.type)}</text>\n`
     })
-    
+
     if (table.columns.length > 5) {
       svg += `  <text x="${x + tableWidth / 2}" y="${y + tableHeight - 10}" text-anchor="middle" font-size="10" fill="${foregroundColor}" opacity="0.6">+${table.columns.length - 5} more</text>\n`
     }
   })
-  
+
   svg += `</svg>`
-  
+
   return svg
 }
 
@@ -409,7 +417,11 @@ export function getClaudeDeepLink(schema: DatabaseSchema): string {
 /**
  * Downloads content as a file
  */
-export function downloadAsFile(content: string, filename: string, mimeType: string = 'text/plain') {
+export function downloadAsFile(
+  content: string,
+  filename: string,
+  mimeType: string = 'text/plain',
+) {
   const blob = new Blob([content], { type: mimeType })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -420,4 +432,3 @@ export function downloadAsFile(content: string, filename: string, mimeType: stri
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
-

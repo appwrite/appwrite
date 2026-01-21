@@ -4,7 +4,10 @@ import { cn } from '@/lib/utils'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { RefreshControls, type RefreshInterval } from '@/components/global/shared/RefreshControls'
+import {
+  RefreshControls,
+  type RefreshInterval,
+} from '@/components/global/shared/RefreshControls'
 import {
   Table,
   TableBody,
@@ -41,12 +44,12 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
 
   const pageIndexed = currentPage - 1
 
-  const {
-    messages,
-    total,
-    isLoading,
-    refetch,
-  } = useRealtimeMessages(projectId, pageIndexed, pageSize, dateRange)
+  const { messages, total, isLoading, refetch } = useRealtimeMessages(
+    projectId,
+    pageIndexed,
+    pageSize,
+    dateRange,
+  )
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -84,14 +87,18 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
       {/* Messages Table */}
       {isLoading && (!messages || messages.length === 0) ? (
         <div className="flex h-64 items-center justify-center px-4 sm:px-6">
-          <p className="text-[13px] text-muted-foreground">Loading messages...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading messages...
+          </p>
         </div>
       ) : messages && messages.length > 0 ? (
         <>
           <Table className="border-b border-border">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[200px] pl-6 sm:pl-8">Message ID</TableHead>
+                <TableHead className="w-[200px] pl-6 sm:pl-8">
+                  Message ID
+                </TableHead>
                 <TableHead className="w-[250px]">Channel</TableHead>
                 <TableHead className="w-[200px]">Events</TableHead>
                 <TableHead className="w-[150px]">Payload Size</TableHead>

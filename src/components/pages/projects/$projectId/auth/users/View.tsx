@@ -1,5 +1,10 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useParams, useLocation, useNavigate, Link } from '@tanstack/react-router'
+import {
+  useParams,
+  useLocation,
+  useNavigate,
+  Link,
+} from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
   ArrowLeft,
@@ -69,11 +74,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { ConsoleFooter } from '@/components/global/layout/Footer'
 import {
@@ -164,7 +165,11 @@ export function UserDetailView() {
   const navigate = useNavigate()
 
   // Temporary test to verify component is rendering
-  console.log('UserDetailView component called', { projectId, userId, pathname: location.pathname })
+  console.log('UserDetailView component called', {
+    projectId,
+    userId,
+    pathname: location.pathname,
+  })
 
   // Early return if missing required params
   if (!projectId || !userId) {
@@ -174,43 +179,70 @@ export function UserDetailView() {
           <p className="text-[13px] text-muted-foreground">
             Missing project ID or user ID
           </p>
-          {!projectId && <p className="text-[12px] text-muted-foreground mt-2">Project ID is required</p>}
-          {!userId && <p className="text-[12px] text-muted-foreground mt-2">User ID is required</p>}
+          {!projectId && (
+            <p className="text-[12px] text-muted-foreground mt-2">
+              Project ID is required
+            </p>
+          )}
+          {!userId && (
+            <p className="text-[12px] text-muted-foreground mt-2">
+              User ID is required
+            </p>
+          )}
         </div>
       </div>
     )
   }
 
   // Fetch user data
-  const { data: user, isLoading: userLoading, error: userError, isFetching, isError } = useUser(projectId, userId)
+  const {
+    data: user,
+    isLoading: userLoading,
+    error: userError,
+    isFetching,
+    isError,
+  } = useUser(projectId, userId)
   const { data: mfaFactors } = useUserMFAFactors(projectId, userId)
 
   // Debug: Log to verify component is rendering
   useEffect(() => {
-    console.log('UserDetailView rendering:', { 
-      projectId, 
-      userId, 
-      userLoading, 
+    console.log('UserDetailView rendering:', {
+      projectId,
+      userId,
+      userLoading,
       isFetching,
       isError,
-      hasUser: !!user, 
+      hasUser: !!user,
       error: userError,
-      pathname: location.pathname 
+      pathname: location.pathname,
     })
-  }, [projectId, userId, userLoading, isFetching, isError, user, userError, location.pathname])
+  }, [
+    projectId,
+    userId,
+    userLoading,
+    isFetching,
+    isError,
+    user,
+    userError,
+    location.pathname,
+  ])
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
     const userIdIndex = pathParts.findIndex((part) => part === userId)
-    
+
     if (userIdIndex >= 0 && pathParts[userIdIndex + 1]) {
       const tabFromPath = pathParts[userIdIndex + 1]
-      if (['memberships', 'identities', 'targets', 'sessions'].includes(tabFromPath)) {
+      if (
+        ['memberships', 'identities', 'targets', 'sessions'].includes(
+          tabFromPath,
+        )
+      ) {
         return tabFromPath
       }
     }
-    
+
     return 'overview'
   }, [location.pathname, userId])
 
@@ -284,7 +316,9 @@ export function UserDetailView() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-destructive mb-2">Error loading user</p>
+          <p className="text-[13px] text-destructive mb-2">
+            Error loading user
+          </p>
           <p className="text-[12px] text-muted-foreground">
             {userError instanceof Error ? userError.message : 'Unknown error'}
           </p>
@@ -336,13 +370,18 @@ export function UserDetailView() {
           activeTab === 'targets' ? (
             <div className="border-b border-border bg-blue-500/5">
               <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-                <Alert variant="default" className="border-blue-500/30 bg-transparent">
+                <Alert
+                  variant="default"
+                  className="border-blue-500/30 bg-transparent"
+                >
                   <Info className="h-4 w-4 text-blue-500" />
                   <AlertTitle className="text-[13px] font-medium text-blue-600 dark:text-blue-400">
                     User targets
                   </AlertTitle>
                   <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80">
-                    User targets include emails, phone numbers, and devices with your app installed. These targets can subscribe to a topic and receive messages published to it.
+                    User targets include emails, phone numbers, and devices with
+                    your app installed. These targets can subscribe to a topic
+                    and receive messages published to it.
                   </AlertDescription>
                 </Alert>
               </div>
@@ -352,7 +391,7 @@ export function UserDetailView() {
       />
 
       <div className="flex-1 flex flex-col">
-        <div className={cn("mx-auto w-full max-w-7xl flex-1")}>
+        <div className={cn('mx-auto w-full max-w-7xl flex-1')}>
           {activeTab === 'overview' && (
             <div className="px-4 py-4 sm:px-6">
               <OverviewTab
@@ -366,26 +405,17 @@ export function UserDetailView() {
           )}
           {activeTab === 'memberships' && (
             <div className="px-4 py-4 sm:px-6">
-              <MembershipsTab
-                projectId={projectId!}
-                userId={userId!}
-              />
+              <MembershipsTab projectId={projectId!} userId={userId!} />
             </div>
           )}
           {activeTab === 'identities' && (
             <div className="px-4 py-4 sm:px-6">
-              <IdentitiesTab
-                projectId={projectId!}
-                userId={userId!}
-              />
+              <IdentitiesTab projectId={projectId!} userId={userId!} />
             </div>
           )}
           {activeTab === 'targets' && (
             <div className="px-4 py-4 sm:px-6">
-              <TargetsTab
-                projectId={projectId!}
-                userId={userId!}
-              />
+              <TargetsTab projectId={projectId!} userId={userId!} />
             </div>
           )}
           {activeTab === 'sessions' && (
@@ -416,7 +446,13 @@ interface OverviewTabProps {
   displayName: string
 }
 
-function OverviewTab({ user, mfaFactors, projectId, userId, displayName }: OverviewTabProps) {
+function OverviewTab({
+  user,
+  mfaFactors,
+  projectId,
+  userId,
+  displayName,
+}: OverviewTabProps) {
   const { data: sessionsData } = useUserSessions(projectId, userId)
   const sessions = sessionsData?.sessions || []
 
@@ -434,7 +470,11 @@ function OverviewTab({ user, mfaFactors, projectId, userId, displayName }: Overv
       <UpdatePhoneSection user={user} projectId={projectId} userId={userId} />
       <UpdatePasswordSection projectId={projectId} userId={userId} />
       <UpdateLabelsSection user={user} projectId={projectId} userId={userId} />
-      <UpdatePreferencesSection user={user} projectId={projectId} userId={userId} />
+      <UpdatePreferencesSection
+        user={user}
+        projectId={projectId}
+        userId={userId}
+      />
       <UpdateMFASection
         user={user}
         mfaFactors={mfaFactors}
@@ -464,8 +504,14 @@ function UserStatusCard({
   displayName: string
 }) {
   const [verifyMenuOpen, setVerifyMenuOpen] = useState(false)
-  const updateEmailVerification = useUpdateUserEmailVerification(projectId, userId)
-  const updatePhoneVerification = useUpdateUserPhoneVerification(projectId, userId)
+  const updateEmailVerification = useUpdateUserEmailVerification(
+    projectId,
+    userId,
+  )
+  const updatePhoneVerification = useUpdateUserPhoneVerification(
+    projectId,
+    userId,
+  )
   const updateStatus = useUpdateUserStatus(projectId, userId)
 
   const hasEmail = !!user.email
@@ -495,7 +541,9 @@ function UserStatusCard({
   const handleVerifyEmail = () => {
     updateEmailVerification.mutate(!emailVerified, {
       onSuccess: () => {
-        toast.success(`${displayName}'s email has been ${emailVerified ? 'unverified' : 'verified'}`)
+        toast.success(
+          `${displayName}'s email has been ${emailVerified ? 'unverified' : 'verified'}`,
+        )
         setVerifyMenuOpen(false)
       },
       onError: (error: Error) => {
@@ -507,7 +555,9 @@ function UserStatusCard({
   const handleVerifyPhone = () => {
     updatePhoneVerification.mutate(!phoneVerified, {
       onSuccess: () => {
-        toast.success(`${displayName}'s phone has been ${phoneVerified ? 'unverified' : 'verified'}`)
+        toast.success(
+          `${displayName}'s phone has been ${phoneVerified ? 'unverified' : 'verified'}`,
+        )
         setVerifyMenuOpen(false)
       },
       onError: (error: Error) => {
@@ -519,7 +569,9 @@ function UserStatusCard({
   const handleBlockToggle = () => {
     updateStatus.mutate(isBlocked, {
       onSuccess: () => {
-        toast.success(`${displayName} has been ${isBlocked ? 'unblocked' : 'blocked'}`)
+        toast.success(
+          `${displayName} has been ${isBlocked ? 'unblocked' : 'blocked'}`,
+        )
       },
       onError: (error: Error) => {
         toast.error(error.message || 'Failed to update status')
@@ -544,7 +596,10 @@ function UserStatusCard({
               <p className="text-[15px] font-medium text-foreground truncate">
                 {displayName}
               </p>
-              <Badge variant={statusBadge.variant} className="text-[12px] font-medium border shrink-0">
+              <Badge
+                variant={statusBadge.variant}
+                className="text-[12px] font-medium border shrink-0"
+              >
                 {statusBadge.label}
               </Badge>
             </div>
@@ -655,7 +710,9 @@ function UpdateNameSection({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Update name</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Update name
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Update the user's display name.
         </p>
@@ -729,7 +786,9 @@ function UpdateEmailSection({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Update email</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Update email
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Update the user's email address.
         </p>
@@ -803,7 +862,9 @@ function UpdatePhoneSection({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Update phone</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Update phone
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Update the user's phone number.
         </p>
@@ -874,7 +935,9 @@ function UpdatePasswordSection({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Update password</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Update password
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Update the user's password.
         </p>
@@ -962,7 +1025,9 @@ function UpdateLabelsSection({
     setError(null)
   }
 
-  const handleLabelInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleLabelInputKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === 'Enter' && labelInput.trim()) {
       e.preventDefault()
       handleAddLabel(labelInput)
@@ -972,7 +1037,11 @@ function UpdateLabelsSection({
     } else if (e.key === ' ' && labelInput.trim()) {
       e.preventDefault()
       handleAddLabel(labelInput)
-    } else if ((e.key === 'Backspace' || e.key === 'Delete') && !labelInput.trim() && labels.length > 0) {
+    } else if (
+      (e.key === 'Backspace' || e.key === 'Delete') &&
+      !labelInput.trim() &&
+      labels.length > 0
+    ) {
       e.preventDefault()
       handleRemoveLabel(labels[labels.length - 1])
     }
@@ -1005,9 +1074,13 @@ function UpdateLabelsSection({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Update labels</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Update labels
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
-          Categorize and manage your users based on specific criteria by assigning them customizable labels. New label-based roles will be assigned.
+          Categorize and manage your users based on specific criteria by
+          assigning them customizable labels. New label-based roles will be
+          assigned.
         </p>
       </div>
       <form onSubmit={handleSubmit}>
@@ -1015,7 +1088,10 @@ function UpdateLabelsSection({
         <div className="px-6 py-4">
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="labels" className="text-[13px] font-medium text-foreground">
+              <Label
+                htmlFor="labels"
+                className="text-[13px] font-medium text-foreground"
+              >
                 Labels
               </Label>
               <p className="text-[12px] text-muted-foreground">
@@ -1026,7 +1102,9 @@ function UpdateLabelsSection({
                   className={cn(
                     'flex flex-wrap items-center gap-1.5 min-h-[36px] rounded-md border bg-transparent px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none',
                     'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
-                    updateLabels.isPending ? 'opacity-50 cursor-not-allowed' : ''
+                    updateLabels.isPending
+                      ? 'opacity-50 cursor-not-allowed'
+                      : '',
                   )}
                 >
                   {labels.map((label) => (
@@ -1055,7 +1133,9 @@ function UpdateLabelsSection({
                       setError(null)
                     }}
                     onKeyDown={handleLabelInputKeyDown}
-                    placeholder={labels.length === 0 ? 'Enter label (e.g., admin)' : ''}
+                    placeholder={
+                      labels.length === 0 ? 'Enter label (e.g., admin)' : ''
+                    }
                     className="flex-1 min-w-[120px] bg-transparent border-0 outline-none text-sm placeholder:text-muted-foreground"
                     disabled={updateLabels.isPending}
                     autoComplete="off"
@@ -1082,8 +1162,7 @@ function UpdateLabelsSection({
                       className="h-8 text-[12px]"
                       onClick={() => handleAddLabel(label)}
                       disabled={
-                        updateLabels.isPending ||
-                        labels.includes(label)
+                        updateLabels.isPending || labels.includes(label)
                       }
                     >
                       <Plus className="h-3 w-3 mr-1" />
@@ -1120,13 +1199,18 @@ function UpdatePreferencesSection({
   projectId: string
   userId: string
 }) {
-  const [preferences, setPreferences] = useState<Array<{ key: string; value: string }>>([])
+  const [preferences, setPreferences] = useState<
+    Array<{ key: string; value: string }>
+  >([])
   const updatePrefs = useUpdateUserPrefs(projectId, userId)
 
   useEffect(() => {
     const prefs = user.prefs || {}
     setPreferences(
-      Object.entries(prefs).map(([key, value]) => ({ key, value: String(value) })),
+      Object.entries(prefs).map(([key, value]) => ({
+        key,
+        value: String(value),
+      })),
     )
     if (Object.keys(prefs).length === 0) {
       setPreferences([{ key: '', value: '' }])
@@ -1138,7 +1222,11 @@ function UpdatePreferencesSection({
   }
 
   const handleRemovePreference = (index: number) => {
-    if (preferences.length === 1 && !preferences[0].key && !preferences[0].value) {
+    if (
+      preferences.length === 1 &&
+      !preferences[0].key &&
+      !preferences[0].value
+    ) {
       return
     }
     setPreferences(preferences.filter((_, i) => i !== index))
@@ -1162,10 +1250,12 @@ function UpdatePreferencesSection({
     }
   })
 
-  const hasChanges = JSON.stringify(originalPrefs) !== JSON.stringify(currentPrefs)
+  const hasChanges =
+    JSON.stringify(originalPrefs) !== JSON.stringify(currentPrefs)
   const lastRowIncomplete =
     preferences.length > 0 &&
-    (!preferences[preferences.length - 1].key || !preferences[preferences.length - 1].value)
+    (!preferences[preferences.length - 1].key ||
+      !preferences[preferences.length - 1].value)
 
   const isDisabled = !hasChanges || lastRowIncomplete || updatePrefs.isPending
 
@@ -1186,7 +1276,9 @@ function UpdatePreferencesSection({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">Update preferences</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Update preferences
+        </h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Update user preferences as key-value pairs.
         </p>
@@ -1201,7 +1293,9 @@ function UpdatePreferencesSection({
                   type="text"
                   placeholder="Key"
                   value={pref.key}
-                  onChange={(e) => handlePreferenceChange(index, 'key', e.target.value)}
+                  onChange={(e) =>
+                    handlePreferenceChange(index, 'key', e.target.value)
+                  }
                   disabled={updatePrefs.isPending}
                   className="h-9 flex-1 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                 />
@@ -1209,7 +1303,9 @@ function UpdatePreferencesSection({
                   type="text"
                   placeholder="Value"
                   value={pref.value}
-                  onChange={(e) => handlePreferenceChange(index, 'value', e.target.value)}
+                  onChange={(e) =>
+                    handlePreferenceChange(index, 'value', e.target.value)
+                  }
                   disabled={updatePrefs.isPending}
                   className="h-9 flex-1 border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
                 />
@@ -1235,9 +1331,7 @@ function UpdatePreferencesSection({
               size="sm"
               className="h-9 text-[13px]"
               onClick={handleAddPreference}
-              disabled={
-                lastRowIncomplete || updatePrefs.isPending
-              }
+              disabled={lastRowIncomplete || updatePrefs.isPending}
             >
               <Plus className="mr-1.5 h-3.5 w-3.5" />
               Add preference
@@ -1285,7 +1379,9 @@ function UpdateMFASection({
     setUserMfa(checked)
     updateMFA.mutate(checked, {
       onSuccess: () => {
-        toast.success(`Multi-factor authentication has been ${checked ? 'enabled' : 'disabled'}`)
+        toast.success(
+          `Multi-factor authentication has been ${checked ? 'enabled' : 'disabled'}`,
+        )
       },
       onError: (error: Error) => {
         toast.error(error.message || 'Failed to update MFA')
@@ -1316,7 +1412,9 @@ function UpdateMFASection({
   }
 
   const authenticators = mfaFactors?.authenticators || []
-  const hasTOTP = authenticators.some((auth) => auth.type === AuthenticatorType.Totp)
+  const hasTOTP = authenticators.some(
+    (auth) => auth.type === AuthenticatorType.Totp,
+  )
 
   return (
     <>
@@ -1326,18 +1424,24 @@ function UpdateMFASection({
             Multi-factor authentication
           </h3>
           <p className="text-[13px] text-muted-foreground mt-1">
-            Enhance the user's account security by requiring a second sign-in method
+            Enhance the user's account security by requiring a second sign-in
+            method
           </p>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4 space-y-6">
           <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
             <div className="space-y-0.5">
-              <Label htmlFor="mfa-toggle" className="text-[13px] font-semibold text-foreground cursor-pointer">
+              <Label
+                htmlFor="mfa-toggle"
+                className="text-[13px] font-semibold text-foreground cursor-pointer"
+              >
                 Multi-factor authentication
               </Label>
               <p className="text-[12px] text-muted-foreground">
-                {userMfa ? 'MFA is currently enabled' : 'MFA is currently disabled'}
+                {userMfa
+                  ? 'MFA is currently enabled'
+                  : 'MFA is currently disabled'}
               </p>
             </div>
             <Switch
@@ -1356,9 +1460,14 @@ function UpdateMFASection({
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-[14px] font-semibold text-foreground">Authenticator app</h4>
+                    <h4 className="text-[14px] font-semibold text-foreground">
+                      Authenticator app
+                    </h4>
                     {hasTOTP && (
-                      <Badge variant="secondary" className="h-5 gap-1 px-1.5 text-[11px]">
+                      <Badge
+                        variant="secondary"
+                        className="h-5 gap-1 px-1.5 text-[11px]"
+                      >
                         <CheckCircle2 className="h-3 w-3" />
                         connected
                       </Badge>
@@ -1376,7 +1485,13 @@ function UpdateMFASection({
                       variant="outline"
                       size="sm"
                       className="h-9 text-[13px]"
-                      onClick={() => handleDeleteAuthenticator(authenticators.find((a) => a.type === AuthenticatorType.Totp))}
+                      onClick={() =>
+                        handleDeleteAuthenticator(
+                          authenticators.find(
+                            (a) => a.type === AuthenticatorType.Totp,
+                          ),
+                        )
+                      }
                       disabled={deleteAuthenticator.isPending}
                     >
                       Delete
@@ -1391,14 +1506,18 @@ function UpdateMFASection({
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
                         <TableHead>Type</TableHead>
-                        <TableHead className="w-[100px] text-right">Actions</TableHead>
+                        <TableHead className="w-[100px] text-right">
+                          Actions
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {authenticators.map((auth) => (
                         <TableRow key={auth.$id}>
                           <TableCell className="text-[13px]">
-                            {auth.type === AuthenticatorType.Totp ? 'TOTP' : auth.type}
+                            {auth.type === AuthenticatorType.Totp
+                              ? 'TOTP'
+                              : auth.type}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button
@@ -1427,7 +1546,8 @@ function UpdateMFASection({
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete authentication method</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this authentication method? This action cannot be undone.
+              Are you sure you want to delete this authentication method? This
+              action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -1493,12 +1613,15 @@ function DeleteUserSection({
     <>
       <div className="rounded-xl border border-destructive/50 bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Delete user</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Delete user
+          </h3>
         </div>
         <div className="border-t border-destructive/20" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            Permanently delete this user from the project. This action cannot be undone.
+            Permanently delete this user from the project. This action cannot be
+            undone.
           </p>
 
           {/* User Info Summary */}
@@ -1532,10 +1655,7 @@ function DeleteUserSection({
           </div>
         </div>
         <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
-          <Dialog
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
-          >
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
               <Button
                 variant="destructive"
@@ -1549,7 +1669,11 @@ function DeleteUserSection({
               <DialogHeader className="px-6 pt-6 text-left">
                 <DialogTitle>Delete user</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  Are you sure you want to delete <strong>{displayName} · {project?.name || 'this project'}</strong>? This action cannot be undone.
+                  Are you sure you want to delete{' '}
+                  <strong>
+                    {displayName} · {project?.name || 'this project'}
+                  </strong>
+                  ? This action cannot be undone.
                 </DialogDescription>
               </DialogHeader>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -1585,11 +1709,20 @@ function DeleteUserSection({
 // MEMBERSHIPS TAB
 // ============================================================================
 
-function MembershipsTab({ projectId, userId }: { projectId: string; userId: string }) {
+function MembershipsTab({
+  projectId,
+  userId,
+}: {
+  projectId: string
+  userId: string
+}) {
   const { data, isLoading } = useUserMemberships(projectId, userId)
-  const [selectedMemberships, setSelectedMemberships] = useState<Set<string>>(new Set())
+  const [selectedMemberships, setSelectedMemberships] = useState<Set<string>>(
+    new Set(),
+  )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [membershipToDelete, setMembershipToDelete] = useState<Models.Membership | null>(null)
+  const [membershipToDelete, setMembershipToDelete] =
+    useState<Models.Membership | null>(null)
   const deleteMembership = useDeleteUserMembership(projectId)
   const navigate = useNavigate()
 
@@ -1637,7 +1770,9 @@ function MembershipsTab({ projectId, userId }: { projectId: string; userId: stri
   if (memberships.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground mb-2">No memberships available</p>
+        <p className="text-[13px] text-muted-foreground mb-2">
+          No memberships available
+        </p>
         <a
           href="https://appwrite.io/docs/users"
           className="text-[13px] text-primary hover:underline"
@@ -1664,7 +1799,9 @@ function MembershipsTab({ projectId, userId }: { projectId: string; userId: stri
                   }
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      setSelectedMemberships(new Set(memberships.map((m) => m.$id)))
+                      setSelectedMemberships(
+                        new Set(memberships.map((m) => m.$id)),
+                      )
                     } else {
                       setSelectedMemberships(new Set())
                     }
@@ -1709,7 +1846,11 @@ function MembershipsTab({ projectId, userId }: { projectId: string; userId: stri
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {membership.roles.map((role) => (
-                      <Badge key={role} variant="secondary" className="text-[11px]">
+                      <Badge
+                        key={role}
+                        variant="secondary"
+                        className="text-[11px]"
+                      >
                         {role}
                       </Badge>
                     ))}
@@ -1742,7 +1883,12 @@ function MembershipsTab({ projectId, userId }: { projectId: string; userId: stri
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete member</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete <strong>{membershipToDelete?.userName || 'this user'} · {membershipToDelete?.teamName || 'this team'}</strong>? This action cannot be undone.
+              Are you sure you want to delete{' '}
+              <strong>
+                {membershipToDelete?.userName || 'this user'} ·{' '}
+                {membershipToDelete?.teamName || 'this team'}
+              </strong>
+              ? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -1776,10 +1922,18 @@ function MembershipsTab({ projectId, userId }: { projectId: string; userId: stri
 // IDENTITIES TAB
 // ============================================================================
 
-function IdentitiesTab({ projectId, userId }: { projectId: string; userId: string }) {
+function IdentitiesTab({
+  projectId,
+  userId,
+}: {
+  projectId: string
+  userId: string
+}) {
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
-  const [selectedIdentities, setSelectedIdentities] = useState<Set<string>>(new Set())
+  const [selectedIdentities, setSelectedIdentities] = useState<Set<string>>(
+    new Set(),
+  )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const deleteIdentity = useDeleteUserIdentity(projectId, userId)
 
@@ -1846,11 +2000,13 @@ function IdentitiesTab({ projectId, userId }: { projectId: string; userId: strin
 
   const handleBulkDelete = async () => {
     if (selectedIdentities.size === 0) return
-    
+
     const identityIds = Array.from(selectedIdentities)
     try {
-      await Promise.all(identityIds.map(id => deleteIdentity.mutateAsync(id)))
-      toast.success(`${identityIds.length} identit${identityIds.length === 1 ? 'y' : 'ies'} have been deleted`)
+      await Promise.all(identityIds.map((id) => deleteIdentity.mutateAsync(id)))
+      toast.success(
+        `${identityIds.length} identit${identityIds.length === 1 ? 'y' : 'ies'} have been deleted`,
+      )
       setSelectedIdentities(new Set())
       setDeleteDialogOpen(false)
     } catch (error: any) {
@@ -1869,7 +2025,9 @@ function IdentitiesTab({ projectId, userId }: { projectId: string; userId: strin
   if (identities.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground mb-2">No identities available</p>
+        <p className="text-[13px] text-muted-foreground mb-2">
+          No identities available
+        </p>
         <a
           href="https://appwrite.io/docs/users"
           className="text-[13px] text-primary hover:underline"
@@ -1888,14 +2046,16 @@ function IdentitiesTab({ projectId, userId }: { projectId: string; userId: strin
         <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3">
           <Info className="h-4 w-4 text-muted-foreground" />
           <p className="text-[13px] text-muted-foreground">
-            User identities are the user's connected OAuth accounts. The user can sign in using these identities.
+            User identities are the user's connected OAuth accounts. The user
+            can sign in using these identities.
           </p>
         </div>
 
         {selectedIdentities.size > 0 && (
           <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
             <span className="text-[13px] text-foreground">
-              {selectedIdentities.size} identit{selectedIdentities.size === 1 ? 'y' : 'ies'} selected
+              {selectedIdentities.size} identit
+              {selectedIdentities.size === 1 ? 'y' : 'ies'} selected
             </span>
             <Button
               variant="destructive"
@@ -1910,99 +2070,103 @@ function IdentitiesTab({ projectId, userId }: { projectId: string; userId: strin
         )}
 
         <div className="rounded-lg border border-border bg-card overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[40px]">
-                <Checkbox
-                  checked={
-                    identities.length > 0 &&
-                    selectedIdentities.size === identities.length
-                  }
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedIdentities(new Set(identities.map((i) => i.$id)))
-                    } else {
-                      setSelectedIdentities(new Set())
-                    }
-                  }}
-                />
-              </TableHead>
-              <TableHead>Identity ID</TableHead>
-              <TableHead>Provider</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {identities.map((identity) => (
-              <TableRow key={identity.$id}>
-                <TableCell>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-[40px]">
                   <Checkbox
-                    checked={selectedIdentities.has(identity.$id)}
+                    checked={
+                      identities.length > 0 &&
+                      selectedIdentities.size === identities.length
+                    }
                     onCheckedChange={(checked) => {
-                      const newSelected = new Set(selectedIdentities)
                       if (checked) {
-                        newSelected.add(identity.$id)
+                        setSelectedIdentities(
+                          new Set(identities.map((i) => i.$id)),
+                        )
                       } else {
-                        newSelected.delete(identity.$id)
+                        setSelectedIdentities(new Set())
                       }
-                      setSelectedIdentities(newSelected)
                     }}
                   />
-                </TableCell>
-                <TableCell>
-                  <CopyableId id={identity.$id} size="xs" />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={`/icons/${getProviderIcon(identity.provider)}`}
-                      alt={identity.provider}
-                      className="h-4 w-4"
-                      onError={(e) => {
-                        e.currentTarget.src = '/icons/empty.svg'
+                </TableHead>
+                <TableHead>Identity ID</TableHead>
+                <TableHead>Provider</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {identities.map((identity) => (
+                <TableRow key={identity.$id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIdentities.has(identity.$id)}
+                      onCheckedChange={(checked) => {
+                        const newSelected = new Set(selectedIdentities)
+                        if (checked) {
+                          newSelected.add(identity.$id)
+                        } else {
+                          newSelected.delete(identity.$id)
+                        }
+                        setSelectedIdentities(newSelected)
                       }}
                     />
-                    <span className="text-[13px] font-medium text-foreground">
-                      {getProviderName(identity.provider)}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-[13px]">
-                  {identity.providerEmail || '-'}
-                </TableCell>
-                <TableCell>
-                  <DateTooltip
-                    date={new Date(identity.$createdAt)}
-                    className="text-[12px] text-muted-foreground"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => {
-                      deleteIdentity.mutate(identity.$id, {
-                        onSuccess: () => {
-                          toast.success('Identity has been deleted')
-                        },
-                        onError: (error: Error) => {
-                          toast.error(error.message || 'Failed to delete identity')
-                        },
-                      })
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                  </TableCell>
+                  <TableCell>
+                    <CopyableId id={identity.$id} size="xs" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={`/icons/${getProviderIcon(identity.provider)}`}
+                        alt={identity.provider}
+                        className="h-4 w-4"
+                        onError={(e) => {
+                          e.currentTarget.src = '/icons/empty.svg'
+                        }}
+                      />
+                      <span className="text-[13px] font-medium text-foreground">
+                        {getProviderName(identity.provider)}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-[13px]">
+                    {identity.providerEmail || '-'}
+                  </TableCell>
+                  <TableCell>
+                    <DateTooltip
+                      date={new Date(identity.$createdAt)}
+                      className="text-[12px] text-muted-foreground"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        deleteIdentity.mutate(identity.$id, {
+                          onSuccess: () => {
+                            toast.success('Identity has been deleted')
+                          },
+                          onError: (error: Error) => {
+                            toast.error(
+                              error.message || 'Failed to delete identity',
+                            )
+                          },
+                        })
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
 
         {total > DEFAULT_PAGE_SIZE && (
           <Pagination
@@ -2020,7 +2184,9 @@ function IdentitiesTab({ projectId, userId }: { projectId: string; userId: strin
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete identities</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete {selectedIdentities.size} identit{selectedIdentities.size === 1 ? 'y' : 'ies'}? This action cannot be undone.
+              Are you sure you want to delete {selectedIdentities.size} identit
+              {selectedIdentities.size === 1 ? 'y' : 'ies'}? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -2050,7 +2216,13 @@ function IdentitiesTab({ projectId, userId }: { projectId: string; userId: strin
 // TARGETS TAB
 // ============================================================================
 
-function TargetsTab({ projectId, userId }: { projectId: string; userId: string }) {
+function TargetsTab({
+  projectId,
+  userId,
+}: {
+  projectId: string
+  userId: string
+}) {
   const [page, setPage] = useState(1)
   const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set())
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -2069,11 +2241,13 @@ function TargetsTab({ projectId, userId }: { projectId: string; userId: string }
 
   const handleBulkDelete = async () => {
     if (selectedTargets.size === 0) return
-    
+
     const targetIds = Array.from(selectedTargets)
     try {
-      await Promise.all(targetIds.map(id => deleteTarget.mutateAsync(id)))
-      toast.success(`${targetIds.length} target${targetIds.length === 1 ? '' : 's'} have been deleted`)
+      await Promise.all(targetIds.map((id) => deleteTarget.mutateAsync(id)))
+      toast.success(
+        `${targetIds.length} target${targetIds.length === 1 ? '' : 's'} have been deleted`,
+      )
       setSelectedTargets(new Set())
       setDeleteDialogOpen(false)
     } catch (error: any) {
@@ -2106,7 +2280,8 @@ function TargetsTab({ projectId, userId }: { projectId: string; userId: string }
         {selectedTargets.size > 0 && (
           <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
             <span className="text-[13px] text-foreground">
-              {selectedTargets.size} target{selectedTargets.size === 1 ? '' : 's'} selected
+              {selectedTargets.size} target
+              {selectedTargets.size === 1 ? '' : 's'} selected
             </span>
             <Button
               variant="destructive"
@@ -2120,116 +2295,122 @@ function TargetsTab({ projectId, userId }: { projectId: string; userId: string }
           </div>
         )}
 
-      {targets.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card py-12 text-center">
-          <p className="text-[13px] text-muted-foreground mb-2">No targets available</p>
-          <a
-            href="https://appwrite.io/docs/users"
-            className="text-[13px] text-primary hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn more about targets
-          </a>
-        </div>
-      ) : (
-        <>
-          <div className="rounded-lg border border-border bg-card overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[40px]">
-                    <Checkbox
-                      checked={
-                        targets.length > 0 &&
-                        selectedTargets.size === targets.length
-                      }
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedTargets(new Set(targets.map((t) => t.$id)))
-                        } else {
-                          setSelectedTargets(new Set())
-                        }
-                      }}
-                    />
-                  </TableHead>
-                  <TableHead>Target ID</TableHead>
-                  <TableHead>Target</TableHead>
-                  <TableHead>Provider Type</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {targets.map((target) => (
-                  <TableRow key={target.$id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedTargets.has(target.$id)}
-                        onCheckedChange={(checked) => {
-                          const newSelected = new Set(selectedTargets)
-                          if (checked) {
-                            newSelected.add(target.$id)
-                          } else {
-                            newSelected.delete(target.$id)
-                          }
-                          setSelectedTargets(newSelected)
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <CopyableId id={target.$id} size="xs" />
-                    </TableCell>
-                    <TableCell className="text-[13px]">
-                      {target.name || target.identifier}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="text-[12px]">
-                        {target.providerType}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DateTooltip
-                        date={new Date(target.$createdAt)}
-                        className="text-[12px] text-muted-foreground"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => {
-                          deleteTarget.mutate(target.$id, {
-                            onSuccess: () => {
-                              toast.success('Target has been deleted')
-                            },
-                            onError: (error: Error) => {
-                              toast.error(error.message || 'Failed to delete target')
-                            },
-                          })
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        {targets.length === 0 ? (
+          <div className="rounded-lg border border-border bg-card py-12 text-center">
+            <p className="text-[13px] text-muted-foreground mb-2">
+              No targets available
+            </p>
+            <a
+              href="https://appwrite.io/docs/users"
+              className="text-[13px] text-primary hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Learn more about targets
+            </a>
           </div>
+        ) : (
+          <>
+            <div className="rounded-lg border border-border bg-card overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={
+                          targets.length > 0 &&
+                          selectedTargets.size === targets.length
+                        }
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedTargets(
+                              new Set(targets.map((t) => t.$id)),
+                            )
+                          } else {
+                            setSelectedTargets(new Set())
+                          }
+                        }}
+                      />
+                    </TableHead>
+                    <TableHead>Target ID</TableHead>
+                    <TableHead>Target</TableHead>
+                    <TableHead>Provider Type</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="w-[100px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {targets.map((target) => (
+                    <TableRow key={target.$id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedTargets.has(target.$id)}
+                          onCheckedChange={(checked) => {
+                            const newSelected = new Set(selectedTargets)
+                            if (checked) {
+                              newSelected.add(target.$id)
+                            } else {
+                              newSelected.delete(target.$id)
+                            }
+                            setSelectedTargets(newSelected)
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <CopyableId id={target.$id} size="xs" />
+                      </TableCell>
+                      <TableCell className="text-[13px]">
+                        {target.name || target.identifier}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-[12px]">
+                          {target.providerType}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DateTooltip
+                          date={new Date(target.$createdAt)}
+                          className="text-[12px] text-muted-foreground"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => {
+                            deleteTarget.mutate(target.$id, {
+                              onSuccess: () => {
+                                toast.success('Target has been deleted')
+                              },
+                              onError: (error: Error) => {
+                                toast.error(
+                                  error.message || 'Failed to delete target',
+                                )
+                              },
+                            })
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
 
-          {total > DEFAULT_PAGE_SIZE && (
-            <Pagination
-              currentPage={page}
-              totalItems={total}
-              pageSize={DEFAULT_PAGE_SIZE}
-              onPageChange={setPage}
-              onPageSizeChange={() => {}}
-            />
-          )}
-        </>
-      )}
+            {total > DEFAULT_PAGE_SIZE && (
+              <Pagination
+                currentPage={page}
+                totalItems={total}
+                pageSize={DEFAULT_PAGE_SIZE}
+                onPageChange={setPage}
+                onPageSizeChange={() => {}}
+              />
+            )}
+          </>
+        )}
 
         <CreateTargetDialog
           open={createDialogOpen}
@@ -2244,7 +2425,9 @@ function TargetsTab({ projectId, userId }: { projectId: string; userId: string }
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete targets</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete {selectedTargets.size} target{selectedTargets.size === 1 ? '' : 's'}? This action cannot be undone.
+              Are you sure you want to delete {selectedTargets.size} target
+              {selectedTargets.size === 1 ? '' : 's'}? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -2282,7 +2465,9 @@ function CreateTargetDialog({
   projectId: string
   userId: string
 }) {
-  const [providerType, setProviderType] = useState<string>(MessagingProviderType.Push)
+  const [providerType, setProviderType] = useState<string>(
+    MessagingProviderType.Push,
+  )
   const [identifier, setIdentifier] = useState('')
   const [providerId, setProviderId] = useState('')
   const [name, setName] = useState('')
@@ -2311,7 +2496,9 @@ function CreateTargetDialog({
 
     if (providerType === MessagingProviderType.Push) {
       if (!providerId || !identifier || !name) {
-        toast.error('Provider ID, identifier, and name are required for push targets')
+        toast.error(
+          'Provider ID, identifier, and name are required for push targets',
+        )
         return
       }
       targetData.providerId = providerId
@@ -2354,8 +2541,12 @@ function CreateTargetDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={MessagingProviderType.Push}>Push</SelectItem>
-                  <SelectItem value={MessagingProviderType.Email}>Email</SelectItem>
+                  <SelectItem value={MessagingProviderType.Push}>
+                    Push
+                  </SelectItem>
+                  <SelectItem value={MessagingProviderType.Email}>
+                    Email
+                  </SelectItem>
                   <SelectItem value={MessagingProviderType.Sms}>SMS</SelectItem>
                 </SelectContent>
               </Select>
@@ -2398,7 +2589,11 @@ function CreateTargetDialog({
               </Label>
               <Input
                 id="identifier"
-                type={providerType === MessagingProviderType.Email ? 'email' : 'text'}
+                type={
+                  providerType === MessagingProviderType.Email
+                    ? 'email'
+                    : 'text'
+                }
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder={
@@ -2474,7 +2669,9 @@ function SessionsTab({
   const { data, isLoading } = useUserSessions(projectId, userId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false)
-  const [sessionToDelete, setSessionToDelete] = useState<Models.Session | null>(null)
+  const [sessionToDelete, setSessionToDelete] = useState<Models.Session | null>(
+    null,
+  )
   const deleteSession = useDeleteUserSession(projectId, userId)
   const deleteAllSessions = useDeleteAllUserSessions(projectId, userId)
 
@@ -2524,7 +2721,9 @@ function SessionsTab({
   if (sessions.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground mb-2">No sessions available</p>
+        <p className="text-[13px] text-muted-foreground mb-2">
+          No sessions available
+        </p>
         <a
           href="https://appwrite.io/docs/users"
           className="text-[13px] text-primary hover:underline"
@@ -2613,7 +2812,8 @@ function SessionsTab({
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete session</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this session? This action cannot be undone.
+              Are you sure you want to delete this session? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -2645,7 +2845,9 @@ function SessionsTab({
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete all sessions</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete <strong>all of {displayName}'s sessions</strong>? This action cannot be undone.
+              Are you sure you want to delete{' '}
+              <strong>all of {displayName}'s sessions</strong>? This action
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -2674,5 +2876,3 @@ function SessionsTab({
     </>
   )
 }
-
-

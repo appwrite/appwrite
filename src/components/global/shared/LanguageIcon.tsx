@@ -28,18 +28,22 @@ const languageIconMap: Record<string, string> = {
   dotnet: 'dotnet.svg',
 }
 
-export function LanguageIcon({ language, className, size = 'md' }: LanguageIconProps) {
+export function LanguageIcon({
+  language,
+  className,
+  size = 'md',
+}: LanguageIconProps) {
   const normalized = language.toLowerCase()
   const iconFile = languageIconMap[normalized]
   const sizeClass = sizeClasses[size as keyof typeof sizeClasses]
-  
+
   if (!iconFile) {
     return null
   }
-  
+
   // Go icon uses #414146 (dark gray) instead of #C4C6D7 (light gray) like others
   const isGoIcon = normalized === 'go'
-  
+
   return (
     <img
       src={`/icons/${iconFile}`}
@@ -52,9 +56,8 @@ export function LanguageIcon({ language, className, size = 'md' }: LanguageIconP
         isGoIcon
           ? 'brightness-0 dark:brightness-0 dark:invert'
           : 'brightness-0 dark:brightness-100',
-        className
+        className,
       )}
     />
   )
 }
-

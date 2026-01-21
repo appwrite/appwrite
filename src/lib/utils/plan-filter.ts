@@ -4,7 +4,9 @@
  * - tier-1 → 'pro'
  * - anything else → 'custom'
  */
-export function getPlanNameFromTier(tier: string | number | null | undefined): string {
+export function getPlanNameFromTier(
+  tier: string | number | null | undefined,
+): string {
   if (tier === null || tier === undefined) {
     return 'free'
   }
@@ -18,16 +20,20 @@ export function getPlanNameFromTier(tier: string | number | null | undefined): s
       if (tierNumber === 1) return 'pro'
       return 'custom'
     }
-    
+
     // Handle direct tier numbers as strings
     if (tier === '0' || tier.toLowerCase() === 'tier-0') return 'free'
     if (tier === '1' || tier.toLowerCase() === 'tier-1') return 'pro'
-    
+
     // If it's already a plan name, return it
-    if (['free', 'pro', 'scale', 'enterprise', 'custom'].includes(tier.toLowerCase())) {
+    if (
+      ['free', 'pro', 'scale', 'enterprise', 'custom'].includes(
+        tier.toLowerCase(),
+      )
+    ) {
       return tier.toLowerCase()
     }
-    
+
     return 'custom'
   }
 
@@ -40,4 +46,3 @@ export function getPlanNameFromTier(tier: string | number | null | undefined): s
 
   return 'free'
 }
-

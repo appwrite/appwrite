@@ -27,13 +27,13 @@ interface ComingSoonCurtainProps {
 
 /**
  * ComingSoonCurtain Component
- * 
+ *
  * A component that creates a "curtain" overlay above content for features
  * that are coming soon, with a CTA to get notified when available.
- * 
+ *
  * When clicked, it saves the feature ID in the user's preferences under
  * the 'featureNotifications' key as an array.
- * 
+ *
  * Usage:
  * ```tsx
  * <ComingSoonCurtain featureId="database-insights">
@@ -53,16 +53,18 @@ export function ComingSoonCurtain({
 
   // Check if user has already requested notification for this feature
   const featureNotificationsRaw = account?.prefs?.featureNotifications
-  
+
   // Handle different data types (string, array, or undefined)
   let featureNotifications: string[] = []
   if (typeof featureNotificationsRaw === 'string') {
-    featureNotifications = featureNotificationsRaw ? featureNotificationsRaw.split(',').filter(Boolean) : []
+    featureNotifications = featureNotificationsRaw
+      ? featureNotificationsRaw.split(',').filter(Boolean)
+      : []
   } else if (Array.isArray(featureNotificationsRaw)) {
     // Handle legacy array format
     featureNotifications = featureNotificationsRaw
   }
-  
+
   const isNotifying = featureNotifications.includes(featureId)
 
   const handleNotifyClick = async () => {
@@ -74,9 +76,11 @@ export function ComingSoonCurtain({
     setIsAnimating(true)
     try {
       await toggleNotification.mutateAsync(featureId)
-      
+
       if (isNotifying) {
-        toast.success('You will no longer receive notifications for this feature')
+        toast.success(
+          'You will no longer receive notifications for this feature',
+        )
       } else {
         toast.success('You will be notified when this feature launches!')
       }
@@ -89,7 +93,12 @@ export function ComingSoonCurtain({
   }
 
   return (
-    <div className={cn('relative @container max-h-[600px] overflow-hidden', className)}>
+    <div
+      className={cn(
+        'relative @container max-h-[600px] overflow-hidden',
+        className,
+      )}
+    >
       {/* Content with blur and overlay */}
       <div className="opacity-40 pointer-events-none select-none blur-sm">
         {children}
@@ -104,7 +113,7 @@ export function ComingSoonCurtain({
               <Bell className="h-3 w-3 @[250px]:h-3.5 @[250px]:w-3.5 @[300px]:h-4 @[300px]:w-4 @[400px]:h-5 @[400px]:w-5 @[500px]:h-6 @[500px]:w-6 text-muted-foreground" />
             </div>
           </div>
-          
+
           {/* Content */}
           <div className="flex-1 text-center @[400px]:text-left space-y-0.5 @[200px]:space-y-1 @[300px]:space-y-1.5 @[400px]:space-y-2 min-w-0">
             <h4 className="text-[12px] @[200px]:text-[13px] @[250px]:text-[14px] @[300px]:text-[15px] font-semibold text-foreground leading-tight">
@@ -114,7 +123,7 @@ export function ComingSoonCurtain({
               {message}
             </p>
           </div>
-          
+
           {/* Button */}
           <div className="flex shrink-0 w-full @[400px]:w-auto">
             <Button
@@ -122,7 +131,7 @@ export function ComingSoonCurtain({
               variant={isNotifying ? 'outline' : 'default'}
               className={cn(
                 'h-6 @[200px]:h-7 @[250px]:h-8 @[300px]:h-9 text-[10px] @[200px]:text-[11px] @[250px]:text-[12px] @[300px]:text-[13px] w-full @[400px]:w-auto px-2 @[200px]:px-3 @[250px]:px-4 gap-1.5',
-                isAnimating && 'scale-95 transition-transform'
+                isAnimating && 'scale-95 transition-transform',
               )}
               onClick={handleNotifyClick}
               disabled={toggleNotification.isPending}

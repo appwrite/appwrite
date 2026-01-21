@@ -32,11 +32,7 @@ interface ResetProps {
   isSuccess?: boolean
 }
 
-export function Reset({
-  onSubmit,
-  isLoading,
-  isSuccess,
-}: ResetProps) {
+export function Reset({ onSubmit, isLoading, isSuccess }: ResetProps) {
   const form = useForm<z.infer<typeof resetPasswordSchema>>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
@@ -60,13 +56,12 @@ export function Reset({
                   Password reset
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Your password has been successfully reset. You can now sign in with your new password.
+                  Your password has been successfully reset. You can now sign in
+                  with your new password.
                 </p>
               </div>
               <Link to="/sign-in">
-                <Button className="w-full">
-                  Sign in
-                </Button>
+                <Button className="w-full">Sign in</Button>
               </Link>
             </div>
           </div>
@@ -89,7 +84,10 @@ export function Reset({
       <div className="grid md:grid-cols-2">
         <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-6"
+            >
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight">
                   Reset your password
@@ -135,10 +133,7 @@ export function Reset({
 
               <p className="text-center text-sm text-muted-foreground">
                 Remember your password?{' '}
-                <Link
-                  to="/sign-in"
-                  className="text-primary hover:underline"
-                >
+                <Link to="/sign-in" className="text-primary hover:underline">
                   Sign in
                 </Link>
               </p>
@@ -158,5 +153,3 @@ export function Reset({
     </Card>
   )
 }
-
-

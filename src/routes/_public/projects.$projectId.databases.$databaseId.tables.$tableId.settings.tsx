@@ -1,6 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { TableView } from '@/components/pages/projects/$projectId/databases/View'
-import { fetchProjectTables, fetchProjectDatabase, fetchProjectTableColumns, fetchProjectTable } from '@/lib/react-query/hooks'
+import {
+  fetchProjectTables,
+  fetchProjectDatabase,
+  fetchProjectTableColumns,
+  fetchProjectTableIndexes,
+  fetchProjectTable,
+} from '@/lib/react-query/hooks'
 
 const TABLES_PER_PAGE = 100
 
@@ -23,8 +29,23 @@ export const Route = createFileRoute(
     // Resolve all required data before rendering to avoid intermediate empty states
     await Promise.all([
       queryClient.ensureQueryData({
-        queryKey: ['tables', 'project', projectId, databaseId, 0, TABLES_PER_PAGE, undefined],
-        queryFn: () => fetchProjectTables(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+        queryKey: [
+          'tables',
+          'project',
+          projectId,
+          databaseId,
+          0,
+          TABLES_PER_PAGE,
+          undefined,
+        ],
+        queryFn: () =>
+          fetchProjectTables(
+            projectId,
+            databaseId,
+            0,
+            TABLES_PER_PAGE,
+            undefined,
+          ),
         staleTime: 30 * 1000, // 30 seconds
       }),
       queryClient.ensureQueryData({
@@ -35,6 +56,12 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData({
         queryKey: ['columns', 'project', projectId, databaseId, tableId],
         queryFn: () => fetchProjectTableColumns(projectId, databaseId, tableId),
+        staleTime: 30 * 1000, // 30 seconds
+      }),
+      // Prefetch indexes (optional data)
+      queryClient.prefetchQuery({
+        queryKey: ['indexes', 'project', projectId, databaseId, tableId],
+        queryFn: () => fetchProjectTableIndexes(projectId, databaseId, tableId),
         staleTime: 30 * 1000, // 30 seconds
       }),
       queryClient.ensureQueryData({

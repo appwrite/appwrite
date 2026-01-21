@@ -41,7 +41,11 @@ export function CreateProjectDialog({
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const createProjectMutation = useCreateProject(teamId)
-  const { regions, isLoading: regionsLoading, error: regionsError } = useRegions()
+  const {
+    regions,
+    isLoading: regionsLoading,
+    error: regionsError,
+  } = useRegions()
 
   // Log regions data for debugging
   useEffect(() => {
@@ -54,7 +58,8 @@ export function CreateProjectDialog({
   useEffect(() => {
     if (regions.length > 0 && !selectedRegion) {
       // Prefer Frankfurt (fra) or first available region
-      const defaultRegion = regions.find((r: any) => r.$id === 'fra') || regions[0]
+      const defaultRegion =
+        regions.find((r: any) => r.$id === 'fra') || regions[0]
       if (defaultRegion) {
         setSelectedRegion(defaultRegion.$id)
       }
@@ -64,23 +69,26 @@ export function CreateProjectDialog({
   // Calculate if this would be an additional project
   const isAdditionalProject = useMemo(() => {
     if (!organizationPlan) return false
-    
+
     const projectLimit = (organizationPlan?.addons as any)?.projects?.limit
-    const planIncluded = (organizationPlan?.addons as any)?.projects?.planIncluded
+    const planIncluded = (organizationPlan?.addons as any)?.projects
+      ?.planIncluded
     const limitNum = Number(projectLimit ?? planIncluded)
     const limit = isNaN(limitNum) ? null : limitNum
-    
+
     if (limit === null || limit === 0) return false // Unlimited or no limit
-    
+
     return currentProjectsCount >= limit
   }, [organizationPlan, currentProjectsCount])
 
   // Get additional project price
   const additionalProjectPrice = useMemo(() => {
     if (!isAdditionalProject || !organizationPlan) return null
-    return (organizationPlan?.addons as any)?.projects?.price || 
-           (organizationPlan as any)?.additionalProjectPrice || 
-           null
+    return (
+      (organizationPlan?.addons as any)?.projects?.price ||
+      (organizationPlan as any)?.additionalProjectPrice ||
+      null
+    )
   }, [isAdditionalProject, organizationPlan])
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -142,10 +150,13 @@ export function CreateProjectDialog({
 
       toast.success('Project created successfully')
       handleOpenChange(false)
-      
+
       // Navigate to the new project
       if (result?.$id) {
-        navigate({ to: '/projects/$projectId', params: { projectId: result.$id } })
+        navigate({
+          to: '/projects/$projectId',
+          params: { projectId: result.$id },
+        })
       }
     } catch (error: any) {
       toast.error(error?.message || 'Failed to create project')
@@ -222,16 +233,19 @@ export function CreateProjectDialog({
                     Failed to load regions
                   </p>
                   <p className="text-[12px] text-muted-foreground">
-                    {regionsError instanceof Error ? regionsError.message : 'Unknown error'}
+                    {regionsError instanceof Error
+                      ? regionsError.message
+                      : 'Unknown error'}
                   </p>
                 </div>
               ) : regions.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {regions.map((region: any) => {
                     const isSelected = selectedRegion === region.$id
-                    const regionCode = region.code || region.$id?.toUpperCase() || ''
+                    const regionCode =
+                      region.code || region.$id?.toUpperCase() || ''
                     const regionName = region.name || region.$id || 'Unknown'
-                    
+
                     return (
                       <button
                         key={region.$id}
@@ -257,9 +271,13 @@ export function CreateProjectDialog({
                                 // Fallback: hide image and show globe icon
                                 const target = e.target as HTMLImageElement
                                 target.style.display = 'none'
-                                const fallback = target.parentElement?.querySelector('.flag-fallback')
+                                const fallback =
+                                  target.parentElement?.querySelector(
+                                    '.flag-fallback',
+                                  )
                                 if (fallback) {
-                                  (fallback as HTMLElement).style.display = 'flex'
+                                  ;(fallback as HTMLElement).style.display =
+                                    'flex'
                                 }
                               }}
                             />
@@ -326,9 +344,13 @@ export function CreateProjectDialog({
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={createProjectMutation.isPending || !name.trim() || !selectedRegion}
+            <Button
+              type="submit"
+              disabled={
+                createProjectMutation.isPending ||
+                !name.trim() ||
+                !selectedRegion
+              }
               style={{ backgroundColor: '#f02e65' }}
               className="text-white hover:opacity-90"
             >

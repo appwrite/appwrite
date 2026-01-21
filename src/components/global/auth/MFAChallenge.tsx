@@ -32,7 +32,7 @@ export async function verifyMFAChallenge(
   challenge: Models.MfaChallenge | null,
   code: string,
   challengeType: AuthenticationFactor,
-  factors?: Models.MfaFactors & { recoveryCode?: boolean }
+  factors?: Models.MfaFactors & { recoveryCode?: boolean },
 ) {
   // Validate factor
   if (factors) {
@@ -70,7 +70,7 @@ export async function verifyMFAChallenge(
       // If challenge creation fails for TOTP/Recovery, try verification without challenge
       // Some SDKs might handle this differently
       throw new Error(
-        error.message || 'Failed to create challenge. Please try again.'
+        error.message || 'Failed to create challenge. Please try again.',
       )
     }
   }
@@ -85,7 +85,8 @@ export async function verifyMFAChallenge(
 export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [challengeType, setChallengeType] = useState<AuthenticationFactor | null>(null)
+  const [challengeType, setChallengeType] =
+    useState<AuthenticationFactor | null>(null)
   const [challenge, setChallenge] = useState<Models.MfaChallenge | null>(null)
   const [code, setCode] = useState('')
   const [disabled, setDisabled] = useState(false)
@@ -115,15 +116,21 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
     const focusInput = () => {
       if (challengeType === AuthenticationFactor.Recoverycode) {
         // Focus recovery code input
-        const recoveryInput = document.getElementById('mfa-code') as HTMLInputElement | null
+        const recoveryInput = document.getElementById(
+          'mfa-code',
+        ) as HTMLInputElement | null
         recoveryInput?.focus()
       } else {
         // For OTP input, find the container and focus it
         // The input-otp library uses a hidden input that we can focus
-        const otpContainer = document.querySelector('[data-slot="input-otp"]') as HTMLElement | null
+        const otpContainer = document.querySelector(
+          '[data-slot="input-otp"]',
+        ) as HTMLElement | null
         if (otpContainer) {
           // Find the actual input element (input-otp uses a hidden input)
-          const input = otpContainer.querySelector('input') as HTMLInputElement | null
+          const input = otpContainer.querySelector(
+            'input',
+          ) as HTMLInputElement | null
           if (input) {
             input.focus()
           } else {
@@ -175,10 +182,14 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
       if (!challengeType) {
         throw new Error('Please select an authentication factor')
       }
-      
+
       // For TOTP and Recovery codes, create challenge if needed
       let activeChallenge = challenge
-      if (!activeChallenge && (challengeType === AuthenticationFactor.Totp || challengeType === AuthenticationFactor.Recoverycode)) {
+      if (
+        !activeChallenge &&
+        (challengeType === AuthenticationFactor.Totp ||
+          challengeType === AuthenticationFactor.Recoverycode)
+      ) {
         try {
           activeChallenge = await sdk.forConsole.account.createMFAChallenge({
             factor: challengeType,
@@ -186,25 +197,29 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
           setChallenge(activeChallenge)
         } catch (error: any) {
           // If challenge creation fails, try to verify anyway (SDK might handle it)
-          console.warn('Failed to create challenge for TOTP/Recovery, attempting verification:', error)
+          console.warn(
+            'Failed to create challenge for TOTP/Recovery, attempting verification:',
+            error,
+          )
         }
       }
-      
+
       await verifyMFAChallenge(activeChallenge, code, challengeType, factors)
     },
     onSuccess: async () => {
       // After MFA verification, the session is now fully authenticated
       // Clear any error state and prepare for navigation
       setError(null)
-      
+
       // Determine target URL
-      const targetUrl = redirect && redirect.startsWith('/') && !redirect.includes('://')
-        ? redirect
-        : '/'
-      
+      const targetUrl =
+        redirect && redirect.startsWith('/') && !redirect.includes('://')
+          ? redirect
+          : '/'
+
       // Clear the account query cache to force a fresh fetch on next page
       queryClient.removeQueries({ queryKey: ['account', 'console'] })
-      
+
       // Use window.location for a full page reload
       // This ensures all components and loaders start fresh with the authenticated state
       window.location.href = targetUrl
@@ -313,7 +328,9 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                             : 'outline'
                         }
                         className="justify-start"
-                        onClick={() => createChallenge(AuthenticationFactor.Email)}
+                        onClick={() =>
+                          createChallenge(AuthenticationFactor.Email)
+                        }
                         disabled={disabled}
                       >
                         <Mail className="mr-1.5 h-4 w-4" />
@@ -329,7 +346,9 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                             : 'outline'
                         }
                         className="justify-start"
-                        onClick={() => createChallenge(AuthenticationFactor.Phone)}
+                        onClick={() =>
+                          createChallenge(AuthenticationFactor.Phone)
+                        }
                         disabled={disabled}
                       >
                         <Smartphone className="mr-1.5 h-4 w-4" />
@@ -351,20 +370,20 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                   <p className="text-sm text-muted-foreground">
                     {getFactorDescription()}
                   </p>
-                    {challengeType === AuthenticationFactor.Recoverycode ? (
-                      <Input
-                        id="mfa-code"
-                        type="text"
-                        value={code}
-                        onChange={(e) => {
-                          setCode(e.target.value)
-                          setError(null)
-                        }}
-                        placeholder="Enter recovery code"
-                        disabled={disabled || verifyMutation.isPending}
-                        autoFocus
-                        className="font-mono"
-                      />
+                  {challengeType === AuthenticationFactor.Recoverycode ? (
+                    <Input
+                      id="mfa-code"
+                      type="text"
+                      value={code}
+                      onChange={(e) => {
+                        setCode(e.target.value)
+                        setError(null)
+                      }}
+                      placeholder="Enter recovery code"
+                      disabled={disabled || verifyMutation.isPending}
+                      autoFocus
+                      className="font-mono"
+                    />
                   ) : (
                     <div className="w-full">
                       <InputOTP
@@ -378,20 +397,38 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
                         containerClassName="w-full justify-center"
                       >
                         <InputOTPGroup className="flex-1">
-                          <InputOTPSlot index={0} className="h-16 w-full text-2xl" />
-                          <InputOTPSlot index={1} className="h-16 w-full text-2xl" />
-                          <InputOTPSlot index={2} className="h-16 w-full text-2xl" />
+                          <InputOTPSlot
+                            index={0}
+                            className="h-16 w-full text-2xl"
+                          />
+                          <InputOTPSlot
+                            index={1}
+                            className="h-16 w-full text-2xl"
+                          />
+                          <InputOTPSlot
+                            index={2}
+                            className="h-16 w-full text-2xl"
+                          />
                         </InputOTPGroup>
                         <InputOTPSeparator />
                         <InputOTPGroup className="flex-1">
-                          <InputOTPSlot index={3} className="h-16 w-full text-2xl" />
-                          <InputOTPSlot index={4} className="h-16 w-full text-2xl" />
-                          <InputOTPSlot index={5} className="h-16 w-full text-2xl" />
+                          <InputOTPSlot
+                            index={3}
+                            className="h-16 w-full text-2xl"
+                          />
+                          <InputOTPSlot
+                            index={4}
+                            className="h-16 w-full text-2xl"
+                          />
+                          <InputOTPSlot
+                            index={5}
+                            className="h-16 w-full text-2xl"
+                          />
                         </InputOTPGroup>
                       </InputOTP>
                     </div>
                   )}
-                  
+
                   {/* Error Message */}
                   {error && (
                     <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
@@ -461,4 +498,3 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
     </Card>
   )
 }
-

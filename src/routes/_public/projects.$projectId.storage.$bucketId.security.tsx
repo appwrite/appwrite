@@ -23,5 +23,3 @@ export const Route = createFileRoute(
 function BucketSecurityPage() {
   return <BucketDetailView />
 }
-
-

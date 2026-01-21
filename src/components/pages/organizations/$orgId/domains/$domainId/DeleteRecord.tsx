@@ -50,4 +50,3 @@ export function DeleteRecordDialog({
     </Dialog>
   )
 }
-

@@ -22,7 +22,9 @@ function ProjectLayout() {
     activeSection === 'databases' &&
     pathParts.length >= 8 &&
     pathParts[5] === 'tables' &&
-    ['rows', 'columns', 'indexes', 'security', 'settings'].includes(pathParts[7])
+    ['rows', 'columns', 'indexes', 'security', 'settings'].includes(
+      pathParts[7],
+    )
 
   // Check if we're in the database visualizer view
   // Pattern: /projects/:projectId/databases/:databaseId/visualizer
@@ -33,14 +35,17 @@ function ProjectLayout() {
 
   // Views that need overflow-hidden on main (they manage their own scrolling)
   const isFixedLayoutView =
-    isDatabaseSpreadsheetView || isDatabaseVisualizerView || activeSection === 'usage'
-  
+    isDatabaseSpreadsheetView ||
+    isDatabaseVisualizerView ||
+    activeSection === 'usage'
+
   // Check if we're on a detail route (user detail, team detail, etc.)
-  const isDetailRoute = pathParts.some((part, idx) => 
-    (part === 'users' || part === 'teams') && 
-    idx > 0 && 
-    pathParts[idx - 1] === 'auth' &&
-    idx + 1 < pathParts.length
+  const isDetailRoute = pathParts.some(
+    (part, idx) =>
+      (part === 'users' || part === 'teams') &&
+      idx > 0 &&
+      pathParts[idx - 1] === 'auth' &&
+      idx + 1 < pathParts.length,
   )
 
   // Check if we're on the function executions tab

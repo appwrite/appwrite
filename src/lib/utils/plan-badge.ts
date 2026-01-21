@@ -1,5 +1,8 @@
 import { Organization } from '@/lib/utils/mock-data'
-import { getPlanBadgeColor as getPlanBadgeColorUtil, type PlanType } from '@/lib/utils/status-badge'
+import {
+  getPlanBadgeColor as getPlanBadgeColorUtil,
+  type PlanType,
+} from '@/lib/utils/status-badge'
 
 /**
  * Get the color classes for a plan badge
@@ -18,5 +21,3 @@ export function getPlanBadgeColor(plan: Organization['plan']): string {
 export function getPlanDisplayName(plan: Organization['plan']): string {
   return plan.charAt(0).toUpperCase() + plan.slice(1)
 }
-
-

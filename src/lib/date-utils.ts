@@ -6,11 +6,13 @@
  * Formats a date for display in a consistent format: "11 Dec 2025"
  * Handles various input formats (ISO string, Unix timestamp in seconds or milliseconds, Date object)
  */
-export function formatDate(date: string | number | Date | null | undefined): string {
+export function formatDate(
+  date: string | number | Date | null | undefined,
+): string {
   if (!date) return 'N/A'
-  
+
   let dateObj: Date
-  
+
   if (date instanceof Date) {
     dateObj = date
   } else if (typeof date === 'number') {
@@ -22,12 +24,12 @@ export function formatDate(date: string | number | Date | null | undefined): str
   } else {
     return 'N/A'
   }
-  
+
   // Check if date is valid
   if (isNaN(dateObj.getTime())) {
     return 'N/A'
   }
-  
+
   return dateObj.toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -38,11 +40,13 @@ export function formatDate(date: string | number | Date | null | undefined): str
 /**
  * Formats a date for display with month and year only: "Dec 2025"
  */
-export function formatDateMonthYear(date: string | number | Date | null | undefined): string {
+export function formatDateMonthYear(
+  date: string | number | Date | null | undefined,
+): string {
   if (!date) return 'N/A'
-  
+
   let dateObj: Date
-  
+
   if (date instanceof Date) {
     dateObj = date
   } else if (typeof date === 'number') {
@@ -52,11 +56,11 @@ export function formatDateMonthYear(date: string | number | Date | null | undefi
   } else {
     return 'N/A'
   }
-  
+
   if (isNaN(dateObj.getTime())) {
     return 'N/A'
   }
-  
+
   return dateObj.toLocaleDateString('en-GB', {
     month: 'short',
     year: 'numeric',
@@ -66,11 +70,13 @@ export function formatDateMonthYear(date: string | number | Date | null | undefi
 /**
  * Formats a date with time: "11 Dec 2025, 14:30"
  */
-export function formatDateTime(date: string | number | Date | null | undefined): string {
+export function formatDateTime(
+  date: string | number | Date | null | undefined,
+): string {
   if (!date) return 'N/A'
-  
+
   let dateObj: Date
-  
+
   if (date instanceof Date) {
     dateObj = date
   } else if (typeof date === 'number') {
@@ -80,11 +86,11 @@ export function formatDateTime(date: string | number | Date | null | undefined):
   } else {
     return 'N/A'
   }
-  
+
   if (isNaN(dateObj.getTime())) {
     return 'N/A'
   }
-  
+
   return dateObj.toLocaleString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -94,4 +100,3 @@ export function formatDateTime(date: string | number | Date | null | undefined):
     hour12: false,
   })
 }
-

@@ -2,7 +2,9 @@ import { DomainDetailView } from '@/components/pages/organizations/$orgId/domain
 import { createFileRoute } from '@tanstack/react-router'
 import { fetchOrganizations, fetchDomain } from '@/lib/react-query/hooks'
 
-export const Route = createFileRoute('/_public/organizations/$orgId/domains/$domainId/settings')({
+export const Route = createFileRoute(
+  '/_public/organizations/$orgId/domains/$domainId/settings',
+)({
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

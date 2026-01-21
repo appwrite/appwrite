@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Webhooks
- * 
+ *
  * Handles webhook fetching, creation, updating, and deletion.
  */
 
@@ -15,9 +15,9 @@ import { DEFAULT_STALE_TIME } from './constants'
 
 /**
  * Query function to fetch webhooks for a project
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @returns Webhooks list response from the API
  */
@@ -39,7 +39,7 @@ export async function fetchProjectWebhooks(projectId: string) {
 
 /**
  * Hook to fetch webhooks for a project
- * 
+ *
  * @param projectId - The project ID
  * @returns Webhooks list with loading state
  */
@@ -62,7 +62,7 @@ export function useProjectWebhooks(projectId: string | null | undefined) {
 
 /**
  * Hook to get a single webhook
- * 
+ *
  * @param projectId - The project ID
  * @param webhookId - The webhook ID
  */
@@ -92,7 +92,7 @@ export function useProjectWebhook(
 
 /**
  * Hook to create a webhook
- * 
+ *
  * @param projectId - The project ID
  */
 export function useCreateWebhook(projectId: string | null | undefined) {
@@ -135,7 +135,7 @@ export function useCreateWebhook(projectId: string | null | undefined) {
 
 /**
  * Hook to update a webhook
- * 
+ *
  * @param projectId - The project ID
  */
 export function useUpdateWebhook(projectId: string | null | undefined) {
@@ -186,10 +186,12 @@ export function useUpdateWebhook(projectId: string | null | undefined) {
 
 /**
  * Hook to update webhook signature key
- * 
+ *
  * @param projectId - The project ID
  */
-export function useUpdateWebhookSignature(projectId: string | null | undefined) {
+export function useUpdateWebhookSignature(
+  projectId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -215,7 +217,7 @@ export function useUpdateWebhookSignature(projectId: string | null | undefined) 
 
 /**
  * Hook to delete a webhook
- * 
+ *
  * @param projectId - The project ID
  */
 export function useDeleteWebhook(projectId: string | null | undefined) {
@@ -226,7 +228,10 @@ export function useDeleteWebhook(projectId: string | null | undefined) {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
-      return await sdk.forConsole.projects.deleteWebhook({ projectId, webhookId })
+      return await sdk.forConsole.projects.deleteWebhook({
+        projectId,
+        webhookId,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -238,4 +243,3 @@ export function useDeleteWebhook(projectId: string | null | undefined) {
     },
   })
 }
-

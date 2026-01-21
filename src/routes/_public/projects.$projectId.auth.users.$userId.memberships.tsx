@@ -1,6 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { UserDetailView } from '@/components/pages/projects/$projectId/auth/users/View'
-import { fetchUser, fetchUserMemberships, fetchUserMFAFactors } from '@/lib/react-query/hooks/users'
+import {
+  fetchUser,
+  fetchUserMemberships,
+  fetchUserMFAFactors,
+} from '@/lib/react-query/hooks/users'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/auth/users/$userId/memberships',

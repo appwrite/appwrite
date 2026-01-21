@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Functions
- * 
+ *
  * Handles functions, deployments, executions, templates, and variables.
  */
 
@@ -9,7 +9,13 @@ import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, LONG_STALE_TIME, DEFAULT_PAGE_SIZE, SMALL_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  LONG_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  SMALL_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 import { Dependencies } from './dependencies'
 
 // ============================================================================
@@ -18,9 +24,9 @@ import { Dependencies } from './dependencies'
 
 /**
  * Query function to fetch functions for a project
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -44,7 +50,10 @@ export async function fetchProjectFunctions(
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.functions.list(queries, search?.trim() || undefined)
+  const response = await projectSdk.functions.list(
+    queries,
+    search?.trim() || undefined,
+  )
 
   return {
     functions: response.functions || [],
@@ -87,7 +96,9 @@ export async function fetchFunctionDeployments(
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const finalQueries = queries ? [...defaultQueries, ...queries] : defaultQueries
+  const finalQueries = queries
+    ? [...defaultQueries, ...queries]
+    : defaultQueries
 
   const response = await projectSdk.functions.listDeployments({
     functionId,
@@ -118,9 +129,9 @@ export async function fetchFunctionDeployment(
 
 /**
  * Query function to fetch function templates
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param runtimes - Optional array of runtime names to filter by
  * @param useCases - Optional array of use case names to filter by
@@ -178,7 +189,9 @@ export async function fetchFunctionExecutions(
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const finalQueries = queries ? [...defaultQueries, ...queries] : defaultQueries
+  const finalQueries = queries
+    ? [...defaultQueries, ...queries]
+    : defaultQueries
 
   const response = await projectSdk.functions.listExecutions({
     functionId,
@@ -193,9 +206,9 @@ export async function fetchFunctionExecutions(
 
 /**
  * Query function to fetch function variables with pagination
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param functionId - The function ID
  * @param page - Page number (0-indexed)
@@ -221,7 +234,7 @@ export async function fetchFunctionVariables(
 
   try {
     // Try to pass queries - the API may support it even if SDK signature doesn't show it
-    const response = await projectSdk.functions.listVariables({ 
+    const response = await projectSdk.functions.listVariables({
       functionId,
       queries,
     } as any)
@@ -232,7 +245,10 @@ export async function fetchFunctionVariables(
     }
   } catch (error) {
     // If queries aren't supported, fall back to fetching all and paginating client-side
-    console.warn('Function variables API does not support queries, falling back to client-side pagination:', error)
+    console.warn(
+      'Function variables API does not support queries, falling back to client-side pagination:',
+      error,
+    )
     const response = await projectSdk.functions.listVariables({ functionId })
     const allVariables = (response.variables || []).sort((a, b) => {
       const aTime = new Date(a.$createdAt || 0).getTime()
@@ -240,12 +256,12 @@ export async function fetchFunctionVariables(
       return bTime - aTime
     })
     const total = response.total || 0
-    
+
     // Client-side pagination as fallback
     const start = page * limit
     const end = start + limit
     const paginatedVariables = allVariables.slice(start, end)
-    
+
     return {
       variables: paginatedVariables,
       total,
@@ -291,9 +307,9 @@ export async function fetchFunctionDomains(
 
 /**
  * Query function to fetch function runtimes
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @returns Runtimes list response from the API
  */
@@ -328,9 +344,9 @@ export async function fetchFunctionSpecifications(projectId: string) {
 
 /**
  * Hook to fetch paginated functions for a project
- * 
+ *
  * This is useful for displaying project functions with pagination and search.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -410,8 +426,17 @@ export function useFunctionDeployments(
     error,
     refetch,
   } = useQuery({
-    queryKey: ['deployments', 'function', projectId, functionId, page, limit, queries],
-    queryFn: () => fetchFunctionDeployments(projectId!, functionId!, page, limit, queries),
+    queryKey: [
+      'deployments',
+      'function',
+      projectId,
+      functionId,
+      page,
+      limit,
+      queries,
+    ],
+    queryFn: () =>
+      fetchFunctionDeployments(projectId!, functionId!, page, limit, queries),
     enabled: !!projectId && !!functionId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -438,7 +463,8 @@ export function useFunctionDeployment(
 ) {
   return useQuery({
     queryKey: ['deployment', 'function', projectId, functionId, deploymentId],
-    queryFn: () => fetchFunctionDeployment(projectId!, functionId!, deploymentId!),
+    queryFn: () =>
+      fetchFunctionDeployment(projectId!, functionId!, deploymentId!),
     enabled: !!projectId && !!functionId && !!deploymentId,
     staleTime: DEFAULT_STALE_TIME,
   })
@@ -446,10 +472,10 @@ export function useFunctionDeployment(
 
 /**
  * Hook to fetch function templates
- * 
+ *
  * This is useful for displaying function templates with optional filtering and pagination.
  * Matches the pattern used in useOrganizationInvoices for consistency.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page (default: 25)
@@ -469,21 +495,12 @@ export function useFunctionTemplates(
 
   // Serialize arrays for stable query keys - sort to ensure consistent ordering
   // Handle empty arrays as null to ensure consistent cache keys
-  const runtimesKey = runtimes && runtimes.length > 0 
-    ? [...runtimes].sort().join(',') 
-    : null
-  const useCasesKey = useCases && useCases.length > 0 
-    ? [...useCases].sort().join(',') 
-    : null
+  const runtimesKey =
+    runtimes && runtimes.length > 0 ? [...runtimes].sort().join(',') : null
+  const useCasesKey =
+    useCases && useCases.length > 0 ? [...useCases].sort().join(',') : null
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    isPending,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, isFetching, isPending, error, refetch } = useQuery({
     // Serialize arrays in query key to ensure proper cache differentiation
     // Each unique combination of page, limit, runtimes, and useCases gets its own cache entry
     // Include offset explicitly in key for extra safety (even though it's derived from page*limit)
@@ -497,7 +514,15 @@ export function useFunctionTemplates(
       runtimesKey, // Serialized runtimes filter (null if no filter)
       useCasesKey, // Serialized useCases filter (null if no filter)
     ],
-    queryFn: () => fetchFunctionTemplates(projectId!, runtimes, useCases, limit, offset, true),
+    queryFn: () =>
+      fetchFunctionTemplates(
+        projectId!,
+        runtimes,
+        useCases,
+        limit,
+        offset,
+        true,
+      ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME, // Matches org view pattern
     gcTime: LONG_STALE_TIME, // Keep cache for a reasonable time
@@ -534,8 +559,17 @@ export function useFunctionExecutions(
     error,
     refetch,
   } = useQuery({
-    queryKey: ['executions', 'function', projectId, functionId, page, limit, queries],
-    queryFn: () => fetchFunctionExecutions(projectId!, functionId!, page, limit, queries),
+    queryKey: [
+      'executions',
+      'function',
+      projectId,
+      functionId,
+      page,
+      limit,
+      queries,
+    ],
+    queryFn: () =>
+      fetchFunctionExecutions(projectId!, functionId!, page, limit, queries),
     enabled: !!projectId && !!functionId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -553,7 +587,7 @@ export function useFunctionExecutions(
 
 /**
  * Hook to fetch function variables with pagination
- * 
+ *
  * @param projectId - The project ID
  * @param functionId - The function ID
  * @param page - Page number (0-indexed)
@@ -595,8 +629,17 @@ export function useFunctionDomains(
   search?: string,
 ) {
   return useQuery({
-    queryKey: ['proxy-rules', 'function', projectId, functionId, page, limit, search],
-    queryFn: () => fetchFunctionDomains(projectId!, functionId!, page, limit, search),
+    queryKey: [
+      'proxy-rules',
+      'function',
+      projectId,
+      functionId,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () =>
+      fetchFunctionDomains(projectId!, functionId!, page, limit, search),
     enabled: !!projectId && !!functionId,
     staleTime: DEFAULT_STALE_TIME,
   })
@@ -628,7 +671,9 @@ export function useCreateFunctionVariable(
         throw new Error('Variable key is required')
       }
       if (value.length > 8192) {
-        throw new Error(`Variable ${key} is longer than 8192 allowed characters`)
+        throw new Error(
+          `Variable ${key} is longer than 8192 allowed characters`,
+        )
       }
 
       const projectSdk = sdk.forProject(projectId)
@@ -675,7 +720,9 @@ export function useUpdateFunctionVariable(
         throw new Error('Variable key is required')
       }
       if (value.length > 8192) {
-        throw new Error(`Variable ${key} is longer than 8192 allowed characters`)
+        throw new Error(
+          `Variable ${key} is longer than 8192 allowed characters`,
+        )
       }
 
       const projectSdk = sdk.forProject(projectId)
@@ -726,7 +773,7 @@ export function useDeleteFunctionVariable(
 
 /**
  * Delete a function deployment
- * 
+ *
  * @param projectId - The project ID
  * @param functionId - The function ID
  * @param deploymentId - The deployment ID
@@ -762,7 +809,9 @@ export function useProjectRuntimes(projectId: string | null | undefined) {
 /**
  * Hook to fetch function specifications
  */
-export function useFunctionSpecifications(projectId: string | null | undefined) {
+export function useFunctionSpecifications(
+  projectId: string | null | undefined,
+) {
   return useQuery({
     queryKey: ['specifications', 'function', projectId],
     queryFn: () => fetchFunctionSpecifications(projectId!),
@@ -793,4 +842,3 @@ export function useDeleteFunction(projectId: string | null | undefined) {
     },
   })
 }
-

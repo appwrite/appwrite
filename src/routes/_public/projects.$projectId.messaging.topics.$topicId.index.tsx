@@ -35,7 +35,13 @@ export const Route = createFileRoute(
             '',
           ],
           queryFn: () =>
-            fetchTopicSubscribers(projectId, topicId, 0, SUBSCRIBERS_PER_PAGE, ''),
+            fetchTopicSubscribers(
+              projectId,
+              topicId,
+              0,
+              SUBSCRIBERS_PER_PAGE,
+              '',
+            ),
           staleTime: 30 * 1000,
         }),
       ])

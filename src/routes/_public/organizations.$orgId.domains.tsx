@@ -1,5 +1,8 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import { fetchOrganizations, fetchOrganizationDomains } from '@/lib/react-query/hooks'
+import {
+  fetchOrganizations,
+  fetchOrganizationDomains,
+} from '@/lib/react-query/hooks'
 
 const DOMAINS_PER_PAGE = 25
 
@@ -46,4 +49,3 @@ function DomainsLayout() {
   // The index route handles the list view, and the $domainId route handles detail views
   return <Outlet />
 }
-

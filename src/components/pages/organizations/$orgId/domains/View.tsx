@@ -1,7 +1,21 @@
 import { useState, useEffect, useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import { Globe, List, LayoutGrid, MoreHorizontal, RefreshCw, CheckCircle2, XCircle, AlertCircle, Search, Plus } from 'lucide-react'
-import { useOrganizationDomains, fetchOrganizationDomains } from '@/lib/react-query/hooks'
+import {
+  Globe,
+  List,
+  LayoutGrid,
+  MoreHorizontal,
+  RefreshCw,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Search,
+  Plus,
+} from 'lucide-react'
+import {
+  useOrganizationDomains,
+  fetchOrganizationDomains,
+} from '@/lib/react-query/hooks'
 import { ResourceCard } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -32,7 +46,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Link, useNavigate, useParams, useLocation } from '@tanstack/react-router'
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useLocation,
+} from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -61,7 +80,9 @@ export function DomainsView() {
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [retryDialogOpen, setRetryDialogOpen] = useState(false)
-  const [selectedDomain, setSelectedDomain] = useState<Models.Domain | null>(null)
+  const [selectedDomain, setSelectedDomain] = useState<Models.Domain | null>(
+    null,
+  )
 
   // Convert 1-indexed page to 0-indexed for API
   const pageIndexed = currentPage - 1
@@ -289,7 +310,9 @@ export function DomainsView() {
         {viewMode === 'list' ? (
           domainsLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">
-              <p className="text-[13px] text-muted-foreground">Loading domains...</p>
+              <p className="text-[13px] text-muted-foreground">
+                Loading domains...
+              </p>
             </div>
           ) : paginatedDomains.length > 0 ? (
             <>
@@ -354,7 +377,10 @@ export function DomainsView() {
                           <TableCell>
                             <div className="flex items-center gap-1.5">
                               <VerificationIcon
-                                className={cn('h-4 w-4', verification.className)}
+                                className={cn(
+                                  'h-4 w-4',
+                                  verification.className,
+                                )}
                               />
                               <span
                                 className={cn(
@@ -394,7 +420,10 @@ export function DomainsView() {
                                   onClick={() => {
                                     navigate({
                                       to: '/organizations/$orgId/domains/$domainId',
-                                      params: { orgId: orgId!, domainId: domain.$id },
+                                      params: {
+                                        orgId: orgId!,
+                                        domainId: domain.$id,
+                                      },
                                     })
                                   }}
                                 >
@@ -453,7 +482,9 @@ export function DomainsView() {
           <>
             {domainsLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
-                <p className="text-[13px] text-muted-foreground">Loading domains...</p>
+                <p className="text-[13px] text-muted-foreground">
+                  Loading domains...
+                </p>
               </div>
             ) : paginatedDomains.length > 0 ? (
               <>
@@ -473,7 +504,9 @@ export function DomainsView() {
                           icon={Globe}
                           iconColor="bg-muted text-muted-foreground"
                           status={
-                            verification.status === 'verified' ? 'success' : 'warning'
+                            verification.status === 'verified'
+                              ? 'success'
+                              : 'warning'
                           }
                           statusLabel={verification.label}
                           metadata={[
@@ -533,7 +566,8 @@ export function DomainsView() {
           <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
               <Badge variant="secondary" className="h-6 px-2.5">
-                {selectedDomains.size} domain{selectedDomains.size > 1 ? 's' : ''} selected
+                {selectedDomains.size} domain
+                {selectedDomains.size > 1 ? 's' : ''} selected
               </Badge>
               <div className="flex items-center gap-2">
                 <Button
@@ -562,9 +596,13 @@ export function DomainsView() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 text-left">
-              <DialogTitle>Delete Domain{selectedDomains.size > 1 ? 's' : ''}</DialogTitle>
+              <DialogTitle>
+                Delete Domain{selectedDomains.size > 1 ? 's' : ''}
+              </DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete {selectedDomains.size} domain{selectedDomains.size > 1 ? 's' : ''}? This action cannot be undone.
+                Are you sure you want to delete {selectedDomains.size} domain
+                {selectedDomains.size > 1 ? 's' : ''}? This action cannot be
+                undone.
               </DialogDescription>
             </DialogHeader>
 
@@ -609,4 +647,3 @@ export function DomainsView() {
     </div>
   )
 }
-

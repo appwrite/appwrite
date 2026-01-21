@@ -57,7 +57,14 @@ export interface ColumnFormData {
   // Common
   required?: boolean
   array?: boolean
-  xdefault?: string | number | boolean | [number, number] | number[][] | number[][][] | null
+  xdefault?:
+    | string
+    | number
+    | boolean
+    | [number, number]
+    | number[][]
+    | number[][][]
+    | null
 }
 
 interface ColumnDrawerProps {
@@ -86,19 +93,27 @@ const COLUMN_TYPES: { value: ColumnType; label: string }[] = [
   { value: 'polygon', label: 'Polygon' },
 ]
 
-const RELATIONSHIP_TYPES: { value: 'oneToOne' | 'oneToMany' | 'manyToOne' | 'manyToMany'; label: string }[] = [
+const RELATIONSHIP_TYPES: {
+  value: 'oneToOne' | 'oneToMany' | 'manyToOne' | 'manyToMany'
+  label: string
+}[] = [
   { value: 'oneToOne', label: 'One to one' },
   { value: 'oneToMany', label: 'One to many' },
   { value: 'manyToOne', label: 'Many to one' },
   { value: 'manyToMany', label: 'Many to many' },
 ]
 
-const ON_DELETE_OPTIONS: { value: 'setNull' | 'cascade' | 'restrict'; label: string }[] = [
-  { value: 'setNull', label: 'Set NULL - set row ID as NULL in all related rows' },
+const ON_DELETE_OPTIONS: {
+  value: 'setNull' | 'cascade' | 'restrict'
+  label: string
+}[] = [
+  {
+    value: 'setNull',
+    label: 'Set NULL - set row ID as NULL in all related rows',
+  },
   { value: 'cascade', label: 'Cascade - delete all related rows' },
   { value: 'restrict', label: 'Restrict - row can not be deleted' },
 ]
-
 
 export function ColumnDrawer({
   open,
@@ -166,8 +181,14 @@ export function ColumnDrawer({
 
   // Auto-generate key from related table name for relationships
   useEffect(() => {
-    if (formData.type === 'relationship' && formData.relatedTableId && !isEditMode) {
-      const relatedTable = availableTables.find(t => t.$id === formData.relatedTableId)
+    if (
+      formData.type === 'relationship' &&
+      formData.relatedTableId &&
+      !isEditMode
+    ) {
+      const relatedTable = availableTables.find(
+        (t) => t.$id === formData.relatedTableId,
+      )
       if (relatedTable && !formData.key) {
         // Convert table name to camelCase
         const camelCase = relatedTable.name
@@ -175,14 +196,19 @@ export function ColumnDrawer({
             return index === 0 ? word.toLowerCase() : word.toUpperCase()
           })
           .replace(/\s+/g, '')
-        setFormData(prev => ({ ...prev, key: camelCase }))
+        setFormData((prev) => ({ ...prev, key: camelCase }))
       }
     }
   }, [formData.type, formData.relatedTableId, availableTables, isEditMode])
 
   // Auto-generate two-way key from current table name
   useEffect(() => {
-    if (formData.type === 'relationship' && formData.twoWay && !formData.twoWayKey && !isEditMode) {
+    if (
+      formData.type === 'relationship' &&
+      formData.twoWay &&
+      !formData.twoWayKey &&
+      !isEditMode
+    ) {
       // We don't have current table name here, so we'll let user set it
       // This would need to be passed as a prop if needed
     }
@@ -214,7 +240,10 @@ export function ColumnDrawer({
       newErrors.key = 'Key is required'
     } else if (!/^[A-Za-z0-9][A-Za-z0-9._\-]*$/.test(formData.key)) {
       newErrors.key = 'Invalid key format. Allowed: a-z, A-Z, 0-9, -, ., _'
-    } else if (!isEditMode && existingColumns.some(c => c.key === formData.key)) {
+    } else if (
+      !isEditMode &&
+      existingColumns.some((c) => c.key === formData.key)
+    ) {
       newErrors.key = 'Column with this key already exists'
     }
 
@@ -223,16 +252,18 @@ export function ColumnDrawer({
       if (!formData.size || formData.size < 1) {
         newErrors.size = 'Size is required and must be at least 1'
       } else if (formData.encrypt && formData.size < 150) {
-        newErrors.size = 'Encrypted string columns require a minimum size of 150'
+        newErrors.size =
+          'Encrypted string columns require a minimum size of 150'
       }
     } else if (formData.type === 'enum') {
-      const validElements = enumElements.filter(e => e.trim().length > 0)
+      const validElements = enumElements.filter((e) => e.trim().length > 0)
       if (validElements.length === 0) {
         newErrors.elements = 'At least one element is required'
       } else {
-        const invalidElements = validElements.filter(e => e.length > 255)
+        const invalidElements = validElements.filter((e) => e.length > 255)
         if (invalidElements.length > 0) {
-          newErrors.elements = 'Enum elements have a maximum length of 255 characters'
+          newErrors.elements =
+            'Enum elements have a maximum length of 255 characters'
         }
       }
     } else if (formData.type === 'relationship') {
@@ -266,7 +297,7 @@ export function ColumnDrawer({
 
       // Process enum elements
       if (formData.type === 'enum') {
-        submitData.elements = enumElements.filter(e => e.trim().length > 0)
+        submitData.elements = enumElements.filter((e) => e.trim().length > 0)
       }
 
       // Handle default values
@@ -283,10 +314,16 @@ export function ColumnDrawer({
       handleOpenChange(false)
       // Don't show toast for suggestions - parent handles it
       if (!(column as any)?.isSuggestion) {
-        toast.success(isEditMode ? 'Column updated successfully' : 'Column created successfully')
+        toast.success(
+          isEditMode
+            ? 'Column updated successfully'
+            : 'Column created successfully',
+        )
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save column')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to save column',
+      )
     }
   }
 
@@ -315,8 +352,11 @@ export function ColumnDrawer({
     setEnumElements(newElements)
   }
 
-  const isSpatialType = ['point', 'linestring', 'polygon'].includes(formData.type)
-  const showDefaultValue = !formData.required && !formData.array && !isSpatialType
+  const isSpatialType = ['point', 'linestring', 'polygon'].includes(
+    formData.type,
+  )
+  const showDefaultValue =
+    !formData.required && !formData.array && !isSpatialType
   const showDefaultValueCheckbox = isSpatialType && !formData.required
 
   return (
@@ -339,9 +379,13 @@ export function ColumnDrawer({
               <Input
                 id="column-key"
                 value={formData.key}
-                onChange={(e) => setFormData(prev => ({ ...prev, key: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, key: e.target.value }))
+                }
                 placeholder="Enter key"
-                disabled={isLoading || (isEditMode && formData.type === 'relationship')}
+                disabled={
+                  isLoading || (isEditMode && formData.type === 'relationship')
+                }
                 pattern="^[A-Za-z0-9][A-Za-z0-9._\-]*$"
                 className={errors.key ? 'border-destructive' : ''}
               />
@@ -363,7 +407,7 @@ export function ColumnDrawer({
               <Select
                 value={formData.type}
                 onValueChange={(value) => {
-                  setFormData(prev => ({
+                  setFormData((prev) => ({
                     ...prev,
                     type: value as ColumnType,
                     // Reset type-specific fields
@@ -377,7 +421,12 @@ export function ColumnDrawer({
                     twoWay: false,
                     twoWayKey: undefined,
                     onDelete: undefined,
-                    array: value === 'point' || value === 'linestring' || value === 'polygon' ? false : prev.array,
+                    array:
+                      value === 'point' ||
+                      value === 'linestring' ||
+                      value === 'polygon'
+                        ? false
+                        : prev.array,
                   }))
                   if (value === 'enum') {
                     setEnumElements([''])
@@ -385,11 +434,14 @@ export function ColumnDrawer({
                 }}
                 disabled={isLoading || isEditMode}
               >
-                <SelectTrigger id="column-type" className={errors.type ? 'border-destructive' : ''}>
+                <SelectTrigger
+                  id="column-type"
+                  className={errors.type ? 'border-destructive' : ''}
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {COLUMN_TYPES.map(type => (
+                  {COLUMN_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
                     </SelectItem>
@@ -405,7 +457,10 @@ export function ColumnDrawer({
             {formData.type === 'string' && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="column-size" className="text-[12px] font-medium">
+                  <Label
+                    htmlFor="column-size"
+                    className="text-[12px] font-medium"
+                  >
                     Size <span className="text-destructive">*</span>
                   </Label>
                   <Input
@@ -414,7 +469,7 @@ export function ColumnDrawer({
                     value={formData.size || ''}
                     onChange={(e) => {
                       const size = parseInt(e.target.value) || 0
-                      setFormData(prev => ({ ...prev, size }))
+                      setFormData((prev) => ({ ...prev, size }))
                     }}
                     placeholder="Enter size"
                     min={formData.encrypt ? 150 : 1}
@@ -422,7 +477,9 @@ export function ColumnDrawer({
                     className={errors.size ? 'border-destructive' : ''}
                   />
                   {errors.size && (
-                    <p className="text-[12px] text-destructive">{errors.size}</p>
+                    <p className="text-[12px] text-destructive">
+                      {errors.size}
+                    </p>
                   )}
                   {formData.encrypt && (
                     <p className="text-[11px] text-muted-foreground">
@@ -437,15 +494,21 @@ export function ColumnDrawer({
                       id="column-encrypt"
                       checked={formData.encrypt || false}
                       onCheckedChange={(checked) => {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
                           encrypt: checked as boolean,
-                          size: checked && (!prev.size || prev.size < 150) ? 150 : prev.size,
+                          size:
+                            checked && (!prev.size || prev.size < 150)
+                              ? 150
+                              : prev.size,
                         }))
                       }}
                       disabled={isLoading}
                     />
-                    <Label htmlFor="column-encrypt" className="text-[12px] font-normal cursor-pointer">
+                    <Label
+                      htmlFor="column-encrypt"
+                      className="text-[12px] font-normal cursor-pointer"
+                    >
                       Encrypted
                     </Label>
                     <TooltipProvider>
@@ -455,7 +518,8 @@ export function ColumnDrawer({
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="text-[12px]">
-                            Protect column against data leaks for best privacy compliance. Encrypted columns cannot be queried.
+                            Protect column against data leaks for best privacy
+                            compliance. Encrypted columns cannot be queried.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -470,7 +534,10 @@ export function ColumnDrawer({
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="column-min" className="text-[12px] font-medium">
+                    <Label
+                      htmlFor="column-min"
+                      className="text-[12px] font-medium"
+                    >
                       Min
                     </Label>
                     <Input
@@ -478,8 +545,11 @@ export function ColumnDrawer({
                       type="number"
                       value={formData.min ?? ''}
                       onChange={(e) => {
-                        const min = e.target.value === '' ? undefined : parseFloat(e.target.value)
-                        setFormData(prev => ({ ...prev, min }))
+                        const min =
+                          e.target.value === ''
+                            ? undefined
+                            : parseFloat(e.target.value)
+                        setFormData((prev) => ({ ...prev, min }))
                       }}
                       placeholder="Enter min"
                       step={formData.type === 'double' ? 0.1 : 1}
@@ -487,7 +557,10 @@ export function ColumnDrawer({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="column-max" className="text-[12px] font-medium">
+                    <Label
+                      htmlFor="column-max"
+                      className="text-[12px] font-medium"
+                    >
                       Max
                     </Label>
                     <Input
@@ -495,8 +568,11 @@ export function ColumnDrawer({
                       type="number"
                       value={formData.max ?? ''}
                       onChange={(e) => {
-                        const max = e.target.value === '' ? undefined : parseFloat(e.target.value)
-                        setFormData(prev => ({ ...prev, max }))
+                        const max =
+                          e.target.value === ''
+                            ? undefined
+                            : parseFloat(e.target.value)
+                        setFormData((prev) => ({ ...prev, max }))
                       }}
                       placeholder="Enter max"
                       step={formData.type === 'double' ? 0.1 : 1}
@@ -518,7 +594,9 @@ export function ColumnDrawer({
                     <div key={index} className="flex items-center gap-2">
                       <Input
                         value={element}
-                        onChange={(e) => updateEnumElement(index, e.target.value)}
+                        onChange={(e) =>
+                          updateEnumElement(index, e.target.value)
+                        }
                         placeholder="Add elements here"
                         maxLength={255}
                         disabled={isLoading}
@@ -550,12 +628,15 @@ export function ColumnDrawer({
                   </Button>
                 </div>
                 {errors.elements && (
-                  <p className="text-[12px] text-destructive">{errors.elements}</p>
+                  <p className="text-[12px] text-destructive">
+                    {errors.elements}
+                  </p>
                 )}
                 <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3">
                   <Info className="h-4 w-4 shrink-0 text-muted-foreground mt-0.5" />
                   <p className="text-[11px] text-muted-foreground">
-                    Enum elements have a maximum length of 255 characters. This limit can not be exceeded.
+                    Enum elements have a maximum length of 255 characters. This
+                    limit can not be exceeded.
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -585,7 +666,7 @@ export function ColumnDrawer({
                   <RadioGroup
                     value={formData.twoWay ? 'two' : 'one'}
                     onValueChange={(value) => {
-                      setFormData(prev => ({
+                      setFormData((prev) => ({
                         ...prev,
                         twoWay: value === 'two',
                         twoWayKey: value === 'two' ? prev.twoWayKey : undefined,
@@ -596,8 +677,13 @@ export function ColumnDrawer({
                   >
                     <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
                       <RadioGroupItem value="one" id="one-way" />
-                      <Label htmlFor="one-way" className="cursor-pointer flex-1">
-                        <div className="font-medium text-[12px]">One-way relationship</div>
+                      <Label
+                        htmlFor="one-way"
+                        className="cursor-pointer flex-1"
+                      >
+                        <div className="font-medium text-[12px]">
+                          One-way relationship
+                        </div>
                         <div className="text-[11px] text-muted-foreground">
                           One Relation column within this table
                         </div>
@@ -605,10 +691,16 @@ export function ColumnDrawer({
                     </div>
                     <div className="flex items-center space-x-2 rounded-lg border border-border p-3">
                       <RadioGroupItem value="two" id="two-way" />
-                      <Label htmlFor="two-way" className="cursor-pointer flex-1">
-                        <div className="font-medium text-[12px]">Two-way relationship</div>
+                      <Label
+                        htmlFor="two-way"
+                        className="cursor-pointer flex-1"
+                      >
+                        <div className="font-medium text-[12px]">
+                          Two-way relationship
+                        </div>
                         <div className="text-[11px] text-muted-foreground">
-                          One Relation column within this table and another within the related table
+                          One Relation column within this table and another
+                          within the related table
                         </div>
                       </Label>
                     </div>
@@ -616,21 +708,32 @@ export function ColumnDrawer({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="related-table" className="text-[12px] font-medium">
+                  <Label
+                    htmlFor="related-table"
+                    className="text-[12px] font-medium"
+                  >
                     Related table <span className="text-destructive">*</span>
                   </Label>
                   <Select
                     value={formData.relatedTableId || ''}
                     onValueChange={(value) => {
-                      setFormData(prev => ({ ...prev, relatedTableId: value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        relatedTableId: value,
+                      }))
                     }}
                     disabled={isLoading || isEditMode}
                   >
-                    <SelectTrigger id="related-table" className={errors.relatedTableId ? 'border-destructive' : ''}>
+                    <SelectTrigger
+                      id="related-table"
+                      className={
+                        errors.relatedTableId ? 'border-destructive' : ''
+                      }
+                    >
                       <SelectValue placeholder="Select a table" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableTables.map(table => (
+                      {availableTables.map((table) => (
                         <SelectItem key={table.$id} value={table.$id}>
                           {table.name} ({table.$id})
                         </SelectItem>
@@ -638,27 +741,39 @@ export function ColumnDrawer({
                     </SelectContent>
                   </Select>
                   {errors.relatedTableId && (
-                    <p className="text-[12px] text-destructive">{errors.relatedTableId}</p>
+                    <p className="text-[12px] text-destructive">
+                      {errors.relatedTableId}
+                    </p>
                   )}
                 </div>
 
                 {formData.relatedTableId && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="column-key-relationship" className="text-[12px] font-medium">
+                      <Label
+                        htmlFor="column-key-relationship"
+                        className="text-[12px] font-medium"
+                      >
                         Column key <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="column-key-relationship"
                         value={formData.key}
-                        onChange={(e) => setFormData(prev => ({ ...prev, key: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            key: e.target.value,
+                          }))
+                        }
                         placeholder="Enter key"
                         disabled={isLoading}
                         pattern="^[A-Za-z0-9][A-Za-z0-9._\-]*$"
                         className={errors.key ? 'border-destructive' : ''}
                       />
                       {errors.key && (
-                        <p className="text-[12px] text-destructive">{errors.key}</p>
+                        <p className="text-[12px] text-destructive">
+                          {errors.key}
+                        </p>
                       )}
                       <p className="text-[11px] text-muted-foreground">
                         Allowed characters: a-z, A-Z, 0-9, -, ., _
@@ -667,43 +782,69 @@ export function ColumnDrawer({
 
                     {formData.twoWay && (
                       <div className="space-y-2">
-                        <Label htmlFor="two-way-key" className="text-[12px] font-medium">
-                          Column key (related table) <span className="text-destructive">*</span>
+                        <Label
+                          htmlFor="two-way-key"
+                          className="text-[12px] font-medium"
+                        >
+                          Column key (related table){' '}
+                          <span className="text-destructive">*</span>
                         </Label>
                         <Input
                           id="two-way-key"
                           value={formData.twoWayKey || ''}
-                          onChange={(e) => setFormData(prev => ({ ...prev, twoWayKey: e.target.value }))}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              twoWayKey: e.target.value,
+                            }))
+                          }
                           placeholder="Enter key"
                           disabled={isLoading || isEditMode}
                           pattern="^[A-Za-z0-9][A-Za-z0-9._\-]*$"
-                          className={errors.twoWayKey ? 'border-destructive' : ''}
+                          className={
+                            errors.twoWayKey ? 'border-destructive' : ''
+                          }
                         />
                         {errors.twoWayKey && (
-                          <p className="text-[12px] text-destructive">{errors.twoWayKey}</p>
+                          <p className="text-[12px] text-destructive">
+                            {errors.twoWayKey}
+                          </p>
                         )}
                         <p className="text-[11px] text-muted-foreground">
-                          Allowed characters: a-z, A-Z, 0-9, -, ., _. Once created, column key cannot be adjusted to maintain data integrity.
+                          Allowed characters: a-z, A-Z, 0-9, -, ., _. Once
+                          created, column key cannot be adjusted to maintain
+                          data integrity.
                         </p>
                       </div>
                     )}
 
                     <div className="space-y-2">
-                      <Label htmlFor="relationship-type" className="text-[12px] font-medium">
+                      <Label
+                        htmlFor="relationship-type"
+                        className="text-[12px] font-medium"
+                      >
                         Relation <span className="text-destructive">*</span>
                       </Label>
                       <Select
                         value={formData.relationshipType || ''}
                         onValueChange={(value) => {
-                          setFormData(prev => ({ ...prev, relationshipType: value as any }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            relationshipType: value as any,
+                          }))
                         }}
                         disabled={isLoading || isEditMode}
                       >
-                        <SelectTrigger id="relationship-type" className={errors.relationshipType ? 'border-destructive' : ''}>
+                        <SelectTrigger
+                          id="relationship-type"
+                          className={
+                            errors.relationshipType ? 'border-destructive' : ''
+                          }
+                        >
                           <SelectValue placeholder="Select a relation" />
                         </SelectTrigger>
                         <SelectContent>
-                          {RELATIONSHIP_TYPES.map(type => (
+                          {RELATIONSHIP_TYPES.map((type) => (
                             <SelectItem key={type.value} value={type.value}>
                               {type.label}
                             </SelectItem>
@@ -711,26 +852,40 @@ export function ColumnDrawer({
                         </SelectContent>
                       </Select>
                       {errors.relationshipType && (
-                        <p className="text-[12px] text-destructive">{errors.relationshipType}</p>
+                        <p className="text-[12px] text-destructive">
+                          {errors.relationshipType}
+                        </p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="on-delete" className="text-[12px] font-medium">
-                        On deleting a row <span className="text-destructive">*</span>
+                      <Label
+                        htmlFor="on-delete"
+                        className="text-[12px] font-medium"
+                      >
+                        On deleting a row{' '}
+                        <span className="text-destructive">*</span>
                       </Label>
                       <Select
                         value={formData.onDelete || 'setNull'}
                         onValueChange={(value) => {
-                          setFormData(prev => ({ ...prev, onDelete: value as any }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            onDelete: value as any,
+                          }))
                         }}
                         disabled={isLoading}
                       >
-                        <SelectTrigger id="on-delete" className={errors.onDelete ? 'border-destructive' : ''}>
+                        <SelectTrigger
+                          id="on-delete"
+                          className={
+                            errors.onDelete ? 'border-destructive' : ''
+                          }
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {ON_DELETE_OPTIONS.map(option => (
+                          {ON_DELETE_OPTIONS.map((option) => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -738,7 +893,9 @@ export function ColumnDrawer({
                         </SelectContent>
                       </Select>
                       {errors.onDelete && (
-                        <p className="text-[12px] text-destructive">{errors.onDelete}</p>
+                        <p className="text-[12px] text-destructive">
+                          {errors.onDelete}
+                        </p>
                       )}
                     </div>
                   </>
@@ -754,7 +911,7 @@ export function ColumnDrawer({
                     id="spatial-required"
                     checked={formData.required || false}
                     onCheckedChange={(checked) => {
-                      setFormData(prev => ({
+                      setFormData((prev) => ({
                         ...prev,
                         required: checked as boolean,
                         xdefault: checked ? null : prev.xdefault,
@@ -762,7 +919,10 @@ export function ColumnDrawer({
                     }}
                     disabled={isLoading}
                   />
-                  <Label htmlFor="spatial-required" className="text-[12px] font-normal cursor-pointer">
+                  <Label
+                    htmlFor="spatial-required"
+                    className="text-[12px] font-normal cursor-pointer"
+                  >
                     Required
                   </Label>
                 </div>
@@ -770,53 +930,83 @@ export function ColumnDrawer({
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="spatial-default"
-                    checked={showDefaultValueCheckbox && formData.xdefault !== null && formData.xdefault !== undefined}
+                    checked={
+                      showDefaultValueCheckbox &&
+                      formData.xdefault !== null &&
+                      formData.xdefault !== undefined
+                    }
                     onCheckedChange={(checked) => {
-                      setFormData(prev => ({
+                      setFormData((prev) => ({
                         ...prev,
-                        xdefault: checked ? (formData.type === 'point' ? [0, 0] : formData.type === 'linestring' ? [[0, 0], [0, 0]] : [[[0, 0], [0, 0], [0, 0]]]) : null,
+                        xdefault: checked
+                          ? formData.type === 'point'
+                            ? [0, 0]
+                            : formData.type === 'linestring'
+                              ? [
+                                  [0, 0],
+                                  [0, 0],
+                                ]
+                              : [
+                                  [
+                                    [0, 0],
+                                    [0, 0],
+                                    [0, 0],
+                                  ],
+                                ]
+                          : null,
                         required: checked ? false : prev.required,
                       }))
                     }}
                     disabled={isLoading || formData.required}
                   />
-                  <Label htmlFor="spatial-default" className="text-[12px] font-normal cursor-pointer">
+                  <Label
+                    htmlFor="spatial-default"
+                    className="text-[12px] font-normal cursor-pointer"
+                  >
                     Default value
                   </Label>
                 </div>
 
                 {/* Spatial default value editors */}
-                {showDefaultValueCheckbox && formData.xdefault !== null && formData.xdefault !== undefined && (
-                  <div className="space-y-3">
-                    {formData.type === 'point' && (
-                      <PointEditor
-                        value={formData.xdefault as [number, number] | null}
-                        onChange={(val: [number, number] | null) => setFormData(prev => ({ ...prev, xdefault: val }))}
-                        isRequired={false}
-                        disabled={isLoading}
-                        showNullCheckbox={false}
-                      />
-                    )}
-                    {formData.type === 'linestring' && (
-                      <LineEditor
-                        value={formData.xdefault as number[][] | null}
-                        onChange={(val: number[][] | null) => setFormData(prev => ({ ...prev, xdefault: val }))}
-                        isRequired={false}
-                        disabled={isLoading}
-                        showNullCheckbox={false}
-                      />
-                    )}
-                    {formData.type === 'polygon' && (
-                      <PolygonEditor
-                        value={formData.xdefault as number[][][] | null}
-                        onChange={(val: number[][][] | null) => setFormData(prev => ({ ...prev, xdefault: val }))}
-                        isRequired={false}
-                        disabled={isLoading}
-                        showNullCheckbox={false}
-                      />
-                    )}
-                  </div>
-                )}
+                {showDefaultValueCheckbox &&
+                  formData.xdefault !== null &&
+                  formData.xdefault !== undefined && (
+                    <div className="space-y-3">
+                      {formData.type === 'point' && (
+                        <PointEditor
+                          value={formData.xdefault as [number, number] | null}
+                          onChange={(val: [number, number] | null) =>
+                            setFormData((prev) => ({ ...prev, xdefault: val }))
+                          }
+                          isRequired={false}
+                          disabled={isLoading}
+                          showNullCheckbox={false}
+                        />
+                      )}
+                      {formData.type === 'linestring' && (
+                        <LineEditor
+                          value={formData.xdefault as number[][] | null}
+                          onChange={(val: number[][] | null) =>
+                            setFormData((prev) => ({ ...prev, xdefault: val }))
+                          }
+                          isRequired={false}
+                          disabled={isLoading}
+                          showNullCheckbox={false}
+                        />
+                      )}
+                      {formData.type === 'polygon' && (
+                        <PolygonEditor
+                          value={formData.xdefault as number[][][] | null}
+                          onChange={(val: number[][][] | null) =>
+                            setFormData((prev) => ({ ...prev, xdefault: val }))
+                          }
+                          isRequired={false}
+                          disabled={isLoading}
+                          showNullCheckbox={false}
+                        />
+                      )}
+                    </div>
+                  )}
               </div>
             )}
 
@@ -828,7 +1018,7 @@ export function ColumnDrawer({
                     id="column-required"
                     checked={formData.required || false}
                     onCheckedChange={(checked) => {
-                      setFormData(prev => ({
+                      setFormData((prev) => ({
                         ...prev,
                         required: checked as boolean,
                         xdefault: checked ? null : prev.xdefault,
@@ -836,7 +1026,10 @@ export function ColumnDrawer({
                     }}
                     disabled={isLoading}
                   />
-                  <Label htmlFor="column-required" className="text-[12px] font-normal cursor-pointer">
+                  <Label
+                    htmlFor="column-required"
+                    className="text-[12px] font-normal cursor-pointer"
+                  >
                     Required
                   </Label>
                 </div>
@@ -846,7 +1039,7 @@ export function ColumnDrawer({
                     id="column-array"
                     checked={formData.array || false}
                     onCheckedChange={(checked) => {
-                      setFormData(prev => ({
+                      setFormData((prev) => ({
                         ...prev,
                         array: checked as boolean,
                         xdefault: checked ? null : prev.xdefault,
@@ -854,7 +1047,10 @@ export function ColumnDrawer({
                     }}
                     disabled={isLoading}
                   />
-                  <Label htmlFor="column-array" className="text-[12px] font-normal cursor-pointer">
+                  <Label
+                    htmlFor="column-array"
+                    className="text-[12px] font-normal cursor-pointer"
+                  >
                     Array
                   </Label>
                 </div>
@@ -864,14 +1060,21 @@ export function ColumnDrawer({
             {/* Default value - for non-spatial types */}
             {showDefaultValue && (
               <div className="space-y-2">
-                <Label htmlFor="column-default" className="text-[12px] font-medium">
+                <Label
+                  htmlFor="column-default"
+                  className="text-[12px] font-medium"
+                >
                   Default value
                 </Label>
                 {formData.type === 'boolean' ? (
                   <Select
-                    value={formData.xdefault === null ? 'null' : String(formData.xdefault)}
+                    value={
+                      formData.xdefault === null
+                        ? 'null'
+                        : String(formData.xdefault)
+                    }
                     onValueChange={(value) => {
-                      setFormData(prev => ({
+                      setFormData((prev) => ({
                         ...prev,
                         xdefault: value === 'null' ? null : value === 'true',
                       }))
@@ -891,18 +1094,28 @@ export function ColumnDrawer({
                   <Input
                     id="column-default"
                     type="datetime-local"
-                    value={formData.xdefault ? new Date(formData.xdefault as string).toISOString().slice(0, 16) : ''}
+                    value={
+                      formData.xdefault
+                        ? new Date(formData.xdefault as string)
+                            .toISOString()
+                            .slice(0, 16)
+                        : ''
+                    }
                     onChange={(e) => {
-                      const value = e.target.value ? new Date(e.target.value).toISOString() : null
-                      setFormData(prev => ({ ...prev, xdefault: value }))
+                      const value = e.target.value
+                        ? new Date(e.target.value).toISOString()
+                        : null
+                      setFormData((prev) => ({ ...prev, xdefault: value }))
                     }}
                     disabled={isLoading}
                   />
                 ) : formData.type === 'enum' ? (
                   <Select
-                    value={formData.xdefault ? String(formData.xdefault) : 'null'}
+                    value={
+                      formData.xdefault ? String(formData.xdefault) : 'null'
+                    }
                     onValueChange={(value) => {
-                      setFormData(prev => ({
+                      setFormData((prev) => ({
                         ...prev,
                         xdefault: value === 'null' ? null : value,
                       }))
@@ -914,21 +1127,34 @@ export function ColumnDrawer({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="null">NULL</SelectItem>
-                      {enumElements.filter(e => e.trim()).map(element => (
-                        <SelectItem key={element} value={element}>
-                          {element}
-                        </SelectItem>
-                      ))}
+                      {enumElements
+                        .filter((e) => e.trim())
+                        .map((element) => (
+                          <SelectItem key={element} value={element}>
+                            {element}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
-                ) : formData.type === 'integer' || formData.type === 'double' ? (
+                ) : formData.type === 'integer' ||
+                  formData.type === 'double' ? (
                   <Input
                     id="column-default"
                     type="number"
-                    value={formData.xdefault !== null && formData.xdefault !== undefined ? String(formData.xdefault) : ''}
+                    value={
+                      formData.xdefault !== null &&
+                      formData.xdefault !== undefined
+                        ? String(formData.xdefault)
+                        : ''
+                    }
                     onChange={(e) => {
-                      const value = e.target.value === '' ? null : (formData.type === 'integer' ? parseInt(e.target.value) : parseFloat(e.target.value))
-                      setFormData(prev => ({ ...prev, xdefault: value }))
+                      const value =
+                        e.target.value === ''
+                          ? null
+                          : formData.type === 'integer'
+                            ? parseInt(e.target.value)
+                            : parseFloat(e.target.value)
+                      setFormData((prev) => ({ ...prev, xdefault: value }))
                     }}
                     min={formData.min}
                     max={formData.max}
@@ -939,14 +1165,22 @@ export function ColumnDrawer({
                 ) : (
                   <Input
                     id="column-default"
-                    type={formData.type === 'email' ? 'email' : formData.type === 'url' ? 'url' : 'text'}
+                    type={
+                      formData.type === 'email'
+                        ? 'email'
+                        : formData.type === 'url'
+                          ? 'url'
+                          : 'text'
+                    }
                     value={formData.xdefault ? String(formData.xdefault) : ''}
                     onChange={(e) => {
                       const value = e.target.value || null
-                      setFormData(prev => ({ ...prev, xdefault: value }))
+                      setFormData((prev) => ({ ...prev, xdefault: value }))
                     }}
                     placeholder="Enter value"
-                    maxLength={formData.type === 'string' ? formData.size : undefined}
+                    maxLength={
+                      formData.type === 'string' ? formData.size : undefined
+                    }
                     disabled={isLoading}
                   />
                 )}
@@ -972,4 +1206,3 @@ export function ColumnDrawer({
     </BaseDrawer>
   )
 }
-

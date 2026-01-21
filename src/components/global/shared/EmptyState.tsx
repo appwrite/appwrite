@@ -46,7 +46,7 @@ export interface EmptyStateProps {
  * Unified empty state component that differentiates between:
  * - No items at all (isEmpty = true)
  * - No results after search/filter (hasFilters = true)
- * 
+ *
  * Supports content overwriting via children prop for custom empty states.
  */
 export function EmptyState({
@@ -102,11 +102,21 @@ export function EmptyState({
       )
     }
 
-    return <div className={cn('flex flex-col items-center text-center', className)}>{children}</div>
+    return (
+      <div className={cn('flex flex-col items-center text-center', className)}>
+        {children}
+      </div>
+    )
   }
 
   // Default empty state content
-  const defaultTitle = title || (hasFilters ? 'No results found' : isEmpty ? 'No items yet' : 'No items found')
+  const defaultTitle =
+    title ||
+    (hasFilters
+      ? 'No results found'
+      : isEmpty
+        ? 'No items yet'
+        : 'No items found')
   const defaultDescription =
     description ||
     (hasFilters
@@ -125,7 +135,9 @@ export function EmptyState({
             variant === 'centered' && 'ring-1 ring-border',
           )}
         >
-          <Icon className={cn('text-muted-foreground', iconSizeClasses[iconSize])} />
+          <Icon
+            className={cn('text-muted-foreground', iconSizeClasses[iconSize])}
+          />
         </div>
       )}
       <p className="mb-1 text-[14px] font-medium text-foreground">
@@ -161,6 +173,9 @@ export function EmptyState({
     )
   }
 
-  return <div className={cn('flex flex-col items-center text-center', className)}>{content}</div>
+  return (
+    <div className={cn('flex flex-col items-center text-center', className)}>
+      {content}
+    </div>
+  )
 }
-

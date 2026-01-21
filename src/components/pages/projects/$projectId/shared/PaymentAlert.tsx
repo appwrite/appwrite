@@ -29,7 +29,9 @@ export function PaymentAlert({ className }: PaymentAlertProps) {
     <div
       className={cn(
         'relative min-h-14 transition-all duration-200',
-        isDismissed ? 'overflow-hidden' : 'flex min-h-14 flex-col gap-3 bg-amber-500/10 px-4 py-3 pr-12 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 sm:flex-row sm:items-center sm:gap-4',
+        isDismissed
+          ? 'overflow-hidden'
+          : 'flex min-h-14 flex-col gap-3 bg-amber-500/10 px-4 py-3 pr-12 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 sm:flex-row sm:items-center sm:gap-4',
         className,
       )}
       style={isDismissed ? { height: 0, minHeight: 0 } : undefined}

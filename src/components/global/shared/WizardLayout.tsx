@@ -29,10 +29,10 @@ interface WizardLayoutProps {
 
 /**
  * WizardLayout Component
- * 
+ *
  * A reusable layout for multi-step wizards with consistent header, content, sidebar, and footer structure.
  * Automatically handles browser history navigation with fallback support, and ESC key to close.
- * 
+ *
  * @example
  * ```tsx
  * <WizardLayout
@@ -113,16 +113,20 @@ export function WizardLayout({
     <div className={containerClasses}>
       {/* Header */}
       <div className={headerClasses}>
-        <div className={cn(
-          'mx-auto w-full max-w-7xl',
-          fullscreen ? 'px-6 py-6' : 'px-4 py-4 sm:px-6'
-        )}>
+        <div
+          className={cn(
+            'mx-auto w-full max-w-7xl',
+            fullscreen ? 'px-6 py-6' : 'px-4 py-4 sm:px-6',
+          )}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className={cn(
-                'font-semibold text-foreground',
-                fullscreen ? 'text-lg' : 'text-xl'
-              )}>
+              <h1
+                className={cn(
+                  'font-semibold text-foreground',
+                  fullscreen ? 'text-lg' : 'text-xl',
+                )}
+              >
                 {title}
               </h1>
               {description && (
@@ -147,28 +151,26 @@ export function WizardLayout({
       {/* Main Content */}
       <div className={contentWrapperClasses}>
         {fullscreen && (
-          <div className={cn(
-            'mx-auto w-full max-w-7xl px-6',
-            fullscreen ? 'py-6' : 'pt-6'
-          )}>
+          <div
+            className={cn(
+              'mx-auto w-full max-w-7xl px-6',
+              fullscreen ? 'py-6' : 'pt-6',
+            )}
+          >
             {useSidebar ? (
               <div className="grid gap-8 lg:grid-cols-3">
                 {/* Main Content */}
-                <div className={cn('lg:col-span-2 space-y-8', contentClassName)}>
+                <div
+                  className={cn('lg:col-span-2 space-y-8', contentClassName)}
+                >
                   {children}
                 </div>
 
                 {/* Sidebar */}
-                {sidebar && (
-                  <div className="lg:col-span-1">
-                    {sidebar}
-                  </div>
-                )}
+                {sidebar && <div className="lg:col-span-1">{sidebar}</div>}
               </div>
             ) : (
-              <div className={contentClassName}>
-                {children}
-              </div>
+              <div className={contentClassName}>{children}</div>
             )}
           </div>
         )}
@@ -181,28 +183,24 @@ export function WizardLayout({
             </div>
 
             {/* Sidebar */}
-            {sidebar && (
-              <div className="lg:col-span-1">
-                {sidebar}
-              </div>
-            )}
+            {sidebar && <div className="lg:col-span-1">{sidebar}</div>}
           </div>
         )}
 
         {!fullscreen && !useSidebar && (
-          <div className={cn('pt-6', contentClassName)}>
-            {children}
-          </div>
+          <div className={cn('pt-6', contentClassName)}>{children}</div>
         )}
       </div>
 
       {/* Footer */}
       {footer && (
         <div className={footerClasses}>
-          <div className={cn(
-            'mx-auto w-full max-w-7xl flex items-center justify-end gap-3',
-            fullscreen && 'px-6 py-4'
-          )}>
+          <div
+            className={cn(
+              'mx-auto w-full max-w-7xl flex items-center justify-end gap-3',
+              fullscreen && 'px-6 py-4',
+            )}
+          >
             {footer}
           </div>
         </div>

@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Storage
- * 
+ *
  * Handles buckets, files, and file tokens.
  */
 
@@ -9,7 +9,11 @@ import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -17,9 +21,9 @@ import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './const
 
 /**
  * Query function to fetch buckets for a project
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -43,7 +47,10 @@ export async function fetchProjectBuckets(
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.storage.listBuckets(queries, search?.trim() || undefined)
+  const response = await projectSdk.storage.listBuckets(
+    queries,
+    search?.trim() || undefined,
+  )
 
   return {
     buckets: response.buckets || [],
@@ -53,7 +60,7 @@ export async function fetchProjectBuckets(
 
 /**
  * Query function to fetch a single bucket by ID
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
  */
 export async function fetchBucket(
@@ -71,7 +78,7 @@ export async function fetchBucket(
 
 /**
  * Query function to fetch files in a bucket
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
  */
 export async function fetchBucketFiles(
@@ -103,7 +110,7 @@ export async function fetchBucketFiles(
 
 /**
  * Query function to fetch a single file by ID
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
  */
 export async function fetchFile(
@@ -122,7 +129,7 @@ export async function fetchFile(
 
 /**
  * Query function to fetch file tokens
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
  */
 export async function fetchFileTokens(
@@ -142,9 +149,9 @@ export async function fetchFileTokens(
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  
-  const response = await projectSdk.tokens.list({ 
-    bucketId, 
+
+  const response = await projectSdk.tokens.list({
+    bucketId,
     fileId,
     queries,
   })
@@ -157,9 +164,9 @@ export async function fetchFileTokens(
 
 /**
  * Hook to fetch paginated buckets for a project
- * 
+ *
  * This is useful for displaying project buckets with pagination and search.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -233,7 +240,16 @@ export function useBucketFiles(
   search?: string,
 ) {
   return useQuery({
-    queryKey: ['files', 'project', projectId, 'bucket', bucketId, page, limit, search],
+    queryKey: [
+      'files',
+      'project',
+      projectId,
+      'bucket',
+      bucketId,
+      page,
+      limit,
+      search,
+    ],
     queryFn: () => fetchBucketFiles(projectId!, bucketId!, page, limit, search),
     enabled: !!projectId && !!bucketId,
     staleTime: DEFAULT_STALE_TIME,
@@ -268,11 +284,19 @@ export function useFileTokens(
   limit: number = DEFAULT_PAGE_SIZE,
 ) {
   return useQuery({
-    queryKey: ['file-tokens', 'project', projectId, 'bucket', bucketId, fileId, page, limit],
+    queryKey: [
+      'file-tokens',
+      'project',
+      projectId,
+      'bucket',
+      bucketId,
+      fileId,
+      page,
+      limit,
+    ],
     queryFn: () => fetchFileTokens(projectId!, bucketId!, fileId!, page, limit),
     enabled: !!projectId && !!bucketId && !!fileId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
   })
 }
-

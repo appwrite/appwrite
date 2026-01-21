@@ -30,13 +30,13 @@ export function ViewLogsDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <div className="px-6 pb-4 pt-0">
           <pre className="max-h-[400px] overflow-auto rounded-md bg-muted p-4 text-[13px] font-mono">
             {logs}
           </pre>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
@@ -50,5 +50,3 @@ export function ViewLogsDialog({
     </Dialog>
   )
 }
-
-

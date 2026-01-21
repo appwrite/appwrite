@@ -1,5 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
-import { ChevronUp, ChevronDown, Copy, Check, Search, Link2 } from 'lucide-react'
+import {
+  ChevronUp,
+  ChevronDown,
+  Copy,
+  Check,
+  Search,
+  Link2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
@@ -22,7 +29,12 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import type { Models } from '@appwrite.io/console'
 import { getExecutionStatusBadge, getStatusCodeBadge } from './Executions'
 import { useParams } from '@tanstack/react-router'
@@ -53,7 +65,9 @@ function formatDurationFromSeconds(seconds: number): string {
   return `${minutes}m ${secs}s`
 }
 
-function parseQueryParams(path: string): Array<{ name: string; value: string }> {
+function parseQueryParams(
+  path: string,
+): Array<{ name: string; value: string }> {
   try {
     const url = new URL(path, 'http://dummy.com')
     const params: Array<{ name: string; value: string }> = []
@@ -81,8 +95,12 @@ export function ExecutionDetailsDrawer({
   const { projectId, functionId } = useParams({ strict: false })
   const [copiedPath, setCopiedPath] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
-  const [requestTab, setRequestTab] = useState<'parameters' | 'headers'>('parameters')
-  const [responseTab, setResponseTab] = useState<'logs' | 'errors' | 'headers' | 'body'>('logs')
+  const [requestTab, setRequestTab] = useState<'parameters' | 'headers'>(
+    'parameters',
+  )
+  const [responseTab, setResponseTab] = useState<
+    'logs' | 'errors' | 'headers' | 'body'
+  >('logs')
   const [elapsedTime, setElapsedTime] = useState(0)
   const [logsSearch, setLogsSearch] = useState('')
   const [errorsSearch, setErrorsSearch] = useState('')
@@ -110,7 +128,10 @@ export function ExecutionDetailsDrawer({
       setResponseTab('errors')
     } else if (execution.logs) {
       setResponseTab('logs')
-    } else if (execution.responseHeaders && execution.responseHeaders.length > 0) {
+    } else if (
+      execution.responseHeaders &&
+      execution.responseHeaders.length > 0
+    ) {
       setResponseTab('headers')
     } else {
       setResponseTab('logs')
@@ -125,7 +146,10 @@ export function ExecutionDetailsDrawer({
   useEffect(() => {
     if (queryParams.length > 0) {
       setRequestTab('parameters')
-    } else if (execution?.requestHeaders && execution.requestHeaders.length > 0) {
+    } else if (
+      execution?.requestHeaders &&
+      execution.requestHeaders.length > 0
+    ) {
       setRequestTab('headers')
     }
   }, [queryParams.length, execution?.requestHeaders])
@@ -253,7 +277,11 @@ export function ExecutionDetailsDrawer({
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-6 space-y-8">
             {/* Details Section */}
-            <Accordion type="multiple" defaultValue={['details', 'request', 'response']} className="w-full">
+            <Accordion
+              type="multiple"
+              defaultValue={['details', 'request', 'response']}
+              className="w-full"
+            >
               <AccordionItem value="details" className="border-none">
                 <AccordionTrigger className="text-[16px] font-medium py-2 cursor-pointer hover:no-underline">
                   Details
@@ -262,21 +290,27 @@ export function ExecutionDetailsDrawer({
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 -mx-1.5 px-1.5">
                     {/* Execution ID */}
                     <div>
-                      <p className="text-[14px] text-muted-foreground mb-2">Execution ID</p>
+                      <p className="text-[14px] text-muted-foreground mb-2">
+                        Execution ID
+                      </p>
                       <CopyableId id={execution.$id} size="sm" />
                     </div>
 
                     {/* Deployment ID */}
                     {execution.deploymentId && (
                       <div>
-                        <p className="text-[14px] text-muted-foreground mb-2">Deployment ID</p>
+                        <p className="text-[14px] text-muted-foreground mb-2">
+                          Deployment ID
+                        </p>
                         <CopyableId id={execution.deploymentId} size="sm" />
                       </div>
                     )}
 
                     {/* Method */}
                     <div>
-                      <p className="text-[14px] text-muted-foreground mb-2">Method</p>
+                      <p className="text-[14px] text-muted-foreground mb-2">
+                        Method
+                      </p>
                       <p className="text-[14px] text-foreground font-medium">
                         {execution.requestMethod?.toUpperCase() || 'N/A'}
                       </p>
@@ -284,25 +318,35 @@ export function ExecutionDetailsDrawer({
 
                     {/* Status Code */}
                     <div>
-                      <p className="text-[14px] text-muted-foreground mb-2">Status code</p>
+                      <p className="text-[14px] text-muted-foreground mb-2">
+                        Status code
+                      </p>
                       {execution.responseStatusCode ? (
                         <Badge variant={statusCodeBadge?.variant || 'outline'}>
                           {execution.responseStatusCode}
                         </Badge>
                       ) : (
-                        <span className="text-[14px] text-muted-foreground">N/A</span>
+                        <span className="text-[14px] text-muted-foreground">
+                          N/A
+                        </span>
                       )}
                     </div>
 
                     {/* Status */}
                     <div>
-                      <p className="text-[14px] text-muted-foreground mb-2">Status</p>
-                      <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                      <p className="text-[14px] text-muted-foreground mb-2">
+                        Status
+                      </p>
+                      <Badge variant={statusBadge.variant}>
+                        {statusBadge.label}
+                      </Badge>
                     </div>
 
                     {/* Triggered By */}
                     <div>
-                      <p className="text-[14px] text-muted-foreground mb-2">Triggered by</p>
+                      <p className="text-[14px] text-muted-foreground mb-2">
+                        Triggered by
+                      </p>
                       <p className="text-[14px] text-foreground">
                         {execution.trigger
                           ? capitalizeFirst(execution.trigger)
@@ -312,7 +356,9 @@ export function ExecutionDetailsDrawer({
 
                     {/* Duration */}
                     <div>
-                      <p className="text-[14px] text-muted-foreground mb-2">Duration</p>
+                      <p className="text-[14px] text-muted-foreground mb-2">
+                        Duration
+                      </p>
                       <p className="text-[14px] text-foreground font-mono">
                         {durationDisplay}
                       </p>
@@ -320,13 +366,17 @@ export function ExecutionDetailsDrawer({
 
                     {/* Created */}
                     <div>
-                      <p className="text-[14px] text-muted-foreground mb-2">Created</p>
+                      <p className="text-[14px] text-muted-foreground mb-2">
+                        Created
+                      </p>
                       <DateTooltip date={execution.$createdAt} />
                     </div>
 
                     {/* Path - Full Width */}
                     <div className="sm:col-span-2 lg:col-span-3">
-                      <p className="text-[14px] text-muted-foreground mb-2">Path</p>
+                      <p className="text-[14px] text-muted-foreground mb-2">
+                        Path
+                      </p>
                       {execution.requestPath ? (
                         <div className="relative -mx-1 px-1">
                           <Input
@@ -348,7 +398,9 @@ export function ExecutionDetailsDrawer({
                           </button>
                         </div>
                       ) : (
-                        <span className="text-[14px] text-muted-foreground">N/A</span>
+                        <span className="text-[14px] text-muted-foreground">
+                          N/A
+                        </span>
                       )}
                     </div>
                   </div>
@@ -374,7 +426,8 @@ export function ExecutionDetailsDrawer({
                               : 'text-muted-foreground hover:text-foreground',
                           )}
                         >
-                          Parameters {queryParams.length > 0 && `(${queryParams.length})`}
+                          Parameters{' '}
+                          {queryParams.length > 0 && `(${queryParams.length})`}
                         </button>
                         <button
                           type="button"
@@ -387,7 +440,8 @@ export function ExecutionDetailsDrawer({
                           )}
                         >
                           Headers{' '}
-                          {execution.requestHeaders && execution.requestHeaders.length > 0
+                          {execution.requestHeaders &&
+                          execution.requestHeaders.length > 0
                             ? `(${execution.requestHeaders.length})`
                             : ''}
                         </button>
@@ -401,7 +455,9 @@ export function ExecutionDetailsDrawer({
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead className="w-[200px]">Key</TableHead>
+                                  <TableHead className="w-[200px]">
+                                    Key
+                                  </TableHead>
                                   <TableHead>Value</TableHead>
                                 </TableRow>
                               </TableHeader>
@@ -431,50 +487,55 @@ export function ExecutionDetailsDrawer({
 
                     {requestTab === 'headers' && (
                       <div className="mt-4">
-                        {execution.requestHeaders && execution.requestHeaders.length > 0 ? (
-                        <>
-                          <div className="rounded-lg border border-border overflow-hidden">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-[200px]">Key</TableHead>
-                                  <TableHead>Value</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {execution.requestHeaders.map((header, index) => (
-                                  <TableRow key={index}>
-                                    <TableCell className="font-mono text-[13px]">
-                                      {header.name}
-                                    </TableCell>
-                                    <TableCell className="font-mono text-[13px]">
-                                      {header.value}
-                                    </TableCell>
+                        {execution.requestHeaders &&
+                        execution.requestHeaders.length > 0 ? (
+                          <>
+                            <div className="rounded-lg border border-border overflow-hidden">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead className="w-[200px]">
+                                      Key
+                                    </TableHead>
+                                    <TableHead>Value</TableHead>
                                   </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
+                                </TableHeader>
+                                <TableBody>
+                                  {execution.requestHeaders.map(
+                                    (header, index) => (
+                                      <TableRow key={index}>
+                                        <TableCell className="font-mono text-[13px]">
+                                          {header.name}
+                                        </TableCell>
+                                        <TableCell className="font-mono text-[13px]">
+                                          {header.value}
+                                        </TableCell>
+                                      </TableRow>
+                                    ),
+                                  )}
+                                </TableBody>
+                              </Table>
+                            </div>
+                            <p className="text-[12px] text-muted-foreground mt-4">
+                              Missing headers?{' '}
+                              <a
+                                href="https://appwrite.io/docs"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline"
+                              >
+                                Check the docs
+                              </a>{' '}
+                              to see the supported data and how to log it.
+                            </p>
+                          </>
+                        ) : (
+                          <div className="rounded-lg border border-border bg-card p-3">
+                            <code className="text-[13px] text-muted-foreground">
+                              No headers found.
+                            </code>
                           </div>
-                          <p className="text-[12px] text-muted-foreground mt-4">
-                            Missing headers?{' '}
-                            <a
-                              href="https://appwrite.io/docs"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline"
-                            >
-                              Check the docs
-                            </a>{' '}
-                            to see the supported data and how to log it.
-                          </p>
-                        </>
-                      ) : (
-                        <div className="rounded-lg border border-border bg-card p-3">
-                          <code className="text-[13px] text-muted-foreground">
-                            No headers found.
-                          </code>
-                        </div>
-                      )}
+                        )}
                       </div>
                     )}
                   </div>
@@ -525,7 +586,8 @@ export function ExecutionDetailsDrawer({
                           )}
                         >
                           Headers{' '}
-                          {execution.responseHeaders && execution.responseHeaders.length > 0
+                          {execution.responseHeaders &&
+                          execution.responseHeaders.length > 0
                             ? `(${execution.responseHeaders.length})`
                             : ''}
                         </button>
@@ -546,232 +608,272 @@ export function ExecutionDetailsDrawer({
 
                     {responseTab === 'logs' && (
                       <div className="mt-4">
-                      {func?.logging === false ? (
-                        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
-                          <p className="text-[13px] text-foreground mb-2">
-                            Logging is disabled for this function. Enable logging in settings to
-                            view execution logs.
-                          </p>
-                          <a
-                            href="https://appwrite.io/docs"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[12px] text-primary hover:underline"
-                          >
-                            Learn more →
-                          </a>
-                        </div>
-                      ) : execution.logs ? (
-                        <div className="rounded-lg border border-border bg-card p-4">
-                          <div className="space-y-3">
-                            <div className="relative -mx-1 px-1">
-                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                              <Input
-                                placeholder="Search logs..."
-                                value={logsSearch}
-                                onChange={(e) => setLogsSearch(e.target.value)}
-                                className="pl-9 h-9 text-[13px]"
-                              />
-                            </div>
-                            <ScrollArea className="h-[400px] w-full rounded-lg border border-border">
-                              <div className="p-4 min-w-0">
-                                <pre className="text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
-                                  {(() => {
-                                  const logsText =
-                                    typeof execution.logs === 'string'
-                                      ? execution.logs
-                                      : Array.isArray(execution.logs)
-                                        ? (execution.logs as string[]).join('\n')
-                                        : JSON.stringify(execution.logs, null, 2)
-                                  
-                                  if (!logsSearch.trim()) return logsText
-                                  
-                                  const searchLower = logsSearch.toLowerCase()
-                                  const lines = logsText.split('\n')
-                                  return lines
-                                    .filter((line: string) => line.toLowerCase().includes(searchLower))
-                                    .join('\n')
-                                  })()}
-                                </pre>
-                              </div>
-                            </ScrollArea>
+                        {func?.logging === false ? (
+                          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+                            <p className="text-[13px] text-foreground mb-2">
+                              Logging is disabled for this function. Enable
+                              logging in settings to view execution logs.
+                            </p>
+                            <a
+                              href="https://appwrite.io/docs"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[12px] text-primary hover:underline"
+                            >
+                              Learn more →
+                            </a>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border border-border bg-card p-3">
-                          <code className="text-[13px] text-muted-foreground">
-                            No logs found.
-                          </code>
-                        </div>
-                      )}
+                        ) : execution.logs ? (
+                          <div className="rounded-lg border border-border bg-card p-4">
+                            <div className="space-y-3">
+                              <div className="relative -mx-1 px-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                  placeholder="Search logs..."
+                                  value={logsSearch}
+                                  onChange={(e) =>
+                                    setLogsSearch(e.target.value)
+                                  }
+                                  className="pl-9 h-9 text-[13px]"
+                                />
+                              </div>
+                              <ScrollArea className="h-[400px] w-full rounded-lg border border-border">
+                                <div className="p-4 min-w-0">
+                                  <pre className="text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
+                                    {(() => {
+                                      const logsText =
+                                        typeof execution.logs === 'string'
+                                          ? execution.logs
+                                          : Array.isArray(execution.logs)
+                                            ? (execution.logs as string[]).join(
+                                                '\n',
+                                              )
+                                            : JSON.stringify(
+                                                execution.logs,
+                                                null,
+                                                2,
+                                              )
+
+                                      if (!logsSearch.trim()) return logsText
+
+                                      const searchLower =
+                                        logsSearch.toLowerCase()
+                                      const lines = logsText.split('\n')
+                                      return lines
+                                        .filter((line: string) =>
+                                          line
+                                            .toLowerCase()
+                                            .includes(searchLower),
+                                        )
+                                        .join('\n')
+                                    })()}
+                                  </pre>
+                                </div>
+                              </ScrollArea>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="rounded-lg border border-border bg-card p-3">
+                            <code className="text-[13px] text-muted-foreground">
+                              No logs found.
+                            </code>
+                          </div>
+                        )}
                       </div>
                     )}
 
                     {responseTab === 'errors' && (
                       <div className="mt-4">
-                      {func?.logging === false ? (
-                        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
-                          <p className="text-[13px] text-foreground mb-2">
-                            Logging is disabled for this function. Enable logging in settings to
-                            view execution errors.
-                          </p>
-                          <a
-                            href="https://appwrite.io/docs"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[12px] text-primary hover:underline"
-                          >
-                            Learn more →
-                          </a>
-                        </div>
-                      ) : execution.errors ? (
-                        <div className="space-y-3">
-                          <div className="relative -mx-1 px-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="Search errors..."
-                              value={errorsSearch}
-                              onChange={(e) => setErrorsSearch(e.target.value)}
-                              className="pl-9 h-9 text-[13px]"
-                            />
+                        {func?.logging === false ? (
+                          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4">
+                            <p className="text-[13px] text-foreground mb-2">
+                              Logging is disabled for this function. Enable
+                              logging in settings to view execution errors.
+                            </p>
+                            <a
+                              href="https://appwrite.io/docs"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[12px] text-primary hover:underline"
+                            >
+                              Learn more →
+                            </a>
                           </div>
-                          <ScrollArea className="h-[400px] w-full rounded-lg border border-border bg-muted">
-                            <div className="p-4 min-w-0">
-                              <pre className="text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
-                                {(() => {
-                                const errorsText =
-                                  typeof execution.errors === 'string'
-                                    ? execution.errors
-                                    : Array.isArray(execution.errors)
-                                      ? (execution.errors as string[]).join('\n')
-                                      : JSON.stringify(execution.errors, null, 2)
-                                
-                                if (!errorsSearch.trim()) return errorsText
-                                
-                                const searchLower = errorsSearch.toLowerCase()
-                                const lines = errorsText.split('\n')
-                                return lines
-                                  .filter((line: string) => line.toLowerCase().includes(searchLower))
-                                  .join('\n')
-                                })()}
-                              </pre>
+                        ) : execution.errors ? (
+                          <div className="space-y-3">
+                            <div className="relative -mx-1 px-1">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                placeholder="Search errors..."
+                                value={errorsSearch}
+                                onChange={(e) =>
+                                  setErrorsSearch(e.target.value)
+                                }
+                                className="pl-9 h-9 text-[13px]"
+                              />
                             </div>
-                          </ScrollArea>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border border-border bg-card p-3">
-                          <code className="text-[13px] text-muted-foreground">
-                            No errors found.
-                          </code>
-                        </div>
-                      )}
+                            <ScrollArea className="h-[400px] w-full rounded-lg border border-border bg-muted">
+                              <div className="p-4 min-w-0">
+                                <pre className="text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
+                                  {(() => {
+                                    const errorsText =
+                                      typeof execution.errors === 'string'
+                                        ? execution.errors
+                                        : Array.isArray(execution.errors)
+                                          ? (execution.errors as string[]).join(
+                                              '\n',
+                                            )
+                                          : JSON.stringify(
+                                              execution.errors,
+                                              null,
+                                              2,
+                                            )
+
+                                    if (!errorsSearch.trim()) return errorsText
+
+                                    const searchLower =
+                                      errorsSearch.toLowerCase()
+                                    const lines = errorsText.split('\n')
+                                    return lines
+                                      .filter((line: string) =>
+                                        line
+                                          .toLowerCase()
+                                          .includes(searchLower),
+                                      )
+                                      .join('\n')
+                                  })()}
+                                </pre>
+                              </div>
+                            </ScrollArea>
+                          </div>
+                        ) : (
+                          <div className="rounded-lg border border-border bg-card p-3">
+                            <code className="text-[13px] text-muted-foreground">
+                              No errors found.
+                            </code>
+                          </div>
+                        )}
                       </div>
                     )}
 
                     {responseTab === 'headers' && (
                       <div className="mt-4">
-                      {execution.responseHeaders && execution.responseHeaders.length > 0 ? (
-                        <>
-                          <div className="rounded-lg border border-border overflow-hidden">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-[200px]">Key</TableHead>
-                                  <TableHead>Value</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {execution.responseHeaders.map((header, index) => (
-                                  <TableRow key={index}>
-                                    <TableCell className="font-mono text-[13px]">
-                                      {header.name}
-                                    </TableCell>
-                                    <TableCell className="font-mono text-[13px]">
-                                      {header.value}
-                                    </TableCell>
+                        {execution.responseHeaders &&
+                        execution.responseHeaders.length > 0 ? (
+                          <>
+                            <div className="rounded-lg border border-border overflow-hidden">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead className="w-[200px]">
+                                      Key
+                                    </TableHead>
+                                    <TableHead>Value</TableHead>
                                   </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
+                                </TableHeader>
+                                <TableBody>
+                                  {execution.responseHeaders.map(
+                                    (header, index) => (
+                                      <TableRow key={index}>
+                                        <TableCell className="font-mono text-[13px]">
+                                          {header.name}
+                                        </TableCell>
+                                        <TableCell className="font-mono text-[13px]">
+                                          {header.value}
+                                        </TableCell>
+                                      </TableRow>
+                                    ),
+                                  )}
+                                </TableBody>
+                              </Table>
+                            </div>
+                            <p className="text-[12px] text-muted-foreground mt-4">
+                              Missing headers?{' '}
+                              <a
+                                href="https://appwrite.io/docs"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline"
+                              >
+                                Check the docs
+                              </a>{' '}
+                              to see the supported data and how to log it.
+                            </p>
+                          </>
+                        ) : (
+                          <div className="rounded-lg border border-border bg-card p-3">
+                            <code className="text-[13px] text-muted-foreground">
+                              No headers found.
+                            </code>
                           </div>
-                          <p className="text-[12px] text-muted-foreground mt-4">
-                            Missing headers?{' '}
-                            <a
-                              href="https://appwrite.io/docs"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline"
-                            >
-                              Check the docs
-                            </a>{' '}
-                            to see the supported data and how to log it.
-                          </p>
-                        </>
-                      ) : (
-                        <div className="rounded-lg border border-border bg-card p-3">
-                          <code className="text-[13px] text-muted-foreground">
-                            No headers found.
-                          </code>
-                        </div>
-                      )}
+                        )}
                       </div>
                     )}
 
                     {responseTab === 'body' && (
                       <div className="mt-4">
-                      {execution.responseBody ? (
-                        <div className="space-y-3">
-                          <div className="relative -mx-1 px-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="Search body..."
-                              value={bodySearch}
-                              onChange={(e) => setBodySearch(e.target.value)}
-                              className="pl-9 h-9 text-[13px]"
-                            />
-                          </div>
-                          <ScrollArea className="h-[400px] w-full rounded-lg border border-border bg-muted">
-                            <div className="p-4 min-w-0">
-                              <pre className="text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
-                                {(() => {
-                                  const bodyText =
-                                    typeof execution.responseBody === 'string'
-                                      ? execution.responseBody
-                                      : JSON.stringify(execution.responseBody, null, 2)
-                                  
-                                  if (!bodySearch.trim()) return bodyText
-                                  
-                                  const searchLower = bodySearch.toLowerCase()
-                                  const lines = bodyText.split('\n')
-                                  return lines
-                                    .filter((line) => line.toLowerCase().includes(searchLower))
-                                    .join('\n')
-                                })()}
-                              </pre>
+                        {execution.responseBody ? (
+                          <div className="space-y-3">
+                            <div className="relative -mx-1 px-1">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                placeholder="Search body..."
+                                value={bodySearch}
+                                onChange={(e) => setBodySearch(e.target.value)}
+                                className="pl-9 h-9 text-[13px]"
+                              />
                             </div>
-                          </ScrollArea>
-                        </div>
-                      ) : (
-                        <div className="rounded-lg border border-border bg-card p-3">
-                          <p className="text-[13px] text-foreground">
-                            Body data is not captured by Appwrite for your user's security and
-                            privacy. To display body data in the Logs tab, use{' '}
-                            <code className="px-1.5 py-0.5 bg-muted rounded text-[12px]">
-                              context.log()
-                            </code>
-                            .{' '}
-                            <a
-                              href="https://appwrite.io/docs"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline"
-                            >
-                              Learn more
-                            </a>
-                            .
-                          </p>
-                        </div>
-                      )}
+                            <ScrollArea className="h-[400px] w-full rounded-lg border border-border bg-muted">
+                              <div className="p-4 min-w-0">
+                                <pre className="text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
+                                  {(() => {
+                                    const bodyText =
+                                      typeof execution.responseBody === 'string'
+                                        ? execution.responseBody
+                                        : JSON.stringify(
+                                            execution.responseBody,
+                                            null,
+                                            2,
+                                          )
+
+                                    if (!bodySearch.trim()) return bodyText
+
+                                    const searchLower = bodySearch.toLowerCase()
+                                    const lines = bodyText.split('\n')
+                                    return lines
+                                      .filter((line) =>
+                                        line
+                                          .toLowerCase()
+                                          .includes(searchLower),
+                                      )
+                                      .join('\n')
+                                  })()}
+                                </pre>
+                              </div>
+                            </ScrollArea>
+                          </div>
+                        ) : (
+                          <div className="rounded-lg border border-border bg-card p-3">
+                            <p className="text-[13px] text-foreground">
+                              Body data is not captured by Appwrite for your
+                              user's security and privacy. To display body data
+                              in the Logs tab, use{' '}
+                              <code className="px-1.5 py-0.5 bg-muted rounded text-[12px]">
+                                context.log()
+                              </code>
+                              .{' '}
+                              <a
+                                href="https://appwrite.io/docs"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline"
+                              >
+                                Learn more
+                              </a>
+                              .
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -784,4 +886,3 @@ export function ExecutionDetailsDrawer({
     </BaseDrawer>
   )
 }
-

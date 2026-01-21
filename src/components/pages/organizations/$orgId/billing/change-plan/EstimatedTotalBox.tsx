@@ -56,7 +56,9 @@ export function EstimatedTotalBox({
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground">Loading estimation...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading estimation...
+          </p>
         </div>
       </div>
     )
@@ -66,7 +68,9 @@ export function EstimatedTotalBox({
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground">Unable to load estimation</p>
+          <p className="text-[13px] text-muted-foreground">
+            Unable to load estimation
+          </p>
         </div>
       </div>
     )
@@ -82,7 +86,7 @@ export function EstimatedTotalBox({
     amount: item.value || 0,
     currency: 'USD',
   }))
-  
+
   const discounts = estimation.discounts || []
   const discountAmount = estimation.discount || 0
   const creditsAmount = estimation.credits || 0
@@ -106,8 +110,13 @@ export function EstimatedTotalBox({
         {lineItems.length > 0 && (
           <div className="space-y-2">
             {lineItems.map((item: any, index: number) => (
-              <div key={index} className="flex items-center justify-between text-[13px]">
-                <span className="text-muted-foreground">{item.name || item.description}</span>
+              <div
+                key={index}
+                className="flex items-center justify-between text-[13px]"
+              >
+                <span className="text-muted-foreground">
+                  {item.name || item.description}
+                </span>
                 <span className="font-medium text-foreground">
                   {formatCurrency(item.amount || 0, item.currency || 'USD')}
                 </span>
@@ -120,12 +129,20 @@ export function EstimatedTotalBox({
         {(discounts.length > 0 || discountAmount > 0) && (
           <div className="space-y-2 pt-2 border-t border-border">
             {discounts.map((discount: any, index: number) => (
-              <div key={index} className="flex items-center justify-between text-[13px]">
+              <div
+                key={index}
+                className="flex items-center justify-between text-[13px]"
+              >
                 <span className="text-muted-foreground">
-                  Discount: {discount.name || discount.description || 'Discount'}
+                  Discount:{' '}
+                  {discount.name || discount.description || 'Discount'}
                 </span>
                 <span className="font-medium text-green-600 dark:text-green-400">
-                  -{formatCurrency(discount.amount || 0, discount.currency || 'USD')}
+                  -
+                  {formatCurrency(
+                    discount.amount || 0,
+                    discount.currency || 'USD',
+                  )}
                 </span>
               </div>
             ))}
@@ -153,7 +170,9 @@ export function EstimatedTotalBox({
             )}
             {organizationCredits > 0 && (
               <div className="flex items-center justify-between text-[13px]">
-                <span className="text-muted-foreground">Organization Credits</span>
+                <span className="text-muted-foreground">
+                  Organization Credits
+                </span>
                 <span className="font-medium text-green-600 dark:text-green-400">
                   -{formatCurrency(organizationCredits, 'USD')}
                 </span>
@@ -188,7 +207,9 @@ export function EstimatedTotalBox({
         {totalDue > 0 && (
           <div className="pt-2 border-t border-border">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] font-medium text-foreground">Total Due</span>
+              <span className="text-[13px] font-medium text-foreground">
+                Total Due
+              </span>
               <span className="text-[15px] font-semibold text-foreground">
                 {formatCurrency(totalDue, 'USD')}
               </span>
@@ -200,9 +221,12 @@ export function EstimatedTotalBox({
         {recurringCharge > 0 && (
           <div className="pt-2">
             <div className="flex items-center justify-between">
-              <span className="text-[13px] text-muted-foreground">Recurring Charge</span>
+              <span className="text-[13px] text-muted-foreground">
+                Recurring Charge
+              </span>
               <span className="text-[13px] font-medium text-foreground">
-                {formatCurrency(recurringCharge, estimation.currency || 'USD')}/month
+                {formatCurrency(recurringCharge, estimation.currency || 'USD')}
+                /month
               </span>
             </div>
           </div>

@@ -1,6 +1,6 @@
 /**
  * AccountPayments Component
- * 
+ *
  * Main component for the account payments tab.
  * Displays payment methods and billing addresses at the account level.
  */

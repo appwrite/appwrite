@@ -15,10 +15,12 @@ function isValidRelativeRedirect(url: string): boolean {
 }
 
 const searchSchema = z.object({
-  redirect: z.string().optional().refine(
-    (val) => !val || isValidRelativeRedirect(val),
-    { message: 'Redirect must be a relative URL' }
-  ),
+  redirect: z
+    .string()
+    .optional()
+    .refine((val) => !val || isValidRelativeRedirect(val), {
+      message: 'Redirect must be a relative URL',
+    }),
 })
 
 export const Route = createFileRoute('/_auth/mfa')({
@@ -28,7 +30,7 @@ export const Route = createFileRoute('/_auth/mfa')({
     // Check if MFA is required by trying to get account
     // If we get 'user_more_factors_required' error, MFA is required
     let mfaRequired = false
-    
+
     try {
       await sdk.forConsole.account.get()
       // If we can get account successfully, MFA is not required - redirect to home
@@ -41,17 +43,19 @@ export const Route = createFileRoute('/_auth/mfa')({
       if ((error as any)?.status === 302 || (error as any)?.status === 303) {
         throw error
       }
-      
+
       if (error instanceof AppwriteException) {
         // Check for MFA requirement error - this is the key check
         if (error.type === 'user_more_factors_required') {
           mfaRequired = true
         } else if (error.code === 401) {
           // Not authenticated at all - redirect to sign-in
-          const redirectUrl = location.pathname + (location.search ? `?${location.search}` : '')
+          const redirectUrl =
+            location.pathname + (location.search ? `?${location.search}` : '')
           throw redirect({
             to: '/sign-in',
-            search: redirectUrl !== '/mfa' ? { redirect: redirectUrl } : undefined,
+            search:
+              redirectUrl !== '/mfa' ? { redirect: redirectUrl } : undefined,
             throw: true,
           })
         } else {

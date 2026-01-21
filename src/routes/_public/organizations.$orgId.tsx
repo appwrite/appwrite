@@ -31,13 +31,15 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
 
 function OrganizationLayout() {
   const matches = useMatches()
-  
+
   // Check if we're on a domain detail route (should not have org header/tabs)
   const isDomainDetailRoute = matches.some(
     (match) =>
       match.routeId.includes('/domains/$domainId') ||
       match.routeId === '/_public/organizations/$orgId/domains/$domainId' ||
-      match.routeId.startsWith('/_public/organizations/$orgId/domains/$domainId')
+      match.routeId.startsWith(
+        '/_public/organizations/$orgId/domains/$domainId',
+      ),
   )
 
   // Check if we're on the change-plan route (should not have org header/tabs - it's fullscreen)
@@ -45,7 +47,7 @@ function OrganizationLayout() {
     (match) =>
       match.routeId.includes('/change-plan') ||
       match.routeId === '/_public/organizations/$orgId/change-plan' ||
-      match.routeId.startsWith('/_public/organizations/$orgId/change-plan')
+      match.routeId.startsWith('/_public/organizations/$orgId/change-plan'),
   )
 
   return (
@@ -62,4 +64,3 @@ function OrganizationLayout() {
     </RequireAuth>
   )
 }
-

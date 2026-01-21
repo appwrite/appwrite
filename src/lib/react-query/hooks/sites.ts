@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Sites
- * 
+ *
  * Handles sites, deployments, logs, variables, frameworks, and specifications.
  */
 
@@ -9,7 +9,12 @@ import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, LONG_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  LONG_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -17,9 +22,9 @@ import { DEFAULT_STALE_TIME, LONG_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousDat
 
 /**
  * Query function to fetch sites for a project
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -43,7 +48,10 @@ export async function fetchProjectSites(
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.sites.list(queries, search?.trim() || undefined)
+  const response = await projectSdk.sites.list(
+    queries,
+    search?.trim() || undefined,
+  )
 
   return {
     sites: response.sites || [],
@@ -86,7 +94,9 @@ export async function fetchSiteDeployments(
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const finalQueries = queries ? [...defaultQueries, ...queries] : defaultQueries
+  const finalQueries = queries
+    ? [...defaultQueries, ...queries]
+    : defaultQueries
 
   const response = await projectSdk.sites.listDeployments({
     siteId,
@@ -135,7 +145,9 @@ export async function fetchSiteLogs(
     Query.limit(limit),
     Query.offset(page * limit),
   ]
-  const finalQueries = queries ? [...defaultQueries, ...queries] : defaultQueries
+  const finalQueries = queries
+    ? [...defaultQueries, ...queries]
+    : defaultQueries
 
   const response = await projectSdk.sites.listLogs({
     siteId,
@@ -151,10 +163,7 @@ export async function fetchSiteLogs(
 /**
  * Query function to fetch site variables
  */
-export async function fetchSiteVariables(
-  projectId: string,
-  siteId: string,
-) {
+export async function fetchSiteVariables(projectId: string, siteId: string) {
   if (!projectId || !siteId) {
     return { variables: [], total: 0 }
   }
@@ -203,9 +212,9 @@ export async function fetchSiteSpecifications(projectId: string) {
 
 /**
  * Hook to fetch paginated sites for a project
- * 
+ *
  * This is useful for displaying project sites with pagination and search.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -280,7 +289,8 @@ export function useSiteDeployments(
 ) {
   return useQuery({
     queryKey: ['deployments', 'site', projectId, siteId, page, limit, queries],
-    queryFn: () => fetchSiteDeployments(projectId!, siteId!, page, limit, queries),
+    queryFn: () =>
+      fetchSiteDeployments(projectId!, siteId!, page, limit, queries),
     enabled: !!projectId && !!siteId,
     staleTime: DEFAULT_STALE_TIME,
   })
@@ -357,4 +367,3 @@ export function useSiteSpecifications(projectId: string | null | undefined) {
     staleTime: LONG_STALE_TIME,
   })
 }
-

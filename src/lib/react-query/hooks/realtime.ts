@@ -1,6 +1,11 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { DateRange } from 'react-day-picker'
-import { subMinutes, format, eachMinuteOfInterval, startOfMinute } from 'date-fns'
+import {
+  subMinutes,
+  format,
+  eachMinuteOfInterval,
+  startOfMinute,
+} from 'date-fns'
 
 // Mock data types
 export interface RealtimeStats {
@@ -45,10 +50,10 @@ function generateMockStats(dateRange: DateRange | undefined): RealtimeStats {
   const daysDiff = hoursDiff / 24
   const totalMinutes = hoursDiff * 60
   const maxPoints = 50
-  
+
   // Calculate step to ensure we don't exceed maxPoints
   let step = Math.max(5, Math.ceil(totalMinutes / maxPoints))
-  
+
   // Use larger intervals for longer date ranges to reduce density
   if (daysDiff > 30) {
     // More than 30 days: use 12 hour intervals (720 minutes)
@@ -67,10 +72,10 @@ function generateMockStats(dateRange: DateRange | undefined): RealtimeStats {
     step = Math.max(step, 10)
   }
   // Otherwise use calculated step (minimum 5 minutes)
-  
+
   const minutes = eachMinuteOfInterval(
     { start: startOfMinute(from), end: startOfMinute(to) },
-    { step }
+    { step },
   )
 
   const baseConnections = 150 + Math.random() * 100
@@ -108,7 +113,7 @@ function generateMockStats(dateRange: DateRange | undefined): RealtimeStats {
 function generateMockMessages(
   page: number,
   limit: number,
-  dateRange: DateRange | undefined
+  dateRange: DateRange | undefined,
 ): { messages: RealtimeMessage[]; total: number } {
   const total = 1247 // Mock total
   const startIndex = page * limit
@@ -142,7 +147,7 @@ function generateMockMessages(
 
   for (let i = startIndex; i < endIndex; i++) {
     const timestamp = new Date(
-      from.getTime() + Math.random() * (to.getTime() - from.getTime())
+      from.getTime() + Math.random() * (to.getTime() - from.getTime()),
     )
 
     const numChannels = Math.floor(Math.random() * 3) + 1
@@ -150,11 +155,13 @@ function generateMockMessages(
 
     messages.push({
       id: `msg_${i.toString().padStart(8, '0')}`,
-      channels: Array.from({ length: numChannels }, () =>
-        channelTypes[Math.floor(Math.random() * channelTypes.length)]
+      channels: Array.from(
+        { length: numChannels },
+        () => channelTypes[Math.floor(Math.random() * channelTypes.length)],
       ),
-      events: Array.from({ length: numEvents }, () =>
-        eventTypes[Math.floor(Math.random() * eventTypes.length)]
+      events: Array.from(
+        { length: numEvents },
+        () => eventTypes[Math.floor(Math.random() * eventTypes.length)],
       ),
       payloadSize: `${Math.floor(Math.random() * 5000 + 100)} bytes`,
       timestamp: timestamp.toISOString(),
@@ -167,7 +174,7 @@ function generateMockMessages(
 function generateMockChannels(
   page: number,
   limit: number,
-  dateRange: DateRange | undefined
+  dateRange: DateRange | undefined,
 ): { channels: RealtimeChannel[]; total: number } {
   const total = 89 // Mock total
   const startIndex = page * limit
@@ -200,7 +207,7 @@ function generateMockChannels(
     const lastActivity =
       Math.random() > 0.3
         ? new Date(
-            from.getTime() + Math.random() * (to.getTime() - from.getTime())
+            from.getTime() + Math.random() * (to.getTime() - from.getTime()),
           ).toISOString()
         : null
 
@@ -220,7 +227,7 @@ function generateMockChannels(
 // Hooks
 export function useRealtimeStats(
   projectId: string | null | undefined,
-  dateRange: DateRange | undefined
+  dateRange: DateRange | undefined,
 ) {
   return useQuery({
     queryKey: ['realtime', 'stats', projectId, dateRange],
@@ -242,7 +249,7 @@ export function useRealtimeMessages(
   projectId: string | null | undefined,
   page: number,
   limit: number,
-  dateRange: DateRange | undefined
+  dateRange: DateRange | undefined,
 ) {
   const { data, ...rest } = useQuery({
     queryKey: ['realtime', 'messages', projectId, page, limit, dateRange],
@@ -252,7 +259,7 @@ export function useRealtimeMessages(
           setTimeout(() => {
             resolve(generateMockMessages(page, limit, dateRange))
           }, 300)
-        }
+        },
       )
     },
     enabled: !!projectId,
@@ -271,7 +278,7 @@ export function useRealtimeChannels(
   projectId: string | null | undefined,
   page: number,
   limit: number,
-  dateRange: DateRange | undefined
+  dateRange: DateRange | undefined,
 ) {
   const { data, ...rest } = useQuery({
     queryKey: ['realtime', 'channels', projectId, page, limit, dateRange],
@@ -281,7 +288,7 @@ export function useRealtimeChannels(
           setTimeout(() => {
             resolve(generateMockChannels(page, limit, dateRange))
           }, 300)
-        }
+        },
       )
     },
     enabled: !!projectId,

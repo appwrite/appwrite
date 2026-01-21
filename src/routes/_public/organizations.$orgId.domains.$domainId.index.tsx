@@ -1,10 +1,16 @@
 import { DomainDetailView } from '@/components/pages/organizations/$orgId/domains/$domainId/View'
 import { createFileRoute } from '@tanstack/react-router'
-import { fetchOrganizations, fetchDomain, fetchDomainRecords } from '@/lib/react-query/hooks'
+import {
+  fetchOrganizations,
+  fetchDomain,
+  fetchDomainRecords,
+} from '@/lib/react-query/hooks'
 
 const RECORDS_PER_PAGE = 25
 
-export const Route = createFileRoute('/_public/organizations/$orgId/domains/$domainId/')({
+export const Route = createFileRoute(
+  '/_public/organizations/$orgId/domains/$domainId/',
+)({
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -55,4 +61,3 @@ function DomainDetailPage() {
   const { orgId, domainId } = Route.useParams()
   return <DomainDetailView key={`domain-${domainId}-index`} />
 }
-

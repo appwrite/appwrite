@@ -38,7 +38,14 @@ interface SignInProps {
   redirect?: string // Optional redirect URL to preserve when switching between sign-in/sign-up
 }
 
-export function SignIn({ mode = 'sign-in', onSubmit, onGitHubLogin, isLoading, isGitHubLoading, redirect }: SignInProps) {
+export function SignIn({
+  mode = 'sign-in',
+  onSubmit,
+  onGitHubLogin,
+  isLoading,
+  isGitHubLoading,
+  redirect,
+}: SignInProps) {
   const schema = mode === 'sign-in' ? loginSchema : signUpSchema
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
@@ -49,7 +56,9 @@ export function SignIn({ mode = 'sign-in', onSubmit, onGitHubLogin, isLoading, i
   })
 
   const location = useLocation()
-  const [lastLoginMethod, setLastLoginMethod] = useState<'github' | 'email' | null>(null)
+  const [lastLoginMethod, setLastLoginMethod] = useState<
+    'github' | 'email' | null
+  >(null)
 
   // Function to update last login method from storage
   const updateLastLoginMethod = () => {
@@ -96,7 +105,10 @@ export function SignIn({ mode = 'sign-in', onSubmit, onGitHubLogin, isLoading, i
       <div className="grid md:grid-cols-2">
         <div className="p-6 md:p-10 min-h-[600px] flex flex-col justify-center">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-6"
+            >
               <div className="space-y-2">
                 <h1 className="text-2xl font-semibold tracking-tight">
                   {mode === 'sign-in' ? 'Welcome back' : 'Create an account'}
@@ -123,7 +135,11 @@ export function SignIn({ mode = 'sign-in', onSubmit, onGitHubLogin, isLoading, i
                       onClick={onGitHubLogin}
                       disabled={isGitHubLoading || isLoading}
                     >
-                      <svg className="mr-1.5 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                      <svg
+                        className="mr-1.5 h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
                         <path
                           fillRule="evenodd"
                           clipRule="evenodd"
@@ -195,17 +211,15 @@ export function SignIn({ mode = 'sign-in', onSubmit, onGitHubLogin, isLoading, i
                     Last used
                   </span>
                 )}
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isLoading}
-                >
+                <Button type="submit" className="w-full" disabled={isLoading}>
                   {mode === 'sign-in' ? 'Login' : 'Sign up'}
                 </Button>
               </div>
 
               <p className="text-center text-sm text-muted-foreground">
-                {mode === 'sign-in' ? "Don't have an account? " : 'Already have an account? '}
+                {mode === 'sign-in'
+                  ? "Don't have an account? "
+                  : 'Already have an account? '}
                 <Link
                   to={mode === 'sign-in' ? '/sign-up' : '/sign-in'}
                   search={redirect ? { redirect } : undefined}
@@ -230,5 +244,3 @@ export function SignIn({ mode = 'sign-in', onSubmit, onGitHubLogin, isLoading, i
     </Card>
   )
 }
-
-

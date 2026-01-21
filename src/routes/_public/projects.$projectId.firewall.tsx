@@ -7,14 +7,14 @@ export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
 
 function FirewallPage() {
   const matches = useMatches()
-  
+
   // Check if we're on a child route (analytics, logs, etc.)
   const isChildRoute = matches.some(
     (match) =>
       match.routeId.includes('/firewall/analytics') ||
       match.routeId.includes('/firewall/logs') ||
       (match.routeId.startsWith('/_public/projects/$projectId/firewall/') &&
-       match.routeId !== '/_public/projects/$projectId/firewall')
+        match.routeId !== '/_public/projects/$projectId/firewall'),
   )
 
   // If we're on a child route, render the outlet (child route component)

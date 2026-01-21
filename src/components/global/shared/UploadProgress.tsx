@@ -1,6 +1,6 @@
 /**
  * Upload progress indicator component
- * 
+ *
  * Shows active file uploads with progress bars
  */
 
@@ -59,17 +59,17 @@ export function UploadProgress({
                 </p>
               </div>
               <div className="flex items-center gap-2 mb-2">
-                <Progress
-                  value={upload.progress}
-                  className="h-1.5 flex-1"
-                />
+                <Progress value={upload.progress} className="h-1.5 flex-1" />
                 <span className="text-[11px] text-muted-foreground shrink-0">
                   {upload.progress}%
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-muted-foreground">
-                  {formatBytes(Math.round((upload.progress / 100) * upload.fileSize))} / {formatBytes(upload.fileSize)}
+                  {formatBytes(
+                    Math.round((upload.progress / 100) * upload.fileSize),
+                  )}{' '}
+                  / {formatBytes(upload.fileSize)}
                 </span>
                 {upload.status === 'failed' && upload.error && (
                   <span className="text-[11px] text-destructive truncate max-w-[200px]">
@@ -78,20 +78,21 @@ export function UploadProgress({
                 )}
               </div>
             </div>
-            {onCancel && (upload.status === 'pending' || upload.status === 'uploading') && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 shrink-0"
-                onClick={() => onCancel(upload.id)}
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
-            )}
+            {onCancel &&
+              (upload.status === 'pending' ||
+                upload.status === 'uploading') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 shrink-0"
+                  onClick={() => onCancel(upload.id)}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              )}
           </div>
         </div>
       ))}
     </div>
   )
 }
-

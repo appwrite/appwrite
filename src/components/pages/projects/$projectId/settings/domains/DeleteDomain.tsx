@@ -44,10 +44,11 @@ export function DeleteDomainDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Delete domain</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Are you sure you want to delete this domain? This action cannot be undone.
+            Are you sure you want to delete this domain? This action cannot be
+            undone.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
@@ -74,4 +75,3 @@ export function DeleteDomainDialog({
     </Dialog>
   )
 }
-

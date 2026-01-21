@@ -176,11 +176,18 @@ export function ApiKeysList({
                         )}
                       </span>
                       {expirationStatus && expirationStatus.isExpired ? (
-                        <Badge variant="secondary" className="text-[10px] shrink-0">
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] shrink-0"
+                        >
                           Expired
                         </Badge>
-                      ) : expirationStatus && expirationStatus.isExpiringSoon ? (
-                        <Badge variant="warning" className="text-[10px] shrink-0">
+                      ) : expirationStatus &&
+                        expirationStatus.isExpiringSoon ? (
+                        <Badge
+                          variant="warning"
+                          className="text-[10px] shrink-0"
+                        >
                           Expires soon
                         </Badge>
                       ) : null}
@@ -241,18 +248,13 @@ export function ApiKeysList({
                 readOnly
                 value={viewingKey?.key || ''}
                 className="w-full min-h-[100px] rounded-md border border-border bg-muted px-3 py-2 font-mono text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                onClick={(e) =>
-                  (e.target as HTMLTextAreaElement).select()
-                }
+                onClick={(e) => (e.target as HTMLTextAreaElement).select()}
               />
             </div>
           </div>
 
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setViewingKeyId(null)}
-            >
+            <Button variant="outline" onClick={() => setViewingKeyId(null)}>
               Close
             </Button>
             <Button
@@ -282,4 +284,3 @@ export function ApiKeysList({
     </>
   )
 }
-

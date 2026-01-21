@@ -1,14 +1,31 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import { Button } from '@/components/ui/button'
-import { Clock, Code, AlertCircle, CheckCircle2, ChevronDown } from 'lucide-react'
+import {
+  Clock,
+  Code,
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-type SchedulePreset = 
+type SchedulePreset =
   | 'disabled'
   | 'every-minute'
   | 'every-5-minutes'
@@ -50,47 +67,168 @@ interface PresetOption {
 // All preset options organized by category
 export const PRESET_OPTIONS: PresetOption[] = [
   // Frequent
-  { value: 'every-minute', label: 'Every minute', description: 'Runs every minute', cron: '* * * * *', category: 'frequent' },
-  { value: 'every-5-minutes', label: 'Every 5 minutes', description: 'Runs every 5 minutes', cron: '*/5 * * * *', category: 'frequent' },
-  { value: 'every-15-minutes', label: 'Every 15 minutes', description: 'Runs every 15 minutes', cron: '*/15 * * * *', category: 'frequent' },
-  { value: 'every-30-minutes', label: 'Every 30 minutes', description: 'Runs every 30 minutes', cron: '*/30 * * * *', category: 'frequent' },
-  { value: 'every-hour', label: 'Every hour', description: 'Runs at the start of every hour', cron: '0 * * * *', category: 'frequent' },
-  
+  {
+    value: 'every-minute',
+    label: 'Every minute',
+    description: 'Runs every minute',
+    cron: '* * * * *',
+    category: 'frequent',
+  },
+  {
+    value: 'every-5-minutes',
+    label: 'Every 5 minutes',
+    description: 'Runs every 5 minutes',
+    cron: '*/5 * * * *',
+    category: 'frequent',
+  },
+  {
+    value: 'every-15-minutes',
+    label: 'Every 15 minutes',
+    description: 'Runs every 15 minutes',
+    cron: '*/15 * * * *',
+    category: 'frequent',
+  },
+  {
+    value: 'every-30-minutes',
+    label: 'Every 30 minutes',
+    description: 'Runs every 30 minutes',
+    cron: '*/30 * * * *',
+    category: 'frequent',
+  },
+  {
+    value: 'every-hour',
+    label: 'Every hour',
+    description: 'Runs at the start of every hour',
+    cron: '0 * * * *',
+    category: 'frequent',
+  },
+
   // Daily
-  { value: 'every-6-hours', label: 'Every 6 hours', description: 'Runs every 6 hours (00:00, 06:00, 12:00, 18:00)', cron: '0 */6 * * *', category: 'daily' },
-  { value: 'every-12-hours', label: 'Every 12 hours', description: 'Runs every 12 hours (00:00, 12:00)', cron: '0 */12 * * *', category: 'daily' },
-  { value: 'daily-midnight', label: 'Daily at midnight', description: 'Runs once per day at midnight (00:00)', cron: '0 0 * * *', category: 'daily' },
-  { value: 'daily-noon', label: 'Daily at noon', description: 'Runs once per day at noon (12:00)', cron: '0 12 * * *', category: 'daily' },
-  { value: 'twice-daily', label: 'Twice daily', description: 'Runs twice per day (09:00, 21:00)', cron: '0 9,21 * * *', category: 'daily' },
-  
+  {
+    value: 'every-6-hours',
+    label: 'Every 6 hours',
+    description: 'Runs every 6 hours (00:00, 06:00, 12:00, 18:00)',
+    cron: '0 */6 * * *',
+    category: 'daily',
+  },
+  {
+    value: 'every-12-hours',
+    label: 'Every 12 hours',
+    description: 'Runs every 12 hours (00:00, 12:00)',
+    cron: '0 */12 * * *',
+    category: 'daily',
+  },
+  {
+    value: 'daily-midnight',
+    label: 'Daily at midnight',
+    description: 'Runs once per day at midnight (00:00)',
+    cron: '0 0 * * *',
+    category: 'daily',
+  },
+  {
+    value: 'daily-noon',
+    label: 'Daily at noon',
+    description: 'Runs once per day at noon (12:00)',
+    cron: '0 12 * * *',
+    category: 'daily',
+  },
+  {
+    value: 'twice-daily',
+    label: 'Twice daily',
+    description: 'Runs twice per day (09:00, 21:00)',
+    cron: '0 9,21 * * *',
+    category: 'daily',
+  },
+
   // Weekly
-  { value: 'weekly-sunday', label: 'Weekly on Sunday', description: 'Runs once per week on Sunday at midnight', cron: '0 0 * * 0', category: 'weekly' },
-  { value: 'weekly-monday', label: 'Weekly on Monday', description: 'Runs once per week on Monday at midnight', cron: '0 0 * * 1', category: 'weekly' },
-  { value: 'weekly-tuesday', label: 'Weekly on Tuesday', description: 'Runs once per week on Tuesday at midnight', cron: '0 0 * * 2', category: 'weekly' },
-  { value: 'weekly-wednesday', label: 'Weekly on Wednesday', description: 'Runs once per week on Wednesday at midnight', cron: '0 0 * * 3', category: 'weekly' },
-  { value: 'weekly-thursday', label: 'Weekly on Thursday', description: 'Runs once per week on Thursday at midnight', cron: '0 0 * * 4', category: 'weekly' },
-  { value: 'weekly-friday', label: 'Weekly on Friday', description: 'Runs once per week on Friday at midnight', cron: '0 0 * * 5', category: 'weekly' },
-  { value: 'weekly-saturday', label: 'Weekly on Saturday', description: 'Runs once per week on Saturday at midnight', cron: '0 0 * * 6', category: 'weekly' },
-  
+  {
+    value: 'weekly-sunday',
+    label: 'Weekly on Sunday',
+    description: 'Runs once per week on Sunday at midnight',
+    cron: '0 0 * * 0',
+    category: 'weekly',
+  },
+  {
+    value: 'weekly-monday',
+    label: 'Weekly on Monday',
+    description: 'Runs once per week on Monday at midnight',
+    cron: '0 0 * * 1',
+    category: 'weekly',
+  },
+  {
+    value: 'weekly-tuesday',
+    label: 'Weekly on Tuesday',
+    description: 'Runs once per week on Tuesday at midnight',
+    cron: '0 0 * * 2',
+    category: 'weekly',
+  },
+  {
+    value: 'weekly-wednesday',
+    label: 'Weekly on Wednesday',
+    description: 'Runs once per week on Wednesday at midnight',
+    cron: '0 0 * * 3',
+    category: 'weekly',
+  },
+  {
+    value: 'weekly-thursday',
+    label: 'Weekly on Thursday',
+    description: 'Runs once per week on Thursday at midnight',
+    cron: '0 0 * * 4',
+    category: 'weekly',
+  },
+  {
+    value: 'weekly-friday',
+    label: 'Weekly on Friday',
+    description: 'Runs once per week on Friday at midnight',
+    cron: '0 0 * * 5',
+    category: 'weekly',
+  },
+  {
+    value: 'weekly-saturday',
+    label: 'Weekly on Saturday',
+    description: 'Runs once per week on Saturday at midnight',
+    cron: '0 0 * * 6',
+    category: 'weekly',
+  },
+
   // Monthly
-  { value: 'monthly-1st', label: 'Monthly on the 1st', description: 'Runs once per month on the 1st at midnight', cron: '0 0 1 * *', category: 'monthly' },
-  { value: 'monthly-15th', label: 'Monthly on the 15th', description: 'Runs once per month on the 15th at midnight', cron: '0 0 15 * *', category: 'monthly' },
+  {
+    value: 'monthly-1st',
+    label: 'Monthly on the 1st',
+    description: 'Runs once per month on the 1st at midnight',
+    cron: '0 0 1 * *',
+    category: 'monthly',
+  },
+  {
+    value: 'monthly-15th',
+    label: 'Monthly on the 15th',
+    description: 'Runs once per month on the 15th at midnight',
+    cron: '0 0 15 * *',
+    category: 'monthly',
+  },
 ]
 
 // Helper to get presets by category
 const getPresetsByCategory = (category: PresetCategory) => {
-  return PRESET_OPTIONS.filter(preset => preset.category === category)
+  return PRESET_OPTIONS.filter((preset) => preset.category === category)
 }
 
 // Validate cron expression (basic validation)
-function validateCronExpression(cron: string): { valid: boolean; error?: string } {
+function validateCronExpression(cron: string): {
+  valid: boolean
+  error?: string
+} {
   if (!cron.trim()) {
     return { valid: true } // Empty is valid (disabled)
   }
 
   const parts = cron.trim().split(/\s+/)
   if (parts.length !== 5) {
-    return { valid: false, error: 'Cron expression must have 5 parts (minute hour day month weekday)' }
+    return {
+      valid: false,
+      error:
+        'Cron expression must have 5 parts (minute hour day month weekday)',
+    }
   }
 
   // Basic validation for each part
@@ -104,9 +242,9 @@ function validateCronExpression(cron: string): { valid: boolean; error?: string 
 
   for (let i = 0; i < parts.length; i++) {
     if (parts[i] !== '*' && !patterns[i].test(parts[i])) {
-      return { 
-        valid: false, 
-        error: `Invalid value in ${['minute', 'hour', 'day', 'month', 'weekday'][i]} field` 
+      return {
+        valid: false,
+        error: `Invalid value in ${['minute', 'hour', 'day', 'month', 'weekday'][i]} field`,
       }
     }
   }
@@ -128,7 +266,7 @@ export function formatCronExpression(cron: string): string {
   const [minute, hour, day, month, weekday] = parts
 
   // Check if it matches a preset
-  const matchingPreset = PRESET_OPTIONS.find(p => p.cron === cron)
+  const matchingPreset = PRESET_OPTIONS.find((p) => p.cron === cron)
   if (matchingPreset) {
     return matchingPreset.label
   }
@@ -170,7 +308,8 @@ export function formatCronExpression(cron: string): string {
     const minuteNum = parseInt(minute, 10)
     if (!isNaN(hourNum) && !isNaN(minuteNum)) {
       const period = hourNum >= 12 ? 'PM' : 'AM'
-      const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum
+      const displayHour =
+        hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum
       description = `At ${displayHour}:${minuteNum.toString().padStart(2, '0')} ${period}`
     } else {
       // Fallback for complex expressions
@@ -190,7 +329,15 @@ export function formatCronExpression(cron: string): string {
 
   // Weekday
   if (weekday !== '*') {
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const dayNames = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ]
     const dayIndex = parseInt(weekday, 10)
     if (dayIndex >= 0 && dayIndex < 7) {
       description += ` on ${dayNames[dayIndex]}`
@@ -200,7 +347,11 @@ export function formatCronExpression(cron: string): string {
   return description || cron
 }
 
-export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEditorProps) {
+export function CronScheduleEditor({
+  value,
+  onChange,
+  disabled,
+}: CronScheduleEditorProps) {
   const [mode, setMode] = useState<'preset' | 'advanced'>('preset')
   const [preset, setPreset] = useState<SchedulePreset>('disabled')
   const [customCron, setCustomCron] = useState('')
@@ -215,7 +366,7 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
     }
 
     // Check if value matches a preset
-    const matchingPreset = PRESET_OPTIONS.find(p => p.cron === value)
+    const matchingPreset = PRESET_OPTIONS.find((p) => p.cron === value)
     if (matchingPreset) {
       setPreset(matchingPreset.value)
       setMode('preset')
@@ -233,7 +384,7 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
       if (preset === 'disabled') {
         onChange('')
       } else {
-        const presetOption = PRESET_OPTIONS.find(p => p.value === preset)
+        const presetOption = PRESET_OPTIONS.find((p) => p.value === preset)
         if (presetOption) {
           onChange(presetOption.cron)
         }
@@ -255,7 +406,7 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
     } else if (preset === 'disabled') {
       currentValue = ''
     } else {
-      const presetOption = PRESET_OPTIONS.find(p => p.value === preset)
+      const presetOption = PRESET_OPTIONS.find((p) => p.value === preset)
       currentValue = presetOption?.cron || ''
     }
     return validateCronExpression(currentValue)
@@ -268,7 +419,7 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
     } else if (preset === 'disabled') {
       currentValue = ''
     } else {
-      const presetOption = PRESET_OPTIONS.find(p => p.value === preset)
+      const presetOption = PRESET_OPTIONS.find((p) => p.value === preset)
       currentValue = presetOption?.cron || ''
     }
     return formatCronExpression(currentValue)
@@ -283,14 +434,16 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
       } else if (preset === 'disabled') {
         currentValue = ''
       } else {
-        const presetOption = PRESET_OPTIONS.find(p => p.value === preset)
+        const presetOption = PRESET_OPTIONS.find((p) => p.value === preset)
         currentValue = presetOption?.cron || ''
       }
-      
+
       if (!currentValue || !currentValue.trim()) {
         setPreset('disabled')
       } else {
-        const matchingPreset = PRESET_OPTIONS.find(p => p.cron === currentValue)
+        const matchingPreset = PRESET_OPTIONS.find(
+          (p) => p.cron === currentValue,
+        )
         if (matchingPreset) {
           setPreset(matchingPreset.value)
         } else {
@@ -304,7 +457,7 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
       if (preset === 'disabled') {
         currentValue = ''
       } else {
-        const presetOption = PRESET_OPTIONS.find(p => p.value === preset)
+        const presetOption = PRESET_OPTIONS.find((p) => p.value === preset)
         currentValue = presetOption?.cron || ''
       }
       setCustomCron(currentValue)
@@ -315,7 +468,7 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
   // Get display label for selected preset
   const getPresetDisplayLabel = (presetValue: SchedulePreset): string => {
     if (presetValue === 'disabled') return 'Disabled'
-    const preset = PRESET_OPTIONS.find(p => p.value === presetValue)
+    const preset = PRESET_OPTIONS.find((p) => p.value === presetValue)
     return preset?.label || 'Unknown'
   }
 
@@ -333,7 +486,7 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
               mode === 'preset'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
-              disabled && 'opacity-50 cursor-not-allowed'
+              disabled && 'opacity-50 cursor-not-allowed',
             )}
           >
             <Clock className="h-3.5 w-3.5" />
@@ -348,7 +501,7 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
               mode === 'advanced'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground',
-              disabled && 'opacity-50 cursor-not-allowed'
+              disabled && 'opacity-50 cursor-not-allowed',
             )}
           >
             <Code className="h-3.5 w-3.5" />
@@ -361,7 +514,10 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
       {mode === 'preset' && (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="schedule-preset" className="text-[13px] font-medium">
+            <Label
+              htmlFor="schedule-preset"
+              className="text-[13px] font-medium"
+            >
               Schedule preset
             </Label>
             <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
@@ -372,7 +528,7 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
                   role="combobox"
                   className={cn(
                     'h-9 w-full justify-between text-[13px] font-normal',
-                    !preset && 'text-muted-foreground'
+                    !preset && 'text-muted-foreground',
                   )}
                   disabled={disabled}
                 >
@@ -382,10 +538,13 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
               </PopoverTrigger>
               <PopoverContent className="w-[400px] p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Search presets..." className="h-9" />
+                  <CommandInput
+                    placeholder="Search presets..."
+                    className="h-9"
+                  />
                   <CommandList>
                     <CommandEmpty>No preset found.</CommandEmpty>
-                    
+
                     {/* Disabled */}
                     <CommandGroup>
                       <CommandItem
@@ -397,14 +556,16 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
                         className="px-3 py-2.5"
                       >
                         <div className="flex flex-col gap-0.5">
-                          <span className="text-[13px] font-medium">Disabled</span>
+                          <span className="text-[13px] font-medium">
+                            Disabled
+                          </span>
                           <span className="text-[11px] text-muted-foreground leading-tight">
                             Function will not run on a schedule
                           </span>
                         </div>
                       </CommandItem>
                     </CommandGroup>
-                    
+
                     {/* Frequent */}
                     <CommandGroup heading="Frequent">
                       {getPresetsByCategory('frequent').map((presetOption) => (
@@ -418,15 +579,20 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
                           className="px-3 py-2.5"
                         >
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[13px] font-medium">{presetOption.label}</span>
+                            <span className="text-[13px] font-medium">
+                              {presetOption.label}
+                            </span>
                             <span className="text-[11px] text-muted-foreground leading-tight">
-                              {presetOption.description} • <span className="font-mono">{presetOption.cron}</span>
+                              {presetOption.description} •{' '}
+                              <span className="font-mono">
+                                {presetOption.cron}
+                              </span>
                             </span>
                           </div>
                         </CommandItem>
                       ))}
                     </CommandGroup>
-                    
+
                     {/* Daily */}
                     <CommandGroup heading="Daily">
                       {getPresetsByCategory('daily').map((presetOption) => (
@@ -440,15 +606,20 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
                           className="px-3 py-2.5"
                         >
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[13px] font-medium">{presetOption.label}</span>
+                            <span className="text-[13px] font-medium">
+                              {presetOption.label}
+                            </span>
                             <span className="text-[11px] text-muted-foreground leading-tight">
-                              {presetOption.description} • <span className="font-mono">{presetOption.cron}</span>
+                              {presetOption.description} •{' '}
+                              <span className="font-mono">
+                                {presetOption.cron}
+                              </span>
                             </span>
                           </div>
                         </CommandItem>
                       ))}
                     </CommandGroup>
-                    
+
                     {/* Weekly */}
                     <CommandGroup heading="Weekly">
                       {getPresetsByCategory('weekly').map((presetOption) => (
@@ -462,15 +633,20 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
                           className="px-3 py-2.5"
                         >
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[13px] font-medium">{presetOption.label}</span>
+                            <span className="text-[13px] font-medium">
+                              {presetOption.label}
+                            </span>
                             <span className="text-[11px] text-muted-foreground leading-tight">
-                              {presetOption.description} • <span className="font-mono">{presetOption.cron}</span>
+                              {presetOption.description} •{' '}
+                              <span className="font-mono">
+                                {presetOption.cron}
+                              </span>
                             </span>
                           </div>
                         </CommandItem>
                       ))}
                     </CommandGroup>
-                    
+
                     {/* Monthly */}
                     <CommandGroup heading="Monthly">
                       {getPresetsByCategory('monthly').map((presetOption) => (
@@ -484,9 +660,14 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
                           className="px-3 py-2.5"
                         >
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-[13px] font-medium">{presetOption.label}</span>
+                            <span className="text-[13px] font-medium">
+                              {presetOption.label}
+                            </span>
                             <span className="text-[11px] text-muted-foreground leading-tight">
-                              {presetOption.description} • <span className="font-mono">{presetOption.cron}</span>
+                              {presetOption.description} •{' '}
+                              <span className="font-mono">
+                                {presetOption.cron}
+                              </span>
                             </span>
                           </div>
                         </CommandItem>
@@ -515,7 +696,8 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
             disabled={disabled}
           />
           <p className="text-[12px] text-muted-foreground">
-            Format: minute hour day month weekday (e.g., "0 0 * * *" for daily at midnight)
+            Format: minute hour day month weekday (e.g., "0 0 * * *" for daily
+            at midnight)
           </p>
         </div>
       )}
@@ -540,4 +722,3 @@ export function CronScheduleEditor({ value, onChange, disabled }: CronScheduleEd
     </div>
   )
 }
-

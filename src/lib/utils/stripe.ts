@@ -1,6 +1,6 @@
 /**
  * Stripe utility functions
- * 
+ *
  * Handles Stripe.js initialization and theme configuration
  */
 
@@ -10,11 +10,13 @@ let stripePromise: Promise<Stripe | null> | null = null
 
 /**
  * Get or create Stripe instance
- * 
+ *
  * @param publishableKey - Stripe publishable key
  * @returns Stripe instance promise
  */
-export function getStripeInstance(publishableKey?: string): Promise<Stripe | null> {
+export function getStripeInstance(
+  publishableKey?: string,
+): Promise<Stripe | null> {
   if (!publishableKey) {
     return Promise.resolve(null)
   }
@@ -28,7 +30,7 @@ export function getStripeInstance(publishableKey?: string): Promise<Stripe | nul
 
 /**
  * Get Stripe appearance configuration based on theme
- * 
+ *
  * @param theme - Current theme ('light' | 'dark' | 'system')
  * @returns Stripe appearance configuration
  */
@@ -44,7 +46,11 @@ export function getStripeAppearance(theme: string | undefined): {
     borderRadius?: string
   }
 } {
-  const isDark = theme === 'dark' || (theme === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const isDark =
+    theme === 'dark' ||
+    (theme === 'system' &&
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches)
 
   if (isDark) {
     return {
@@ -77,7 +83,7 @@ export function getStripeAppearance(theme: string | undefined): {
 
 /**
  * Get Stripe appearance based on current theme
- * 
+ *
  * @param theme - Current theme from useTheme hook
  * @returns Stripe appearance configuration
  */

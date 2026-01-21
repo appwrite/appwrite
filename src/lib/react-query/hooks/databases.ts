@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Databases
- * 
+ *
  * Handles databases, tables, rows, columns, and indexes.
  */
 
@@ -9,7 +9,11 @@ import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -17,9 +21,9 @@ import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './const
 
 /**
  * Query function to fetch databases for a project
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -48,7 +52,7 @@ export async function fetchProjectDatabases(
   try {
     response = await (projectSdk.tablesDB as any).list(
       queries,
-      search?.trim() || undefined
+      search?.trim() || undefined,
     )
   } catch (err) {
     console.warn('Failed to fetch databases:', err)
@@ -63,9 +67,9 @@ export async function fetchProjectDatabases(
 
 /**
  * Query function to fetch a single database by ID
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @returns Single database or null
@@ -87,10 +91,18 @@ export async function fetchProjectDatabase(
     }
 
     // Map to our Database type
-    const backupPolicies = db.backupPolicies || db.backups || db.policies || db.backup || []
-    const backupPoliciesArray = Array.isArray(backupPolicies) ? backupPolicies : (backupPolicies ? [backupPolicies] : [])
+    const backupPolicies =
+      db.backupPolicies || db.backups || db.policies || db.backup || []
+    const backupPoliciesArray = Array.isArray(backupPolicies)
+      ? backupPolicies
+      : backupPolicies
+        ? [backupPolicies]
+        : []
     const backupPolicyCount = backupPoliciesArray.length
-    const hasBackupPolicy = backupPolicyCount > 0 || db.backupEnabled === true || db.backupPolicyEnabled === true
+    const hasBackupPolicy =
+      backupPolicyCount > 0 ||
+      db.backupEnabled === true ||
+      db.backupPolicyEnabled === true
     const backupPolicy = backupPoliciesArray[0] || null
 
     return {
@@ -104,7 +116,14 @@ export async function fetchProjectDatabase(
       hasBackupPolicy,
       backupPolicy,
       backupPolicyCount,
-    } as Database & { enabled: boolean; createdAt: string; updatedAt: string; hasBackupPolicy: boolean; backupPolicy: any; backupPolicyCount: number }
+    } as Database & {
+      enabled: boolean
+      createdAt: string
+      updatedAt: string
+      hasBackupPolicy: boolean
+      backupPolicy: any
+      backupPolicyCount: number
+    }
   } catch (err) {
     console.error('[fetchProjectDatabase] Failed to fetch database:', err)
     return null
@@ -127,7 +146,10 @@ export async function createProjectDatabase(
     throw new Error('Project ID is required')
   }
   const projectSdk = sdk.forProject(projectId)
-  const databaseId = (data.databaseId && data.databaseId.trim() !== '') ? data.databaseId.trim() : ID.unique()
+  const databaseId =
+    data.databaseId && data.databaseId.trim() !== ''
+      ? data.databaseId.trim()
+      : ID.unique()
   return await (projectSdk.tablesDB as any).create({
     databaseId,
     name: data.name.trim(),
@@ -136,9 +158,9 @@ export async function createProjectDatabase(
 
 /**
  * Query function to fetch tables (collections) for a database
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param page - Page number (0-indexed)
@@ -170,7 +192,7 @@ export async function fetchProjectTables(
     response = await (projectSdk.tablesDB as any).listTables(
       databaseId,
       queries,
-      search?.trim() || undefined
+      search?.trim() || undefined,
     )
   } catch (err) {
     console.warn('Failed to fetch tables:', err)
@@ -185,9 +207,9 @@ export async function fetchProjectTables(
 
 /**
  * Query function to fetch all tables with full details (columns, indexes) for visualizer
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @returns All tables with columns and indexes
@@ -212,7 +234,7 @@ export async function fetchAllProjectTablesForVisualizer(
     response = await (projectSdk.tablesDB as any).listTables(
       databaseId,
       queries,
-      undefined
+      undefined,
     )
   } catch (err) {
     console.warn('Failed to fetch tables for visualizer:', err)
@@ -226,9 +248,9 @@ export async function fetchAllProjectTablesForVisualizer(
 
 /**
  * Query function to fetch rows for a table
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -288,9 +310,9 @@ export async function fetchProjectTableRows(
 
 /**
  * Query function to fetch columns (attributes) for a table
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -306,14 +328,22 @@ export async function fetchProjectTableColumns(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  
+
   // Use TablesDB API to get table details which includes attributes/columns
   let response: any
   try {
     if (typeof (projectSdk.tablesDB as any).getTable === 'function') {
-      response = await (projectSdk.tablesDB as any).getTable(databaseId, tableId)
-    } else if (typeof (projectSdk.tablesDB as any).getCollection === 'function') {
-      response = await (projectSdk.tablesDB as any).getCollection(databaseId, tableId)
+      response = await (projectSdk.tablesDB as any).getTable(
+        databaseId,
+        tableId,
+      )
+    } else if (
+      typeof (projectSdk.tablesDB as any).getCollection === 'function'
+    ) {
+      response = await (projectSdk.tablesDB as any).getCollection(
+        databaseId,
+        tableId,
+      )
     } else {
       response = { attributes: [] }
     }
@@ -329,7 +359,7 @@ export async function fetchProjectTableColumns(
 
 /**
  * Query function to fetch indexes for a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -345,13 +375,21 @@ export async function fetchProjectTableIndexes(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  
+
   let response: any
   try {
     if (typeof (projectSdk.tablesDB as any).getTable === 'function') {
-      response = await (projectSdk.tablesDB as any).getTable(databaseId, tableId)
-    } else if (typeof (projectSdk.tablesDB as any).getCollection === 'function') {
-      response = await (projectSdk.tablesDB as any).getCollection(databaseId, tableId)
+      response = await (projectSdk.tablesDB as any).getTable(
+        databaseId,
+        tableId,
+      )
+    } else if (
+      typeof (projectSdk.tablesDB as any).getCollection === 'function'
+    ) {
+      response = await (projectSdk.tablesDB as any).getCollection(
+        databaseId,
+        tableId,
+      )
     } else {
       response = { indexes: [] }
     }
@@ -367,9 +405,9 @@ export async function fetchProjectTableIndexes(
 
 /**
  * Query function to fetch a single table by ID
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -388,9 +426,17 @@ export async function fetchProjectTable(
   try {
     let response: any
     if (typeof (projectSdk.tablesDB as any).getTable === 'function') {
-      response = await (projectSdk.tablesDB as any).getTable(databaseId, tableId)
-    } else if (typeof (projectSdk.tablesDB as any).getCollection === 'function') {
-      response = await (projectSdk.tablesDB as any).getCollection(databaseId, tableId)
+      response = await (projectSdk.tablesDB as any).getTable(
+        databaseId,
+        tableId,
+      )
+    } else if (
+      typeof (projectSdk.tablesDB as any).getCollection === 'function'
+    ) {
+      response = await (projectSdk.tablesDB as any).getCollection(
+        databaseId,
+        tableId,
+      )
     } else {
       return null
     }
@@ -407,7 +453,8 @@ export async function fetchProjectTable(
       rowSecurity: response.rowSecurity === true,
       $permissions: response.$permissions || [],
       $createdAt: response.$createdAt || new Date().toISOString(),
-      $updatedAt: response.$updatedAt || response.$createdAt || new Date().toISOString(),
+      $updatedAt:
+        response.$updatedAt || response.$createdAt || new Date().toISOString(),
     }
   } catch (err) {
     console.error('[fetchProjectTable] Failed to fetch table:', err)
@@ -421,7 +468,7 @@ export async function fetchProjectTable(
 
 /**
  * Delete a single row from a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -438,7 +485,7 @@ export async function deleteProjectTableRow(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  
+
   if (typeof projectSdk.tablesDB.deleteRow === 'function') {
     await projectSdk.tablesDB.deleteRow({
       databaseId,
@@ -452,7 +499,7 @@ export async function deleteProjectTableRow(
 
 /**
  * Create a single row in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -472,7 +519,7 @@ export async function createProjectTableRow(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  
+
   if (typeof projectSdk.tablesDB.createRow === 'function') {
     const { ID } = await import('@appwrite.io/console')
     const createParams: any = {
@@ -481,17 +528,17 @@ export async function createProjectTableRow(
       rowId: rowId || data.$id || ID.unique(),
       data: { ...data },
     }
-    
+
     // Remove $id from data if it exists (it's passed as rowId)
     if (createParams.data.$id) {
       delete createParams.data.$id
     }
-    
+
     // Add permissions if provided
     if (permissions && permissions.length > 0) {
       createParams.permissions = permissions
     }
-    
+
     return await projectSdk.tablesDB.createRow(createParams)
   } else {
     throw new Error('Create row method not available')
@@ -500,7 +547,7 @@ export async function createProjectTableRow(
 
 /**
  * Update a single row in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -520,7 +567,7 @@ export async function updateProjectTableRow(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  
+
   if (typeof projectSdk.tablesDB.updateRow === 'function') {
     const updateParams: any = {
       databaseId,
@@ -528,17 +575,17 @@ export async function updateProjectTableRow(
       rowId,
       data: { ...data },
     }
-    
+
     // Remove $id from data if it exists (it's passed as rowId)
     if (updateParams.data.$id) {
       delete updateParams.data.$id
     }
-    
+
     // Add permissions if provided (including empty array to clear permissions)
     if (permissions !== undefined) {
       updateParams.permissions = permissions
     }
-    
+
     return await projectSdk.tablesDB.updateRow(updateParams)
   } else {
     throw new Error('Update row method not available')
@@ -548,7 +595,7 @@ export async function updateProjectTableRow(
 /**
  * Create multiple rows in a table
  * Uses bulk insert if available and no relationship columns exist, otherwise inserts one-by-one
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -575,7 +622,10 @@ export async function createProjectTableRows(
   let created = 0
 
   // If no relationship columns, try bulk insert
-  if (!hasRelationshipColumns && typeof (projectSdk.tablesDB as any).createRows === 'function') {
+  if (
+    !hasRelationshipColumns &&
+    typeof (projectSdk.tablesDB as any).createRows === 'function'
+  ) {
     try {
       const { ID } = await import('@appwrite.io/console')
       const rowsToInsert = rows.map((row) => {
@@ -598,7 +648,10 @@ export async function createProjectTableRows(
       created = rows.length
     } catch (error) {
       // If bulk insert fails, fall back to individual inserts
-      console.warn('Bulk insert failed, falling back to individual inserts:', error)
+      console.warn(
+        'Bulk insert failed, falling back to individual inserts:',
+        error,
+      )
     }
   }
 
@@ -610,7 +663,13 @@ export async function createProjectTableRows(
       const batch = rows.slice(i, i + batchSize)
       const batchPromises = batch.map(async (row) => {
         try {
-          await createProjectTableRow(projectId, databaseId, tableId, row, row.$id)
+          await createProjectTableRow(
+            projectId,
+            databaseId,
+            tableId,
+            row,
+            row.$id,
+          )
           created++
         } catch (error) {
           // Ignore individual row errors for sample data
@@ -626,7 +685,7 @@ export async function createProjectTableRows(
 
 /**
  * Create a column (attribute) in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -643,8 +702,19 @@ export async function createProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const { key, type, required = false, array = false, xdefault, size, min, max, elements, encrypt } = columnData
-  
+  const {
+    key,
+    type,
+    required = false,
+    array = false,
+    xdefault,
+    size,
+    min,
+    max,
+    elements,
+    encrypt,
+  } = columnData
+
   // Call the appropriate method based on column type
   switch (type) {
     case 'string':
@@ -749,7 +819,7 @@ export async function createProjectTableColumn(
 
 /**
  * Update a column (attribute) in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -768,8 +838,17 @@ export async function updateProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const { type, required = false, xdefault, size, min, max, elements, newKey } = columnData
-  
+  const {
+    type,
+    required = false,
+    xdefault,
+    size,
+    min,
+    max,
+    elements,
+    newKey,
+  } = columnData
+
   // Call the appropriate update method based on column type
   switch (type) {
     case 'string':
@@ -902,7 +981,7 @@ export async function updateProjectTableColumn(
 
 /**
  * Delete a column (attribute) from a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -919,7 +998,7 @@ export async function deleteProjectTableColumn(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  
+
   if (typeof (projectSdk.tablesDB as any).deleteAttribute === 'function') {
     return await (projectSdk.tablesDB as any).deleteAttribute({
       databaseId,
@@ -939,7 +1018,7 @@ export async function deleteProjectTableColumn(
 
 /**
  * Create an index in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -956,7 +1035,7 @@ export async function createProjectTableIndex(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  
+
   if (typeof (projectSdk.tablesDB as any).createIndex === 'function') {
     return await (projectSdk.tablesDB as any).createIndex({
       databaseId,
@@ -970,7 +1049,7 @@ export async function createProjectTableIndex(
 
 /**
  * Delete an index from a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -987,7 +1066,7 @@ export async function deleteProjectTableIndex(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  
+
   if (typeof (projectSdk.tablesDB as any).deleteIndex === 'function') {
     return await (projectSdk.tablesDB as any).deleteIndex({
       databaseId,
@@ -1001,7 +1080,7 @@ export async function deleteProjectTableIndex(
 
 /**
  * Update a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1023,14 +1102,16 @@ export async function updateProjectTable(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  
+
   if (typeof (projectSdk.tablesDB as any).updateTable === 'function') {
     return await (projectSdk.tablesDB as any).updateTable({
       databaseId,
       tableId,
       ...data,
     })
-  } else if (typeof (projectSdk.tablesDB as any).updateCollection === 'function') {
+  } else if (
+    typeof (projectSdk.tablesDB as any).updateCollection === 'function'
+  ) {
     return await (projectSdk.tablesDB as any).updateCollection({
       databaseId,
       tableId,
@@ -1043,7 +1124,7 @@ export async function updateProjectTable(
 
 /**
  * Delete a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1058,13 +1139,15 @@ export async function deleteProjectTable(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  
+
   if (typeof (projectSdk.tablesDB as any).deleteTable === 'function') {
     return await (projectSdk.tablesDB as any).deleteTable({
       databaseId,
       tableId,
     })
-  } else if (typeof (projectSdk.tablesDB as any).deleteCollection === 'function') {
+  } else if (
+    typeof (projectSdk.tablesDB as any).deleteCollection === 'function'
+  ) {
     return await (projectSdk.tablesDB as any).deleteCollection({
       databaseId,
       tableId,
@@ -1080,9 +1163,9 @@ export async function deleteProjectTable(
 
 /**
  * Hook to fetch databases for a project
- * 
+ *
  * This is useful for displaying project databases with pagination and search.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -1112,20 +1195,28 @@ export function useProjectDatabases(
   // Map databases to our Database type
   const databases = useMemo(() => {
     if (!databasesData?.databases) return []
-    
+
     return databasesData.databases.map((db: any) => {
       // Get table count and row count if available
       // These might need to be fetched separately or calculated
       const tables = db.collections?.length || 0
       const rows = db.documents || 0 // This might not be available directly
-      
+
       // Check for backup policies - check multiple possible field names
-      const backupPolicies = db.backupPolicies || db.backups || db.policies || db.backup || []
-      const backupPoliciesArray = Array.isArray(backupPolicies) ? backupPolicies : (backupPolicies ? [backupPolicies] : [])
+      const backupPolicies =
+        db.backupPolicies || db.backups || db.policies || db.backup || []
+      const backupPoliciesArray = Array.isArray(backupPolicies)
+        ? backupPolicies
+        : backupPolicies
+          ? [backupPolicies]
+          : []
       const backupPolicyCount = backupPoliciesArray.length
-      const hasBackupPolicy = backupPolicyCount > 0 || db.backupEnabled === true || db.backupPolicyEnabled === true
+      const hasBackupPolicy =
+        backupPolicyCount > 0 ||
+        db.backupEnabled === true ||
+        db.backupPolicyEnabled === true
       const backupPolicy = backupPoliciesArray[0] || null
-      
+
       return {
         $id: db.$id,
         name: db.name || 'Unnamed Database',
@@ -1137,7 +1228,14 @@ export function useProjectDatabases(
         hasBackupPolicy,
         backupPolicy,
         backupPolicyCount,
-      } as Database & { enabled: boolean; createdAt: string; updatedAt: string; hasBackupPolicy: boolean; backupPolicy: any; backupPolicyCount: number }
+      } as Database & {
+        enabled: boolean
+        createdAt: string
+        updatedAt: string
+        hasBackupPolicy: boolean
+        backupPolicy: any
+        backupPolicyCount: number
+      }
     })
   }, [databasesData])
 
@@ -1159,7 +1257,7 @@ export function useProjectDatabases(
 
 /**
  * Hook to fetch a single database by ID
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @returns Single database with loading state
@@ -1169,7 +1267,7 @@ export function useProjectDatabase(
   databaseId: string | null | undefined,
 ) {
   const isEnabled = !!projectId && !!databaseId
-  
+
   const {
     data: databaseData,
     isLoading,
@@ -1194,7 +1292,7 @@ export function useProjectDatabase(
 
 /**
  * Hook to fetch tables (collections) for a database
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param page - Page number (0-indexed)
@@ -1211,7 +1309,7 @@ export function useProjectTables(
 ) {
   // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
-  
+
   const {
     data: tablesData,
     isLoading,
@@ -1220,8 +1318,23 @@ export function useProjectTables(
     error,
     refetch,
   } = useQuery({
-    queryKey: ['tables', 'project', projectId, databaseId, page, limit, normalizedSearch],
-    queryFn: () => fetchProjectTables(projectId!, databaseId!, page, limit, normalizedSearch),
+    queryKey: [
+      'tables',
+      'project',
+      projectId,
+      databaseId,
+      page,
+      limit,
+      normalizedSearch,
+    ],
+    queryFn: () =>
+      fetchProjectTables(
+        projectId!,
+        databaseId!,
+        page,
+        limit,
+        normalizedSearch,
+      ),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -1230,7 +1343,7 @@ export function useProjectTables(
   // Map tables to our Collection type
   const tables = useMemo(() => {
     if (!tablesData?.tables) return []
-    
+
     return tablesData.tables.map((table: any) => ({
       $id: table.$id,
       name: table.name || 'Unnamed Table',
@@ -1261,7 +1374,7 @@ export function useProjectTables(
 
 /**
  * Hook to fetch all tables with full details (columns, indexes) for visualizer
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @returns All tables with columns and indexes
@@ -1294,7 +1407,7 @@ export function useAllProjectTablesForVisualizer(
 
 /**
  * Hook to fetch rows for a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1318,8 +1431,25 @@ export function useProjectTableRows(
     error,
     refetch,
   } = useQuery({
-    queryKey: ['rows', 'project', projectId, databaseId, tableId, page, limit, search],
-    queryFn: () => fetchProjectTableRows(projectId!, databaseId!, tableId!, page, limit, search),
+    queryKey: [
+      'rows',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () =>
+      fetchProjectTableRows(
+        projectId!,
+        databaseId!,
+        tableId!,
+        page,
+        limit,
+        search,
+      ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -1343,7 +1473,7 @@ export function useProjectTableRows(
 
 /**
  * Hook to fetch columns (attributes) for a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1376,7 +1506,7 @@ export function useProjectTableColumns(
 
 /**
  * Hook to fetch indexes for a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1409,7 +1539,7 @@ export function useProjectTableIndexes(
 
 /**
  * Hook to fetch a single table by ID
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1421,7 +1551,7 @@ export function useProjectTable(
   tableId: string | null | undefined,
 ) {
   const isEnabled = !!projectId && !!databaseId && !!tableId
-  
+
   const {
     data: tableData,
     isLoading,
@@ -1446,7 +1576,7 @@ export function useProjectTable(
 
 /**
  * Hook to create a row in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1471,7 +1601,14 @@ export function useCreateProjectTableRow(
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
-      return await createProjectTableRow(projectId, databaseId, tableId, data, rowId, permissions)
+      return await createProjectTableRow(
+        projectId,
+        databaseId,
+        tableId,
+        data,
+        rowId,
+        permissions,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1486,7 +1623,7 @@ export function useCreateProjectTableRow(
 
 /**
  * Hook to update a row in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1511,7 +1648,14 @@ export function useUpdateProjectTableRow(
       if (!projectId || !databaseId || !tableId || !rowId) {
         throw new Error('Missing required parameters')
       }
-      return await updateProjectTableRow(projectId, databaseId, tableId, rowId, data, permissions)
+      return await updateProjectTableRow(
+        projectId,
+        databaseId,
+        tableId,
+        rowId,
+        data,
+        permissions,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1523,7 +1667,7 @@ export function useUpdateProjectTableRow(
 
 /**
  * Hook to delete a row from a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1555,7 +1699,7 @@ export function useDeleteProjectTableRow(
 
 /**
  * Hook to create multiple rows in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1578,7 +1722,13 @@ export function useCreateProjectTableRows(
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
-      return await createProjectTableRows(projectId, databaseId, tableId, rows, hasRelationshipColumns)
+      return await createProjectTableRows(
+        projectId,
+        databaseId,
+        tableId,
+        rows,
+        hasRelationshipColumns,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1593,7 +1743,7 @@ export function useCreateProjectTableRows(
 
 /**
  * Hook to create a column in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1610,7 +1760,12 @@ export function useCreateProjectTableColumn(
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
-      return await createProjectTableColumn(projectId, databaseId, tableId, columnData)
+      return await createProjectTableColumn(
+        projectId,
+        databaseId,
+        tableId,
+        columnData,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1628,7 +1783,7 @@ export function useCreateProjectTableColumn(
 
 /**
  * Hook to update a column in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1651,7 +1806,13 @@ export function useUpdateProjectTableColumn(
       if (!projectId || !databaseId || !tableId || !columnKey) {
         throw new Error('Missing required parameters')
       }
-      return await updateProjectTableColumn(projectId, databaseId, tableId, columnKey, columnData)
+      return await updateProjectTableColumn(
+        projectId,
+        databaseId,
+        tableId,
+        columnKey,
+        columnData,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1669,7 +1830,7 @@ export function useUpdateProjectTableColumn(
 
 /**
  * Hook to delete a column from a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1686,7 +1847,12 @@ export function useDeleteProjectTableColumn(
       if (!projectId || !databaseId || !tableId || !columnKey) {
         throw new Error('Missing required parameters')
       }
-      return await deleteProjectTableColumn(projectId, databaseId, tableId, columnKey)
+      return await deleteProjectTableColumn(
+        projectId,
+        databaseId,
+        tableId,
+        columnKey,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1704,7 +1870,7 @@ export function useDeleteProjectTableColumn(
 
 /**
  * Hook to create an index in a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1721,7 +1887,12 @@ export function useCreateProjectTableIndex(
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
-      return await createProjectTableIndex(projectId, databaseId, tableId, indexData)
+      return await createProjectTableIndex(
+        projectId,
+        databaseId,
+        tableId,
+        indexData,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1739,7 +1910,7 @@ export function useCreateProjectTableIndex(
 
 /**
  * Hook to delete an index from a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1756,7 +1927,12 @@ export function useDeleteProjectTableIndex(
       if (!projectId || !databaseId || !tableId || !indexKey) {
         throw new Error('Missing required parameters')
       }
-      return await deleteProjectTableIndex(projectId, databaseId, tableId, indexKey)
+      return await deleteProjectTableIndex(
+        projectId,
+        databaseId,
+        tableId,
+        indexKey,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1774,7 +1950,7 @@ export function useDeleteProjectTableIndex(
 
 /**
  * Hook to update a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID
@@ -1811,7 +1987,7 @@ export function useUpdateProjectTable(
 
 /**
  * Hook to delete a table
- * 
+ *
  * @param projectId - The project ID
  * @param databaseId - The database ID
  * @param tableId - The table ID

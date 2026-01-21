@@ -1,6 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { MessagingView } from '@/components/pages/projects/$projectId/messaging/View'
-import { fetchProjectTopics, fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  fetchProjectTopics,
+  fetchProject,
+  fetchOrganizationPlan,
+} from '@/lib/react-query/hooks'
 
 const TOPICS_PER_PAGE = 25
 

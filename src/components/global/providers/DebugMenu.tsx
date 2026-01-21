@@ -84,9 +84,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [planModalOpen, setPlanModalOpen] = useState(false)
   const [showError, setShowError] = useState(false)
-  const [overrides, setOverrides] = useState<DebugOverrides>(
-    loadDebugOverrides,
-  )
+  const [overrides, setOverrides] = useState<DebugOverrides>(loadDebugOverrides)
   const navigate = useNavigate()
   const location = useLocation()
   const { account } = useAuth()
@@ -99,7 +97,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   // Get current orgId from URL params or account prefs
   const currentOrgId = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
-    const orgIndex = pathParts.findIndex(part => part === 'organizations')
+    const orgIndex = pathParts.findIndex((part) => part === 'organizations')
     if (orgIndex >= 0 && pathParts[orgIndex + 1]) {
       return pathParts[orgIndex + 1]
     }
@@ -108,7 +106,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
 
   // Fetch organization plan when modal is open
   const { plan, isLoading: planLoading } = useOrganizationPlan(
-    planModalOpen ? currentOrgId : null
+    planModalOpen ? currentOrgId : null,
   )
 
   useEffect(() => {
@@ -124,7 +122,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       const favicon = getCurrentFavicon()
       setCurrentFavicon(favicon)
     }
-    
+
     updateCurrentFavicon()
     const interval = setInterval(updateCurrentFavicon, 500)
     return () => clearInterval(interval)
@@ -145,7 +143,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       { label: 'System', themeValue: 'system' },
       { label: '🎨 Crazy', themeValue: 'crazy' },
       { label: '🥷 Stealth', themeValue: 'stealth' },
-    ].map(opt => ({
+    ].map((opt) => ({
       label: opt.label,
       onClick: () => {
         setTheme(opt.themeValue)
@@ -164,7 +162,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       { label: 'Theme + Green', faviconValue: 'theme-green' },
       { label: 'Theme + Orange', faviconValue: 'theme-orange' },
       { label: 'Theme + Red', faviconValue: 'theme-red' },
-    ].map(opt => ({
+    ].map((opt) => ({
       label: opt.label,
       onClick: () => {
         setFavicon(opt.faviconValue)
@@ -201,7 +199,10 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
             variant: 'switch' as const,
             switchValue: overrides.disableInitialLoader,
             switchOnChange: (checked: boolean) => {
-              setOverrides((prev) => ({ ...prev, disableInitialLoader: checked }))
+              setOverrides((prev) => ({
+                ...prev,
+                disableInitialLoader: checked,
+              }))
               setDebugOverride('disableInitialLoader', checked)
             },
           },
@@ -352,7 +353,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
   // Get current submenu items
   const currentSubmenu = useMemo(() => {
     if (!activeSubmenu) return null
-    
+
     for (const section of sections) {
       for (const item of section.items) {
         const itemKey = `${section.title}-${item.label}`
@@ -529,7 +530,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
           <div className="mt-4">
             {planLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="text-muted-foreground">Loading plan details...</div>
+                <div className="text-muted-foreground">
+                  Loading plan details...
+                </div>
               </div>
             ) : plan ? (
               <div className="space-y-4">
@@ -548,7 +551,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                         <label className="text-xs font-medium text-muted-foreground">
                           Plan Type
                         </label>
-                        <p className="text-sm font-medium capitalize">{String(plan.type)}</p>
+                        <p className="text-sm font-medium capitalize">
+                          {String(plan.type)}
+                        </p>
                       </div>
                     )}
                     {'tier' in plan && plan.tier !== undefined && (
@@ -576,7 +581,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                         <label className="text-xs font-medium text-muted-foreground">
                           Currency
                         </label>
-                        <p className="text-sm font-medium">{String(plan.currency)}</p>
+                        <p className="text-sm font-medium">
+                          {String(plan.currency)}
+                        </p>
                       </div>
                     )}
                     {plan.price !== undefined && (
@@ -585,7 +592,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                           Price
                         </label>
                         <p className="text-sm font-medium">
-                          {'currency' in plan && plan.currency && plan.price !== undefined
+                          {'currency' in plan &&
+                          plan.currency &&
+                          plan.price !== undefined
                             ? `${plan.currency} ${plan.price}`
                             : plan.price}
                         </p>
@@ -596,7 +605,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                         <label className="text-xs font-medium text-muted-foreground">
                           Billing Interval
                         </label>
-                        <p className="text-sm font-medium capitalize">{String(plan.interval)}</p>
+                        <p className="text-sm font-medium capitalize">
+                          {String(plan.interval)}
+                        </p>
                       </div>
                     )}
                   </div>

@@ -25,10 +25,12 @@ function isValidRelativeRedirect(url: string): boolean {
 }
 
 const searchSchema = z.object({
-  redirect: z.string().optional().refine(
-    (val) => !val || isValidRelativeRedirect(val),
-    { message: 'Redirect must be a relative URL' }
-  ),
+  redirect: z
+    .string()
+    .optional()
+    .refine((val) => !val || isValidRelativeRedirect(val), {
+      message: 'Redirect must be a relative URL',
+    }),
 })
 
 export const Route = createFileRoute('/_auth/sign-up')({
@@ -46,9 +48,10 @@ function SignUpPage() {
     setIsGitHubLoading(true)
     try {
       // Build success and failure URLs
-      const successUrl = search.redirect && isValidRelativeRedirect(search.redirect)
-        ? `${window.location.origin}${search.redirect}`
-        : `${window.location.origin}/`
+      const successUrl =
+        search.redirect && isValidRelativeRedirect(search.redirect)
+          ? `${window.location.origin}${search.redirect}`
+          : `${window.location.origin}/`
       const failureUrl = `${window.location.origin}/sign-up${search.redirect ? `?redirect=${encodeURIComponent(search.redirect)}` : ''}`
 
       // Store GitHub as last login method before redirecting
@@ -83,7 +86,7 @@ function SignUpPage() {
           email: data.email,
           password: data.password,
         })
-        
+
         // Create session
         await sdk.forConsole.account.createEmailPasswordSession({
           email: data.email,
@@ -126,11 +129,17 @@ function SignUpPage() {
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
           By clicking continue, you agree to our{' '}
-          <a href="#" className="underline underline-offset-4 hover:text-primary">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Terms of Service
           </a>{' '}
           and{' '}
-          <a href="#" className="underline underline-offset-4 hover:text-primary">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Privacy Policy
           </a>
           .

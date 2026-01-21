@@ -1,6 +1,11 @@
 import { MapPin, Pencil, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useOrganizationById, useBillingAddress, useBillingAddresses, useUpdateOrganizationBillingAddress } from '@/lib/react-query/hooks'
+import {
+  useOrganizationById,
+  useBillingAddress,
+  useBillingAddresses,
+  useUpdateOrganizationBillingAddress,
+} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 
 /**
@@ -28,7 +33,9 @@ export function BillingAddressSection({
   orgId,
 }: BillingAddressSectionProps) {
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
-  const { address, isLoading: addressLoading } = useBillingAddress(organization?.billingAddressId)
+  const { address, isLoading: addressLoading } = useBillingAddress(
+    organization?.billingAddressId,
+  )
   const { addresses: allAddresses } = useBillingAddresses()
   const updateAddressMutation = useUpdateOrganizationBillingAddress()
 
@@ -36,7 +43,7 @@ export function BillingAddressSection({
 
   const handleLinkAddress = async (addressId: string) => {
     if (!orgId) return
-    
+
     try {
       await updateAddressMutation.mutateAsync({
         organizationId: orgId,
@@ -44,13 +51,17 @@ export function BillingAddressSection({
       })
       toast.success('Billing address updated')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update billing address')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update billing address',
+      )
     }
   }
 
   const handleRemoveAddress = async () => {
     if (!orgId) return
-    
+
     try {
       await updateAddressMutation.mutateAsync({
         organizationId: orgId,
@@ -58,7 +69,11 @@ export function BillingAddressSection({
       })
       toast.success('Billing address removed')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to remove billing address')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to remove billing address',
+      )
     }
   }
 
@@ -71,7 +86,9 @@ export function BillingAddressSection({
           </h3>
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading address...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading address...
+          </p>
         </div>
       </div>
     )
@@ -150,20 +167,15 @@ export function BillingAddressSection({
             <MapPin className="h-5 w-5 text-muted-foreground" />
           </div>
           <div className="text-[13px] text-foreground space-y-0.5">
-            {address.name && (
-              <p className="font-medium">{address.name}</p>
-            )}
+            {address.name && <p className="font-medium">{address.name}</p>}
             {address.company && (
               <p className="text-muted-foreground">{address.company}</p>
             )}
             <p>{address.addressLine1}</p>
-            {address.addressLine2 && (
-              <p>{address.addressLine2}</p>
-            )}
+            {address.addressLine2 && <p>{address.addressLine2}</p>}
             <p>
               {address.city}
-              {address.state && `, ${address.state}`}{' '}
-              {address.postalCode}
+              {address.state && `, ${address.state}`} {address.postalCode}
             </p>
             <p>{address.country}</p>
           </div>

@@ -125,7 +125,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
     // Show tabs if we have tabs and either:
     // 1. activeTab + onTabChange (button-based tabs), OR
     // 2. activeTab + tabs with 'to' property (Link-based tabs)
-    const hasLinkTabs = tabs && tabs.length > 0 && activeTab && tabs.some(tab => !!tab.to)
+    const hasLinkTabs =
+      tabs && tabs.length > 0 && activeTab && tabs.some((tab) => !!tab.to)
     const hasButtonTabs = tabs && tabs.length > 0 && activeTab && !!onTabChange
     const hasTabs = hasLinkTabs || hasButtonTabs
 
@@ -256,9 +257,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
         {!isCollapsed && (
           <>
             {fullWidthBorder ? (
-              <div className="w-full border-b border-border">
-                {tabsContent}
-              </div>
+              <div className="w-full border-b border-border">{tabsContent}</div>
             ) : hasTabs ? (
               <div
                 className="flex gap-0 overflow-x-auto border-b border-border px-4 sm:px-6"
@@ -392,7 +391,12 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         disabled={isRefreshing}
                         className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
-                        <RefreshCw className={cn("h-4 w-4 transition-transform duration-500", isRefreshing && "animate-spin")} />
+                        <RefreshCw
+                          className={cn(
+                            'h-4 w-4 transition-transform duration-500',
+                            isRefreshing && 'animate-spin',
+                          )}
+                        />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
@@ -463,7 +467,10 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                     </TooltipTrigger>
                     {createDisabled && (
                       <TooltipContent side="bottom">
-                        <p>You've reached the limit for this resource on your plan</p>
+                        <p>
+                          You've reached the limit for this resource on your
+                          plan
+                        </p>
                       </TooltipContent>
                     )}
                   </Tooltip>

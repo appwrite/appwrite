@@ -247,7 +247,14 @@ export interface TeamMember {
   userName: string
   userEmail: string
   avatar?: string
-  role: 'owner' | 'admin' | 'member' | 'developer' | 'editor' | 'analyst' | 'billing'
+  role:
+    | 'owner'
+    | 'admin'
+    | 'member'
+    | 'developer'
+    | 'editor'
+    | 'analyst'
+    | 'billing'
   roles?: string[] // Full roles array from membership (for resending invitations)
   orgId: string
   joinedAt: string
@@ -522,9 +529,19 @@ export const currentProject = projects[0]
 
 // Databases
 export const databases: Database[] = [
-  { $id: '507f1f77bcf86cd799439050', name: 'Production', tables: 12, rows: 45892 },
+  {
+    $id: '507f1f77bcf86cd799439050',
+    name: 'Production',
+    tables: 12,
+    rows: 45892,
+  },
   { $id: '507f1f77bcf86cd799439051', name: 'Staging', tables: 12, rows: 1250 },
-  { $id: '507f1f77bcf86cd799439052', name: 'Analytics', tables: 5, rows: 128450 },
+  {
+    $id: '507f1f77bcf86cd799439052',
+    name: 'Analytics',
+    tables: 5,
+    rows: 128450,
+  },
 ]
 
 // Collections (Tables)
@@ -1269,14 +1286,14 @@ const generateTimeSeries = () => {
   const now = Date.now()
   const hours = 24
   const points = []
-  
+
   for (let i = hours; i >= 0; i--) {
     const timestamp = new Date(now - i * 60 * 60 * 1000).toISOString()
     const baseRequests = 100 + Math.random() * 200
     const blocked = Math.floor(baseRequests * (0.1 + Math.random() * 0.2))
     const challenged = Math.floor(baseRequests * (0.05 + Math.random() * 0.1))
     const allowed = Math.floor(baseRequests - blocked - challenged)
-    
+
     points.push({
       timestamp,
       requests: Math.floor(baseRequests),
@@ -1285,7 +1302,7 @@ const generateTimeSeries = () => {
       challenged,
     })
   }
-  
+
   return points
 }
 

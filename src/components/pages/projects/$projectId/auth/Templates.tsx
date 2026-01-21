@@ -45,7 +45,14 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-import { Loader2, Copy, Check, Mail, ChevronDown, ExternalLink } from 'lucide-react'
+import {
+  Loader2,
+  Copy,
+  Check,
+  Mail,
+  ChevronDown,
+  ExternalLink,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // GitHub Circle Icon Component
@@ -71,7 +78,8 @@ const EMAIL_TEMPLATE_TYPES = [
   {
     type: EmailTemplateType.Verification,
     label: 'Verification',
-    description: 'Send a verification email to users that sign in with their email and password.',
+    description:
+      'Send a verification email to users that sign in with their email and password.',
     variables: [
       { variable: '{{user}}', description: 'User name' },
       { variable: '{{project}}', description: 'Project name' },
@@ -156,7 +164,7 @@ export function Templates({ projectId }: TemplatesProps) {
   const { project } = useProject(projectId)
   const { data: localeData } = useLocaleCodes()
   const queryClient = useQueryClient()
-  
+
   const [selectedType, setSelectedType] = useState<string>(
     EmailTemplateType.Verification,
   )
@@ -178,10 +186,20 @@ export function Templates({ projectId }: TemplatesProps) {
     // This ensures all templates are in cache when user switches between them
     const prefetchPromises = EMAIL_TEMPLATE_TYPES.map((templateConfig) =>
       queryClient.prefetchQuery({
-        queryKey: ['emailTemplate', projectId, templateConfig.type, EmailTemplateLocale.En],
-        queryFn: () => fetchEmailTemplate(projectId, templateConfig.type, EmailTemplateLocale.En),
+        queryKey: [
+          'emailTemplate',
+          projectId,
+          templateConfig.type,
+          EmailTemplateLocale.En,
+        ],
+        queryFn: () =>
+          fetchEmailTemplate(
+            projectId,
+            templateConfig.type,
+            EmailTemplateLocale.En,
+          ),
         staleTime: 30 * 1000, // 30 seconds
-      })
+      }),
     )
 
     // Start all prefetches but don't block rendering
@@ -191,15 +209,16 @@ export function Templates({ projectId }: TemplatesProps) {
   }, [projectId, queryClient])
 
   // Fetch template when type or locale changes
-  const { data: template, isLoading: isTemplateLoading, isFetching: isTemplateFetching } = useEmailTemplate(
-    projectId,
-    selectedType,
-    selectedLocale,
-  )
+  const {
+    data: template,
+    isLoading: isTemplateLoading,
+    isFetching: isTemplateFetching,
+  } = useEmailTemplate(projectId, selectedType, selectedLocale)
 
   // Keep previous template data visible when switching languages
   // This prevents the form from clearing while new data loads
-  const [displayTemplate, setDisplayTemplate] = useState<Models.EmailTemplate | null>(null)
+  const [displayTemplate, setDisplayTemplate] =
+    useState<Models.EmailTemplate | null>(null)
 
   // Update display template when new data arrives, but keep previous data while loading
   useEffect(() => {
@@ -213,7 +232,12 @@ export function Templates({ projectId }: TemplatesProps) {
   // Check if we have cached data for the current template
   const hasCachedData = useMemo(() => {
     if (!projectId || !selectedType || !selectedLocale) return false
-    return !!queryClient.getQueryData(['emailTemplate', projectId, selectedType, selectedLocale])
+    return !!queryClient.getQueryData([
+      'emailTemplate',
+      projectId,
+      selectedType,
+      selectedLocale,
+    ])
   }, [projectId, selectedType, selectedLocale, queryClient])
 
   // Only show loading if we don't have cached data AND we don't have previous data to display
@@ -280,10 +304,7 @@ export function Templates({ projectId }: TemplatesProps) {
   }
 
   // Handle form field changes
-  const handleFieldChange = (
-    field: string,
-    value: string,
-  ) => {
+  const handleFieldChange = (field: string, value: string) => {
     if (field in formData) {
       setFormData((prev) => ({ ...prev, [field]: value }))
     }
@@ -382,82 +403,82 @@ export function Templates({ projectId }: TemplatesProps) {
       <div className="flex h-full flex-col gap-4 @[640px]:flex-row @[640px]:gap-6">
         {/* Sidebar - Template List */}
         <div className="w-full shrink-0 @[640px]:w-64">
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <div className="border-b border-border px-4 py-3">
-            <h2 className="text-sm font-semibold text-foreground">
-              Email Templates
-            </h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {EMAIL_TEMPLATE_TYPES.length} templates
-            </p>
-          </div>
-          <div className="divide-y divide-border max-h-[60vh] overflow-y-auto @[640px]:max-h-none">
-            {EMAIL_TEMPLATE_TYPES.map((templateConfig) => {
-              const isSelected = selectedType === templateConfig.type
-              return (
-                <button
-                  key={templateConfig.type}
-                  onClick={() => setSelectedType(templateConfig.type)}
-                  className={cn(
-                    'w-full px-4 py-3 text-left transition-colors hover:bg-muted/50',
-                    isSelected && 'bg-muted',
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 shrink-0">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div
-                        className={cn(
-                          'text-sm font-medium',
-                          isSelected
-                            ? 'text-foreground'
-                            : 'text-muted-foreground',
-                        )}
-                      >
-                        {templateConfig.label}
+          <div className="overflow-hidden rounded-lg border border-border bg-card">
+            <div className="border-b border-border px-4 py-3">
+              <h2 className="text-sm font-semibold text-foreground">
+                Email Templates
+              </h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {EMAIL_TEMPLATE_TYPES.length} templates
+              </p>
+            </div>
+            <div className="divide-y divide-border max-h-[60vh] overflow-y-auto @[640px]:max-h-none">
+              {EMAIL_TEMPLATE_TYPES.map((templateConfig) => {
+                const isSelected = selectedType === templateConfig.type
+                return (
+                  <button
+                    key={templateConfig.type}
+                    onClick={() => setSelectedType(templateConfig.type)}
+                    className={cn(
+                      'w-full px-4 py-3 text-left transition-colors hover:bg-muted/50',
+                      isSelected && 'bg-muted',
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 shrink-0">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
                       </div>
-                      <div className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
-                        {templateConfig.description}
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className={cn(
+                            'text-sm font-medium',
+                            isSelected
+                              ? 'text-foreground'
+                              : 'text-muted-foreground',
+                          )}
+                        >
+                          {templateConfig.label}
+                        </div>
+                        <div className="mt-0.5 text-xs text-muted-foreground line-clamp-2">
+                          {templateConfig.description}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </button>
-              )
-            })}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Editor Area */}
-      <div className="min-w-0 flex-1">
-        {currentTemplateConfig && (
-          <TemplateEditor
-            projectId={projectId}
-            templateType={currentTemplateConfig.type}
-            templateLabel={currentTemplateConfig.label}
-            templateDescription={currentTemplateConfig.description}
-            locale={selectedLocale}
-            onLocaleChange={handleLocaleChange}
-            localeCodes={localeData?.localeCodes || []}
-            template={displayTemplate || undefined}
-            isLoading={showLoading}
-            formData={formData}
-            onFieldChange={handleFieldChange}
-            hasChanges={hasChanges}
-            isSmtpEnabled={isSmtpEnabled}
-            onUpdate={handleUpdate}
-            onReset={() => handleResetClick(selectedType, selectedLocale)}
-            isUpdating={updateMutation.isPending}
-            isResetting={deleteMutation.isPending}
-            onCopyVariable={handleCopyVariable}
-            copiedVariable={copiedVariable}
-            variables={[...currentTemplateConfig.variables]}
-          />
-        )}
+        {/* Main Editor Area */}
+        <div className="min-w-0 flex-1">
+          {currentTemplateConfig && (
+            <TemplateEditor
+              projectId={projectId}
+              templateType={currentTemplateConfig.type}
+              templateLabel={currentTemplateConfig.label}
+              templateDescription={currentTemplateConfig.description}
+              locale={selectedLocale}
+              onLocaleChange={handleLocaleChange}
+              localeCodes={localeData?.localeCodes || []}
+              template={displayTemplate || undefined}
+              isLoading={showLoading}
+              formData={formData}
+              onFieldChange={handleFieldChange}
+              hasChanges={hasChanges}
+              isSmtpEnabled={isSmtpEnabled}
+              onUpdate={handleUpdate}
+              onReset={() => handleResetClick(selectedType, selectedLocale)}
+              isUpdating={updateMutation.isPending}
+              isResetting={deleteMutation.isPending}
+              onCopyVariable={handleCopyVariable}
+              copiedVariable={copiedVariable}
+              variables={[...currentTemplateConfig.variables]}
+            />
+          )}
+        </div>
       </div>
-    </div>
 
       {/* Reset Confirmation Dialog */}
       <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
@@ -636,7 +657,8 @@ function TemplateEditor({
               <code className="rounded bg-muted px-1 py-0.5 text-[11px] font-mono">
                 X-Appwrite-Locale
               </code>{' '}
-              HTTP header. Templates are automatically selected based on the user's locale.
+              HTTP header. Templates are automatically selected based on the
+              user's locale.
             </p>
             <a
               href="https://appwrite.io/docs/advanced/platform/message-templates"
@@ -693,7 +715,9 @@ function TemplateEditor({
               type="email"
               placeholder="noreply@appwrite.io"
               value={localFormData.replyTo}
-              onChange={(e) => handleLocalFieldChange('replyTo', e.target.value)}
+              onChange={(e) =>
+                handleLocalFieldChange('replyTo', e.target.value)
+              }
               dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
@@ -705,7 +729,9 @@ function TemplateEditor({
               id="subject"
               placeholder="Enter subject"
               value={localFormData.subject}
-              onChange={(e) => handleLocalFieldChange('subject', e.target.value)}
+              onChange={(e) =>
+                handleLocalFieldChange('subject', e.target.value)
+              }
               dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
@@ -738,18 +764,21 @@ function TemplateEditor({
                     Available Variables
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Use these variables in your message to insert dynamic content. Click a variable to copy it.
+                    Use these variables in your message to insert dynamic
+                    content. Click a variable to copy it.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {variables.map((variableItem) => {
-                    const variable = typeof variableItem === 'string' 
-                      ? variableItem 
-                      : variableItem.variable
-                    const description = typeof variableItem === 'string'
-                      ? undefined
-                      : variableItem.description
-                    
+                    const variable =
+                      typeof variableItem === 'string'
+                        ? variableItem
+                        : variableItem.variable
+                    const description =
+                      typeof variableItem === 'string'
+                        ? undefined
+                        : variableItem.description
+
                     return (
                       <TooltipProvider key={variable}>
                         <Tooltip>
@@ -791,7 +820,9 @@ function TemplateEditor({
               placeholder="Enter your message"
               rows={12}
               value={localFormData.message}
-              onChange={(e) => handleLocalFieldChange('message', e.target.value)}
+              onChange={(e) =>
+                handleLocalFieldChange('message', e.target.value)
+              }
               readOnly={!isSmtpEnabled}
               className={cn(!isSmtpEnabled && 'cursor-not-allowed opacity-60')}
               dir="ltr"

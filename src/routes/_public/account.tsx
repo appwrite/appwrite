@@ -13,5 +13,3 @@ function AccountPage() {
     </RequireAuth>
   )
 }
-
-

@@ -67,8 +67,10 @@ export function AddDomainDialog({
 
     setIsSubmitting(true)
     try {
-      const rule = await createDomainMutation.mutateAsync(domainName.trim().toLowerCase())
-      
+      const rule = await createDomainMutation.mutateAsync(
+        domainName.trim().toLowerCase(),
+      )
+
       // Try to create apex domain if cloud (silently fail if it already exists)
       const apexDomain = getApexDomain(domainName.trim().toLowerCase())
       try {
@@ -97,7 +99,7 @@ export function AddDomainDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <form onSubmit={handleSubmit}>
           <div className="px-6 pb-4 pt-0">
             <div className="space-y-2">
@@ -114,7 +116,7 @@ export function AddDomainDialog({
               />
             </div>
           </div>
-          
+
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
@@ -139,5 +141,3 @@ export function AddDomainDialog({
     </Dialog>
   )
 }
-
-

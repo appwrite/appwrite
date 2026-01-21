@@ -63,14 +63,18 @@ export function EventSelector({
 }: EventSelectorProps) {
   const [eventDialogOpen, setEventDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [tempSelectedEvents, setTempSelectedEvents] = useState<string[]>(selectedEvents)
+  const [tempSelectedEvents, setTempSelectedEvents] =
+    useState<string[]>(selectedEvents)
 
   const filteredEvents = PROJECT_EVENTS.filter((event) =>
     event.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
   const handleAddEvent = (event: string) => {
-    if (!tempSelectedEvents.includes(event) && tempSelectedEvents.length < maxEvents) {
+    if (
+      !tempSelectedEvents.includes(event) &&
+      tempSelectedEvents.length < maxEvents
+    ) {
       setTempSelectedEvents([...tempSelectedEvents, event])
     }
   }
@@ -106,7 +110,8 @@ export function EventSelector({
     <div className="space-y-4">
       <div>
         <p className="text-[13px] text-muted-foreground mb-2">
-          Set the events that will trigger your webhook. Maximum {maxEvents} events allowed.
+          Set the events that will trigger your webhook. Maximum {maxEvents}{' '}
+          events allowed.
         </p>
         {selectedEvents.length > 0 ? (
           <div className="flex flex-wrap gap-2">
@@ -124,7 +129,9 @@ export function EventSelector({
             ))}
           </div>
         ) : (
-          <p className="text-[13px] text-muted-foreground">No events selected</p>
+          <p className="text-[13px] text-muted-foreground">
+            No events selected
+          </p>
         )}
       </div>
       <Button
@@ -144,11 +151,12 @@ export function EventSelector({
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Select events</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Select events in your Appwrite project that will trigger your webhook. Learn more.
+              Select events in your Appwrite project that will trigger your
+              webhook. Learn more.
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
-          
+
           <div className="px-6 pb-4 pt-0">
             <div className="space-y-4">
               <Input
@@ -190,7 +198,7 @@ export function EventSelector({
               </p>
             </div>
           </div>
-          
+
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
@@ -208,4 +216,3 @@ export function EventSelector({
     </div>
   )
 }
-

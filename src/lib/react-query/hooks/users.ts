@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Users and Teams
- * 
+ *
  * Handles project users and project teams.
  */
 
@@ -9,7 +9,11 @@ import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
 import type { User } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -17,9 +21,9 @@ import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './const
 
 /**
  * Query function to fetch paginated users for a project
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -43,7 +47,10 @@ export async function fetchProjectUsers(
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.users.list(queries, search?.trim() || undefined)
+  const response = await projectSdk.users.list(
+    queries,
+    search?.trim() || undefined,
+  )
 
   return {
     users: response.users || [],
@@ -53,9 +60,9 @@ export async function fetchProjectUsers(
 
 /**
  * Query function to fetch teams for a project
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -79,7 +86,10 @@ export async function fetchProjectTeams(
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.teams.list(queries, search?.trim() || undefined)
+  const response = await projectSdk.teams.list(
+    queries,
+    search?.trim() || undefined,
+  )
 
   return {
     teams: response.teams || [],
@@ -93,7 +103,7 @@ export async function fetchProjectTeams(
 
 /**
  * Mutation function to create a user in a project
- * 
+ *
  * @param projectId - The project ID
  * @param userData - User data (userId, email, phone, password, name)
  * @returns Created user
@@ -126,7 +136,7 @@ export async function createProjectUser(
 
 /**
  * Mutation function to create a team in a project
- * 
+ *
  * @param projectId - The project ID
  * @param teamData - Team data (teamId, name)
  * @returns Created team
@@ -157,14 +167,11 @@ export async function createProjectTeam(
 
 /**
  * Mutation function to delete a user from a project
- * 
+ *
  * @param projectId - The project ID
  * @param userId - The user ID to delete
  */
-export async function deleteProjectUser(
-  projectId: string,
-  userId: string,
-) {
+export async function deleteProjectUser(projectId: string, userId: string) {
   if (!projectId) {
     throw new Error('Project ID is required')
   }
@@ -179,14 +186,11 @@ export async function deleteProjectUser(
 
 /**
  * Mutation function to delete a team from a project
- * 
+ *
  * @param projectId - The project ID
  * @param teamId - The team ID to delete
  */
-export async function deleteProjectTeam(
-  projectId: string,
-  teamId: string,
-) {
+export async function deleteProjectTeam(projectId: string, teamId: string) {
   if (!projectId) {
     throw new Error('Project ID is required')
   }
@@ -205,9 +209,9 @@ export async function deleteProjectTeam(
 
 /**
  * Hook to fetch paginated users for a project
- * 
+ *
  * This is useful for displaying project users with pagination and search.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -237,7 +241,7 @@ export function useProjectUsers(
   // Map users to our User type
   const users = useMemo(() => {
     if (!usersData?.users) return []
-    
+
     return usersData.users.map((user: any) => {
       return {
         $id: user.$id,
@@ -249,7 +253,10 @@ export function useProjectUsers(
         phoneVerification: !!user.phoneVerification,
         status: user.status,
         createdAt: user.$createdAt || new Date().toISOString(),
-        mfaEnabled: user.mfa === true || user.twoFactorAuthenticatorEnabled === true || false,
+        mfaEnabled:
+          user.mfa === true ||
+          user.twoFactorAuthenticatorEnabled === true ||
+          false,
         accessedAt: user.accessedAt || undefined,
       } as User & { phone?: string; mfaEnabled?: boolean; accessedAt?: string }
     })
@@ -273,7 +280,7 @@ export function useProjectUsers(
 
 /**
  * Hook to create a user in a project
- * 
+ *
  * @param projectId - The project ID
  * @returns Mutation object with mutate function
  */
@@ -304,9 +311,9 @@ export function useCreateProjectUser(projectId: string | null | undefined) {
 
 /**
  * Hook to fetch teams for a project
- * 
+ *
  * This is useful for displaying project teams with pagination and search.
- * 
+ *
  * @param projectId - The project ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -336,18 +343,18 @@ export function useProjectTeams(
   // Map teams to our extended team type with additional metadata
   const teams = useMemo(() => {
     if (!teamsData?.teams) return []
-    
+
     return teamsData.teams.map((team: any) => {
       // Get member counts from memberships if available
       // For now, use total as members count
       const members = team.total || 0
-      
+
       // Placeholder values for owners and admins
       // These would need to be calculated from memberships with roles
       const owners = 0 // TODO: Calculate from memberships with owner role
       const admins = 0 // TODO: Calculate from memberships with admin role
       const regularMembers = members - owners - admins
-      
+
       return {
         id: team.$id,
         name: team.name,
@@ -379,7 +386,7 @@ export function useProjectTeams(
 
 /**
  * Hook to create a team in a project
- * 
+ *
  * @param projectId - The project ID
  * @returns Mutation object with mutate function
  */
@@ -387,10 +394,7 @@ export function useCreateProjectTeam(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (teamData: {
-      teamId?: string
-      name: string
-    }) => {
+    mutationFn: (teamData: { teamId?: string; name: string }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
@@ -407,7 +411,7 @@ export function useCreateProjectTeam(projectId: string | null | undefined) {
 
 /**
  * Hook to delete a user from a project
- * 
+ *
  * @param projectId - The project ID
  * @returns Mutation object with mutate function
  */
@@ -432,7 +436,7 @@ export function useDeleteProjectUser(projectId: string | null | undefined) {
 
 /**
  * Hook to delete a team from a project
- * 
+ *
  * @param projectId - The project ID
  * @returns Mutation object with mutate function
  */
@@ -462,10 +466,7 @@ export function useDeleteProjectTeam(projectId: string | null | undefined) {
 /**
  * Query function to fetch a single user by ID
  */
-export async function fetchUser(
-  projectId: string,
-  userId: string,
-) {
+export async function fetchUser(projectId: string, userId: string) {
   if (!projectId || !userId) {
     throw new Error('Project ID and User ID are required')
   }
@@ -477,10 +478,7 @@ export async function fetchUser(
 /**
  * Query function to fetch user memberships
  */
-export async function fetchUserMemberships(
-  projectId: string,
-  userId: string,
-) {
+export async function fetchUserMemberships(projectId: string, userId: string) {
   if (!projectId || !userId) {
     return { memberships: [], total: 0 }
   }
@@ -561,10 +559,7 @@ export async function fetchUserTargets(
 /**
  * Query function to fetch user sessions
  */
-export async function fetchUserSessions(
-  projectId: string,
-  userId: string,
-) {
+export async function fetchUserSessions(projectId: string, userId: string) {
   if (!projectId || !userId) {
     return { sessions: [], total: 0 }
   }
@@ -581,10 +576,7 @@ export async function fetchUserSessions(
 /**
  * Query function to fetch user MFA factors
  */
-export async function fetchUserMFAFactors(
-  projectId: string,
-  userId: string,
-) {
+export async function fetchUserMFAFactors(projectId: string, userId: string) {
   if (!projectId || !userId) {
     return { totp: false, authenticators: [] }
   }
@@ -881,10 +873,7 @@ export async function deleteUserSession(
 /**
  * Mutation function to delete all user sessions
  */
-export async function deleteAllUserSessions(
-  projectId: string,
-  userId: string,
-) {
+export async function deleteAllUserSessions(projectId: string, userId: string) {
   if (!projectId || !userId) {
     throw new Error('Project ID and User ID are required')
   }
@@ -938,8 +927,18 @@ export function useUserIdentities(
   search?: string,
 ) {
   return useQuery({
-    queryKey: ['user', 'identities', 'project', projectId, userId, page, limit, search],
-    queryFn: () => fetchUserIdentities(projectId!, userId!, page, limit, search),
+    queryKey: [
+      'user',
+      'identities',
+      'project',
+      projectId,
+      userId,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () =>
+      fetchUserIdentities(projectId!, userId!, page, limit, search),
     enabled: !!projectId && !!userId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -997,7 +996,10 @@ export function useUserMFAFactors(
 /**
  * Hook to update user name
  */
-export function useUpdateUserName(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useUpdateUserName(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1021,7 +1023,10 @@ export function useUpdateUserName(projectId: string | null | undefined, userId: 
 /**
  * Hook to update user email
  */
-export function useUpdateUserEmail(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useUpdateUserEmail(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1045,7 +1050,10 @@ export function useUpdateUserEmail(projectId: string | null | undefined, userId:
 /**
  * Hook to update user phone
  */
-export function useUpdateUserPhone(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useUpdateUserPhone(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1069,7 +1077,10 @@ export function useUpdateUserPhone(projectId: string | null | undefined, userId:
 /**
  * Hook to update user password
  */
-export function useUpdateUserPassword(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useUpdateUserPassword(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1090,7 +1101,10 @@ export function useUpdateUserPassword(projectId: string | null | undefined, user
 /**
  * Hook to update user labels
  */
-export function useUpdateUserLabels(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useUpdateUserLabels(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1114,7 +1128,10 @@ export function useUpdateUserLabels(projectId: string | null | undefined, userId
 /**
  * Hook to update user preferences
  */
-export function useUpdateUserPrefs(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useUpdateUserPrefs(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1138,7 +1155,10 @@ export function useUpdateUserPrefs(projectId: string | null | undefined, userId:
 /**
  * Hook to update user status
  */
-export function useUpdateUserStatus(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useUpdateUserStatus(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1162,7 +1182,10 @@ export function useUpdateUserStatus(projectId: string | null | undefined, userId
 /**
  * Hook to update user email verification
  */
-export function useUpdateUserEmailVerification(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useUpdateUserEmailVerification(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1186,7 +1209,10 @@ export function useUpdateUserEmailVerification(projectId: string | null | undefi
 /**
  * Hook to update user phone verification
  */
-export function useUpdateUserPhoneVerification(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useUpdateUserPhoneVerification(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1210,7 +1236,10 @@ export function useUpdateUserPhoneVerification(projectId: string | null | undefi
 /**
  * Hook to update user MFA
  */
-export function useUpdateUserMFA(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useUpdateUserMFA(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1237,7 +1266,10 @@ export function useUpdateUserMFA(projectId: string | null | undefined, userId: s
 /**
  * Hook to delete user MFA authenticator
  */
-export function useDeleteUserMFAAuthenticator(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useDeleteUserMFAAuthenticator(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1265,7 +1297,13 @@ export function useDeleteUserMembership(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ teamId, membershipId }: { teamId: string; membershipId: string }) => {
+    mutationFn: ({
+      teamId,
+      membershipId,
+    }: {
+      teamId: string
+      membershipId: string
+    }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }
@@ -1283,7 +1321,10 @@ export function useDeleteUserMembership(projectId: string | null | undefined) {
 /**
  * Hook to delete user identity
  */
-export function useDeleteUserIdentity(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useDeleteUserIdentity(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1307,7 +1348,10 @@ export function useDeleteUserIdentity(projectId: string | null | undefined, user
 /**
  * Hook to create user target
  */
-export function useCreateUserTarget(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useCreateUserTarget(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1334,7 +1378,10 @@ export function useCreateUserTarget(projectId: string | null | undefined, userId
 /**
  * Hook to delete user target
  */
-export function useDeleteUserTarget(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useDeleteUserTarget(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1355,7 +1402,10 @@ export function useDeleteUserTarget(projectId: string | null | undefined, userId
 /**
  * Hook to delete user session
  */
-export function useDeleteUserSession(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useDeleteUserSession(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1376,7 +1426,10 @@ export function useDeleteUserSession(projectId: string | null | undefined, userI
 /**
  * Hook to delete all user sessions
  */
-export function useDeleteAllUserSessions(projectId: string | null | undefined, userId: string | null | undefined) {
+export function useDeleteAllUserSessions(
+  projectId: string | null | undefined,
+  userId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1401,10 +1454,7 @@ export function useDeleteAllUserSessions(projectId: string | null | undefined, u
 /**
  * Query function to fetch a single team by ID
  */
-export async function fetchTeam(
-  projectId: string,
-  teamId: string,
-) {
+export async function fetchTeam(projectId: string, teamId: string) {
   if (!projectId || !teamId) {
     throw new Error('Project ID and Team ID are required')
   }
@@ -1555,8 +1605,18 @@ export function useTeamMemberships(
   search?: string,
 ) {
   return useQuery({
-    queryKey: ['team', 'memberships', 'project', projectId, teamId, page, limit, search],
-    queryFn: () => fetchTeamMemberships(projectId!, teamId!, page, limit, search),
+    queryKey: [
+      'team',
+      'memberships',
+      'project',
+      projectId,
+      teamId,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () =>
+      fetchTeamMemberships(projectId!, teamId!, page, limit, search),
     enabled: !!projectId && !!teamId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -1566,7 +1626,10 @@ export function useTeamMemberships(
 /**
  * Hook to update team name
  */
-export function useUpdateTeamName(projectId: string | null | undefined, teamId: string | null | undefined) {
+export function useUpdateTeamName(
+  projectId: string | null | undefined,
+  teamId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1590,7 +1653,10 @@ export function useUpdateTeamName(projectId: string | null | undefined, teamId: 
 /**
  * Hook to update team preferences
  */
-export function useUpdateTeamPrefs(projectId: string | null | undefined, teamId: string | null | undefined) {
+export function useUpdateTeamPrefs(
+  projectId: string | null | undefined,
+  teamId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1614,7 +1680,10 @@ export function useUpdateTeamPrefs(projectId: string | null | undefined, teamId:
 /**
  * Hook to create team membership
  */
-export function useCreateTeamMembership(projectId: string | null | undefined, teamId: string | null | undefined) {
+export function useCreateTeamMembership(
+  projectId: string | null | undefined,
+  teamId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1643,7 +1712,10 @@ export function useCreateTeamMembership(projectId: string | null | undefined, te
 /**
  * Hook to delete team membership
  */
-export function useDeleteTeamMembership(projectId: string | null | undefined, teamId: string | null | undefined) {
+export function useDeleteTeamMembership(
+  projectId: string | null | undefined,
+  teamId: string | null | undefined,
+) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1663,4 +1735,3 @@ export function useDeleteTeamMembership(projectId: string | null | undefined, te
     },
   })
 }
-

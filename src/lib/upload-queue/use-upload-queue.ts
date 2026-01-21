@@ -48,7 +48,12 @@ export function useUploadQueue(projectId?: string, bucketId?: string) {
             setUploads((prev) =>
               prev.map((u) =>
                 u.id === progress.id
-                  ? { ...u, status: progress.status, progress: progress.progress, error: progress.error }
+                  ? {
+                      ...u,
+                      status: progress.status,
+                      progress: progress.progress,
+                      error: progress.error,
+                    }
                   : u,
               ),
             )
@@ -97,7 +102,12 @@ export function useUploadQueue(projectId?: string, bucketId?: string) {
           if (existing) {
             return prev.map((u) =>
               u.id === uploadId
-                ? { ...u, status: progress.status, progress: progress.progress, error: progress.error }
+                ? {
+                    ...u,
+                    status: progress.status,
+                    progress: progress.progress,
+                    error: progress.error,
+                  }
                 : u,
             )
           } else {
@@ -162,4 +172,3 @@ export function useUploadQueue(projectId?: string, bucketId?: string) {
     cancelUpload,
   }
 }
-

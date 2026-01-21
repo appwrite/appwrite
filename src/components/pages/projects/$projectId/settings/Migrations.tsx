@@ -11,7 +11,10 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { getMigrationStatusVariant, type MigrationStatus } from '@/lib/utils/status-badge'
+import {
+  getMigrationStatusVariant,
+  type MigrationStatus,
+} from '@/lib/utils/status-badge'
 import { cn } from '@/lib/utils'
 import { Loader2, ArrowRightLeft } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -28,7 +31,8 @@ export function Migrations({ projectId }: MigrationsProps) {
   const { project } = useProject(projectId)
   const region = project?.region
 
-  const [selectedMigration, setSelectedMigration] = useState<Models.Migration | null>(null)
+  const [selectedMigration, setSelectedMigration] =
+    useState<Models.Migration | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
@@ -36,8 +40,11 @@ export function Migrations({ projectId }: MigrationsProps) {
 
   const getStatusBadge = (status: string) => {
     const variant = getMigrationStatusVariant(status as MigrationStatus)
-    
-    const statusConfig: Record<string, { label: string; icon?: typeof Loader2; spin?: boolean }> = {
+
+    const statusConfig: Record<
+      string,
+      { label: string; icon?: typeof Loader2; spin?: boolean }
+    > = {
       completed: { label: 'Complete' },
       processing: { label: 'Processing', icon: Loader2, spin: true },
       failed: { label: 'Failed' },
@@ -49,7 +56,9 @@ export function Migrations({ projectId }: MigrationsProps) {
 
     return (
       <Badge variant={variant} className="gap-1.5">
-        {Icon && <Icon className={cn('h-3 w-3', config.spin && 'animate-spin')} />}
+        {Icon && (
+          <Icon className={cn('h-3 w-3', config.spin && 'animate-spin')} />
+        )}
         {config.label}
       </Badge>
     )
@@ -59,7 +68,6 @@ export function Migrations({ projectId }: MigrationsProps) {
     setSelectedMigration(migration)
     setDetailsOpen(true)
   }
-
 
   return (
     <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
@@ -129,4 +137,3 @@ export function Migrations({ projectId }: MigrationsProps) {
     </div>
   )
 }
-

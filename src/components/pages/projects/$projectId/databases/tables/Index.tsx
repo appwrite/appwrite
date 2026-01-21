@@ -92,35 +92,46 @@ export function IndexDrawer({
     if (formData.type === 'spatial') {
       // Only spatial columns (non-array)
       return availableColumns.filter(
-        col => ['point', 'linestring', 'polygon'].includes(col.type) && !col.array
+        (col) =>
+          ['point', 'linestring', 'polygon'].includes(col.type) && !col.array,
       )
     } else {
       // All non-relationship, non-spatial, non-array columns + system fields
       const regularColumns = availableColumns.filter(
-        col => col.type !== 'relationship' && 
-               !['point', 'linestring', 'polygon'].includes(col.type) &&
-               !col.array  // Exclude array columns - not supported for indexes
+        (col) =>
+          col.type !== 'relationship' &&
+          !['point', 'linestring', 'polygon'].includes(col.type) &&
+          !col.array, // Exclude array columns - not supported for indexes
       )
-      return [...SYSTEM_FIELDS.map(sf => ({ ...sf, required: true, array: false })), ...regularColumns]
+      return [
+        ...SYSTEM_FIELDS.map((sf) => ({ ...sf, required: true, array: false })),
+        ...regularColumns,
+      ]
     }
   }, [formData.type, availableColumns])
 
   // Generate suggested key
   useEffect(() => {
-    if (!isEditMode && formData.columns.length > 0 && formData.columns[0].column) {
-      const baseKey = formData.columns[0].column.replace(/^\$/, '').replace(/[^a-zA-Z0-9]/g, '_')
+    if (
+      !isEditMode &&
+      formData.columns.length > 0 &&
+      formData.columns[0].column
+    ) {
+      const baseKey = formData.columns[0].column
+        .replace(/^\$/, '')
+        .replace(/[^a-zA-Z0-9]/g, '_')
       let counter = 1
       let suggested = `index_${baseKey}`
-      
+
       // Check if key already exists
-      while (existingIndexes.some(idx => idx.key === suggested)) {
+      while (existingIndexes.some((idx) => idx.key === suggested)) {
         suggested = `index_${baseKey}_${counter}`
         counter++
       }
-      
+
       setSuggestedKey(suggested)
       if (!formData.key) {
-        setFormData(prev => ({ ...prev, key: suggested }))
+        setFormData((prev) => ({ ...prev, key: suggested }))
       }
     }
   }, [formData.columns, existingIndexes, isEditMode])
@@ -128,16 +139,23 @@ export function IndexDrawer({
   // Initialize form data from index
   useEffect(() => {
     if (index) {
-      const columns: IndexColumnEntry[] = (index.columns || []).map((col: string, idx: number) => ({
-        column: col,
-        order: (index.orders && index.orders[idx]) || (formData.type === 'spatial' ? null : 'ASC'),
-        length: (index.lengths && index.lengths[idx]) || null,
-      }))
+      const columns: IndexColumnEntry[] = (index.columns || []).map(
+        (col: string, idx: number) => ({
+          column: col,
+          order:
+            (index.orders && index.orders[idx]) ||
+            (formData.type === 'spatial' ? null : 'ASC'),
+          length: (index.lengths && index.lengths[idx]) || null,
+        }),
+      )
 
       setFormData({
         key: index.key || '',
         type: (index.type || 'key') as IndexType,
-        columns: columns.length > 0 ? columns : [{ column: '', order: 'ASC', length: null }],
+        columns:
+          columns.length > 0
+            ? columns
+            : [{ column: '', order: 'ASC', length: null }],
       })
     } else {
       // Reset form for create mode
@@ -156,17 +174,18 @@ export function IndexDrawer({
     if (!isEditMode && open) {
       if (formData.type === 'spatial') {
         // Spatial: single column only
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           columns: [{ column: '', order: null, length: null }],
         }))
       } else {
         // Other types: reset to single column with ASC order
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          columns: prev.columns.length === 1 && prev.columns[0].column === '' 
-            ? prev.columns 
-            : [{ column: '', order: 'ASC', length: null }],
+          columns:
+            prev.columns.length === 1 && prev.columns[0].column === ''
+              ? prev.columns
+              : [{ column: '', order: 'ASC', length: null }],
         }))
       }
     }
@@ -196,7 +215,10 @@ export function IndexDrawer({
       newErrors.key = 'Key is required'
     } else if (!/^[A-Za-z0-9][A-Za-z0-9._\-]*$/.test(formData.key)) {
       newErrors.key = 'Invalid key format. Allowed: a-z, A-Z, 0-9, -, ., _'
-    } else if (!isEditMode && existingIndexes.some(idx => idx.key === formData.key)) {
+    } else if (
+      !isEditMode &&
+      existingIndexes.some((idx) => idx.key === formData.key)
+    ) {
       newErrors.key = 'Index with this key already exists'
     }
 
@@ -206,9 +228,12 @@ export function IndexDrawer({
       if (formData.columns.length !== 1 || !formData.columns[0].column) {
         newErrors.columns = 'Spatial index requires exactly one spatial column'
       } else {
-        const col = filteredColumns.find(c => c.key === formData.columns[0].column)
+        const col = filteredColumns.find(
+          (c) => c.key === formData.columns[0].column,
+        )
         if (!col || !['point', 'linestring', 'polygon'].includes(col.type)) {
-          newErrors.columns = 'Selected column must be a spatial type (point, linestring, or polygon)'
+          newErrors.columns =
+            'Selected column must be a spatial type (point, linestring, or polygon)'
         }
       }
     } else {
@@ -217,7 +242,8 @@ export function IndexDrawer({
         newErrors.columns = 'At least one column is required'
       } else {
         const incompleteColumns = formData.columns.filter(
-          col => !col.column || (col.order === null && formData.type !== 'spatial')
+          (col) =>
+            !col.column || (col.order === null && formData.type !== 'spatial'),
         )
         if (incompleteColumns.length > 0) {
           newErrors.columns = 'All columns must have a value and order selected'
@@ -240,17 +266,23 @@ export function IndexDrawer({
       const submitData: IndexFormData = {
         key: formData.key,
         type: formData.type,
-        columns: formData.columns.filter(col => col.column), // Remove empty columns
+        columns: formData.columns.filter((col) => col.column), // Remove empty columns
       }
 
       await onSubmit(submitData)
       handleOpenChange(false)
       // Don't show toast for suggestions - parent handles it
       if (!(index as any)?.isSuggestion) {
-        toast.success(isEditMode ? 'Index updated successfully' : 'Index created successfully')
+        toast.success(
+          isEditMode
+            ? 'Index updated successfully'
+            : 'Index created successfully',
+        )
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save index')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to save index',
+      )
     }
   }
 
@@ -266,7 +298,7 @@ export function IndexDrawer({
       return
     }
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       columns: [...prev.columns, { column: '', order: 'ASC', length: null }],
     }))
@@ -277,14 +309,18 @@ export function IndexDrawer({
       toast.error('At least one column is required')
       return
     }
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       columns: prev.columns.filter((_, i) => i !== index),
     }))
   }
 
-  const updateColumn = (index: number, field: keyof IndexColumnEntry, value: any) => {
-    setFormData(prev => {
+  const updateColumn = (
+    index: number,
+    field: keyof IndexColumnEntry,
+    value: any,
+  ) => {
+    setFormData((prev) => {
       const newColumns = [...prev.columns]
       newColumns[index] = { ...newColumns[index], [field]: value }
       return { ...prev, columns: newColumns }
@@ -293,7 +329,7 @@ export function IndexDrawer({
 
   const getColumnLabel = (columnKey: string) => {
     if (columnKey.startsWith('$')) {
-      const systemField = SYSTEM_FIELDS.find(sf => sf.key === columnKey)
+      const systemField = SYSTEM_FIELDS.find((sf) => sf.key === columnKey)
       if (systemField) {
         const Icon = systemField.icon
         return (
@@ -330,7 +366,9 @@ export function IndexDrawer({
               <Input
                 id="index-key"
                 value={formData.key}
-                onChange={(e) => setFormData(prev => ({ ...prev, key: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, key: e.target.value }))
+                }
                 placeholder="Enter Key"
                 disabled={isLoading}
                 pattern="^[A-Za-z0-9][A-Za-z0-9._\-]*$"
@@ -341,9 +379,12 @@ export function IndexDrawer({
               )}
               {suggestedKey && !formData.key && (
                 <p className="text-[11px] text-muted-foreground">
-                  Suggested: <button
+                  Suggested:{' '}
+                  <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, key: suggestedKey }))}
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, key: suggestedKey }))
+                    }
                     className="text-primary hover:underline"
                   >
                     {suggestedKey}
@@ -363,13 +404,14 @@ export function IndexDrawer({
               <Select
                 value={formData.type}
                 onValueChange={(value) => {
-                  setFormData(prev => ({
+                  setFormData((prev) => ({
                     ...prev,
                     type: value as IndexType,
                     // Reset columns when type changes
-                    columns: value === 'spatial' 
-                      ? [{ column: '', order: null, length: null }]
-                      : [{ column: '', order: 'ASC', length: null }],
+                    columns:
+                      value === 'spatial'
+                        ? [{ column: '', order: null, length: null }]
+                        : [{ column: '', order: 'ASC', length: null }],
                   }))
                 }}
                 disabled={isLoading || isEditMode}
@@ -378,7 +420,7 @@ export function IndexDrawer({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {INDEX_TYPES.map(type => (
+                  {INDEX_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
                     </SelectItem>
@@ -393,20 +435,29 @@ export function IndexDrawer({
                 Columns <span className="text-destructive">*</span>
               </Label>
               {formData.columns.map((columnEntry, index) => (
-                <div key={index} className="flex items-start gap-2 rounded-lg border border-border p-3">
+                <div
+                  key={index}
+                  className="flex items-start gap-2 rounded-lg border border-border p-3"
+                >
                   <div className="flex-1 space-y-3">
                     <div className="space-y-2">
-                      <Label className="text-[11px] text-muted-foreground">Column</Label>
+                      <Label className="text-[11px] text-muted-foreground">
+                        Column
+                      </Label>
                       <Select
                         value={columnEntry.column}
-                        onValueChange={(value) => updateColumn(index, 'column', value)}
+                        onValueChange={(value) =>
+                          updateColumn(index, 'column', value)
+                        }
                         disabled={isLoading}
                       >
-                        <SelectTrigger className={errors.columns ? 'border-destructive' : ''}>
+                        <SelectTrigger
+                          className={errors.columns ? 'border-destructive' : ''}
+                        >
                           <SelectValue placeholder="Select column" />
                         </SelectTrigger>
                         <SelectContent>
-                          {filteredColumns.map(col => (
+                          {filteredColumns.map((col) => (
                             <SelectItem key={col.key} value={col.key}>
                               {getColumnLabel(col.key)}
                             </SelectItem>
@@ -417,11 +468,17 @@ export function IndexDrawer({
 
                     {!isSpatial && (
                       <div className="space-y-2">
-                        <Label className="text-[11px] text-muted-foreground">Order</Label>
+                        <Label className="text-[11px] text-muted-foreground">
+                          Order
+                        </Label>
                         <Select
                           value={columnEntry.order || 'ASC'}
                           onValueChange={(value) => {
-                            updateColumn(index, 'order', value === 'NONE' ? null : value)
+                            updateColumn(
+                              index,
+                              'order',
+                              value === 'NONE' ? null : value,
+                            )
                           }}
                           disabled={isLoading}
                         >
@@ -429,7 +486,7 @@ export function IndexDrawer({
                             <SelectValue placeholder="Select order" />
                           </SelectTrigger>
                           <SelectContent>
-                            {ORDER_OPTIONS.map(opt => (
+                            {ORDER_OPTIONS.map((opt) => (
                               <SelectItem key={opt.value} value={opt.value}>
                                 {opt.label}
                               </SelectItem>
@@ -441,11 +498,17 @@ export function IndexDrawer({
 
                     {isSpatial && (
                       <div className="space-y-2">
-                        <Label className="text-[11px] text-muted-foreground">Order (Optional)</Label>
+                        <Label className="text-[11px] text-muted-foreground">
+                          Order (Optional)
+                        </Label>
                         <Select
                           value={columnEntry.order || 'NONE'}
                           onValueChange={(value) => {
-                            updateColumn(index, 'order', value === 'NONE' ? null : value)
+                            updateColumn(
+                              index,
+                              'order',
+                              value === 'NONE' ? null : value,
+                            )
                           }}
                           disabled={isLoading}
                         >
@@ -453,7 +516,7 @@ export function IndexDrawer({
                             <SelectValue placeholder="Select order" />
                           </SelectTrigger>
                           <SelectContent>
-                            {ORDER_OPTIONS_WITH_NONE.map(opt => (
+                            {ORDER_OPTIONS_WITH_NONE.map((opt) => (
                               <SelectItem key={opt.value} value={opt.value}>
                                 {opt.label}
                               </SelectItem>
@@ -463,36 +526,44 @@ export function IndexDrawer({
                       </div>
                     )}
 
-                    {showLength && (() => {
-                      // Only show length for string columns
-                      const selectedColumn = availableColumns?.find(col => col.key === columnEntry.column)
-                      const isStringColumn = selectedColumn?.type === 'string'
-                      
-                      if (!isStringColumn) {
-                        return null
-                      }
-                      
-                      return (
-                        <div className="space-y-2">
-                          <Label className="text-[11px] text-muted-foreground">Length (Optional)</Label>
-                          <Input
-                            type="number"
-                            value={columnEntry.length ?? ''}
-                            onChange={(e) => {
-                              const value = e.target.value === '' ? null : parseInt(e.target.value)
-                              updateColumn(index, 'length', value)
-                            }}
-                            placeholder="Max 767"
-                            max={767}
-                            min={1}
-                            disabled={isLoading}
-                          />
-                          <p className="text-[10px] text-muted-foreground">
-                            Only applicable to string columns
-                          </p>
-                        </div>
-                      )
-                    })()}
+                    {showLength &&
+                      (() => {
+                        // Only show length for string columns
+                        const selectedColumn = availableColumns?.find(
+                          (col) => col.key === columnEntry.column,
+                        )
+                        const isStringColumn = selectedColumn?.type === 'string'
+
+                        if (!isStringColumn) {
+                          return null
+                        }
+
+                        return (
+                          <div className="space-y-2">
+                            <Label className="text-[11px] text-muted-foreground">
+                              Length (Optional)
+                            </Label>
+                            <Input
+                              type="number"
+                              value={columnEntry.length ?? ''}
+                              onChange={(e) => {
+                                const value =
+                                  e.target.value === ''
+                                    ? null
+                                    : parseInt(e.target.value)
+                                updateColumn(index, 'length', value)
+                              }}
+                              placeholder="Max 767"
+                              max={767}
+                              min={1}
+                              disabled={isLoading}
+                            />
+                            <p className="text-[10px] text-muted-foreground">
+                              Only applicable to string columns
+                            </p>
+                          </div>
+                        )
+                      })()}
                   </div>
 
                   {formData.columns.length > 1 && (
@@ -548,4 +619,3 @@ export function IndexDrawer({
     </BaseDrawer>
   )
 }
-

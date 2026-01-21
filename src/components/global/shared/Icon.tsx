@@ -81,61 +81,99 @@ const TypeScriptIcon = ({ className }: { className?: string }) => (
 // Get the base platform icon (without Flutter badge)
 function getBasePlatformIcon(platform: string, size: string) {
   const normalized = platform.toLowerCase()
-  
+
   // Handle Flutter platforms - extract the underlying platform
   if (normalized.startsWith('flutter-')) {
     const basePlatform = normalized.replace('flutter-', '')
     return getBasePlatformIcon(basePlatform, size)
   }
-  
+
   // Handle React Native platforms
   if (normalized.startsWith('react-native-')) {
     const basePlatform = normalized.replace('react-native-', '')
     return getBasePlatformIcon(basePlatform, size)
   }
-  
+
   // Handle Apple platforms
   if (normalized.startsWith('apple-')) {
     const appleType = normalized.replace('apple-', '')
     switch (appleType) {
       case 'ios':
-        return <Smartphone className={sizeClasses[size as keyof typeof sizeClasses]} />
+        return (
+          <Smartphone
+            className={sizeClasses[size as keyof typeof sizeClasses]}
+          />
+        )
       case 'macos':
-        return <Monitor className={sizeClasses[size as keyof typeof sizeClasses]} />
+        return (
+          <Monitor className={sizeClasses[size as keyof typeof sizeClasses]} />
+        )
       case 'watchos':
-        return <Watch className={sizeClasses[size as keyof typeof sizeClasses]} />
+        return (
+          <Watch className={sizeClasses[size as keyof typeof sizeClasses]} />
+        )
       case 'tvos':
         return <Tv className={sizeClasses[size as keyof typeof sizeClasses]} />
       default:
-        return <AppleIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+        return (
+          <AppleIcon
+            className={sizeClasses[size as keyof typeof sizeClasses]}
+          />
+        )
     }
   }
-  
+
   // Base platforms
   switch (normalized) {
     case 'web':
       // Return a special component that handles JS/TS rotation on hover
       return null // Will be handled in PlatformIcon component
     case 'android':
-      return <AndroidIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+      return (
+        <AndroidIcon
+          className={sizeClasses[size as keyof typeof sizeClasses]}
+        />
+      )
     case 'apple':
-      return <AppleIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+      return (
+        <AppleIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+      )
     case 'flutter':
-      return <FlutterIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+      return (
+        <FlutterIcon
+          className={sizeClasses[size as keyof typeof sizeClasses]}
+        />
+      )
     case 'react-native':
-      return <ReactNativeIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+      return (
+        <ReactNativeIcon
+          className={sizeClasses[size as keyof typeof sizeClasses]}
+        />
+      )
     case 'ios':
-      return <Smartphone className={sizeClasses[size as keyof typeof sizeClasses]} />
+      return (
+        <Smartphone className={sizeClasses[size as keyof typeof sizeClasses]} />
+      )
     case 'linux':
-      return <LinuxIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+      return (
+        <LinuxIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+      )
     case 'macos':
     case 'mac':
-      return <Monitor className={sizeClasses[size as keyof typeof sizeClasses]} />
+      return (
+        <Monitor className={sizeClasses[size as keyof typeof sizeClasses]} />
+      )
     case 'windows':
     case 'win':
-      return <WindowsIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+      return (
+        <WindowsIcon
+          className={sizeClasses[size as keyof typeof sizeClasses]}
+        />
+      )
     case 'unity':
-      return <UnityIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+      return (
+        <UnityIcon className={sizeClasses[size as keyof typeof sizeClasses]} />
+      )
     default:
       return <Globe className={sizeClasses[size as keyof typeof sizeClasses]} />
   }
@@ -151,39 +189,44 @@ function isReactNativePlatform(platform: string): boolean {
   return platform.toLowerCase().startsWith('react-native-')
 }
 
-export function PlatformIcon({ platform, className, size = 'md', initialIcon }: PlatformIconProps) {
+export function PlatformIcon({
+  platform,
+  className,
+  size = 'md',
+  initialIcon,
+}: PlatformIconProps) {
   const normalized = platform.toLowerCase()
   const isFlutter = isFlutterPlatform(normalized)
   const isReactNative = isReactNativePlatform(normalized)
   const isWeb = normalized === 'web'
-  
+
   const baseIcon = getBasePlatformIcon(normalized, size)
-  
+
   // Badge size based on main icon size
   const badgeSize = {
     sm: 'h-2.5 w-2.5',
     md: 'h-3 w-3',
     lg: 'h-4 w-4',
   }[size]
-  
+
   // Flutter and React Native badge size - bigger than other badges
   const frameworkBadgeSize = {
     sm: 'h-3.5 w-3.5',
     md: 'h-4.5 w-4.5',
     lg: 'h-6 w-6',
   }[size]
-  
+
   // Special handling for web platform - JS/TS 3D cube rotation on hover
   if (isWeb) {
     const iconClass = sizeClasses[size as keyof typeof sizeClasses]
     // Determine which icon shows first - use prop if provided, otherwise default to JS
     const showTSFirst = initialIcon === 'ts'
     const [isFlipped, setIsFlipped] = useState(false)
-    
+
     const handleMouseEnter = () => {
       setIsFlipped(!isFlipped)
     }
-    
+
     const getTransform = () => {
       if (showTSFirst) {
         return isFlipped ? 'rotateY(-180deg)' : 'rotateY(0deg)'
@@ -191,39 +234,39 @@ export function PlatformIcon({ platform, className, size = 'md', initialIcon }: 
         return isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
       }
     }
-    
+
     return (
-      <div 
-        className={cn('relative group', iconClass, className)} 
+      <div
+        className={cn('relative group', iconClass, className)}
         style={{ perspective: '1000px', perspectiveOrigin: 'center center' }}
         onMouseEnter={handleMouseEnter}
       >
-        <div 
+        <div
           className="relative w-full h-full transition-transform duration-700 ease-in-out"
-          style={{ 
+          style={{
             transform: getTransform(),
             transformStyle: 'preserve-3d',
-            WebkitTransformStyle: 'preserve-3d'
+            WebkitTransformStyle: 'preserve-3d',
           }}
         >
           {/* JavaScript icon */}
-          <div 
-            className="absolute inset-0 flex items-center justify-center" 
-            style={{ 
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
-              transform: showTSFirst ? 'rotateY(180deg)' : 'rotateY(0deg)'
+              transform: showTSFirst ? 'rotateY(180deg)' : 'rotateY(0deg)',
             }}
           >
             <JavaScriptIcon className={iconClass} />
           </div>
           {/* TypeScript icon */}
-          <div 
-            className="absolute inset-0 flex items-center justify-center" 
-            style={{ 
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
-              transform: showTSFirst ? 'rotateY(0deg)' : 'rotateY(180deg)'
+              transform: showTSFirst ? 'rotateY(0deg)' : 'rotateY(180deg)',
             }}
           >
             <TypeScriptIcon className={iconClass} />
@@ -232,45 +275,52 @@ export function PlatformIcon({ platform, className, size = 'md', initialIcon }: 
       </div>
     )
   }
-  
+
   if (isFlutter) {
     return (
       <div className={cn('relative', className)}>
         {baseIcon}
         {/* Flutter badge in corner - bigger and no color */}
-        <div className={cn(
-          'absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700',
-          frameworkBadgeSize
-        )}>
-          <FlutterIcon className={cn('text-muted-foreground/60', {
-            'h-2 w-2': size === 'sm',
-            'h-2.5 w-2.5': size === 'md',
-            'h-3.5 w-3.5': size === 'lg',
-          })} />
+        <div
+          className={cn(
+            'absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700',
+            frameworkBadgeSize,
+          )}
+        >
+          <FlutterIcon
+            className={cn('text-muted-foreground/60', {
+              'h-2 w-2': size === 'sm',
+              'h-2.5 w-2.5': size === 'md',
+              'h-3.5 w-3.5': size === 'lg',
+            })}
+          />
         </div>
       </div>
     )
   }
-  
+
   if (isReactNative) {
     return (
       <div className={cn('relative', className)}>
         {baseIcon}
         {/* React Native badge in corner - bigger and no color */}
-        <div className={cn(
-          'absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700',
-          frameworkBadgeSize
-        )}>
-          <ReactNativeIcon className={cn('text-foreground', {
-            'h-2 w-2': size === 'sm',
-            'h-2.5 w-2.5': size === 'md',
-            'h-3.5 w-3.5': size === 'lg',
-          })} />
+        <div
+          className={cn(
+            'absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700',
+            frameworkBadgeSize,
+          )}
+        >
+          <ReactNativeIcon
+            className={cn('text-foreground', {
+              'h-2 w-2': size === 'sm',
+              'h-2.5 w-2.5': size === 'md',
+              'h-3.5 w-3.5': size === 'lg',
+            })}
+          />
         </div>
       </div>
     )
   }
-  
+
   return <div className={cn(className)}>{baseIcon}</div>
 }
-

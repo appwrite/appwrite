@@ -19,28 +19,28 @@ const sizeClasses: Record<AvatarSize, string> = {
 
 function getInitials(name?: string): string {
   if (!name) return '?'
-  
+
   // Remove special characters, emojis, and keep only letters and spaces
   const cleaned = name.replace(/[^\p{L}\s]/gu, '').trim()
-  
+
   if (!cleaned) return '?'
-  
-  const parts = cleaned.split(/\s+/).filter(part => part.length > 0)
-  
+
+  const parts = cleaned.split(/\s+/).filter((part) => part.length > 0)
+
   if (parts.length === 0) return '?'
-  
+
   if (parts.length === 1) {
     // Get first letter from the single part
     const firstLetter = parts[0].match(/\p{L}/u)?.[0]
     return firstLetter ? firstLetter.toUpperCase() : '?'
   }
-  
+
   // Get first letter from first and last parts
   const firstLetter = parts[0].match(/\p{L}/u)?.[0]
   const lastLetter = parts[parts.length - 1].match(/\p{L}/u)?.[0]
-  
+
   if (!firstLetter || !lastLetter) return '?'
-  
+
   return (firstLetter + lastLetter).toUpperCase()
 }
 

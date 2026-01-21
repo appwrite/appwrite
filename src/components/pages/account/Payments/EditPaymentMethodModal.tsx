@@ -1,11 +1,17 @@
 /**
  * EditPaymentMethodModal Component
- * 
+ *
  * Modal for updating payment method expiration date.
  */
 
 import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -108,10 +114,10 @@ export function EditPaymentMethodModal({
   onSuccess,
 }: EditPaymentMethodModalProps) {
   const [expiryMonth, setExpiryMonth] = useState<string>(
-    paymentMethod.expiryMonth?.toString().padStart(2, '0') || ''
+    paymentMethod.expiryMonth?.toString().padStart(2, '0') || '',
   )
   const [expiryYear, setExpiryYear] = useState<string>(
-    paymentMethod.expiryYear?.toString() || ''
+    paymentMethod.expiryYear?.toString() || '',
   )
   const [state, setState] = useState<string>(paymentMethod.state || '')
 
@@ -120,7 +126,9 @@ export function EditPaymentMethodModal({
   // Reset form when modal opens/closes or payment method changes
   useEffect(() => {
     if (open && paymentMethod) {
-      setExpiryMonth(paymentMethod.expiryMonth?.toString().padStart(2, '0') || '')
+      setExpiryMonth(
+        paymentMethod.expiryMonth?.toString().padStart(2, '0') || '',
+      )
       setExpiryYear(paymentMethod.expiryYear?.toString() || '')
       setState(paymentMethod.state || '')
     }
@@ -144,7 +152,7 @@ export function EditPaymentMethodModal({
       // State is required by the API - use existing state if not changed
       // For US cards, state should already be set; for others, use existing or empty string
       const finalState = state || paymentMethod.state || ''
-      
+
       await updatePaymentMethodMutation.mutateAsync({
         paymentMethodId: paymentMethod.$id,
         expiryMonth: parseInt(expiryMonth, 10),
@@ -156,13 +164,18 @@ export function EditPaymentMethodModal({
       onOpenChange(false)
       onSuccess?.()
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update payment method')
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to update payment method',
+      )
     }
   }
 
   const isLoading = updatePaymentMethodMutation.isPending
   const hasChanges =
-    expiryMonth !== (paymentMethod.expiryMonth?.toString().padStart(2, '0') || '') ||
+    expiryMonth !==
+      (paymentMethod.expiryMonth?.toString().padStart(2, '0') || '') ||
     expiryYear !== (paymentMethod.expiryYear?.toString() || '') ||
     state !== (paymentMethod.state || '')
 
@@ -240,7 +253,10 @@ export function EditPaymentMethodModal({
                   </SelectTrigger>
                   <SelectContent>
                     {US_STATES.map((stateOption) => (
-                      <SelectItem key={stateOption.value} value={stateOption.value}>
+                      <SelectItem
+                        key={stateOption.value}
+                        value={stateOption.value}
+                      >
                         {stateOption.label}
                       </SelectItem>
                     ))}

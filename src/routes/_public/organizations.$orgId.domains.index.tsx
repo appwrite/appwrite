@@ -1,6 +1,9 @@
 import { DomainsView } from '@/components/pages/organizations/$orgId/domains/View'
 import { createFileRoute } from '@tanstack/react-router'
-import { fetchOrganizations, fetchOrganizationDomains } from '@/lib/react-query/hooks'
+import {
+  fetchOrganizations,
+  fetchOrganizationDomains,
+} from '@/lib/react-query/hooks'
 
 const DOMAINS_PER_PAGE = 25
 

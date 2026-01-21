@@ -14,10 +14,7 @@ import { IdInput } from '@/components/ui/id-input'
 interface CreateOrganizationDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (orgData: {
-    organizationId?: string
-    name: string
-  }) => void
+  onCreate: (orgData: { organizationId?: string; name: string }) => void
   isLoading?: boolean
 }
 
@@ -27,7 +24,9 @@ export function CreateOrganizationDialog({
   onCreate,
   isLoading = false,
 }: CreateOrganizationDialogProps) {
-  const [organizationId, setOrganizationId] = useState<string | undefined>(undefined)
+  const [organizationId, setOrganizationId] = useState<string | undefined>(
+    undefined,
+  )
   const [name, setName] = useState('')
 
   // Reset form when dialog closes
@@ -67,7 +66,7 @@ export function CreateOrganizationDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
-        
+
         <form onSubmit={handleSubmit}>
           <div className="px-6 pb-4 pt-0 space-y-4">
             <div className="space-y-2">
@@ -81,7 +80,7 @@ export function CreateOrganizationDialog({
                 placeholder="Leave blank to auto-generate"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="name">
                 Name <span className="text-destructive">*</span>
@@ -109,10 +108,7 @@ export function CreateOrganizationDialog({
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={isLoading || !name.trim()}
-            >
+            <Button type="submit" disabled={isLoading || !name.trim()}>
               Create organization
             </Button>
           </div>
@@ -121,5 +117,3 @@ export function CreateOrganizationDialog({
     </Dialog>
   )
 }
-
-

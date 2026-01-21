@@ -14,7 +14,10 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { useProjectFunction, useFunctionExecutions } from '@/lib/react-query/hooks'
+import {
+  useProjectFunction,
+  useFunctionExecutions,
+} from '@/lib/react-query/hooks'
 import { ExecutionDetailsDrawer } from './ExecutionDetailsDrawer'
 import type { Models } from '@appwrite.io/console'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.executions'
@@ -31,7 +34,13 @@ function formatDuration(ms: number): string {
 }
 
 export function getExecutionStatusBadge(status: string) {
-  const statusMap: Record<string, { label: string; variant: 'completed' | 'processing' | 'failed' | 'pending' | 'outline' }> = {
+  const statusMap: Record<
+    string,
+    {
+      label: string
+      variant: 'completed' | 'processing' | 'failed' | 'pending' | 'outline'
+    }
+  > = {
     completed: { label: 'Completed', variant: 'completed' },
     processing: { label: 'Processing', variant: 'processing' },
     failed: { label: 'Failed', variant: 'failed' },
@@ -41,13 +50,21 @@ export function getExecutionStatusBadge(status: string) {
 }
 
 function getTriggerBadge(trigger: string) {
-  const triggerMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
+  const triggerMap: Record<
+    string,
+    { label: string; variant: 'default' | 'secondary' | 'outline' }
+  > = {
     http: { label: 'HTTP', variant: 'default' },
     event: { label: 'Event', variant: 'secondary' },
     schedule: { label: 'Schedule', variant: 'outline' },
     manual: { label: 'Manual', variant: 'outline' },
   }
-  return triggerMap[trigger?.toLowerCase()] || { label: trigger || 'Unknown', variant: 'outline' }
+  return (
+    triggerMap[trigger?.toLowerCase()] || {
+      label: trigger || 'Unknown',
+      variant: 'outline',
+    }
+  )
 }
 
 export function getStatusCodeBadge(statusCode: number) {
@@ -70,16 +87,21 @@ export function FunctionExecutions() {
   const search = Route.useSearch()
   const urlPage = search.page || 1 // 1-indexed from URL
   const urlExecutionId = search.executionId
-  
+
   // Initialize displayed page from URL (0-indexed)
   const [displayedPage, setDisplayedPage] = useState(urlPage - 1)
   const [requestedPage, setRequestedPage] = useState(urlPage - 1)
   const [pageSize, setPageSize] = useState(EXECUTIONS_PER_PAGE)
-  const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(urlExecutionId || null)
+  const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(
+    urlExecutionId || null,
+  )
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  const { data: func, isLoading: funcLoading } = useProjectFunction(projectId, functionId)
-  
+  const { data: func, isLoading: funcLoading } = useProjectFunction(
+    projectId,
+    functionId,
+  )
+
   // Sync requested page with URL when it changes externally (e.g., browser back/forward)
   useEffect(() => {
     const newRequestedPage = urlPage - 1
@@ -87,7 +109,7 @@ export function FunctionExecutions() {
       setRequestedPage(newRequestedPage)
     }
   }, [urlPage, requestedPage])
-  
+
   // Fetch data for the requested page (this will fetch in background)
   const {
     executions: requestedExecutions,
@@ -97,14 +119,21 @@ export function FunctionExecutions() {
   } = useFunctionExecutions(projectId, functionId, requestedPage, pageSize)
 
   // Fetch data for the displayed page (this is what we show)
-  const {
-    executions: displayedExecutions,
-  } = useFunctionExecutions(projectId, functionId, displayedPage, pageSize)
+  const { executions: displayedExecutions } = useFunctionExecutions(
+    projectId,
+    functionId,
+    displayedPage,
+    pageSize,
+  )
 
   // Update displayed page only when requested page data is ready (not fetching)
   // This keeps the current page visible until the next page data is fully loaded
   useEffect(() => {
-    if (!executionsFetching && requestedPage !== displayedPage && !executionsLoading) {
+    if (
+      !executionsFetching &&
+      requestedPage !== displayedPage &&
+      !executionsLoading
+    ) {
       setDisplayedPage(requestedPage)
     }
   }, [executionsFetching, executionsLoading, requestedPage, displayedPage])
@@ -122,7 +151,8 @@ export function FunctionExecutions() {
       }
     }
   }, [displayedPage, executions.length])
-  const selectedExecution = executions.find((e) => e.$id === selectedExecutionId) || null
+  const selectedExecution =
+    executions.find((e) => e.$id === selectedExecutionId) || null
 
   const handlePageChange = (page: number) => {
     // Update URL with new page (1-indexed)
@@ -192,7 +222,9 @@ export function FunctionExecutions() {
       <div className="flex-1">
         <div className="flex h-full items-center justify-center py-16">
           <div className="text-center">
-            <p className="text-[13px] text-muted-foreground">Loading executions...</p>
+            <p className="text-[13px] text-muted-foreground">
+              Loading executions...
+            </p>
           </div>
         </div>
       </div>
@@ -206,7 +238,9 @@ export function FunctionExecutions() {
           <Table className="border-b border-border">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[200px] pl-6 sm:pl-8">Execution ID</TableHead>
+                <TableHead className="w-[200px] pl-6 sm:pl-8">
+                  Execution ID
+                </TableHead>
                 <TableHead className="w-[200px]">Status</TableHead>
                 <TableHead className="w-[150px]">Trigger</TableHead>
                 <TableHead className="w-[120px]">Status Code</TableHead>
@@ -229,7 +263,8 @@ export function FunctionExecutions() {
                     key={execution.$id}
                     className={cn(
                       'cursor-pointer',
-                      index === executions.length - 1 && 'border-b border-border',
+                      index === executions.length - 1 &&
+                        'border-b border-border',
                     )}
                     onClick={() => handleExecutionClick(execution.$id)}
                   >
@@ -237,7 +272,9 @@ export function FunctionExecutions() {
                       <CopyableId id={execution.$id} size="sm" />
                     </TableCell>
                     <TableCell>
-                      <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                      <Badge variant={statusBadge.variant}>
+                        {statusBadge.label}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={triggerBadge.variant}>
@@ -250,7 +287,9 @@ export function FunctionExecutions() {
                           {execution.responseStatusCode}
                         </Badge>
                       ) : (
-                        <span className="text-[13px] text-muted-foreground">N/A</span>
+                        <span className="text-[13px] text-muted-foreground">
+                          N/A
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -261,7 +300,9 @@ export function FunctionExecutions() {
                     <TableCell>
                       <p className="truncate text-[12px] text-muted-foreground">
                         {execution.requestPath ? (
-                          <code className="text-[12px]">{execution.requestPath}</code>
+                          <code className="text-[12px]">
+                            {execution.requestPath}
+                          </code>
                         ) : (
                           'N/A'
                         )}
@@ -271,7 +312,9 @@ export function FunctionExecutions() {
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="text-[13px] text-muted-foreground">
-                          {execution.duration ? formatDuration(execution.duration * 1000) : 'N/A'}
+                          {execution.duration
+                            ? formatDuration(execution.duration * 1000)
+                            : 'N/A'}
                         </span>
                       </div>
                     </TableCell>
@@ -337,4 +380,3 @@ export function FunctionExecutions() {
     </div>
   )
 }
-

@@ -18,11 +18,12 @@ function RecoveryPage() {
     mutationFn: async (data: { email: string }) => {
       try {
         // Get the current origin to build the redirect URL
-        const origin = typeof window !== 'undefined' ? window.location.origin : ''
+        const origin =
+          typeof window !== 'undefined' ? window.location.origin : ''
         // The recovery URL should point to a reset password page
         // Appwrite will append userId and secret as query parameters
         const redirectUrl = `${origin}/reset`
-        
+
         await sdk.forConsole.account.createRecovery({
           email: data.email,
           url: redirectUrl,
@@ -54,11 +55,17 @@ function RecoveryPage() {
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
           By clicking continue, you agree to our{' '}
-          <a href="#" className="underline underline-offset-4 hover:text-primary">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Terms of Service
           </a>{' '}
           and{' '}
-          <a href="#" className="underline underline-offset-4 hover:text-primary">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Privacy Policy
           </a>
           .
@@ -70,4 +77,3 @@ function RecoveryPage() {
     </div>
   )
 }
-

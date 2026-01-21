@@ -4,7 +4,10 @@ import { cn } from '@/lib/utils'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { RefreshControls, type RefreshInterval } from '@/components/global/shared/RefreshControls'
+import {
+  RefreshControls,
+  type RefreshInterval,
+} from '@/components/global/shared/RefreshControls'
 import {
   Table,
   TableBody,
@@ -40,12 +43,12 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
 
   const pageIndexed = currentPage - 1
 
-  const {
-    channels,
-    total,
-    isLoading,
-    refetch,
-  } = useRealtimeChannels(projectId, pageIndexed, pageSize, dateRange)
+  const { channels, total, isLoading, refetch } = useRealtimeChannels(
+    projectId,
+    pageIndexed,
+    pageSize,
+    dateRange,
+  )
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
@@ -83,14 +86,18 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
       {/* Channels Table */}
       {isLoading && (!channels || channels.length === 0) ? (
         <div className="flex h-64 items-center justify-center px-4 sm:px-6">
-          <p className="text-[13px] text-muted-foreground">Loading channels...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading channels...
+          </p>
         </div>
       ) : channels && channels.length > 0 ? (
         <>
           <Table className="border-b border-border">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[300px] pl-6 sm:pl-8">Channel</TableHead>
+                <TableHead className="w-[300px] pl-6 sm:pl-8">
+                  Channel
+                </TableHead>
                 <TableHead className="w-[150px]">Type</TableHead>
                 <TableHead className="w-[150px]">Subscribers</TableHead>
                 <TableHead className="w-[150px]">Messages</TableHead>

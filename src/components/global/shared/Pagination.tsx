@@ -157,7 +157,9 @@ export function Pagination({
               ))}
             </SelectContent>
           </Select>
-          <span className="text-muted-foreground whitespace-nowrap">per page</span>
+          <span className="text-muted-foreground whitespace-nowrap">
+            per page
+          </span>
         </div>
       </div>
 
@@ -189,7 +191,9 @@ export function Pagination({
           <div className="flex items-center gap-1 rounded border border-border bg-background px-2 py-0.5 font-medium text-foreground">
             <span>{currentPage}</span>
           </div>
-          <span className="whitespace-nowrap">of {totalPages.toLocaleString()}</span>
+          <span className="whitespace-nowrap">
+            of {totalPages.toLocaleString()}
+          </span>
         </div>
 
         <Button

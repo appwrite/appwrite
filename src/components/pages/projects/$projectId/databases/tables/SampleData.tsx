@@ -44,10 +44,11 @@ export function SampleDataModal({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Generate Sample Data</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Select the number of rows to generate. Sample data will be created based on your table's column types and constraints.
+            Select the number of rows to generate. Sample data will be created
+            based on your table's column types and constraints.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="px-6 pb-4 pt-0">
           <div className="space-y-4">
             <div className="space-y-2">
@@ -66,7 +67,7 @@ export function SampleDataModal({
             </div>
           </div>
         </div>
-        
+
         <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="outline"
@@ -75,10 +76,7 @@ export function SampleDataModal({
           >
             Cancel
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={isLoading}
-          >
+          <Button onClick={handleConfirm} disabled={isLoading}>
             Create
           </Button>
         </div>
@@ -86,4 +84,3 @@ export function SampleDataModal({
     </Dialog>
   )
 }
-

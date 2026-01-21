@@ -16,7 +16,8 @@ export function UploadWarning() {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       // Modern browsers ignore custom messages, but we still need to set returnValue
       e.preventDefault()
-      e.returnValue = 'You have file uploads in progress. Are you sure you want to leave?'
+      e.returnValue =
+        'You have file uploads in progress. Are you sure you want to leave?'
       return e.returnValue
     }
 
@@ -30,4 +31,3 @@ export function UploadWarning() {
   // This component doesn't render anything
   return null
 }
-

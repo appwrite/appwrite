@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Regions
- * 
+ *
  * Handles region fetching from the console service.
  */
 
@@ -14,12 +14,12 @@ import { LONG_STALE_TIME } from './constants'
 
 /**
  * Query function to fetch available regions from the console SDK
- * 
+ *
  * @returns Regions list response from the API
  */
 export async function fetchRegions() {
   const response = await sdk.forConsole.console.regions()
-  
+
   // Response is Models.ConsoleRegionList which should have a regions property
   return {
     regions: response.regions || [],
@@ -32,7 +32,7 @@ export async function fetchRegions() {
 
 /**
  * Hook to fetch available regions
- * 
+ *
  * @returns Regions list with loading state
  */
 export function useRegions() {

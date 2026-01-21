@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react'
 
 interface DebugModeContextValue {
   isDebugModeOpen: boolean
@@ -40,5 +46,3 @@ export function DebugModeProvider({ children }: DebugModeProviderProps) {
     </DebugModeContext.Provider>
   )
 }
-
-

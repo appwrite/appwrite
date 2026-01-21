@@ -45,12 +45,7 @@ interface MapProps extends Omit<maplibregl.MapOptions, 'container' | 'style'> {
   projection?: maplibregl.ProjectionSpecification
 }
 
-export function Map({
-  children,
-  styles,
-  projection,
-  ...mapOptions
-}: MapProps) {
+export function Map({ children, styles, projection, ...mapOptions }: MapProps) {
   const { theme } = useTheme()
   const mapContainerRef = React.useRef<HTMLDivElement>(null)
   const mapRef = React.useRef<maplibregl.Map | null>(null)
@@ -67,7 +62,9 @@ export function Map({
     defaultStyle[theme === 'dark' ? 'dark' : 'light']
 
   // State to track map instance for context
-  const [mapInstance, setMapInstance] = React.useState<maplibregl.Map | null>(null)
+  const [mapInstance, setMapInstance] = React.useState<maplibregl.Map | null>(
+    null,
+  )
 
   React.useEffect(() => {
     if (!mapContainerRef.current) return
@@ -84,10 +81,10 @@ export function Map({
       const rect = mapContainerRef.current.getBoundingClientRect()
       const computedStyle = window.getComputedStyle(mapContainerRef.current)
       return (
-        computedStyle.display !== 'none' && 
+        computedStyle.display !== 'none' &&
         computedStyle.visibility !== 'hidden' &&
         mapContainerRef.current.offsetParent !== null &&
-        rect.width > 0 && 
+        rect.width > 0 &&
         rect.height > 0
       )
     }
@@ -145,7 +142,7 @@ export function Map({
             })
           }
         })
-        
+
         if (mapContainerRef.current) {
           resizeObserver.observe(mapContainerRef.current)
         }
@@ -162,7 +159,7 @@ export function Map({
               }, 100)
             }
           })
-          
+
           mutationObserver.observe(mapContainerRef.current.parentElement, {
             attributes: true,
             attributeFilter: ['style', 'class'],
@@ -215,8 +212,7 @@ const MarkerContext = React.createContext<{
   setPopup: () => {},
 })
 
-interface MapMarkerProps
-  extends Omit<maplibregl.MarkerOptions, 'element'> {
+interface MapMarkerProps extends Omit<maplibregl.MarkerOptions, 'element'> {
   longitude: number
   latitude: number
   children?: React.ReactNode
@@ -347,7 +343,10 @@ export function MarkerContent({ children, className }: MarkerContentProps) {
   return <div className={cn('relative', className)}>{children}</div>
 }
 
-interface MarkerPopupProps extends Omit<maplibregl.PopupOptions, 'className' | 'closeButton'> {
+interface MarkerPopupProps extends Omit<
+  maplibregl.PopupOptions,
+  'className' | 'closeButton'
+> {
   children?: React.ReactNode
   className?: string
   closeButton?: boolean
@@ -413,11 +412,7 @@ export function MarkerPopup({
 }
 
 interface MapControlsProps {
-  position?:
-    | 'top-left'
-    | 'top-right'
-    | 'bottom-left'
-    | 'bottom-right'
+  position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
   showZoom?: boolean
   showCompass?: boolean
   showLocate?: boolean

@@ -105,13 +105,29 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
   const getActionBadge = (action: string) => {
     switch (action) {
       case 'block':
-        return <Badge variant="destructive" className="text-[11px]">Blocked</Badge>
+        return (
+          <Badge variant="destructive" className="text-[11px]">
+            Blocked
+          </Badge>
+        )
       case 'allow':
-        return <Badge variant="default" className="bg-emerald-500 text-[11px]">Allowed</Badge>
+        return (
+          <Badge variant="default" className="bg-emerald-500 text-[11px]">
+            Allowed
+          </Badge>
+        )
       case 'challenge':
-        return <Badge variant="secondary" className="bg-amber-500 text-[11px]">Challenged</Badge>
+        return (
+          <Badge variant="secondary" className="bg-amber-500 text-[11px]">
+            Challenged
+          </Badge>
+        )
       default:
-        return <Badge variant="outline" className="text-[11px]">{action}</Badge>
+        return (
+          <Badge variant="outline" className="text-[11px]">
+            {action}
+          </Badge>
+        )
     }
   }
 
@@ -201,7 +217,15 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
             onClick={() => {
               // Export logs
               const csv = [
-                ['Timestamp', 'Action', 'IP Address', 'Path', 'Method', 'Status Code', 'Rule'].join(','),
+                [
+                  'Timestamp',
+                  'Action',
+                  'IP Address',
+                  'Path',
+                  'Method',
+                  'Status Code',
+                  'Rule',
+                ].join(','),
                 ...filteredLogs.map((log) =>
                   [
                     log.timestamp,
@@ -238,8 +262,12 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
               ? 'Try adjusting your filters to see more logs.'
               : 'Firewall logs will appear here once rules start processing requests.'
           }
-          isEmpty={!searchValue && filterAction === 'all' && filterRule === 'all'}
-          hasFilters={!!searchValue || filterAction !== 'all' || filterRule !== 'all'}
+          isEmpty={
+            !searchValue && filterAction === 'all' && filterRule === 'all'
+          }
+          hasFilters={
+            !!searchValue || filterAction !== 'all' || filterRule !== 'all'
+          }
           variant="card"
         />
       ) : (
@@ -297,7 +325,9 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
                         {log.statusCode}
                       </span>
                     ) : (
-                      <span className="text-[12px] text-muted-foreground">-</span>
+                      <span className="text-[12px] text-muted-foreground">
+                        -
+                      </span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -306,7 +336,9 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
                         {log.ruleName}
                       </span>
                     ) : (
-                      <span className="text-[12px] text-muted-foreground">-</span>
+                      <span className="text-[12px] text-muted-foreground">
+                        -
+                      </span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -315,7 +347,9 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
                         {log.country}
                       </span>
                     ) : (
-                      <span className="text-[12px] text-muted-foreground">-</span>
+                      <span className="text-[12px] text-muted-foreground">
+                        -
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>
@@ -327,6 +361,3 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
     </div>
   )
 }
-
-
-

@@ -66,7 +66,8 @@ export function ErrorComponent({
     const errorText = [
       `Error: ${errorDetails.message}`,
       errorDetails.stack && `\nStack:\n${errorDetails.stack}`,
-      errorDetails.componentStack && `\nComponent Stack:\n${errorDetails.componentStack}`,
+      errorDetails.componentStack &&
+        `\nComponent Stack:\n${errorDetails.componentStack}`,
       errorDetails.cause && `\nCause: ${errorDetails.cause}`,
       `\nURL: ${errorDetails.url}`,
       `Error ID: ${errorDetails.errorId}`,
@@ -97,7 +98,7 @@ export function ErrorComponent({
         <div className="mt-2 relative w-full max-w-full rounded-lg border bg-card px-4 py-3">
           <div className="flex items-start gap-2 pr-8 min-w-0 w-full">
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
-            <div 
+            <div
               className="text-xs font-mono text-muted-foreground flex-1 min-w-0 overflow-hidden text-left"
               style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}
             >
@@ -120,18 +121,11 @@ export function ErrorComponent({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mt-4 w-full">
-          <Button
-            variant="outline"
-            onClick={handleGoHome}
-            className="flex-1"
-          >
+          <Button variant="outline" onClick={handleGoHome} className="flex-1">
             <Home className="mr-1.5 h-4 w-4" />
             Go Home
           </Button>
-          <Button
-            onClick={handleRetry}
-            className="flex-1"
-          >
+          <Button onClick={handleRetry} className="flex-1">
             <RefreshCw className="mr-1.5 h-4 w-4" />
             Try Again
           </Button>

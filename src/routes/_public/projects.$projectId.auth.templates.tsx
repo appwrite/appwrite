@@ -14,7 +14,9 @@ const EMAIL_TEMPLATE_TYPES = [
   EmailTemplateType.Sessionalert,
 ]
 
-export const Route = createFileRoute('/_public/projects/$projectId/auth/templates')({
+export const Route = createFileRoute(
+  '/_public/projects/$projectId/auth/templates',
+)({
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -37,8 +39,18 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/template
       await Promise.allSettled(
         EMAIL_TEMPLATE_TYPES.map((templateType) =>
           queryClient.ensureQueryData({
-            queryKey: ['emailTemplate', projectId, templateType, EmailTemplateLocale.En],
-            queryFn: () => fetchEmailTemplate(projectId, templateType, EmailTemplateLocale.En),
+            queryKey: [
+              'emailTemplate',
+              projectId,
+              templateType,
+              EmailTemplateLocale.En,
+            ],
+            queryFn: () =>
+              fetchEmailTemplate(
+                projectId,
+                templateType,
+                EmailTemplateLocale.En,
+              ),
             staleTime: 30 * 1000, // 30 seconds
           }),
         ),

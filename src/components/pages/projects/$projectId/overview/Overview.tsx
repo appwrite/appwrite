@@ -120,25 +120,24 @@ const supportedLanguages = [
   { id: 'dotnet', name: '.NET' },
 ] as const
 
-
 // Helper function to get platform display name
 function getPlatformDisplayName(platform: string): string {
   const normalized = platform.toLowerCase()
-  
+
   // Handle Flutter platforms
   if (normalized.startsWith('flutter-')) {
     const basePlatform = normalized.replace('flutter-', '')
     const baseName = getPlatformDisplayName(basePlatform)
     return `Flutter ${baseName}`
   }
-  
+
   // Handle React Native platforms
   if (normalized.startsWith('react-native-')) {
     const basePlatform = normalized.replace('react-native-', '')
     const baseName = getPlatformDisplayName(basePlatform)
     return `React Native ${baseName}`
   }
-  
+
   // Handle Apple platforms
   if (normalized.startsWith('apple-')) {
     const appleType = normalized.replace('apple-', '')
@@ -150,7 +149,7 @@ function getPlatformDisplayName(platform: string): string {
     }
     return `Apple ${appleTypeMap[appleType] || appleType}`
   }
-  
+
   // Base platforms
   const nameMap: Record<string, string> = {
     web: 'Web',
@@ -170,8 +169,11 @@ function getPlatformDisplayName(platform: string): string {
     flutter: 'Flutter',
     'react-native': 'React Native',
   }
-  
-  return nameMap[normalized] || normalized.charAt(0).toUpperCase() + normalized.slice(1)
+
+  return (
+    nameMap[normalized] ||
+    normalized.charAt(0).toUpperCase() + normalized.slice(1)
+  )
 }
 
 interface DashboardOverviewProps {
@@ -219,7 +221,7 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
 
   // Fetch real project data from console SDK
   const { project: currentProject } = useProject(projectId)
-  
+
   // Fetch API keys using the hook
   const { apiKeys, isLoading: isLoadingKeys } = useApiKeys(projectId)
 
@@ -244,22 +246,28 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
       // Use platform name if available, otherwise fall back to display name from type
       const platformName = platform.name || getPlatformDisplayName(platformType)
       // For identifier, use hostname/key/identifier but not the name (since name is for display)
-      const identifier = platform.hostname || platform.identifier || platform.key || ''
-      
+      const identifier =
+        platform.hostname || platform.identifier || platform.key || ''
+
       // Determine if it's web or app based on platform type
       const type: 'web' | 'app' = platformType === 'web' ? 'web' : 'app'
 
       // Randomly decide which icon shows first for web platforms
-      const initialIcon = platformType === 'web' 
-        ? (Math.random() < 0.5 ? 'ts' : 'js')
-        : undefined
+      const initialIcon =
+        platformType === 'web' ? (Math.random() < 0.5 ? 'ts' : 'js') : undefined
 
       return {
         id: platformId,
         name: platformName,
         type,
         identifier,
-        icon: <PlatformIcon platform={platformType} size="md" initialIcon={initialIcon} />,
+        icon: (
+          <PlatformIcon
+            platform={platformType}
+            size="md"
+            initialIcon={initialIcon}
+          />
+        ),
         docsUrl: '#', // Could be constructed from platform data if available
       } as Integration
     })
@@ -269,19 +277,24 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
   const projectEndpoint = useMemo(() => {
     if (!currentProject?.region || currentProject.region === 'unknown') {
       // Fallback to default endpoint if region is not available
-      return import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
+      return (
+        import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
+      )
     }
 
     // Normalize the region value (trim, lowercase, remove spaces)
     // The region from the server is expected to be correct
-    const normalizedRegion = currentProject.region.trim().toLowerCase().replace(/\s+/g, '')
+    const normalizedRegion = currentProject.region
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '')
     return `https://${normalizedRegion}.cloud.appwrite.io/v1`
   }, [currentProject?.region])
 
   // Extract hostname and path from endpoint URL
   const endpointDisplay = useMemo(() => {
     if (!projectEndpoint) return ''
-    
+
     try {
       const url = new URL(projectEndpoint)
       // Ensure we include the full hostname (with region code if present) and path
@@ -418,7 +431,9 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
                       onClick={() => copyToClipboard(projectId, 'projectId')}
                       className="flex min-w-0 items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 font-mono text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
-                      <span className="truncate max-w-[120px] sm:max-w-[180px]">{projectId}</span>
+                      <span className="truncate max-w-[120px] sm:max-w-[180px]">
+                        {projectId}
+                      </span>
                       {copiedField === 'projectId' ? (
                         <Check className="h-3 w-3 shrink-0 text-emerald-500" />
                       ) : (
@@ -441,7 +456,9 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
                       className="flex min-w-0 items-center gap-1.5 rounded-md bg-muted/50 px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       <Link className="h-3.5 w-3.5 shrink-0" />
-                      <span className="truncate max-w-[100px] sm:max-w-[160px] font-mono">{endpointDisplay}</span>
+                      <span className="truncate max-w-[100px] sm:max-w-[160px] font-mono">
+                        {endpointDisplay}
+                      </span>
                       {copiedField === 'endpoint' ? (
                         <Check className="h-3 w-3 shrink-0 text-emerald-500" />
                       ) : (
@@ -659,11 +676,7 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
             </Button>
           </div>
           {integrations.length === 0 ? (
-            <EmptyState
-              icon={Plug2}
-              variant="card"
-              isEmpty={true}
-            >
+            <EmptyState icon={Plug2} variant="card" isEmpty={true}>
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                   <Plug2 className="h-6 w-6 text-muted-foreground" />
@@ -672,7 +685,8 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
                   No platforms connected
                 </h3>
                 <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  Connect your first platform to start building with Appwrite. Add web apps, mobile apps, or server SDKs to get started.
+                  Connect your first platform to start building with Appwrite.
+                  Add web apps, mobile apps, or server SDKs to get started.
                 </p>
                 <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
                   <div className="h-px flex-1 bg-border" />
@@ -697,28 +711,28 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
               </div>
             </EmptyState>
           ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {integrations.map((integration) => (
-              <button
-                key={integration.id}
-                className="group flex items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
-                  {integration.icon}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-medium text-foreground">
-                    {integration.name}
-                  </p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {integrations.map((integration) => (
+                <button
+                  key={integration.id}
+                  className="group flex items-center gap-4 rounded-xl border border-border bg-card/50 p-4 text-left transition-colors hover:border-border hover:bg-card"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-foreground">
+                    {integration.icon}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14px] font-medium text-foreground">
+                      {integration.name}
+                    </p>
                     {integration.identifier && (
-                  <p className="text-[12px] text-muted-foreground">
-                    {integration.identifier}
-                  </p>
+                      <p className="text-[12px] text-muted-foreground">
+                        {integration.identifier}
+                      </p>
                     )}
-                </div>
-              </button>
-            ))}
-          </div>
+                  </div>
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
@@ -742,7 +756,10 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
             <div className="rounded-xl border border-border bg-card/50">
               <div className="divide-y divide-border">
                 {Array.from({ length: 2 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 p-4">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-3 p-4"
+                  >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <Skeleton className="h-4 w-4 shrink-0 rounded" />
@@ -762,11 +779,7 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
               </div>
             </div>
           ) : apiKeys.length === 0 ? (
-            <EmptyState
-              icon={Key}
-              variant="card"
-              isEmpty={true}
-            >
+            <EmptyState icon={Key} variant="card" isEmpty={true}>
               <div className="flex flex-col items-center text-center">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
                   <Key className="h-6 w-6 text-muted-foreground" />
@@ -775,7 +788,9 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
                   No API keys created
                 </h3>
                 <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  Create an API key to authenticate your applications and access Appwrite services. API keys provide secure access to your project resources.
+                  Create an API key to authenticate your applications and access
+                  Appwrite services. API keys provide secure access to your
+                  project resources.
                 </p>
                 <div className="w-full">
                   <div className="mb-4 flex w-full items-center gap-3 text-[12px] text-muted-foreground">

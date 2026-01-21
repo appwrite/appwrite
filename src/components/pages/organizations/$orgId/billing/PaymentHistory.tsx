@@ -208,8 +208,8 @@ export function PaymentHistory() {
           </thead>
           <tbody className="divide-y divide-border">
             {invoices.map((invoice) => (
-              <InvoiceRow 
-                key={invoice.$id} 
+              <InvoiceRow
+                key={invoice.$id}
                 invoice={invoice}
                 orgId={orgId}
                 onViewInvoice={async (invoiceId: string) => {
@@ -217,18 +217,22 @@ export function PaymentHistory() {
                   try {
                     // Use SDK method to get the view URL
                     // The SDK handles authentication automatically
-                    const response = await sdk.forConsole.organizations.getInvoiceView({
-                      organizationId: orgId,
-                      invoiceId,
-                    })
-                    
+                    const response =
+                      await sdk.forConsole.organizations.getInvoiceView({
+                        organizationId: orgId,
+                        invoiceId,
+                      })
+
                     // The response might be a URL string or an object with a URL
                     let url: string
                     if (typeof response === 'string') {
                       url = response
                     } else if (response && typeof response === 'object') {
                       // Check for common URL properties
-                      url = (response as any).url || (response as any).href || (response as any).link
+                      url =
+                        (response as any).url ||
+                        (response as any).href ||
+                        (response as any).link
                       if (!url) {
                         // If no URL in response, construct it from endpoint
                         const endpoint = sdk.forConsole.client.config.endpoint
@@ -239,10 +243,14 @@ export function PaymentHistory() {
                       const endpoint = sdk.forConsole.client.config.endpoint
                       url = `${endpoint}/organizations/${orgId}/invoices/${invoiceId}/view`
                     }
-                    
+
                     window.open(url, '_blank', 'noopener,noreferrer')
                   } catch (error) {
-                    toast.error(error instanceof Error ? error.message : 'Failed to view invoice')
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : 'Failed to view invoice',
+                    )
                   }
                 }}
                 onDownloadInvoice={async (invoiceId: string) => {
@@ -250,18 +258,22 @@ export function PaymentHistory() {
                   try {
                     // Use SDK method to get the download URL
                     // The SDK handles authentication automatically
-                    const response = await sdk.forConsole.organizations.getInvoiceDownload({
-                      organizationId: orgId,
-                      invoiceId,
-                    })
-                    
+                    const response =
+                      await sdk.forConsole.organizations.getInvoiceDownload({
+                        organizationId: orgId,
+                        invoiceId,
+                      })
+
                     // The response might be a URL string or an object with a URL
                     let url: string
                     if (typeof response === 'string') {
                       url = response
                     } else if (response && typeof response === 'object') {
                       // Check for common URL properties
-                      url = (response as any).url || (response as any).href || (response as any).link
+                      url =
+                        (response as any).url ||
+                        (response as any).href ||
+                        (response as any).link
                       if (!url) {
                         // If no URL in response, construct it from endpoint
                         const endpoint = sdk.forConsole.client.config.endpoint
@@ -272,17 +284,19 @@ export function PaymentHistory() {
                       const endpoint = sdk.forConsole.client.config.endpoint
                       url = `${endpoint}/organizations/${orgId}/invoices/${invoiceId}/download`
                     }
-                    
+
                     // Fetch the PDF blob with credentials to include auth cookies
                     const pdfResponse = await fetch(url, {
                       method: 'GET',
                       credentials: 'include', // Include cookies for authentication
                     })
-                    
+
                     if (!pdfResponse.ok) {
-                      throw new Error(`Failed to download invoice: ${pdfResponse.statusText}`)
+                      throw new Error(
+                        `Failed to download invoice: ${pdfResponse.statusText}`,
+                      )
                     }
-                    
+
                     // Get the blob and create a download link
                     const blob = await pdfResponse.blob()
                     const blobUrl = window.URL.createObjectURL(blob)
@@ -294,7 +308,11 @@ export function PaymentHistory() {
                     document.body.removeChild(link)
                     window.URL.revokeObjectURL(blobUrl)
                   } catch (error) {
-                    toast.error(error instanceof Error ? error.message : 'Failed to download invoice')
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : 'Failed to download invoice',
+                    )
                   }
                 }}
               />
@@ -307,7 +325,8 @@ export function PaymentHistory() {
       <div className="border-t border-border px-6 py-3 bg-muted/30">
         <div className="flex items-center justify-between">
           <p className="text-[12px] text-muted-foreground">
-            Showing {currentPage * ITEMS_PER_PAGE + 1}–{Math.min((currentPage + 1) * ITEMS_PER_PAGE, totalInvoices)} of{' '}
+            Showing {currentPage * ITEMS_PER_PAGE + 1}–
+            {Math.min((currentPage + 1) * ITEMS_PER_PAGE, totalInvoices)} of{' '}
             {totalInvoices} invoices
           </p>
           <div className="flex items-center gap-2">
@@ -346,7 +365,12 @@ interface InvoiceRowProps {
   onDownloadInvoice: (invoiceId: string) => Promise<void>
 }
 
-function InvoiceRow({ invoice, orgId, onViewInvoice, onDownloadInvoice }: InvoiceRowProps) {
+function InvoiceRow({
+  invoice,
+  orgId,
+  onViewInvoice,
+  onDownloadInvoice,
+}: InvoiceRowProps) {
   const [isViewing, setIsViewing] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
 

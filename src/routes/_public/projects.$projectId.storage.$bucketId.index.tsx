@@ -47,4 +47,3 @@ export const Route = createFileRoute(
 function BucketFilesPage() {
   return <BucketDetailView />
 }
-

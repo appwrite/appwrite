@@ -48,14 +48,15 @@ export function MessagingProviderIcon({
           sizeClass,
           // Make icons work in both light and dark mode
           'brightness-0 dark:brightness-100',
-          className
+          className,
         )}
       />
     )
   }
 
   // Fallback to type-based icons
-  const FallbackIcon = providerType === 'email' ? Mail : providerType === 'sms' ? Phone : Bell
+  const FallbackIcon =
+    providerType === 'email' ? Mail : providerType === 'sms' ? Phone : Bell
 
   return <FallbackIcon className={cn(sizeClass, className)} />
 }

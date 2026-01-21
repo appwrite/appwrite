@@ -139,11 +139,31 @@ interface MockActivity {
 // Generate mock activities
 const generateMockActivities = (): MockActivity[] => {
   const users = [
-    { id: '507f1f77bcf86cd7994390a0', name: 'Alex Morgan', email: 'alex@appwrite.io' },
-    { id: '507f1f77bcf86cd7994390a1', name: 'Sarah Chen', email: 'sarah@example.com' },
-    { id: '507f1f77bcf86cd7994390a2', name: 'Mike Johnson', email: 'mike@example.com' },
-    { id: '507f1f77bcf86cd7994390a3', name: 'Emily Davis', email: 'emily@example.com' },
-    { id: '507f1f77bcf86cd7994390a4', name: 'System', email: 'system@appwrite.io' },
+    {
+      id: '507f1f77bcf86cd7994390a0',
+      name: 'Alex Morgan',
+      email: 'alex@appwrite.io',
+    },
+    {
+      id: '507f1f77bcf86cd7994390a1',
+      name: 'Sarah Chen',
+      email: 'sarah@example.com',
+    },
+    {
+      id: '507f1f77bcf86cd7994390a2',
+      name: 'Mike Johnson',
+      email: 'mike@example.com',
+    },
+    {
+      id: '507f1f77bcf86cd7994390a3',
+      name: 'Emily Davis',
+      email: 'emily@example.com',
+    },
+    {
+      id: '507f1f77bcf86cd7994390a4',
+      name: 'System',
+      email: 'system@appwrite.io',
+    },
   ]
 
   const activities: MockActivity[] = []
@@ -412,8 +432,10 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
                     Activity retention period
                   </AlertTitle>
                   <AlertDescription className="text-[12px] text-blue-600/80 dark:text-blue-400/80 !block mt-1">
-                    Your <span className="font-medium capitalize">{plan}</span> plan supports{' '}
-                    <span className="font-medium">{planLimit.label}</span> of activity retention.
+                    Your <span className="font-medium capitalize">{plan}</span>{' '}
+                    plan supports{' '}
+                    <span className="font-medium">{planLimit.label}</span> of
+                    activity retention.
                     {(plan === 'free' || plan === 'pro') && (
                       <>
                         {' '}
@@ -551,7 +573,9 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
             <Table className="border-b border-border">
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[200px] pl-6 sm:pl-8">Event</TableHead>
+                  <TableHead className="w-[200px] pl-6 sm:pl-8">
+                    Event
+                  </TableHead>
                   <TableHead className="w-[200px]">Resource</TableHead>
                   <TableHead className="w-[180px]">User</TableHead>
                   <TableHead className="w-[280px]">Description</TableHead>
@@ -565,7 +589,8 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
                     key={activity.$id}
                     className={cn(
                       'cursor-pointer',
-                      index === paginatedActivities.length - 1 && 'border-b border-border',
+                      index === paginatedActivities.length - 1 &&
+                        'border-b border-border',
                     )}
                     onClick={() => console.log('View activity', activity.$id)}
                   >

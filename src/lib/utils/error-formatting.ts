@@ -43,7 +43,8 @@ export function formatError(
     ) {
       return {
         title: 'Not Found',
-        message: 'The requested resource could not be found. It may have been deleted or you may not have permission to access it.',
+        message:
+          'The requested resource could not be found. It may have been deleted or you may not have permission to access it.',
         isUserFriendly: true,
       }
     }
@@ -58,16 +59,14 @@ export function formatError(
     ) {
       return {
         title: 'Access Denied',
-        message: 'You do not have permission to perform this action. Please contact your administrator if you believe this is an error.',
+        message:
+          'You do not have permission to perform this action. Please contact your administrator if you believe this is an error.',
         isUserFriendly: true,
       }
     }
 
     // Check for forbidden errors
-    if (
-      (error as any).code === 403 ||
-      lowerMessage.includes('forbidden')
-    ) {
+    if ((error as any).code === 403 || lowerMessage.includes('forbidden')) {
       return {
         title: 'Forbidden',
         message: 'You do not have permission to access this resource.',
@@ -83,10 +82,11 @@ export function formatError(
       lowerMessage.includes('bad request')
     ) {
       // Try to extract a more specific message if available
-      const specificMessage = message.length > 0 && !message.includes('400') 
-        ? message 
-        : 'The request is invalid. Please check your input and try again.'
-      
+      const specificMessage =
+        message.length > 0 && !message.includes('400')
+          ? message
+          : 'The request is invalid. Please check your input and try again.'
+
       return {
         title: 'Invalid Request',
         message: specificMessage,
@@ -104,7 +104,8 @@ export function formatError(
     ) {
       return {
         title: 'Server Error',
-        message: 'An error occurred on the server. Please try again in a few moments. If the problem persists, contact support.',
+        message:
+          'An error occurred on the server. Please try again in a few moments. If the problem persists, contact support.',
         isUserFriendly: true,
       }
     }
@@ -112,23 +113,21 @@ export function formatError(
     // Check for network errors
     if (
       error.name === 'NetworkError' ||
-      error.name === 'TypeError' && message.includes('fetch') ||
+      (error.name === 'TypeError' && message.includes('fetch')) ||
       lowerMessage.includes('network') ||
       lowerMessage.includes('failed to fetch') ||
       lowerMessage.includes('connection')
     ) {
       return {
         title: 'Connection Error',
-        message: 'Unable to connect to the server. Please check your internet connection and try again.',
+        message:
+          'Unable to connect to the server. Please check your internet connection and try again.',
         isUserFriendly: true,
       }
     }
 
     // Check for timeout errors
-    if (
-      error.name === 'TimeoutError' ||
-      lowerMessage.includes('timeout')
-    ) {
+    if (error.name === 'TimeoutError' || lowerMessage.includes('timeout')) {
       return {
         title: 'Request Timeout',
         message: 'The request took too long to complete. Please try again.',
@@ -138,7 +137,7 @@ export function formatError(
 
     // For other Error objects, check if message is user-friendly
     // If it's a technical error (contains stack trace indicators, etc.), use fallback
-    const isTechnicalError = 
+    const isTechnicalError =
       message.includes('at ') ||
       message.includes('Error:') ||
       message.includes('TypeError') ||
@@ -213,15 +212,15 @@ export function getErrorTitle(
 /**
  * Helper function to show a toast error with consistent formatting
  * This should be used instead of toast.error() directly for better UX
- * 
+ *
  * Note: This function requires toast to be imported separately to avoid circular dependencies.
  * Use getErrorMessage() with toast.error() directly if you prefer.
- * 
+ *
  * @example
  * ```ts
  * import { toast } from 'sonner'
  * import { getErrorMessage } from '@/lib/utils/error-formatting'
- * 
+ *
  * try {
  *   await someOperation()
  * } catch (error) {
@@ -229,4 +228,3 @@ export function getErrorTitle(
  * }
  * ```
  */
-

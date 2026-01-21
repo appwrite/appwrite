@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Backups
- * 
+ *
  * Handles backup policies and archives for databases.
  */
 
@@ -8,7 +8,11 @@ import { useQuery } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, TINY_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  TINY_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS
@@ -16,7 +20,7 @@ import { DEFAULT_STALE_TIME, TINY_PAGE_SIZE, keepPreviousData } from './constant
 
 /**
  * Query function to fetch backup policies for a database
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
  */
 export async function fetchBackupPolicies(
@@ -40,7 +44,7 @@ export async function fetchBackupPolicies(
 
 /**
  * Query function to fetch backup archives for a database
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
  */
 export async function fetchBackupArchives(
@@ -76,7 +80,7 @@ export async function fetchBackupArchives(
 export function useBackupPolicies(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ) {
   return useQuery({
     queryKey: ['backup-policies', 'project', projectId, 'database', databaseId],
@@ -95,14 +99,21 @@ export function useBackupArchives(
   databaseId: string | null | undefined,
   page: number = 0,
   limit: number = TINY_PAGE_SIZE,
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ) {
   return useQuery({
-    queryKey: ['backup-archives', 'project', projectId, 'database', databaseId, page, limit],
+    queryKey: [
+      'backup-archives',
+      'project',
+      projectId,
+      'database',
+      databaseId,
+      page,
+      limit,
+    ],
     queryFn: () => fetchBackupArchives(projectId!, databaseId!, page, limit),
     enabled: !!projectId && !!databaseId && (options?.enabled ?? true),
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
   })
 }
-

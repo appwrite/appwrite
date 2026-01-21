@@ -1,6 +1,6 @@
 /**
  * React Query hooks for VCS (Version Control System)
- * 
+ *
  * Handles installations, repositories, branches, and repository contents.
  */
 
@@ -28,10 +28,7 @@ export async function fetchVcsInstallations(
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const queries = [
-    Query.limit(limit),
-    Query.offset(page * limit),
-  ]
+  const queries = [Query.limit(limit), Query.offset(page * limit)]
   return await projectSdk.vcs.listInstallations({ queries })
 }
 
@@ -44,7 +41,9 @@ export async function fetchRepository(
   providerRepositoryId: string,
 ): Promise<Models.ProviderRepository> {
   if (!projectId || !installationId || !providerRepositoryId) {
-    throw new Error('Project ID, Installation ID, and Repository ID are required')
+    throw new Error(
+      'Project ID, Installation ID, and Repository ID are required',
+    )
   }
 
   const projectSdk = sdk.forProject(projectId)
@@ -85,14 +84,15 @@ export async function fetchRepositories(
   search?: string,
 ): Promise<Models.ProviderRepositoryFrameworkList> {
   if (!projectId || !installationId) {
-    return { runtimeProviderRepositories: [], frameworkProviderRepositories: [], total: 0 }
+    return {
+      runtimeProviderRepositories: [],
+      frameworkProviderRepositories: [],
+      total: 0,
+    }
   }
 
   const projectSdk = sdk.forProject(projectId)
-  const queries = [
-    Query.limit(limit),
-    Query.offset(page * limit),
-  ]
+  const queries = [Query.limit(limit), Query.offset(page * limit)]
 
   return await projectSdk.vcs.listRepositories({
     installationId,
@@ -136,7 +136,9 @@ export async function detectRepositoryRuntime(
   providerRootDirectory?: string,
 ): Promise<Models.DetectionFramework> {
   if (!projectId || !installationId || !providerRepositoryId) {
-    throw new Error('Project ID, Installation ID, and Repository ID are required')
+    throw new Error(
+      'Project ID, Installation ID, and Repository ID are required',
+    )
   }
 
   const projectSdk = sdk.forProject(projectId)
@@ -200,8 +202,15 @@ export function useRepository(
   providerRepositoryId: string | null | undefined,
 ) {
   return useQuery({
-    queryKey: ['vcs', 'repository', projectId, installationId, providerRepositoryId],
-    queryFn: () => fetchRepository(projectId!, installationId!, providerRepositoryId!),
+    queryKey: [
+      'vcs',
+      'repository',
+      projectId,
+      installationId,
+      providerRepositoryId,
+    ],
+    queryFn: () =>
+      fetchRepository(projectId!, installationId!, providerRepositoryId!),
     enabled: !!projectId && !!installationId && !!providerRepositoryId,
     staleTime: DEFAULT_STALE_TIME,
   })
@@ -216,8 +225,19 @@ export function useRepositoryBranches(
   providerRepositoryId: string | null | undefined,
 ) {
   return useQuery({
-    queryKey: ['vcs', 'branches', projectId, installationId, providerRepositoryId],
-    queryFn: () => fetchRepositoryBranches(projectId!, installationId!, providerRepositoryId!),
+    queryKey: [
+      'vcs',
+      'branches',
+      projectId,
+      installationId,
+      providerRepositoryId,
+    ],
+    queryFn: () =>
+      fetchRepositoryBranches(
+        projectId!,
+        installationId!,
+        providerRepositoryId!,
+      ),
     enabled: !!projectId && !!installationId && !!providerRepositoryId,
     staleTime: DEFAULT_STALE_TIME,
   })
@@ -235,8 +255,18 @@ export function useRepositories(
   search?: string,
 ) {
   return useQuery({
-    queryKey: ['vcs', 'repositories', projectId, installationId, type, page, limit, search],
-    queryFn: () => fetchRepositories(projectId!, installationId!, type, page, limit, search),
+    queryKey: [
+      'vcs',
+      'repositories',
+      projectId,
+      installationId,
+      type,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () =>
+      fetchRepositories(projectId!, installationId!, type, page, limit, search),
     enabled: !!projectId && !!installationId,
     staleTime: DEFAULT_STALE_TIME,
   })
@@ -274,5 +304,3 @@ export function useRepositoryContents(
     staleTime: DEFAULT_STALE_TIME,
   })
 }
-
-

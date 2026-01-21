@@ -100,9 +100,7 @@ export function InputTags({
           className="flex-1 min-w-[120px] h-6 border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-[13px]"
         />
       </div>
-      {error && (
-        <p className="text-[12px] text-red-500">{error}</p>
-      )}
+      {error && <p className="text-[12px] text-red-500">{error}</p>}
     </div>
   )
 }

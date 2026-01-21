@@ -22,7 +22,9 @@ export function PlanComparisonBox({
   }
 
   const currentPlanName = getPlanDisplayName(currentPlan as string)
-  const selectedPlanName = selectedPlan ? getPlanDisplayName(selectedPlan) : null
+  const selectedPlanName = selectedPlan
+    ? getPlanDisplayName(selectedPlan)
+    : null
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden sticky top-6">
@@ -41,12 +43,16 @@ export function PlanComparisonBox({
         <div className="space-y-4">
           <div className="flex items-center justify-between text-[13px]">
             <span className="text-muted-foreground">Current Plan</span>
-            <span className="font-medium text-foreground">{currentPlanName}</span>
+            <span className="font-medium text-foreground">
+              {currentPlanName}
+            </span>
           </div>
           {selectedPlanName && (
             <div className="flex items-center justify-between text-[13px]">
               <span className="text-muted-foreground">Selected Plan</span>
-              <span className="font-medium text-foreground">{selectedPlanName}</span>
+              <span className="font-medium text-foreground">
+                {selectedPlanName}
+              </span>
             </div>
           )}
           {!selectedPlan && (

@@ -163,7 +163,13 @@ function UpdateEmailSection() {
   }, [account])
 
   const updateEmailMutation = useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+    mutationFn: async ({
+      email,
+      password,
+    }: {
+      email: string
+      password: string
+    }) => {
       return await sdk.forConsole.account.updateEmail({ email, password })
     },
     onSuccess: () => {
@@ -179,7 +185,8 @@ function UpdateEmailSection() {
 
   const emailChanged = email !== (account?.email || '')
   const showPassword = emailChanged && !!email
-  const isDisabled = !email || !emailPassword || !emailChanged || updateEmailMutation.isPending
+  const isDisabled =
+    !email || !emailPassword || !emailChanged || updateEmailMutation.isPending
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -207,7 +214,8 @@ function UpdateEmailSection() {
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-3">
-            Update your account email address. Requires password verification when changing email.
+            Update your account email address. Requires password verification
+            when changing email.
           </p>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -265,8 +273,17 @@ function UpdatePasswordSection() {
   const queryClient = useQueryClient()
 
   const updatePasswordMutation = useMutation({
-    mutationFn: async ({ password, oldPassword }: { password: string; oldPassword: string }) => {
-      return await sdk.forConsole.account.updatePassword({ password, oldPassword })
+    mutationFn: async ({
+      password,
+      oldPassword,
+    }: {
+      password: string
+      oldPassword: string
+    }) => {
+      return await sdk.forConsole.account.updatePassword({
+        password,
+        oldPassword,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: Dependencies.ACCOUNT })
@@ -279,7 +296,8 @@ function UpdatePasswordSection() {
     },
   })
 
-  const isDisabled = !newPassword || !oldPassword || updatePasswordMutation.isPending
+  const isDisabled =
+    !newPassword || !oldPassword || updatePasswordMutation.isPending
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -299,7 +317,8 @@ function UpdatePasswordSection() {
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-3">
-            Change your account password. Includes link to password recovery if forgotten.
+            Change your account password. Includes link to password recovery if
+            forgotten.
           </p>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -498,7 +517,9 @@ function IdentitiesSection() {
                         className="text-[12px] text-muted-foreground"
                       />
                     ) : (
-                      <span className="text-[12px] text-muted-foreground">-</span>
+                      <span className="text-[12px] text-muted-foreground">
+                        -
+                      </span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -552,7 +573,7 @@ function MFASection() {
     onSuccess: async (_, mfa) => {
       queryClient.invalidateQueries({ queryKey: Dependencies.ACCOUNT })
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
-      
+
       // Auto-setup email MFA if enabling MFA and email is verified but email MFA not set up
       if (mfa && account?.emailVerification && !factors.email) {
         try {
@@ -564,8 +585,10 @@ function MFASection() {
           console.error('Failed to auto-setup email MFA:', error)
         }
       }
-      
-      toast.success(`Multi-factor authentication has been ${mfa ? 'enabled' : 'disabled'}`)
+
+      toast.success(
+        `Multi-factor authentication has been ${mfa ? 'enabled' : 'disabled'}`,
+      )
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to update MFA')
@@ -595,11 +618,16 @@ function MFASection() {
       <div className="px-6 py-4 space-y-6">
         <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
           <div className="space-y-0.5">
-            <Label htmlFor="mfa-toggle" className="text-[13px] font-semibold text-foreground cursor-pointer">
+            <Label
+              htmlFor="mfa-toggle"
+              className="text-[13px] font-semibold text-foreground cursor-pointer"
+            >
               Multi-factor authentication
             </Label>
             <p className="text-[12px] text-muted-foreground">
-              {mfaEnabled ? 'MFA is currently enabled' : 'MFA is currently disabled'}
+              {mfaEnabled
+                ? 'MFA is currently enabled'
+                : 'MFA is currently disabled'}
             </p>
           </div>
           <Switch
@@ -614,8 +642,13 @@ function MFASection() {
           <div className="space-y-4">
             <TOTPMethod factors={factors} />
             <EmailMFAMethod factors={factors} account={account} />
-            {factors.phone && <SMSMFAMethod factors={factors} account={account} />}
-            <RecoveryCodesMethod factors={factors} hasAnyMfaMethod={hasAnyMfaMethod} />
+            {factors.phone && (
+              <SMSMFAMethod factors={factors} account={account} />
+            )}
+            <RecoveryCodesMethod
+              factors={factors}
+              hasAnyMfaMethod={hasAnyMfaMethod}
+            />
           </div>
         )}
       </div>
@@ -638,13 +671,13 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
       const mfaType = await sdk.forConsole.account.createMFAAuthenticator({
         type: AuthenticatorType.Totp,
       })
-      
+
       // Generate QR code
       const qrUrl = sdk.forConsole.avatars.getQR({
         text: mfaType.uri,
         size: 384,
       })
-      
+
       return { mfaType, qrUrl }
     },
     onSuccess: (data) => {
@@ -719,16 +752,22 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="text-[14px] font-semibold text-foreground">Authenticator app</h4>
+            <h4 className="text-[14px] font-semibold text-foreground">
+              Authenticator app
+            </h4>
             {factors.totp && (
-              <Badge variant="secondary" className="h-5 gap-1 px-1.5 text-[11px]">
+              <Badge
+                variant="secondary"
+                className="h-5 gap-1 px-1.5 text-[11px]"
+              >
                 <CheckCircle2 className="h-3 w-3" />
                 connected
               </Badge>
             )}
           </div>
           <p className="text-[13px] text-muted-foreground">
-            Use an authentication app to generate two-factor authentication codes.
+            Use an authentication app to generate two-factor authentication
+            codes.
           </p>
         </div>
         <div>
@@ -801,7 +840,9 @@ function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
                     placeholder="000000"
                     value={otp}
                     onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '').slice(0, 6)
+                      const value = e.target.value
+                        .replace(/\D/g, '')
+                        .slice(0, 6)
                       setOtp(value)
                     }}
                     maxLength={6}
@@ -960,7 +1001,9 @@ function RecoveryCodesMethod({
       return await sdk.forConsole.account.createMFARecoveryCodes()
     },
     onSuccess: (data) => {
-      setRecoveryCodes(('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [])
+      setRecoveryCodes(
+        ('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [],
+      )
       setCodesDialogOpen(true)
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
     },
@@ -974,7 +1017,9 @@ function RecoveryCodesMethod({
       return await sdk.forConsole.account.updateMFARecoveryCodes()
     },
     onSuccess: (data) => {
-      setRecoveryCodes(('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [])
+      setRecoveryCodes(
+        ('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [],
+      )
       setCodesDialogOpen(true)
       queryClient.invalidateQueries({ queryKey: Dependencies.FACTORS })
     },
@@ -986,7 +1031,9 @@ function RecoveryCodesMethod({
   const handleView = async () => {
     try {
       const data = await sdk.forConsole.account.getMFARecoveryCodes()
-      setRecoveryCodes(('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [])
+      setRecoveryCodes(
+        ('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [],
+      )
       setCodesDialogOpen(true)
     } catch (error: any) {
       // If codes don't exist, create them
@@ -1005,7 +1052,9 @@ function RecoveryCodesMethod({
           <LockOpen className="h-5 w-5 text-muted-foreground" />
         </div>
         <div className="flex-1">
-          <h4 className="text-[14px] font-semibold text-foreground mb-1">Recovery codes</h4>
+          <h4 className="text-[14px] font-semibold text-foreground mb-1">
+            Recovery codes
+          </h4>
           <p className="text-[13px] text-muted-foreground">
             Use in case you can't receive two-factor authentication codes.
           </p>
@@ -1017,7 +1066,9 @@ function RecoveryCodesMethod({
               size="sm"
               className="h-9 text-[13px]"
               onClick={() => regenerateRecoveryCodesMutation.mutate()}
-              disabled={!hasAnyMfaMethod || regenerateRecoveryCodesMutation.isPending}
+              disabled={
+                !hasAnyMfaMethod || regenerateRecoveryCodesMutation.isPending
+              }
             >
               Regenerate
             </Button>
@@ -1041,7 +1092,8 @@ function RecoveryCodesMethod({
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Recovery codes</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Save these codes in a safe place. You can use them to access your account if you lose access to your authenticator device.
+              Save these codes in a safe place. You can use them to access your
+              account if you lose access to your authenticator device.
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
@@ -1141,7 +1193,8 @@ function DeleteAccountSection() {
         <div className="border-t border-red-500/20" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground">
-            Your account will be permanently deleted and access will be lost to any of your teams and data. This action is irreversible.
+            Your account will be permanently deleted and access will be lost to
+            any of your teams and data. This action is irreversible.
           </p>
 
           {/* Account Info Summary */}
@@ -1178,7 +1231,8 @@ function DeleteAccountSection() {
               <DialogHeader className="px-6 pt-6 text-left">
                 <DialogTitle>Delete account</DialogTitle>
                 <DialogDescription className="text-[13px] mt-2">
-                  Are you sure you want to delete your account? This action cannot be undone.
+                  Are you sure you want to delete your account? This action
+                  cannot be undone.
                 </DialogDescription>
               </DialogHeader>
               <div className="border-t border-border" />
@@ -1235,8 +1289,6 @@ function DeleteAccountSection() {
           </Dialog>
         </div>
       </div>
-
     </>
   )
 }
-

@@ -38,7 +38,7 @@ export function SelectPaymentMethod({
 }: SelectPaymentMethodProps) {
   // Filter to only show completed cards (with last4)
   const completedPaymentMethods = paymentMethods.filter((pm) => pm.last4)
-  
+
   // Show inline form only when dropdown is empty (no payment methods)
   const showInlineForm = completedPaymentMethods.length === 0
 
@@ -67,7 +67,10 @@ export function SelectPaymentMethod({
         <>
           {/* Payment Method Dropdown */}
           <div>
-            <Label htmlFor="payment-method" className="text-[13px] font-medium mb-2 block">
+            <Label
+              htmlFor="payment-method"
+              className="text-[13px] font-medium mb-2 block"
+            >
               Payment method
             </Label>
             <Select

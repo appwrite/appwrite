@@ -482,198 +482,193 @@ export function AnalyticsView() {
               itemLabel="websites"
             />
           </div>
-        ) : (
-          paginatedWebsites.length > 0 ? (
-            <>
-              <div className="rounded-lg border border-border bg-card">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-[250px]">Website</TableHead>
-                      <TableHead className="w-[100px]">Visitors</TableHead>
-                      <TableHead className="w-[100px]">Page Views</TableHead>
-                      <TableHead className="w-[100px]">Avg. Duration</TableHead>
-                      <TableHead className="w-[100px]">Bounce Rate</TableHead>
-                      <TableHead className="w-[120px]">Last Activity</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedWebsites.map((site) => (
-                      <TableRow
-                        key={site.id}
-                        className="cursor-pointer"
-                      >
-                        <TableCell>
-                          <Link
-                            to="/projects/$projectId/analytics/$websiteId"
-                            params={{
-                              projectId: projectId as string,
-                              websiteId: site.id,
-                            }}
-                            className="block"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <p className="truncate text-[13px] font-medium text-foreground">
-                                    {site.name}
-                                  </p>
-                                  {site.isAppwriteSite && <AppwriteSitesBadge />}
-                                </div>
-                                <p className="flex items-center gap-1.5 truncate text-[12px] text-muted-foreground">
-                                  {site.domain}
+        ) : paginatedWebsites.length > 0 ? (
+          <>
+            <div className="rounded-lg border border-border bg-card">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-[250px]">Website</TableHead>
+                    <TableHead className="w-[100px]">Visitors</TableHead>
+                    <TableHead className="w-[100px]">Page Views</TableHead>
+                    <TableHead className="w-[100px]">Avg. Duration</TableHead>
+                    <TableHead className="w-[100px]">Bounce Rate</TableHead>
+                    <TableHead className="w-[120px]">Last Activity</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedWebsites.map((site) => (
+                    <TableRow key={site.id} className="cursor-pointer">
+                      <TableCell>
+                        <Link
+                          to="/projects/$projectId/analytics/$websiteId"
+                          params={{
+                            projectId: projectId as string,
+                            websiteId: site.id,
+                          }}
+                          className="block"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="truncate text-[13px] font-medium text-foreground">
+                                  {site.name}
                                 </p>
+                                {site.isAppwriteSite && <AppwriteSitesBadge />}
                               </div>
+                              <p className="flex items-center gap-1.5 truncate text-[12px] text-muted-foreground">
+                                {site.domain}
+                              </p>
                             </div>
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Link
-                            to="/projects/$projectId/analytics/$websiteId"
-                            params={{
-                              projectId: projectId as string,
-                              websiteId: site.id,
-                            }}
-                            className="block"
-                          >
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[13px] text-foreground">
-                                {formatNumber(site.stats.visitors)}
-                              </span>
-                              {site.stats.visitorsChange !== 0 && (
-                                <span
-                                  className={cn(
-                                    'text-[11px]',
-                                    site.stats.visitorsChange > 0
-                                      ? 'text-emerald-600 dark:text-emerald-400'
-                                      : 'text-red-600 dark:text-red-400',
-                                  )}
-                                >
-                                  {site.stats.visitorsChange > 0 ? '+' : ''}
-                                  {site.stats.visitorsChange}%
-                                </span>
-                              )}
-                            </div>
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Link
-                            to="/projects/$projectId/analytics/$websiteId"
-                            params={{
-                              projectId: projectId as string,
-                              websiteId: site.id,
-                            }}
-                            className="block"
-                          >
-                            <span className="text-[13px] text-muted-foreground">
-                              {formatNumber(site.stats.pageViews)}
+                          </div>
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          to="/projects/$projectId/analytics/$websiteId"
+                          params={{
+                            projectId: projectId as string,
+                            websiteId: site.id,
+                          }}
+                          className="block"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[13px] text-foreground">
+                              {formatNumber(site.stats.visitors)}
                             </span>
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Link
-                            to="/projects/$projectId/analytics/$websiteId"
-                            params={{
-                              projectId: projectId as string,
-                              websiteId: site.id,
-                            }}
-                            className="block"
-                          >
-                            <span className="text-[13px] text-muted-foreground">
-                              {site.stats.avgDuration}
-                            </span>
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Link
-                            to="/projects/$projectId/analytics/$websiteId"
-                            params={{
-                              projectId: projectId as string,
-                              websiteId: site.id,
-                            }}
-                            className="block"
-                          >
-                            <span className="text-[13px] text-muted-foreground">
-                              {site.stats.bounceRate}%
-                            </span>
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Link
-                            to="/projects/$projectId/analytics/$websiteId"
-                            params={{
-                              projectId: projectId as string,
-                              websiteId: site.id,
-                            }}
-                            className="block"
-                          >
-                            {site.lastActivity ? (
-                              <DateTooltip
-                                date={new Date(site.lastActivity)}
-                                className="text-[12px] text-muted-foreground"
-                              />
-                            ) : (
-                              <span className="text-[12px] text-muted-foreground/50">
-                                Never
+                            {site.stats.visitorsChange !== 0 && (
+                              <span
+                                className={cn(
+                                  'text-[11px]',
+                                  site.stats.visitorsChange > 0
+                                    ? 'text-emerald-600 dark:text-emerald-400'
+                                    : 'text-red-600 dark:text-red-400',
+                                )}
+                              >
+                                {site.stats.visitorsChange > 0 ? '+' : ''}
+                                {site.stats.visitorsChange}%
                               </span>
                             )}
-                          </Link>
-                        </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 w-7 p-0"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View Analytics</DropdownMenuItem>
-                              <DropdownMenuItem>Visit Site</DropdownMenuItem>
-                              <DropdownMenuItem>Settings</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive">
-                                Remove Website
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <Pagination
-                currentPage={page}
-                totalItems={filteredWebsites.length}
-                pageSize={pageSize}
-                pageSizeOptions={[10, 25, 50, 100]}
-                onPageChange={setPage}
-                onPageSizeChange={(size) => {
-                  setPageSize(size)
-                  setPage(1)
-                }}
-                itemLabel="websites"
-              />
-            </>
-          ) : (
-            <div className="rounded-lg border border-border bg-card py-12 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                <Globe className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <p className="mb-1 text-[14px] font-medium text-foreground">
-                No websites found
-              </p>
-              <p className="text-[13px] text-muted-foreground">
-                Try adjusting your search or add a new website
-              </p>
+                          </div>
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          to="/projects/$projectId/analytics/$websiteId"
+                          params={{
+                            projectId: projectId as string,
+                            websiteId: site.id,
+                          }}
+                          className="block"
+                        >
+                          <span className="text-[13px] text-muted-foreground">
+                            {formatNumber(site.stats.pageViews)}
+                          </span>
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          to="/projects/$projectId/analytics/$websiteId"
+                          params={{
+                            projectId: projectId as string,
+                            websiteId: site.id,
+                          }}
+                          className="block"
+                        >
+                          <span className="text-[13px] text-muted-foreground">
+                            {site.stats.avgDuration}
+                          </span>
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          to="/projects/$projectId/analytics/$websiteId"
+                          params={{
+                            projectId: projectId as string,
+                            websiteId: site.id,
+                          }}
+                          className="block"
+                        >
+                          <span className="text-[13px] text-muted-foreground">
+                            {site.stats.bounceRate}%
+                          </span>
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          to="/projects/$projectId/analytics/$websiteId"
+                          params={{
+                            projectId: projectId as string,
+                            websiteId: site.id,
+                          }}
+                          className="block"
+                        >
+                          {site.lastActivity ? (
+                            <DateTooltip
+                              date={new Date(site.lastActivity)}
+                              className="text-[12px] text-muted-foreground"
+                            />
+                          ) : (
+                            <span className="text-[12px] text-muted-foreground/50">
+                              Never
+                            </span>
+                          )}
+                        </Link>
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>View Analytics</DropdownMenuItem>
+                            <DropdownMenuItem>Visit Site</DropdownMenuItem>
+                            <DropdownMenuItem>Settings</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive">
+                              Remove Website
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          )
+            <Pagination
+              currentPage={page}
+              totalItems={filteredWebsites.length}
+              pageSize={pageSize}
+              pageSizeOptions={[10, 25, 50, 100]}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => {
+                setPageSize(size)
+                setPage(1)
+              }}
+              itemLabel="websites"
+            />
+          </>
+        ) : (
+          <div className="rounded-lg border border-border bg-card py-12 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
+              <Globe className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="mb-1 text-[14px] font-medium text-foreground">
+              No websites found
+            </p>
+            <p className="text-[13px] text-muted-foreground">
+              Try adjusting your search or add a new website
+            </p>
+          </div>
         )}
       </div>
     </div>

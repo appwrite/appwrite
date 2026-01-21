@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 
 /**
  * Line Editor Component
- * 
+ *
  * Used for editing linestring spatial data (array of coordinate points)
  * Can be used in row editing, default values, and geo queries
  */
@@ -19,10 +19,10 @@ export interface LineEditorProps {
   showNullCheckbox?: boolean
 }
 
-export function LineEditor({ 
-  value, 
-  onChange, 
-  isRequired = false, 
+export function LineEditor({
+  value,
+  onChange,
+  isRequired = false,
   disabled = false,
   showNullCheckbox = true,
 }: LineEditorProps) {
@@ -75,10 +75,15 @@ export function LineEditor({
       ) : (
         <div className="space-y-2">
           {points.map((point, index) => (
-            <div key={index} className="flex items-center gap-2 rounded-md border border-border bg-background p-2">
+            <div
+              key={index}
+              className="flex items-center gap-2 rounded-md border border-border bg-background p-2"
+            >
               <div className="flex-1 grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground">Lon</Label>
+                  <Label className="text-[10px] text-muted-foreground">
+                    Lon
+                  </Label>
                   <Input
                     type="number"
                     step="any"
@@ -90,7 +95,9 @@ export function LineEditor({
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground">Lat</Label>
+                  <Label className="text-[10px] text-muted-foreground">
+                    Lat
+                  </Label>
                   <Input
                     type="number"
                     step="any"
@@ -122,12 +129,22 @@ export function LineEditor({
             id="line-null"
             checked={value === null}
             onCheckedChange={(checked) => {
-              onChange(checked ? null : [[0, 0], [0, 0]])
+              onChange(
+                checked
+                  ? null
+                  : [
+                      [0, 0],
+                      [0, 0],
+                    ],
+              )
             }}
             disabled={disabled}
             className="h-4 w-4"
           />
-          <label htmlFor="line-null" className="text-[11px] text-muted-foreground cursor-pointer select-none">
+          <label
+            htmlFor="line-null"
+            className="text-[11px] text-muted-foreground cursor-pointer select-none"
+          >
             Set to NULL
           </label>
         </div>
@@ -135,4 +152,3 @@ export function LineEditor({
     </div>
   )
 }
-

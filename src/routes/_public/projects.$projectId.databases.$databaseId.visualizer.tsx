@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { DatabaseOverview } from '@/components/pages/projects/$projectId/databases/View'
-import { fetchProjectDatabase, fetchAllProjectTablesForVisualizer } from '@/lib/react-query/hooks'
+import {
+  fetchProjectDatabase,
+  fetchAllProjectTablesForVisualizer,
+} from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/visualizer',
@@ -24,7 +27,8 @@ export const Route = createFileRoute(
         }),
         queryClient.prefetchQuery({
           queryKey: ['tables', 'visualizer', 'project', projectId, databaseId],
-          queryFn: () => fetchAllProjectTablesForVisualizer(projectId, databaseId),
+          queryFn: () =>
+            fetchAllProjectTablesForVisualizer(projectId, databaseId),
           staleTime: 30 * 1000, // 30 seconds
         }),
       ])

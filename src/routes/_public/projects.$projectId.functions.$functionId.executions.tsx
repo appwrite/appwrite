@@ -1,7 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { FunctionExecutions } from '@/components/pages/projects/$projectId/functions/Executions'
-import { fetchProjectFunction, fetchFunctionExecutions } from '@/lib/react-query/hooks'
+import {
+  fetchProjectFunction,
+  fetchFunctionExecutions,
+} from '@/lib/react-query/hooks'
 
 const EXECUTIONS_PER_PAGE = 25
 
@@ -44,8 +47,22 @@ export const Route = createFileRoute(
     // Prefetch executions for the requested page
     try {
       await queryClient.ensureQueryData({
-        queryKey: ['executions', 'function', projectId, functionId, pageIndex, EXECUTIONS_PER_PAGE, undefined],
-        queryFn: () => fetchFunctionExecutions(projectId, functionId, pageIndex, EXECUTIONS_PER_PAGE),
+        queryKey: [
+          'executions',
+          'function',
+          projectId,
+          functionId,
+          pageIndex,
+          EXECUTIONS_PER_PAGE,
+          undefined,
+        ],
+        queryFn: () =>
+          fetchFunctionExecutions(
+            projectId,
+            functionId,
+            pageIndex,
+            EXECUTIONS_PER_PAGE,
+          ),
         staleTime: 30 * 1000,
       })
     } catch (error) {

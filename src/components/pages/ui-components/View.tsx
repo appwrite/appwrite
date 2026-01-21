@@ -1,8 +1,32 @@
 import { useState, useMemo } from 'react'
-import { LayoutDashboard, Component, Layers, Navigation, FormInput, AlertCircle, Table, Sparkles } from 'lucide-react'
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarProvider } from '@/components/ui/sidebar'
+import {
+  LayoutDashboard,
+  Component,
+  Layers,
+  Navigation,
+  FormInput,
+  AlertCircle,
+  Table,
+  Sparkles,
+} from 'lucide-react'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarProvider,
+} from '@/components/ui/sidebar'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,36 +39,152 @@ import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Slider } from '@/components/ui/slider'
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Table as TableComponent, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import {
+  Table as TableComponent,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer'
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
 import { Calendar } from '@/components/ui/calendar'
 import { Toggle } from '@/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { AspectRatio } from '@/components/ui/aspect-ratio'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from '@/components/ui/resizable'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp'
 import { IdInput } from '@/components/ui/id-input'
 import { cn } from '@/lib/utils'
 
 // Component categories
-type Category = 'all' | 'layout' | 'navigation' | 'forms' | 'overlays' | 'feedback' | 'data-display'
+type Category =
+  | 'all'
+  | 'layout'
+  | 'navigation'
+  | 'forms'
+  | 'overlays'
+  | 'feedback'
+  | 'data-display'
 
 interface ComponentInfo {
   name: string
@@ -55,67 +195,312 @@ interface ComponentInfo {
 
 const UI_COMPONENTS: ComponentInfo[] = [
   // Layout
-  { name: 'Card', file: 'card', category: 'layout', description: 'Container for content sections' },
-  { name: 'Separator', file: 'separator', category: 'layout', description: 'Visual divider between sections' },
-  { name: 'Aspect Ratio', file: 'aspect-ratio', category: 'layout', description: 'Maintain aspect ratio for media' },
-  { name: 'Resizable', file: 'resizable', category: 'layout', description: 'Resizable panels and containers' },
-  { name: 'Scroll Area', file: 'scroll-area', category: 'layout', description: 'Custom scrollable container' },
-  { name: 'Skeleton', file: 'skeleton', category: 'layout', description: 'Loading placeholder component' },
-  
+  {
+    name: 'Card',
+    file: 'card',
+    category: 'layout',
+    description: 'Container for content sections',
+  },
+  {
+    name: 'Separator',
+    file: 'separator',
+    category: 'layout',
+    description: 'Visual divider between sections',
+  },
+  {
+    name: 'Aspect Ratio',
+    file: 'aspect-ratio',
+    category: 'layout',
+    description: 'Maintain aspect ratio for media',
+  },
+  {
+    name: 'Resizable',
+    file: 'resizable',
+    category: 'layout',
+    description: 'Resizable panels and containers',
+  },
+  {
+    name: 'Scroll Area',
+    file: 'scroll-area',
+    category: 'layout',
+    description: 'Custom scrollable container',
+  },
+  {
+    name: 'Skeleton',
+    file: 'skeleton',
+    category: 'layout',
+    description: 'Loading placeholder component',
+  },
+
   // Navigation
-  { name: 'Breadcrumb', file: 'breadcrumb', category: 'navigation', description: 'Navigation breadcrumb trail' },
-  { name: 'Navigation Menu', file: 'navigation-menu', category: 'navigation', description: 'Main navigation menu' },
-  { name: 'Menubar', file: 'menubar', category: 'navigation', description: 'Application menubar' },
-  { name: 'Sidebar', file: 'sidebar', category: 'navigation', description: 'Collapsible sidebar component' },
-  { name: 'Tabs', file: 'tabs', category: 'navigation', description: 'Tabbed interface' },
-  { name: 'Pagination', file: 'pagination', category: 'navigation', description: 'Page navigation controls' },
-  
+  {
+    name: 'Breadcrumb',
+    file: 'breadcrumb',
+    category: 'navigation',
+    description: 'Navigation breadcrumb trail',
+  },
+  {
+    name: 'Navigation Menu',
+    file: 'navigation-menu',
+    category: 'navigation',
+    description: 'Main navigation menu',
+  },
+  {
+    name: 'Menubar',
+    file: 'menubar',
+    category: 'navigation',
+    description: 'Application menubar',
+  },
+  {
+    name: 'Sidebar',
+    file: 'sidebar',
+    category: 'navigation',
+    description: 'Collapsible sidebar component',
+  },
+  {
+    name: 'Tabs',
+    file: 'tabs',
+    category: 'navigation',
+    description: 'Tabbed interface',
+  },
+  {
+    name: 'Pagination',
+    file: 'pagination',
+    category: 'navigation',
+    description: 'Page navigation controls',
+  },
+
   // Forms
-  { name: 'Button', file: 'button', category: 'forms', description: 'Interactive button element' },
-  { name: 'Input', file: 'input', category: 'forms', description: 'Text input field' },
-  { name: 'Textarea', file: 'textarea', category: 'forms', description: 'Multi-line text input' },
-  { name: 'Select', file: 'select', category: 'forms', description: 'Dropdown selection' },
-  { name: 'Checkbox', file: 'checkbox', category: 'forms', description: 'Checkbox input' },
-  { name: 'Radio Group', file: 'radio-group', category: 'forms', description: 'Radio button group' },
-  { name: 'Switch', file: 'switch', category: 'forms', description: 'Toggle switch' },
-  { name: 'Slider', file: 'slider', category: 'forms', description: 'Range slider input' },
-  { name: 'Form', file: 'form', category: 'forms', description: 'Form wrapper with validation' },
-  { name: 'Label', file: 'label', category: 'forms', description: 'Form field label' },
-  { name: 'Input OTP', file: 'input-otp', category: 'forms', description: 'OTP code input' },
-  { name: 'ID Input', file: 'id-input', category: 'forms', description: 'Custom ID input field' },
-  
+  {
+    name: 'Button',
+    file: 'button',
+    category: 'forms',
+    description: 'Interactive button element',
+  },
+  {
+    name: 'Input',
+    file: 'input',
+    category: 'forms',
+    description: 'Text input field',
+  },
+  {
+    name: 'Textarea',
+    file: 'textarea',
+    category: 'forms',
+    description: 'Multi-line text input',
+  },
+  {
+    name: 'Select',
+    file: 'select',
+    category: 'forms',
+    description: 'Dropdown selection',
+  },
+  {
+    name: 'Checkbox',
+    file: 'checkbox',
+    category: 'forms',
+    description: 'Checkbox input',
+  },
+  {
+    name: 'Radio Group',
+    file: 'radio-group',
+    category: 'forms',
+    description: 'Radio button group',
+  },
+  {
+    name: 'Switch',
+    file: 'switch',
+    category: 'forms',
+    description: 'Toggle switch',
+  },
+  {
+    name: 'Slider',
+    file: 'slider',
+    category: 'forms',
+    description: 'Range slider input',
+  },
+  {
+    name: 'Form',
+    file: 'form',
+    category: 'forms',
+    description: 'Form wrapper with validation',
+  },
+  {
+    name: 'Label',
+    file: 'label',
+    category: 'forms',
+    description: 'Form field label',
+  },
+  {
+    name: 'Input OTP',
+    file: 'input-otp',
+    category: 'forms',
+    description: 'OTP code input',
+  },
+  {
+    name: 'ID Input',
+    file: 'id-input',
+    category: 'forms',
+    description: 'Custom ID input field',
+  },
+
   // Overlays
-  { name: 'Dialog', file: 'dialog', category: 'overlays', description: 'Modal dialog window' },
-  { name: 'Alert Dialog', file: 'alert-dialog', category: 'overlays', description: 'Confirmation dialog' },
-  { name: 'Sheet', file: 'sheet', category: 'overlays', description: 'Slide-out panel' },
-  { name: 'Drawer', file: 'drawer', category: 'overlays', description: 'Mobile drawer component' },
-  { name: 'Popover', file: 'popover', category: 'overlays', description: 'Popover tooltip' },
-  { name: 'Hover Card', file: 'hover-card', category: 'overlays', description: 'Hover-triggered card' },
-  { name: 'Tooltip', file: 'tooltip', category: 'overlays', description: 'Contextual tooltip' },
-  { name: 'Context Menu', file: 'context-menu', category: 'overlays', description: 'Right-click menu' },
-  { name: 'Dropdown Menu', file: 'dropdown-menu', category: 'overlays', description: 'Dropdown menu' },
-  
+  {
+    name: 'Dialog',
+    file: 'dialog',
+    category: 'overlays',
+    description: 'Modal dialog window',
+  },
+  {
+    name: 'Alert Dialog',
+    file: 'alert-dialog',
+    category: 'overlays',
+    description: 'Confirmation dialog',
+  },
+  {
+    name: 'Sheet',
+    file: 'sheet',
+    category: 'overlays',
+    description: 'Slide-out panel',
+  },
+  {
+    name: 'Drawer',
+    file: 'drawer',
+    category: 'overlays',
+    description: 'Mobile drawer component',
+  },
+  {
+    name: 'Popover',
+    file: 'popover',
+    category: 'overlays',
+    description: 'Popover tooltip',
+  },
+  {
+    name: 'Hover Card',
+    file: 'hover-card',
+    category: 'overlays',
+    description: 'Hover-triggered card',
+  },
+  {
+    name: 'Tooltip',
+    file: 'tooltip',
+    category: 'overlays',
+    description: 'Contextual tooltip',
+  },
+  {
+    name: 'Context Menu',
+    file: 'context-menu',
+    category: 'overlays',
+    description: 'Right-click menu',
+  },
+  {
+    name: 'Dropdown Menu',
+    file: 'dropdown-menu',
+    category: 'overlays',
+    description: 'Dropdown menu',
+  },
+
   // Feedback
-  { name: 'Alert', file: 'alert', category: 'feedback', description: 'Alert notification' },
-  { name: 'Badge', file: 'badge', category: 'feedback', description: 'Status badge' },
-  { name: 'Progress', file: 'progress', category: 'feedback', description: 'Progress indicator' },
-  { name: 'Sonner', file: 'sonner', category: 'feedback', description: 'Toast notifications' },
-  { name: 'Loader', file: 'loader', category: 'feedback', description: 'Loading spinner' },
-  
+  {
+    name: 'Alert',
+    file: 'alert',
+    category: 'feedback',
+    description: 'Alert notification',
+  },
+  {
+    name: 'Badge',
+    file: 'badge',
+    category: 'feedback',
+    description: 'Status badge',
+  },
+  {
+    name: 'Progress',
+    file: 'progress',
+    category: 'feedback',
+    description: 'Progress indicator',
+  },
+  {
+    name: 'Sonner',
+    file: 'sonner',
+    category: 'feedback',
+    description: 'Toast notifications',
+  },
+  {
+    name: 'Loader',
+    file: 'loader',
+    category: 'feedback',
+    description: 'Loading spinner',
+  },
+
   // Data Display
-  { name: 'Table', file: 'table', category: 'data-display', description: 'Data table component' },
-  { name: 'Accordion', file: 'accordion', category: 'data-display', description: 'Collapsible content sections' },
-  { name: 'Collapsible', file: 'collapsible', category: 'data-display', description: 'Expandable content' },
-  { name: 'Chart', file: 'chart', category: 'data-display', description: 'Chart visualization' },
-  { name: 'Avatar', file: 'avatar', category: 'data-display', description: 'User avatar image' },
-  { name: 'Calendar', file: 'calendar', category: 'data-display', description: 'Date picker calendar' },
-  { name: 'Carousel', file: 'carousel', category: 'data-display', description: 'Image/content carousel' },
-  
+  {
+    name: 'Table',
+    file: 'table',
+    category: 'data-display',
+    description: 'Data table component',
+  },
+  {
+    name: 'Accordion',
+    file: 'accordion',
+    category: 'data-display',
+    description: 'Collapsible content sections',
+  },
+  {
+    name: 'Collapsible',
+    file: 'collapsible',
+    category: 'data-display',
+    description: 'Expandable content',
+  },
+  {
+    name: 'Chart',
+    file: 'chart',
+    category: 'data-display',
+    description: 'Chart visualization',
+  },
+  {
+    name: 'Avatar',
+    file: 'avatar',
+    category: 'data-display',
+    description: 'User avatar image',
+  },
+  {
+    name: 'Calendar',
+    file: 'calendar',
+    category: 'data-display',
+    description: 'Date picker calendar',
+  },
+  {
+    name: 'Carousel',
+    file: 'carousel',
+    category: 'data-display',
+    description: 'Image/content carousel',
+  },
+
   // Custom
-  { name: 'Upgrade Curtain', file: 'upgrade-curtain', category: 'layout', description: 'Feature upgrade overlay' },
-  { name: 'Command', file: 'command', category: 'navigation', description: 'Command palette' },
-  { name: 'Toggle', file: 'toggle', category: 'forms', description: 'Toggle button' },
-  { name: 'Toggle Group', file: 'toggle-group', category: 'forms', description: 'Toggle button group' },
+  {
+    name: 'Upgrade Curtain',
+    file: 'upgrade-curtain',
+    category: 'layout',
+    description: 'Feature upgrade overlay',
+  },
+  {
+    name: 'Command',
+    file: 'command',
+    category: 'navigation',
+    description: 'Command palette',
+  },
+  {
+    name: 'Toggle',
+    file: 'toggle',
+    category: 'forms',
+    description: 'Toggle button',
+  },
+  {
+    name: 'Toggle Group',
+    file: 'toggle-group',
+    category: 'forms',
+    description: 'Toggle button group',
+  },
 ]
 
 const CATEGORIES: { id: Category; label: string; icon: typeof Component }[] = [
@@ -130,24 +515,24 @@ const CATEGORIES: { id: Category; label: string; icon: typeof Component }[] = [
 
 export function UIComponentsView() {
   const [selectedCategory, setSelectedCategory] = useState<Category>('all')
-  
+
   const filteredComponents = useMemo(() => {
     if (selectedCategory === 'all') {
       return UI_COMPONENTS
     }
     return UI_COMPONENTS.filter((comp) => comp.category === selectedCategory)
   }, [selectedCategory])
-  
+
   const categories = useMemo(() => {
     const cats = CATEGORIES.map((cat) => ({
       ...cat,
-      count: UI_COMPONENTS.filter((comp) => 
-        cat.id === 'all' ? true : comp.category === cat.id
+      count: UI_COMPONENTS.filter((comp) =>
+        cat.id === 'all' ? true : comp.category === cat.id,
       ).length,
     }))
     return cats
   }, [])
-  
+
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full">
@@ -166,7 +551,7 @@ export function UIComponentsView() {
                       onClick={() => setSelectedCategory(category.id)}
                       className={cn(
                         'w-full justify-between',
-                        selectedCategory === category.id && 'bg-accent'
+                        selectedCategory === category.id && 'bg-accent',
                       )}
                     >
                       <div className="flex items-center gap-2">
@@ -183,19 +568,25 @@ export function UIComponentsView() {
             </SidebarGroup>
           </SidebarContent>
         </Sidebar>
-        
+
         <div className="flex-1 overflow-auto">
           <div className="container mx-auto p-6">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold mb-2">UI Components Showcase</h1>
+              <h1 className="text-3xl font-bold mb-2">
+                UI Components Showcase
+              </h1>
               <p className="text-muted-foreground">
-                Browse and preview all available UI components in the design system
+                Browse and preview all available UI components in the design
+                system
               </p>
             </div>
-            
+
             <Separator className="mb-6" />
-            
-            <Tabs value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as Category)}>
+
+            <Tabs
+              value={selectedCategory}
+              onValueChange={(v) => setSelectedCategory(v as Category)}
+            >
               <TabsList className="mb-6">
                 {categories.map((category) => (
                   <TabsTrigger key={category.id} value={category.id}>
@@ -203,7 +594,7 @@ export function UIComponentsView() {
                   </TabsTrigger>
                 ))}
               </TabsList>
-              
+
               <TabsContent value={selectedCategory} className="mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredComponents.map((component) => (
@@ -275,9 +666,7 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
         <Input type="email" placeholder="email@example.com" />
       </div>
     ),
-    textarea: (
-      <Textarea placeholder="Type your message here..." />
-    ),
+    textarea: <Textarea placeholder="Type your message here..." />,
     select: (
       <Select>
         <SelectTrigger className="w-full">
@@ -339,7 +728,7 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
         <ToggleGroupItem value="c">C</ToggleGroupItem>
       </ToggleGroup>
     ),
-    
+
     // Layout
     card: (
       <Card>
@@ -355,7 +744,10 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
     separator: <Separator />,
     'aspect-ratio': (
       <div className="w-full max-w-xs">
-        <AspectRatio ratio={16 / 9} className="bg-muted rounded-md flex items-center justify-center">
+        <AspectRatio
+          ratio={16 / 9}
+          className="bg-muted rounded-md flex items-center justify-center"
+        >
           <span className="text-sm text-muted-foreground">16:9</span>
         </AspectRatio>
       </div>
@@ -364,13 +756,18 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
       <ScrollArea className="h-24 w-full rounded border p-4">
         <div className="space-y-2">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="text-sm">Item {i + 1}</div>
+            <div key={i} className="text-sm">
+              Item {i + 1}
+            </div>
           ))}
         </div>
       </ScrollArea>
     ),
     resizable: (
-      <ResizablePanelGroup direction="horizontal" className="max-w-md rounded-lg border">
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="max-w-md rounded-lg border"
+      >
         <ResizablePanel defaultSize={50}>
           <div className="flex h-full items-center justify-center p-4">
             <span className="text-sm">Panel 1</span>
@@ -391,7 +788,7 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
         <Skeleton className="h-4 w-1/2" />
       </div>
     ),
-    
+
     // Navigation
     breadcrumb: (
       <Breadcrumb>
@@ -417,9 +814,15 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
           <TabsTrigger value="tab2">Tab 2</TabsTrigger>
           <TabsTrigger value="tab3">Tab 3</TabsTrigger>
         </TabsList>
-        <TabsContent value="tab1" className="mt-2 text-sm">Content for Tab 1</TabsContent>
-        <TabsContent value="tab2" className="mt-2 text-sm">Content for Tab 2</TabsContent>
-        <TabsContent value="tab3" className="mt-2 text-sm">Content for Tab 3</TabsContent>
+        <TabsContent value="tab1" className="mt-2 text-sm">
+          Content for Tab 1
+        </TabsContent>
+        <TabsContent value="tab2" className="mt-2 text-sm">
+          Content for Tab 2
+        </TabsContent>
+        <TabsContent value="tab3" className="mt-2 text-sm">
+          Content for Tab 3
+        </TabsContent>
       </Tabs>
     ),
     pagination: (
@@ -432,7 +835,9 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
             <PaginationLink href="#">1</PaginationLink>
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#" isActive>2</PaginationLink>
+            <PaginationLink href="#" isActive>
+              2
+            </PaginationLink>
           </PaginationItem>
           <PaginationItem>
             <PaginationLink href="#">3</PaginationLink>
@@ -462,7 +867,7 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
         </CommandList>
       </Command>
     ),
-    
+
     // Overlays
     dialog: (
       <Dialog>
@@ -541,7 +946,9 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
         <PopoverContent>
           <div className="space-y-2">
             <h4 className="font-medium text-sm">Popover Title</h4>
-            <p className="text-sm text-muted-foreground">Popover content text</p>
+            <p className="text-sm text-muted-foreground">
+              Popover content text
+            </p>
           </div>
         </PopoverContent>
       </Popover>
@@ -597,7 +1004,7 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
         </DropdownMenuContent>
       </DropdownMenu>
     ),
-    
+
     // Feedback
     alert: (
       <div className="space-y-2">
@@ -605,7 +1012,9 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
           <AlertDescription>This is a default alert message.</AlertDescription>
         </Alert>
         <Alert variant="destructive">
-          <AlertDescription>This is a destructive alert message.</AlertDescription>
+          <AlertDescription>
+            This is a destructive alert message.
+          </AlertDescription>
         </Alert>
       </div>
     ),
@@ -624,7 +1033,7 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
         <Progress value={100} />
       </div>
     ),
-    
+
     // Data Display
     table: (
       <div className="rounded-md border">
@@ -670,7 +1079,9 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
     collapsible: (
       <Collapsible>
         <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="sm">Toggle</Button>
+          <Button variant="ghost" size="sm">
+            Toggle
+          </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2">
           <div className="rounded-md border p-4 text-sm">
@@ -692,10 +1103,8 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
         </Avatar>
       </div>
     ),
-    calendar: (
-      <Calendar mode="single" className="rounded-md border" />
-    ),
-    
+    calendar: <Calendar mode="single" className="rounded-md border" />,
+
     // Additional form components
     'input-otp': (
       <InputOTP maxLength={6}>
@@ -709,9 +1118,7 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
         </InputOTPGroup>
       </InputOTP>
     ),
-    'id-input': (
-      <IdInput placeholder="Enter custom ID" />
-    ),
+    'id-input': <IdInput placeholder="Enter custom ID" />,
   }
 
   const preview = previews[component.file]
@@ -752,4 +1159,3 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
     </div>
   )
 }
-

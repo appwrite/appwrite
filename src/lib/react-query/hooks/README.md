@@ -34,7 +34,7 @@ Each module follows this consistent structure:
 ```typescript
 /**
  * React Query hooks for [Domain]
- * 
+ *
  * Handles [description of what this module covers].
  */
 
@@ -50,7 +50,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 
 /**
  * Query function to fetch [resource]
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
  */
 export async function fetch[Resource](...) {
@@ -112,4 +112,3 @@ See `STANDARDIZATION.md` for detailed patterns and guidelines.
 - **Reduced File Size** - Each module is manageable (200-500 lines)
 - **Clearer Dependencies** - See what each module depends on
 - **Better Maintainability** - Changes to one domain don't affect others
-

@@ -84,7 +84,8 @@ export function ImportZoneDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Import Zone File</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Upload a DNS zone file (.txt format) to import DNS records. Maximum file size is 5MB.
+            Upload a DNS zone file (.txt format) to import DNS records. Maximum
+            file size is 5MB.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -119,12 +120,11 @@ export function ImportZoneDialog({
                   </span>
                 )}
               </div>
-              {error && (
-                <p className="text-[12px] text-destructive">{error}</p>
-              )}
+              {error && <p className="text-[12px] text-destructive">{error}</p>}
               {file && !error && (
                 <p className="text-[12px] text-muted-foreground">
-                  File selected: {file.name} ({(file.size / 1000).toFixed(2)} KB)
+                  File selected: {file.name} ({(file.size / 1000).toFixed(2)}{' '}
+                  KB)
                 </p>
               )}
             </div>
@@ -147,4 +147,3 @@ export function ImportZoneDialog({
     </Dialog>
   )
 }
-

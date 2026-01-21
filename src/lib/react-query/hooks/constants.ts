@@ -1,6 +1,6 @@
 /**
  * Constants for React Query hooks
- * 
+ *
  * Centralized constants for consistent configuration across all hooks.
  */
 
@@ -36,5 +36,3 @@ export const TINY_PAGE_SIZE = 6
  * Keeps previous data visible during pagination to prevent loading flicker.
  */
 export const keepPreviousData = <T>(previousData: T | undefined) => previousData
-
-

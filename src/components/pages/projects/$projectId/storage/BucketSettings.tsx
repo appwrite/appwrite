@@ -3,7 +3,12 @@ import { useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useBucket, Dependencies, useProject, useOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  useBucket,
+  Dependencies,
+  useProject,
+  useOrganizationPlan,
+} from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -57,14 +62,14 @@ export function BucketSettings() {
   // Get max file size from plan object (fileSize is in MB, -1 means unlimited)
   const maxFileSizeByPlan = useMemo(() => {
     if (!organizationPlan) return null
-    
+
     const fileSize = (organizationPlan as any)?.fileSize
-    
+
     // -1 means unlimited
     if (fileSize === -1 || fileSize === null || fileSize === undefined) {
       return null
     }
-    
+
     // Convert MB to bytes (using 1000 base)
     return fileSize * 1000 * 1000
   }, [organizationPlan])
@@ -74,11 +79,17 @@ export function BucketSettings() {
   const [enabled, setEnabled] = useState(false)
   const [encryption, setEncryption] = useState(false)
   const [antivirus, setAntivirus] = useState(false)
-  const [compression, setCompression] = useState<'none' | 'gzip' | 'zstd'>('none')
+  const [compression, setCompression] = useState<'none' | 'gzip' | 'zstd'>(
+    'none',
+  )
   const [transformations, setTransformations] = useState(false)
   const [maximumFileSize, setMaximumFileSize] = useState(0)
-  const [fileSizeUnit, setFileSizeUnit] = useState<'bytes' | 'KB' | 'MB' | 'GB'>('MB')
-  const [allowedFileExtensions, setAllowedFileExtensions] = useState<string[]>([])
+  const [fileSizeUnit, setFileSizeUnit] = useState<
+    'bytes' | 'KB' | 'MB' | 'GB'
+  >('MB')
+  const [allowedFileExtensions, setAllowedFileExtensions] = useState<string[]>(
+    [],
+  )
   const [extensionInput, setExtensionInput] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteConfirmation, setDeleteConfirmation] = useState('')
@@ -90,7 +101,8 @@ export function BucketSettings() {
       setEnabled(bucket.enabled)
       setEncryption(bucket.encryption)
       setAntivirus(bucket.antivirus)
-      const bucketCompression = (bucket.compression as 'none' | 'gzip' | 'zstd') || 'none'
+      const bucketCompression =
+        (bucket.compression as 'none' | 'gzip' | 'zstd') || 'none'
       setCompression(bucketCompression)
       setTransformations(bucket.transformations)
       // Initialize file size with unit conversion
@@ -100,7 +112,7 @@ export function BucketSettings() {
         const GB = bytes / (1000 * 1000 * 1000)
         const MB = bytes / (1000 * 1000)
         const KB = bytes / 1000
-        
+
         // Check from highest to lowest unit, use first that gives whole number
         if (GB >= 1 && Number.isInteger(GB)) {
           setMaximumFileSize(GB)
@@ -127,7 +139,8 @@ export function BucketSettings() {
   // Update name mutation
   const updateNameMutation = useMutation({
     mutationFn: async (name: string) => {
-      if (!projectId || !bucketId || !bucket) throw new Error('Project ID, Bucket ID, and Bucket are required')
+      if (!projectId || !bucketId || !bucket)
+        throw new Error('Project ID, Bucket ID, and Bucket are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.updateBucket({
         bucketId,
@@ -143,7 +156,9 @@ export function BucketSettings() {
     },
     onSuccess: () => {
       toast.success('Bucket name has been updated')
-      queryClient.invalidateQueries({ queryKey: ['bucket', 'project', projectId, bucketId] })
+      queryClient.invalidateQueries({
+        queryKey: ['bucket', 'project', projectId, bucketId],
+      })
       queryClient.invalidateQueries({ queryKey: Dependencies.BUCKETS })
     },
     onError: (error) => {
@@ -154,7 +169,8 @@ export function BucketSettings() {
   // Update enabled mutation
   const updateEnabledMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
-      if (!projectId || !bucketId || !bucket) throw new Error('Project ID, Bucket ID, and Bucket are required')
+      if (!projectId || !bucketId || !bucket)
+        throw new Error('Project ID, Bucket ID, and Bucket are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.updateBucket({
         bucketId,
@@ -170,7 +186,9 @@ export function BucketSettings() {
     },
     onSuccess: () => {
       toast.success(`Bucket has been ${enabled ? 'enabled' : 'disabled'}`)
-      queryClient.invalidateQueries({ queryKey: ['bucket', 'project', projectId, bucketId] })
+      queryClient.invalidateQueries({
+        queryKey: ['bucket', 'project', projectId, bucketId],
+      })
       queryClient.invalidateQueries({ queryKey: Dependencies.BUCKETS })
     },
     onError: (error) => {
@@ -182,11 +200,11 @@ export function BucketSettings() {
     },
   })
 
-
   // Update compression mutation
   const updateCompressionMutation = useMutation({
     mutationFn: async (compression: 'none' | 'gzip' | 'zstd') => {
-      if (!projectId || !bucketId || !bucket) throw new Error('Project ID, Bucket ID, and Bucket are required')
+      if (!projectId || !bucketId || !bucket)
+        throw new Error('Project ID, Bucket ID, and Bucket are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.updateBucket({
         bucketId,
@@ -202,7 +220,9 @@ export function BucketSettings() {
     },
     onSuccess: () => {
       toast.success('Compression setting has been updated')
-      queryClient.invalidateQueries({ queryKey: ['bucket', 'project', projectId, bucketId] })
+      queryClient.invalidateQueries({
+        queryKey: ['bucket', 'project', projectId, bucketId],
+      })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
@@ -212,7 +232,8 @@ export function BucketSettings() {
   // Update file size mutation
   const updateMaximumFileSizeMutation = useMutation({
     mutationFn: async (maximumFileSize: number) => {
-      if (!projectId || !bucketId || !bucket) throw new Error('Project ID, Bucket ID, and Bucket are required')
+      if (!projectId || !bucketId || !bucket)
+        throw new Error('Project ID, Bucket ID, and Bucket are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.updateBucket({
         bucketId,
@@ -228,7 +249,9 @@ export function BucketSettings() {
     },
     onSuccess: () => {
       toast.success('Maximum file size has been updated')
-      queryClient.invalidateQueries({ queryKey: ['bucket', 'project', projectId, bucketId] })
+      queryClient.invalidateQueries({
+        queryKey: ['bucket', 'project', projectId, bucketId],
+      })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
@@ -238,7 +261,8 @@ export function BucketSettings() {
   // Update allowed extensions mutation
   const updateAllowedExtensionsMutation = useMutation({
     mutationFn: async (allowedFileExtensions: string[]) => {
-      if (!projectId || !bucketId || !bucket) throw new Error('Project ID, Bucket ID, and Bucket are required')
+      if (!projectId || !bucketId || !bucket)
+        throw new Error('Project ID, Bucket ID, and Bucket are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.updateBucket({
         bucketId,
@@ -254,7 +278,9 @@ export function BucketSettings() {
     },
     onSuccess: () => {
       toast.success('Allowed file extensions have been updated')
-      queryClient.invalidateQueries({ queryKey: ['bucket', 'project', projectId, bucketId] })
+      queryClient.invalidateQueries({
+        queryKey: ['bucket', 'project', projectId, bucketId],
+      })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
@@ -264,7 +290,8 @@ export function BucketSettings() {
   // Delete bucket mutation
   const deleteBucketMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId || !bucketId) throw new Error('Project ID and Bucket ID are required')
+      if (!projectId || !bucketId)
+        throw new Error('Project ID and Bucket ID are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.deleteBucket({ bucketId })
     },
@@ -284,7 +311,8 @@ export function BucketSettings() {
   // Individual security feature mutations
   const updateEncryptionMutation = useMutation({
     mutationFn: async (encryption: boolean) => {
-      if (!projectId || !bucketId || !bucket) throw new Error('Project ID, Bucket ID, and Bucket are required')
+      if (!projectId || !bucketId || !bucket)
+        throw new Error('Project ID, Bucket ID, and Bucket are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.updateBucket({
         bucketId,
@@ -300,7 +328,9 @@ export function BucketSettings() {
     },
     onSuccess: () => {
       toast.success('Encryption setting has been updated')
-      queryClient.invalidateQueries({ queryKey: ['bucket', 'project', projectId, bucketId] })
+      queryClient.invalidateQueries({
+        queryKey: ['bucket', 'project', projectId, bucketId],
+      })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
@@ -313,7 +343,8 @@ export function BucketSettings() {
 
   const updateAntivirusMutation = useMutation({
     mutationFn: async (antivirus: boolean) => {
-      if (!projectId || !bucketId || !bucket) throw new Error('Project ID, Bucket ID, and Bucket are required')
+      if (!projectId || !bucketId || !bucket)
+        throw new Error('Project ID, Bucket ID, and Bucket are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.updateBucket({
         bucketId,
@@ -329,7 +360,9 @@ export function BucketSettings() {
     },
     onSuccess: () => {
       toast.success('Antivirus setting has been updated')
-      queryClient.invalidateQueries({ queryKey: ['bucket', 'project', projectId, bucketId] })
+      queryClient.invalidateQueries({
+        queryKey: ['bucket', 'project', projectId, bucketId],
+      })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
@@ -339,7 +372,8 @@ export function BucketSettings() {
 
   const updateTransformationsMutation = useMutation({
     mutationFn: async (transformations: boolean) => {
-      if (!projectId || !bucketId || !bucket) throw new Error('Project ID, Bucket ID, and Bucket are required')
+      if (!projectId || !bucketId || !bucket)
+        throw new Error('Project ID, Bucket ID, and Bucket are required')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.updateBucket({
         bucketId,
@@ -355,7 +389,9 @@ export function BucketSettings() {
     },
     onSuccess: () => {
       toast.success('Image transformations setting has been updated')
-      queryClient.invalidateQueries({ queryKey: ['bucket', 'project', projectId, bucketId] })
+      queryClient.invalidateQueries({
+        queryKey: ['bucket', 'project', projectId, bucketId],
+      })
     },
     onError: (error) => {
       toast.error(getErrorMessage(error))
@@ -375,7 +411,6 @@ export function BucketSettings() {
   const handleEnabledToggle = (checked: boolean) => {
     setEnabled(checked)
   }
-
 
   const handleEncryptionToggle = (checked: boolean) => {
     setEncryption(checked)
@@ -405,7 +440,9 @@ export function BucketSettings() {
     setCompression(value)
   }
 
-  const getCompressionDisplayName = (value: 'none' | 'gzip' | 'zstd' | null | undefined): string => {
+  const getCompressionDisplayName = (
+    value: 'none' | 'gzip' | 'zstd' | null | undefined,
+  ): string => {
     if (!value) return ''
     const names: Record<'none' | 'gzip' | 'zstd', string> = {
       none: 'None',
@@ -464,14 +501,20 @@ export function BucketSettings() {
   }
 
   const handleAllowedExtensionsUpdate = () => {
-    if (!arraysEqual(allowedFileExtensions, bucket?.allowedFileExtensions || [])) {
+    if (
+      !arraysEqual(allowedFileExtensions, bucket?.allowedFileExtensions || [])
+    ) {
       updateAllowedExtensionsMutation.mutate(allowedFileExtensions)
     }
   }
 
   const handleAddExtension = (ext: string) => {
     const trimmed = ext.trim().toLowerCase().replace(/^\./, '')
-    if (trimmed && !allowedFileExtensions.includes(trimmed) && allowedFileExtensions.length < 100) {
+    if (
+      trimmed &&
+      !allowedFileExtensions.includes(trimmed) &&
+      allowedFileExtensions.length < 100
+    ) {
       setAllowedFileExtensions([...allowedFileExtensions, trimmed])
       setExtensionInput('')
     }
@@ -481,7 +524,9 @@ export function BucketSettings() {
     setAllowedFileExtensions(allowedFileExtensions.filter((e) => e !== ext))
   }
 
-  const handleExtensionInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleExtensionInputKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === 'Enter' && extensionInput.trim()) {
       e.preventDefault()
       handleAddExtension(extensionInput)
@@ -491,13 +536,31 @@ export function BucketSettings() {
     } else if (e.key === ' ' && extensionInput.trim()) {
       e.preventDefault()
       handleAddExtension(extensionInput)
-    } else if ((e.key === 'Backspace' || e.key === 'Delete') && !extensionInput.trim() && allowedFileExtensions !== null && allowedFileExtensions.length > 0) {
+    } else if (
+      (e.key === 'Backspace' || e.key === 'Delete') &&
+      !extensionInput.trim() &&
+      allowedFileExtensions !== null &&
+      allowedFileExtensions.length > 0
+    ) {
       e.preventDefault()
-      handleRemoveExtension(allowedFileExtensions[allowedFileExtensions.length - 1])
+      handleRemoveExtension(
+        allowedFileExtensions[allowedFileExtensions.length - 1],
+      )
     }
   }
 
-  const popularExtensions = ['jpg', 'png', 'gif', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'mp4']
+  const popularExtensions = [
+    'jpg',
+    'png',
+    'gif',
+    'pdf',
+    'doc',
+    'docx',
+    'xls',
+    'xlsx',
+    'zip',
+    'mp4',
+  ]
 
   // Helper to compare arrays
   const arraysEqual = (a: string[], b: string[]): boolean => {
@@ -529,15 +592,13 @@ export function BucketSettings() {
         {/* Update Bucket Name */}
         <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
           <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              Name
-            </h3>
+            <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
           </div>
           <div className="border-t border-border" />
           <div className="px-6 py-4">
             <p className="text-[13px] text-muted-foreground">
-              Update your bucket's display name. This will be
-              visible to all team members.
+              Update your bucket's display name. This will be visible to all
+              team members.
             </p>
             <Input
               value={bucketName}
@@ -563,101 +624,121 @@ export function BucketSettings() {
         </div>
 
         {/* Bucket Information */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            {bucket.name}
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Switch
-                id="toggle"
-                checked={enabled ?? false}
-                onCheckedChange={handleEnabledToggle}
-                disabled={updateEnabledMutation.isPending}
-              />
-              <Label htmlFor="toggle" className="text-[13px] text-foreground">
-                {enabled ? 'Enabled' : 'Disabled'}
-              </Label>
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              {bucket.name}
+            </h3>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="toggle"
+                  checked={enabled ?? false}
+                  onCheckedChange={handleEnabledToggle}
+                  disabled={updateEnabledMutation.isPending}
+                />
+                <Label htmlFor="toggle" className="text-[13px] text-foreground">
+                  {enabled ? 'Enabled' : 'Disabled'}
+                </Label>
+              </div>
             </div>
-          </div>
-          <div className="mt-4 space-y-1">
-            <p className="text-[13px] text-muted-foreground">
-              Bucket ID: <span className="ml-1.5"><CopyableId id={bucket.$id} size="sm" /></span>
-            </p>
-            <p className="text-[13px] text-muted-foreground">
-              Created: <DateTooltip date={new Date(bucket.$createdAt)} showFormattedDate className="text-foreground" />
-            </p>
-            <p className="text-[13px] text-muted-foreground">
-              Last updated: <DateTooltip date={new Date(bucket.$updatedAt)} showFormattedDate className="text-foreground" />
-            </p>
-          </div>
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={enabled === bucket.enabled || updateEnabledMutation.isPending}
-            onClick={() => {
-              if (enabled !== bucket.enabled) {
-                updateEnabledMutation.mutate(enabled)
-              }
-            }}
-          >
-            Update
-          </Button>
-        </div>
-      </div>
-
-      {/* Encryption */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Encryption
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Encrypt files stored in this bucket. For file size above 20MB encryption is skipped even if it's enabled. This change will only apply to new files uploaded after the update.
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="encryption" className="text-[13px] font-medium text-foreground">
-                Enabled
-              </Label>
-              <p className="text-[12px] text-muted-foreground mt-0.5">
-                Encrypt files stored in this bucket
+            <div className="mt-4 space-y-1">
+              <p className="text-[13px] text-muted-foreground">
+                Bucket ID:{' '}
+                <span className="ml-1.5">
+                  <CopyableId id={bucket.$id} size="sm" />
+                </span>
+              </p>
+              <p className="text-[13px] text-muted-foreground">
+                Created:{' '}
+                <DateTooltip
+                  date={new Date(bucket.$createdAt)}
+                  showFormattedDate
+                  className="text-foreground"
+                />
+              </p>
+              <p className="text-[13px] text-muted-foreground">
+                Last updated:{' '}
+                <DateTooltip
+                  date={new Date(bucket.$updatedAt)}
+                  showFormattedDate
+                  className="text-foreground"
+                />
               </p>
             </div>
-            <Switch
-              id="encryption"
-              checked={encryption}
-              onCheckedChange={handleEncryptionToggle}
-              disabled={updateEncryptionMutation.isPending}
-            />
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={
+                enabled === bucket.enabled || updateEnabledMutation.isPending
+              }
+              onClick={() => {
+                if (enabled !== bucket.enabled) {
+                  updateEnabledMutation.mutate(enabled)
+                }
+              }}
+            >
+              Update
+            </Button>
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={
-              encryption === bucket.encryption ||
-              updateEncryptionMutation.isPending
-            }
-            onClick={handleEncryptionUpdate}
-          >
-            Update
-          </Button>
-        </div>
-      </div>
 
-      {/* Antivirus */}
-      {/* <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        {/* Encryption */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Encryption
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              Encrypt files stored in this bucket. For file size above 20MB
+              encryption is skipped even if it's enabled. This change will only
+              apply to new files uploaded after the update.
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label
+                  htmlFor="encryption"
+                  className="text-[13px] font-medium text-foreground"
+                >
+                  Enabled
+                </Label>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  Encrypt files stored in this bucket
+                </p>
+              </div>
+              <Switch
+                id="encryption"
+                checked={encryption}
+                onCheckedChange={handleEncryptionToggle}
+                disabled={updateEncryptionMutation.isPending}
+              />
+            </div>
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={
+                encryption === bucket.encryption ||
+                updateEncryptionMutation.isPending
+              }
+              onClick={handleEncryptionUpdate}
+            >
+              Update
+            </Button>
+          </div>
+        </div>
+
+        {/* Antivirus */}
+        {/* <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
             Antivirus
@@ -692,461 +773,514 @@ export function BucketSettings() {
         </div>
       </div> */}
 
-      {/* Image Transformations */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Image transformations
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Enable image transformation features for files in this bucket.
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="transformations" className="text-[13px] font-medium text-foreground">
-                Enabled
-              </Label>
-              <p className="text-[12px] text-muted-foreground mt-0.5">
-                Enable image transformation features
-              </p>
-            </div>
-            <Switch
-              id="transformations"
-              checked={transformations}
-              onCheckedChange={handleTransformationsToggle}
-              disabled={updateTransformationsMutation.isPending}
-            />
+        {/* Image Transformations */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Image transformations
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              Enable image transformation features for files in this bucket.
+            </p>
           </div>
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={
-              transformations === bucket.transformations ||
-              updateTransformationsMutation.isPending
-            }
-            onClick={handleTransformationsUpdate}
-          >
-            Update
-          </Button>
-        </div>
-      </div>
-
-      {/* Compression */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Compression
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Choose a compression algorithm for files in this bucket. Compression reduces file sizes, lowering storage costs and bandwidth usage while improving transfer speeds. This change will only apply to new files uploaded after the update.
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="compression" className="text-[13px] font-medium text-foreground">
-                Algorithm
-              </Label>
-              <Select
-                value={compression || undefined}
-                onValueChange={(value) => handleCompressionUpdate(value as 'none' | 'gzip' | 'zstd')}
-                disabled={updateCompressionMutation.isPending}
-              >
-                <SelectTrigger id="compression" className="mt-1.5 max-w-sm">
-                  <SelectValue placeholder="Select algorithm">
-                    {getCompressionDisplayName(compression)}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none" className="items-start py-2">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-medium">None</span>
-                      <span className="text-[11px] text-muted-foreground">
-                        No compression applied. Files are stored as-is.
-                      </span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="gzip" className="items-start py-2">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-medium">Gzip</span>
-                      <span className="text-[11px] text-muted-foreground">
-                        Good balance between compression ratio and speed.
-                      </span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="zstd" className="items-start py-2">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-medium">Zstd</span>
-                      <span className="text-[11px] text-muted-foreground">
-                        Excellent compression ratios with fast decompression.
-                      </span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={
-              compression === ((bucket.compression as 'none' | 'gzip' | 'zstd') || 'none') ||
-              updateCompressionMutation.isPending
-            }
-            onClick={() => {
-              if (compression !== ((bucket.compression as 'none' | 'gzip' | 'zstd') || 'none')) {
-                updateCompressionMutation.mutate(compression)
-              }
-            }}
-          >
-            Update
-          </Button>
-        </div>
-      </div>
-
-      {/* Maximum File Size */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Maximum file size
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Set the maximum file size allowed.{' '}
-            {maxFileSizeByPlan !== null
-              ? (
-                  <>
-                    Maximum allowed value is {formatBytes(maxFileSizeByPlan)} for your plan.{' '}
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0 text-[13px] font-medium underline"
-                      onClick={() => {
-                        if (orgId) {
-                          navigate({
-                            to: '/organizations/$orgId/billing',
-                            params: { orgId },
-                          })
-                        }
-                      }}
-                    >
-                      Upgrade
-                    </Button>{' '}
-                    to increase the limit. Set to 0 to use your plan's maximum limit ({formatBytes(maxFileSizeByPlan)}).
-                  </>
-                )
-              : 'No limit for your plan. Set to 0 for unlimited.'}
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <div className="flex items-end gap-3">
-            <div className="space-y-2 flex-1 max-w-[200px]">
-              <Label htmlFor="max-file-size" className="text-[13px] font-medium text-foreground">
-                Size
-              </Label>
-              <Input
-                id="max-file-size"
-                type="number"
-                min={0}
-                step="any"
-                value={maximumFileSize}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value)
-                  if (!isNaN(value) && value >= 0) {
-                    setMaximumFileSize(value)
-                  } else if (e.target.value === '') {
-                    setMaximumFileSize(0)
-                  }
-                }}
-                max={maxFileSizeInCurrentUnit}
-                placeholder="0 for unlimited"
-                disabled={updateMaximumFileSizeMutation.isPending}
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label
+                  htmlFor="transformations"
+                  className="text-[13px] font-medium text-foreground"
+                >
+                  Enabled
+                </Label>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  Enable image transformation features
+                </p>
+              </div>
+              <Switch
+                id="transformations"
+                checked={transformations}
+                onCheckedChange={handleTransformationsToggle}
+                disabled={updateTransformationsMutation.isPending}
               />
             </div>
-            <div className="space-y-2 flex-1 max-w-[200px]">
-              <Label htmlFor="file-size-unit" className="text-[13px] font-medium text-foreground">
-                Unit
-              </Label>
-              <Select
-                value={fileSizeUnit}
-                onValueChange={(value) => {
-                  const newUnit = value as 'bytes' | 'KB' | 'MB' | 'GB'
-                  // Convert current value to new unit, preserving decimals
-                  const currentBytes = fileSizeInBytes
-                  const multipliers: Record<'bytes' | 'KB' | 'MB' | 'GB', number> = {
-                    bytes: 1,
-                    KB: 1000,
-                    MB: 1000 * 1000,
-                    GB: 1000 * 1000 * 1000,
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={
+                transformations === bucket.transformations ||
+                updateTransformationsMutation.isPending
+              }
+              onClick={handleTransformationsUpdate}
+            >
+              Update
+            </Button>
+          </div>
+        </div>
+
+        {/* Compression */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Compression
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              Choose a compression algorithm for files in this bucket.
+              Compression reduces file sizes, lowering storage costs and
+              bandwidth usage while improving transfer speeds. This change will
+              only apply to new files uploaded after the update.
+            </p>
+          </div>
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <div className="space-y-4">
+              <div>
+                <Label
+                  htmlFor="compression"
+                  className="text-[13px] font-medium text-foreground"
+                >
+                  Algorithm
+                </Label>
+                <Select
+                  value={compression || undefined}
+                  onValueChange={(value) =>
+                    handleCompressionUpdate(value as 'none' | 'gzip' | 'zstd')
                   }
-                  const newValue = currentBytes / multipliers[newUnit]
-                  setMaximumFileSize(newValue)
-                  setFileSizeUnit(newUnit)
-                }}
-                disabled={updateMaximumFileSizeMutation.isPending}
-              >
-                <SelectTrigger id="file-size-unit">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bytes">Bytes</SelectItem>
-                  <SelectItem value="KB">KB</SelectItem>
-                  <SelectItem value="MB">MB</SelectItem>
-                  <SelectItem value="GB">GB</SelectItem>
-                </SelectContent>
-              </Select>
+                  disabled={updateCompressionMutation.isPending}
+                >
+                  <SelectTrigger id="compression" className="mt-1.5 max-w-sm">
+                    <SelectValue placeholder="Select algorithm">
+                      {getCompressionDisplayName(compression)}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none" className="items-start py-2">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium">None</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          No compression applied. Files are stored as-is.
+                        </span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="gzip" className="items-start py-2">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium">Gzip</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          Good balance between compression ratio and speed.
+                        </span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="zstd" className="items-start py-2">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium">Zstd</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          Excellent compression ratios with fast decompression.
+                        </span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-          <div className="mt-2">
-            {fileSizeError ? (
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-[12px] text-destructive">{fileSizeError.message}</p>
-                {fileSizeError.showUpgrade && orgId && (
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={
+                compression ===
+                  ((bucket.compression as 'none' | 'gzip' | 'zstd') ||
+                    'none') || updateCompressionMutation.isPending
+              }
+              onClick={() => {
+                if (
+                  compression !==
+                  ((bucket.compression as 'none' | 'gzip' | 'zstd') || 'none')
+                ) {
+                  updateCompressionMutation.mutate(compression)
+                }
+              }}
+            >
+              Update
+            </Button>
+          </div>
+        </div>
+
+        {/* Maximum File Size */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Maximum file size
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              Set the maximum file size allowed.{' '}
+              {maxFileSizeByPlan !== null ? (
+                <>
+                  Maximum allowed value is {formatBytes(maxFileSizeByPlan)} for
+                  your plan.{' '}
                   <Button
                     variant="link"
                     size="sm"
-                    className="h-auto p-0 text-[12px] font-medium underline"
+                    className="h-auto p-0 text-[13px] font-medium underline"
                     onClick={() => {
-                      navigate({
-                        to: '/organizations/$orgId/billing',
-                        params: { orgId },
-                      })
+                      if (orgId) {
+                        navigate({
+                          to: '/organizations/$orgId/billing',
+                          params: { orgId },
+                        })
+                      }
                     }}
                   >
                     Upgrade
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <p className="text-[12px] text-muted-foreground">
-                {bucket.maximumFileSize > 0
-                  ? `Current: ${formatBytes(bucket.maximumFileSize)}`
-                  : 'Unlimited'}
-              </p>
-            )}
+                  </Button>{' '}
+                  to increase the limit. Set to 0 to use your plan's maximum
+                  limit ({formatBytes(maxFileSizeByPlan)}).
+                </>
+              ) : (
+                'No limit for your plan. Set to 0 for unlimited.'
+              )}
+            </p>
           </div>
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={
-              !bucket ||
-              Math.abs(fileSizeInBytes - bucket.maximumFileSize) < 1 ||
-              updateMaximumFileSizeMutation.isPending ||
-              fileSizeError !== null
-            }
-            onClick={handleMaximumFileSizeUpdate}
-          >
-            Update
-          </Button>
-        </div>
-      </div>
-
-      {/* Allowed File Extensions */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Allowed file extensions
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Restrict file uploads to specific file extensions. Maximum of 100 extensions are allowed, each 64 characters long. Leave empty to allow all.
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="allowed-extensions" className="text-[13px] font-medium text-foreground">
-                File extensions
-              </Label>
-              <p className="text-[12px] text-muted-foreground mt-0.5 mb-2">
-                Type and press Enter or comma to add extensions
-              </p>
-              <div className="relative max-w-md">
-                <div
-                  className={cn(
-                    'flex flex-wrap items-center gap-1.5 min-h-[36px] rounded-md border bg-transparent px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none',
-                    'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
-                    updateAllowedExtensionsMutation.isPending || allowedFileExtensions.length >= 100
-                      ? 'opacity-50 cursor-not-allowed'
-                      : ''
-                  )}
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <div className="flex items-end gap-3">
+              <div className="space-y-2 flex-1 max-w-[200px]">
+                <Label
+                  htmlFor="max-file-size"
+                  className="text-[13px] font-medium text-foreground"
                 >
-                  {allowedFileExtensions.map((ext) => (
-                    <Badge
-                      key={ext}
-                      variant="secondary"
-                      className="gap-1 h-6 text-[11px] px-1.5 py-0 bg-muted border-border"
-                    >
-                      {ext}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveExtension(ext)}
-                        className="ml-0.5 rounded-full hover:bg-muted/80 p-0.5"
-                        disabled={updateAllowedExtensionsMutation.isPending}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                  <input
-                    id="allowed-extensions"
-                    type="text"
-                    value={extensionInput}
-                    onChange={(e) => setExtensionInput(e.target.value)}
-                    onKeyDown={handleExtensionInputKeyDown}
-                    placeholder={allowedFileExtensions.length === 0 ? 'Enter extension (e.g., jpg)' : ''}
-                    className="flex-1 min-w-[120px] bg-transparent border-0 outline-none text-sm placeholder:text-muted-foreground"
-                    disabled={updateAllowedExtensionsMutation.isPending || allowedFileExtensions.length >= 100}
-                  />
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-3">
-                {popularExtensions.map((ext) => (
-                  <Button
-                    key={ext}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-[12px]"
-                    onClick={() => handleAddExtension(ext)}
-                    disabled={
-                      updateAllowedExtensionsMutation.isPending ||
-                      allowedFileExtensions.includes(ext) ||
-                      allowedFileExtensions.length >= 100
+                  Size
+                </Label>
+                <Input
+                  id="max-file-size"
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={maximumFileSize}
+                  onChange={(e) => {
+                    const value = parseFloat(e.target.value)
+                    if (!isNaN(value) && value >= 0) {
+                      setMaximumFileSize(value)
+                    } else if (e.target.value === '') {
+                      setMaximumFileSize(0)
                     }
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    {ext}
-                  </Button>
-                ))}
+                  }}
+                  max={maxFileSizeInCurrentUnit}
+                  placeholder="0 for unlimited"
+                  disabled={updateMaximumFileSizeMutation.isPending}
+                />
+              </div>
+              <div className="space-y-2 flex-1 max-w-[200px]">
+                <Label
+                  htmlFor="file-size-unit"
+                  className="text-[13px] font-medium text-foreground"
+                >
+                  Unit
+                </Label>
+                <Select
+                  value={fileSizeUnit}
+                  onValueChange={(value) => {
+                    const newUnit = value as 'bytes' | 'KB' | 'MB' | 'GB'
+                    // Convert current value to new unit, preserving decimals
+                    const currentBytes = fileSizeInBytes
+                    const multipliers: Record<
+                      'bytes' | 'KB' | 'MB' | 'GB',
+                      number
+                    > = {
+                      bytes: 1,
+                      KB: 1000,
+                      MB: 1000 * 1000,
+                      GB: 1000 * 1000 * 1000,
+                    }
+                    const newValue = currentBytes / multipliers[newUnit]
+                    setMaximumFileSize(newValue)
+                    setFileSizeUnit(newUnit)
+                  }}
+                  disabled={updateMaximumFileSizeMutation.isPending}
+                >
+                  <SelectTrigger id="file-size-unit">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bytes">Bytes</SelectItem>
+                    <SelectItem value="KB">KB</SelectItem>
+                    <SelectItem value="MB">MB</SelectItem>
+                    <SelectItem value="GB">GB</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+            <div className="mt-2">
+              {fileSizeError ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-[12px] text-destructive">
+                    {fileSizeError.message}
+                  </p>
+                  {fileSizeError.showUpgrade && orgId && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-[12px] font-medium underline"
+                      onClick={() => {
+                        navigate({
+                          to: '/organizations/$orgId/billing',
+                          params: { orgId },
+                        })
+                      }}
+                    >
+                      Upgrade
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <p className="text-[12px] text-muted-foreground">
+                  {bucket.maximumFileSize > 0
+                    ? `Current: ${formatBytes(bucket.maximumFileSize)}`
+                    : 'Unlimited'}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={
+                !bucket ||
+                Math.abs(fileSizeInBytes - bucket.maximumFileSize) < 1 ||
+                updateMaximumFileSizeMutation.isPending ||
+                fileSizeError !== null
+              }
+              onClick={handleMaximumFileSizeUpdate}
+            >
+              Update
+            </Button>
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={
-              !bucket ||
-              arraysEqual(allowedFileExtensions, bucket.allowedFileExtensions || []) ||
-              updateAllowedExtensionsMutation.isPending
-            }
-            onClick={handleAllowedExtensionsUpdate}
-          >
-            Update
-          </Button>
-        </div>
-      </div>
 
-      {/* Delete Bucket */}
-      <div className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Delete bucket
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Permanently delete this bucket and all its files. This action cannot be undone.
-          </p>
-        </div>
-        <div className="border-t border-red-500/20" />
-        <div className="px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <FolderOpen className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-medium text-foreground truncate">
-                {bucket.name}
-              </p>
-              <p className="text-[12px] text-muted-foreground">
-                Last updated:{' '}
-                <DateTooltip
-                  date={new Date(bucket.$updatedAt)}
-                  showFormattedDate
-                  className="text-foreground"
-                />
-              </p>
-            </div>
+        {/* Allowed File Extensions */}
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Allowed file extensions
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              Restrict file uploads to specific file extensions. Maximum of 100
+              extensions are allowed, each 64 characters long. Leave empty to
+              allow all.
+            </p>
           </div>
-        </div>
-        <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
-          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="destructive" size="sm" className="h-9 text-[13px]">
-                Delete
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md p-0">
-              <DialogHeader className="px-6 pt-6 text-left">
-                <DialogTitle>Delete bucket</DialogTitle>
-                <DialogDescription className="text-[13px] mt-2">
-                  Are you sure you want to delete <strong>{bucket.name}</strong>? This will permanently delete the bucket and all its files. This action cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="border-t border-border" />
-              <div className="px-6 pb-4 pt-0">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="delete-confirmation" className="text-[13px] font-medium text-foreground">
-                      Type the bucket name to confirm
-                    </Label>
-                    <Input
-                      id="delete-confirmation"
-                      value={deleteConfirmation}
-                      onChange={(e) => setDeleteConfirmation(e.target.value)}
-                      placeholder={bucket.name}
-                      className="mt-1.5"
+          <div className="border-t border-border" />
+          <div className="px-6 py-4">
+            <div className="space-y-4">
+              <div>
+                <Label
+                  htmlFor="allowed-extensions"
+                  className="text-[13px] font-medium text-foreground"
+                >
+                  File extensions
+                </Label>
+                <p className="text-[12px] text-muted-foreground mt-0.5 mb-2">
+                  Type and press Enter or comma to add extensions
+                </p>
+                <div className="relative max-w-md">
+                  <div
+                    className={cn(
+                      'flex flex-wrap items-center gap-1.5 min-h-[36px] rounded-md border bg-transparent px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none',
+                      'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
+                      updateAllowedExtensionsMutation.isPending ||
+                        allowedFileExtensions.length >= 100
+                        ? 'opacity-50 cursor-not-allowed'
+                        : '',
+                    )}
+                  >
+                    {allowedFileExtensions.map((ext) => (
+                      <Badge
+                        key={ext}
+                        variant="secondary"
+                        className="gap-1 h-6 text-[11px] px-1.5 py-0 bg-muted border-border"
+                      >
+                        {ext}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExtension(ext)}
+                          className="ml-0.5 rounded-full hover:bg-muted/80 p-0.5"
+                          disabled={updateAllowedExtensionsMutation.isPending}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                    <input
+                      id="allowed-extensions"
+                      type="text"
+                      value={extensionInput}
+                      onChange={(e) => setExtensionInput(e.target.value)}
+                      onKeyDown={handleExtensionInputKeyDown}
+                      placeholder={
+                        allowedFileExtensions.length === 0
+                          ? 'Enter extension (e.g., jpg)'
+                          : ''
+                      }
+                      className="flex-1 min-w-[120px] bg-transparent border-0 outline-none text-sm placeholder:text-muted-foreground"
+                      disabled={
+                        updateAllowedExtensionsMutation.isPending ||
+                        allowedFileExtensions.length >= 100
+                      }
                     />
                   </div>
                 </div>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {popularExtensions.map((ext) => (
+                    <Button
+                      key={ext}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-[12px]"
+                      onClick={() => handleAddExtension(ext)}
+                      disabled={
+                        updateAllowedExtensionsMutation.isPending ||
+                        allowedFileExtensions.includes(ext) ||
+                        allowedFileExtensions.length >= 100
+                      }
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      {ext}
+                    </Button>
+                  ))}
+                </div>
               </div>
-              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 text-[13px]"
-                  onClick={() => {
-                    setDeleteDialogOpen(false)
-                    setDeleteConfirmation('')
-                  }}
-                  disabled={deleteBucketMutation.isPending}
-                >
-                  Cancel
-                </Button>
+            </div>
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30">
+            <Button
+              size="sm"
+              className="h-9 text-[13px]"
+              disabled={
+                !bucket ||
+                arraysEqual(
+                  allowedFileExtensions,
+                  bucket.allowedFileExtensions || [],
+                ) ||
+                updateAllowedExtensionsMutation.isPending
+              }
+              onClick={handleAllowedExtensionsUpdate}
+            >
+              Update
+            </Button>
+          </div>
+        </div>
+
+        {/* Delete Bucket */}
+        <div className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden">
+          <div className="px-6 py-4">
+            <h3 className="text-[15px] font-semibold text-foreground">
+              Delete bucket
+            </h3>
+            <p className="text-[13px] text-muted-foreground mt-2">
+              Permanently delete this bucket and all its files. This action
+              cannot be undone.
+            </p>
+          </div>
+          <div className="border-t border-red-500/20" />
+          <div className="px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <FolderOpen className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-medium text-foreground truncate">
+                  {bucket.name}
+                </p>
+                <p className="text-[12px] text-muted-foreground">
+                  Last updated:{' '}
+                  <DateTooltip
+                    date={new Date(bucket.$updatedAt)}
+                    showFormattedDate
+                    className="text-foreground"
+                  />
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="px-6 py-4 border-t border-destructive/20 bg-destructive/5">
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <DialogTrigger asChild>
                 <Button
                   variant="destructive"
                   size="sm"
                   className="h-9 text-[13px]"
-                  disabled={
-                    deleteConfirmation !== bucket.name ||
-                    deleteBucketMutation.isPending
-                  }
-                  onClick={() => {
-                    if (deleteConfirmation === bucket.name) {
-                      deleteBucketMutation.mutate()
-                    }
-                  }}
                 >
                   Delete
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md p-0">
+                <DialogHeader className="px-6 pt-6 text-left">
+                  <DialogTitle>Delete bucket</DialogTitle>
+                  <DialogDescription className="text-[13px] mt-2">
+                    Are you sure you want to delete{' '}
+                    <strong>{bucket.name}</strong>? This will permanently delete
+                    the bucket and all its files. This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="border-t border-border" />
+                <div className="px-6 pb-4 pt-0">
+                  <div className="space-y-4">
+                    <div>
+                      <Label
+                        htmlFor="delete-confirmation"
+                        className="text-[13px] font-medium text-foreground"
+                      >
+                        Type the bucket name to confirm
+                      </Label>
+                      <Input
+                        id="delete-confirmation"
+                        value={deleteConfirmation}
+                        onChange={(e) => setDeleteConfirmation(e.target.value)}
+                        placeholder={bucket.name}
+                        className="mt-1.5"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-[13px]"
+                    onClick={() => {
+                      setDeleteDialogOpen(false)
+                      setDeleteConfirmation('')
+                    }}
+                    disabled={deleteBucketMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-9 text-[13px]"
+                    disabled={
+                      deleteConfirmation !== bucket.name ||
+                      deleteBucketMutation.isPending
+                    }
+                    onClick={() => {
+                      if (deleteConfirmation === bucket.name) {
+                        deleteBucketMutation.mutate()
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
-      </div>
       </div>
     </div>
   )
 }
-

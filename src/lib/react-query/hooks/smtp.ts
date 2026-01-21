@@ -1,6 +1,6 @@
 /**
  * React Query hooks for SMTP
- * 
+ *
  * Handles SMTP settings updates.
  */
 
@@ -14,7 +14,7 @@ import { Dependencies } from './dependencies'
 
 /**
  * Hook to update SMTP settings
- * 
+ *
  * @param projectId - The project ID
  */
 export function useUpdateSMTP(projectId: string | null | undefined) {
@@ -45,7 +45,11 @@ export function useUpdateSMTP(projectId: string | null | undefined) {
         port: data.enabled ? data.port : undefined,
         username: data.enabled ? data.username : undefined,
         password: data.enabled ? data.password : undefined,
-        secure: data.enabled ? (data.secure === '' ? undefined : data.secure) : undefined,
+        secure: data.enabled
+          ? data.secure === ''
+            ? undefined
+            : data.secure
+          : undefined,
       })
     },
     onSuccess: () => {
@@ -58,5 +62,3 @@ export function useUpdateSMTP(projectId: string | null | undefined) {
     },
   })
 }
-
-

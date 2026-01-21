@@ -17,7 +17,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-import { useOrganizationById, useOrganizationPlan, useOrganizationBillingAggregation, useOrganizationCredits } from '@/lib/react-query/hooks'
+import {
+  useOrganizationById,
+  useOrganizationPlan,
+  useOrganizationBillingAggregation,
+  useOrganizationCredits,
+} from '@/lib/react-query/hooks'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
@@ -68,12 +73,13 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // Fetch organization data
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
-  const { aggregation, isLoading: aggLoading } = useOrganizationBillingAggregation(
-    orgId,
-    organization?.billingAggregationId,
-    pageLimit,
-    pageOffset,
-  )
+  const { aggregation, isLoading: aggLoading } =
+    useOrganizationBillingAggregation(
+      orgId,
+      organization?.billingAggregationId,
+      pageLimit,
+      pageOffset,
+    )
   const { credits, total: creditsTotal } = useOrganizationCredits(orgId, 0, 1)
 
   // Calculate available credit
@@ -116,7 +122,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
   // Get base amount (from aggregation if available, otherwise plan price)
   const baseAmount = useMemo(() => {
-    if (aggregation && aggregation.amount !== undefined && aggregation.amount !== null) {
+    if (
+      aggregation &&
+      aggregation.amount !== undefined &&
+      aggregation.amount !== null
+    ) {
       return aggregation.amount
     }
     return basePlanPrice
@@ -135,17 +145,17 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // Get billing cycle dates from organization
   const billingCycle = useMemo(() => {
     if (!organization) return null
-    
+
     const cycleStart = organization.billingCurrentInvoiceDate
     const cycleEnd = organization.billingNextInvoiceDate
-    
+
     if (cycleStart && cycleEnd) {
       return {
         start: cycleStart,
         end: cycleEnd,
       }
     }
-    
+
     return null
   }, [organization])
 
@@ -178,25 +188,36 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // Check both aggregation and plan for project limits
   const additionalProjectsCost = useMemo(() => {
     if (!plan || !aggregation) return 0
-    
+
     // Get included projects from plan
-    const includedProjects = plan.projects || plan.addons?.projects?.planIncluded || 0
-    const projects = aggregation.breakdown || aggregation.projects || aggregation.projectBreakdown || []
+    const includedProjects =
+      plan.projects || plan.addons?.projects?.planIncluded || 0
+    const projects =
+      aggregation.breakdown ||
+      aggregation.projects ||
+      aggregation.projectBreakdown ||
+      []
     const totalProjects = Array.isArray(projects) ? projects.length : 0
-    
+
     if (totalProjects <= includedProjects) return 0
-    
+
     const additionalCount = totalProjects - includedProjects
     // Get additional project price from plan addons
-    const additionalProjectPrice = plan.addons?.projects?.price || plan.additionalProjectPrice || 0
-    
+    const additionalProjectPrice =
+      plan.addons?.projects?.price || plan.additionalProjectPrice || 0
+
     return additionalCount * additionalProjectPrice
   }, [plan, aggregation])
 
   const additionalProjectsCount = useMemo(() => {
     if (!plan || !aggregation) return 0
-    const includedProjects = plan.projects || plan.addons?.projects?.planIncluded || 0
-    const projects = aggregation.breakdown || aggregation.projects || aggregation.projectBreakdown || []
+    const includedProjects =
+      plan.projects || plan.addons?.projects?.planIncluded || 0
+    const projects =
+      aggregation.breakdown ||
+      aggregation.projects ||
+      aggregation.projectBreakdown ||
+      []
     const totalProjects = Array.isArray(projects) ? projects.length : 0
     return Math.max(0, totalProjects - includedProjects)
   }, [plan, aggregation])
@@ -217,30 +238,89 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // Process aggregation breakdown for display
   const projectBreakdowns = useMemo(() => {
     if (!aggregation) return []
-    
+
     // Try different property names for projects
-    const projects = aggregation.breakdown || aggregation.projects || aggregation.projectBreakdown || []
+    const projects =
+      aggregation.breakdown ||
+      aggregation.projects ||
+      aggregation.projectBreakdown ||
+      []
     if (!Array.isArray(projects) || projects.length === 0) return []
-    
+
     return projects.map((project: any) => {
       const resources: ResourceItem[] = []
       let projectTotal = 0
 
       // Resources are in project.resources array with resourceId and value
-      const projectResources = Array.isArray(project.resources) ? project.resources : []
-      
+      const projectResources = Array.isArray(project.resources)
+        ? project.resources
+        : []
+
       // Map aggregation resourceIds to our internal keys and display info
       // The aggregation uses resourceId like "bandwidth", "storage", "users", "databasesReads", "GBHours", etc.
-      const resourceIdMap: Record<string, { key: string; name: string; format: 'bytes' | 'number' | 'sms'; planKey: string }> = {
-        bandwidth: { key: 'bandwidth', name: 'Bandwidth', format: 'bytes', planKey: 'bandwidth' },
-        storage: { key: 'storage', name: 'Storage', format: 'bytes', planKey: 'storage' },
-        users: { key: 'users', name: 'Users', format: 'number', planKey: 'users' },
-        databasesReads: { key: 'databaseReads', name: 'Database reads', format: 'number', planKey: 'databaseReads' },
-        databasesWrites: { key: 'databaseWrites', name: 'Database writes', format: 'number', planKey: 'databaseWrites' },
-        executions: { key: 'executions', name: 'Executions', format: 'number', planKey: 'executions' },
-        imageTransformations: { key: 'imageTransformations', name: 'Image transformations', format: 'number', planKey: 'imageTransformations' },
-        GBHours: { key: 'gbHours', name: 'GB-hours', format: 'number', planKey: 'gbHours' },
-        authPhone: { key: 'authPhone', name: 'Phone OTP', format: 'sms', planKey: 'authPhone' },
+      const resourceIdMap: Record<
+        string,
+        {
+          key: string
+          name: string
+          format: 'bytes' | 'number' | 'sms'
+          planKey: string
+        }
+      > = {
+        bandwidth: {
+          key: 'bandwidth',
+          name: 'Bandwidth',
+          format: 'bytes',
+          planKey: 'bandwidth',
+        },
+        storage: {
+          key: 'storage',
+          name: 'Storage',
+          format: 'bytes',
+          planKey: 'storage',
+        },
+        users: {
+          key: 'users',
+          name: 'Users',
+          format: 'number',
+          planKey: 'users',
+        },
+        databasesReads: {
+          key: 'databaseReads',
+          name: 'Database reads',
+          format: 'number',
+          planKey: 'databaseReads',
+        },
+        databasesWrites: {
+          key: 'databaseWrites',
+          name: 'Database writes',
+          format: 'number',
+          planKey: 'databaseWrites',
+        },
+        executions: {
+          key: 'executions',
+          name: 'Executions',
+          format: 'number',
+          planKey: 'executions',
+        },
+        imageTransformations: {
+          key: 'imageTransformations',
+          name: 'Image transformations',
+          format: 'number',
+          planKey: 'imageTransformations',
+        },
+        GBHours: {
+          key: 'gbHours',
+          name: 'GB-hours',
+          format: 'number',
+          planKey: 'gbHours',
+        },
+        authPhone: {
+          key: 'authPhone',
+          name: 'Phone OTP',
+          format: 'sms',
+          planKey: 'authPhone',
+        },
       }
 
       // Helper to get resource from aggregation by resourceId
@@ -253,7 +333,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       // Some limits need unit conversion (bandwidth and storage are in GB)
       const getPlanLimit = (planKey: string): number | null => {
         if (!plan) return null
-        
+
         // Map our planKey to the plan object property name
         const planPropertyMap: Record<string, string> = {
           bandwidth: 'bandwidth',
@@ -266,55 +346,59 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           imageTransformations: 'imageTransformations',
           authPhone: 'authPhone',
         }
-        
+
         const planProperty = planPropertyMap[planKey] || planKey
-        
+
         // Get the limit value directly from plan object
         const limitValue = (plan as any)[planProperty]
-        
+
         if (limitValue === null || limitValue === undefined) {
           return null
         }
-        
+
         const numValue = Number(limitValue)
         if (isNaN(numValue)) {
           return null
         }
-        
+
         // Convert bandwidth and storage from GB to bytes (multiply by 1 billion)
         if (planKey === 'bandwidth' || planKey === 'storage') {
           return numValue * 1000000000
         }
-        
+
         return numValue
       }
 
       // Process each resource type from the aggregation
-      Object.entries(resourceIdMap).forEach(([resourceId, { key, name, format, planKey }]) => {
-        const resource = getResourceByResourceId(resourceId)
-        
-        // Get usage from resource.value (aggregation format)
-        const usage = resource?.value !== undefined ? Number(resource.value) : 0
-        
-        // Get limit from plan
-        const limit = getPlanLimit(planKey)
-        
-        // Get cost from resource.amount if available
-        const cost = resource?.amount !== undefined ? Number(resource.amount) : 0
-        
-        // Always show the resource if it exists in aggregation or if plan has a limit
-        // This matches the old UI which shows all resources
-        if (resource || limit !== null) {
-          resources.push({
-            name,
-            usage,
-            limit,
-            cost,
-            formatType: format,
-          })
-          projectTotal += cost
-        }
-      })
+      Object.entries(resourceIdMap).forEach(
+        ([resourceId, { key, name, format, planKey }]) => {
+          const resource = getResourceByResourceId(resourceId)
+
+          // Get usage from resource.value (aggregation format)
+          const usage =
+            resource?.value !== undefined ? Number(resource.value) : 0
+
+          // Get limit from plan
+          const limit = getPlanLimit(planKey)
+
+          // Get cost from resource.amount if available
+          const cost =
+            resource?.amount !== undefined ? Number(resource.amount) : 0
+
+          // Always show the resource if it exists in aggregation or if plan has a limit
+          // This matches the old UI which shows all resources
+          if (resource || limit !== null) {
+            resources.push({
+              name,
+              usage,
+              limit,
+              cost,
+              formatType: format,
+            })
+            projectTotal += cost
+          }
+        },
+      )
 
       // Debug: Log project structure if no resources found (only in development)
       if (resources.length === 0 && process.env.NODE_ENV === 'development') {
@@ -334,7 +418,11 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   // Get total projects count for pagination
   const totalProjects = useMemo(() => {
     if (!aggregation) return 0
-    const projects = aggregation.breakdown || aggregation.projects || aggregation.projectBreakdown || []
+    const projects =
+      aggregation.breakdown ||
+      aggregation.projects ||
+      aggregation.projectBreakdown ||
+      []
     return Array.isArray(projects) ? projects.length : 0
   }, [aggregation])
 
@@ -349,7 +437,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           <div className="h-6 w-32 bg-muted animate-pulse rounded" />
         </div>
         <div className="border-t border-border px-6 py-12 text-center">
-          <p className="text-[13px] text-muted-foreground">Loading plan details...</p>
+          <p className="text-[13px] text-muted-foreground">
+            Loading plan details...
+          </p>
         </div>
       </div>
     )
@@ -371,7 +461,19 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             </div>
             {totalAmount > 0 && nextPaymentDate && (
               <p className="text-[12px] text-muted-foreground mt-1">
-                Next payment of <span className="font-medium text-foreground">{formatCurrency(totalAmount)}</span> will occur on <span className="font-medium text-foreground">{formatDate(nextPaymentDate, { month: 'short', day: 'numeric', year: 'numeric' })}</span>.
+                Next payment of{' '}
+                <span className="font-medium text-foreground">
+                  {formatCurrency(totalAmount)}
+                </span>{' '}
+                will occur on{' '}
+                <span className="font-medium text-foreground">
+                  {formatDate(nextPaymentDate, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </span>
+                .
               </p>
             )}
           </div>
@@ -389,7 +491,14 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           <div className="flex items-center justify-between text-[12px]">
             <span className="text-muted-foreground">Current billing cycle</span>
             <span className="font-medium text-foreground">
-              ({formatDate(billingCycle.start, { month: 'short', day: 'numeric' })}–{formatDate(billingCycle.end, { month: 'short', day: 'numeric' })})
+              (
+              {formatDate(billingCycle.start, {
+                month: 'short',
+                day: 'numeric',
+              })}
+              –
+              {formatDate(billingCycle.end, { month: 'short', day: 'numeric' })}
+              )
             </span>
           </div>
         </div>
@@ -418,9 +527,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
           <div className="border-t border-border px-6 py-4 space-y-4">
             {/* Base Plan Row */}
             <div className="flex items-center justify-between text-[13px]">
-              <span className="text-foreground">
-                {planName} plan (base)
-              </span>
+              <span className="text-foreground">{planName} plan (base)</span>
               <span className="font-medium text-foreground">
                 {formatCurrency(basePlanPrice)}
               </span>
@@ -432,7 +539,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 <span className="text-foreground flex items-center gap-2">
                   Additional members
                   {additionalMembersCount > 0 && (
-                    <Badge variant="secondary" className="h-4 px-1.5 text-[10px] font-medium">
+                    <Badge
+                      variant="secondary"
+                      className="h-4 px-1.5 text-[10px] font-medium"
+                    >
                       {additionalMembersCount}
                     </Badge>
                   )}
@@ -448,7 +558,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
               <div className="flex items-center justify-between text-[13px]">
                 <span className="text-foreground flex items-center gap-2">
                   Additional projects
-                  <Badge variant="secondary" className="h-4 px-1.5 text-[10px] font-medium">
+                  <Badge
+                    variant="secondary"
+                    className="h-4 px-1.5 text-[10px] font-medium"
+                  >
                     {additionalProjectsCount}
                   </Badge>
                 </span>
@@ -461,9 +574,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
             {/* Credits Applied */}
             {creditsApplied > 0 && (
               <div className="flex items-center justify-between text-[13px]">
-                <span className="text-muted-foreground">
-                  Credits applied
-                </span>
+                <span className="text-muted-foreground">Credits applied</span>
                 <span className="font-medium text-foreground text-green-600 dark:text-green-400">
                   -{formatCurrency(creditsApplied)}
                 </span>
@@ -505,22 +616,36 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                         <div className="ml-5 mt-1 border-l border-border pl-3 pr-6 pb-2">
                           <div className="space-y-0.5">
                             {project.resources.map((resource, index) => {
-                              const usagePercentage = resource.limit && resource.limit > 0
-                                ? Math.min(100, (resource.usage / resource.limit) * 100)
-                                : null
-                              const usageFormatted = formatResourceUsage(resource.usage, resource.formatType)
-                              const limitFormatted = resource.limit !== null
-                                ? formatResourceLimit(resource.limit, resource.formatType)
-                                : 'Unlimited'
+                              const usagePercentage =
+                                resource.limit && resource.limit > 0
+                                  ? Math.min(
+                                      100,
+                                      (resource.usage / resource.limit) * 100,
+                                    )
+                                  : null
+                              const usageFormatted = formatResourceUsage(
+                                resource.usage,
+                                resource.formatType,
+                              )
+                              const limitFormatted =
+                                resource.limit !== null
+                                  ? formatResourceLimit(
+                                      resource.limit,
+                                      resource.formatType,
+                                    )
+                                  : 'Unlimited'
 
                               return (
-                                <div key={index} className="py-2 border-b border-border last:border-0">
+                                <div
+                                  key={index}
+                                  className="py-2 border-b border-border last:border-0"
+                                >
                                   <div className="flex items-center gap-6">
                                     {/* Resource name - fixed width */}
                                     <span className="text-[12px] font-medium text-foreground w-[140px] shrink-0">
                                       {resource.name}
                                     </span>
-                                    
+
                                     {/* Progress bar - fixed width column for alignment */}
                                     <div className="w-[120px] shrink-0">
                                       {usagePercentage !== null ? (
@@ -532,14 +657,16 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                                                   value={usagePercentage}
                                                   className={cn(
                                                     'h-2 cursor-pointer',
-                                                    usagePercentage >= 80 && '[&>div]:bg-blue-500',
+                                                    usagePercentage >= 80 &&
+                                                      '[&>div]:bg-blue-500',
                                                   )}
                                                 />
                                               </div>
                                             </TooltipTrigger>
                                             <TooltipContent>
                                               <p className="text-[12px]">
-                                                {usagePercentage.toFixed(1)}% used
+                                                {usagePercentage.toFixed(1)}%
+                                                used
                                               </p>
                                             </TooltipContent>
                                           </Tooltip>
@@ -548,12 +675,12 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                                         <div className="h-2" /> // Spacer to maintain alignment
                                       )}
                                     </div>
-                                    
+
                                     {/* Usage/limit text - flexible */}
                                     <span className="text-[11px] text-muted-foreground whitespace-nowrap flex-1 min-w-0">
                                       {usageFormatted} / {limitFormatted}
                                     </span>
-                                    
+
                                     {/* Cost - right aligned to match parent prices */}
                                     <span className="text-[12px] font-medium text-foreground shrink-0 text-right min-w-[70px]">
                                       {formatCurrency(resource.cost)}
@@ -583,7 +710,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between pt-2 border-t border-border">
                     <span className="text-[12px] text-muted-foreground">
-                      Showing {pageOffset + 1}–{Math.min(pageOffset + pageLimit, totalProjects)} of {totalProjects} projects
+                      Showing {pageOffset + 1}–
+                      {Math.min(pageOffset + pageLimit, totalProjects)} of{' '}
+                      {totalProjects} projects
                     </span>
                     <div className="flex items-center gap-2">
                       <Button
@@ -696,7 +825,10 @@ function formatNumber(num: number): string {
   return num.toLocaleString()
 }
 
-function formatResourceUsage(value: number, type: 'bytes' | 'number' | 'sms'): string {
+function formatResourceUsage(
+  value: number,
+  type: 'bytes' | 'number' | 'sms',
+): string {
   if (type === 'bytes') {
     return formatBytes(value)
   }
@@ -706,7 +838,10 @@ function formatResourceUsage(value: number, type: 'bytes' | 'number' | 'sms'): s
   return formatNumber(value)
 }
 
-function formatResourceLimit(value: number | null, type: 'bytes' | 'number' | 'sms'): string {
+function formatResourceLimit(
+  value: number | null,
+  type: 'bytes' | 'number' | 'sms',
+): string {
   if (value === null) return 'Unlimited'
   if (type === 'bytes') {
     // For limits, show in GB if large enough

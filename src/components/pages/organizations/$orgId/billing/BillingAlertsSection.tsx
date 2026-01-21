@@ -9,7 +9,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { useOrganizationById, useUpdateOrganizationBudget } from '@/lib/react-query/hooks'
+import {
+  useOrganizationById,
+  useUpdateOrganizationBudget,
+} from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 
 /**
@@ -49,7 +52,6 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
     (t) => !usedThresholds.includes(t),
   )
 
-
   const handleAddAlert = async () => {
     if (!newThreshold || !orgId) return
 
@@ -66,7 +68,9 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
       setNewThreshold('')
       setShowAddAlert(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to add alert')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to add alert',
+      )
     }
   }
 
@@ -83,7 +87,9 @@ export function BillingAlertsSection({ orgId }: BillingAlertsSectionProps) {
       })
       toast.success('Alert removed')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to remove alert')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to remove alert',
+      )
     }
   }
 

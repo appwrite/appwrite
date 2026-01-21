@@ -1,7 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { FunctionDeployments } from '@/components/pages/projects/$projectId/functions/Deployments'
-import { fetchProjectFunction, fetchFunctionDeployments, fetchFunctionDeployment, fetchFunctionDomains } from '@/lib/react-query/hooks'
+import {
+  fetchProjectFunction,
+  fetchFunctionDeployments,
+  fetchFunctionDeployment,
+  fetchFunctionDomains,
+} from '@/lib/react-query/hooks'
 
 const DEPLOYMENTS_PER_PAGE = 25
 const DOMAINS_LIMIT = 20 // Fetch enough to ensure we have 3 after filtering by active deployment
@@ -47,8 +52,15 @@ export const Route = createFileRoute(
     if (func?.deploymentId) {
       try {
         await queryClient.ensureQueryData({
-          queryKey: ['deployment', 'function', projectId, functionId, func.deploymentId],
-          queryFn: () => fetchFunctionDeployment(projectId, functionId, func.deploymentId!),
+          queryKey: [
+            'deployment',
+            'function',
+            projectId,
+            functionId,
+            func.deploymentId,
+          ],
+          queryFn: () =>
+            fetchFunctionDeployment(projectId, functionId, func.deploymentId!),
           staleTime: 30 * 1000,
         })
       } catch (error) {
@@ -60,8 +72,17 @@ export const Route = createFileRoute(
     // Prefetch domains/rules (for overview card - up to 3 rules filtered by active deployment)
     try {
       await queryClient.ensureQueryData({
-        queryKey: ['proxy-rules', 'function', projectId, functionId, 0, DOMAINS_LIMIT, undefined],
-        queryFn: () => fetchFunctionDomains(projectId, functionId, 0, DOMAINS_LIMIT),
+        queryKey: [
+          'proxy-rules',
+          'function',
+          projectId,
+          functionId,
+          0,
+          DOMAINS_LIMIT,
+          undefined,
+        ],
+        queryFn: () =>
+          fetchFunctionDomains(projectId, functionId, 0, DOMAINS_LIMIT),
         staleTime: 30 * 1000,
       })
     } catch (error) {
@@ -73,8 +94,22 @@ export const Route = createFileRoute(
     // Using ensureQueryData to wait for data before navigation completes
     try {
       await queryClient.ensureQueryData({
-        queryKey: ['deployments', 'function', projectId, functionId, pageIndex, DEPLOYMENTS_PER_PAGE, undefined],
-        queryFn: () => fetchFunctionDeployments(projectId, functionId, pageIndex, DEPLOYMENTS_PER_PAGE),
+        queryKey: [
+          'deployments',
+          'function',
+          projectId,
+          functionId,
+          pageIndex,
+          DEPLOYMENTS_PER_PAGE,
+          undefined,
+        ],
+        queryFn: () =>
+          fetchFunctionDeployments(
+            projectId,
+            functionId,
+            pageIndex,
+            DEPLOYMENTS_PER_PAGE,
+          ),
         staleTime: 30 * 1000,
       })
     } catch (error) {
@@ -84,4 +119,3 @@ export const Route = createFileRoute(
   },
   component: FunctionDeployments,
 })
-

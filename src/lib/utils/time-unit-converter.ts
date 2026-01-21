@@ -1,11 +1,18 @@
 /**
  * Time unit conversion utilities
- * 
+ *
  * Converts between different time units (seconds, minutes, hours, days, weeks, months, years)
  * and seconds (the base unit used by the API).
  */
 
-export type TimeUnit = 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks' | 'months' | 'years'
+export type TimeUnit =
+  | 'seconds'
+  | 'minutes'
+  | 'hours'
+  | 'days'
+  | 'weeks'
+  | 'months'
+  | 'years'
 
 export interface TimeUnitPair {
   value: number
@@ -46,8 +53,16 @@ export function createTimeUnitPair(seconds: number): TimeUnitPair {
   }
 
   // Try to find the best unit that gives a whole number or reasonable decimal
-  const units: TimeUnit[] = ['years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds']
-  
+  const units: TimeUnit[] = [
+    'years',
+    'months',
+    'weeks',
+    'days',
+    'hours',
+    'minutes',
+    'seconds',
+  ]
+
   for (const unit of units) {
     const value = fromSeconds(seconds, unit)
     // If the value is >= 1 and reasonably whole (within 0.01), use this unit
@@ -68,10 +83,9 @@ export function createTimeUnitPair(seconds: number): TimeUnitPair {
  * Formats a time unit pair as a human-readable string
  */
 export function formatTimeUnitPair(pair: TimeUnitPair): string {
-  const unitLabel = pair.value === 1 
-    ? pair.unit.slice(0, -1) // Remove 's' for singular
-    : pair.unit
+  const unitLabel =
+    pair.value === 1
+      ? pair.unit.slice(0, -1) // Remove 's' for singular
+      : pair.unit
   return `${pair.value} ${unitLabel}`
 }
-
-

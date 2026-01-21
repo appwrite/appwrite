@@ -1,6 +1,6 @@
 /**
  * React Query hooks for Organization Domains
- * 
+ *
  * Handles domain fetching, creation, deletion, and verification for organizations.
  * All operations use the Console SDK (sdk.forConsole.domains).
  */
@@ -10,7 +10,11 @@ import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE, keepPreviousData } from './constants'
+import {
+  DEFAULT_STALE_TIME,
+  DEFAULT_PAGE_SIZE,
+  keepPreviousData,
+} from './constants'
 import { Dependencies } from './dependencies'
 
 // ============================================================================
@@ -19,9 +23,9 @@ import { Dependencies } from './dependencies'
 
 /**
  * Query function to fetch domains for an organization
- * 
+ *
  * This is extracted so it can be reused in both hooks and route loaders.
- * 
+ *
  * @param organizationId - The organization/team ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -58,7 +62,7 @@ export async function fetchOrganizationDomains(
 
 /**
  * Query function to fetch a single domain by ID
- * 
+ *
  * @param domainId - The domain ID to fetch
  * @returns Domain details from the API
  */
@@ -76,7 +80,7 @@ export async function fetchDomain(domainId: string) {
 
 /**
  * Mutation function to create a domain
- * 
+ *
  * @param organizationId - The organization/team ID
  * @param domain - The domain name (lowercase)
  * @returns Created domain object
@@ -100,7 +104,7 @@ export async function createOrganizationDomain(
 
 /**
  * Mutation function to delete a domain
- * 
+ *
  * @param domainId - The domain ID to delete
  */
 export async function deleteOrganizationDomain(domainId: string) {
@@ -112,7 +116,7 @@ export async function deleteOrganizationDomain(domainId: string) {
 
 /**
  * Mutation function to update nameservers (retry verification)
- * 
+ *
  * @param domainId - The domain ID to retry verification for
  * @returns Updated domain object
  */
@@ -126,7 +130,7 @@ export async function retryDomainVerification(domainId: string) {
 
 /**
  * Mutation function to move a domain to a different organization
- * 
+ *
  * @param domainId - The domain ID
  * @param teamId - The target organization/team ID
  */
@@ -142,7 +146,7 @@ export async function updateDomainTeam(domainId: string, teamId: string) {
 
 /**
  * Query function to fetch DNS records for a domain
- * 
+ *
  * @param domainId - The domain ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -176,7 +180,7 @@ export async function fetchDomainRecords(
 
 /**
  * Query function to fetch zone file for a domain
- * 
+ *
  * @param domainId - The domain ID
  * @returns Zone file content
  */
@@ -241,7 +245,9 @@ export async function createDnsRecord(
         data.weight === undefined ||
         data.port === undefined
       ) {
-        throw new Error('Priority, weight, and port are required for SRV records')
+        throw new Error(
+          'Priority, weight, and port are required for SRV records',
+        )
       }
       return await sdk.forConsole.domains.createRecordSRV({
         ...baseParams,
@@ -318,7 +324,9 @@ export async function updateDnsRecord(
         data.weight === undefined ||
         data.port === undefined
       ) {
-        throw new Error('Priority, weight, and port are required for SRV records')
+        throw new Error(
+          'Priority, weight, and port are required for SRV records',
+        )
       }
       return await sdk.forConsole.domains.updateRecordSRV({
         ...baseParams,
@@ -339,7 +347,7 @@ export async function updateDnsRecord(
 
 /**
  * Mutation function to delete a DNS record
- * 
+ *
  * @param domainId - The domain ID
  * @param recordId - The DNS record ID to delete
  */
@@ -355,7 +363,7 @@ export async function deleteDnsRecord(domainId: string, recordId: string) {
 
 /**
  * Mutation function to update zone file (import)
- * 
+ *
  * @param domainId - The domain ID
  * @param content - Zone file content as string
  */
@@ -374,7 +382,13 @@ export async function updateDomainZone(domainId: string, content: string) {
  */
 export async function fetchPresetRecords(
   domainId: string,
-  preset: 'zoho' | 'mailgun' | 'outlook' | 'protonmail' | 'icloud' | 'google-workspace',
+  preset:
+    | 'zoho'
+    | 'mailgun'
+    | 'outlook'
+    | 'protonmail'
+    | 'icloud'
+    | 'google-workspace',
 ) {
   if (!domainId) {
     throw new Error('Domain ID is required')
@@ -404,7 +418,7 @@ export async function fetchPresetRecords(
 
 /**
  * Hook to fetch domains for an organization
- * 
+ *
  * @param organizationId - The organization ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -425,7 +439,8 @@ export function useOrganizationDomains(
     refetch,
   } = useQuery({
     queryKey: ['domains', 'organization', organizationId, page, limit, search],
-    queryFn: () => fetchOrganizationDomains(organizationId!, page, limit, search),
+    queryFn: () =>
+      fetchOrganizationDomains(organizationId!, page, limit, search),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
@@ -454,7 +469,7 @@ export function useOrganizationDomains(
 
 /**
  * Hook to fetch a single domain by ID
- * 
+ *
  * @param domainId - The domain ID
  * @returns Domain details with loading state
  */
@@ -469,7 +484,7 @@ export function useDomain(domainId: string | null | undefined) {
 
 /**
  * Hook to create a domain
- * 
+ *
  * @param organizationId - The organization ID
  * @returns Mutation hook for creating a domain
  */
@@ -495,7 +510,7 @@ export function useCreateOrganizationDomain(
 
 /**
  * Hook to delete a domain
- * 
+ *
  * @param organizationId - The organization ID (for cache invalidation)
  * @returns Mutation hook for deleting a domain
  */
@@ -521,7 +536,7 @@ export function useDeleteOrganizationDomain(
 
 /**
  * Hook to retry domain verification (update nameservers)
- * 
+ *
  * @param organizationId - The organization ID (for cache invalidation)
  * @returns Mutation hook for retrying verification
  */
@@ -547,17 +562,21 @@ export function useRetryDomainVerification(
 
 /**
  * Hook to move a domain to a different organization
- * 
+ *
  * @param organizationId - The organization ID (for cache invalidation)
  * @returns Mutation hook for updating domain team
  */
-export function useUpdateDomainTeam(
-  organizationId: string | null | undefined,
-) {
+export function useUpdateDomainTeam(organizationId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ domainId, teamId }: { domainId: string; teamId: string }) => {
+    mutationFn: async ({
+      domainId,
+      teamId,
+    }: {
+      domainId: string
+      teamId: string
+    }) => {
       return await updateDomainTeam(domainId, teamId)
     },
     onSuccess: () => {
@@ -573,7 +592,7 @@ export function useUpdateDomainTeam(
 
 /**
  * Hook to fetch DNS records for a domain
- * 
+ *
  * @param domainId - The domain ID
  * @param page - Page number (0-indexed)
  * @param limit - Number of items per page
@@ -628,7 +647,7 @@ export function useDomainRecords(
 
 /**
  * Hook to fetch zone file for a domain
- * 
+ *
  * @param domainId - The domain ID
  * @returns Zone file content with loading state
  */
@@ -643,7 +662,7 @@ export function useDomainZone(domainId: string | null | undefined) {
 
 /**
  * Hook to create a DNS record
- * 
+ *
  * @param domainId - The domain ID
  * @returns Mutation hook for creating a DNS record
  */
@@ -684,7 +703,7 @@ export function useCreateDnsRecord(domainId: string | null | undefined) {
 
 /**
  * Hook to update a DNS record
- * 
+ *
  * @param domainId - The domain ID
  * @returns Mutation hook for updating a DNS record
  */
@@ -727,7 +746,7 @@ export function useUpdateDnsRecord(domainId: string | null | undefined) {
 
 /**
  * Hook to delete a DNS record
- * 
+ *
  * @param domainId - The domain ID
  * @returns Mutation hook for deleting a DNS record
  */
@@ -754,7 +773,7 @@ export function useDeleteDnsRecord(domainId: string | null | undefined) {
 
 /**
  * Hook to update zone file (import)
- * 
+ *
  * @param domainId - The domain ID
  * @returns Mutation hook for importing zone file
  */
@@ -784,13 +803,20 @@ export function useUpdateDomainZone(domainId: string | null | undefined) {
 
 /**
  * Hook to fetch preset DNS records
- * 
+ *
  * @param domainId - The domain ID
  * @returns Query hook for fetching preset records
  */
 export function usePresetRecords(
   domainId: string | null | undefined,
-  preset: 'zoho' | 'mailgun' | 'outlook' | 'protonmail' | 'icloud' | 'google-workspace' | null,
+  preset:
+    | 'zoho'
+    | 'mailgun'
+    | 'outlook'
+    | 'protonmail'
+    | 'icloud'
+    | 'google-workspace'
+    | null,
 ) {
   return useQuery({
     queryKey: ['preset-records', 'domain', domainId, preset],
@@ -799,4 +825,3 @@ export function usePresetRecords(
     staleTime: DEFAULT_STALE_TIME,
   })
 }
-

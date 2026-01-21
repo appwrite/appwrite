@@ -55,7 +55,9 @@ export function RetryVerificationDialog({
         <DialogHeader className="px-6 pt-6 text-left">
           <DialogTitle>Retry verification</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Update your domain <strong>{domain.domain}</strong> nameservers to point to Appwrite. It may take up to 48 hours for DNS changes to propagate.
+            Update your domain <strong>{domain.domain}</strong> nameservers to
+            point to Appwrite. It may take up to 48 hours for DNS changes to
+            propagate.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -125,4 +127,3 @@ export function RetryVerificationDialog({
     </Dialog>
   )
 }
-

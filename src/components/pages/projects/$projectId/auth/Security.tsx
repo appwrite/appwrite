@@ -1,13 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import {
-  X,
-  RefreshCw,
-  Plus,
-  Copy,
-  Check,
-} from 'lucide-react'
+import { X, RefreshCw, Plus, Copy, Check } from 'lucide-react'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useUpdateAuthLimit,
@@ -27,9 +21,19 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp'
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp'
 import { Separator } from '@/components/ui/separator'
 import { UpgradeCurtain } from '@/components/ui/upgrade-curtain'
 import { cn } from '@/lib/utils'
@@ -65,24 +69,29 @@ export function Security({ projectId }: SecurityProps) {
   if (isLoading) {
     return (
       <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <div className="text-muted-foreground">Loading security settings...</div>
+        <div className="text-muted-foreground">
+          Loading security settings...
+        </div>
       </div>
     )
   }
 
   const authLimit = (projectData as any)?.authLimit ?? 0
   // Parse authDuration as number (in seconds) - ensure it's a valid number
-  const authDuration = typeof (projectData as any)?.authDuration === 'number' 
-    ? (projectData as any).authDuration 
-    : typeof (projectData as any)?.authDuration === 'string'
-    ? parseInt((projectData as any).authDuration, 10) || 0
-    : 0
+  const authDuration =
+    typeof (projectData as any)?.authDuration === 'number'
+      ? (projectData as any).authDuration
+      : typeof (projectData as any)?.authDuration === 'string'
+        ? parseInt((projectData as any).authDuration, 10) || 0
+        : 0
   const authSessionsLimit = (projectData as any)?.authSessionsLimit ?? 10
   const passwordHistoryLimit = (projectData as any)?.authPasswordHistory ?? 0
-  const passwordDictionary = (projectData as any)?.authPasswordDictionary ?? false
+  const passwordDictionary =
+    (projectData as any)?.authPasswordDictionary ?? false
   const personalDataCheck = (projectData as any)?.authPersonalDataCheck ?? false
   const sessionAlerts = (projectData as any)?.authSessionAlerts ?? false
-  const sessionInvalidation = (projectData as any)?.authInvalidateSessions ?? false
+  const sessionInvalidation =
+    (projectData as any)?.authInvalidateSessions ?? false
   const mockNumbers = (projectData as any)?.authMockNumbers ?? []
   const membershipsPrivacy = {
     userName: (projectData as any)?.authMembershipsUserName ?? true,
@@ -94,7 +103,10 @@ export function Security({ projectId }: SecurityProps) {
     <div className="space-y-6">
       <UsersLimitCard projectId={projectId} currentLimit={authLimit} />
       <SessionLengthCard projectId={projectId} currentDuration={authDuration} />
-      <SessionsLimitCard projectId={projectId} currentLimit={authSessionsLimit} />
+      <SessionsLimitCard
+        projectId={projectId}
+        currentLimit={authSessionsLimit}
+      />
       <PasswordHistoryCard
         projectId={projectId}
         currentLimit={passwordHistoryLimit}
@@ -145,11 +157,17 @@ function UsersLimitCard({
     // 1. Mutation is not pending
     // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
     if (!mutation.isPending) {
-      if (lastSubmittedValue.current === null || currentLimit === lastSubmittedValue.current) {
+      if (
+        lastSubmittedValue.current === null ||
+        currentLimit === lastSubmittedValue.current
+      ) {
         setIsUnlimited(currentLimit === 0)
         setLimit(currentLimit === 0 ? 1000 : currentLimit)
         // Reset ref once we've synced to the expected value
-        if (lastSubmittedValue.current !== null && currentLimit === lastSubmittedValue.current) {
+        if (
+          lastSubmittedValue.current !== null &&
+          currentLimit === lastSubmittedValue.current
+        ) {
           lastSubmittedValue.current = null
         }
       }
@@ -260,7 +278,7 @@ function SessionLengthCard({
   currentDuration: number
 }) {
   const MAX_DURATION_SECONDS = 31_536_000 // 1 year in seconds (365 days)
-  
+
   // Convert seconds to the best human-friendly unit (excluding years and months)
   // Prefers the smallest unit that gives a whole number, otherwise the smallest unit
   const getInitialPair = (seconds: number): TimeUnitPair => {
@@ -269,11 +287,17 @@ function SessionLengthCard({
     }
 
     // Available units in order from largest to smallest (excluding years and months)
-    const availableUnits: TimeUnit[] = ['weeks', 'days', 'hours', 'minutes', 'seconds']
-    
+    const availableUnits: TimeUnit[] = [
+      'weeks',
+      'days',
+      'hours',
+      'minutes',
+      'seconds',
+    ]
+
     let bestWholeNumber: TimeUnitPair | null = null
     let smallestUnit: TimeUnitPair | null = null
-    
+
     // Try each unit to find the best one
     for (const unit of availableUnits) {
       const value = fromSeconds(seconds, unit)
@@ -293,20 +317,20 @@ function SessionLengthCard({
         }
       }
     }
-    
+
     // Prefer whole number, otherwise use smallest unit
     if (bestWholeNumber) {
       return bestWholeNumber
     }
-    
+
     if (smallestUnit) {
       return smallestUnit
     }
-    
+
     // Fallback to seconds if less than 1 second (shouldn't happen in practice)
     return { value: seconds, unit: 'seconds' }
   }
-  
+
   const initialPair = getInitialPair(currentDuration)
   const [duration, setDuration] = useState(initialPair.value)
   const [unit, setUnit] = useState<TimeUnit>(initialPair.unit)
@@ -353,7 +377,7 @@ function SessionLengthCard({
     // Convert to the new unit
     const newValue = fromSeconds(currentSeconds, newUnit)
     const maxForNewUnit = Math.floor(fromSeconds(MAX_DURATION_SECONDS, newUnit))
-    
+
     // Round to reasonable precision based on unit
     let roundedValue: number
     if (newUnit === 'seconds' || newUnit === 'minutes') {
@@ -363,14 +387,14 @@ function SessionLengthCard({
     } else {
       roundedValue = Math.round(newValue * 100) / 100
     }
-    
+
     // If the new value exceeds max for the new unit, clamp it
     if (roundedValue > maxForNewUnit) {
       setDuration(maxForNewUnit)
     } else {
       setDuration(roundedValue)
     }
-    
+
     setUnit(newUnit)
   }
 
@@ -384,10 +408,13 @@ function SessionLengthCard({
       toast.error(`Session length cannot exceed 365 days (1 year)`)
       return
     }
-    
+
     const durationSeconds = toSeconds(duration, unit)
     // Clamp to valid range before submitting
-    const clampedDuration = Math.max(0, Math.min(durationSeconds, MAX_DURATION_SECONDS))
+    const clampedDuration = Math.max(
+      0,
+      Math.min(durationSeconds, MAX_DURATION_SECONDS),
+    )
     mutation.mutate(clampedDuration, {
       onSuccess: () => {
         toast.success('Updated session length successfully')
@@ -590,11 +617,17 @@ function PasswordHistoryCard({
     // 1. Mutation is not pending
     // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
     if (!mutation.isPending) {
-      if (lastSubmittedValue.current === null || currentLimit === lastSubmittedValue.current) {
+      if (
+        lastSubmittedValue.current === null ||
+        currentLimit === lastSubmittedValue.current
+      ) {
         setEnabled(currentLimit > 0)
         setLimit(currentLimit > 0 ? currentLimit : 5)
         // Reset ref once we've synced to the expected value
-        if (lastSubmittedValue.current !== null && currentLimit === lastSubmittedValue.current) {
+        if (
+          lastSubmittedValue.current !== null &&
+          currentLimit === lastSubmittedValue.current
+        ) {
           lastSubmittedValue.current = null
         }
       }
@@ -712,10 +745,16 @@ function PasswordDictionaryCard({
     // 1. Mutation is not pending
     // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
     if (!mutation.isPending) {
-      if (lastSubmittedValue.current === null || currentEnabled === lastSubmittedValue.current) {
+      if (
+        lastSubmittedValue.current === null ||
+        currentEnabled === lastSubmittedValue.current
+      ) {
         setEnabled(currentEnabled)
         // Reset ref once we've synced to the expected value
-        if (lastSubmittedValue.current !== null && currentEnabled === lastSubmittedValue.current) {
+        if (
+          lastSubmittedValue.current !== null &&
+          currentEnabled === lastSubmittedValue.current
+        ) {
           lastSubmittedValue.current = null
         }
       }
@@ -749,8 +788,8 @@ function PasswordDictionaryCard({
               Password dictionary
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Enabling this option prevents users from setting insecure passwords
-              by comparing the user's password with the{' '}
+              Enabling this option prevents users from setting insecure
+              passwords by comparing the user's password with the{' '}
               <a
                 href="https://github.com/danielmiessler/SecLists/blob/master/Passwords/Common-Credentials/10k-most-common.txt"
                 target="_blank"
@@ -811,10 +850,16 @@ function PersonalDataCard({
     // 1. Mutation is not pending
     // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
     if (!mutation.isPending) {
-      if (lastSubmittedValue.current === null || currentEnabled === lastSubmittedValue.current) {
+      if (
+        lastSubmittedValue.current === null ||
+        currentEnabled === lastSubmittedValue.current
+      ) {
         setEnabled(currentEnabled)
         // Reset ref once we've synced to the expected value
-        if (lastSubmittedValue.current !== null && currentEnabled === lastSubmittedValue.current) {
+        if (
+          lastSubmittedValue.current !== null &&
+          currentEnabled === lastSubmittedValue.current
+        ) {
           lastSubmittedValue.current = null
         }
       }
@@ -848,10 +893,20 @@ function PersonalDataCard({
               Personal data
             </h3>
             <p className="text-[13px] text-muted-foreground mt-1">
-              Do not allow passwords that contain any part of the user's personal
-              data. This includes the user's <code className="text-[12px] bg-muted px-1 py-0.5 rounded">name</code>,{' '}
-              <code className="text-[12px] bg-muted px-1 py-0.5 rounded">email</code>, or{' '}
-              <code className="text-[12px] bg-muted px-1 py-0.5 rounded">phone</code>.
+              Do not allow passwords that contain any part of the user's
+              personal data. This includes the user's{' '}
+              <code className="text-[12px] bg-muted px-1 py-0.5 rounded">
+                name
+              </code>
+              ,{' '}
+              <code className="text-[12px] bg-muted px-1 py-0.5 rounded">
+                email
+              </code>
+              , or{' '}
+              <code className="text-[12px] bg-muted px-1 py-0.5 rounded">
+                phone
+              </code>
+              .
             </p>
           </div>
         </div>
@@ -903,10 +958,16 @@ function SessionAlertsCard({
     // 1. Mutation is not pending
     // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
     if (!mutation.isPending) {
-      if (lastSubmittedValue.current === null || currentEnabled === lastSubmittedValue.current) {
+      if (
+        lastSubmittedValue.current === null ||
+        currentEnabled === lastSubmittedValue.current
+      ) {
         setEnabled(currentEnabled)
         // Reset ref once we've synced to the expected value
-        if (lastSubmittedValue.current !== null && currentEnabled === lastSubmittedValue.current) {
+        if (
+          lastSubmittedValue.current !== null &&
+          currentEnabled === lastSubmittedValue.current
+        ) {
           lastSubmittedValue.current = null
         }
       }
@@ -993,10 +1054,16 @@ function InvalidateSessionsCard({
     // 1. Mutation is not pending
     // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
     if (!mutation.isPending) {
-      if (lastSubmittedValue.current === null || currentEnabled === lastSubmittedValue.current) {
+      if (
+        lastSubmittedValue.current === null ||
+        currentEnabled === lastSubmittedValue.current
+      ) {
         setEnabled(currentEnabled)
         // Reset ref once we've synced to the expected value
-        if (lastSubmittedValue.current !== null && currentEnabled === lastSubmittedValue.current) {
+        if (
+          lastSubmittedValue.current !== null &&
+          currentEnabled === lastSubmittedValue.current
+        ) {
           lastSubmittedValue.current = null
         }
       }
@@ -1157,13 +1224,9 @@ function MockPhoneNumbersCard({
   const handlePhoneChange = (id: string, phone: string) => {
     // Validate phone format (9-16 characters, starts with +)
     if (phone.length >= 9 && phone.length <= 16 && phone.startsWith('+')) {
-      setNumbers(
-        numbers.map((n) => (n.id === id ? { ...n, phone } : n)),
-      )
+      setNumbers(numbers.map((n) => (n.id === id ? { ...n, phone } : n)))
     } else if (phone === '') {
-      setNumbers(
-        numbers.map((n) => (n.id === id ? { ...n, phone: '' } : n)),
-      )
+      setNumbers(numbers.map((n) => (n.id === id ? { ...n, phone: '' } : n)))
     }
   }
 
@@ -1268,12 +1331,15 @@ function MockPhoneNumbersCard({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleCopy(number.id, 'phone', number.phone)}
+                            onClick={() =>
+                              handleCopy(number.id, 'phone', number.phone)
+                            }
                             disabled={mutation.isPending}
                             className="h-9 w-9 p-0"
                             title="Copy phone number"
                           >
-                            {copiedItem?.id === number.id && copiedItem?.type === 'phone' ? (
+                            {copiedItem?.id === number.id &&
+                            copiedItem?.type === 'phone' ? (
                               <Check className="h-4 w-4 text-emerald-500" />
                             ) : (
                               <Copy className="h-4 w-4" />
@@ -1297,7 +1363,9 @@ function MockPhoneNumbersCard({
                           <InputOTP
                             maxLength={6}
                             value={number.otp}
-                            onChange={(value) => handleOTPChange(number.id, value)}
+                            onChange={(value) =>
+                              handleOTPChange(number.id, value)
+                            }
                             disabled={mutation.isPending}
                           >
                             <InputOTPGroup>
@@ -1309,12 +1377,15 @@ function MockPhoneNumbersCard({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleCopy(number.id, 'otp', number.otp)}
+                            onClick={() =>
+                              handleCopy(number.id, 'otp', number.otp)
+                            }
                             disabled={mutation.isPending}
                             className="h-9 w-9 p-0"
                             title="Copy verification code"
                           >
-                            {copiedItem?.id === number.id && copiedItem?.type === 'otp' ? (
+                            {copiedItem?.id === number.id &&
+                            copiedItem?.type === 'otp' ? (
                               <Check className="h-4 w-4 text-emerald-500" />
                             ) : (
                               <Copy className="h-4 w-4" />
@@ -1394,10 +1465,16 @@ function MembershipsPrivacyCard({
     // 2. Server value matches what we expect (last submitted value), or we haven't submitted anything
     if (!mutation.isPending) {
       const currentPrivacyStr = JSON.stringify(currentPrivacy)
-      if (lastSubmittedValue.current === null || currentPrivacyStr === lastSubmittedValue.current) {
+      if (
+        lastSubmittedValue.current === null ||
+        currentPrivacyStr === lastSubmittedValue.current
+      ) {
         setPrivacy(currentPrivacy)
         // Reset ref once we've synced to the expected value
-        if (lastSubmittedValue.current !== null && currentPrivacyStr === lastSubmittedValue.current) {
+        if (
+          lastSubmittedValue.current !== null &&
+          currentPrivacyStr === lastSubmittedValue.current
+        ) {
           lastSubmittedValue.current = null
         }
       }
@@ -1509,4 +1586,3 @@ function MembershipsPrivacyCard({
     </div>
   )
 }
-

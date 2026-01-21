@@ -81,8 +81,9 @@ export function ConsoleHeader({
   const { project } = useProject(projectId)
 
   // Get organization ID for upgrade button
-  const orgId = project?.teamId || (account?.prefs?.organization as string | undefined)
-  
+  const orgId =
+    project?.teamId || (account?.prefs?.organization as string | undefined)
+
   // Fetch organization plan to check if upgrade button should be shown
   const { plan: organizationPlan } = useOrganizationPlan(orgId)
 
@@ -96,19 +97,20 @@ export function ConsoleHeader({
   const displayName = account?.name || account?.email || 'User'
   const userEmail = account?.email || ''
   const accountId = account?.$id || ''
-  
+
   // Format member since date using consistent formatting
   // Account registration can be in various formats (Unix timestamp, ISO string, etc.)
   const memberSince = formatDateMonthYear(
-    account?.registration || account?.createdAt || account?.$createdAt
+    account?.registration || account?.createdAt || account?.$createdAt,
   )
 
   // Account status (active if account exists)
   const accountStatus = account ? 'Active' : 'Inactive'
-  
+
   // Check if 2FA is enabled
   // Appwrite account object may have mfa or twoFactorAuthenticatorEnabled property
-  const is2FAEnabled = account?.mfa === true || account?.twoFactorAuthenticatorEnabled === true
+  const is2FAEnabled =
+    account?.mfa === true || account?.twoFactorAuthenticatorEnabled === true
 
   return (
     <div className="@container w-full">
@@ -133,25 +135,26 @@ export function ConsoleHeader({
           {/* Logo - links back to org overview */}
           {(() => {
             // Use project's teamId when in project context, otherwise fall back to account prefs
-            const orgId = project?.teamId || (account?.prefs?.organization as string | undefined)
+            const orgId =
+              project?.teamId ||
+              (account?.prefs?.organization as string | undefined)
             if (orgId) {
               return (
-                <Link to="/organizations/$orgId" params={{ orgId }} className="-ml-[1px] -mr-[1px] flex shrink-0 items-center">
-                  <img
-                    src="/logo.svg"
-                    alt="Appwrite"
-                    className="h-5 w-5"
-                  />
+                <Link
+                  to="/organizations/$orgId"
+                  params={{ orgId }}
+                  className="-ml-[1px] -mr-[1px] flex shrink-0 items-center"
+                >
+                  <img src="/logo.svg" alt="Appwrite" className="h-5 w-5" />
                 </Link>
               )
             }
             return (
-              <Link to="/" className="-ml-[1px] -mr-[1px] flex shrink-0 items-center">
-                <img
-                  src="/logo.svg"
-                  alt="Appwrite"
-                  className="h-5 w-5"
-                />
+              <Link
+                to="/"
+                className="-ml-[1px] -mr-[1px] flex shrink-0 items-center"
+              >
+                <img src="/logo.svg" alt="Appwrite" className="h-5 w-5" />
               </Link>
             )
           })()}
@@ -179,9 +182,14 @@ export function ConsoleHeader({
                     <DropdownMenuItem
                       onClick={() => {
                         // Use project's teamId when in project context, otherwise fall back to account prefs
-                        const orgId = project?.teamId || (account?.prefs?.organization as string | undefined)
+                        const orgId =
+                          project?.teamId ||
+                          (account?.prefs?.organization as string | undefined)
                         if (orgId) {
-                          navigate({ to: '/organizations/$orgId', params: { orgId } })
+                          navigate({
+                            to: '/organizations/$orgId',
+                            params: { orgId },
+                          })
                         }
                       }}
                       className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
@@ -196,7 +204,9 @@ export function ConsoleHeader({
                           onCreateOrganization()
                         } else {
                           // Otherwise, navigate to org overview with createOrg param
-                          const orgId = project?.teamId || (account?.prefs?.organization as string | undefined)
+                          const orgId =
+                            project?.teamId ||
+                            (account?.prefs?.organization as string | undefined)
                           if (orgId) {
                             navigate({
                               to: '/organizations/$orgId',
@@ -217,7 +227,7 @@ export function ConsoleHeader({
                       <Building2 className="h-4 w-4" />
                       <span>New Organization</span>
                     </DropdownMenuItem>
-                    
+
                     {projectId && (
                       <>
                         <DropdownMenuSeparator />
@@ -227,7 +237,10 @@ export function ConsoleHeader({
                         </DropdownMenuLabel>
                         <DropdownMenuItem
                           onClick={() => {
-                            navigate({ to: '/projects/$projectId/databases', params: { projectId } })
+                            navigate({
+                              to: '/projects/$projectId/databases',
+                              params: { projectId },
+                            })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                         >
@@ -236,7 +249,10 @@ export function ConsoleHeader({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
-                            navigate({ to: '/projects/$projectId/auth/', params: { projectId } })
+                            navigate({
+                              to: '/projects/$projectId/auth/',
+                              params: { projectId },
+                            })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                         >
@@ -245,7 +261,10 @@ export function ConsoleHeader({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
-                            navigate({ to: '/projects/$projectId/storage', params: { projectId } })
+                            navigate({
+                              to: '/projects/$projectId/storage',
+                              params: { projectId },
+                            })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                         >
@@ -254,7 +273,10 @@ export function ConsoleHeader({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
-                            navigate({ to: '/projects/$projectId/functions', params: { projectId } })
+                            navigate({
+                              to: '/projects/$projectId/functions',
+                              params: { projectId },
+                            })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                         >
@@ -263,14 +285,17 @@ export function ConsoleHeader({
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
-                            navigate({ to: '/projects/$projectId/messaging', params: { projectId } })
+                            navigate({
+                              to: '/projects/$projectId/messaging',
+                              params: { projectId },
+                            })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                         >
                           <MessageSquare className="h-4 w-4" />
                           <span>New Message</span>
                         </DropdownMenuItem>
-                        
+
                         <DropdownMenuSeparator />
                         {/* Deploy Category */}
                         <DropdownMenuLabel className="px-2 py-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -278,7 +303,10 @@ export function ConsoleHeader({
                         </DropdownMenuLabel>
                         <DropdownMenuItem
                           onClick={() => {
-                            navigate({ to: '/projects/$projectId/sites', params: { projectId } })
+                            navigate({
+                              to: '/projects/$projectId/sites',
+                              params: { projectId },
+                            })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                         >
@@ -324,7 +352,10 @@ export function ConsoleHeader({
           {/* Support - hidden on small containers */}
           <div className="hidden @[700px]:flex">
             <SupportPopover
-              orgId={project?.teamId || (account?.prefs?.organization as string | undefined)}
+              orgId={
+                project?.teamId ||
+                (account?.prefs?.organization as string | undefined)
+              }
             />
           </div>
 
@@ -410,9 +441,7 @@ export function ConsoleHeader({
                     <p className="text-[11px] text-muted-foreground mb-1.5">
                       Member since
                     </p>
-                    <p className="text-[14px] text-foreground">
-                      {memberSince}
-                    </p>
+                    <p className="text-[14px] text-foreground">{memberSince}</p>
                   </div>
                 )}
 
@@ -438,9 +467,7 @@ export function ConsoleHeader({
                     {is2FAEnabled ? (
                       <>
                         <Shield className="h-3.5 w-3.5 text-emerald-500" />
-                        <p className="text-[14px] text-foreground">
-                          Enabled
-                        </p>
+                        <p className="text-[14px] text-foreground">Enabled</p>
                       </>
                     ) : (
                       <>

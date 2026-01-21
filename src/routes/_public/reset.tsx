@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import {
-  createFileRoute,
-  useSearch,
-} from '@tanstack/react-router'
+import { createFileRoute, useSearch } from '@tanstack/react-router'
 import { z } from 'zod'
 import { Reset } from '@/components/global/auth/Reset'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
@@ -61,7 +58,8 @@ function ResetPage() {
               Invalid reset link
             </h1>
             <p className="text-sm text-muted-foreground mb-4">
-              This password reset link is invalid or has expired. Please request a new one.
+              This password reset link is invalid or has expired. Please request
+              a new one.
             </p>
             <div className="flex gap-2 justify-center">
               <Link
@@ -90,11 +88,17 @@ function ResetPage() {
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
           By clicking continue, you agree to our{' '}
-          <a href="#" className="underline underline-offset-4 hover:text-primary">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Terms of Service
           </a>{' '}
           and{' '}
-          <a href="#" className="underline underline-offset-4 hover:text-primary">
+          <a
+            href="#"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Privacy Policy
           </a>
           .
@@ -106,4 +110,3 @@ function ResetPage() {
     </div>
   )
 }
-

@@ -40,7 +40,10 @@ export function formatDate(
   return new Date(date).toLocaleDateString('en-US', options)
 }
 
-import { getInvoiceStatusColor as getInvoiceStatusColorUtil, type InvoiceStatus } from '@/lib/utils/status-badge'
+import {
+  getInvoiceStatusColor as getInvoiceStatusColorUtil,
+  type InvoiceStatus,
+} from '@/lib/utils/status-badge'
 
 /**
  * Get status badge color classes based on invoice status

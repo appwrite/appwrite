@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 interface ConsoleLayoutProps {
   /** Main content to render */
   children: ReactNode
-  
+
   /** Optional sidebar configuration */
   sidebar?: {
     projectId: string
@@ -17,36 +17,36 @@ interface ConsoleLayoutProps {
     onMobileClose: () => void
     onMenuClick: () => void
   }
-  
+
   /** ConsoleHeader props */
   header?: {
     projectId?: string
     onCommandCenterOpen?: () => void
     onCreateOrganization?: () => void
   }
-  
+
   /** Whether to show the footer */
   showFooter?: boolean
-  
+
   /** Whether the main content should have overflow-hidden (for views that manage their own scrolling) */
   fixedLayout?: boolean
-  
+
   /** Whether this is a detail route (affects content wrapper styling) */
   isDetailRoute?: boolean
-  
+
   /** Custom container class name */
   containerClassName?: string
 }
 
 /**
  * ConsoleLayout - Reusable layout component for all console pages
- * 
+ *
  * Provides consistent layout structure with:
  * - Sticky header (PaymentAlert + ConsoleHeader)
  * - Optional sidebar
  * - Scrollable main content area
  * - Optional footer
- * 
+ *
  * Usage:
  * ```tsx
  * // With sidebar (project scope)
@@ -63,7 +63,7 @@ interface ConsoleLayoutProps {
  * >
  *   <Outlet />
  * </ConsoleLayout>
- * 
+ *
  * // Without sidebar (org/account scope)
  * <ConsoleLayout
  *   header={{
@@ -86,11 +86,14 @@ export function ConsoleLayout({
   containerClassName,
 }: ConsoleLayoutProps) {
   const hasSidebar = !!sidebar
-  const layoutContainerClass = containerClassName || 
+  const layoutContainerClass =
+    containerClassName ||
     (hasSidebar ? 'project-layout-container' : 'org-layout-container')
 
   return (
-    <div className={cn('flex h-full flex-col bg-background', layoutContainerClass)}>
+    <div
+      className={cn('flex h-full flex-col bg-background', layoutContainerClass)}
+    >
       {/* Sticky header section - takes space in flex layout */}
       <div className="flex-shrink-0">
         <div className="sticky top-0 z-40">
@@ -133,8 +136,18 @@ export function ConsoleLayout({
             fixedLayout ? 'overflow-hidden' : 'overflow-y-auto',
           )}
         >
-          <div className={cn('flex-1', (fixedLayout || isDetailRoute) && 'min-h-0')}>
-            <div className={cn('h-full', (fixedLayout || isDetailRoute) && 'min-h-0')}>
+          <div
+            className={cn(
+              'flex-1',
+              (fixedLayout || isDetailRoute) && 'min-h-0',
+            )}
+          >
+            <div
+              className={cn(
+                'h-full',
+                (fixedLayout || isDetailRoute) && 'min-h-0',
+              )}
+            >
               {children}
             </div>
           </div>

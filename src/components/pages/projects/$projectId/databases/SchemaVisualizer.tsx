@@ -1,9 +1,36 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
-import { useAllProjectTablesForVisualizer, createProjectTableColumn, createProjectTableIndex, useProjectTableColumns, useProjectTableIndexes } from '@/lib/react-query/hooks'
+import {
+  useAllProjectTablesForVisualizer,
+  createProjectTableColumn,
+  createProjectTableIndex,
+  useProjectTableColumns,
+  useProjectTableIndexes,
+} from '@/lib/react-query/hooks'
 import { getColumnIcon } from '@/lib/utils/column-icons'
-import { Table2, Key, ZoomIn, ZoomOut, Maximize2, ChevronDown, ChevronUp, Plus, Map as MapIcon, Download, Copy, Settings, Eye, Check, FileJson, FileText, Code, ExternalLink, ChevronRight, Link2 } from 'lucide-react'
+import {
+  Table2,
+  Key,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Map as MapIcon,
+  Download,
+  Copy,
+  Settings,
+  Eye,
+  Check,
+  FileJson,
+  FileText,
+  Code,
+  ExternalLink,
+  ChevronRight,
+  Link2,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -32,7 +59,11 @@ import {
 import { ColumnDrawer, ColumnFormData } from './tables/Column'
 import { IndexDrawer, IndexFormData } from './tables/Index'
 import { toast } from 'sonner'
-import { fetchDatabaseSchema, formatSchemaAsJSON, formatSchemaAsMarkdown } from '@/lib/utils/database-schema-export'
+import {
+  fetchDatabaseSchema,
+  formatSchemaAsJSON,
+  formatSchemaAsMarkdown,
+} from '@/lib/utils/database-schema-export'
 import { useQuery } from '@tanstack/react-query'
 
 interface SchemaVisualizerProps {
@@ -77,9 +108,12 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const projectId = params.projectId as string
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  
-  const { tables, isLoading } = useAllProjectTablesForVisualizer(projectId, databaseId)
-  
+
+  const { tables, isLoading } = useAllProjectTablesForVisualizer(
+    projectId,
+    databaseId,
+  )
+
   const canvasRef = useRef<HTMLDivElement>(null)
   const minimapRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(1)
@@ -93,29 +127,46 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const [activeTableId, setActiveTableId] = useState<string | null>(null)
   const [hasAutoFocused, setHasAutoFocused] = useState(false)
   const [showMinimap, setShowMinimap] = useState(true)
-  const [contextMenuTableId, setContextMenuTableId] = useState<string | null>(null)
+  const [contextMenuTableId, setContextMenuTableId] = useState<string | null>(
+    null,
+  )
   const [copiedLink, setCopiedLink] = useState(false)
-  
+
   // Store initial positions to maintain stability when expanding/collapsing
-  const initialPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map())
+  const initialPositionsRef = useRef<Map<string, { x: number; y: number }>>(
+    new Map(),
+  )
 
   // Helper to get computed CSS variable values
   const getCSSVariable = (variable: string): string => {
     if (typeof window === 'undefined') return ''
-    return getComputedStyle(document.documentElement).getPropertyValue(variable).trim()
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue(variable)
+      .trim()
   }
 
   // Create SVG icon for column type
-  const createColumnIconSVG = (type: string, x: number, y: number, color: string): SVGGElement => {
-    const iconGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  const createColumnIconSVG = (
+    type: string,
+    x: number,
+    y: number,
+    color: string,
+  ): SVGGElement => {
+    const iconGroup = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'g',
+    )
     iconGroup.setAttribute('transform', `translate(${x}, ${y})`)
-    
+
     // Simple geometric shapes based on column type
     switch (type) {
       case 'string':
       case 'text':
         // Type icon - simple "T" shape
-        const tPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        const tPath = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'path',
+        )
         tPath.setAttribute('d', 'M2 2 L6 2 M4 2 L4 6')
         tPath.setAttribute('stroke', color)
         tPath.setAttribute('stroke-width', '1.5')
@@ -126,7 +177,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       case 'float':
       case 'double':
         // Hash icon - "#" shape
-        const hashPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        const hashPath = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'path',
+        )
         hashPath.setAttribute('d', 'M2 1 L2 7 M6 1 L6 7 M0 3 L8 3 M0 5 L8 5')
         hashPath.setAttribute('stroke', color)
         hashPath.setAttribute('stroke-width', '1.5')
@@ -135,7 +189,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         break
       case 'boolean':
         // Toggle icon - circle with line
-        const boolCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+        const boolCircle = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'circle',
+        )
         boolCircle.setAttribute('cx', '4')
         boolCircle.setAttribute('cy', '4')
         boolCircle.setAttribute('r', '2.5')
@@ -143,7 +200,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         boolCircle.setAttribute('stroke', color)
         boolCircle.setAttribute('stroke-width', '1.5')
         iconGroup.appendChild(boolCircle)
-        const boolLine = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        const boolLine = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'line',
+        )
         boolLine.setAttribute('x1', '1.5')
         boolLine.setAttribute('y1', '4')
         boolLine.setAttribute('x2', '2.5')
@@ -154,7 +214,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         break
       case 'datetime':
         // Calendar icon - rectangle with lines
-        const calRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+        const calRect = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'rect',
+        )
         calRect.setAttribute('x', '1')
         calRect.setAttribute('y', '2')
         calRect.setAttribute('width', '6')
@@ -163,7 +226,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         calRect.setAttribute('stroke', color)
         calRect.setAttribute('stroke-width', '1.5')
         iconGroup.appendChild(calRect)
-        const calLine1 = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        const calLine1 = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'line',
+        )
         calLine1.setAttribute('x1', '1')
         calLine1.setAttribute('y1', '3.5')
         calLine1.setAttribute('x2', '7')
@@ -174,7 +240,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         break
       case 'email':
         // Mail icon - envelope shape
-        const mailPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        const mailPath = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'path',
+        )
         mailPath.setAttribute('d', 'M1 2 L4 4.5 L7 2 M1 2 L1 6 L7 6 L7 2')
         mailPath.setAttribute('fill', 'none')
         mailPath.setAttribute('stroke', color)
@@ -184,8 +253,14 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       case 'url':
       case 'link':
         // Link icon - chain links
-        const linkPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
-        linkPath.setAttribute('d', 'M2 3 C2 2, 3 1, 4 1 C5 1, 6 2, 6 3 M6 5 C6 6, 5 7, 4 7 C3 7, 2 6, 2 5')
+        const linkPath = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'path',
+        )
+        linkPath.setAttribute(
+          'd',
+          'M2 3 C2 2, 3 1, 4 1 C5 1, 6 2, 6 3 M6 5 C6 6, 5 7, 4 7 C3 7, 2 6, 2 5',
+        )
         linkPath.setAttribute('fill', 'none')
         linkPath.setAttribute('stroke', color)
         linkPath.setAttribute('stroke-width', '1.5')
@@ -193,7 +268,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         break
       default:
         // Default - simple square
-        const defaultRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+        const defaultRect = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'rect',
+        )
         defaultRect.setAttribute('x', '2')
         defaultRect.setAttribute('y', '2')
         defaultRect.setAttribute('width', '4')
@@ -203,15 +281,17 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         defaultRect.setAttribute('stroke-width', '1.5')
         iconGroup.appendChild(defaultRect)
     }
-    
+
     return iconGroup
   }
 
   // Detect if dark mode is active (with state to trigger re-renders)
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window === 'undefined') return false
-    return document.documentElement.classList.contains('dark') ||
-           window.matchMedia('(prefers-color-scheme: dark)').matches
+    return (
+      document.documentElement.classList.contains('dark') ||
+      window.matchMedia('(prefers-color-scheme: dark)').matches
+    )
   })
 
   // Watch for theme changes
@@ -219,7 +299,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     const checkDarkMode = () => {
       setIsDarkMode(
         document.documentElement.classList.contains('dark') ||
-        window.matchMedia('(prefers-color-scheme: dark)').matches
+          window.matchMedia('(prefers-color-scheme: dark)').matches,
       )
     }
 
@@ -250,7 +330,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     const border = getCSSVariable('--border')
     const primary = getCSSVariable('--primary')
     const muted = getCSSVariable('--muted')
-    
+
     // For light mode, use darker colors for better visibility and contrast
     if (!isDarkMode) {
       // In light mode, use white/light cards on darker muted background for high contrast
@@ -264,7 +344,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         muted: 'oklch(0.85 0.005 286)', // darker muted background for contrast
       }
     }
-    
+
     // Dark mode colors - use lighter cards on darker background
     return {
       card: 'oklch(0.2 0.006 286)', // lighter than background for contrast
@@ -276,78 +356,87 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     }
   }
 
-
   // Convert tables to nodes with positions using improved layout algorithm
   const nodes = useMemo<TableNode[]>(() => {
     if (!tables || tables.length === 0) return []
 
     const nodes: TableNode[] = []
-    const placedNodes: Array<{ 
+    const placedNodes: Array<{
       x: number
       y: number
       width: number
       height: number
     }> = []
-    
+
     // Calculate all node dimensions first
     const nodeDimensions = tables.map((table: any) => {
       const columnCount = table.columns?.length || 0
-      
+
       // Calculate maximum possible height (when fully expanded) for layout stability
-      const maxContentHeight = 
-        NODE_HEADER_HEIGHT + 
-        (columnCount * COLUMN_HEIGHT) + 
+      const maxContentHeight =
+        NODE_HEADER_HEIGHT +
+        columnCount * COLUMN_HEIGHT +
         (columnCount > MAX_VISIBLE_COLUMNS ? COLUMN_HEIGHT : 0) +
-        (NODE_PADDING * 2) +
+        NODE_PADDING * 2 +
         40
-      
+
       // Current visible height (for rendering)
-      const visibleColumns = expandedColumns.has(table.$id) 
-        ? columnCount 
+      const visibleColumns = expandedColumns.has(table.$id)
+        ? columnCount
         : Math.min(columnCount, MAX_VISIBLE_COLUMNS)
-      
-      const currentContentHeight = 
-        NODE_HEADER_HEIGHT + 
-        (visibleColumns * COLUMN_HEIGHT) + 
-        (columnCount > MAX_VISIBLE_COLUMNS && !expandedColumns.has(table.$id) ? COLUMN_HEIGHT : 0) +
-        (NODE_PADDING * 2) +
+
+      const currentContentHeight =
+        NODE_HEADER_HEIGHT +
+        visibleColumns * COLUMN_HEIGHT +
+        (columnCount > MAX_VISIBLE_COLUMNS && !expandedColumns.has(table.$id)
+          ? COLUMN_HEIGHT
+          : 0) +
+        NODE_PADDING * 2 +
         40
-      
+
       return {
         width: NODE_WIDTH,
         layoutHeight: Math.max(maxContentHeight, 100),
         renderHeight: Math.max(currentContentHeight, 100),
       }
     })
-    
+
     // Calculate average dimensions for better initial spacing
     const avgWidth = NODE_WIDTH
-    const avgHeight = nodeDimensions.reduce((sum: number, dim: { layoutHeight: number }) => sum + dim.layoutHeight, 0) / nodeDimensions.length
-    const baseSpacing = Math.max(MIN_SPACING, avgWidth + MIN_NODE_GAP, avgHeight + MIN_NODE_GAP)
-    
+    const avgHeight =
+      nodeDimensions.reduce(
+        (sum: number, dim: { layoutHeight: number }) => sum + dim.layoutHeight,
+        0,
+      ) / nodeDimensions.length
+    const baseSpacing = Math.max(
+      MIN_SPACING,
+      avgWidth + MIN_NODE_GAP,
+      avgHeight + MIN_NODE_GAP,
+    )
+
     // Calculate optimal grid dimensions
     const cols = Math.ceil(Math.sqrt(tables.length))
     const startX = 100
     const startY = 100
-    
+
     // Place nodes in a compact grid
     tables.forEach((table: any, index: number) => {
       const row = Math.floor(index / cols)
       const col = index % cols
       const { width, layoutHeight, renderHeight } = nodeDimensions[index]
-      
+
       // Try to use stored position first
       let storedPosition = initialPositionsRef.current.get(table.$id)
       let x: number = startX + col * baseSpacing
       let y: number = startY + row * baseSpacing
       let useStoredPosition = false
-      
+
       if (storedPosition) {
         const storedX = storedPosition.x
         const storedY = storedPosition.y
-        
+
         // Check if stored position still works
-        const hasOverlap = placedNodes.some(placed => {
+        const hasOverlap = placedNodes.some((placed) => {
           return !(
             storedX + width + MIN_NODE_GAP <= placed.x ||
             storedX >= placed.x + placed.width + MIN_NODE_GAP ||
@@ -355,20 +444,20 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             storedY >= placed.y + placed.height + MIN_NODE_GAP
           )
         })
-        
+
         if (!hasOverlap) {
           x = storedX
           y = storedY
           useStoredPosition = true
         }
       }
-      
+
       if (!useStoredPosition) {
         // Start with grid position (already set above)
-        
+
         // Check for overlap and adjust if needed
         const checkOverlap = (testX: number, testY: number): boolean => {
-          return placedNodes.some(placed => {
+          return placedNodes.some((placed) => {
             return !(
               testX + width + MIN_NODE_GAP <= placed.x ||
               testX >= placed.x + placed.width + MIN_NODE_GAP ||
@@ -377,13 +466,13 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             )
           })
         }
-        
+
         // If initial position overlaps, find nearby position
         if (checkOverlap(x, y)) {
           let found = false
           const maxAttempts = 50
           let attempts = 0
-          
+
           // Try positions in a compact spiral around the grid position
           while (attempts < maxAttempts && !found) {
             const radius = Math.floor(attempts / 8) + 1
@@ -391,10 +480,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             const step = (width + MIN_NODE_GAP) * 0.5 // Smaller steps for tighter packing
             const offsetX = Math.cos(angle) * step * radius
             const offsetY = Math.sin(angle) * step * radius
-            
+
             const testX = x + offsetX
             const testY = y + offsetY
-            
+
             if (!checkOverlap(testX, testY)) {
               x = testX
               y = testY
@@ -403,19 +492,19 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             attempts++
           }
         }
-        
+
         // Store position for future renders
         initialPositionsRef.current.set(table.$id, { x, y })
       }
-      
+
       // Store for collision detection
-      placedNodes.push({ 
-        x, 
-        y, 
-        width, 
+      placedNodes.push({
+        x,
+        y,
+        width,
         height: layoutHeight,
       })
-      
+
       nodes.push({
         id: table.$id,
         name: table.name || 'Unnamed Table',
@@ -428,7 +517,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         enabled: table.enabled !== false,
       })
     })
-    
+
     return nodes
   }, [tables, expandedColumns])
 
@@ -446,24 +535,29 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       table.columns.forEach((column: any) => {
         // Check if column name suggests a foreign key (e.g., "postId", "userId", etc.)
         const columnKey = column.key.toLowerCase()
-        
+
         // Pattern: {tableName}Id or {tableName}_id
         const match = columnKey.match(/^(.+?)(id|_id)$/)
         if (match && column.type === 'string') {
           const referencedTableName = match[1]
-          
+
           // Try to find the referenced table by name
-          const referencedTable = tableNameMap.get(referencedTableName) || 
-                                  Array.from(tableNameMap.values()).find(
-                                    (t: any) => t.name.toLowerCase() === referencedTableName
-                                  )
-          
-          if (referencedTable && typeof referencedTable === 'object' && '$id' in referencedTable) {
+          const referencedTable =
+            tableNameMap.get(referencedTableName) ||
+            Array.from(tableNameMap.values()).find(
+              (t: any) => t.name.toLowerCase() === referencedTableName,
+            )
+
+          if (
+            referencedTable &&
+            typeof referencedTable === 'object' &&
+            '$id' in referencedTable
+          ) {
             // Check if referenced table has an $id column (primary key)
             const hasIdColumn = (referencedTable as any).columns?.some(
-              (c: any) => c.key === '$id' || c.key === 'id'
+              (c: any) => c.key === '$id' || c.key === 'id',
             )
-            
+
             if (hasIdColumn) {
               rels.push({
                 from: table.$id,
@@ -484,49 +578,52 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   useEffect(() => {
     if (nodes.length > 0 && !hasAutoFocused && !isLoading) {
       // Calculate bounding box of all nodes
-      const bounds = nodes.reduce((acc, node) => {
-        return {
-          minX: Math.min(acc.minX, node.x),
-          minY: Math.min(acc.minY, node.y),
-          maxX: Math.max(acc.maxX, node.x + node.width),
-          maxY: Math.max(acc.maxY, node.y + node.height),
-        }
-      }, {
-        minX: Infinity,
-        minY: Infinity,
-        maxX: -Infinity,
-        maxY: -Infinity,
-      })
+      const bounds = nodes.reduce(
+        (acc, node) => {
+          return {
+            minX: Math.min(acc.minX, node.x),
+            minY: Math.min(acc.minY, node.y),
+            maxX: Math.max(acc.maxX, node.x + node.width),
+            maxY: Math.max(acc.maxY, node.y + node.height),
+          }
+        },
+        {
+          minX: Infinity,
+          minY: Infinity,
+          maxX: -Infinity,
+          maxY: -Infinity,
+        },
+      )
 
       if (bounds.minX !== Infinity) {
         const canvas = canvasRef.current
         if (canvas) {
           const canvasWidth = canvas.clientWidth
           const canvasHeight = canvas.clientHeight
-          
+
           const contentWidth = bounds.maxX - bounds.minX
           const contentHeight = bounds.maxY - bounds.minY
-          
+
           // Add padding around content
           const padding = 100
           const paddedWidth = contentWidth + padding * 2
           const paddedHeight = contentHeight + padding * 2
-          
+
           // Calculate zoom to fit content
           const zoomX = canvasWidth / paddedWidth
           const zoomY = canvasHeight / paddedHeight
           const fitZoom = Math.min(zoomX, zoomY, 1) // Don't zoom in beyond 100%
-          
+
           // Center the content
           const centerX = (bounds.minX + bounds.maxX) / 2
           const centerY = (bounds.minY + bounds.maxY) / 2
-          
+
           setZoom(fitZoom)
           setPan({
             x: canvasWidth / 2 - centerX * fitZoom,
             y: canvasHeight / 2 - centerY * fitZoom,
           })
-          
+
           setHasAutoFocused(true)
         }
       }
@@ -540,18 +637,18 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault()
-      
+
       const delta = e.deltaY > 0 ? -WHEEL_ZOOM_STEP : WHEEL_ZOOM_STEP
       const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoom + delta))
-      
+
       // Zoom towards mouse position
       const rect = canvas.getBoundingClientRect()
       const mouseX = e.clientX - rect.left
       const mouseY = e.clientY - rect.top
-      
+
       const zoomPointX = (mouseX - pan.x) / zoom
       const zoomPointY = (mouseY - pan.y) / zoom
-      
+
       setZoom(newZoom)
       setPan({
         x: mouseX - zoomPointX * newZoom,
@@ -612,7 +709,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     })
   }
 
-
   // Get available tables for relationship columns
   const availableTables = useMemo(() => {
     return tables.map((table: any) => ({
@@ -625,26 +721,37 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const { columns: activeTableColumns } = useProjectTableColumns(
     projectId,
     databaseId,
-    activeTableId || undefined
+    activeTableId || undefined,
   )
 
   // Get indexes for the active table (to check for duplicates)
   const { indexes: activeTableIndexes } = useProjectTableIndexes(
     projectId,
     databaseId,
-    activeTableId || undefined
+    activeTableId || undefined,
   )
 
   // Mutation to create column
   const createColumnMutation = useMutation({
     mutationFn: async (data: ColumnFormData) => {
       if (!activeTableId) throw new Error('No table selected')
-      return await createProjectTableColumn(projectId, databaseId, activeTableId, data)
+      return await createProjectTableColumn(
+        projectId,
+        databaseId,
+        activeTableId,
+        data,
+      )
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['columns', 'project', projectId, databaseId, activeTableId] })
-      queryClient.invalidateQueries({ queryKey: ['tables', 'visualizer', 'project', projectId, databaseId] })
-      queryClient.invalidateQueries({ queryKey: ['tables', 'project', projectId, databaseId] })
+      queryClient.invalidateQueries({
+        queryKey: ['columns', 'project', projectId, databaseId, activeTableId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['tables', 'visualizer', 'project', projectId, databaseId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
+      })
       setColumnDialogOpen(false)
       toast.success('Column created successfully')
     },
@@ -657,22 +764,33 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const createIndexMutation = useMutation({
     mutationFn: async (data: IndexFormData) => {
       if (!activeTableId) throw new Error('No table selected')
-      
+
       // Convert IndexFormData to API format
       const apiData = {
         key: data.key,
         type: data.type,
-        columns: data.columns.map(col => col.column),
-        orders: data.columns.map(col => col.order || 'ASC'),
-        lengths: data.columns.map(col => col.length || 0),
+        columns: data.columns.map((col) => col.column),
+        orders: data.columns.map((col) => col.order || 'ASC'),
+        lengths: data.columns.map((col) => col.length || 0),
       }
-      
-      return await createProjectTableIndex(projectId, databaseId, activeTableId, apiData)
+
+      return await createProjectTableIndex(
+        projectId,
+        databaseId,
+        activeTableId,
+        apiData,
+      )
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['indexes', 'project', projectId, databaseId, activeTableId] })
-      queryClient.invalidateQueries({ queryKey: ['tables', 'visualizer', 'project', projectId, databaseId] })
-      queryClient.invalidateQueries({ queryKey: ['tables', 'project', projectId, databaseId] })
+      queryClient.invalidateQueries({
+        queryKey: ['indexes', 'project', projectId, databaseId, activeTableId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['tables', 'visualizer', 'project', projectId, databaseId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
+      })
       setIndexDialogOpen(false)
       toast.success('Index created successfully')
     },
@@ -707,18 +825,28 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
     try {
       // Detect if dark mode for proper color selection
-      const isDark = document.documentElement.classList.contains('dark') ||
-                     window.matchMedia('(prefers-color-scheme: dark)').matches
-      
+      const isDark =
+        document.documentElement.classList.contains('dark') ||
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+
       // Get computed color values with fallbacks for better contrast
-      const cardColor = getCSSVariable('--card') || (isDark ? 'oklch(0.141 0.005 285.823)' : 'oklch(1 0 0)')
-      const foregroundColor = getCSSVariable('--foreground') || (isDark ? 'oklch(0.985 0 0)' : 'oklch(0.141 0.005 285.823)')
-      const borderColor = getCSSVariable('--border') || (isDark ? 'oklch(0.274 0.006 286.033)' : 'oklch(0.7 0.01 285)')
-      const mutedColor = getCSSVariable('--muted') || (isDark ? 'oklch(0.274 0.006 286.033)' : 'oklch(0.967 0.001 286.375)')
-      
+      const cardColor =
+        getCSSVariable('--card') ||
+        (isDark ? 'oklch(0.141 0.005 285.823)' : 'oklch(1 0 0)')
+      const foregroundColor =
+        getCSSVariable('--foreground') ||
+        (isDark ? 'oklch(0.985 0 0)' : 'oklch(0.141 0.005 285.823)')
+      const borderColor =
+        getCSSVariable('--border') ||
+        (isDark ? 'oklch(0.274 0.006 286.033)' : 'oklch(0.7 0.01 285)')
+      const mutedColor =
+        getCSSVariable('--muted') ||
+        (isDark ? 'oklch(0.274 0.006 286.033)' : 'oklch(0.967 0.001 286.375)')
+
       // Ensure we have proper contrast - if colors are too similar, use defaults
       const finalCardColor = cardColor || (isDark ? '#242424' : '#ffffff')
-      const finalForegroundColor = foregroundColor || (isDark ? '#ffffff' : '#000000')
+      const finalForegroundColor =
+        foregroundColor || (isDark ? '#ffffff' : '#000000')
       const finalBorderColor = borderColor || (isDark ? '#444444' : '#b3b3b3')
       // Use soft grey for muted backgrounds to ensure contrast
       const finalMutedColor = isDark ? '#2a2a2a' : '#e5e5e5' // Soft grey for light mode
@@ -726,19 +854,22 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       const finalRowBgColor = isDark ? '#2a2a2a' : '#f5f5f5' // Soft grey for alternating rows
 
       const canvas = canvasRef.current
-      const bounds = nodes.reduce((acc, node) => {
-        return {
-          minX: Math.min(acc.minX, node.x),
-          minY: Math.min(acc.minY, node.y),
-          maxX: Math.max(acc.maxX, node.x + node.width),
-          maxY: Math.max(acc.maxY, node.y + node.height),
-        }
-      }, {
-        minX: Infinity,
-        minY: Infinity,
-        maxX: -Infinity,
-        maxY: -Infinity,
-      })
+      const bounds = nodes.reduce(
+        (acc, node) => {
+          return {
+            minX: Math.min(acc.minX, node.x),
+            minY: Math.min(acc.minY, node.y),
+            maxX: Math.max(acc.maxX, node.x + node.width),
+            maxY: Math.max(acc.maxY, node.y + node.height),
+          }
+        },
+        {
+          minX: Infinity,
+          minY: Infinity,
+          maxX: -Infinity,
+          maxY: -Infinity,
+        },
+      )
 
       if (bounds.minX === Infinity) return
 
@@ -751,9 +882,12 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       svg.setAttribute('width', width.toString())
       svg.setAttribute('height', height.toString())
       svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
-      
+
       // Add style definitions for better font rendering
-      const style = document.createElementNS('http://www.w3.org/2000/svg', 'style')
+      const style = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'style',
+      )
       style.textContent = `
         text {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
@@ -784,15 +918,24 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       svg.appendChild(bg)
 
       // Create defs element for patterns and clipPaths
-      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
-      
+      const defs = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'defs',
+      )
+
       // Add dot pattern
-      const dotPattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern')
+      const dotPattern = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'pattern',
+      )
       dotPattern.setAttribute('id', 'export-dots')
       dotPattern.setAttribute('width', '40')
       dotPattern.setAttribute('height', '40')
       dotPattern.setAttribute('patternUnits', 'userSpaceOnUse')
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+      const circle = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'circle',
+      )
       circle.setAttribute('cx', '0')
       circle.setAttribute('cy', '0')
       circle.setAttribute('r', '2.5')
@@ -802,7 +945,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       defs.appendChild(dotPattern)
       svg.appendChild(defs)
 
-      const patternRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+      const patternRect = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'rect',
+      )
       patternRect.setAttribute('width', '100%')
       patternRect.setAttribute('height', '100%')
       patternRect.setAttribute('fill', 'url(#export-dots)')
@@ -812,9 +958,18 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       relationships.forEach((rel) => {
         const fromPoint = getConnectionPoint(rel.from, 'right')
         const toPoint = getConnectionPoint(rel.to, 'left')
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-        line.setAttribute('x1', (fromPoint.x - bounds.minX + padding).toString())
-        line.setAttribute('y1', (fromPoint.y - bounds.minY + padding).toString())
+        const line = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'line',
+        )
+        line.setAttribute(
+          'x1',
+          (fromPoint.x - bounds.minX + padding).toString(),
+        )
+        line.setAttribute(
+          'y1',
+          (fromPoint.y - bounds.minY + padding).toString(),
+        )
         line.setAttribute('x2', (toPoint.x - bounds.minX + padding).toString())
         line.setAttribute('y2', (toPoint.y - bounds.minY + padding).toString())
         line.setAttribute('stroke', finalBorderColor)
@@ -824,20 +979,31 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
       // Add table nodes with full details (columns, indexes)
       nodes.forEach((node) => {
-        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-        group.setAttribute('transform', `translate(${node.x - bounds.minX + padding}, ${node.y - bounds.minY + padding})`)
+        const group = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'g',
+        )
+        group.setAttribute(
+          'transform',
+          `translate(${node.x - bounds.minX + padding}, ${node.y - bounds.minY + padding})`,
+        )
 
         // Calculate node height based on columns - match actual rendered height
         const columnCount = node.columns.length
         const visibleColumns = Math.min(columnCount, MAX_VISIBLE_COLUMNS)
         const hasMoreColumns = columnCount > MAX_VISIBLE_COLUMNS
-        const nodeHeight = NODE_HEADER_HEIGHT + 
-                          (visibleColumns * COLUMN_HEIGHT) + 
-                          (hasMoreColumns ? COLUMN_HEIGHT : 0) + 
-                          (NODE_PADDING * 2) + 40 // Action buttons area
+        const nodeHeight =
+          NODE_HEADER_HEIGHT +
+          visibleColumns * COLUMN_HEIGHT +
+          (hasMoreColumns ? COLUMN_HEIGHT : 0) +
+          NODE_PADDING * 2 +
+          40 // Action buttons area
 
         // Table box
-        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+        const rect = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'rect',
+        )
         rect.setAttribute('width', node.width.toString())
         rect.setAttribute('height', nodeHeight.toString())
         rect.setAttribute('rx', '8')
@@ -847,7 +1013,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         group.appendChild(rect)
 
         // Header section - rounded top corners only using path
-        const headerPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+        const headerPath = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'path',
+        )
         const headerPathData = `M 8,0 L ${node.width - 8},0 Q ${node.width},0 ${node.width},8 L ${node.width},${NODE_HEADER_HEIGHT} L 0,${NODE_HEADER_HEIGHT} L 0,8 Q 0,0 8,0 Z`
         headerPath.setAttribute('d', headerPathData)
         // Use soft grey for header background to ensure contrast
@@ -855,7 +1024,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         group.appendChild(headerPath)
 
         // Header border
-        const headerBorder = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        const headerBorder = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'line',
+        )
         headerBorder.setAttribute('x1', '0')
         headerBorder.setAttribute('y1', NODE_HEADER_HEIGHT.toString())
         headerBorder.setAttribute('x2', node.width.toString())
@@ -865,13 +1037,19 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         group.appendChild(headerBorder)
 
         // Table name in header
-        const tableNameText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        const tableNameText = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'text',
+        )
         tableNameText.setAttribute('x', '12')
         tableNameText.setAttribute('y', '26')
         tableNameText.setAttribute('font-size', '13')
         tableNameText.setAttribute('font-weight', '500')
         tableNameText.setAttribute('fill', finalForegroundColor)
-        tableNameText.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
+        tableNameText.setAttribute(
+          'font-family',
+          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        )
         tableNameText.setAttribute('dominant-baseline', 'middle')
         tableNameText.setAttribute('class', 'table-header')
         tableNameText.textContent = node.name
@@ -879,13 +1057,19 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
         // Disabled indicator if needed
         if (!node.enabled) {
-          const disabledText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+          const disabledText = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'text',
+          )
           disabledText.setAttribute('x', (node.width - 12).toString())
           disabledText.setAttribute('y', '26')
           disabledText.setAttribute('font-size', '10')
           disabledText.setAttribute('fill', finalForegroundColor)
           disabledText.setAttribute('text-anchor', 'end')
-          disabledText.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
+          disabledText.setAttribute(
+            'font-family',
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          )
           disabledText.setAttribute('dominant-baseline', 'middle')
           disabledText.textContent = 'Disabled'
           group.appendChild(disabledText)
@@ -894,13 +1078,19 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         // Columns
         let yOffset = NODE_HEADER_HEIGHT + NODE_PADDING
         const columnsToShow = node.columns.slice(0, visibleColumns)
-        
+
         columnsToShow.forEach((column: any, index: number) => {
-          const columnGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g')
-          
+          const columnGroup = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'g',
+          )
+
           // Column row background (subtle hover effect) - use soft grey for every 2nd row
           if (index % 2 === 0) {
-            const rowBg = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+            const rowBg = document.createElementNS(
+              'http://www.w3.org/2000/svg',
+              'rect',
+            )
             rowBg.setAttribute('x', '8')
             rowBg.setAttribute('y', (yOffset - 2).toString())
             rowBg.setAttribute('width', (node.width - 16).toString())
@@ -910,51 +1100,72 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             rowBg.setAttribute('fill', finalRowBgColor)
             columnGroup.appendChild(rowBg)
           }
-          
+
           // Column name
-          const columnNameText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+          const columnNameText = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'text',
+          )
           columnNameText.setAttribute('x', '12')
           columnNameText.setAttribute('y', (yOffset + 14).toString())
           columnNameText.setAttribute('font-size', '12')
           columnNameText.setAttribute('fill', finalForegroundColor)
-          columnNameText.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
+          columnNameText.setAttribute(
+            'font-family',
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          )
           columnNameText.setAttribute('dominant-baseline', 'middle')
           columnNameText.setAttribute('class', 'column-name')
           // Truncate long column names with ellipsis
           const maxLength = 30
-          const displayName = column.key.length > maxLength ? column.key.substring(0, maxLength) + '...' : column.key
+          const displayName =
+            column.key.length > maxLength
+              ? column.key.substring(0, maxLength) + '...'
+              : column.key
           columnNameText.textContent = displayName
           columnGroup.appendChild(columnNameText)
 
           // Calculate positions for badges (right-aligned)
           let currentX = node.width - 12
-          
+
           // Column type badge (always shown)
-          const typeText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+          const typeText = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'text',
+          )
           typeText.setAttribute('x', currentX.toString())
           typeText.setAttribute('y', (yOffset + 14).toString())
           typeText.setAttribute('font-size', '10')
           typeText.setAttribute('fill', finalForegroundColor)
           typeText.setAttribute('text-anchor', 'end')
-          typeText.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
+          typeText.setAttribute(
+            'font-family',
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          )
           typeText.setAttribute('dominant-baseline', 'middle')
           typeText.setAttribute('class', 'column-type')
           typeText.textContent = column.type
           columnGroup.appendChild(typeText)
-          
+
           // Estimate type badge width and adjust for required
           const typeWidth = column.type.length * 6 + 8
           currentX = currentX - typeWidth - 4
 
           // Required indicator
           if (column.required) {
-            const requiredText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+            const requiredText = document.createElementNS(
+              'http://www.w3.org/2000/svg',
+              'text',
+            )
             requiredText.setAttribute('x', currentX.toString())
             requiredText.setAttribute('y', (yOffset + 14).toString())
             requiredText.setAttribute('font-size', '10')
             requiredText.setAttribute('fill', finalForegroundColor)
             requiredText.setAttribute('text-anchor', 'end')
-            requiredText.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
+            requiredText.setAttribute(
+              'font-family',
+              '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            )
             requiredText.setAttribute('dominant-baseline', 'middle')
             requiredText.textContent = 'required'
             columnGroup.appendChild(requiredText)
@@ -966,21 +1177,30 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
         // Show more indicator if there are more columns
         if (columnCount > MAX_VISIBLE_COLUMNS) {
-          const showMoreText = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+          const showMoreText = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'text',
+          )
           showMoreText.setAttribute('x', (node.width / 2).toString())
           showMoreText.setAttribute('y', (yOffset + 12).toString())
           showMoreText.setAttribute('font-size', '11')
           showMoreText.setAttribute('fill', finalForegroundColor)
           showMoreText.setAttribute('text-anchor', 'middle')
           showMoreText.setAttribute('opacity', '0.6')
-          showMoreText.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
+          showMoreText.setAttribute(
+            'font-family',
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          )
           showMoreText.textContent = `Show ${columnCount - MAX_VISIBLE_COLUMNS} more`
           group.appendChild(showMoreText)
         }
 
         // Action buttons area (simplified)
         const actionY = yOffset + 8
-        const actionBorder = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+        const actionBorder = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'line',
+        )
         actionBorder.setAttribute('x1', '8')
         actionBorder.setAttribute('y1', actionY.toString())
         actionBorder.setAttribute('x2', (node.width - 8).toString())
@@ -1047,7 +1267,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return
     }
     try {
-      const { formatSchemaAsMarkdown } = await import('@/lib/utils/database-schema-export')
+      const { formatSchemaAsMarkdown } =
+        await import('@/lib/utils/database-schema-export')
       const markdown = formatSchemaAsMarkdown(databaseSchema)
       await navigator.clipboard.writeText(markdown)
       toast.success('Schema copied to clipboard')
@@ -1063,7 +1284,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return
     }
     try {
-      const { getChatGPTDeepLink, formatSchemaAsMarkdown } = await import('@/lib/utils/database-schema-export')
+      const { getChatGPTDeepLink, formatSchemaAsMarkdown } =
+        await import('@/lib/utils/database-schema-export')
       const deepLink = getChatGPTDeepLink(databaseSchema)
       // Also copy to clipboard as fallback
       const markdown = formatSchemaAsMarkdown(databaseSchema)
@@ -1081,7 +1303,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return
     }
     try {
-      const { getClaudeDeepLink, formatSchemaAsMarkdown } = await import('@/lib/utils/database-schema-export')
+      const { getClaudeDeepLink, formatSchemaAsMarkdown } =
+        await import('@/lib/utils/database-schema-export')
       const deepLink = getClaudeDeepLink(databaseSchema)
       // Also copy to clipboard as fallback
       const markdown = formatSchemaAsMarkdown(databaseSchema)
@@ -1099,7 +1322,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return
     }
     try {
-      const { getCursorDeepLink, formatSchemaAsJSON } = await import('@/lib/utils/database-schema-export')
+      const { getCursorDeepLink, formatSchemaAsJSON } =
+        await import('@/lib/utils/database-schema-export')
       const deepLink = getCursorDeepLink(databaseSchema)
       // Also copy to clipboard as fallback
       const json = formatSchemaAsJSON(databaseSchema)
@@ -1122,7 +1346,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return
     }
     try {
-      const { getLovableDeepLink, formatSchemaAsJSON } = await import('@/lib/utils/database-schema-export')
+      const { getLovableDeepLink, formatSchemaAsJSON } =
+        await import('@/lib/utils/database-schema-export')
       const deepLink = getLovableDeepLink(databaseSchema)
       // Also copy to clipboard as fallback
       const json = formatSchemaAsJSON(databaseSchema)
@@ -1136,7 +1361,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
   // Minimap functions
   const handleMinimapClick = (nodeId: string) => {
-    const node = nodes.find(n => n.id === nodeId)
+    const node = nodes.find((n) => n.id === nodeId)
     if (!node || !canvasRef.current) return
 
     const canvas = canvasRef.current
@@ -1158,19 +1383,22 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const minimapBounds = useMemo(() => {
     if (nodes.length === 0) return null
 
-    const bounds = nodes.reduce((acc, node) => {
-      return {
-        minX: Math.min(acc.minX, node.x),
-        minY: Math.min(acc.minY, node.y),
-        maxX: Math.max(acc.maxX, node.x + node.width),
-        maxY: Math.max(acc.maxY, node.y + node.height),
-      }
-    }, {
-      minX: Infinity,
-      minY: Infinity,
-      maxX: -Infinity,
-      maxY: -Infinity,
-    })
+    const bounds = nodes.reduce(
+      (acc, node) => {
+        return {
+          minX: Math.min(acc.minX, node.x),
+          minY: Math.min(acc.minY, node.y),
+          maxX: Math.max(acc.maxX, node.x + node.width),
+          maxY: Math.max(acc.maxY, node.y + node.height),
+        }
+      },
+      {
+        minX: Infinity,
+        minY: Infinity,
+        maxX: -Infinity,
+        maxY: -Infinity,
+      },
+    )
 
     if (bounds.minX === Infinity) return null
 
@@ -1227,7 +1455,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const getConnectionPoint = (nodeId: string, side: 'left' | 'right') => {
     const node = nodes.find((n) => n.id === nodeId)
     if (!node) return { x: 0, y: 0 }
-    
+
     return {
       x: node.x + (side === 'left' ? 0 : node.width),
       y: node.y + NODE_HEADER_HEIGHT / 2,
@@ -1244,7 +1472,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
   if (nodes.length === 0) {
     return (
-      <div className="relative h-full w-full overflow-hidden" style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}>
+      <div
+        className="relative h-full w-full overflow-hidden"
+        style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}
+      >
         {/* Blueprint dot pattern */}
         <svg
           className="absolute pointer-events-none"
@@ -1276,7 +1507,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
         {/* Placeholder table node - positioned lower */}
         <div className="absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2 z-10">
-          <div className="rounded-lg border border-dashed border-border/40 bg-card/20 shadow-sm opacity-40" style={{ width: `${NODE_WIDTH}px` }}>
+          <div
+            className="rounded-lg border border-dashed border-border/40 bg-card/20 shadow-sm opacity-40"
+            style={{ width: `${NODE_WIDTH}px` }}
+          >
             {/* Header */}
             <div className="flex items-center gap-2 border-b border-border/40 bg-muted/20 px-3 py-2">
               <Table2 className="h-4 w-4 shrink-0 text-muted-foreground/40" />
@@ -1313,7 +1547,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               No tables found
             </h3>
             <p className="text-sm leading-relaxed text-foreground/80">
-              Create tables to visualize your database schema. Tables will appear here as interactive nodes that you can drag, zoom, and explore.
+              Create tables to visualize your database schema. Tables will
+              appear here as interactive nodes that you can drag, zoom, and
+              explore.
             </p>
           </div>
         </div>
@@ -1324,7 +1560,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const zoomPercentage = Math.round(zoom * 100)
 
   return (
-    <div className="relative h-full w-full overflow-hidden" style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}>
+    <div
+      className="relative h-full w-full overflow-hidden"
+      style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}
+    >
       {/* Top controls - Left side */}
       <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
         {/* Copy share link button */}
@@ -1362,9 +1601,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
-            <TooltipContent>
-              Copy schema
-            </TooltipContent>
+            <TooltipContent>Copy schema</TooltipContent>
           </Tooltip>
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuItem onClick={handleExportJSON}>
@@ -1390,9 +1627,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
               <Download className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
-            Export as SVG
-          </TooltipContent>
+          <TooltipContent>Export as SVG</TooltipContent>
         </Tooltip>
 
         {/* Open in dropdown */}
@@ -1409,25 +1644,39 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
-            <TooltipContent>
-              Open in...
-            </TooltipContent>
+            <TooltipContent>Open in...</TooltipContent>
           </Tooltip>
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuItem onClick={handleOpenInChatGPT}>
-              <img src="/icons/chatgpt.svg" alt="ChatGPT" className="h-4 w-4 mr-2 brightness-0 dark:brightness-100" />
+              <img
+                src="/icons/chatgpt.svg"
+                alt="ChatGPT"
+                className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+              />
               ChatGPT
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleOpenInClaude}>
-              <img src="/icons/claude.svg" alt="Claude" className="h-4 w-4 mr-2 brightness-0 dark:brightness-100" />
+              <img
+                src="/icons/claude.svg"
+                alt="Claude"
+                className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+              />
               Claude
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleOpenInCursor}>
-              <img src="/icons/cursor-ai.svg" alt="Cursor" className="h-4 w-4 mr-2 brightness-0 dark:brightness-100" />
+              <img
+                src="/icons/cursor-ai.svg"
+                alt="Cursor"
+                className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+              />
               Cursor
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleOpenInLovable}>
-              <img src="/icons/lovable.svg" alt="Lovable" className="h-4 w-4 mr-2 brightness-0 dark:brightness-100" />
+              <img
+                src="/icons/lovable.svg"
+                alt="Lovable"
+                className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+              />
               Lovable
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -1474,8 +1723,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       <div
         ref={canvasRef}
         className={cn(
-          "h-full w-full cursor-grab overflow-hidden select-none",
-          isDragging && "cursor-grabbing"
+          'h-full w-full cursor-grab overflow-hidden select-none',
+          isDragging && 'cursor-grabbing',
         )}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -1536,17 +1785,14 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                 refY="3"
                 orient="auto"
               >
-                <polygon
-                  points="0 0, 10 3, 0 6"
-                  fill="hsl(var(--border))"
-                />
+                <polygon points="0 0, 10 3, 0 6" fill="hsl(var(--border))" />
               </marker>
             </defs>
             <g>
               {relationships.map((rel, index) => {
                 const fromPoint = getConnectionPoint(rel.from, 'right')
                 const toPoint = getConnectionPoint(rel.to, 'left')
-                
+
                 return (
                   <line
                     key={`${rel.from}-${rel.to}-${index}`}
@@ -1578,164 +1824,198 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                   >
                     <div
                       className={cn(
-                        "rounded-lg border bg-card shadow-sm transition-all cursor-pointer select-none overflow-hidden",
-                        selectedTable === node.id && "ring-2 ring-ring",
-                        !node.enabled && "opacity-60"
+                        'rounded-lg border bg-card shadow-sm transition-all cursor-pointer select-none overflow-hidden',
+                        selectedTable === node.id && 'ring-2 ring-ring',
+                        !node.enabled && 'opacity-60',
                       )}
-                      onClick={() => setSelectedTable(node.id === selectedTable ? null : node.id)}
+                      onClick={() =>
+                        setSelectedTable(
+                          node.id === selectedTable ? null : node.id,
+                        )
+                      }
                     >
-                  {/* Header */}
-                  <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-3 py-2">
-                    <Table2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="truncate text-[13px] font-medium text-foreground">
-                      {node.name}
-                    </span>
-                    {!node.enabled && (
-                      <span className="ml-auto text-[10px] text-muted-foreground">
-                        Disabled
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Columns */}
-                  <div className="p-2">
-                    {node.columns.length > 0 && (
-                      <div className="space-y-0.5">
-                        {(expandedColumns.has(node.id) 
-                          ? node.columns 
-                          : node.columns.slice(0, MAX_VISIBLE_COLUMNS)
-                        ).map((column: any) => {
-                          const Icon = getColumnIcon(column.type)
-                          // Find indexes that include this column
-                          const columnIndexes = node.indexes.filter((idx: any) => 
-                            idx.columns?.includes(column.key)
-                          )
-                          const hasIndex = columnIndexes.length > 0
-                          
-                          return (
-                            <div
-                              key={column.key}
-                              className="flex items-center gap-2 px-2 py-1 text-[12px] hover:bg-muted/50 rounded"
-                            >
-                              <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                              <span className="truncate text-foreground flex-1 flex items-center gap-1.5">
-                                {column.key}
-                                {hasIndex && (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="flex items-center shrink-0">
-                                        <Key className="h-3 w-3 text-muted-foreground" />
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="right" className="max-w-xs">
-                                      <div className="space-y-1">
-                                        {columnIndexes.map((idx: any) => (
-                                          <div key={idx.$id || idx.key} className="text-[12px]">
-                                            <div className="font-medium">{idx.key}</div>
-                                            <div className="text-muted-foreground text-[11px]">
-                                              Type: {idx.type || 'key'}
-                                              {idx.columns && idx.columns.length > 1 && (
-                                                <span> • Columns: {idx.columns.join(', ')}</span>
-                                              )}
-                                            </div>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )}
-                              </span>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                {column.required && (
-                                  <Badge variant="outline" className="h-4 px-1.5 text-[10px] font-normal">
-                                    required
-                                  </Badge>
-                                )}
-                                <Badge variant="outline" className="h-4 px-1.5 text-[10px] font-normal">
-                                  {column.type}
-                                </Badge>
-                              </div>
-                            </div>
-                          )
-                        })}
-                        {node.columns.length > MAX_VISIBLE_COLUMNS && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              toggleColumns(node.id)
-                            }}
-                            className="flex w-full items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] text-muted-foreground hover:bg-muted/50 rounded transition-colors"
-                          >
-                            {expandedColumns.has(node.id) ? (
-                              <>
-                                <ChevronUp className="h-3 w-3" />
-                                Show less
-                              </>
-                            ) : (
-                              <>
-                                <ChevronDown className="h-3 w-3" />
-                                Show {node.columns.length - MAX_VISIBLE_COLUMNS} more
-                              </>
-                            )}
-                          </button>
+                      {/* Header */}
+                      <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-3 py-2">
+                        <Table2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span className="truncate text-[13px] font-medium text-foreground">
+                          {node.name}
+                        </span>
+                        {!node.enabled && (
+                          <span className="ml-auto text-[10px] text-muted-foreground">
+                            Disabled
+                          </span>
                         )}
                       </div>
-                    )}
 
-                    {/* Action buttons */}
-                    <div className="mt-2 border-t border-border pt-2 px-2 pb-2 flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 flex-1 text-[11px]"
-                        onClick={(e) => handleOpenColumnDialog(node.id, e)}
-                      >
-                        <Plus className="h-3 w-3 mr-1.5" />
-                        Column
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-7 flex-1 text-[11px]"
-                        onClick={(e) => handleOpenIndexDialog(node.id, e)}
-                      >
-                        <Plus className="h-3 w-3 mr-1.5" />
-                        Index
-                      </Button>
+                      {/* Columns */}
+                      <div className="p-2">
+                        {node.columns.length > 0 && (
+                          <div className="space-y-0.5">
+                            {(expandedColumns.has(node.id)
+                              ? node.columns
+                              : node.columns.slice(0, MAX_VISIBLE_COLUMNS)
+                            ).map((column: any) => {
+                              const Icon = getColumnIcon(column.type)
+                              // Find indexes that include this column
+                              const columnIndexes = node.indexes.filter(
+                                (idx: any) => idx.columns?.includes(column.key),
+                              )
+                              const hasIndex = columnIndexes.length > 0
+
+                              return (
+                                <div
+                                  key={column.key}
+                                  className="flex items-center gap-2 px-2 py-1 text-[12px] hover:bg-muted/50 rounded"
+                                >
+                                  <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                  <span className="truncate text-foreground flex-1 flex items-center gap-1.5">
+                                    {column.key}
+                                    {hasIndex && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="flex items-center shrink-0">
+                                            <Key className="h-3 w-3 text-muted-foreground" />
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent
+                                          side="right"
+                                          className="max-w-xs"
+                                        >
+                                          <div className="space-y-1">
+                                            {columnIndexes.map((idx: any) => (
+                                              <div
+                                                key={idx.$id || idx.key}
+                                                className="text-[12px]"
+                                              >
+                                                <div className="font-medium">
+                                                  {idx.key}
+                                                </div>
+                                                <div className="text-muted-foreground text-[11px]">
+                                                  Type: {idx.type || 'key'}
+                                                  {idx.columns &&
+                                                    idx.columns.length > 1 && (
+                                                      <span>
+                                                        {' '}
+                                                        • Columns:{' '}
+                                                        {idx.columns.join(', ')}
+                                                      </span>
+                                                    )}
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                  </span>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    {column.required && (
+                                      <Badge
+                                        variant="outline"
+                                        className="h-4 px-1.5 text-[10px] font-normal"
+                                      >
+                                        required
+                                      </Badge>
+                                    )}
+                                    <Badge
+                                      variant="outline"
+                                      className="h-4 px-1.5 text-[10px] font-normal"
+                                    >
+                                      {column.type}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                            {node.columns.length > MAX_VISIBLE_COLUMNS && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  toggleColumns(node.id)
+                                }}
+                                className="flex w-full items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] text-muted-foreground hover:bg-muted/50 rounded transition-colors"
+                              >
+                                {expandedColumns.has(node.id) ? (
+                                  <>
+                                    <ChevronUp className="h-3 w-3" />
+                                    Show less
+                                  </>
+                                ) : (
+                                  <>
+                                    <ChevronDown className="h-3 w-3" />
+                                    Show{' '}
+                                    {node.columns.length -
+                                      MAX_VISIBLE_COLUMNS}{' '}
+                                    more
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Action buttons */}
+                        <div className="mt-2 border-t border-border pt-2 px-2 pb-2 flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 flex-1 text-[11px]"
+                            onClick={(e) => handleOpenColumnDialog(node.id, e)}
+                          >
+                            <Plus className="h-3 w-3 mr-1.5" />
+                            Column
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 flex-1 text-[11px]"
+                            onClick={(e) => handleOpenIndexDialog(node.id, e)}
+                          >
+                            <Plus className="h-3 w-3 mr-1.5" />
+                            Index
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
-                  <ContextMenuItem onClick={() => {
-                    setContextMenuTableId(node.id)
-                    handleNavigateToTable(node.id)
-                  }}>
+                  <ContextMenuItem
+                    onClick={() => {
+                      setContextMenuTableId(node.id)
+                      handleNavigateToTable(node.id)
+                    }}
+                  >
                     <Eye className="h-4 w-4 mr-2" />
                     View rows
                   </ContextMenuItem>
-                  <ContextMenuItem onClick={() => {
-                    setContextMenuTableId(node.id)
-                    setActiveTableId(node.id)
-                    setColumnDialogOpen(true)
-                  }}>
+                  <ContextMenuItem
+                    onClick={() => {
+                      setContextMenuTableId(node.id)
+                      setActiveTableId(node.id)
+                      setColumnDialogOpen(true)
+                    }}
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     Create column
                   </ContextMenuItem>
-                  <ContextMenuItem onClick={() => {
-                    setContextMenuTableId(node.id)
-                    setActiveTableId(node.id)
-                    setIndexDialogOpen(true)
-                  }}>
+                  <ContextMenuItem
+                    onClick={() => {
+                      setContextMenuTableId(node.id)
+                      setActiveTableId(node.id)
+                      setIndexDialogOpen(true)
+                    }}
+                  >
                     <Key className="h-4 w-4 mr-2" />
                     Create index
                   </ContextMenuItem>
                   <ContextMenuSeparator />
-                  <ContextMenuItem onClick={() => {
-                    setContextMenuTableId(node.id)
-                    handleNavigateToSettings(node.id)
-                  }}>
+                  <ContextMenuItem
+                    onClick={() => {
+                      setContextMenuTableId(node.id)
+                      handleNavigateToSettings(node.id)
+                    }}
+                  >
                     <Settings className="h-4 w-4 mr-2" />
                     Table settings
                   </ContextMenuItem>
@@ -1748,9 +2028,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
       {/* Minimap */}
       {showMinimap && nodes.length > 0 && minimapBounds && (
-        <div 
-          className="absolute bottom-4 right-4 z-10 w-64 h-44 rounded-lg border border-border bg-card/95 backdrop-blur-sm shadow-lg overflow-hidden select-none"
-        >
+        <div className="absolute bottom-4 right-4 z-10 w-64 h-44 rounded-lg border border-border bg-card/95 backdrop-blur-sm shadow-lg overflow-hidden select-none">
           <div className="absolute top-0 left-0 right-0 h-8 bg-muted/50 border-b border-border flex items-center justify-between px-3">
             <span className="text-[12px] font-medium text-foreground flex items-center gap-2 select-none">
               <MapIcon className="h-4 w-4" />
@@ -1766,10 +2044,10 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           <div
             ref={minimapRef}
             className={cn(
-              "relative w-full h-[calc(100%-32px)] mt-8 border select-none",
-              isDarkMode 
-                ? "bg-muted/80 border-border/60" 
-                : "bg-[#e5e5e5] border-border"
+              'relative w-full h-[calc(100%-32px)] mt-8 border select-none',
+              isDarkMode
+                ? 'bg-muted/80 border-border/60'
+                : 'bg-[#e5e5e5] border-border',
             )}
           >
             {/* Minimap content */}
@@ -1788,9 +2066,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                       const fromPoint = getConnectionPoint(rel.from, 'right')
                       const toPoint = getConnectionPoint(rel.to, 'left')
                       // Use darker stroke in light mode for better visibility
-                      const strokeColor = isDarkMode 
-                        ? colors.border 
-                        : (colors.border || 'oklch(0.5 0.01 285)')
+                      const strokeColor = isDarkMode
+                        ? colors.border
+                        : colors.border || 'oklch(0.5 0.01 285)'
                       return (
                         <line
                           key={`minimap-rel-${index}`}
@@ -1800,22 +2078,22 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                           y2={toPoint.y}
                           stroke={strokeColor}
                           strokeWidth="1.5"
-                          opacity={isDarkMode ? "0.6" : "0.8"}
+                          opacity={isDarkMode ? '0.6' : '0.8'}
                         />
                       )
                     })}
-                    
+
                     {/* Table nodes */}
                     {nodes.map((node) => {
                       const isSelected = selectedTable === node.id
                       // Use brand pink color from logo (#FD366E)
                       const selectedColor = '#FD366E'
-                      const borderColor = isSelected 
+                      const borderColor = isSelected
                         ? selectedColor
                         : colors.border
                       // Use white text for selected nodes on pink background
-                      const textColor = isSelected 
-                        ? '#ffffff' 
+                      const textColor = isSelected
+                        ? '#ffffff'
                         : colors.foreground
                       return (
                         <g key={`minimap-${node.id}`}>
@@ -1840,9 +2118,14 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                             fill={textColor}
                             fontWeight="600"
                             className="pointer-events-none select-none"
-                            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                            style={{
+                              userSelect: 'none',
+                              WebkitUserSelect: 'none',
+                            }}
                           >
-                            {node.name.length > 15 ? node.name.substring(0, 15) + '...' : node.name}
+                            {node.name.length > 15
+                              ? node.name.substring(0, 15) + '...'
+                              : node.name}
                           </text>
                         </g>
                       )
@@ -1891,7 +2174,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             await createColumnMutation.mutateAsync(data)
           }}
           availableTables={availableTables}
-          existingColumns={nodes.find(n => n.id === activeTableId)?.columns || []}
+          existingColumns={
+            nodes.find((n) => n.id === activeTableId)?.columns || []
+          }
           isLoading={createColumnMutation.isPending}
         />
       )}
@@ -1905,11 +2190,12 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             await createIndexMutation.mutateAsync(data)
           }}
           availableColumns={activeTableColumns}
-          existingIndexes={activeTableIndexes.map((idx: any) => ({ key: idx.key }))}
+          existingIndexes={activeTableIndexes.map((idx: any) => ({
+            key: idx.key,
+          }))}
           isLoading={createIndexMutation.isPending}
         />
       )}
     </div>
   )
 }
-

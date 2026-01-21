@@ -34,12 +34,13 @@ export function PlanSelection({
 }: PlanSelectionProps) {
   // Filter out Scale plan (not shown in UI per instructions)
   // Handle empty plans object gracefully
-  const availablePlans = plans && typeof plans === 'object' 
-    ? Object.entries(plans).filter(([key]) => {
-        const planName = getPlanNameFromTier(key)
-        return planName !== 'scale'
-      })
-    : []
+  const availablePlans =
+    plans && typeof plans === 'object'
+      ? Object.entries(plans).filter(([key]) => {
+          const planName = getPlanNameFromTier(key)
+          return planName !== 'scale'
+        })
+      : []
 
   const getPlanDisplayName = (planTier: string) => {
     const planName = getPlanNameFromTier(planTier)
@@ -50,7 +51,11 @@ export function PlanSelection({
   }
 
   const isCurrentPlan = (planTier: string) => {
-    return planTier === currentPlan || getPlanNameFromTier(planTier) === getPlanNameFromTier(currentPlan as string)
+    return (
+      planTier === currentPlan ||
+      getPlanNameFromTier(planTier) ===
+        getPlanNameFromTier(currentPlan as string)
+    )
   }
 
   const isFreePlan = (planTier: string) => {
@@ -71,7 +76,8 @@ export function PlanSelection({
           <Info className="h-4 w-4" />
           <AlertTitle>Plan Changes Restricted</AlertTitle>
           <AlertDescription className="mt-2">
-            Plan changes are not available for self-service. Please contact support to change your plan.
+            Plan changes are not available for self-service. Please contact
+            support to change your plan.
           </AlertDescription>
         </Alert>
       )}
@@ -122,14 +128,14 @@ export function PlanSelection({
                       </Badge>
                     )}
                   </div>
-                  
+
                   {/* Description - on its own line */}
                   {description && (
                     <p className="text-[13px] text-muted-foreground leading-snug">
                       {description}
                     </p>
                   )}
-                  
+
                   {/* Price - on its own line */}
                   <div className="text-[13px] font-medium text-foreground">
                     {price > 0 ? (
@@ -162,12 +168,13 @@ export function PlanSelection({
             return (
               <Tooltip key={planTier}>
                 <TooltipTrigger asChild>
-                  <div className="w-full">
-                    {planCard}
-                  </div>
+                  <div className="w-full">{planCard}</div>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>You already have a free organization. You can only have one free organization per account.</p>
+                  <p>
+                    You already have a free organization. You can only have one
+                    free organization per account.
+                  </p>
                 </TooltipContent>
               </Tooltip>
             )
@@ -216,9 +223,7 @@ export function PlanSelection({
 
       <div className="border-t border-border" />
 
-      <div className="px-6 py-4">
-        {radioGroupContent}
-      </div>
+      <div className="px-6 py-4">{radioGroupContent}</div>
     </div>
   )
 }

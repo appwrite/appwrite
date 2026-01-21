@@ -1,6 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { MessagingView } from '@/components/pages/projects/$projectId/messaging/View'
-import { fetchProjectProviders, fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  fetchProjectProviders,
+  fetchProject,
+  fetchOrganizationPlan,
+} from '@/lib/react-query/hooks'
 
 const PROVIDERS_PER_PAGE = 25
 
@@ -35,8 +39,16 @@ export const Route = createFileRoute(
 
       // Prefetch initial page of providers (page 0, no search)
       await queryClient.ensureQueryData({
-        queryKey: ['providers', 'project', projectId, 0, PROVIDERS_PER_PAGE, ''],
-        queryFn: () => fetchProjectProviders(projectId, 0, PROVIDERS_PER_PAGE, ''),
+        queryKey: [
+          'providers',
+          'project',
+          projectId,
+          0,
+          PROVIDERS_PER_PAGE,
+          '',
+        ],
+        queryFn: () =>
+          fetchProjectProviders(projectId, 0, PROVIDERS_PER_PAGE, ''),
         staleTime: 30 * 1000, // 30 seconds
       })
 

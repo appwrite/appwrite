@@ -1,6 +1,6 @@
 /**
  * InlinePaymentForm Component
- * 
+ *
  * Inline form for adding a new payment method using Stripe Elements.
  * Used in the plan change wizard.
  */
@@ -19,7 +19,10 @@ import {
 import { Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Stripe, StripeElements, PaymentElement } from '@stripe/stripe-js'
-import { getStripeInstance, getStripeAppearanceFromTheme } from '@/lib/utils/stripe'
+import {
+  getStripeInstance,
+  getStripeAppearanceFromTheme,
+} from '@/lib/utils/stripe'
 import { useTheme } from 'next-themes'
 import {
   useCreatePaymentMethod,
@@ -109,16 +112,19 @@ export function InlinePaymentForm({
 
   const createPaymentMethodMutation = useCreatePaymentMethod()
   const setPaymentMethodProviderMutation = useSetPaymentMethodProvider()
-  const setDefaultPaymentMethodMutation = useSetOrganizationDefaultPaymentMethod()
+  const setDefaultPaymentMethodMutation =
+    useSetOrganizationDefaultPaymentMethod()
   const { paymentMethods: allPaymentMethods } = usePaymentMethods()
 
   const { theme } = useTheme()
   const appearance = getStripeAppearanceFromTheme(theme)
 
   // Check if Stripe is available
-  const stripePublishableKey = typeof window !== 'undefined' 
-    ? (import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || (window as any).__STRIPE_PUBLISHABLE_KEY__)
-    : undefined
+  const stripePublishableKey =
+    typeof window !== 'undefined'
+      ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+        (window as any).__STRIPE_PUBLISHABLE_KEY__
+      : undefined
   const hasStripePublicKey = !!stripePublishableKey
 
   // Initialize Stripe when component mounts
@@ -141,7 +147,8 @@ export function InlinePaymentForm({
 
         // Check for existing incomplete payment method
         const existingIncomplete = allPaymentMethods?.find(
-          (method: Models.PaymentMethod) => method.clientSecret && !method.providerMethodId
+          (method: Models.PaymentMethod) =>
+            method.clientSecret && !method.providerMethodId,
         )
 
         let paymentMethod: Models.PaymentMethod
@@ -205,7 +212,10 @@ export function InlinePaymentForm({
         }
       } catch (err) {
         if (mounted) {
-          const errorMessage = err instanceof Error ? err.message : 'Failed to initialize payment form'
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : 'Failed to initialize payment form'
           setError(errorMessage)
           setIsStripeLoading(false)
           console.error('Stripe initialization error:', err)
@@ -221,7 +231,7 @@ export function InlinePaymentForm({
       clearTimeout(timeoutId)
       hasInitialized = false
       mounted = false
-      
+
       requestAnimationFrame(() => {
         if (currentPaymentElement) {
           try {
@@ -256,7 +266,12 @@ export function InlinePaymentForm({
       return
     }
 
-    if (!stripeRef.current || !elementsRef.current || !clientSecret || !paymentMethodId) {
+    if (
+      !stripeRef.current ||
+      !elementsRef.current ||
+      !clientSecret ||
+      !paymentMethodId
+    ) {
       setError('Payment form not ready. Please try again.')
       return
     }
@@ -268,20 +283,24 @@ export function InlinePaymentForm({
       await elementsRef.current.submit()
 
       // Confirm setup intent
-      const { setupIntent, error: stripeError } = await stripeRef.current.confirmSetup({
-        elements: elementsRef.current,
-        clientSecret,
-        confirmParams: {
-          return_url: typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '',
-          payment_method_data: {
-            billing_details: {
-              name: cardholderName.trim(),
+      const { setupIntent, error: stripeError } =
+        await stripeRef.current.confirmSetup({
+          elements: elementsRef.current,
+          clientSecret,
+          confirmParams: {
+            return_url:
+              typeof window !== 'undefined'
+                ? `${window.location.origin}${window.location.pathname}`
+                : '',
+            payment_method_data: {
+              billing_details: {
+                name: cardholderName.trim(),
+              },
             },
+            expand: ['payment_method'],
           },
-          expand: ['payment_method'],
-        },
-        redirect: 'if_required',
-      })
+          redirect: 'if_required',
+        })
 
       if (stripeError) {
         throw new Error(stripeError.message)
@@ -305,7 +324,10 @@ export function InlinePaymentForm({
       // Link payment method to Appwrite
       await setPaymentMethodProviderMutation.mutateAsync({
         paymentMethodId,
-        providerMethodId: typeof stripePaymentMethod === 'object' ? stripePaymentMethod.id : stripePaymentMethod,
+        providerMethodId:
+          typeof stripePaymentMethod === 'object'
+            ? stripePaymentMethod.id
+            : stripePaymentMethod,
         name: cardholderName.trim(),
         state: selectedState || undefined,
       })
@@ -321,7 +343,7 @@ export function InlinePaymentForm({
       toast.success(
         organizationId
           ? `Payment method has been added to your organization`
-          : 'A new payment method has been added to your account'
+          : 'A new payment method has been added to your account',
       )
 
       // Reset form
@@ -334,7 +356,9 @@ export function InlinePaymentForm({
 
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add payment method')
+      setError(
+        err instanceof Error ? err.message : 'Failed to add payment method',
+      )
     }
   }
 
@@ -348,7 +372,8 @@ export function InlinePaymentForm({
     return (
       <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 px-3 py-2">
         <p className="text-[12px] text-yellow-600 dark:text-yellow-400">
-          Stripe payment processing is not configured. Please ensure VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.
+          Stripe payment processing is not configured. Please ensure
+          VITE_STRIPE_PUBLISHABLE_KEY is set in your environment.
         </p>
       </div>
     )
@@ -357,7 +382,9 @@ export function InlinePaymentForm({
   return (
     <div className="rounded-lg border border-border bg-card/50 p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-[15px] font-semibold text-foreground">Add payment method</h3>
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Add payment method
+        </h3>
         {onCancel && (
           <Button
             variant="ghost"
@@ -393,10 +420,7 @@ export function InlinePaymentForm({
                 key={`stripe-${paymentMethodId || 'new'}`}
                 className="min-h-[200px] relative"
               >
-                <div
-                  ref={stripeContainerRef}
-                  className="min-h-[200px]"
-                />
+                <div ref={stripeContainerRef} className="min-h-[200px]" />
                 {isStripeLoading && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/80">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -434,7 +458,9 @@ export function InlinePaymentForm({
 
         {error && (
           <div className="rounded-md bg-red-500/10 border border-red-500/20 px-3 py-2">
-            <p className="text-[12px] text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-[12px] text-red-600 dark:text-red-400">
+              {error}
+            </p>
           </div>
         )}
 
@@ -451,10 +477,14 @@ export function InlinePaymentForm({
               Cancel
             </Button>
           )}
-          <Button 
+          <Button
             type="submit"
             size="sm"
-            disabled={isLoading || !cardholderName.trim() || (showStatePicker && !selectedState)}
+            disabled={
+              isLoading ||
+              !cardholderName.trim() ||
+              (showStatePicker && !selectedState)
+            }
             className="h-8 text-[13px]"
           >
             {isLoading ? (

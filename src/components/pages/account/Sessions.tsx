@@ -21,7 +21,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Trash2, Monitor, Smartphone, Tablet, Globe, LogOut } from 'lucide-react'
+import {
+  Trash2,
+  Monitor,
+  Smartphone,
+  Tablet,
+  Globe,
+  LogOut,
+} from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
@@ -50,11 +57,11 @@ export function AccountSessions() {
       queryClient.invalidateQueries({ queryKey: Dependencies.SESSIONS })
       toast.success('Session has been deleted')
       setLogoutDialogOpen(false)
-      
+
       const wasCurrentSession = isCurrentSession
       setSessionToDelete(null)
       setIsCurrentSession(false)
-      
+
       // Redirect to sign-in if current session was deleted
       if (wasCurrentSession) {
         navigate({ to: '/sign-in' })
@@ -82,7 +89,7 @@ export function AccountSessions() {
   })
 
   const handleDeleteClick = (sessionId: string) => {
-    const session = sessions.find(s => s.$id === sessionId)
+    const session = sessions.find((s) => s.$id === sessionId)
     setSessionToDelete(sessionId)
     setIsCurrentSession(session?.current || false)
     setLogoutDialogOpen(true)
@@ -116,15 +123,15 @@ export function AccountSessions() {
 
   const formatDeviceInfo = (session: Models.Session) => {
     const parts: string[] = []
-    
+
     if (session.clientName) {
       parts.push(session.clientName)
     }
-    
+
     if (session.osName) {
       parts.push(session.osName)
     }
-    
+
     return parts.length > 0 ? parts.join(' on ') : 'Unknown device'
   }
 
@@ -153,7 +160,8 @@ export function AccountSessions() {
                   Sessions
                 </h3>
                 <p className="text-[13px] text-muted-foreground mt-1">
-                  Manage your active sessions across different devices. You can revoke access from any device at any time.
+                  Manage your active sessions across different devices. You can
+                  revoke access from any device at any time.
                 </p>
               </div>
             </div>
@@ -244,7 +252,8 @@ export function AccountSessions() {
                 Sessions
               </h3>
               <p className="text-[13px] text-muted-foreground mt-1">
-                Manage your active sessions across different devices. You can revoke access from any device at any time.
+                Manage your active sessions across different devices. You can
+                revoke access from any device at any time.
               </p>
             </div>
             {sessions.length > 1 && (
@@ -402,7 +411,8 @@ export function AccountSessions() {
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Logout from all devices</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to logout from all devices? You will need to sign in again to access your account from any device.
+              Are you sure you want to logout from all devices? You will need to
+              sign in again to access your account from any device.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -426,4 +436,3 @@ export function AccountSessions() {
     </div>
   )
 }
-

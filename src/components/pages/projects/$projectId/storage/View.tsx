@@ -1,8 +1,22 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { FolderOpen, List, LayoutGrid, MoreHorizontal, Lock, Trash2, HardDrive } from 'lucide-react'
+import {
+  FolderOpen,
+  List,
+  LayoutGrid,
+  MoreHorizontal,
+  Lock,
+  Trash2,
+  HardDrive,
+} from 'lucide-react'
 import { formatBytes, formatNumber } from '@/lib/utils/mock-data'
-import { useProjectBuckets, Dependencies, useProject, useOrganizationPlan, fetchProjectBuckets } from '@/lib/react-query/hooks'
+import {
+  useProjectBuckets,
+  Dependencies,
+  useProject,
+  useOrganizationPlan,
+  fetchProjectBuckets,
+} from '@/lib/react-query/hooks'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { ResourceCard } from '../shared/ResourceCard'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -33,7 +47,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Link, useNavigate, useParams, useLocation } from '@tanstack/react-router'
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useLocation,
+} from '@tanstack/react-router'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -70,10 +89,7 @@ export function StorageView() {
 
   // Fetch total count of buckets without search (for limit checking)
   // This is separate from the search query so the alert doesn't change when searching
-  const {
-    data: totalBucketsData,
-    isLoading: totalBucketsLoading,
-  } = useQuery({
+  const { data: totalBucketsData, isLoading: totalBucketsLoading } = useQuery({
     queryKey: ['buckets', 'project', projectId, 'total'],
     queryFn: () => fetchProjectBuckets(projectId!, 0, 1, ''), // Only need total, so limit to 1
     enabled: !!projectId,
@@ -85,13 +101,14 @@ export function StorageView() {
 
   // Get project to get teamId for organization plan
   const { project, isLoading: projectLoading } = useProject(projectId)
-  
+
   // Get organization plan to check limits
-  const { plan: organizationPlan, isLoading: planLoading } = useOrganizationPlan(project?.teamId)
-  
+  const { plan: organizationPlan, isLoading: planLoading } =
+    useOrganizationPlan(project?.teamId)
+
   // Total count of all buckets (without search) - for limit checking
   const totalBucketsCount = totalBucketsData?.total || 0
-  
+
   // Check if create button should be disabled
   const bucketsLimit = organizationPlan?.buckets ?? 0
   const isCreateDisabled = bucketsLimit > 0 && totalBucketsCount >= bucketsLimit
@@ -117,7 +134,9 @@ export function StorageView() {
       const projectSdk = sdk.forProject(projectId)
       // Delete all buckets in parallel
       await Promise.all(
-        bucketIds.map((bucketId) => projectSdk.storage.deleteBucket({ bucketId })),
+        bucketIds.map((bucketId) =>
+          projectSdk.storage.deleteBucket({ bucketId }),
+        ),
       )
     },
     onSuccess: () => {
@@ -160,7 +179,9 @@ export function StorageView() {
     if (selectedBuckets.size === paginatedBuckets.length) {
       setSelectedBuckets(new Set())
     } else {
-      setSelectedBuckets(new Set(paginatedBuckets.map((b) => (b as Models.Bucket).$id)))
+      setSelectedBuckets(
+        new Set(paginatedBuckets.map((b) => (b as Models.Bucket).$id)),
+      )
     }
   }
 
@@ -199,7 +220,6 @@ export function StorageView() {
       toast.error(getErrorMessage(error))
     },
   })
-
 
   const ViewToggle = () => (
     <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
@@ -261,76 +281,89 @@ export function StorageView() {
         {viewMode === 'list' ? (
           bucketsLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">
-              <p className="text-[13px] text-muted-foreground">Loading buckets...</p>
+              <p className="text-[13px] text-muted-foreground">
+                Loading buckets...
+              </p>
             </div>
           ) : paginatedBuckets.length > 0 ? (
             <>
               <div className="rounded-lg border border-border bg-card overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent border-b border-border">
-                        <TableHead className="w-[40px] px-4">
-                          <Checkbox
-                            checked={
-                              paginatedBuckets.length > 0 &&
-                              selectedBuckets.size === paginatedBuckets.length
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent border-b border-border">
+                      <TableHead className="w-[40px] px-4">
+                        <Checkbox
+                          checked={
+                            paginatedBuckets.length > 0 &&
+                            selectedBuckets.size === paginatedBuckets.length
+                          }
+                          onCheckedChange={toggleAllBuckets}
+                        />
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Bucket
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
+                        Status
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                        Created
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                        Updated
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedBuckets.map((bucket) => {
+                      const bucketData = bucket as Models.Bucket
+                      const isDisabled = !bucketData.enabled
+                      return (
+                        <TableRow
+                          key={bucketData.$id}
+                          className={cn(
+                            'cursor-pointer transition-colors border-b border-border/50',
+                            selectedBuckets.has(bucketData.$id)
+                              ? 'bg-sky-100 dark:bg-sky-950'
+                              : 'hover:bg-muted/30',
+                          )}
+                          onClick={(e) => {
+                            // Don't navigate if clicking on checkbox, link, or their containers
+                            const target = e.target as HTMLElement
+                            if (
+                              target.closest('button') ||
+                              target.closest('[role="checkbox"]') ||
+                              target.closest('a')
+                            ) {
+                              return
                             }
-                            onCheckedChange={toggleAllBuckets}
-                          />
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                          Bucket
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center">
-                          Status
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
-                          Created
-                        </TableHead>
-                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
-                          Updated
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedBuckets.map((bucket) => {
-                        const bucketData = bucket as Models.Bucket
-                        const isDisabled = !bucketData.enabled
-                        return (
-                          <TableRow
-                            key={bucketData.$id}
-                            className={cn(
-                              'cursor-pointer transition-colors border-b border-border/50',
-                              selectedBuckets.has(bucketData.$id)
-                                ? 'bg-sky-100 dark:bg-sky-950'
-                                : 'hover:bg-muted/30',
-                            )}
-                            onClick={(e) => {
-                              // Don't navigate if clicking on checkbox, link, or their containers
-                              const target = e.target as HTMLElement
-                              if (
-                                target.closest('button') ||
-                                target.closest('[role="checkbox"]') ||
-                                target.closest('a')
-                              ) {
-                                return
-                              }
-                              navigate({
-                                to: '/projects/$projectId/storage/$bucketId/',
-                                params: { projectId: projectId!, bucketId: bucketData.$id },
-                              })
-                            }}
+                            navigate({
+                              to: '/projects/$projectId/storage/$bucketId/',
+                              params: {
+                                projectId: projectId!,
+                                bucketId: bucketData.$id,
+                              },
+                            })
+                          }}
+                        >
+                          <TableCell
+                            onClick={(e) => e.stopPropagation()}
+                            className="px-4 py-3"
                           >
-                            <TableCell onClick={(e) => e.stopPropagation()} className="px-4 py-3">
-                              <Checkbox
-                                checked={selectedBuckets.has(bucketData.$id)}
-                                onCheckedChange={() => toggleBucket(bucketData.$id)}
-                              />
-                            </TableCell>
-                            <TableCell className="px-4 py-3">
+                            <Checkbox
+                              checked={selectedBuckets.has(bucketData.$id)}
+                              onCheckedChange={() =>
+                                toggleBucket(bucketData.$id)
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/storage/$bucketId/"
-                              params={{ projectId: projectId!, bucketId: bucketData.$id }}
+                              params={{
+                                projectId: projectId!,
+                                bucketId: bucketData.$id,
+                              }}
                               className="block group"
                             >
                               <div className="flex items-center gap-3 min-w-0">
@@ -348,11 +381,17 @@ export function StorageView() {
                           <TableCell className="px-4 py-3">
                             <div className="flex items-center justify-center">
                               {isDisabled ? (
-                                <Badge variant="error" className="text-[11px] font-medium border px-2 py-0.5">
+                                <Badge
+                                  variant="error"
+                                  className="text-[11px] font-medium border px-2 py-0.5"
+                                >
                                   Disabled
                                 </Badge>
                               ) : (
-                                <Badge variant="success" className="text-[11px] font-medium border px-2 py-0.5">
+                                <Badge
+                                  variant="success"
+                                  className="text-[11px] font-medium border px-2 py-0.5"
+                                >
                                   Enabled
                                 </Badge>
                               )}
@@ -361,7 +400,10 @@ export function StorageView() {
                           <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/storage/$bucketId/"
-                              params={{ projectId: projectId!, bucketId: bucketData.$id }}
+                              params={{
+                                projectId: projectId!,
+                                bucketId: bucketData.$id,
+                              }}
                               className="block text-right"
                             >
                               {bucketData.$createdAt ? (
@@ -370,14 +412,19 @@ export function StorageView() {
                                   className="text-[12px] text-muted-foreground font-mono"
                                 />
                               ) : (
-                                <span className="text-[12px] text-muted-foreground/50 italic">N/A</span>
+                                <span className="text-[12px] text-muted-foreground/50 italic">
+                                  N/A
+                                </span>
                               )}
                             </Link>
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <Link
                               to="/projects/$projectId/storage/$bucketId/"
-                              params={{ projectId: projectId!, bucketId: bucketData.$id }}
+                              params={{
+                                projectId: projectId!,
+                                bucketId: bucketData.$id,
+                              }}
                               className="block text-right"
                             >
                               {bucketData.$updatedAt ? (
@@ -386,7 +433,9 @@ export function StorageView() {
                                   className="text-[12px] text-muted-foreground font-mono"
                                 />
                               ) : (
-                                <span className="text-[12px] text-muted-foreground/50 italic">N/A</span>
+                                <span className="text-[12px] text-muted-foreground/50 italic">
+                                  N/A
+                                </span>
                               )}
                             </Link>
                           </TableCell>
@@ -420,7 +469,9 @@ export function StorageView() {
           <>
             {bucketsLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
-                <p className="text-[13px] text-muted-foreground">Loading buckets...</p>
+                <p className="text-[13px] text-muted-foreground">
+                  Loading buckets...
+                </p>
               </div>
             ) : paginatedBuckets.length > 0 ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -441,23 +492,33 @@ export function StorageView() {
                         status={isDisabled ? 'error' : undefined}
                         statusLabel={isDisabled ? 'Disabled' : undefined}
                         metadata={[
-                          ...(bucketData.compression && bucketData.compression !== 'none'
+                          ...(bucketData.compression &&
+                          bucketData.compression !== 'none'
                             ? [
                                 {
                                   label: 'Compression',
-                                  value: bucketData.compression === 'gzip' ? 'Gzip' : bucketData.compression === 'zstd' ? 'Zstd' : bucketData.compression,
+                                  value:
+                                    bucketData.compression === 'gzip'
+                                      ? 'Gzip'
+                                      : bucketData.compression === 'zstd'
+                                        ? 'Zstd'
+                                        : bucketData.compression,
                                 },
                               ]
                             : []),
-                          ...(bucketData.maximumFileSize && bucketData.maximumFileSize > 0
+                          ...(bucketData.maximumFileSize &&
+                          bucketData.maximumFileSize > 0
                             ? [
                                 {
                                   label: 'Max size',
-                                  value: formatBytes(bucketData.maximumFileSize),
+                                  value: formatBytes(
+                                    bucketData.maximumFileSize,
+                                  ),
                                 },
                               ]
                             : []),
-                          ...(bucketData.allowedFileExtensions && bucketData.allowedFileExtensions.length > 0
+                          ...(bucketData.allowedFileExtensions &&
+                          bucketData.allowedFileExtensions.length > 0
                             ? [
                                 {
                                   label: 'Extensions',
@@ -471,7 +532,10 @@ export function StorageView() {
                               <Lock className="h-3.5 w-3.5 text-muted-foreground" />
                             ) : null,
                           },
-                        ].filter((item) => item.value !== null && item.value !== undefined)}
+                        ].filter(
+                          (item) =>
+                            item.value !== null && item.value !== undefined,
+                        )}
                         onMenuClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
@@ -513,7 +577,8 @@ export function StorageView() {
           <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
             <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
               <Badge variant="secondary" className="h-6 px-2.5">
-                {selectedBuckets.size} bucket{selectedBuckets.size > 1 ? 's' : ''} selected
+                {selectedBuckets.size} bucket
+                {selectedBuckets.size > 1 ? 's' : ''} selected
               </Badge>
               <div className="flex items-center gap-2">
                 <Button
@@ -544,10 +609,12 @@ export function StorageView() {
             <DialogHeader className="px-6 pt-6 text-left">
               <DialogTitle>Delete Buckets</DialogTitle>
               <DialogDescription className="text-[13px] mt-2">
-                Are you sure you want to delete {selectedBuckets.size} bucket{selectedBuckets.size > 1 ? 's' : ''}? This action cannot be undone.
+                Are you sure you want to delete {selectedBuckets.size} bucket
+                {selectedBuckets.size > 1 ? 's' : ''}? This action cannot be
+                undone.
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
                 variant="outline"

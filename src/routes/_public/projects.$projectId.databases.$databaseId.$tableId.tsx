@@ -2,7 +2,9 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 
 const tableSearchSchema = z.object({
-  tab: z.enum(['rows', 'columns', 'indexes', 'security', 'settings']).default('rows'),
+  tab: z
+    .enum(['rows', 'columns', 'indexes', 'security', 'settings'])
+    .default('rows'),
 })
 
 export const Route = createFileRoute(

@@ -66,9 +66,9 @@ export const Route = createFileRoute('/_public/account/$tab')({
         queryClient.prefetchQuery({
           queryKey: ['organizations', 'console', 'full'],
           queryFn: async () => {
-            const response = await sdk.forConsole.organizations.list(
-              [Query.equal('platform', 'appwrite')],
-            )
+            const response = await sdk.forConsole.organizations.list([
+              Query.equal('platform', 'appwrite'),
+            ])
             return response.teams || []
           },
           staleTime: 30 * 1000,

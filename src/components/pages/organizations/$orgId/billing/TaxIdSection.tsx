@@ -1,6 +1,9 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useOrganizationById, useUpdateOrganizationTaxId } from '@/lib/react-query/hooks'
+import {
+  useOrganizationById,
+  useUpdateOrganizationTaxId,
+} from '@/lib/react-query/hooks'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 
@@ -57,7 +60,9 @@ export function TaxIdSection({ onEditTaxId, orgId }: TaxIdSectionProps) {
       toast.success('Tax ID updated')
       setHasChanges(false)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update tax ID')
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update tax ID',
+      )
     }
   }
 

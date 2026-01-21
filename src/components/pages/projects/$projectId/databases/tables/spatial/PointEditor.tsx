@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 
 /**
  * Point Editor Component
- * 
+ *
  * Used for editing point spatial data (longitude, latitude coordinates)
  * Can be used in row editing, default values, and geo queries
  */
@@ -17,15 +17,19 @@ export interface PointEditorProps {
   showNullCheckbox?: boolean
 }
 
-export function PointEditor({ 
-  value, 
-  onChange, 
-  isRequired = false, 
+export function PointEditor({
+  value,
+  onChange,
+  isRequired = false,
   disabled = false,
   showNullCheckbox = true,
 }: PointEditorProps) {
-  const [longitude, setLongitude] = useState<string>(value ? String(value[0]) : '')
-  const [latitude, setLatitude] = useState<string>(value ? String(value[1]) : '')
+  const [longitude, setLongitude] = useState<string>(
+    value ? String(value[0]) : '',
+  )
+  const [latitude, setLatitude] = useState<string>(
+    value ? String(value[1]) : '',
+  )
 
   useEffect(() => {
     if (value) {
@@ -98,7 +102,10 @@ export function PointEditor({
             disabled={disabled}
             className="h-4 w-4"
           />
-          <label htmlFor="point-null" className="text-[11px] text-muted-foreground cursor-pointer select-none">
+          <label
+            htmlFor="point-null"
+            className="text-[11px] text-muted-foreground cursor-pointer select-none"
+          >
             Set to NULL
           </label>
         </div>
@@ -106,4 +113,3 @@ export function PointEditor({
     </div>
   )
 }
-

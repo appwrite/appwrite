@@ -70,97 +70,95 @@ export function CreateUserDrawer({
         <div className="border-t border-border shrink-0" />
 
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col min-h-0">
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-6 py-6">
-            <div className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="user-id">User ID</Label>
-                <IdInput
-                  id="user-id"
-                  value={userId}
-                  onChange={setUserId}
-                  maxLength={36}
-                  disabled={isLoading}
-                  placeholder="Leave blank to auto-generate"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="user@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+1234567890"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  disabled={isLoading}
-                />
-                <p className="text-[12px] text-muted-foreground">
-                  Format with a leading '+' and country code, e.g., +16175551212
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="At least 8 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                />
-                <p className="text-[12px] text-muted-foreground">
-                  Optional. If not provided, user will need to set password via recovery.
-                </p>
+          <div className="flex-1 overflow-y-auto">
+            <div className="px-6 py-6">
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="user-id">User ID</Label>
+                  <IdInput
+                    id="user-id"
+                    value={userId}
+                    onChange={setUserId}
+                    maxLength={36}
+                    disabled={isLoading}
+                    placeholder="Leave blank to auto-generate"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="John Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="user@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+1234567890"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    disabled={isLoading}
+                  />
+                  <p className="text-[12px] text-muted-foreground">
+                    Format with a leading '+' and country code, e.g.,
+                    +16175551212
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="At least 8 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                  />
+                  <p className="text-[12px] text-muted-foreground">
+                    Optional. If not provided, user will need to set password
+                    via recovery.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-          <Button
-            type="submit"
-            disabled={isLoading}
-          >
-            Create User
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleOpenChange(false)}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
+          <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
+            <Button type="submit" disabled={isLoading}>
+              Create User
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+          </div>
+        </form>
       </>
     </BaseDrawer>
   )
 }
-
