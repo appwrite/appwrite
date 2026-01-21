@@ -35,11 +35,6 @@ class XList extends Action
         return 'listProjects';
     }
 
-    protected function getQueriesValidator(): Validator
-    {
-        return new Projects();
-    }
-
     public function __construct()
     {
         $this
@@ -64,7 +59,7 @@ class XList extends Action
                 ],
                 contentType: ContentType::JSON
             ))
-            ->param('queries', [], $this->getQueriesValidator(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
+            ->param('queries', [], new Projects(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('request')
