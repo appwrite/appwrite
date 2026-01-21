@@ -9,6 +9,7 @@ use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Swoole\Table;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
@@ -393,9 +394,15 @@ $register->set('promiseAdapter', function () {
     return new Swoole();
 });
 
-$register->set('graphqlCache', function () {
+$graphqlFlags = new Table(100_000); // 100k projects max
+$graphqlFlags->column('timestamp', Table::TYPE_INT, 8);
+$graphqlFlags->create();
+
+$register->set('graphqlFlags', fn () => $graphqlFlags);
+
+$register->set('graphqlCache', function () use ($graphqlFlags) {
     $maxMB = (int) System::getEnv('_APP_GRAPHQL_SCHEMA_CACHE_MB', 50);
-    return new GraphQLCache($maxMB);
+    return new GraphQLCache($maxMB, $graphqlFlags);
 });
 
 $register->set('graphqlAPISchema', function () {

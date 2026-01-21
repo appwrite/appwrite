@@ -37,6 +37,14 @@ class Swoole extends Adapter
 
     public function all(iterable $promisesOrValues): GQLPromise
     {
-        return new GQLPromise(SwoolePromise::all($promisesOrValues), $this);
+        $swoolePromises = [];
+        foreach ($promisesOrValues as $promise) {
+            if ($promise instanceof GQLPromise) {
+                $swoolePromises[] = $promise->adoptedPromise;
+            } else {
+                $swoolePromises[] = $promise;
+            }
+        }
+        return new GQLPromise(SwoolePromise::all($swoolePromises), $this);
     }
 }

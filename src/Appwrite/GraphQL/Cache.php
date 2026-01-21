@@ -4,6 +4,7 @@ namespace Appwrite\GraphQL;
 
 use GraphQL\Type\Schema as GQLSchema;
 use Swoole\Lock;
+use Swoole\Table;
 
 /**
  * LRU Cache for GraphQL Schemas keyed by project ID.
@@ -13,6 +14,9 @@ use Swoole\Lock;
  *
  * This class is designed to be instantiated once per Swoole worker and
  * registered for reuse across requests. Thread-safe via Swoole mutex locks.
+ *
+ * Dirty flags are stored in a shared Swoole Table to propagate cache
+ * invalidation across all workers.
  */
 class Cache
 {
@@ -42,24 +46,19 @@ class Cache
     private int $currentBytes = 0;
 
     /**
-     * @var array<string, int> Dirty flags with timestamp: projectId => timestamp
+     * @var Table|null Shared Swoole Table for dirty flags (shared across workers)
      */
-    private array $dirty = [];
+    private ?Table $dirty;
 
     /**
-     * @var Lock Swoole mutex lock for thread safety
+     * @var array<string, int> Local dirty flags (used when no shared table available)
+     */
+    private array $local = [];
+
+    /**
+     * @var Lock Swoole mutex lock for thread safety within this worker
      */
     private Lock $lock;
-
-    /**
-     * @var int Maximum age for dirty flags in seconds (1 hour)
-     */
-    private const int DIRTY_FLAG_TTL = 3600;
-
-    /**
-     * @var int Maximum number of dirty flags to prevent unbounded growth
-     */
-    private const int MAX_DIRTY_FLAGS = 10000;
 
     /**
      * Heuristic constants for memory estimation.
@@ -74,10 +73,12 @@ class Cache
      * Create a new cache instance.
      *
      * @param int $maxMB Maximum cache size in megabytes (default: 50)
+     * @param Table|null $dirty Shared Swoole Table for cross-worker dirty flag propagation
      */
-    public function __construct(int $maxMB = 50)
+    public function __construct(int $maxMB = 50, ?Table $dirty = null)
     {
         $this->maxBytes = \max(1, $maxMB) * 1024 * 1024;
+        $this->dirty = $dirty;
         $this->lock = new Lock(SWOOLE_MUTEX);
     }
 
@@ -120,11 +121,8 @@ class Cache
     {
         $this->lock->lock();
         try {
-            // Cleanup dirty flags on get as well to prevent unbounded growth
-            $this->cleanupDirtyFlags();
-
-            if (isset($this->dirty[$projectId])) {
-                unset($this->dirty[$projectId]);
+            if ($this->isDirty($projectId)) {
+                $this->clearDirty($projectId);
                 if (isset($this->cache[$projectId])) {
                     $this->removeInternal($projectId);
                 }
@@ -151,7 +149,7 @@ class Cache
     {
         $this->lock->lock();
         try {
-            unset($this->dirty[$projectId]);
+            $this->clearDirty($projectId);
 
             $schemaSize = $this->calculateSchemaSize($schema);
 
@@ -180,9 +178,6 @@ class Cache
             $this->memorySizes[$projectId] = $schemaSize;
             $this->accessTimes[$projectId] = \hrtime(true);
             $this->currentBytes += $schemaSize;
-
-            // Periodically clean up stale dirty flags
-            $this->cleanupDirtyFlags();
         } finally {
             $this->lock->unlock();
         }
@@ -211,20 +206,15 @@ class Cache
 
     /**
      * Mark a project's schema as dirty (needs rebuild).
+     * Uses shared Swoole Table to propagate across all workers when available,
+     * otherwise falls back to local array (for single-worker/test scenarios).
      */
     public function setDirty(string $projectId): void
     {
-        $this->lock->lock();
-        try {
-            // Enforce maximum dirty flag count to prevent unbounded growth
-            if (\count($this->dirty) >= self::MAX_DIRTY_FLAGS && !isset($this->dirty[$projectId])) {
-                // Remove oldest dirty flag
-                $oldest = \array_key_first($this->dirty);
-                unset($this->dirty[$oldest]);
-            }
-            $this->dirty[$projectId] = \time();
-        } finally {
-            $this->lock->unlock();
+        if ($this->dirty !== null) {
+            $this->dirty->set($projectId, ['timestamp' => \time()]);
+        } else {
+            $this->local[$projectId] = \time();
         }
     }
 
@@ -233,7 +223,22 @@ class Cache
      */
     public function isDirty(string $projectId): bool
     {
-        return isset($this->dirty[$projectId]);
+        if ($this->dirty !== null) {
+            return $this->dirty->exists($projectId);
+        }
+        return isset($this->local[$projectId]);
+    }
+
+    /**
+     * Clear a project's dirty flag (from shared table or local).
+     */
+    private function clearDirty(string $projectId): void
+    {
+        if ($this->dirty !== null) {
+            $this->dirty->del($projectId);
+        } else {
+            unset($this->local[$projectId]);
+        }
     }
 
     /**
@@ -261,7 +266,6 @@ class Cache
         unset($this->cache[$projectId]);
         unset($this->accessTimes[$projectId]);
         unset($this->memorySizes[$projectId]);
-        unset($this->dirty[$projectId]);
     }
 
     /**
@@ -274,7 +278,7 @@ class Cache
             $this->cache = [];
             $this->accessTimes = [];
             $this->memorySizes = [];
-            $this->dirty = [];
+            $this->local = [];
             $this->currentBytes = 0;
         } finally {
             $this->lock->unlock();
@@ -323,23 +327,6 @@ class Cache
     }
 
     /**
-     * Remove dirty flags older than TTL to prevent unbounded growth.
-     * Only cleans up flags for projects without cached schemas.
-     */
-    private function cleanupDirtyFlags(): void
-    {
-        $cutoff = \time() - self::DIRTY_FLAG_TTL;
-
-        foreach ($this->dirty as $projectId => $timestamp) {
-            // Only clean up if there's no cached schema - if there is one,
-            // the dirty flag must persist until the schema is accessed
-            if ($timestamp < $cutoff && !isset($this->cache[$projectId])) {
-                unset($this->dirty[$projectId]);
-            }
-        }
-    }
-
-    /**
      * Get cache statistics for monitoring.
      *
      * @return array{schemas: int, memoryMB: float, maxMemoryMB: int, dirty: int}
@@ -350,7 +337,9 @@ class Cache
             'schemas' => \count($this->cache),
             'memoryMB' => \round($this->currentBytes / 1024 / 1024, 2),
             'maxMemoryMB' => $this->getMaxSizeMB(),
-            'dirty' => \count($this->dirty),
+            'dirty' => $this->dirty !== null
+                ? $this->dirty->count()
+                : \count($this->local),
         ];
     }
 }

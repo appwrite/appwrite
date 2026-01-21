@@ -64,6 +64,7 @@ class Swoole extends Promise
                 return;
             }
 
+            \ksort($result);
             $resolve($result);
         });
     }

@@ -7,7 +7,6 @@ use Appwrite\GraphQL\Types\Registry;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema as GQLSchema;
-use stdClass;
 use Utopia\App;
 use Utopia\Console;
 use Utopia\Route;
