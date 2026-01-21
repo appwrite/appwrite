@@ -220,7 +220,7 @@ class Migrations extends Action
                 $credentials['port'],
             ),
             SourceAppwrite::getName() => new SourceAppwrite(
-                $credentials['endpoint'] === 'http://localhost/v1' ? 'http://appwrite/v1' : $credentials['endpoint'],
+                $credentials['projectId'],
                 $credentials['endpoint'],
                 $credentials['apiKey'],
                 $getDatabasesDB,

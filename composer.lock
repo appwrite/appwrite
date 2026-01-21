@@ -4584,12 +4584,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "0d0129f15d4daaf6ee14ac361a60036997569382"
+                "reference": "f6eadfcd91b60f59cf6ea3af14659466caf196b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0d0129f15d4daaf6ee14ac361a60036997569382",
-                "reference": "0d0129f15d4daaf6ee14ac361a60036997569382",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f6eadfcd91b60f59cf6ea3af14659466caf196b8",
+                "reference": "f6eadfcd91b60f59cf6ea3af14659466caf196b8",
                 "shasum": ""
             },
             "require": {
@@ -9110,5 +9110,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.9.0"
 }
