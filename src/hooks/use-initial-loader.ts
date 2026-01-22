@@ -36,6 +36,7 @@ export function useInitialLoader() {
       !(location.pathname === '/') &&
       (location.pathname.startsWith('/protected') ||
         location.pathname.startsWith('/organizations') ||
+        location.pathname.startsWith('/projects') ||
         location.pathname.startsWith('/console')),
     [location.pathname, isAuthRoute]
   )
