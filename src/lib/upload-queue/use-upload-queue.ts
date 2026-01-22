@@ -71,14 +71,14 @@ export function useUploadQueue(projectId?: string, bucketId?: string) {
 
     const pollIfNeeded = async () => {
       if (!mounted) return
-      
+
       const items = await uploadManager.getBucketUploads(projectId, bucketId)
       if (!mounted) return
-      
+
       const hasActive = items.some(
-        (u) => u.status === 'pending' || u.status === 'uploading'
+        (u) => u.status === 'pending' || u.status === 'uploading',
       )
-      
+
       if (hasActive && !interval) {
         // Start polling
         interval = setInterval(() => {

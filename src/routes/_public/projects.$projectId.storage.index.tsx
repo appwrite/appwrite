@@ -36,7 +36,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
         // Fetch first page of buckets - blocks navigation until ready
         queryClient.fetchQuery({
           queryKey: ['buckets', 'project', projectId, 0, DEFAULT_PAGE_SIZE, ''],
-          queryFn: () => fetchProjectBuckets(projectId, 0, DEFAULT_PAGE_SIZE, ''),
+          queryFn: () =>
+            fetchProjectBuckets(projectId, 0, DEFAULT_PAGE_SIZE, ''),
           staleTime: 30 * 1000, // 30 seconds - uses cached data if fresh
         }),
         // Fetch organization plan if we have a teamId - CRITICAL for limit checking

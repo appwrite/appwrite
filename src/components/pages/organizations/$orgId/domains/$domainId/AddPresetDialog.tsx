@@ -121,8 +121,9 @@ export function AddPresetDialog({
             <div className="mt-4 rounded-lg border border-border bg-muted/30 p-3">
               <p className="text-[12px] text-muted-foreground mb-1">
                 This will add {presetRecords.dnsRecords?.length || 0} DNS record
-                {(presetRecords.dnsRecords?.length || 0) !== 1 ? 's' : ''} for{' '}
-                {selectedPresetLabel}
+                {(presetRecords.dnsRecords?.length || 0) !== 1
+                  ? 's'
+                  : ''} for {selectedPresetLabel}
               </p>
             </div>
           )}

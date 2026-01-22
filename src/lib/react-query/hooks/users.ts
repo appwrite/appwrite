@@ -9,10 +9,7 @@ import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
 import type { User } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
-import {
-  DEFAULT_STALE_TIME,
-  DEFAULT_PAGE_SIZE,
-} from './constants'
+import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS

@@ -53,14 +53,14 @@ export function useActiveUploads() {
     // Use a longer interval (5 seconds) to reduce CPU usage
     const pollIfNeeded = async () => {
       if (!mounted) return false
-      
+
       const uploads = await uploadManager.getActiveUploads()
       if (!mounted) return false
-      
+
       const hasActive = uploads.some(
-        (u) => u.status === 'pending' || u.status === 'uploading'
+        (u) => u.status === 'pending' || u.status === 'uploading',
       )
-      
+
       if (hasActive && !interval) {
         // Start polling
         interval = setInterval(() => {
@@ -73,17 +73,17 @@ export function useActiveUploads() {
         clearInterval(interval)
         interval = null
       }
-      
+
       return hasActive
     }
 
     // Only check periodically if we have active uploads
     // This prevents unnecessary checks when idle
     let checkInterval: NodeJS.Timeout | null = null
-    
+
     const startCheckInterval = () => {
       if (checkInterval || !mounted) return
-      
+
       checkInterval = setInterval(async () => {
         if (!mounted) {
           if (checkInterval) {
@@ -92,9 +92,9 @@ export function useActiveUploads() {
           }
           return
         }
-        
+
         const hasActive = await pollIfNeeded()
-        
+
         // If no active uploads, stop checking
         if (!hasActive && checkInterval) {
           clearInterval(checkInterval)

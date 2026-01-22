@@ -47,7 +47,6 @@ export function CreateProjectDialog({
     error: regionsError,
   } = useRegions()
 
-
   // Set default region when regions load
   useEffect(() => {
     if (regions.length > 0 && !selectedRegion) {

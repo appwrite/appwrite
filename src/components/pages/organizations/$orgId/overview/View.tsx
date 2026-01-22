@@ -566,7 +566,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
   // Get total count from the first page query (no search) - already fetched in route loader
   // This is used for limit checking and doesn't change when searching
-  const { data: totalProjectsData, isLoading: totalProjectsLoading } = useQuery({
+  const { data: totalProjectsData } = useQuery({
     queryKey: ['projects', 'active', 0, '', orgId],
     queryFn: () => fetchActiveProjects(orgTeamId!, 0, PROJECTS_PER_PAGE, ''),
     staleTime: 30 * 1000, // 30 seconds
@@ -699,8 +699,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const totalProjectsCount = totalProjectsData?.total || 0
 
   // Fetch organization plan to check if additional members are supported
-  const { plan: organizationPlan, isLoading: planLoading } =
-    useOrganizationPlan(orgId)
+  const { plan: organizationPlan } = useOrganizationPlan(orgId)
 
   // Check if the plan supports additional members
   // Only disable if seats addon is explicitly disabled with supported = false

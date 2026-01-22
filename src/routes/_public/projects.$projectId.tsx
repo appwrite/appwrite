@@ -28,13 +28,15 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
         // Fetch organization plan if we have a teamId (critical for header/limit checking)
         // Use ensureQueryData to avoid duplicate calls if already fetching
         if (projectData?.teamId) {
-          await queryClient.ensureQueryData({
-            queryKey: ['organization', 'plan', projectData.teamId],
-            queryFn: () => fetchOrganizationPlan(projectData.teamId),
-            staleTime: 5 * 60 * 1000, // 5 minutes
-          }).catch(() => {
-            // Ignore errors for optional prefetch - plan might not be available
-          })
+          await queryClient
+            .ensureQueryData({
+              queryKey: ['organization', 'plan', projectData.teamId],
+              queryFn: () => fetchOrganizationPlan(projectData.teamId),
+              staleTime: 5 * 60 * 1000, // 5 minutes
+            })
+            .catch(() => {
+              // Ignore errors for optional prefetch - plan might not be available
+            })
         }
       } catch (error) {
         // If authentication is not set up yet, the component will handle it via RequireAuth

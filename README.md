@@ -25,6 +25,7 @@ window.performanceMonitor.generateReport()
 ### When to Use
 
 Use the performance monitor when:
+
 - CPU usage is unexpectedly high
 - The app feels sluggish
 - You need to identify what's causing performance issues

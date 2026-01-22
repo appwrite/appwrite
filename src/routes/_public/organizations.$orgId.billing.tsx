@@ -29,13 +29,15 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
     }
 
     // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
-    queryClient.prefetchQuery({
-      queryKey: ['organizations', 'console'],
-      queryFn: fetchOrganizations,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }).catch(() => {
-      // Don't block on optional data
-    })
+    queryClient
+      .prefetchQuery({
+        queryKey: ['organizations', 'console'],
+        queryFn: fetchOrganizations,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      })
+      .catch(() => {
+        // Don't block on optional data
+      })
 
     // Fetch critical data before rendering to prevent layout shifts
     // Note: Organization plan is already loaded in parent route's loader
@@ -114,42 +116,51 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
 
     // Prefetch optional payment method details (non-blocking)
     if (orgData?.paymentMethodId) {
-      queryClient.prefetchQuery({
-        queryKey: ['payment-method', orgData.paymentMethodId],
-        queryFn: async () => {
-          const { fetchPaymentMethod } = await import('@/lib/react-query/hooks')
-          return fetchPaymentMethod(orgData.paymentMethodId)
-        },
-        staleTime: 5 * 60 * 1000,
-      }).catch(() => {
-        // Ignore errors
-      })
+      queryClient
+        .prefetchQuery({
+          queryKey: ['payment-method', orgData.paymentMethodId],
+          queryFn: async () => {
+            const { fetchPaymentMethod } =
+              await import('@/lib/react-query/hooks')
+            return fetchPaymentMethod(orgData.paymentMethodId)
+          },
+          staleTime: 5 * 60 * 1000,
+        })
+        .catch(() => {
+          // Ignore errors
+        })
     }
 
     if (orgData?.backupPaymentMethodId) {
-      queryClient.prefetchQuery({
-        queryKey: ['payment-method', orgData.backupPaymentMethodId],
-        queryFn: async () => {
-          const { fetchPaymentMethod } = await import('@/lib/react-query/hooks')
-          return fetchPaymentMethod(orgData.backupPaymentMethodId)
-        },
-        staleTime: 5 * 60 * 1000,
-      }).catch(() => {
-        // Ignore errors
-      })
+      queryClient
+        .prefetchQuery({
+          queryKey: ['payment-method', orgData.backupPaymentMethodId],
+          queryFn: async () => {
+            const { fetchPaymentMethod } =
+              await import('@/lib/react-query/hooks')
+            return fetchPaymentMethod(orgData.backupPaymentMethodId)
+          },
+          staleTime: 5 * 60 * 1000,
+        })
+        .catch(() => {
+          // Ignore errors
+        })
     }
 
     if (orgData?.billingAddressId) {
-      queryClient.prefetchQuery({
-        queryKey: ['billing-address', orgData.billingAddressId],
-        queryFn: async () => {
-          const { fetchBillingAddress } = await import('@/lib/react-query/hooks')
-          return fetchBillingAddress(orgData.billingAddressId)
-        },
-        staleTime: 5 * 60 * 1000,
-      }).catch(() => {
-        // Ignore errors
-      })
+      queryClient
+        .prefetchQuery({
+          queryKey: ['billing-address', orgData.billingAddressId],
+          queryFn: async () => {
+            const { fetchBillingAddress } =
+              await import('@/lib/react-query/hooks')
+            return fetchBillingAddress(orgData.billingAddressId)
+          },
+          staleTime: 5 * 60 * 1000,
+        })
+        .catch(() => {
+          // Ignore errors
+        })
     }
   },
   component: BillingPage,

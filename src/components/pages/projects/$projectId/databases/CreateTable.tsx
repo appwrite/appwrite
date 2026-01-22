@@ -136,9 +136,7 @@ export function CreateTable({
                 placeholder="Leave blank to auto-generate"
               />
               {errors.tableId && (
-                <p className="text-[12px] text-destructive">
-                  {errors.tableId}
-                </p>
+                <p className="text-[12px] text-destructive">{errors.tableId}</p>
               )}
             </div>
           </div>

@@ -10,10 +10,7 @@ import { Query } from '@appwrite.io/console'
 import type { Team, TeamMember } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useOrganizations } from './organizations'
-import {
-  DEFAULT_STALE_TIME,
-  DEFAULT_PAGE_SIZE,
-} from './constants'
+import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
 
 // ============================================================================
 // QUERY FUNCTIONS

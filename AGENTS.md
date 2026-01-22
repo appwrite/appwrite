@@ -292,12 +292,14 @@ async function fetchDatabases(projectId: string): Promise<Models.DatabaseList> {
 ### loader for Data Loading
 
 **loader:**
+
 - **Blocks navigation** until all awaited promises complete
 - Runs for each route, ensuring data is ready before component renders
 - Best for: All critical data (layout data, page-specific data)
 - Use `await` on all critical data fetches to ensure proper blocking
 
 **beforeLoad:**
+
 - Only use for redirects or validation (not data loading)
 - Runs before loader, but should not be used for data fetching
 
@@ -309,6 +311,7 @@ async function fetchDatabases(projectId: string): Promise<Models.DatabaseList> {
 ### React Query Methods
 
 **fetchQuery / ensureQueryData** (use in loaders for critical data):
+
 - **Blocks navigation** until data is ready when properly awaited
 - `fetchQuery`: Always fetches (ignores cache)
 - `ensureQueryData`: Uses cache if fresh, fetches if stale/missing
@@ -316,6 +319,7 @@ async function fetchDatabases(projectId: string): Promise<Models.DatabaseList> {
 - **Always await** these calls to ensure navigation blocks until data is ready
 
 **prefetchQuery** (use for optional data):
+
 - **Does NOT block** navigation
 - Fetches in background, doesn't wait
 - Use for: Optional data, supporting data, non-critical prefetching
@@ -340,13 +344,15 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
 
     // Organization plan - blocks navigation until ready
     if (projectData?.teamId) {
-      await queryClient.ensureQueryData({
-        queryKey: ['organization', 'plan', projectData.teamId],
-        queryFn: () => fetchOrganizationPlan(projectData.teamId),
-        staleTime: 5 * 60 * 1000,
-      }).catch(() => {
-        // Ignore errors for optional data
-      })
+      await queryClient
+        .ensureQueryData({
+          queryKey: ['organization', 'plan', projectData.teamId],
+          queryFn: () => fetchOrganizationPlan(projectData.teamId),
+          staleTime: 5 * 60 * 1000,
+        })
+        .catch(() => {
+          // Ignore errors for optional data
+        })
     }
 
     // Page-specific critical data - blocks navigation until ready
@@ -357,12 +363,14 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
     })
 
     // Optional data - doesn't block
-    queryClient.prefetchQuery({
-      queryKey: ['optional-data', projectId],
-      queryFn: () => fetchOptional(projectId),
-    }).catch(() => {
-      // Don't block navigation on optional data errors
-    })
+    queryClient
+      .prefetchQuery({
+        queryKey: ['optional-data', projectId],
+        queryFn: () => fetchOptional(projectId),
+      })
+      .catch(() => {
+        // Don't block navigation on optional data errors
+      })
   },
 })
 ```

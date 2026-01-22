@@ -245,7 +245,7 @@ export function DatabasesListView() {
 
   // Get total count from the first page query (no search) - already fetched in route loader
   // This is used for limit checking and doesn't change when searching
-  const { data: totalDatabasesData, isLoading: totalDatabasesLoading } = useQuery({
+  const { data: totalDatabasesData } = useQuery({
     queryKey: ['databases', 'project', projectId, 0, pageSize, ''],
     queryFn: () => fetchProjectDatabases(projectId!, 0, pageSize, ''),
     enabled: !!projectId,
@@ -257,11 +257,10 @@ export function DatabasesListView() {
   const paginatedDatabases = apiDatabases
 
   // Get project to get teamId for organization plan
-  const { project, isLoading: projectLoading } = useProject(projectId)
+  const { project } = useProject(projectId)
 
   // Get organization plan to check limits
-  const { plan: organizationPlan, isLoading: planLoading } =
-    useOrganizationPlan(project?.teamId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
 
   // Total count of all databases (without search) - for limit checking
   const totalDatabasesCount = totalDatabasesData?.total || 0
@@ -421,7 +420,9 @@ export function DatabasesListView() {
         contentAfterBorder={
           // Data is prefetched in route loader, only render if data exists
           // PlanLimitWarning handles its own visibility logic
-          project && organizationPlan !== undefined && totalDatabasesData !== undefined ? (
+          project &&
+          organizationPlan !== undefined &&
+          totalDatabasesData !== undefined ? (
             <PlanLimitWarning
               currentCount={totalDatabasesCount}
               limit={databasesLimit}
@@ -1261,7 +1262,11 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
                 // Navigate to the database rows view with '-' as tableId
                 navigate({
                   to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                  params: { projectId, databaseId: newDatabaseId, tableId: '-' },
+                  params: {
+                    projectId,
+                    databaseId: newDatabaseId,
+                    tableId: '-',
+                  },
                 })
               }}
             >
@@ -1270,7 +1275,11 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
               </SelectTrigger>
               <SelectContent>
                 {sortedDatabases.map((db) => (
-                  <SelectItem key={db.$id} value={db.$id} className="text-[13px]">
+                  <SelectItem
+                    key={db.$id}
+                    value={db.$id}
+                    className="text-[13px]"
+                  >
                     {db.name}
                   </SelectItem>
                 ))}
@@ -1858,7 +1867,6 @@ export function DatabaseOverview({
     }
   }, [database])
 
-
   // Fetch tables for the database with pagination
   const {
     tables: dbTables,
@@ -2319,7 +2327,9 @@ export function DatabaseOverview({
         onSearchChange={activeTab === 'tables' ? handleSearchChange : undefined}
         createLabel={activeTab === 'tables' ? 'Create table' : undefined}
         onCreate={
-          activeTab === 'tables' ? () => setCreateTableDialogOpen(true) : undefined
+          activeTab === 'tables'
+            ? () => setCreateTableDialogOpen(true)
+            : undefined
         }
         beforeCreateButtons={
           activeTab === 'tables' ? (
@@ -2704,10 +2714,10 @@ export function DatabaseOverview({
                     : 'Create your first table to get started'}
                 </p>
                 {!searchValue && (
-                <Button onClick={() => setCreateTableDialogOpen(true)}>
-                  <Plus className="mr-1.5 h-4 w-4" />
-                  Create table
-                </Button>
+                  <Button onClick={() => setCreateTableDialogOpen(true)}>
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    Create table
+                  </Button>
                 )}
               </div>
             )}
@@ -6082,8 +6092,9 @@ function ColumnsSpreadsheet({
 
   // Always include mock columns alongside API columns
   const mockColumns = generateMockColumns()
-  const displayColumns = columns.length > 0 ? [...mockColumns, ...columns] : mockColumns
-  
+  const displayColumns =
+    columns.length > 0 ? [...mockColumns, ...columns] : mockColumns
+
   // Combine regular columns with suggestions
   const allColumns = [...displayColumns, ...suggestedColumns]
 
@@ -6520,8 +6531,11 @@ function IndexesSpreadsheet({
   const queryClient = useQueryClient()
 
   // Fetch indexes from the project SDK
-  const { indexes: apiIndexes, isLoading: indexesLoading } =
-    useProjectTableIndexes(projectId, databaseId, tableId)
+  const { indexes: apiIndexes } = useProjectTableIndexes(
+    projectId,
+    databaseId,
+    tableId,
+  )
 
   // Fetch columns for index creation
   const { columns: availableColumns } = useProjectTableColumns(
@@ -6880,8 +6894,9 @@ function IndexesSpreadsheet({
         ]
       : []),
   ]
-  
-  const displayIndexes = mappedIndexes.length > 0 ? [...mockIndexes, ...mappedIndexes] : mockIndexes
+
+  const displayIndexes =
+    mappedIndexes.length > 0 ? [...mockIndexes, ...mappedIndexes] : mockIndexes
 
   // Combine regular indexes with suggestions
   const allIndexes = [...displayIndexes, ...suggestedIndexes]

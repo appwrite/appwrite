@@ -18,13 +18,15 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
     const { queryClient } = context
 
     // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
-    queryClient.prefetchQuery({
-      queryKey: ['organizations', 'console'],
-      queryFn: fetchOrganizations,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }).catch(() => {
-      // Don't block on optional data
-    })
+    queryClient
+      .prefetchQuery({
+        queryKey: ['organizations', 'console'],
+        queryFn: fetchOrganizations,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      })
+      .catch(() => {
+        // Don't block on optional data
+      })
 
     // Fetch critical page-specific data before rendering to prevent layout shifts
     // Note: Organization plan is already loaded in parent route's loader

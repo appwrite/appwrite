@@ -78,15 +78,15 @@ class PerformanceMonitor {
     try {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-        // Silent monitoring - long tasks data available via generateReport()
+          // Silent monitoring - long tasks data available via generateReport()
         }
       })
 
       observer.observe({ entryTypes: ['longtask'] })
       this.observers.push(observer)
-      } catch (e) {
-        // Long task observer not supported - silently fail
-      }
+    } catch (e) {
+      // Long task observer not supported - silently fail
+    }
   }
 
   /**
@@ -104,7 +104,7 @@ class PerformanceMonitor {
 
       if (currentTime >= lastTime + intervalMs) {
         const fps = Math.round((frames * 1000) / (currentTime - lastTime))
-      // Silent monitoring - FPS data available via generateReport()
+        // Silent monitoring - FPS data available via generateReport()
         frames = 0
         lastTime = currentTime
       }
@@ -124,7 +124,10 @@ class PerformanceMonitor {
     const originalSetInterval = window.setInterval
     const originalClearInterval = window.clearInterval
 
-    const activeIntervals = new Map<number, { callback: string; delay: number; startTime: number }>()
+    const activeIntervals = new Map<
+      number,
+      { callback: string; delay: number; startTime: number }
+    >()
 
     window.setInterval = function (
       callback: Function,
@@ -181,7 +184,9 @@ class PerformanceMonitor {
     const logQueries = () => {
       try {
         const queries = client.getQueryCache().getAll()
-        const activeQueries = queries.filter((q: any) => q.state.status === 'pending')
+        const activeQueries = queries.filter(
+          (q: any) => q.state.status === 'pending',
+        )
         const staleQueries = queries.filter((q: any) => q.state.isStale)
         const refetchingQueries = queries.filter((q: any) => q.state.isFetching)
 
@@ -215,7 +220,9 @@ class PerformanceMonitor {
           staleQueries.slice(0, 10).forEach((q: any) => {
             console.log(q.queryKey, {
               isStale: q.state.isStale,
-              dataUpdatedAt: new Date(q.state.dataUpdatedAt).toLocaleTimeString(),
+              dataUpdatedAt: new Date(
+                q.state.dataUpdatedAt,
+              ).toLocaleTimeString(),
             })
           })
           console.groupEnd()
@@ -229,7 +236,7 @@ class PerformanceMonitor {
 
     // Call immediately when monitorReactQueryQueries() is invoked
     logQueries()
-    
+
     // Don't auto-log continuously - call logQueries() manually or use generateReport()
   }
 
@@ -241,10 +248,13 @@ class PerformanceMonitor {
     if (typeof window === 'undefined') return
 
     // Use Performance API to estimate CPU usage
-    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
+    const navigation = performance.getEntriesByType(
+      'navigation',
+    )[0] as PerformanceNavigationTiming
     if (navigation) {
       const totalTime = navigation.loadEventEnd - navigation.fetchStart
-      const scriptTime = navigation.domContentLoadedEventEnd - navigation.domInteractive
+      const scriptTime =
+        navigation.domContentLoadedEventEnd - navigation.domInteractive
       const cpuUsage = (scriptTime / totalTime) * 100
       console.log(`📈 Estimated CPU usage: ${cpuUsage.toFixed(2)}%`)
     }
@@ -267,12 +277,12 @@ class PerformanceMonitor {
     if (typeof window === 'undefined') return
 
     console.group('📊 Performance Report')
-    
+
     // Log metrics
     console.group('🔍 Performance Metrics')
     this.logMetrics()
     console.groupEnd()
-    
+
     // Log CPU usage
     this.getCPUUsage()
 

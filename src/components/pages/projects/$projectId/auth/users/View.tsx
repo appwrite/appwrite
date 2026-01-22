@@ -164,7 +164,6 @@ export function UserDetailView() {
   const location = useLocation()
   const navigate = useNavigate()
 
-
   // Early return if missing required params
   if (!projectId || !userId) {
     return (
@@ -197,7 +196,6 @@ export function UserDetailView() {
     isError,
   } = useUser(projectId, userId)
   const { data: mfaFactors } = useUserMFAFactors(projectId, userId)
-
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {

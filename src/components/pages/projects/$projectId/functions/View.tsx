@@ -110,7 +110,7 @@ export function FunctionsView() {
 
   // Get total count from the first page query (no search) - already fetched in route loader
   // This is used for limit checking and doesn't change when searching
-  const { data: totalFunctionsData, isLoading: totalFunctionsLoading } = useQuery({
+  const { data: totalFunctionsData } = useQuery({
     queryKey: ['functions', 'project', projectId, 0, pageSize, undefined],
     queryFn: () => fetchProjectFunctions(projectId!, 0, pageSize, undefined),
     enabled: !!projectId,
@@ -119,11 +119,10 @@ export function FunctionsView() {
   })
 
   // Get project to get teamId for organization plan
-  const { project, isLoading: projectLoading } = useProject(projectId)
+  const { project } = useProject(projectId)
 
   // Get organization plan to check limits
-  const { plan: organizationPlan, isLoading: planLoading } =
-    useOrganizationPlan(project?.teamId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
 
   // Total count of all functions (without search) - for limit checking
   const totalFunctionsCount = totalFunctionsData?.total || 0

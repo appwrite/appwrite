@@ -400,7 +400,6 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         },
       )
 
-
       return {
         projectId: project.projectId || project.$id || project.id,
         projectName: project.projectName || project.name || 'Unknown Project',
