@@ -14,9 +14,10 @@ export const Route = createFileRoute(
     const { projectId, databaseId } = params
     const { queryClient } = context
 
-    // Prefetch database
+    // Fetch critical data before rendering to prevent layout shifts
+    // fetchQuery blocks navigation until ready
     if (projectId && databaseId) {
-      await queryClient.prefetchQuery({
+      await queryClient.fetchQuery({
         queryKey: ['database', 'project', projectId, databaseId],
         queryFn: () => fetchProjectDatabase(projectId, databaseId),
         staleTime: 30 * 1000, // 30 seconds

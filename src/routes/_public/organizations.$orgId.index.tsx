@@ -17,23 +17,18 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
     const { orgId } = params
     const { queryClient } = context
 
-    // Prefetch organizations if not already loaded
-    await queryClient.prefetchQuery({
+    // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
+    queryClient.prefetchQuery({
       queryKey: ['organizations', 'console'],
       queryFn: fetchOrganizations,
       staleTime: 5 * 60 * 1000, // 5 minutes
+    }).catch(() => {
+      // Don't block on optional data
     })
 
-    // Fetch critical data before rendering to prevent layout shifts
+    // Fetch critical page-specific data before rendering to prevent layout shifts
+    // Note: Organization plan is already loaded in parent route's beforeLoad
     if (orgId) {
-      // Fetch organization plan - blocks navigation until ready
-      // Use ensureQueryData to avoid duplicate calls if already fetching
-      await queryClient.ensureQueryData({
-        queryKey: ['organization', 'plan', orgId],
-        queryFn: () => fetchOrganizationPlan(orgId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
-
       await Promise.all([
         // Fetch first page of projects - blocks navigation until ready
         queryClient.ensureQueryData({

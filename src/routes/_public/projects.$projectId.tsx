@@ -6,7 +6,7 @@ import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
-  loader: async ({ params, context }) => {
+  beforeLoad: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -16,7 +16,8 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     const { queryClient } = context
 
     if (projectId) {
-      // Fetch project data (needed for header/sidebar) - blocks navigation
+      // Fetch project data (needed for header/sidebar) - CRITICAL: blocks rendering
+      // Use beforeLoad to ensure data is available before any child routes render
       // Use ensureQueryData to avoid duplicate calls and handle auth errors gracefully
       try {
         const projectData = await queryClient.ensureQueryData({
@@ -25,7 +26,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
           staleTime: 5 * 60 * 1000, // 5 minutes
         })
 
-        // Prefetch organization plan if we have a teamId (optional, for header)
+        // Fetch organization plan if we have a teamId (critical for header/limit checking)
         // Use ensureQueryData to avoid duplicate calls if already fetching
         if (projectData?.teamId) {
           await queryClient.ensureQueryData({
@@ -33,15 +34,21 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
             queryFn: () => fetchOrganizationPlan(projectData.teamId),
             staleTime: 5 * 60 * 1000, // 5 minutes
           }).catch(() => {
-            // Ignore errors for optional prefetch
+            // Ignore errors for optional prefetch - plan might not be available
           })
         }
+
+        // Return project data to be merged into context for child routes
+        return { projectData }
       } catch (error) {
         // If authentication is not set up yet, the component will handle it via RequireAuth
         // Don't block navigation - let the component handle the error
-        console.warn('Failed to fetch project in loader:', error)
+        console.warn('Failed to fetch project in beforeLoad:', error)
+        return {}
       }
     }
+
+    return {}
   },
   component: ProjectLayout,
 })

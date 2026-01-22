@@ -244,18 +244,6 @@ export function FunctionsView() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* DEBUG: Plan limit and current count */}
-      <div className="border-b border-red-500 bg-red-50 dark:bg-red-950/20 px-4 py-2 text-xs">
-        <div className="mx-auto max-w-7xl">
-          <strong>DEBUG:</strong> project={project ? 'exists' : 'missing'}, 
-          organizationPlan={organizationPlan !== undefined ? 'exists' : 'missing'}, 
-          totalFunctionsData={totalFunctionsData !== undefined ? 'exists' : 'missing'}, 
-          functionsLimit={functionsLimit}, 
-          totalFunctionsCount={totalFunctionsCount}, 
-          planLoading={planLoading ? 'true' : 'false'}, 
-          totalFunctionsLoading={totalFunctionsLoading ? 'true' : 'false'}
-        </div>
-      </div>
       <ServiceHeader
         title="Functions"
         tabs={tabs}

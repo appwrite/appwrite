@@ -10,7 +10,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/_public/organizations/$orgId')({
   validateSearch: searchSchema,
-  loader: async ({ params, context }) => {
+  beforeLoad: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -19,12 +19,34 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     const { orgId } = params
     const { queryClient } = context
 
-    // Prefetch organizations if not already loaded
-    await queryClient.prefetchQuery({
+    // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
+    queryClient.prefetchQuery({
       queryKey: ['organizations', 'console'],
       queryFn: fetchOrganizations,
       staleTime: 5 * 60 * 1000, // 5 minutes
+    }).catch(() => {
+      // Don't block on optional data
     })
+
+    // Fetch organization plan - CRITICAL: blocks rendering until ready
+    // Use beforeLoad to ensure plan is available before any child routes render
+    if (orgId) {
+      try {
+        await queryClient.ensureQueryData({
+          queryKey: ['organization', 'plan', orgId],
+          queryFn: () => {
+            const { fetchOrganizationPlan } = require('@/lib/react-query/hooks')
+            return fetchOrganizationPlan(orgId)
+          },
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        })
+      } catch (error) {
+        // Don't block navigation if plan fetch fails - component will handle
+        console.warn('Failed to fetch organization plan in beforeLoad:', error)
+      }
+    }
+
+    return {}
   },
   component: OrganizationLayout,
 })

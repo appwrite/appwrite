@@ -17,15 +17,16 @@ export const Route = createFileRoute(
     const { projectId, databaseId } = params
     const { queryClient } = context
 
-    // Prefetch database and all tables for visualizer
+    // Fetch critical data before rendering to prevent layout shifts
+    // fetchQuery blocks navigation until ready
     if (projectId && databaseId) {
       await Promise.all([
-        queryClient.prefetchQuery({
+        queryClient.fetchQuery({
           queryKey: ['database', 'project', projectId, databaseId],
           queryFn: () => fetchProjectDatabase(projectId, databaseId),
           staleTime: 30 * 1000, // 30 seconds
         }),
-        queryClient.prefetchQuery({
+        queryClient.fetchQuery({
           queryKey: ['tables', 'visualizer', 'project', projectId, databaseId],
           queryFn: () =>
             fetchAllProjectTablesForVisualizer(projectId, databaseId),

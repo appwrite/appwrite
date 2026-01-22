@@ -19,18 +19,20 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (projectId && userId) {
+      // Fetch critical data before rendering to prevent layout shifts
+      // fetchQuery blocks navigation until ready
       await Promise.all([
-        queryClient.prefetchQuery({
+        queryClient.fetchQuery({
           queryKey: ['user', 'project', projectId, userId],
           queryFn: () => fetchUser(projectId, userId),
           staleTime: 30 * 1000,
         }),
-        queryClient.prefetchQuery({
+        queryClient.fetchQuery({
           queryKey: ['user', 'sessions', 'project', projectId, userId],
           queryFn: () => fetchUserSessions(projectId, userId),
           staleTime: 30 * 1000,
         }),
-        queryClient.prefetchQuery({
+        queryClient.fetchQuery({
           queryKey: ['user', 'mfa-factors', 'project', projectId, userId],
           queryFn: () => fetchUserMFAFactors(projectId, userId),
           staleTime: 30 * 1000,
