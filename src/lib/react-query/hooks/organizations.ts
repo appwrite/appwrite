@@ -1002,6 +1002,68 @@ export function organizationPlanQueryOptions(orgId: string | null | undefined) {
   })
 }
 
+/**
+ * Query options for fetching all available billing plans
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function billingPlansQueryOptions() {
+  return queryOptions({
+    queryKey: ['billing-plans'],
+    queryFn: fetchBillingPlans,
+    staleTime: LONG_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    gcTime: Infinity, // Keep in cache forever
+  })
+}
+
+/**
+ * Query options for fetching organization usage
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function organizationUsageQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['organization-usage', organizationId],
+    queryFn: () => fetchOrganizationUsage(organizationId!),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching all projects for an organization
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function organizationProjectsQueryOptions(
+  organizationId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['organization-projects', organizationId],
+    queryFn: () => fetchOrganizationProjects(organizationId!),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -1782,16 +1844,9 @@ export function useDeleteBillingAddress() {
  * @returns Plans list with loading state
  */
 export function useBillingPlans() {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['billing-plans'],
-    queryFn: fetchBillingPlans,
-    staleTime: LONG_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
-    gcTime: Infinity, // Keep in cache forever
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    billingPlansQueryOptions(),
+  )
 
   return {
     plans: data?.plans || {},
@@ -1838,18 +1893,9 @@ export function useCouponAccount(couponCode: string | null | undefined) {
 export function useOrganizationUsage(
   organizationId: string | null | undefined,
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['organization-usage', organizationId],
-    queryFn: () => fetchOrganizationUsage(organizationId!),
-    enabled: !!organizationId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
-    // Don't keep disabled queries in cache
-    gcTime: organizationId ? 5 * 60 * 1000 : 0,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    organizationUsageQueryOptions(organizationId),
+  )
 
   return {
     usage: data,
@@ -1868,18 +1914,9 @@ export function useOrganizationUsage(
 export function useOrganizationProjects(
   organizationId: string | null | undefined,
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['organization-projects', organizationId],
-    queryFn: () => fetchOrganizationProjects(organizationId!),
-    enabled: !!organizationId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
-    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
-    refetchOnReconnect: false, // Prevent refetch on network reconnect
-    // Don't keep disabled queries in cache
-    gcTime: organizationId ? 5 * 60 * 1000 : 0,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    organizationProjectsQueryOptions(organizationId),
+  )
 
   return {
     projects: data?.projects || [],

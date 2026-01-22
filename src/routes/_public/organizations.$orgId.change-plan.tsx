@@ -3,14 +3,13 @@ import {
   organizationsQueryOptions,
   organizationQueryOptions,
   organizationPlanQueryOptions,
-  fetchOrganizationMemberships,
-  fetchBillingPlans,
-  fetchOrganizationUsage,
-  fetchOrganizationProjects,
+  organizationMembershipsQueryOptions,
+  billingPlansQueryOptions,
+  organizationUsageQueryOptions,
+  organizationProjectsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { ChangePlanWizardFullscreen } from '@/components/pages/organizations/$orgId/billing/ChangePlanWizardFullscreen'
-
-const MEMBERSHIPS_PER_PAGE = 25
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/change-plan',
@@ -28,69 +27,40 @@ export const Route = createFileRoute(
       return
     }
 
-    // Fetch organization plan first - blocks navigation until ready
-    // Use ensureQueryData to avoid duplicate calls if already fetching
-    await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
+    // Fetch all critical data before rendering to prevent layout shifts
+    // ensureQueryData blocks navigation and uses cache if fresh, fetches if stale/missing
+    await Promise.all([
+      // Organization plan - CRITICAL for plan selection and self-service check
+      queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
 
-    // Prefetch remaining data in parallel (don't block on errors)
-    try {
-      await Promise.all([
-        // Organizations list
-        queryClient.prefetchQuery(organizationsQueryOptions()).catch(() => {}),
+      // Organization details - CRITICAL for default plan calculation
+      queryClient.ensureQueryData(organizationQueryOptions(orgId)),
 
-        // Organization details
-        queryClient
-          .prefetchQuery(organizationQueryOptions(orgId))
-          .catch(() => {}),
+      // Organizations list - CRITICAL for hasFreeOrgs check
+      queryClient.ensureQueryData(organizationsQueryOptions()),
 
-        // Organization memberships
-        queryClient
-          .prefetchQuery({
-            queryKey: [
-              'memberships',
-              'organization',
-              orgId,
-              0,
-              MEMBERSHIPS_PER_PAGE,
-              '',
-            ],
-            queryFn: () =>
-              fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
-            staleTime: 30 * 1000, // 30 seconds
-          })
-          .catch(() => {}),
+      // Organization memberships - CRITICAL for members count
+      queryClient.ensureQueryData(
+        organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+      ),
 
-        // Billing plans
-        queryClient
-          .prefetchQuery({
-            queryKey: ['billing-plans'],
-            queryFn: fetchBillingPlans,
-            staleTime: 5 * 60 * 1000, // 5 minutes
-          })
-          .catch(() => {}),
+      // Billing plans - CRITICAL for plan selection UI
+      queryClient.ensureQueryData(billingPlansQueryOptions()),
 
-        // Organization usage
-        queryClient
-          .prefetchQuery({
-            queryKey: ['organization-usage', orgId],
-            queryFn: () => fetchOrganizationUsage(orgId),
-            staleTime: 30 * 1000, // 30 seconds
-          })
-          .catch(() => {}),
+      // Organization usage - used in sidebar (less critical but prefetch for better UX)
+      queryClient
+        .ensureQueryData(organizationUsageQueryOptions(orgId))
+        .catch(() => {
+          // Don't block navigation if usage fetch fails
+        }),
 
-        // Organization projects
-        queryClient
-          .prefetchQuery({
-            queryKey: ['organization-projects', orgId],
-            queryFn: () => fetchOrganizationProjects(orgId),
-            staleTime: 30 * 1000, // 30 seconds
-          })
-          .catch(() => {}),
-      ])
-    } catch (error) {
-      // Don't block rendering if prefetch fails
-      console.warn('Error prefetching data in change-plan route:', error)
-    }
+      // Organization projects - used for downgrade flow (less critical but prefetch)
+      queryClient
+        .ensureQueryData(organizationProjectsQueryOptions(orgId))
+        .catch(() => {
+          // Don't block navigation if projects fetch fails
+        }),
+    ])
   },
   component: ChangePlanPage,
 })
