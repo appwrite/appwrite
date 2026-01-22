@@ -22,7 +22,7 @@ class Types extends Validator
     /**
      * @var array<string>
      */
-    protected array $allowedAttributes;
+    private array $allowedAttributes;
 
     /**
      * @param array $types
