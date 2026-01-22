@@ -10,7 +10,6 @@ import {
 import {
   Plus,
   Globe,
-  ChevronRight,
   Search,
   ChevronDown,
   Check,
@@ -1402,9 +1401,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       data-project-card
                                       className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
                                     >
-                                      {/* Hover Arrow - Top Right */}
-                                      <ChevronRight className="absolute right-3 top-3 h-4 w-4 text-muted-foreground/50 opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
-
                                       <div>
                                         <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
                                           {project.name}
