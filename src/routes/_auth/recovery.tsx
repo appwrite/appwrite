@@ -1,17 +1,24 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useSearch } from '@tanstack/react-router'
+import { z } from 'zod'
 import { Recovery } from '@/components/global/auth/Recovery'
 import { AppwriteLogo } from '@/components/global/auth/AppwriteLogo'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException } from '@appwrite.io/console'
 
+const searchSchema = z.object({
+  email: z.string().optional(),
+})
+
 export const Route = createFileRoute('/_auth/recovery')({
   component: RecoveryPage,
+  validateSearch: searchSchema,
 })
 
 function RecoveryPage() {
+  const search = useSearch({ from: '/_auth/recovery' })
   const [isSuccess, setIsSuccess] = useState(false)
 
   const recoveryMutation = useMutation({
@@ -52,6 +59,7 @@ function RecoveryPage() {
           onSubmit={(data) => recoveryMutation.mutate(data)}
           isLoading={recoveryMutation.isPending}
           isSuccess={isSuccess}
+          initialEmail={search.email}
         />
         <p className="mt-6 text-center text-xs text-muted-foreground">
           By clicking continue, you agree to our{' '}
@@ -70,7 +78,7 @@ function RecoveryPage() {
           </a>
           .
         </p>
-        <div className="mt-6 flex justify-center">
+        <div className="mt-10 md:mt-16 flex justify-center">
           <AppwriteLogo className="h-6 w-auto" />
         </div>
       </div>

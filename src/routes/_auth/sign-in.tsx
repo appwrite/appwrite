@@ -165,7 +165,7 @@ function SignInPage() {
           </a>
           .
         </p>
-        <div className="mt-6 flex justify-center">
+        <div className="mt-10 md:mt-16 flex justify-center">
           <AppwriteLogo className="h-6 w-auto" />
         </div>
       </div>

@@ -55,6 +55,9 @@ export function SignIn({
     },
   })
 
+  // Watch email value to pass it to recovery page
+  const emailValue = form.watch('email')
+
   const location = useLocation()
   const [lastLoginMethod, setLastLoginMethod] = useState<
     'github' | 'email' | null
@@ -195,6 +198,11 @@ export function SignIn({
                       {mode === 'sign-in' && (
                         <Link
                           to="/recovery"
+                          search={
+                            emailValue
+                              ? { email: emailValue }
+                              : undefined
+                          }
                           className="text-sm text-primary hover:underline"
                         >
                           Forgot your password?

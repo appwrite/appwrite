@@ -25,13 +25,19 @@ interface RecoveryProps {
   onSubmit: (data: { email: string }) => void
   isLoading?: boolean
   isSuccess?: boolean
+  initialEmail?: string
 }
 
-export function Recovery({ onSubmit, isLoading, isSuccess }: RecoveryProps) {
+export function Recovery({
+  onSubmit,
+  isLoading,
+  isSuccess,
+  initialEmail,
+}: RecoveryProps) {
   const form = useForm<z.infer<typeof recoverySchema>>({
     resolver: zodResolver(recoverySchema),
     defaultValues: {
-      email: '',
+      email: initialEmail || '',
     },
   })
 
