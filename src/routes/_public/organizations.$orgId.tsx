@@ -27,12 +27,22 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
       // Don't block on optional data
     })
 
-    // Fetch organization plan - CRITICAL: blocks navigation until ready
+    // Fetch organization plan with timeout to prevent hanging
     if (orgId) {
       try {
-        await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
+        // Add timeout to prevent infinite hanging (10 seconds)
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Organization plan fetch timeout'))
+          }, 10000)
+        })
+
+        await Promise.race([
+          queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
+          timeoutPromise,
+        ])
       } catch (error) {
-        // Don't block navigation if plan fetch fails - component will handle
+        // Don't block navigation if plan fetch fails or times out - component will handle
         console.warn('Failed to fetch organization plan in loader:', error)
       }
     }

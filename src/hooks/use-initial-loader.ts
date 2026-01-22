@@ -34,6 +34,7 @@ export function useInitialLoader() {
   // Initialize loading state synchronously so the loader is visible on first paint
   const [isLoading, setIsLoading] = useState(() => effectiveShouldShowLoader)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const maxTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number | null>(
     effectiveShouldShowLoader ? Date.now() : null,
   )
@@ -53,10 +54,14 @@ export function useInitialLoader() {
       return
     }
 
-    // Clear any existing timeout
+    // Clear any existing timeouts
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current)
       timeoutRef.current = null
+    }
+    if (maxTimeoutRef.current) {
+      clearTimeout(maxTimeoutRef.current)
+      maxTimeoutRef.current = null
     }
 
     // Check hasActiveRequests inside the effect to avoid dependency
@@ -73,6 +78,16 @@ export function useInitialLoader() {
         setIsLoading(true)
         startTimeRef.current = Date.now()
         wasLoadingRef.current = true
+
+        // Safety net: Hide loader after 20 seconds maximum to prevent infinite hanging
+        maxTimeoutRef.current = setTimeout(() => {
+          console.warn('Initial loader timeout - hiding loader after 20 seconds')
+          setIsLoading(false)
+          startTimeRef.current = null
+          wasLoadingRef.current = false
+          hasCompletedInitialLoadRef.current = true
+          maxTimeoutRef.current = null
+        }, 20000)
       } else if (!isCurrentlyLoading && wasLoadingRef.current) {
         // All requests completed - mark initial load as complete
         const minLoadTime = 800 // Minimum display time to prevent flashing
@@ -86,6 +101,11 @@ export function useInitialLoader() {
           startTimeRef.current = null
           wasLoadingRef.current = false
           hasCompletedInitialLoadRef.current = true // Mark initial load as complete
+          // Clear max timeout if it exists
+          if (maxTimeoutRef.current) {
+            clearTimeout(maxTimeoutRef.current)
+            maxTimeoutRef.current = null
+          }
         }, remainingTime)
       }
     } else {
@@ -105,6 +125,9 @@ export function useInitialLoader() {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
+      }
+      if (maxTimeoutRef.current) {
+        clearTimeout(maxTimeoutRef.current)
       }
     }
   }, [

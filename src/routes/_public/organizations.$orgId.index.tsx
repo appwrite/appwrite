@@ -24,16 +24,31 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
     // Fetch critical page-specific data before rendering to prevent layout shifts
     // Note: Organization plan is already loaded in parent route's loader
     if (orgId) {
-      await Promise.all([
-        // Fetch first page of projects - blocks navigation until ready
-        queryClient.ensureQueryData(
-          activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
-        ),
-        // Fetch first page of memberships - blocks navigation until ready
-        queryClient.ensureQueryData(
-          organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
-        ),
-      ])
+      try {
+        // Add timeout to prevent infinite hanging (10 seconds)
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Data fetch timeout'))
+          }, 10000)
+        })
+
+        await Promise.race([
+          Promise.all([
+            // Fetch first page of projects - blocks navigation until ready
+            queryClient.ensureQueryData(
+              activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+            ),
+            // Fetch first page of memberships - blocks navigation until ready
+            queryClient.ensureQueryData(
+              organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+            ),
+          ]),
+          timeoutPromise,
+        ])
+      } catch (error) {
+        // Don't block navigation if data fetch fails or times out - component will handle
+        console.warn('Failed to fetch organization data in loader:', error)
+      }
     }
   },
   component: OrgOverviewIndexPage,
