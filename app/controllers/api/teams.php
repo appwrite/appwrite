@@ -101,7 +101,6 @@ App::post('/v1/teams')
                 '$id' => $teamId,
                 '$permissions' => [
                     Permission::read(Role::team($teamId)),
-                    Permission::read(Role::team($teamId, 'member')),
                     Permission::update(Role::team($teamId, 'owner')),
                     Permission::delete(Role::team($teamId, 'owner')),
                 ],

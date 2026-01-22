@@ -275,6 +275,7 @@ App::init()
         $scopes = \array_unique($scopes);
 
         $authorization->addRole($role);
+
         foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
         }

@@ -77,8 +77,6 @@ class User extends Document
             $teamWideRoles = \array_filter($nodeRoles, fn ($role) => !str_starts_with($role, "project-"));
             if (!empty($teamWideRoles)) {
                 $roles[] = Role::team($node['teamId'])->toString();
-            } else {
-                $roles[] = Role::team($node['teamId'], self::ROLE_MEMBER)->toString();
             }
 
             // Add base project-wide roles.
