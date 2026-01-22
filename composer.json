@@ -80,7 +80,7 @@
         "utopia-php/migration": "dev-multitype-db as 1.4.5",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.7.*",
-        "utopia-php/pools": "0.8.*",
+        "utopia-php/pools": "1.*",
         "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "0.15.*",
         "utopia-php/registry": "0.5.*",
