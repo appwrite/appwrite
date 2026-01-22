@@ -49,11 +49,12 @@ const config = defineConfig({
         },
       },
     }),
-    forSites &&
-      nitroV2Plugin({
-        compatibilityDate: '2025-10-08',
-        preset: 'node',
-      }),
+    // Enable Nitro plugin to generate .output directory for deployment
+    // This is required for Appwrite deployment which expects .output/
+    nitroV2Plugin({
+      compatibilityDate: '2025-10-08',
+      preset: 'node',
+    }),
     devtoolsJson(),
     viteReact(),
   ],
