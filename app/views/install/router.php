@@ -1,7 +1,10 @@
 <?php
 
+require_once dirname(__DIR__, 3) . '/src/Appwrite/Platform/Installer/Server.php';
+
+use Appwrite\Platform\Installer\Server as InstallerServer;
+
 const INSTALLER_DEFAULT_HOST = 'localhost';
-const INSTALLER_DEFAULT_PORT = '8080';
 const INSTALLER_DEFAULT_IMAGE = 'appwrite-dev';
 const INSTALLER_DEFAULT_CONTAINER = 'appwrite-installer';
 const DEV_SERVER_START_PATTERN = '/PHP\s+\d+\.\d+\.\d+\s+Development Server .* started/';
@@ -146,7 +149,7 @@ function startDockerInstaller(array $opts): void
         buildDockerInstallerImage($image);
     }
     ensureLocalInstallerTag($image, 'appwrite/appwrite:local');
-    $port = $opts['port'] ?? INSTALLER_DEFAULT_PORT;
+    $port = (string) InstallerServer::INSTALLER_WEB_PORT;
     $entrypoint = isset($opts['upgrade']) ? 'upgrade' : 'install';
 
     removeDockerInstallerContainer($container);
@@ -168,7 +171,7 @@ function startDockerInstaller(array $opts): void
         '-it',
         '--rm',
         '--name', $container,
-        '-p', "$port:8080",
+        '-p', "$port:" . InstallerServer::INSTALLER_WEB_PORT_INTERNAL,
         '--volume', '/var/run/docker.sock:/var/run/docker.sock',
         '--volume', "$volumePath:/usr/src/code/appwrite:rw",
     ];
@@ -226,9 +229,9 @@ function handleInstallerRequest(): bool
 }
 
 if (PHP_SAPI === 'cli') {
-    $opts = getopt('', ['host::', 'port::', 'mock', 'upgrade', 'locked-database::', 'docker', 'container::', 'clean']);
+    $opts = getopt('', ['host::', 'mock', 'upgrade', 'locked-database::', 'docker', 'container::', 'clean']);
     $host = $opts['host'] ?? INSTALLER_DEFAULT_HOST;
-    $port = $opts['port'] ?? INSTALLER_DEFAULT_PORT;
+    $port = (string) InstallerServer::INSTALLER_WEB_PORT;
     $isMock = isset($opts['mock']);
     if (isset($opts['clean'])) {
         removeDockerInstallerContainer($opts['container'] ?? INSTALLER_DEFAULT_CONTAINER);

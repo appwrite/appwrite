@@ -145,6 +145,7 @@
 
     /* Border radius */
     --border-radius-s: 8px;
+    --border-radius-xs: 6px;
     --border-radius-m: 12px;
     --border-radius-l: 16px;
 
@@ -263,57 +264,14 @@ body {
     opacity: 0.4;
 }
 
-.step-layout.is-locked .selector-card,
-.step-layout.is-locked .accordion-toggle {
-    cursor: not-allowed;
-}
-
-.step-layout.is-locked .selector-card {
-    opacity: 0.6;
-}
-
 .selector-card.is-disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    pointer-events: none;
+    cursor: default;
+    pointer-events: auto;
 }
 
-.selector-group.is-locked::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(250, 250, 251, 0.8);
-    border-radius: var(--border-radius-s);
-    pointer-events: none;
-    z-index: 1;
-}
-
-.selector-lock {
-    position: absolute;
-    inset: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--gap-xs);
-    color: var(--fgcolor-neutral-secondary);
-    z-index: 2;
-    pointer-events: none;
-}
-
-.selector-lock svg {
-    width: 16px;
-    height: 16px;
-    display: block;
-}
-
-.selector-lock {
-    padding: var(--space-2) var(--space-4);
-    border-radius: var(--border-radius-s);
-    border: var(--border-width-s) solid var(--border-neutral);
-    background: rgba(255, 255, 255, 0.95);
-    width: max-content;
-    height: max-content;
-    margin: auto;
+.selector-card.is-disabled .selector-content,
+.selector-card.is-disabled .selector-icon {
+    opacity: 0.4;
 }
 
 .installer-step {
@@ -473,7 +431,7 @@ body {
     flex-direction: column;
     align-items: stretch;
     gap: var(--gap-xxxs);
-    transition: height var(--duration-medium) var(--ease-standard);
+    transition: height var(--duration-slow) var(--ease-standard);
 }
 
 .install-header {
@@ -503,7 +461,7 @@ body {
     opacity: 1;
     transform: translateY(0);
     transition: opacity var(--duration-medium) var(--ease-standard),
-        transform var(--duration-slow) var(--ease-emphasized);
+        transform var(--duration-extended) var(--ease-standard);
     will-change: transform, opacity;
 }
 
@@ -580,7 +538,7 @@ body {
 
 .install-row.is-entering {
     opacity: 0;
-    transform: translateY(-12px);
+    transform: translateY(-8px);
 }
 
 .install-icon {
@@ -949,6 +907,7 @@ body {
     gap: var(--gap-m);
     width: 100%;
     position: relative;
+    overflow: visible;
 }
 
 .selector-card {
@@ -968,6 +927,10 @@ body {
     transition: all var(--duration-fast) var(--ease-in-out);
 }
 
+.selector-card.has-tooltip {
+    overflow: visible;
+}
+
 .selector-card::before {
     content: '';
     position: absolute;
@@ -982,6 +945,49 @@ body {
     opacity: 1;
 }
 
+.selector-card.is-disabled::before,
+.selector-card.is-disabled:hover::before {
+    opacity: 0;
+}
+
+.selector-group.is-locked .selector-card {
+    cursor: default;
+}
+
+.selector-group.is-locked .selector-card:hover::before {
+    opacity: 0;
+}
+
+.selector-card.has-tooltip .tooltip {
+    top: calc(100% + 6px);
+    bottom: auto;
+    transform: translateX(-50%) translateY(-8px);
+}
+
+.selector-card.has-tooltip {
+    z-index: 0;
+}
+
+.selector-card.has-tooltip:hover {
+    z-index: 3;
+}
+
+.selector-card.has-tooltip:hover .tooltip,
+.selector-card.has-tooltip:focus-within .tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    transition: opacity var(--duration-short) var(--ease-standard),
+        transform var(--duration-short) var(--ease-standard),
+        visibility 0s;
+}
+
+.tooltip-db-locked {
+    width: 193px;
+    max-width: none;
+    min-width: 193px;
+    text-align: center;
+}
 .selector-card.selected {
     box-shadow: inset 0 0 0 var(--border-width-s) var(--border-neutral-stronger);
 }
@@ -1301,6 +1307,23 @@ body {
         transform var(--duration-short) var(--ease-standard),
         visibility 0s linear var(--duration-short);
     z-index: 5;
+}
+
+.tooltip.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition: opacity var(--duration-short) var(--ease-standard),
+        transform var(--duration-short) var(--ease-standard),
+        visibility 0s;
+}
+
+.tooltip-portal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: auto;
+    transform: translateY(8px);
 }
 
 .tooltip-assistant {

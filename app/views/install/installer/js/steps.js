@@ -65,7 +65,8 @@
         installFallbackDelay: CONSTANTS.installFallbackDelayMs ?? 12000,
         redirectDelay: CONSTANTS.redirectDelayMs ?? 500,
         mockStepDelay: CONSTANTS.mockStepDelayMs ?? 1800,
-        progressTransitionDelay: CONSTANTS.progressTransitionDelayMs ?? 140
+        progressTransitionDelay: CONSTANTS.progressTransitionDelayMs ?? 140,
+        progressCompleteDelay: CONSTANTS.progressCompleteDelayMs ?? 120
     };
 
     const formState = {
@@ -423,21 +424,20 @@
     };
 
     const lockDatabaseSelection = (root, lockedDatabase) => {
-        const cards = root.querySelectorAll('.selector-card');
-        cards.forEach((card) => {
-            card.classList.add('is-disabled');
-            const input = card.querySelector('input[name="database"]');
-            if (input) {
-                input.disabled = true;
-            }
-        });
-
         if (lockedDatabase) {
-            const radio = root.querySelector(`input[name="database"][value="${lockedDatabase}"]`);
-            if (radio) {
-                radio.checked = true;
-                updateDatabaseSelection(radio, root);
-            }
+            const radios = root.querySelectorAll('input[name="database"]');
+            radios.forEach((radio) => {
+                const isLockedChoice = radio.value === lockedDatabase;
+                const card = radio.closest('.selector-card');
+                radio.disabled = !isLockedChoice;
+                if (card) {
+                    card.classList.toggle('is-disabled', !isLockedChoice);
+                }
+                if (isLockedChoice) {
+                    radio.checked = true;
+                    updateDatabaseSelection(radio, root);
+                }
+            });
         }
     };
 
@@ -548,15 +548,6 @@
             bindDatabaseSelection(root);
         }
 
-        if (isUpgradeMode()) {
-            const radios = root.querySelectorAll('input[name="database"]');
-            radios.forEach((radio) => {
-                radio.checked = false;
-            });
-            const cards = root.querySelectorAll('.selector-card');
-            cards.forEach((card) => card.classList.remove('selected'));
-        }
-
         const hostname = root.querySelector('#hostname');
         const httpPort = root.querySelector('#http-port');
         const httpsPort = root.querySelector('#https-port');
@@ -582,6 +573,7 @@
 
         setupResetButtons(root);
         setupAccordion(root);
+        Tooltips?.setupTooltipPortals?.(root);
     };
 
     const generateSecretKey = () => {
@@ -630,6 +622,8 @@
         if (!defaultText) return;
         setTooltipText(wrapper, defaultText);
     };
+
+    const Tooltips = window.InstallerTooltips || null;
 
     const hydrateStep2State = (root) => {
         const value = root.querySelector('#secret-key')?.value;
@@ -911,12 +905,15 @@
         const hasPort = rawDomain.includes(':') || rawDomain.startsWith('[');
         let host = rawDomain;
         const hostForProtocol = extractHostname(rawDomain);
+        const normalizedHost = hostForProtocol.toLowerCase();
         if (hostForProtocol === '0.0.0.0') {
             host = rawDomain.replace('0.0.0.0', 'localhost');
+        } else if (normalizedHost === 'traefik') {
+            host = rawDomain.replace(hostForProtocol, 'localhost');
         }
         let protocol = 'http';
         let port = httpPort;
-        if (httpsPort && httpsPort !== '0' && !isLocalHost(hostForProtocol)) {
+        if (httpsPort && httpsPort !== '0' && !isLocalHost(normalizedHost)) {
             protocol = 'https';
             port = httpsPort;
         }
@@ -1071,6 +1068,7 @@
         const progressState = new Map();
         let pendingProgressTimer = null;
         let pendingProgressStep = null;
+        let pendingCompletionTimer = null;
         syncInstallLockFlag();
         applyLockPayload();
         applyBodyDefaults();
@@ -1199,6 +1197,10 @@
                 pendingProgressTimer = null;
                 pendingProgressStep = null;
             }
+            if (pendingCompletionTimer) {
+                clearTimeout(pendingCompletionTimer);
+                pendingCompletionTimer = null;
+            }
             const step = getStepDefinition(payload.step) || {
                 id: payload.step,
                 inProgress: payload.message || payload.step,
@@ -1206,24 +1208,32 @@
             };
             if (payload.status === 'in-progress') {
                 const currentIndex = INSTALLATION_STEPS.findIndex((candidate) => candidate.id === step.id);
-                let didAutoComplete = false;
+                const completionTargets = [];
                 if (currentIndex > 0) {
                     for (let i = 0; i < currentIndex; i += 1) {
                         const previousStep = INSTALLATION_STEPS[i];
                         const previousState = progressState.get(previousStep.id);
                         if (previousState && previousState.status !== 'completed') {
-                            progressState.set(previousStep.id, {
-                                status: 'completed',
-                                message: previousStep.done,
+                            completionTargets.push({
+                                step: previousStep,
                                 details: previousState.details
                             });
-                            didAutoComplete = true;
                         }
                     }
                 }
-                if (didAutoComplete && currentIndex > 0) {
-                    renderProgress();
+                if (completionTargets.length && currentIndex > 0) {
                     pendingProgressStep = payload.step;
+                    pendingCompletionTimer = setTimeout(() => {
+                        pendingCompletionTimer = null;
+                        completionTargets.forEach(({ step: previousStep, details }) => {
+                            progressState.set(previousStep.id, {
+                                status: 'completed',
+                                message: previousStep.done,
+                                details
+                            });
+                        });
+                        renderProgress();
+                    }, TIMINGS.progressCompleteDelay);
                     pendingProgressTimer = setTimeout(() => {
                         pendingProgressTimer = null;
                         pendingProgressStep = null;
@@ -1558,6 +1568,7 @@
         if (!container) return;
         const root = container.querySelector('.step-layout') || container;
         const normalized = clampStep(step);
+        Tooltips?.cleanupTooltipPortals?.();
         if (normalized !== 3 && reviewListener) {
             document.removeEventListener('installer:state-change', reviewListener);
             reviewListener = null;

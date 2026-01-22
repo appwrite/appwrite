@@ -7,10 +7,12 @@ $vars = $vars ?? [];
 $defaultHttpPort = $defaultHttpPort ?? '80';
 $defaultHttpsPort = $defaultHttpsPort ?? '443';
 $defaultAppDomain = $vars['_APP_DOMAIN']['default'] ?? 'localhost';
+$defaultAppDomain = ($defaultAppDomain === 'traefik') ? 'localhost' : $defaultAppDomain;
 $defaultEmailCertificates = $vars['_APP_EMAIL_CERTIFICATES']['default'] ?? '';
 $defaultSecretKey = $vars['_APP_OPENSSL_KEY_V1']['default'] ?? '';
 $defaultAssistantOpenAIKey = $vars['_APP_ASSISTANT_OPENAI_API_KEY']['default'] ?? '';
 $defaultDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? 'mongodb';
+$lockedDatabase = $isUpgrade && empty($lockedDatabase) ? $defaultDatabase : $lockedDatabase;
 $isLocalInstall = !empty(getenv('APPWRITE_INSTALLER_LOCAL'));
 if ($installMode === 'mock' && $defaultEmailCertificates === '') {
     $defaultEmailCertificates = 'walterobrien@example.com';
@@ -38,6 +40,7 @@ if (!is_file($stepFile)) {
     $stepFile = __DIR__ . "/installer/templates/steps/step-1.phtml";
 }
 $cssVersion = @filemtime(__DIR__ . '/installer/css/styles.css') ?: time();
+$tooltipsVersion = @filemtime(__DIR__ . '/installer/js/tooltips.js') ?: time();
 $constantsVersion = @filemtime(__DIR__ . '/installer/js/constants.js') ?: time();
 $stepsVersion = @filemtime(__DIR__ . '/installer/js/steps.js') ?: time();
 $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time();
@@ -50,6 +53,7 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
     <title><?php echo $isUpgrade ? 'Appwrite Update' : 'Appwrite Installation'; ?></title>
     <link rel="icon" type="image/svg+xml" href="installer/icons/appwrite-mark.svg">
     <link rel="stylesheet" href="installer/css/styles.css?v=<?php echo $cssVersion; ?>">
+    <script src="installer/js/tooltips.js?v=<?php echo $tooltipsVersion; ?>" defer></script>
     <script src="installer/js/constants.js?v=<?php echo $constantsVersion; ?>" defer></script>
     <script src="installer/js/steps.js?v=<?php echo $stepsVersion; ?>" defer></script>
     <script src="installer/js/installer.js?v=<?php echo $installerVersion; ?>" defer></script>

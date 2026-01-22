@@ -6,7 +6,8 @@
         installFallbackDelayMs: 12000,
         redirectDelayMs: 500,
         mockStepDelayMs: 1800,
-        progressTransitionDelayMs: 200,
+        progressTransitionDelayMs: 320,
+        progressCompleteDelayMs: 140,
         mockErrorDetails: {
             output: [
                 'Failed to start containers: appwrite-worker-webhooks',
