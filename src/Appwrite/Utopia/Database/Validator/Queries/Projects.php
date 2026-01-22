@@ -12,21 +12,16 @@ class Projects extends Base
     ];
 
     /**
-     * Expression constructor
-     *
+     * @param array|null $allowedAttributes
+     * @throws \Exception
      */
-    public function __construct()
+    public function __construct(array $allowedAttributes = null)
     {
-        parent::__construct('projects', $this->getAllowedAttributes());
+        parent::__construct('projects', $allowedAttributes ?? static::ALLOWED_ATTRIBUTES);
     }
 
     public function isSelectQueryAllowed(): bool
     {
         return true;
-    }
-
-    public function getAllowedAttributes(): array
-    {
-        return self::ALLOWED_ATTRIBUTES;
     }
 }
