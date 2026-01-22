@@ -4,19 +4,17 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 
 class Projects extends Base
 {
-//    public const ALLOWED_ATTRIBUTES = [
-//        'name',
-//        'teamId',
-//        'labels',
-//        'search'
-//    ];
-
-    protected array $allowed = [
+    public const ALLOWED_ATTRIBUTES = [
         'name',
         'teamId',
         'labels',
         'search',
     ];
+
+    /**
+     * @var array<string>
+     */
+    protected array $allowed = self::ALLOWED_ATTRIBUTES;
 
     /**
      * Expression constructor
@@ -30,5 +28,10 @@ class Projects extends Base
     public function isSelectQueryAllowed(): bool
     {
         return true;
+    }
+
+    public function getAllowedAttributes(): array
+    {
+        return $this->allowed;
     }
 }
