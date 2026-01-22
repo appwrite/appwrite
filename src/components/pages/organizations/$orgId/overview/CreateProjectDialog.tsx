@@ -18,6 +18,14 @@ import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { sdk } from '@/lib/appwrite/sdk'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectSeparator,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface CreateProjectDialogProps {
   open: boolean
@@ -47,17 +55,42 @@ export function CreateProjectDialog({
     error: regionsError,
   } = useRegions()
 
+  // Check if a region is coming soon (disabled/inactive)
+  const isRegionComingSoon = (region: any): boolean => {
+    return (
+      region.status === 'coming-soon' ||
+      region.comingSoon === true ||
+      region.disabled === true ||
+      region.status === 'disabled' ||
+      region.status === 'inactive' ||
+      region.inactive === true
+    )
+  }
+
+  // Get available (non-coming-soon) regions
+  const availableRegions = useMemo(() => {
+    return regions.filter((r: any) => !isRegionComingSoon(r))
+  }, [regions])
+
+  // Sort regions: available first, inactive/coming soon last
+  const sortedRegions = useMemo(() => {
+    const available = regions.filter((r: any) => !isRegionComingSoon(r))
+    const inactive = regions.filter((r: any) => isRegionComingSoon(r))
+    return [...available, ...inactive]
+  }, [regions])
+
   // Set default region when regions load
   useEffect(() => {
-    if (regions.length > 0 && !selectedRegion) {
+    if (availableRegions.length > 0 && !selectedRegion) {
       // Prefer Frankfurt (fra) or first available region
       const defaultRegion =
-        regions.find((r: any) => r.$id === 'fra') || regions[0]
+        availableRegions.find((r: any) => r.$id === 'fra') ||
+        availableRegions[0]
       if (defaultRegion) {
         setSelectedRegion(defaultRegion.$id)
       }
     }
-  }, [regions, selectedRegion])
+  }, [availableRegions, selectedRegion])
 
   // Calculate if this would be an additional project
   const isAdditionalProject = useMemo(() => {
@@ -212,14 +245,7 @@ export function CreateProjectDialog({
                 <span className="text-destructive">*</span>
               </Label>
               {regionsLoading ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div
-                      key={i}
-                      className="h-20 animate-pulse rounded-lg border border-border bg-muted/50"
-                    />
-                  ))}
-                </div>
+                <div className="h-9 w-full animate-pulse rounded-md border border-border bg-muted/50" />
               ) : regionsError ? (
                 <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-center">
                   <p className="text-[13px] text-destructive mb-1">
@@ -232,79 +258,105 @@ export function CreateProjectDialog({
                   </p>
                 </div>
               ) : regions.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {regions.map((region: any) => {
-                    const isSelected = selectedRegion === region.$id
-                    const regionCode =
-                      region.code || region.$id?.toUpperCase() || ''
-                    const regionName = region.name || region.$id || 'Unknown'
+                <Select
+                  value={selectedRegion || undefined}
+                  onValueChange={setSelectedRegion}
+                  disabled={createProjectMutation.isPending}
+                >
+                  <SelectTrigger className="h-9 w-full text-[13px]">
+                    <SelectValue placeholder="Select a region">
+                      {selectedRegion
+                        ? (() => {
+                            const region = regions.find(
+                              (r: any) => r.$id === selectedRegion,
+                            )
+                            if (!region) return 'Select a region'
+                            const flagCode = region.flag || ''
+                            const regionName = region.name || region.$id || 'Unknown'
+                            const flagUrl = flagCode
+                              ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
+                              : null
+                            return (
+                              <div className="flex items-center gap-2 w-full">
+                                {flagUrl ? (
+                                  <img
+                                    src={flagUrl}
+                                    alt={`${regionName} flag`}
+                                    className="h-4 w-4 shrink-0 rounded border border-border/50 object-cover"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement
+                                      target.style.display = 'none'
+                                    }}
+                                  />
+                                ) : (
+                                  <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                )}
+                                <span className="flex-1">{regionName}</span>
+                                <span className="text-[11px] font-mono text-muted-foreground">
+                                  {region.$id}
+                                </span>
+                              </div>
+                            )
+                          })()
+                        : 'Select a region'}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortedRegions.map((region: any, index: number) => {
+                      const flagCode = region.flag || ''
+                      const regionName = region.name || region.$id || 'Unknown'
+                      const flagUrl = flagCode
+                        ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
+                        : null
+                      const isComingSoon = isRegionComingSoon(region)
+                      const isFirstInactive =
+                        index > 0 &&
+                        !isRegionComingSoon(sortedRegions[index - 1]) &&
+                        isComingSoon
 
-                    return (
-                      <button
-                        key={region.$id}
-                        type="button"
-                        onClick={() => setSelectedRegion(region.$id)}
-                        disabled={createProjectMutation.isPending}
-                        className={cn(
-                          'group relative flex items-center gap-3 rounded-lg border p-3 text-left transition-all',
-                          'hover:border-foreground/20 hover:bg-accent/50',
-                          isSelected
-                            ? 'border-[#f02e65] bg-[#f02e65]/5 shadow-sm'
-                            : 'border-border bg-card/50',
-                        )}
-                      >
-                        {/* Flag Image */}
-                        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border/50 bg-background shadow-sm">
-                          {regionCode ? (
-                            <img
-                              src={`${sdk.forConsole.client.config.endpoint}/avatars/flags/${regionCode.toLowerCase()}?width=40&height=40&quality=100&project=console`}
-                              alt={`${regionName} flag`}
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                // Fallback: hide image and show globe icon
-                                const target = e.target as HTMLImageElement
-                                target.style.display = 'none'
-                                const fallback =
-                                  target.parentElement?.querySelector(
-                                    '.flag-fallback',
-                                  )
-                                if (fallback) {
-                                  ;(fallback as HTMLElement).style.display =
-                                    'flex'
-                                }
-                              }}
-                            />
-                          ) : null}
-                          <div className="flag-fallback hidden h-full w-full items-center justify-center text-lg">
-                            🌐
-                          </div>
-                        </div>
-
-                        {/* Region Info */}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[13px] font-medium text-foreground">
-                              {regionName}
-                            </span>
-                            {isSelected && (
-                              <Check className="h-3.5 w-3.5 shrink-0 text-[#f02e65]" />
-                            )}
-                          </div>
-                          {regionCode && (
-                            <span className="text-[11px] text-muted-foreground font-mono">
-                              {regionCode.toUpperCase()}
-                            </span>
+                      return (
+                        <>
+                          {isFirstInactive && (
+                            <SelectSeparator key={`separator-${region.$id}`} className="my-1" />
                           )}
-                        </div>
-
-                        {/* Selection Indicator */}
-                        {isSelected && (
-                          <div className="absolute inset-0 rounded-lg border-2 border-[#f02e65] pointer-events-none" />
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
+                          <SelectItem
+                            key={region.$id}
+                            value={region.$id}
+                            disabled={isComingSoon}
+                            className={cn(
+                              isComingSoon && 'opacity-50 cursor-not-allowed',
+                            )}
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              {flagUrl ? (
+                                <img
+                                  src={flagUrl}
+                                  alt={`${regionName} flag`}
+                                  className="h-4 w-4 shrink-0 rounded border border-border/50 object-cover"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement
+                                    target.style.display = 'none'
+                                  }}
+                                />
+                              ) : (
+                                <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              )}
+                              <span className="flex-1">{regionName}</span>
+                              <span className="text-[11px] font-mono text-muted-foreground">
+                                {region.$id}
+                              </span>
+                              {isComingSoon && (
+                                <span className="text-[11px] text-muted-foreground">
+                                  Coming soon
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        </>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
               ) : (
                 <div className="rounded-lg border border-border bg-muted/50 p-4 text-center">
                   <p className="text-[13px] text-muted-foreground">

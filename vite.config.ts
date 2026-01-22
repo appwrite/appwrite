@@ -20,6 +20,18 @@ const config = defineConfig({
       spa: {
         enabled: true,
       },
+      prerender: {
+        enabled: true,
+        // Enable if you need pages to be at `/page/index.html` instead of `/page.html`
+        // Useful for static hosting platforms
+        autoSubfolderIndex: true,
+        // Automatically discover and prerender static routes
+        autoStaticPathsDiscovery: true,
+        // Extract links from prerendered pages and prerender those as well
+        crawlLinks: true,
+        // Fail build if prerendering encounters an error
+        failOnError: true,
+      },
     }),
     forSites &&
       nitroV2Plugin({
