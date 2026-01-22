@@ -282,26 +282,23 @@ export function MessagingView() {
       {
         id: 'messages',
         label: 'Messages',
-        count: messagesTotal,
         to: '/projects/$projectId/messaging/',
         params: { projectId: projectId as string },
       },
       {
         id: 'topics',
         label: 'Topics',
-        count: topicsTotal,
         to: '/projects/$projectId/messaging/topics',
         params: { projectId: projectId as string },
       },
       {
         id: 'providers',
         label: 'Providers',
-        count: providersTotal,
         to: '/projects/$projectId/messaging/providers',
         params: { projectId: projectId as string },
       },
     ],
-    [projectId, messagesTotal, topicsTotal, providersTotal],
+    [projectId],
   )
 
   const getCreateLabel = () => {

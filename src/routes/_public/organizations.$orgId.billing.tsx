@@ -35,20 +35,21 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
       staleTime: 5 * 60 * 1000, // 5 minutes
     })
 
-    // Ensure critical data is loaded before rendering to prevent layout shifts
+    // Fetch critical data before rendering to prevent layout shifts
     // Load organization first, then use its data for aggregation
+    // Fetch organization plan first (critical for PlanSummary) - blocks navigation until ready
+    // Use ensureQueryData to avoid duplicate calls if already fetching
+    await queryClient.ensureQueryData({
+      queryKey: ['organization', 'plan', orgId],
+      queryFn: () => fetchOrganizationPlan(orgId),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    })
+
     const [orgData] = await Promise.all([
-      // Organization (needed for billingAggregationId and to ensure correct orgId)
+      // Fetch organization - blocks navigation until ready
       queryClient.ensureQueryData({
         queryKey: ['organization', orgId],
         queryFn: () => fetchOrganizationById(orgId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      }),
-
-      // Organization plan (critical for PlanSummary) - use orgId from params to ensure correct org
-      queryClient.ensureQueryData({
-        queryKey: ['organization', 'plan', orgId],
-        queryFn: () => fetchOrganizationPlan(orgId),
         staleTime: 5 * 60 * 1000, // 5 minutes
       }),
     ])
@@ -75,11 +76,11 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
         })
       : Promise.resolve(null)
 
-    // Ensure remaining critical data is loaded before rendering
+    // Fetch remaining critical data before rendering - blocks navigation until ready
     await Promise.all([
       aggregationPromise,
 
-      // Invoices (first page) - critical for PaymentHistory
+      // Fetch first page of invoices - blocks navigation until ready
       queryClient.ensureQueryData({
         queryKey: [
           'invoices',
@@ -93,21 +94,21 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
         staleTime: 30 * 1000, // 30 seconds
       }),
 
-      // Credits (first page) - critical for AvailableCreditsSection
+      // Fetch first page of credits - blocks navigation until ready
       queryClient.ensureQueryData({
         queryKey: ['credits', 'organization', orgId, 0, CREDITS_PER_PAGE],
         queryFn: () => fetchOrganizationCredits(orgId, 0, CREDITS_PER_PAGE),
         staleTime: 30 * 1000, // 30 seconds
       }),
 
-      // Payment methods (for account) - critical for alerts
+      // Fetch payment methods - blocks navigation until ready
       queryClient.ensureQueryData({
         queryKey: ['payment-methods', 'account'],
         queryFn: fetchPaymentMethods,
         staleTime: 5 * 60 * 1000, // 5 minutes
       }),
 
-      // Billing addresses (for account) - critical for BillingAddressSection
+      // Fetch billing addresses - blocks navigation until ready
       queryClient.ensureQueryData({
         queryKey: ['billing-addresses', 'account'],
         queryFn: fetchBillingAddresses,

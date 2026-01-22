@@ -563,18 +563,27 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     staleTime: 30 * 1000, // 30 seconds
     enabled: !!orgTeamId, // Always fetch when we have an org ID
     placeholderData: (previousData) => previousData, // Keep previous data visible while loading new data
+    initialData: () => {
+      // Use cached data from route loader if available (for first page, no search)
+      if (activeProjectsPage === 0 && !searchQuery) {
+        return queryClient.getQueryData(['projects', 'active', 0, '', orgId])
+      }
+      return undefined
+    },
   })
 
-  // Fetch total count of projects without search (for limit checking)
-  // This is separate from the search query so the alert doesn't change when searching
-  const { data: totalProjectsData, isLoading: totalProjectsLoading } = useQuery(
-    {
-      queryKey: ['projects', 'active', 'total', orgId],
-      queryFn: () => fetchActiveProjects(orgTeamId!, 0, 1, ''), // Only need total, so limit to 1
-      staleTime: 30 * 1000, // 30 seconds
-      enabled: !!orgTeamId, // Always fetch when we have an org ID
+  // Get total count from the first page query (no search) - already fetched in route loader
+  // This is used for limit checking and doesn't change when searching
+  const { data: totalProjectsData, isLoading: totalProjectsLoading } = useQuery({
+    queryKey: ['projects', 'active', 0, '', orgId],
+    queryFn: () => fetchActiveProjects(orgTeamId!, 0, PROJECTS_PER_PAGE, ''),
+    staleTime: 30 * 1000, // 30 seconds
+    enabled: !!orgTeamId, // Always fetch when we have an org ID
+    initialData: () => {
+      // Use cached data from route loader if available
+      return queryClient.getQueryData(['projects', 'active', 0, '', orgId])
     },
-  )
+  })
 
   // Fetch archived projects from Console SDK with server-side filtering
   // Use orgId from URL params directly
@@ -1195,36 +1204,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         {/* Plan Limit Alert - After Tabs */}
         {activeTab === 'projects' &&
           (() => {
-            const isAlertLoading = planLoading || totalProjectsLoading
-
-            // If loading, render placeholder to prevent layout shift
-            if (isAlertLoading) {
-              return (
-                <div className="border-b border-border bg-amber-500/5">
-                  <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-                    <div className="relative w-full rounded-lg border border-amber-500/30 px-4 py-3">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div
-                            className="h-4 w-32 bg-amber-500/20 rounded mb-2"
-                            aria-hidden="true"
-                          />
-                          <div
-                            className="h-3 w-48 bg-amber-500/20 rounded"
-                            aria-hidden="true"
-                          />
-                        </div>
-                        <div
-                          className="h-8 w-20 bg-amber-500/20 rounded shrink-0"
-                          aria-hidden="true"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            }
-
             if (!organizationPlan) return null
 
             const projectLimit = (organizationPlan?.addons as any)?.projects

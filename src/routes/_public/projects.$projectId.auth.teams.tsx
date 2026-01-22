@@ -15,9 +15,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/teams')(
       const { projectId } = params
       const { queryClient } = context
 
-      // Prefetch teams for the project (initial page, no search)
+      // Fetch teams for the project (initial page, no search)
       if (projectId) {
-        await queryClient.ensureQueryData({
+        // Fetch first page of teams - blocks navigation until ready
+        await queryClient.fetchQuery({
           queryKey: ['teams', 'project', projectId, 0, TEAMS_PER_PAGE, ''],
           queryFn: () => fetchProjectTeams(projectId, 0, TEAMS_PER_PAGE, ''),
           staleTime: 30 * 1000, // 30 seconds

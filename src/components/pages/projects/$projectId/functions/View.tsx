@@ -108,15 +108,29 @@ export function FunctionsView() {
     searchValue || undefined,
   )
 
-  // Fetch total count of functions without search (for limit checking)
-  // This is separate from the search query so the alert doesn't change when searching
-  const { data: totalFunctionsData, isLoading: totalFunctionsLoading } =
-    useQuery({
-      queryKey: ['functions', 'project', projectId, 'total'],
-      queryFn: () => fetchProjectFunctions(projectId!, 0, 1, ''), // Only need total, so limit to 1
-      enabled: !!projectId,
-      staleTime: 30 * 1000, // 30 seconds
-    })
+  // Get total count from the first page query (no search) - already fetched in route loader
+  // This is used for limit checking and doesn't change when searching
+  const { data: totalFunctionsData, isLoading: totalFunctionsLoading } = useQuery({
+    queryKey: ['functions', 'project', projectId, 0, pageSize, undefined],
+    queryFn: () => fetchProjectFunctions(projectId!, 0, pageSize, undefined),
+    enabled: !!projectId,
+    staleTime: 30 * 1000, // 30 seconds
+    refetchOnMount: false, // Data is fresh from route loader, no need to refetch
+    placeholderData: (previousData) => {
+      // First, try to get cached data from route loader
+      const cachedData = queryClient.getQueryData([
+        'functions',
+        'project',
+        projectId,
+        0,
+        pageSize,
+        undefined,
+      ])
+      if (cachedData) return cachedData
+      // Keep previous data visible while loading new data
+      return previousData
+    },
+  })
 
   // Get project to get teamId for organization plan
   const { project, isLoading: projectLoading } = useProject(projectId)
@@ -132,42 +146,6 @@ export function FunctionsView() {
   const functionsLimit = organizationPlan?.functions ?? 0
   const isCreateDisabled =
     functionsLimit > 0 && totalFunctionsCount >= functionsLimit
-
-  // Real-time subscription
-  useEffect(() => {
-    if (!projectId) return
-
-    let subscription: { close: () => Promise<void> } | null = null
-
-    const setupSubscription = async () => {
-      try {
-        subscription = await sdk
-          .forProject(projectId)
-          .realtime.subscribe([`projects.${projectId}`], (response) => {
-            if (
-              response.events?.some((event) => event.includes('functions.'))
-            ) {
-              queryClient.invalidateQueries({
-                queryKey: Dependencies.FUNCTIONS,
-              })
-            }
-          })
-      } catch (error) {
-        // Silently ignore realtime errors
-        console.error('Failed to subscribe to functions realtime:', error)
-      }
-    }
-
-    setupSubscription()
-
-    return () => {
-      if (subscription) {
-        subscription.close().catch(() => {
-          // Silently ignore cleanup errors
-        })
-      }
-    }
-  }, [projectId]) // queryClient is stable, no need to include in deps
 
   // Handle GitHub redirect
   useEffect(() => {
@@ -224,7 +202,6 @@ export function FunctionsView() {
       {
         id: 'functions',
         label: 'Functions',
-        count: totalFunctionsCount,
         to: '/projects/$projectId/functions/',
         params: { projectId: projectId as string },
       },
@@ -235,7 +212,7 @@ export function FunctionsView() {
         params: { projectId: projectId as string },
       },
     ],
-    [totalFunctionsCount, projectId],
+    [projectId],
   )
 
   const getCreateLabel = () => {
@@ -281,6 +258,18 @@ export function FunctionsView() {
 
   return (
     <div className="flex h-full flex-col">
+      {/* DEBUG: Plan limit and current count */}
+      <div className="border-b border-red-500 bg-red-50 dark:bg-red-950/20 px-4 py-2 text-xs">
+        <div className="mx-auto max-w-7xl">
+          <strong>DEBUG:</strong> project={project ? 'exists' : 'missing'}, 
+          organizationPlan={organizationPlan !== undefined ? 'exists' : 'missing'}, 
+          totalFunctionsData={totalFunctionsData !== undefined ? 'exists' : 'missing'}, 
+          functionsLimit={functionsLimit}, 
+          totalFunctionsCount={totalFunctionsCount}, 
+          planLoading={planLoading ? 'true' : 'false'}, 
+          totalFunctionsLoading={totalFunctionsLoading ? 'true' : 'false'}
+        </div>
+      </div>
       <ServiceHeader
         title="Functions"
         tabs={tabs}
@@ -297,14 +286,18 @@ export function FunctionsView() {
         createDisabled={activeTab === 'functions' ? isCreateDisabled : false}
         fullWidthBorder
         contentAfterBorder={
-          activeTab === 'functions' ? (
+          // Data is prefetched in route loader, only render if data exists
+          // PlanLimitWarning handles its own visibility logic
+          activeTab === 'functions' &&
+          project &&
+          organizationPlan !== undefined &&
+          totalFunctionsData !== undefined ? (
             <PlanLimitWarning
               currentCount={totalFunctionsCount}
               limit={functionsLimit}
               planName={organizationPlan?.name}
               resourceName="functions"
               orgId={project?.teamId}
-              isLoading={projectLoading || planLoading || totalFunctionsLoading}
             />
           ) : undefined
         }

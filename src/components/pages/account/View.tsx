@@ -153,18 +153,6 @@ export function AccountView({ activeTab: tabProp }: AccountViewProps) {
                     )}
                   >
                     {tab.label}
-                    {tab.count !== undefined && (
-                      <span
-                        className={cn(
-                          'rounded-full px-1.5 py-0.5 text-[10px]',
-                          isActive
-                            ? 'bg-accent text-foreground'
-                            : 'bg-muted text-muted-foreground',
-                        )}
-                      >
-                        {tab.count}
-                      </span>
-                    )}
                     {isActive && (
                       <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
                     )}

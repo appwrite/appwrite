@@ -26,22 +26,24 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
       staleTime: 5 * 60 * 1000, // 5 minutes
     })
 
-    // Ensure critical data is loaded before rendering to prevent layout shifts
+    // Fetch critical data before rendering to prevent layout shifts
     if (orgId) {
+      // Fetch organization plan - blocks navigation until ready
+      // Use ensureQueryData to avoid duplicate calls if already fetching
+      await queryClient.ensureQueryData({
+        queryKey: ['organization', 'plan', orgId],
+        queryFn: () => fetchOrganizationPlan(orgId),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      })
+
       await Promise.all([
-        // Ensure organization plan is loaded
-        queryClient.ensureQueryData({
-          queryKey: ['organization', 'plan', orgId],
-          queryFn: () => fetchOrganizationPlan(orgId),
-          staleTime: 5 * 60 * 1000, // 5 minutes
-        }),
-        // Ensure projects are loaded
+        // Fetch first page of projects - blocks navigation until ready
         queryClient.ensureQueryData({
           queryKey: ['projects', 'active', 0, '', orgId],
           queryFn: () => fetchActiveProjects(orgId, 0, PROJECTS_PER_PAGE, ''),
           staleTime: 30 * 1000, // 30 seconds
         }),
-        // Ensure memberships are loaded
+        // Fetch first page of memberships - blocks navigation until ready
         queryClient.ensureQueryData({
           queryKey: [
             'memberships',
@@ -53,12 +55,6 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
           ],
           queryFn: () =>
             fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
-          staleTime: 30 * 1000, // 30 seconds
-        }),
-        // Prefetch total count for limit checking (optional)
-        queryClient.prefetchQuery({
-          queryKey: ['projects', 'active', 'total', orgId],
-          queryFn: () => fetchActiveProjects(orgId, 0, 1, ''),
           staleTime: 30 * 1000, // 30 seconds
         }),
       ])

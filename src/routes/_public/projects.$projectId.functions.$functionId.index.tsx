@@ -34,63 +34,17 @@ export const Route = createFileRoute(
     const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
     const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
 
-    // Prefetch function
-    let func
-    try {
-      func = await queryClient.ensureQueryData({
-        queryKey: ['function', 'project', projectId, functionId],
-        queryFn: () => fetchProjectFunction(projectId, functionId),
-        staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
+    // Fetch function first to get deploymentId
+    const func = await queryClient.fetchQuery({
+      queryKey: ['function', 'project', projectId, functionId],
+      queryFn: () => fetchProjectFunction(projectId, functionId),
+      staleTime: 30 * 1000,
+    })
 
-    // Prefetch active deployment if function has a deploymentId
-    // Using ensureQueryData to wait for data before navigation completes
-    if (func?.deploymentId) {
-      try {
-        await queryClient.ensureQueryData({
-          queryKey: [
-            'deployment',
-            'function',
-            projectId,
-            functionId,
-            func.deploymentId,
-          ],
-          queryFn: () =>
-            fetchFunctionDeployment(projectId, functionId, func.deploymentId!),
-          staleTime: 30 * 1000,
-        })
-      } catch (error) {
-        // Silently fail - component will handle error state
-      }
-    }
-
-    // Prefetch domains/rules (for overview card - up to 3 rules filtered by active deployment)
-    try {
-      await queryClient.ensureQueryData({
-        queryKey: [
-          'proxy-rules',
-          'function',
-          projectId,
-          functionId,
-          0,
-          DOMAINS_LIMIT,
-          undefined,
-        ],
-        queryFn: () =>
-          fetchFunctionDomains(projectId, functionId, 0, DOMAINS_LIMIT),
-        staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
-
-    // Prefetch deployments list for the requested page
-    // Using ensureQueryData to wait for data before navigation completes
-    try {
-      await queryClient.ensureQueryData({
+    // Fetch critical data before rendering to prevent layout shifts
+    const criticalPromises: Promise<unknown>[] = [
+      // Fetch deployments list for the requested page - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: [
           'deployments',
           'function',
@@ -108,10 +62,46 @@ export const Route = createFileRoute(
             DEPLOYMENTS_PER_PAGE,
           ),
         staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
+      }),
+    ]
+
+    // Fetch active deployment if function has a deploymentId
+    if (func?.deploymentId) {
+      criticalPromises.push(
+        queryClient.fetchQuery({
+          queryKey: [
+            'deployment',
+            'function',
+            projectId,
+            functionId,
+            func.deploymentId,
+          ],
+          queryFn: () =>
+            fetchFunctionDeployment(projectId, functionId, func.deploymentId!),
+          staleTime: 30 * 1000,
+        }),
+      )
     }
+
+    // Fetch domains/rules (for overview card) - blocks navigation until ready
+    criticalPromises.push(
+      queryClient.fetchQuery({
+        queryKey: [
+          'proxy-rules',
+          'function',
+          projectId,
+          functionId,
+          0,
+          DOMAINS_LIMIT,
+          undefined,
+        ],
+        queryFn: () =>
+          fetchFunctionDomains(projectId, functionId, 0, DOMAINS_LIMIT),
+        staleTime: 30 * 1000,
+      }),
+    )
+
+    await Promise.all(criticalPromises)
   },
   component: FunctionDeployments,
 })

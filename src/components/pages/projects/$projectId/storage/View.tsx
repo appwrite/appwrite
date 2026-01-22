@@ -87,26 +87,56 @@ export function StorageView() {
     isLoading: bucketsLoading,
   } = useProjectBuckets(projectId, pageIndexed, pageSize, searchValue)
 
-  // Fetch total count of buckets without search (for limit checking)
-  // This is separate from the search query so the alert doesn't change when searching
-  const { data: totalBucketsData, isLoading: totalBucketsLoading } = useQuery({
-    queryKey: ['buckets', 'project', projectId, 'total'],
-    queryFn: () => fetchProjectBuckets(projectId!, 0, 1, ''), // Only need total, so limit to 1
+  // Get total count from the first page query (no search) - already fetched in route loader
+  // This is used for limit checking and doesn't change when searching
+  // Data is guaranteed to be available from route loader, so we can use initialData
+  const { data: totalBucketsData } = useQuery({
+    queryKey: ['buckets', 'project', projectId, 0, pageSize, ''],
+    queryFn: () => fetchProjectBuckets(projectId!, 0, pageSize, ''),
     enabled: !!projectId,
     staleTime: 30 * 1000, // 30 seconds
+    refetchOnMount: false, // Data is fresh from route loader, no need to refetch
+    // Use initialData to ensure data is available immediately (from route loader)
+    initialData: () => {
+      return queryClient.getQueryData<Models.BucketList>([
+        'buckets',
+        'project',
+        projectId,
+        0,
+        pageSize,
+        '',
+      ])
+    },
+    placeholderData: (previousData) => {
+      // First, try to get cached data from route loader
+      const cachedData = queryClient.getQueryData<Models.BucketList>([
+        'buckets',
+        'project',
+        projectId,
+        0,
+        pageSize,
+        '',
+      ])
+      if (cachedData) return cachedData
+      // Keep previous data visible while loading new data
+      return previousData
+    },
   })
 
   // Paginated data - buckets are already paginated by the API
   const paginatedBuckets = apiBuckets
 
   // Get project to get teamId for organization plan
-  const { project, isLoading: projectLoading } = useProject(projectId)
+  // Data is guaranteed to be available from route loader (fetchQuery blocks navigation)
+  const { project } = useProject(projectId)
 
   // Get organization plan to check limits
-  const { plan: organizationPlan, isLoading: planLoading } =
-    useOrganizationPlan(project?.teamId)
+  // Data is guaranteed to be available from route loader if project has teamId
+  // Use initialData to ensure immediate availability from cache
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
 
   // Total count of all buckets (without search) - for limit checking
+  // Use the total from the first page query (already cached from route loader)
   const totalBucketsCount = totalBucketsData?.total || 0
 
   // Check if create button should be disabled
@@ -266,14 +296,18 @@ export function StorageView() {
         fullWidthBorder
         rightContent={<ViewToggle />}
         contentAfterBorder={
-          <PlanLimitWarning
-            currentCount={totalBucketsCount}
-            limit={bucketsLimit}
-            planName={organizationPlan?.name}
-            resourceName="buckets"
-            orgId={project?.teamId}
-            isLoading={projectLoading || planLoading || totalBucketsLoading}
-          />
+          // Data is guaranteed to be available from route loader (fetchQuery blocks navigation)
+          // Only render if we have project and buckets data (project might be null if auth fails)
+          // organizationPlan might be null/undefined if no plan exists, which is fine - PlanLimitWarning handles it
+          project && totalBucketsData !== undefined ? (
+            <PlanLimitWarning
+              currentCount={totalBucketsCount}
+              limit={bucketsLimit}
+              planName={organizationPlan?.name}
+              resourceName="buckets"
+              orgId={project?.teamId}
+            />
+          ) : undefined
         }
       />
 

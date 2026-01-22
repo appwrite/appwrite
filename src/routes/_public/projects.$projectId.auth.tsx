@@ -14,17 +14,14 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth')({
     const { projectId } = params
     const { queryClient } = context
 
-    // Prefetch users for the project (initial page, no search)
+    // Fetch users for the project (initial page, no search)
     if (projectId) {
-      try {
-        await queryClient.ensureQueryData({
-          queryKey: ['users', 'project', projectId, 0, USERS_PER_PAGE, ''],
-          queryFn: () => fetchProjectUsers(projectId, 0, USERS_PER_PAGE, ''),
-          staleTime: 30 * 1000, // 30 seconds
-        })
-      } catch (error) {
-        // Silently fail - component will handle error state
-      }
+      // Fetch first page of users - blocks navigation until ready
+      await queryClient.fetchQuery({
+        queryKey: ['users', 'project', projectId, 0, USERS_PER_PAGE, ''],
+        queryFn: () => fetchProjectUsers(projectId, 0, USERS_PER_PAGE, ''),
+        staleTime: 30 * 1000, // 30 seconds
+      })
     }
   },
   component: AuthPage,

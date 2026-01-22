@@ -243,15 +243,29 @@ export function DatabasesListView() {
     isLoading: databasesLoading,
   } = useProjectDatabases(projectId, currentPageIndexed, pageSize, searchValue)
 
-  // Fetch total count of databases without search (for limit checking)
-  // This is separate from the search query so the alert doesn't change when searching
-  const { data: totalDatabasesData, isLoading: totalDatabasesLoading } =
-    useQuery({
-      queryKey: ['databases', 'project', projectId, 'total'],
-      queryFn: () => fetchProjectDatabases(projectId!, 0, 1, ''), // Only need total, so limit to 1
-      enabled: !!projectId,
-      staleTime: 30 * 1000, // 30 seconds
-    })
+  // Get total count from the first page query (no search) - already fetched in route loader
+  // This is used for limit checking and doesn't change when searching
+  const { data: totalDatabasesData, isLoading: totalDatabasesLoading } = useQuery({
+    queryKey: ['databases', 'project', projectId, 0, pageSize, ''],
+    queryFn: () => fetchProjectDatabases(projectId!, 0, pageSize, ''),
+    enabled: !!projectId,
+    staleTime: 30 * 1000, // 30 seconds
+    refetchOnMount: false, // Data is fresh from route loader, no need to refetch
+    placeholderData: (previousData) => {
+      // First, try to get cached data from route loader
+      const cachedData = queryClient.getQueryData([
+        'databases',
+        'project',
+        projectId,
+        0,
+        pageSize,
+        '',
+      ])
+      if (cachedData) return cachedData
+      // Keep previous data visible while loading new data
+      return previousData
+    },
+  })
 
   // Paginated data - databases are already paginated by the API
   const paginatedDatabases = apiDatabases
@@ -407,6 +421,18 @@ export function DatabasesListView() {
 
   return (
     <div className="flex h-full flex-col">
+      {/* DEBUG: Plan limit and current count */}
+      <div className="border-b border-red-500 bg-red-50 dark:bg-red-950/20 px-4 py-2 text-xs">
+        <div className="mx-auto max-w-7xl">
+          <strong>DEBUG:</strong> project={project ? 'exists' : 'missing'}, 
+          organizationPlan={organizationPlan !== undefined ? 'exists' : 'missing'}, 
+          totalDatabasesData={totalDatabasesData !== undefined ? 'exists' : 'missing'}, 
+          databasesLimit={databasesLimit}, 
+          totalDatabasesCount={totalDatabasesCount}, 
+          planLoading={planLoading ? 'true' : 'false'}, 
+          totalDatabasesLoading={totalDatabasesLoading ? 'true' : 'false'}
+        </div>
+      </div>
       <ServiceHeader
         title="Databases"
         searchPlaceholder="Search databases..."
@@ -419,14 +445,17 @@ export function DatabasesListView() {
         fullWidthBorder
         rightContent={<ViewToggle />}
         contentAfterBorder={
-          <PlanLimitWarning
-            currentCount={totalDatabasesCount}
-            limit={databasesLimit}
-            planName={organizationPlan?.name}
-            resourceName="databases"
-            orgId={project?.teamId}
-            isLoading={projectLoading || planLoading || totalDatabasesLoading}
-          />
+          // Data is prefetched in route loader, only render if data exists
+          // PlanLimitWarning handles its own visibility logic
+          project && organizationPlan !== undefined && totalDatabasesData !== undefined ? (
+            <PlanLimitWarning
+              currentCount={totalDatabasesCount}
+              limit={databasesLimit}
+              planName={organizationPlan?.name}
+              resourceName="databases"
+              orgId={project?.teamId}
+            />
+          ) : undefined
         }
       />
 
@@ -2124,7 +2153,6 @@ export function DatabaseOverview({
     {
       id: 'tables',
       label: 'Tables',
-      count: tablesTotal,
       to: '/projects/$projectId/databases/$databaseId/',
       params: { projectId, databaseId },
     },

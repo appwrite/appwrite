@@ -431,6 +431,7 @@ export function useOrganizationDomains(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
+  const queryClient = useQueryClient()
   const {
     data: domainsData,
     isLoading,
@@ -444,6 +445,10 @@ export function useOrganizationDomains(
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
+    initialData: () => {
+      // Use cached data from route loader if available
+      return queryClient.getQueryData(['domains', 'organization', organizationId, page, limit, search])
+    },
   })
 
   const domains = useMemo(() => {

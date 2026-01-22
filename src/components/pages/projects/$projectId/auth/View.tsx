@@ -410,14 +410,12 @@ export function AuthView() {
       {
         id: 'users',
         label: 'Users',
-        count: usersTotal,
         to: '/projects/$projectId/auth/',
         params: { projectId: projectId as string },
       },
       {
         id: 'teams',
         label: 'Teams',
-        count: teamsTotal,
         to: '/projects/$projectId/auth/teams',
         params: { projectId: projectId as string },
       },
@@ -440,7 +438,7 @@ export function AuthView() {
         params: { projectId: projectId as string },
       },
     ],
-    [usersTotal, teamsTotal, projectId],
+    [projectId],
   )
 
   const getCreateLabel = () => {

@@ -33,22 +33,23 @@ export const Route = createFileRoute('/_public/account/$tab')({
     const { tab } = params
     const { queryClient } = context
 
-    // Ensure critical data is loaded before rendering to prevent layout shifts
+    // Fetch critical data before rendering to prevent layout shifts
     if (tab === 'sessions') {
-      await queryClient.ensureQueryData({
+      // Fetch sessions - blocks navigation until ready
+      await queryClient.fetchQuery({
         queryKey: ['sessions', 'account'],
         queryFn: fetchAccountSessions,
         staleTime: 30 * 1000, // 30 seconds
       })
     } else if (tab === 'payments') {
-      // Ensure payment data is loaded before rendering
+      // Fetch payment data - blocks navigation until ready
       await Promise.all([
-        queryClient.ensureQueryData({
+        queryClient.fetchQuery({
           queryKey: ['payment-methods', 'account'],
           queryFn: fetchPaymentMethods,
           staleTime: 30 * 1000,
         }),
-        queryClient.ensureQueryData({
+        queryClient.fetchQuery({
           queryKey: ['billing-addresses', 'account'],
           queryFn: fetchBillingAddresses,
           staleTime: 30 * 1000,

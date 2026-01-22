@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
+import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import { fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
@@ -15,20 +16,30 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
     const { queryClient } = context
 
     if (projectId) {
-      // Ensure project is loaded before rendering (needed for header/sidebar)
-      const projectData = await queryClient.ensureQueryData({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
-
-      // Prefetch organization plan if we have a teamId (for header)
-      if (projectData?.teamId) {
-        await queryClient.prefetchQuery({
-          queryKey: ['organization', 'plan', projectData.teamId],
-          queryFn: () => fetchOrganizationPlan(projectData.teamId),
+      // Fetch project data (needed for header/sidebar) - blocks navigation
+      // Use ensureQueryData to avoid duplicate calls and handle auth errors gracefully
+      try {
+        const projectData = await queryClient.ensureQueryData({
+          queryKey: ['project', projectId],
+          queryFn: () => fetchProject(projectId),
           staleTime: 5 * 60 * 1000, // 5 minutes
         })
+
+        // Prefetch organization plan if we have a teamId (optional, for header)
+        // Use ensureQueryData to avoid duplicate calls if already fetching
+        if (projectData?.teamId) {
+          await queryClient.ensureQueryData({
+            queryKey: ['organization', 'plan', projectData.teamId],
+            queryFn: () => fetchOrganizationPlan(projectData.teamId),
+            staleTime: 5 * 60 * 1000, // 5 minutes
+          }).catch(() => {
+            // Ignore errors for optional prefetch
+          })
+        }
+      } catch (error) {
+        // If authentication is not set up yet, the component will handle it via RequireAuth
+        // Don't block navigation - let the component handle the error
+        console.warn('Failed to fetch project in loader:', error)
       }
     }
   },
@@ -98,22 +109,24 @@ function ProjectLayout() {
   }, [location.pathname])
 
   return (
-    <KeyboardShortcutsProvider projectId={projectId}>
-      <ConsoleLayout
-        sidebar={{
-          projectId,
-          activeSection,
-          mobileOpen: sidebarOpen,
-          onMobileClose: () => setSidebarOpen(false),
-          onMenuClick: () => setSidebarOpen(true),
-        }}
-        header={{ projectId }}
-        showFooter={!hideFooter}
-        fixedLayout={isFixedLayoutView}
-        isDetailRoute={isDetailRoute}
-      >
-        <Outlet />
-      </ConsoleLayout>
-    </KeyboardShortcutsProvider>
+    <RequireAuth>
+      <KeyboardShortcutsProvider projectId={projectId}>
+        <ConsoleLayout
+          sidebar={{
+            projectId,
+            activeSection,
+            mobileOpen: sidebarOpen,
+            onMobileClose: () => setSidebarOpen(false),
+            onMenuClick: () => setSidebarOpen(true),
+          }}
+          header={{ projectId }}
+          showFooter={!hideFooter}
+          fixedLayout={isFixedLayoutView}
+          isDetailRoute={isDetailRoute}
+        >
+          <Outlet />
+        </ConsoleLayout>
+      </KeyboardShortcutsProvider>
+    </RequireAuth>
   )
 }

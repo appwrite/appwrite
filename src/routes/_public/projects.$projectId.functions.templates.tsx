@@ -25,7 +25,8 @@ export const Route = createFileRoute(
       const limit = 12
       const offset = page * limit // Calculate offset to match hook format
 
-      await queryClient.ensureQueryData({
+      // Fetch first page of templates - blocks navigation until ready
+      await queryClient.fetchQuery({
         queryKey: [
           'function-templates',
           'project',

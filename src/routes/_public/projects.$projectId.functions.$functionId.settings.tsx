@@ -19,49 +19,33 @@ export const Route = createFileRoute(
     const { projectId, functionId } = params
     const { queryClient } = context
 
-    // Prefetch function
-    try {
-      await queryClient.ensureQueryData({
+    // Fetch critical data before rendering to prevent layout shifts
+    await Promise.all([
+      // Fetch function - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: ['function', 'project', projectId, functionId],
         queryFn: () => fetchProjectFunction(projectId, functionId),
         staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
-
-    // Prefetch function variables
-    try {
-      await queryClient.ensureQueryData({
+      }),
+      // Fetch function variables - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: ['variables', 'function', projectId, functionId],
         queryFn: () => fetchFunctionVariables(projectId, functionId),
         staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
-
-    // Prefetch global variables
-    try {
-      await queryClient.ensureQueryData({
+      }),
+      // Fetch global variables - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: ['variables', 'project', projectId],
         queryFn: () => fetchProjectVariables(projectId),
         staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
-
-    // Prefetch runtimes
-    try {
-      await queryClient.ensureQueryData({
+      }),
+      // Fetch runtimes - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: ['runtimes', 'project', projectId],
         queryFn: () => fetchProjectRuntimes(projectId),
         staleTime: 5 * 60 * 1000, // 5 minutes
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
+      }),
+    ])
   },
   component: FunctionSettings,
 })

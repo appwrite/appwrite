@@ -14,8 +14,6 @@ interface PlanLimitWarningProps {
   resourceName: string
   /** The organization ID for the upgrade link */
   orgId: string | null | undefined
-  /** Whether the plan data is still loading */
-  isLoading?: boolean
 }
 
 export function PlanLimitWarning({
@@ -24,37 +22,7 @@ export function PlanLimitWarning({
   planName = 'plan',
   resourceName,
   orgId,
-  isLoading = false,
 }: PlanLimitWarningProps) {
-  // If loading, render placeholder to prevent layout shift
-  // Match the exact structure and height of the actual alert
-  if (isLoading) {
-    return (
-      <div className="border-b border-border bg-amber-500/5">
-        <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-          <div className="relative w-full rounded-lg border border-amber-500/30 px-4 py-3">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <div
-                  className="h-4 w-32 bg-amber-500/20 rounded mb-2"
-                  aria-hidden="true"
-                />
-                <div
-                  className="h-3 w-48 bg-amber-500/20 rounded"
-                  aria-hidden="true"
-                />
-              </div>
-              <div
-                className="h-8 w-20 bg-amber-500/20 rounded shrink-0"
-                aria-hidden="true"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   // If limit is null, undefined, or 0, it means unlimited - no warning needed
   if (!limit || limit === 0) {
     return null

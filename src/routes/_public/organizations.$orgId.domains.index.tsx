@@ -24,19 +24,12 @@ export const Route = createFileRoute('/_public/organizations/$orgId/domains/')({
       staleTime: 5 * 60 * 1000, // 5 minutes
     })
 
-    // Prefetch domains for the organization (initial page, no search)
+    // Fetch domains for the organization (initial page, no search)
     if (orgId) {
-      // Prefetch initial page of domains - use ensureQueryData to prevent layout shifts
-      await queryClient.ensureQueryData({
+      // Fetch first page of domains - blocks navigation until ready
+      await queryClient.fetchQuery({
         queryKey: ['domains', 'organization', orgId, 0, DOMAINS_PER_PAGE, ''],
         queryFn: () => fetchOrganizationDomains(orgId, 0, DOMAINS_PER_PAGE, ''),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-
-      // Prefetch total count for limit checking (separate from search query)
-      await queryClient.prefetchQuery({
-        queryKey: ['domains', 'organization', orgId, 0, 1, ''],
-        queryFn: () => fetchOrganizationDomains(orgId, 0, 1, ''),
         staleTime: 30 * 1000, // 30 seconds
       })
     }

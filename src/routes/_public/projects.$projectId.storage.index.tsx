@@ -9,6 +9,11 @@ import {
 const BUCKETS_PER_PAGE = 25
 
 export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
+  pendingComponent: () => (
+    <div className="flex h-full items-center justify-center">
+      <div className="text-muted-foreground">Loading storage...</div>
+    </div>
+  ),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -18,37 +23,33 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
     const { projectId } = params
     const { queryClient } = context
 
-      if (projectId) {
-        // Ensure project is loaded to get teamId
-        const projectData = await queryClient.ensureQueryData({
-          queryKey: ['project', projectId],
-          queryFn: () => fetchProject(projectId),
-          staleTime: 5 * 60 * 1000, // 5 minutes
-        })
+    if (projectId) {
+      // Fetch project data (needed for header/sidebar) - blocks navigation
+      const projectData = await queryClient.fetchQuery({
+        queryKey: ['project', projectId],
+        queryFn: () => fetchProject(projectId),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      })
 
-        // Ensure buckets are loaded before rendering to prevent layout shifts
-        await Promise.all([
-          queryClient.ensureQueryData({
-            queryKey: ['buckets', 'project', projectId, 0, BUCKETS_PER_PAGE, ''],
-            queryFn: () => fetchProjectBuckets(projectId, 0, BUCKETS_PER_PAGE, ''),
-            staleTime: 30 * 1000, // 30 seconds
-          }),
-          // Prefetch organization plan if we have a teamId (optional, for limit checking)
-          projectData?.teamId
-            ? queryClient.prefetchQuery({
-                queryKey: ['organization', 'plan', projectData.teamId],
-                queryFn: () => fetchOrganizationPlan(projectData.teamId),
-                staleTime: 5 * 60 * 1000, // 5 minutes
-              })
-            : Promise.resolve(),
-          // Prefetch total count for limit checking (optional)
-          queryClient.prefetchQuery({
-            queryKey: ['buckets', 'project', projectId, 'total'],
-            queryFn: () => fetchProjectBuckets(projectId, 0, 1, ''),
-            staleTime: 30 * 1000, // 30 seconds
-          }),
-        ])
-      }
+      // Fetch critical data before rendering to prevent layout shifts
+      // fetchQuery blocks navigation and respects staleTime (uses cached data if fresh)
+      await Promise.all([
+        // Fetch first page of buckets - blocks navigation until ready
+        queryClient.fetchQuery({
+          queryKey: ['buckets', 'project', projectId, 0, BUCKETS_PER_PAGE, ''],
+          queryFn: () => fetchProjectBuckets(projectId, 0, BUCKETS_PER_PAGE, ''),
+          staleTime: 30 * 1000, // 30 seconds - uses cached data if fresh
+        }),
+        // Fetch organization plan if we have a teamId - CRITICAL for limit checking
+        projectData?.teamId
+          ? queryClient.fetchQuery({
+              queryKey: ['organization', 'plan', projectData.teamId],
+              queryFn: () => fetchOrganizationPlan(projectData.teamId),
+              staleTime: 5 * 60 * 1000, // 5 minutes - uses cached data if fresh
+            })
+          : Promise.resolve(),
+      ])
+    }
   },
   component: StorageIndexPage,
 })

@@ -8,12 +8,19 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
     const { queryClient } = context
 
     if (projectId) {
-      // Ensure project is loaded before rendering to prevent layout shifts
-      await queryClient.ensureQueryData({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
+      // Fetch project (needed for overview) - blocks navigation
+      // Use ensureQueryData to avoid duplicate calls and handle auth errors gracefully
+      try {
+        await queryClient.ensureQueryData({
+          queryKey: ['project', projectId],
+          queryFn: () => fetchProject(projectId),
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        })
+      } catch (error) {
+        // If authentication is not set up yet, the component will handle it via RequireAuth
+        // Don't block navigation - let the component handle the error
+        console.warn('Failed to fetch project in loader:', error)
+      }
     }
   },
   component: ProjectOverviewPage,

@@ -1,5 +1,4 @@
 import { createRouter } from '@tanstack/react-router'
-import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 
 // Import the generated route tree
@@ -14,6 +13,11 @@ export const getRouter = () => {
     routeTree,
     context: { ...rqContext },
     defaultPreload: 'intent',
+    defaultPendingComponent: () => (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-muted-foreground">Loading data for you...</div>
+      </div>
+    ),
     defaultErrorComponent: ({ error, info, reset }) => (
       <ErrorComponent error={error} info={info} reset={reset} />
     ),
@@ -26,7 +30,8 @@ export const getRouter = () => {
     },
   })
 
-  setupRouterSsrQueryIntegration({ router, queryClient: rqContext.queryClient })
+  // SSR is disabled - app runs as SPA (client-side only)
+  // No need for SSR query integration
 
   return router
 }

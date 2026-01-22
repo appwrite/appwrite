@@ -32,20 +32,16 @@ export const Route = createFileRoute(
     const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
     const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
 
-    // Prefetch function
-    try {
-      await queryClient.ensureQueryData({
+    // Fetch critical data before rendering to prevent layout shifts
+    await Promise.all([
+      // Fetch function - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: ['function', 'project', projectId, functionId],
         queryFn: () => fetchProjectFunction(projectId, functionId),
         staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
-
-    // Prefetch executions for the requested page
-    try {
-      await queryClient.ensureQueryData({
+      }),
+      // Fetch executions for the requested page - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: [
           'executions',
           'function',
@@ -63,10 +59,8 @@ export const Route = createFileRoute(
             EXECUTIONS_PER_PAGE,
           ),
         staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
+      }),
+    ])
   },
   component: FunctionExecutions,
 })

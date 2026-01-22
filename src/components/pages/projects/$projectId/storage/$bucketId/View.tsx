@@ -142,7 +142,6 @@ export function BucketDetailView() {
       {
         id: 'files',
         label: 'Files',
-        count: filesTotal,
         to: '/projects/$projectId/storage/$bucketId/',
         params: {
           projectId: projectId as string,
@@ -168,7 +167,7 @@ export function BucketDetailView() {
         },
       },
     ],
-    [projectId, bucketId, filesTotal],
+    [projectId, bucketId],
   )
 
   // Handle file upload - queues in background

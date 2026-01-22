@@ -15,22 +15,21 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (projectId && userId) {
-      try {
-        await Promise.all([
-          queryClient.ensureQueryData({
-            queryKey: ['user', 'project', projectId, userId],
-            queryFn: () => fetchUser(projectId, userId),
-            staleTime: 30 * 1000,
-          }),
-          queryClient.ensureQueryData({
-            queryKey: ['user', 'mfa-factors', 'project', projectId, userId],
-            queryFn: () => fetchUserMFAFactors(projectId, userId),
-            staleTime: 30 * 1000,
-          }),
-        ])
-      } catch (error) {
-        // Silently fail - component will handle error state
-      }
+      // Fetch critical data before rendering to prevent layout shifts
+      await Promise.all([
+        // Fetch user - blocks navigation until ready
+        queryClient.fetchQuery({
+          queryKey: ['user', 'project', projectId, userId],
+          queryFn: () => fetchUser(projectId, userId),
+          staleTime: 30 * 1000,
+        }),
+        // Fetch MFA factors - blocks navigation until ready
+        queryClient.fetchQuery({
+          queryKey: ['user', 'mfa-factors', 'project', projectId, userId],
+          queryFn: () => fetchUserMFAFactors(projectId, userId),
+          staleTime: 30 * 1000,
+        }),
+      ])
     }
   },
   component: UserDetailPage,

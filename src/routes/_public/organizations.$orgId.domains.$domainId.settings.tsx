@@ -21,9 +21,9 @@ export const Route = createFileRoute(
       staleTime: 5 * 60 * 1000, // 5 minutes
     })
 
-    // Prefetch domain details
+    // Fetch domain details - blocks navigation until ready
     if (domainId) {
-      await queryClient.ensureQueryData({
+      await queryClient.fetchQuery({
         queryKey: ['domain', domainId],
         queryFn: () => fetchDomain(domainId),
         staleTime: 30 * 1000, // 30 seconds

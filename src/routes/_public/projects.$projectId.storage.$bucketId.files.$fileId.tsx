@@ -10,13 +10,16 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (projectId && bucketId && fileId) {
+      // Fetch critical data before rendering to prevent layout shifts
       await Promise.all([
-        queryClient.prefetchQuery({
+        // Fetch file - blocks navigation until ready
+        queryClient.fetchQuery({
           queryKey: ['file', 'project', projectId, 'bucket', bucketId, fileId],
           queryFn: () => fetchFile(projectId, bucketId, fileId),
           staleTime: 30 * 1000,
         }),
-        queryClient.prefetchQuery({
+        // Fetch first page of file tokens - blocks navigation until ready
+        queryClient.fetchQuery({
           queryKey: [
             'file-tokens',
             'project',

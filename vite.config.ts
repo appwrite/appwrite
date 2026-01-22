@@ -15,7 +15,12 @@ const config = defineConfig({
       projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      // Disable SSR - run as SPA (Single Page Application) only
+      spa: {
+        enabled: true,
+      },
+    }),
     forSites &&
       nitroV2Plugin({
         compatibilityDate: '2025-10-08',

@@ -14,16 +14,12 @@ export const Route = createFileRoute(
     const { projectId, functionId } = params
     const { queryClient } = context
 
-    // Prefetch function
-    try {
-      await queryClient.ensureQueryData({
-        queryKey: ['function', 'project', projectId, functionId],
-        queryFn: () => fetchProjectFunction(projectId, functionId),
-        staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
+    // Fetch function - blocks navigation until ready
+    await queryClient.fetchQuery({
+      queryKey: ['function', 'project', projectId, functionId],
+      queryFn: () => fetchProjectFunction(projectId, functionId),
+      staleTime: 30 * 1000,
+    })
   },
   component: FunctionSecurity,
 })

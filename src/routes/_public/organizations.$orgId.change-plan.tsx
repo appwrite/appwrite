@@ -28,7 +28,15 @@ export const Route = createFileRoute(
       return
     }
 
-    // Prefetch all required data in parallel (don't block on errors)
+    // Fetch organization plan first - blocks navigation until ready
+    // Use ensureQueryData to avoid duplicate calls if already fetching
+    await queryClient.ensureQueryData({
+      queryKey: ['organization', 'plan', orgId],
+      queryFn: () => fetchOrganizationPlan(orgId),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    })
+
+    // Prefetch remaining data in parallel (don't block on errors)
     try {
       await Promise.all([
         // Organizations list
@@ -45,15 +53,6 @@ export const Route = createFileRoute(
           .prefetchQuery({
             queryKey: ['organization', orgId],
             queryFn: () => fetchOrganizationById(orgId),
-            staleTime: 5 * 60 * 1000, // 5 minutes
-          })
-          .catch(() => {}),
-
-        // Organization plan
-        queryClient
-          .prefetchQuery({
-            queryKey: ['organization', 'plan', orgId],
-            queryFn: () => fetchOrganizationPlan(orgId),
             staleTime: 5 * 60 * 1000, // 5 minutes
           })
           .catch(() => {}),

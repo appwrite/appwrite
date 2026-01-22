@@ -172,7 +172,6 @@ export function DomainDetailView() {
       {
         id: 'records',
         label: 'DNS Records',
-        count: recordsTotal,
         to: '/organizations/$orgId/domains/$domainId',
         params: { orgId: orgId as string, domainId: domainId as string },
       },
@@ -183,7 +182,7 @@ export function DomainDetailView() {
         params: { orgId: orgId as string, domainId: domainId as string },
       },
     ],
-    [orgId, domainId, recordsTotal],
+    [orgId, domainId],
   )
 
   // Create record mutation

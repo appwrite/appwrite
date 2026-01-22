@@ -23,9 +23,10 @@ export const Route = createFileRoute('/_public/organizations/$orgId/members')({
       staleTime: 5 * 60 * 1000, // 5 minutes
     })
 
-    // Prefetch memberships for the organization (initial page, no search)
+    // Fetch memberships for the organization (initial page, no search)
     if (orgId) {
-      await queryClient.prefetchQuery({
+      // Fetch first page of memberships - blocks navigation until ready
+      await queryClient.fetchQuery({
         queryKey: [
           'memberships',
           'organization',

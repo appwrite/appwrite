@@ -29,7 +29,6 @@ import {
   Tokens,
   TablesDB,
   Domains,
-  Realtime,
   Organizations,
 } from '@appwrite.io/console'
 
@@ -68,7 +67,6 @@ function createConsoleSdk(client: Client) {
     sites: new Sites(client),
     domains: new Domains(client),
     storage: new Storage(client),
-    realtime: new Realtime(client),
     organizations: new Organizations(client),
   }
 }
@@ -78,16 +76,12 @@ const endpoint = getApiEndpoint()
 
 const clientConsole = new Client()
 const clientProject = new Client()
-const clientRealtime = new Client()
 
 // Configure Console client
 clientConsole.setEndpoint(endpoint).setProject('console')
 
 // Configure Project client (will be set per-project)
 clientProject.setEndpoint(endpoint).setMode('admin')
-
-// Configure Realtime client
-clientRealtime.setEndpoint(endpoint).setProject('console')
 
 // Create Project SDK instance
 const sdkForProject = {
@@ -111,7 +105,6 @@ const sdkForProject = {
   sites: new Sites(clientProject),
   tablesDB: new TablesDB(clientProject),
   console: new Console(clientProject), // for suggestions API
-  realtime: new Realtime(clientProject),
 }
 
 // Export SDK instances

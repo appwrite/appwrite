@@ -27,34 +27,36 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     if (projectId) {
-      // Ensure locale codes are loaded before component renders
-      await queryClient.ensureQueryData({
-        queryKey: ['localeCodes', 'console'],
-        queryFn: fetchLocaleCodes,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
-
-      // Ensure all English templates are loaded before component renders
-      // Use Promise.allSettled to ensure all templates are fetched even if some fail
-      await Promise.allSettled(
-        EMAIL_TEMPLATE_TYPES.map((templateType) =>
-          queryClient.ensureQueryData({
-            queryKey: [
-              'emailTemplate',
-              projectId,
-              templateType,
-              EmailTemplateLocale.En,
-            ],
-            queryFn: () =>
-              fetchEmailTemplate(
+      // Fetch critical data before rendering to prevent layout shifts
+      await Promise.all([
+        // Fetch locale codes - blocks navigation until ready
+        queryClient.fetchQuery({
+          queryKey: ['localeCodes', 'console'],
+          queryFn: fetchLocaleCodes,
+          staleTime: 5 * 60 * 1000, // 5 minutes
+        }),
+        // Fetch all English templates - blocks navigation until ready
+        // Use Promise.allSettled to ensure all templates are fetched even if some fail
+        Promise.allSettled(
+          EMAIL_TEMPLATE_TYPES.map((templateType) =>
+            queryClient.fetchQuery({
+              queryKey: [
+                'emailTemplate',
                 projectId,
                 templateType,
                 EmailTemplateLocale.En,
-              ),
-            staleTime: 30 * 1000, // 30 seconds
-          }),
+              ],
+              queryFn: () =>
+                fetchEmailTemplate(
+                  projectId,
+                  templateType,
+                  EmailTemplateLocale.En,
+                ),
+              staleTime: 30 * 1000, // 30 seconds
+            }),
+          ),
         ),
-      )
+      ])
     }
   },
   component: AuthTemplatesPage,

@@ -10,6 +10,11 @@ const DATABASES_PER_PAGE = 25
 
 export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
   {
+    pendingComponent: () => (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-muted-foreground">Loading databases...</div>
+      </div>
+    ),
     loader: async ({ params, context }) => {
       // Only run on client side (SDK requires browser environment)
       if (typeof window === 'undefined') {
@@ -20,16 +25,18 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
       const { queryClient } = context
 
       if (projectId) {
-        // Ensure project is loaded to get teamId
-        const projectData = await queryClient.ensureQueryData({
+        // Fetch project data (needed for header/sidebar) - blocks navigation
+        const projectData = await queryClient.fetchQuery({
           queryKey: ['project', projectId],
           queryFn: () => fetchProject(projectId),
           staleTime: 5 * 60 * 1000, // 5 minutes
         })
 
-        // Ensure databases are loaded before rendering to prevent layout shifts
+        // Fetch critical data before rendering to prevent layout shifts
+        // fetchQuery blocks navigation and respects staleTime (uses cached data if fresh)
         await Promise.all([
-          queryClient.ensureQueryData({
+          // Fetch first page of databases - blocks navigation until ready
+          queryClient.fetchQuery({
             queryKey: [
               'databases',
               'project',
@@ -40,22 +47,16 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
             ],
             queryFn: () =>
               fetchProjectDatabases(projectId, 0, DATABASES_PER_PAGE, ''),
-            staleTime: 30 * 1000, // 30 seconds
+            staleTime: 30 * 1000, // 30 seconds - uses cached data if fresh
           }),
-          // Prefetch organization plan if we have a teamId (optional, for limit checking)
+          // Fetch organization plan if we have a teamId - CRITICAL for limit checking
           projectData?.teamId
-            ? queryClient.prefetchQuery({
+            ? queryClient.fetchQuery({
                 queryKey: ['organization', 'plan', projectData.teamId],
                 queryFn: () => fetchOrganizationPlan(projectData.teamId),
-                staleTime: 5 * 60 * 1000, // 5 minutes
+                staleTime: 5 * 60 * 1000, // 5 minutes - uses cached data if fresh
               })
             : Promise.resolve(),
-          // Prefetch total count for limit checking (optional)
-          queryClient.prefetchQuery({
-            queryKey: ['databases', 'project', projectId, 'total'],
-            queryFn: () => fetchProjectDatabases(projectId, 0, 1, ''),
-            staleTime: 30 * 1000, // 30 seconds
-          }),
         ])
       }
     },

@@ -26,9 +26,10 @@ export const Route = createFileRoute(
       return
     }
 
-    // Resolve all required data before rendering to avoid intermediate empty states
+    // Fetch critical data before rendering to prevent layout shifts
     await Promise.all([
-      queryClient.ensureQueryData({
+      // Fetch tables list - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: [
           'tables',
           'project',
@@ -48,12 +49,14 @@ export const Route = createFileRoute(
           ),
         staleTime: 30 * 1000, // 30 seconds
       }),
-      queryClient.ensureQueryData({
+      // Fetch database - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: ['database', 'project', projectId, databaseId],
         queryFn: () => fetchProjectDatabase(projectId, databaseId),
         staleTime: 30 * 1000,
       }),
-      queryClient.ensureQueryData({
+      // Fetch columns - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: ['columns', 'project', projectId, databaseId, tableId],
         queryFn: () => fetchProjectTableColumns(projectId, databaseId, tableId),
         staleTime: 30 * 1000, // 30 seconds
@@ -64,7 +67,8 @@ export const Route = createFileRoute(
         queryFn: () => fetchProjectTableIndexes(projectId, databaseId, tableId),
         staleTime: 30 * 1000, // 30 seconds
       }),
-      queryClient.ensureQueryData({
+      // Fetch table - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: ['table', 'project', projectId, databaseId, tableId],
         queryFn: () => fetchProjectTable(projectId, databaseId, tableId),
         staleTime: 30 * 1000, // 30 seconds

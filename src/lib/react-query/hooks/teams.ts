@@ -133,6 +133,7 @@ export function useOrganizationMemberships(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
+  const queryClient = useQueryClient()
   const {
     data: membershipsData,
     isLoading,
@@ -153,6 +154,17 @@ export function useOrganizationMemberships(
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
+    initialData: () => {
+      // Use cached data from route loader if available
+      return queryClient.getQueryData([
+        'memberships',
+        'organization',
+        organizationId,
+        page,
+        limit,
+        search,
+      ])
+    },
   })
 
   // Map memberships to our TeamMember type

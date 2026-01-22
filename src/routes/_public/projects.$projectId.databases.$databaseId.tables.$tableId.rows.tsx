@@ -28,8 +28,8 @@ export const Route = createFileRoute(
       return
     }
 
-    // Resolve all required data before rendering to avoid intermediate empty states
-    const tablesPromise = queryClient.ensureQueryData({
+    // Fetch tables list (needed for redirect logic) - blocks navigation
+    const tablesPromise = queryClient.fetchQuery({
       queryKey: [
         'tables',
         'project',
@@ -102,13 +102,14 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
-      const databasePromise = queryClient.ensureQueryData({
+      // Fetch critical data before rendering to prevent layout shifts
+      const databasePromise = queryClient.fetchQuery({
         queryKey: ['database', 'project', projectId, databaseId],
         queryFn: () => fetchProjectDatabase(projectId, databaseId),
         staleTime: 30 * 1000,
       })
 
-      const columnsPromise = queryClient.ensureQueryData({
+      const columnsPromise = queryClient.fetchQuery({
         queryKey: ['columns', 'project', projectId, databaseId, tableId],
         queryFn: () => fetchProjectTableColumns(projectId, databaseId, tableId),
         staleTime: 30 * 1000, // 30 seconds
@@ -121,7 +122,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000, // 30 seconds
       })
 
-      const rowsPromise = queryClient.ensureQueryData({
+      const rowsPromise = queryClient.fetchQuery({
         queryKey: [
           'rows',
           'project',
@@ -144,7 +145,7 @@ export const Route = createFileRoute(
         staleTime: 30 * 1000, // 30 seconds
       })
 
-      const tablePromise = queryClient.ensureQueryData({
+      const tablePromise = queryClient.fetchQuery({
         queryKey: ['table', 'project', projectId, databaseId, tableId],
         queryFn: () => fetchProjectTable(projectId, databaseId, tableId),
         staleTime: 30 * 1000, // 30 seconds

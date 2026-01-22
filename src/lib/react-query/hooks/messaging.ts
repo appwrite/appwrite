@@ -4,7 +4,7 @@
  * Handles messages, topics, providers, subscribers, and targets.
  */
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
@@ -237,6 +237,7 @@ export function useProjectMessages(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
+  const queryClient = useQueryClient()
   const {
     data: messagesData,
     isLoading,
@@ -249,6 +250,10 @@ export function useProjectMessages(
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
+    initialData: () => {
+      // Use cached data from route loader if available
+      return queryClient.getQueryData(['messages', 'project', projectId, page, limit, search])
+    },
   })
 
   const messages = useMemo(() => {
@@ -314,6 +319,7 @@ export function useProjectTopics(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
+  const queryClient = useQueryClient()
   const {
     data: topicsData,
     isLoading,
@@ -326,6 +332,10 @@ export function useProjectTopics(
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
+    initialData: () => {
+      // Use cached data from route loader if available
+      return queryClient.getQueryData(['topics', 'project', projectId, page, limit, search])
+    },
   })
 
   const topics = useMemo(() => {
@@ -428,6 +438,7 @@ export function useProjectProviders(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
+  const queryClient = useQueryClient()
   const {
     data: providersData,
     isLoading,
@@ -440,6 +451,10 @@ export function useProjectProviders(
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
     placeholderData: keepPreviousData,
+    initialData: () => {
+      // Use cached data from route loader if available
+      return queryClient.getQueryData(['providers', 'project', projectId, page, limit, search])
+    },
   })
 
   const providers = useMemo(() => {

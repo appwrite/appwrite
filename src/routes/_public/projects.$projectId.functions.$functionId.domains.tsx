@@ -19,20 +19,16 @@ export const Route = createFileRoute(
     const { projectId, functionId } = params
     const { queryClient } = context
 
-    // Prefetch function
-    try {
-      await queryClient.ensureQueryData({
+    // Fetch critical data before rendering to prevent layout shifts
+    await Promise.all([
+      // Fetch function - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: ['function', 'project', projectId, functionId],
         queryFn: () => fetchProjectFunction(projectId, functionId),
         staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
-
-    // Prefetch proxy rules for domains (initial page, no search)
-    try {
-      await queryClient.ensureQueryData({
+      }),
+      // Fetch first page of proxy rules - blocks navigation until ready
+      queryClient.fetchQuery({
         queryKey: [
           'proxy-rules',
           'function',
@@ -45,21 +41,8 @@ export const Route = createFileRoute(
         queryFn: () =>
           fetchFunctionDomains(projectId, functionId, 0, DOMAINS_PER_PAGE, ''),
         staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
-
-    // Prefetch total count for limit checking (separate from search query)
-    try {
-      await queryClient.ensureQueryData({
-        queryKey: ['proxy-rules', 'function', projectId, functionId, 0, 1, ''],
-        queryFn: () => fetchFunctionDomains(projectId, functionId, 0, 1, ''),
-        staleTime: 30 * 1000,
-      })
-    } catch (error) {
-      // Silently fail - component will handle error state
-    }
+      }),
+    ])
   },
   component: FunctionDomains,
 })

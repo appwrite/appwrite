@@ -420,44 +420,6 @@ export function FunctionDeployments() {
     setDeleteDialogOpen(false)
   }, [displayedPage])
 
-  // Real-time subscription
-  useEffect(() => {
-    if (!projectId || !functionId) return
-
-    let subscription: { close: () => Promise<void> } | null = null
-
-    const setupSubscription = async () => {
-      try {
-        subscription = await sdk
-          .forProject(projectId)
-          .realtime.subscribe([`projects.${projectId}`], (response) => {
-            if (
-              response.events?.some((event) =>
-                event.includes(`functions.${functionId}.deployments.`),
-              )
-            ) {
-              queryClient.invalidateQueries({
-                queryKey: Dependencies.DEPLOYMENTS,
-              })
-              queryClient.invalidateQueries({
-                queryKey: ['function', 'project', projectId, functionId],
-              })
-            }
-          })
-      } catch (error) {
-        console.error('Failed to subscribe to deployments realtime:', error)
-      }
-    }
-
-    setupSubscription()
-
-    return () => {
-      if (subscription) {
-        subscription.close().catch(() => {})
-      }
-    }
-  }, [projectId, functionId]) // queryClient is stable, no need to include in deps
-
   const isBuilding =
     activeDeployment?.status === 'building' ||
     activeDeployment?.status === 'processing'

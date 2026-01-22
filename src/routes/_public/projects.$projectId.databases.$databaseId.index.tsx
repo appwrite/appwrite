@@ -19,15 +19,17 @@ export const Route = createFileRoute(
     const { projectId, databaseId } = params
     const { queryClient } = context
 
-    // Ensure database and tables are loaded before rendering to prevent layout shifts
+    // Fetch critical data before rendering to prevent layout shifts
     if (projectId && databaseId) {
       await Promise.all([
-        queryClient.ensureQueryData({
+        // Fetch database - blocks navigation until ready
+        queryClient.fetchQuery({
           queryKey: ['database', 'project', projectId, databaseId],
           queryFn: () => fetchProjectDatabase(projectId, databaseId),
           staleTime: 30 * 1000, // 30 seconds
         }),
-        queryClient.ensureQueryData({
+        // Fetch first page of tables - blocks navigation until ready
+        queryClient.fetchQuery({
           queryKey: [
             'tables',
             'project',

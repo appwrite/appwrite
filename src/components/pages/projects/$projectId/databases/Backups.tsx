@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID } from '@appwrite.io/console'
@@ -123,61 +123,6 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     policiesLoading && policies.length === 0 && !policiesData
   const isArchivesActuallyLoading =
     archivesLoading && archives.length === 0 && !archivesData
-
-  // Real-time subscription
-  useEffect(() => {
-    if (!projectId || !databaseId) return
-
-    let subscription: { close: () => Promise<void> } | null = null
-
-    const setupSubscription = async () => {
-      try {
-        subscription = await sdk
-          .forProject(projectId)
-          .realtime.subscribe([`projects.${projectId}`], (response) => {
-            if (
-              response.events?.some(
-                (event) =>
-                  event.includes('archives.') || event.includes('policies.'),
-              )
-            ) {
-              // Invalidate both policies and archives queries for this database
-              queryClient.invalidateQueries({
-                queryKey: [
-                  'backup-policies',
-                  'project',
-                  projectId,
-                  'database',
-                  databaseId,
-                ],
-              })
-              queryClient.invalidateQueries({
-                queryKey: [
-                  'backup-archives',
-                  'project',
-                  projectId,
-                  'database',
-                  databaseId,
-                ],
-              })
-            }
-          })
-      } catch (error) {
-        // Silently ignore realtime errors
-        console.error('Failed to subscribe to backups realtime:', error)
-      }
-    }
-
-    setupSubscription()
-
-    return () => {
-      if (subscription) {
-        subscription.close().catch(() => {
-          // Silently ignore cleanup errors
-        })
-      }
-    }
-  }, [projectId, databaseId]) // queryClient is stable, no need to include in deps
 
   // Check if backups are disabled
   // Wait for plan to load before determining if backups are disabled

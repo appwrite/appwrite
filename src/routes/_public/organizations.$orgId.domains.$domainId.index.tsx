@@ -27,29 +27,22 @@ export const Route = createFileRoute(
       staleTime: 5 * 60 * 1000, // 5 minutes
     })
 
-    // Prefetch domain details and DNS records
+    // Fetch domain details and DNS records - blocks navigation until ready
     if (domainId) {
-      // Prefetch domain details
-      try {
-        await queryClient.ensureQueryData({
+      await Promise.all([
+        // Fetch domain details - blocks navigation until ready
+        queryClient.fetchQuery({
           queryKey: ['domain', domainId],
           queryFn: () => fetchDomain(domainId),
           staleTime: 30 * 1000, // 30 seconds
-        })
-      } catch (error) {
-        // Silently fail - component will handle error state
-      }
-
-      // Prefetch DNS records (initial page) - use ensureQueryData to prevent layout shifts
-      try {
-        await queryClient.ensureQueryData({
+        }),
+        // Fetch first page of DNS records - blocks navigation until ready
+        queryClient.fetchQuery({
           queryKey: ['dns-records', 'domain', domainId, 0, RECORDS_PER_PAGE],
           queryFn: () => fetchDomainRecords(domainId, 0, RECORDS_PER_PAGE),
           staleTime: 30 * 1000, // 30 seconds
-        })
-      } catch (error) {
-        // Silently fail - component will handle error state
-      }
+        }),
+      ])
     }
   },
   component: DomainDetailPage,

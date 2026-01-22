@@ -14,9 +14,9 @@ export const Route = createFileRoute(
     const { projectId, teamId } = params
     const { queryClient } = context
 
-    // Prefetch team data
+    // Fetch team data - blocks navigation until ready
     if (projectId && teamId) {
-      await queryClient.ensureQueryData({
+      await queryClient.fetchQuery({
         queryKey: ['team', 'project', projectId, teamId],
         queryFn: () => fetchTeam(projectId, teamId),
         staleTime: 30 * 1000, // 30 seconds

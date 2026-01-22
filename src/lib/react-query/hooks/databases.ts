@@ -1263,7 +1263,7 @@ export function useProjectDatabases(
     if (!databasesData?.total) return 0
     return Math.ceil(databasesData.total / limit)
   }, [databasesData?.total, limit])
-
+  
   return {
     databases,
     total: databasesData?.total || 0,

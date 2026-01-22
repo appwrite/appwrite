@@ -16,15 +16,17 @@ export const Route = createFileRoute(
     const { projectId, teamId } = params
     const { queryClient } = context
 
-    // Prefetch team data and memberships
+    // Fetch critical data before rendering to prevent layout shifts
     if (projectId && teamId) {
       await Promise.all([
-        queryClient.ensureQueryData({
+        // Fetch team - blocks navigation until ready
+        queryClient.fetchQuery({
           queryKey: ['team', 'project', projectId, teamId],
           queryFn: () => fetchTeam(projectId, teamId),
           staleTime: 30 * 1000,
         }),
-        queryClient.ensureQueryData({
+        // Fetch first page of memberships - blocks navigation until ready
+        queryClient.fetchQuery({
           queryKey: [
             'team',
             'memberships',

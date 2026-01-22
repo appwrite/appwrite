@@ -173,7 +173,6 @@ export function TopicDetailView() {
       {
         id: 'subscribers',
         label: 'Subscribers',
-        count: subscribersTotal,
         to: '/projects/$projectId/messaging/topics/$topicId',
         params: {
           projectId: projectId as string,
@@ -190,7 +189,7 @@ export function TopicDetailView() {
         },
       },
     ],
-    [projectId, topicId, subscribersTotal],
+    [projectId, topicId],
   )
 
   const getTypeIcon = (type: string) => {
