@@ -244,8 +244,29 @@ App::init()
             }
 
             $scopes = []; // Reset scope if admin
-            foreach ($adminRoles as $role) {
-                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+            
+            // Populate scopes from team wide roles
+            $teamWideRoles = \array_filter($adminRoles, fn ($role) => !str_starts_with($role, "project-"));
+            if (!empty($teamWideRoles)) {
+                foreach ($teamWideRoles as $role) {
+                    $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+                }
+            } else {
+                $scopes = \array_merge($scopes, $roles[User::ROLE_USERS]['scopes']);
+            }
+
+            // Populate scopes from project-specific roles
+            if ($project->getId() !== 'console') {
+                $projectId = $project->getId();
+                $projectRoles = \array_filter($adminRoles, fn ($role) => str_starts_with($role, "project-{$projectId}"));
+
+                foreach ($projectRoles as $role) {
+                    $parts = \explode('-', $role);
+                    if (\count($parts) === 3) {
+                        $role = $parts[2];
+                        $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+                    }
+                } 
             }
 
             $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.

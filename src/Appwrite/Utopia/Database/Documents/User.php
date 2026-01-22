@@ -60,17 +60,35 @@ class User extends Document
         }
 
         foreach ($this->getAttribute('memberships', []) as $node) {
-            if (!isset($node['confirm']) || !$node['confirm']) {
+            if (!isset($node['confirm']) || !$node['confirm'] || !isset($node['$id']) || !isset($node['teamId'])) {
                 continue;
             }
 
-            if (isset($node['$id']) && isset($node['teamId'])) {
-                $roles[] = Role::team($node['teamId'])->toString();
-                $roles[] = Role::member($node['$id'])->toString();
+            $nodeRoles = $node['roles'] ?? [];
 
-                if (isset($node['roles'])) {
-                    foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                        $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
+            // Add role for this membership.
+            $roles[] = Role::member($node['$id'])->toString();
+
+            // Add all roles in the team.
+            $allRoles = \array_map(fn ($role) => Role::team($node['teamId'], $role)->toString(), $nodeRoles);
+            $roles = \array_merge($roles, $allRoles);
+            
+            // Add base team-wide role.
+            $teamWideRoles = \array_filter($nodeRoles, fn ($role) => !str_starts_with($role, "project-"));
+            if (!empty($teamWideRoles)) {
+                $roles[] = Role::team($node['teamId'])->toString();
+            } else {
+                $roles[] = Role::team($node['teamId'], self::ROLE_MEMBER)->toString();
+            }
+
+            // Add base project-wide roles.
+            $projectRoles = \array_filter($nodeRoles, fn ($role) => str_starts_with($role, "project-"));
+            if (!empty($projectRoles)) {
+                foreach ($projectRoles as $role) {
+                    $parts = \explode('-', $role);
+                    if (\count($parts) === 3) {
+                        $projectId = $parts[1];
+                        $roles[] = Role::team($node['teamId'], "project-{$projectId}")->toString(); // Add base project-wide role
                     }
                 }
             }
