@@ -1,7 +1,7 @@
 import { DomainDetailView } from '@/components/pages/organizations/$orgId/domains/$domainId/View'
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  fetchOrganizations,
+  organizationsQueryOptions,
   domainQueryOptions,
   domainRecordsQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -21,11 +21,7 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     // Prefetch organizations if not already loaded
-    await queryClient.prefetchQuery({
-      queryKey: ['organizations', 'console'],
-      queryFn: fetchOrganizations,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    })
+    await queryClient.prefetchQuery(organizationsQueryOptions())
 
     // Fetch domain details and DNS records - blocks navigation until ready
     if (domainId) {

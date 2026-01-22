@@ -946,6 +946,43 @@ export async function deleteBillingAddress(params: {
 // ============================================================================
 
 /**
+ * Query options for fetching all organizations (teams) from the console SDK
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function organizationsQueryOptions() {
+  return queryOptions({
+    queryKey: ['organizations', 'console'],
+    queryFn: fetchOrganizations,
+    staleTime: LONG_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+/**
+ * Query options for fetching a single organization by ID
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function organizationQueryOptions(orgId: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['organization', orgId],
+    queryFn: () => fetchOrganizationById(orgId!),
+    enabled: !!orgId,
+    staleTime: LONG_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: !!orgId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
  * Query options for fetching organization plan details
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -957,8 +994,8 @@ export function organizationPlanQueryOptions(orgId: string | null | undefined) {
     enabled: !!orgId,
     staleTime: LONG_STALE_TIME,
     retry: false, // Don't retry on error
-    refetchOnWindowFocus: false,
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
     // Don't keep disabled queries in cache
     gcTime: !!orgId ? 5 * 60 * 1000 : 0,
@@ -983,13 +1020,7 @@ export function useOrganizations() {
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['organizations', 'console'],
-    queryFn: fetchOrganizations,
-    staleTime: LONG_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnWindowFocus: false,
-  })
+  } = useQuery(organizationsQueryOptions())
 
   // Map the API response to our Organization type
   const organizations = useMemo(() => {
@@ -1053,14 +1084,7 @@ export function useOrganizationById(orgId: string | null | undefined) {
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['organization', orgId],
-    queryFn: () => fetchOrganizationById(orgId!),
-    enabled: !!orgId,
-    staleTime: LONG_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnWindowFocus: false,
-  })
+  } = useQuery(organizationQueryOptions(orgId))
 
   // Map the API response to include plan information
   const organization = useMemo(() => {
@@ -1111,6 +1135,8 @@ export function useOrganizationPlan(orgId: string | null | undefined) {
 
 /**
  * Query options for fetching invoices for an organization
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
  */
 export function organizationInvoicesQueryOptions(
   organizationId: string | null | undefined,
@@ -1135,11 +1161,15 @@ export function organizationInvoicesQueryOptions(
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })
 }
 
 /**
  * Query options for fetching billing aggregation for an organization
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
  */
 export function organizationBillingAggregationQueryOptions(
   organizationId: string | null | undefined,
@@ -1169,11 +1199,15 @@ export function organizationBillingAggregationQueryOptions(
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId && aggregationId ? 5 * 60 * 1000 : 0,
   })
 }
 
 /**
  * Query options for fetching credits for an organization
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
  */
 export function organizationCreditsQueryOptions(
   organizationId: string | null | undefined,
@@ -1189,11 +1223,15 @@ export function organizationCreditsQueryOptions(
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })
 }
 
 /**
  * Query options for fetching payment methods
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
  */
 export function paymentMethodsQueryOptions() {
   return queryOptions({
@@ -1209,6 +1247,8 @@ export function paymentMethodsQueryOptions() {
 
 /**
  * Query options for fetching billing addresses
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
  */
 export function billingAddressesQueryOptions() {
   return queryOptions({
@@ -1224,6 +1264,8 @@ export function billingAddressesQueryOptions() {
 
 /**
  * Query options for fetching a specific payment method
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
  */
 export function paymentMethodQueryOptions(
   paymentMethodId: string | null | undefined,
@@ -1237,11 +1279,15 @@ export function paymentMethodQueryOptions(
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: paymentMethodId ? 5 * 60 * 1000 : 0,
   })
 }
 
 /**
  * Query options for fetching a specific billing address
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
  */
 export function billingAddressQueryOptions(
   billingAddressId: string | null | undefined,
@@ -1255,6 +1301,8 @@ export function billingAddressQueryOptions(
     refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
     refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
     refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: billingAddressId ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -1738,11 +1786,10 @@ export function useBillingPlans() {
     queryKey: ['billing-plans'],
     queryFn: fetchBillingPlans,
     staleTime: LONG_STALE_TIME,
-    // Prevent infinite refetch loops
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: false, // Don't retry if it fails
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
     gcTime: Infinity, // Keep in cache forever
   })
 
@@ -1766,11 +1813,12 @@ export function useCouponAccount(couponCode: string | null | undefined) {
     queryFn: () => fetchCouponAccount(couponCode!),
     enabled: !!couponCode,
     staleTime: DEFAULT_STALE_TIME,
-    // Prevent infinite refetch loops
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: false,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: couponCode ? 5 * 60 * 1000 : 0,
   })
 
   return {
@@ -1795,11 +1843,12 @@ export function useOrganizationUsage(
     queryFn: () => fetchOrganizationUsage(organizationId!),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
-    // Prevent infinite refetch loops
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: false,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })
 
   return {
@@ -1824,11 +1873,12 @@ export function useOrganizationProjects(
     queryFn: () => fetchOrganizationProjects(organizationId!),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
-    // Prevent infinite refetch loops
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    retry: false,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
   })
 
   return {

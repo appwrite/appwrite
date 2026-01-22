@@ -1,7 +1,7 @@
 import { DomainsView } from '@/components/pages/organizations/$orgId/domains/View'
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  fetchOrganizations,
+  organizationsQueryOptions,
   organizationDomainsQueryOptions,
 } from '@/lib/react-query/hooks'
 
@@ -18,11 +18,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/domains/')({
     const { queryClient } = context
 
     // Prefetch organizations if not already loaded
-    await queryClient.prefetchQuery({
-      queryKey: ['organizations', 'console'],
-      queryFn: fetchOrganizations,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    })
+    await queryClient.prefetchQuery(organizationsQueryOptions())
 
     // Fetch domains for the organization (initial page, no search)
     if (orgId) {

@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  fetchOrganizations,
+  organizationsQueryOptions,
   organizationInvoicesQueryOptions,
-  fetchOrganizationById,
+  organizationQueryOptions,
   organizationBillingAggregationQueryOptions,
   organizationCreditsQueryOptions,
   paymentMethodsQueryOptions,
@@ -31,11 +31,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
 
     // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
     queryClient
-      .prefetchQuery({
-        queryKey: ['organizations', 'console'],
-        queryFn: fetchOrganizations,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
+      .prefetchQuery(organizationsQueryOptions())
       .catch(() => {
         // Don't block on optional data
       })
@@ -46,11 +42,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
 
     const [orgData] = await Promise.all([
       // Fetch organization - blocks navigation until ready
-      queryClient.ensureQueryData({
-        queryKey: ['organization', orgId],
-        queryFn: () => fetchOrganizationById(orgId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      }),
+      queryClient.ensureQueryData(organizationQueryOptions(orgId)),
     ])
 
     // Now load aggregation using orgData (must be after orgData is loaded)

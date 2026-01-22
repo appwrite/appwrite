@@ -125,31 +125,6 @@ export async function fetchRepositoryContents(
   })
 }
 
-/**
- * Query function to detect runtime/framework for a repository directory
- */
-export async function detectRepositoryRuntime(
-  projectId: string,
-  installationId: string,
-  providerRepositoryId: string,
-  type: VCSDetectionType,
-  providerRootDirectory?: string,
-): Promise<Models.DetectionFramework> {
-  if (!projectId || !installationId || !providerRepositoryId) {
-    throw new Error(
-      'Project ID, Installation ID, and Repository ID are required',
-    )
-  }
-
-  const projectSdk = sdk.forProject(projectId)
-  return await projectSdk.vcs.createRepositoryDetection({
-    installationId,
-    providerRepositoryId,
-    type,
-    providerRootDirectory,
-  })
-}
-
 // ============================================================================
 // HOOKS
 // ============================================================================

@@ -1,7 +1,10 @@
 import { OrgOverview } from '@/components/pages/organizations/$orgId/overview/View'
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
-import { fetchOrganizations } from '@/lib/react-query/hooks'
+import {
+  organizationsQueryOptions,
+  organizationPlanQueryOptions,
+} from '@/lib/react-query/hooks'
 import { z } from 'zod'
 
 const searchSchema = z.object({
@@ -21,11 +24,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
 
     // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
     queryClient
-      .prefetchQuery({
-        queryKey: ['organizations', 'console'],
-        queryFn: fetchOrganizations,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
+      .prefetchQuery(organizationsQueryOptions())
       .catch(() => {
         // Don't block on optional data
       })
@@ -33,7 +32,6 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     // Fetch organization plan - CRITICAL: blocks navigation until ready
     if (orgId) {
       try {
-        const { organizationPlanQueryOptions } = require('@/lib/react-query/hooks')
         await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
       } catch (error) {
         // Don't block navigation if plan fetch fails - component will handle

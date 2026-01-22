@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
   organizationMembershipsQueryOptions,
-  fetchOrganizations,
+  organizationsQueryOptions,
   activeProjectsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
@@ -18,11 +18,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
 
     // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
     queryClient
-      .prefetchQuery({
-        queryKey: ['organizations', 'console'],
-        queryFn: fetchOrganizations,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
+      .prefetchQuery(organizationsQueryOptions())
       .catch(() => {
         // Don't block on optional data
       })

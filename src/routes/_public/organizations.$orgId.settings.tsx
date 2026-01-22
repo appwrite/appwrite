@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { fetchOrganizations } from '@/lib/react-query/hooks'
+import { organizationsQueryOptions } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/settings')({
   loader: async ({ params, context }) => {
@@ -11,11 +11,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/settings')({
     const { queryClient } = context
 
     // Prefetch organizations if not already loaded
-    await queryClient.prefetchQuery({
-      queryKey: ['organizations', 'console'],
-      queryFn: fetchOrganizations,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    })
+    await queryClient.prefetchQuery(organizationsQueryOptions())
   },
   component: SettingsPage,
 })

@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  fetchOrganizations,
-  fetchOrganizationById,
-  fetchOrganizationPlan,
+  organizationsQueryOptions,
+  organizationQueryOptions,
+  organizationPlanQueryOptions,
   fetchOrganizationMemberships,
   fetchBillingPlans,
   fetchOrganizationUsage,
@@ -30,31 +30,19 @@ export const Route = createFileRoute(
 
     // Fetch organization plan first - blocks navigation until ready
     // Use ensureQueryData to avoid duplicate calls if already fetching
-    await queryClient.ensureQueryData({
-      queryKey: ['organization', 'plan', orgId],
-      queryFn: () => fetchOrganizationPlan(orgId),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    })
+    await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
 
     // Prefetch remaining data in parallel (don't block on errors)
     try {
       await Promise.all([
         // Organizations list
         queryClient
-          .prefetchQuery({
-            queryKey: ['organizations', 'console'],
-            queryFn: fetchOrganizations,
-            staleTime: 5 * 60 * 1000, // 5 minutes
-          })
+          .prefetchQuery(organizationsQueryOptions())
           .catch(() => {}),
 
         // Organization details
         queryClient
-          .prefetchQuery({
-            queryKey: ['organization', orgId],
-            queryFn: () => fetchOrganizationById(orgId),
-            staleTime: 5 * 60 * 1000, // 5 minutes
-          })
+          .prefetchQuery(organizationQueryOptions(orgId))
           .catch(() => {}),
 
         // Organization memberships
