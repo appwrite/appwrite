@@ -58,9 +58,6 @@ const config = defineConfig({
     devtoolsJson(),
     viteReact(),
   ],
-  build: {
-    outDir: 'dist',
-  },
   server: {
     host: '::',
     allowedHosts: true,
