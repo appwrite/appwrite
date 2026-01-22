@@ -12,17 +12,12 @@ class Projects extends Base
     ];
 
     /**
-     * @var array<string>
-     */
-    protected array $allowed = self::ALLOWED_ATTRIBUTES;
-
-    /**
      * Expression constructor
      *
      */
     public function __construct()
     {
-        parent::__construct('projects', $this->allowed);
+        parent::__construct('projects', $this->getAllowedAttributes());
     }
 
     public function isSelectQueryAllowed(): bool
@@ -32,6 +27,6 @@ class Projects extends Base
 
     public function getAllowedAttributes(): array
     {
-        return $this->allowed;
+        return self::ALLOWED_ATTRIBUTES;
     }
 }
