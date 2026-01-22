@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useIsFetching, useIsMutating } from '@tanstack/react-query'
 import { useRouter, useLocation } from '@tanstack/react-router'
 import {
@@ -14,22 +14,37 @@ export function useInitialLoader() {
   // Track all active queries and mutations (including Appwrite calls)
   const isFetching = useIsFetching()
   const isMutating = useIsMutating()
-  const hasActiveRequests = isFetching > 0 || isMutating > 0
 
   // Determine if we should show loader
   // Show loader for protected routes and routes that typically need data loading
-  const shouldShowLoader =
-    location.pathname.startsWith('/protected') ||
-    location.pathname.startsWith('/organizations') ||
-    location.pathname.startsWith('/console') ||
-    (location.pathname !== '/sign-in' &&
-      location.pathname !== '/sign-up' &&
-      location.pathname !== '/recovery' &&
-      location.pathname !== '/')
+  // Auth pages don't need a loader - they're simple forms that load instantly
+  // Memoize to prevent recalculation on every render
+  const isAuthRoute = useMemo(
+    () =>
+      location.pathname === '/sign-in' ||
+      location.pathname === '/sign-up' ||
+      location.pathname === '/recovery' ||
+      location.pathname === '/mfa' ||
+      location.pathname === '/join' ||
+      location.pathname === '/sign-out',
+    [location.pathname]
+  )
+
+  const shouldShowLoader = useMemo(
+    () =>
+      !isAuthRoute &&
+      !(location.pathname === '/') &&
+      (location.pathname.startsWith('/protected') ||
+        location.pathname.startsWith('/organizations') ||
+        location.pathname.startsWith('/console')),
+    [location.pathname, isAuthRoute]
+  )
 
   const [debugOverrides, setDebugOverrides] = useState(loadDebugOverrides)
-  const effectiveShouldShowLoader =
-    shouldShowLoader && !debugOverrides.disableInitialLoader
+  const effectiveShouldShowLoader = useMemo(
+    () => shouldShowLoader && !debugOverrides.disableInitialLoader,
+    [shouldShowLoader, debugOverrides.disableInitialLoader]
+  )
 
   // Initialize loading state synchronously so the loader is visible on first paint
   const [isLoading, setIsLoading] = useState(() => effectiveShouldShowLoader)
@@ -48,11 +63,61 @@ export function useInitialLoader() {
     }
   }, [])
 
+  // Use refs to track previous values and prevent unnecessary re-renders
+  const prevIsFetchingRef = useRef(isFetching)
+  const prevIsMutatingRef = useRef(isMutating)
+  const prevRouterStatusRef = useRef(router.state.status)
+  const prevPathnameRef = useRef(location.pathname)
+
   useEffect(() => {
     // If initial load has already completed, never show loader again
     if (hasCompletedInitialLoadRef.current) {
       return
     }
+
+    // Early return if we're on a route that shouldn't show loader
+    // This prevents unnecessary processing on root/auth routes
+    if (!effectiveShouldShowLoader) {
+      // Don't show loader on public/auth routes
+      // Auth pages and root route don't need loaders - mark as complete immediately
+      if (isAuthRoute || location.pathname === '/') {
+        hasCompletedInitialLoadRef.current = true
+      } else if (router.state.status === 'idle' && isFetching === 0 && isMutating === 0) {
+        // For other public routes, mark complete when idle
+        hasCompletedInitialLoadRef.current = true
+      }
+      if (wasLoadingRef.current) {
+        setIsLoading(false)
+        wasLoadingRef.current = false
+        startTimeRef.current = null
+      }
+      // Update refs but don't process further - early return prevents re-renders
+      prevIsFetchingRef.current = isFetching
+      prevIsMutatingRef.current = isMutating
+      prevRouterStatusRef.current = router.state.status
+      prevPathnameRef.current = location.pathname
+      return
+    }
+
+    // From here on, we only process if effectiveShouldShowLoader is true
+    // This means we're on a route that should show the loader
+
+    // Only process if something actually changed
+    const routerStatusChanged = prevRouterStatusRef.current !== router.state.status
+    const pathnameChanged = prevPathnameRef.current !== location.pathname
+    const fetchingChanged = prevIsFetchingRef.current !== isFetching
+    const mutatingChanged = prevIsMutatingRef.current !== isMutating
+
+    // If nothing relevant changed, skip processing
+    if (!routerStatusChanged && !pathnameChanged && !fetchingChanged && !mutatingChanged) {
+      return
+    }
+
+    // Update refs
+    prevIsFetchingRef.current = isFetching
+    prevIsMutatingRef.current = isMutating
+    prevRouterStatusRef.current = router.state.status
+    prevPathnameRef.current = location.pathname
 
     // Clear any existing timeouts
     if (timeoutRef.current) {
@@ -64,62 +129,48 @@ export function useInitialLoader() {
       maxTimeoutRef.current = null
     }
 
-    // Check hasActiveRequests inside the effect to avoid dependency
+    // Check if there are active requests
     const currentHasActiveRequests = isFetching > 0 || isMutating > 0
 
-    if (effectiveShouldShowLoader) {
-      // Check loading state
-      // Router status can be: "idle" | "pending" | "loading"
-      const isRouterLoading = router.state.status !== 'idle'
-      const isCurrentlyLoading = isRouterLoading || currentHasActiveRequests
+    // Check loading state
+    // Router status can be: "idle" | "pending" | "loading"
+    const isRouterLoading = router.state.status !== 'idle'
+    const isCurrentlyLoading = isRouterLoading || currentHasActiveRequests
 
-      if (isCurrentlyLoading && !wasLoadingRef.current) {
-        // Started loading
-        setIsLoading(true)
-        startTimeRef.current = Date.now()
-        wasLoadingRef.current = true
+    if (isCurrentlyLoading && !wasLoadingRef.current) {
+      // Started loading
+      setIsLoading(true)
+      startTimeRef.current = Date.now()
+      wasLoadingRef.current = true
 
-        // Safety net: Hide loader after 20 seconds maximum to prevent infinite hanging
-        maxTimeoutRef.current = setTimeout(() => {
-          console.warn('Initial loader timeout - hiding loader after 20 seconds')
-          setIsLoading(false)
-          startTimeRef.current = null
-          wasLoadingRef.current = false
-          hasCompletedInitialLoadRef.current = true
-          maxTimeoutRef.current = null
-        }, 20000)
-      } else if (!isCurrentlyLoading && wasLoadingRef.current) {
-        // All requests completed - mark initial load as complete
-        const minLoadTime = 800 // Minimum display time to prevent flashing
-        const elapsedTime = startTimeRef.current
-          ? Date.now() - startTimeRef.current
-          : 0
-        const remainingTime = Math.max(0, minLoadTime - elapsedTime)
-
-        timeoutRef.current = setTimeout(() => {
-          setIsLoading(false)
-          startTimeRef.current = null
-          wasLoadingRef.current = false
-          hasCompletedInitialLoadRef.current = true // Mark initial load as complete
-          // Clear max timeout if it exists
-          if (maxTimeoutRef.current) {
-            clearTimeout(maxTimeoutRef.current)
-            maxTimeoutRef.current = null
-          }
-        }, remainingTime)
-      }
-    } else {
-      // Don't show loader on public/auth routes
-      // But if we're on a public route and haven't completed initial load,
-      // mark it as complete (user might have landed on sign-in page)
-      if (!currentHasActiveRequests && router.state.status === 'idle') {
-        hasCompletedInitialLoadRef.current = true
-      }
-      if (wasLoadingRef.current) {
+      // Safety net: Hide loader after 20 seconds maximum to prevent infinite hanging
+      maxTimeoutRef.current = setTimeout(() => {
+        console.warn('Initial loader timeout - hiding loader after 20 seconds')
         setIsLoading(false)
-        wasLoadingRef.current = false
         startTimeRef.current = null
-      }
+        wasLoadingRef.current = false
+        hasCompletedInitialLoadRef.current = true
+        maxTimeoutRef.current = null
+      }, 20000)
+    } else if (!isCurrentlyLoading && wasLoadingRef.current) {
+      // All requests completed - mark initial load as complete
+      const minLoadTime = 800 // Minimum display time to prevent flashing
+      const elapsedTime = startTimeRef.current
+        ? Date.now() - startTimeRef.current
+        : 0
+      const remainingTime = Math.max(0, minLoadTime - elapsedTime)
+
+      timeoutRef.current = setTimeout(() => {
+        setIsLoading(false)
+        startTimeRef.current = null
+        wasLoadingRef.current = false
+        hasCompletedInitialLoadRef.current = true // Mark initial load as complete
+        // Clear max timeout if it exists
+        if (maxTimeoutRef.current) {
+          clearTimeout(maxTimeoutRef.current)
+          maxTimeoutRef.current = null
+        }
+      }, remainingTime)
     }
 
     return () => {

@@ -3,7 +3,7 @@ import {
   useNavigate,
   useLocation,
 } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
 
@@ -15,8 +15,14 @@ function RootRedirect() {
   const { account } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const hasRedirectedRef = useRef(false)
 
   useEffect(() => {
+    // Prevent multiple redirects
+    if (hasRedirectedRef.current) {
+      return
+    }
+
     if (!account) return // Wait for auth
 
     // Check if this is an OAuth callback (URL might contain OAuth params)
@@ -41,6 +47,9 @@ function RootRedirect() {
     // Get org ID from account prefs
     const orgId = account.prefs?.organization as string | undefined
 
+    // Mark as redirected before navigating to prevent loops
+    hasRedirectedRef.current = true
+
     if (orgId) {
       navigate({
         to: '/organizations/$orgId',
@@ -55,7 +64,7 @@ function RootRedirect() {
       to: '/onboarding',
       replace: true,
     })
-  }, [account, navigate, location])
+  }, [account, navigate, location.pathname, location.search])
 
   // Show loading while redirecting
   return (
