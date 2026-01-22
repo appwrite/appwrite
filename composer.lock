@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cfb1d5a7c8f50d37a36732d15f3641b9",
+    "content-hash": "b05bb413276975750801f4348f0540b7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -797,6 +797,68 @@
             "time": "2026-01-12T17:58:43+00:00"
         },
         {
+            "name": "halaxa/json-machine",
+            "version": "1.2.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/halaxa/json-machine.git",
+                "reference": "8bf0b0ff6ff60ab480778eaa5ad7d505b442c2d4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/halaxa/json-machine/zipball/8bf0b0ff6ff60ab480778eaa5ad7d505b442c2d4",
+                "reference": "8bf0b0ff6ff60ab480778eaa5ad7d505b442c2d4",
+                "shasum": ""
+            },
+            "require": {
+                "php": "7.2 - 8.5"
+            },
+            "require-dev": {
+                "ext-json": "*",
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^8.0"
+            },
+            "suggest": {
+                "ext-json": "To run JSON Machine out of the box without custom decoders.",
+                "guzzlehttp/guzzle": "To run example with GuzzleHttp"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/functions.php"
+                ],
+                "psr-4": {
+                    "JsonMachine\\": "src/"
+                },
+                "exclude-from-classmap": [
+                    "src/autoloader.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Filip Halaxa",
+                    "email": "filip@halaxa.cz"
+                }
+            ],
+            "description": "Efficient, easy-to-use and fast JSON pull parser",
+            "support": {
+                "issues": "https://github.com/halaxa/json-machine/issues",
+                "source": "https://github.com/halaxa/json-machine/tree/1.2.6"
+            },
+            "funding": [
+                {
+                    "url": "https://ko-fi.com/G2G57KTE4",
+                    "type": "other"
+                }
+            ],
+            "time": "2025-12-05T14:53:09+00:00"
+        },
+        {
             "name": "league/csv",
             "version": "9.14.0",
             "source": {
@@ -1361,17 +1423,13 @@
         {
             "name": "open-telemetry/exporter-otlp",
             "version": "1.3.4",
-            "version": "1.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/exporter-otlp.git",
                 "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca"
-                "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
-                "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
                 "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
                 "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
                 "shasum": ""
@@ -1424,7 +1482,6 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-01-15T09:31:34+00:00"
             "time": "2026-01-15T09:31:34+00:00"
         },
         {
@@ -1493,17 +1550,13 @@
         {
             "name": "open-telemetry/sdk",
             "version": "1.11.0",
-            "version": "1.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
                 "reference": "d91f21addcdb42da9a451c002777f8318432461a"
-                "reference": "d91f21addcdb42da9a451c002777f8318432461a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/d91f21addcdb42da9a451c002777f8318432461a",
-                "reference": "d91f21addcdb42da9a451c002777f8318432461a",
                 "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/d91f21addcdb42da9a451c002777f8318432461a",
                 "reference": "d91f21addcdb42da9a451c002777f8318432461a",
                 "shasum": ""
@@ -1590,20 +1643,19 @@
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
             "time": "2026-01-15T11:21:03+00:00"
-            "time": "2026-01-15T11:21:03+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
-            "version": "1.37.0",
+            "version": "1.38.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sem-conv.git",
-                "reference": "8da7ec497c881e39afa6657d72586e27efbd29a1"
+                "reference": "e613bc640a407def4991b8a936a9b27edd9a3240"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/8da7ec497c881e39afa6657d72586e27efbd29a1",
-                "reference": "8da7ec497c881e39afa6657d72586e27efbd29a1",
+                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/e613bc640a407def4991b8a936a9b27edd9a3240",
+                "reference": "e613bc640a407def4991b8a936a9b27edd9a3240",
                 "shasum": ""
             },
             "require": {
@@ -1643,11 +1695,11 @@
             ],
             "support": {
                 "chat": "https://app.slack.com/client/T08PSQ7BQ/C01NFPCV44V",
-                "docs": "https://opentelemetry.io/docs/php",
+                "docs": "https://opentelemetry.io/docs/languages/php",
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-09-03T12:08:10+00:00"
+            "time": "2026-01-21T04:14:03+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -3516,12 +3568,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/agents.git",
-                "reference": "2e6a480a4fd0c08480a0251bd1a5bcab057c89b5"
+                "reference": "02da80fe80cfa76cac2c2690ee4d8d933bd5c4ab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/agents/zipball/2e6a480a4fd0c08480a0251bd1a5bcab057c89b5",
-                "reference": "2e6a480a4fd0c08480a0251bd1a5bcab057c89b5",
+                "url": "https://api.github.com/repos/utopia-php/agents/zipball/02da80fe80cfa76cac2c2690ee4d8d933bd5c4ab",
+                "reference": "02da80fe80cfa76cac2c2690ee4d8d933bd5c4ab",
                 "shasum": ""
             },
             "require": {
@@ -3577,7 +3629,7 @@
                 "source": "https://github.com/utopia-php/agents/tree/chore-bump-fetch",
                 "issues": "https://github.com/utopia-php/agents/issues"
             },
-            "time": "2026-01-13T09:29:32+00:00"
+            "time": "2026-01-21T08:07:23+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -3973,16 +4025,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "4.6.0",
+            "version": "4.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "b5c16caf4f6b12fa2c04d5a48f6e5785c99da8df"
+                "reference": "a3707063cef8b48954362a6390db398180ec56c8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/b5c16caf4f6b12fa2c04d5a48f6e5785c99da8df",
-                "reference": "b5c16caf4f6b12fa2c04d5a48f6e5785c99da8df",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/a3707063cef8b48954362a6390db398180ec56c8",
+                "reference": "a3707063cef8b48954362a6390db398180ec56c8",
                 "shasum": ""
             },
             "require": {
@@ -4025,9 +4077,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/4.6.0"
+                "source": "https://github.com/utopia-php/database/tree/4.6.2"
             },
-            "time": "2026-01-16T12:35:16+00:00"
+            "time": "2026-01-22T06:53:41+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4606,6 +4658,7 @@
                 "appwrite/appwrite": "19.*",
                 "ext-curl": "*",
                 "ext-openssl": "*",
+                "halaxa/json-machine": "^1.2",
                 "php": ">=8.1",
                 "utopia-php/console": "0.0.*",
                 "utopia-php/database": "4.*",
@@ -4659,7 +4712,7 @@
                 "source": "https://github.com/utopia-php/migration/tree/multitype-db",
                 "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2026-01-19T07:27:18+00:00"
+            "time": "2026-01-21T05:57:27+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -5575,16 +5628,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.17",
+            "version": "1.8.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "1bc5a39bf87d3c2064f2f8d45fa712340338bc41"
+                "reference": "d4f54ca109bb8126769940a14ed87cbc330f4f1f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/1bc5a39bf87d3c2064f2f8d45fa712340338bc41",
-                "reference": "1bc5a39bf87d3c2064f2f8d45fa712340338bc41",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d4f54ca109bb8126769940a14ed87cbc330f4f1f",
+                "reference": "d4f54ca109bb8126769940a14ed87cbc330f4f1f",
                 "shasum": ""
             },
             "require": {
@@ -5620,9 +5673,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.17"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.19"
             },
-            "time": "2026-01-19T12:13:41+00:00"
+            "time": "2026-01-22T06:02:42+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -9121,6 +9174,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.9.0"
     "plugin-api-version": "2.9.0"
 }
