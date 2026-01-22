@@ -17,7 +17,6 @@ use GraphQL\Type\Schema as GQLSchema;
 use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
-use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -248,21 +247,12 @@ function execute(
         );
     }
 
-    $output = [];
-    $wg = new WaitGroup();
-    $wg->add();
-    $promiseAdapter->all($promises)->then(
-        function (array $results) use (&$output, &$wg, $flags) {
-            try {
-                $output = processResult($results, $flags);
-            } finally {
-                $wg->done();
-            }
-        }
-    );
-    $wg->wait();
+    $allPromise = $promiseAdapter->all($promises);
 
-    return $output;
+    // Use the adapter's wait() to run the queue and resolve promises
+    $results = $promiseAdapter->wait($allPromise);
+
+    return processResult($results, $flags);
 }
 
 /**

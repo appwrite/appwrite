@@ -85,4 +85,13 @@ abstract class Adapter implements PromiseAdapter
      * @return GQLPromise
      */
     abstract public function all(iterable $promisesOrValues): GQLPromise;
+
+    /**
+     * Synchronously wait for promise completion and return the result.
+     *
+     * @param GQLPromise $promise
+     * @return mixed
+     * @throws \Throwable
+     */
+    abstract public function wait(GQLPromise $promise): mixed;
 }
