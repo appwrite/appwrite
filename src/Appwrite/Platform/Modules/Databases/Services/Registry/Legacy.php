@@ -28,8 +28,16 @@ use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Re
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Relationship\Update as UpdateRelationshipAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Create as CreateStringAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Update as UpdateStringAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Text\Create as CreateTextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Text\Update as UpdateTextAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\URL\Create as CreateURLAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\URL\Update as UpdateURLAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Varchar\Create as CreateVarcharAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Varchar\Update as UpdateVarcharAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Mediumtext\Create as CreateMediumtextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Mediumtext\Update as UpdateMediumtextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Longtext\Create as CreateLongtextAttribute;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Longtext\Update as UpdateLongtextAttribute;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\XList as ListAttributes;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Create as CreateCollection;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Delete as DeleteCollection;
@@ -190,6 +198,22 @@ class Legacy extends Base
         // Attribute: URL
         $service->addAction(CreateURLAttribute::getName(), new CreateURLAttribute());
         $service->addAction(UpdateURLAttribute::getName(), new UpdateURLAttribute());
+
+        // Attribute: Varchar
+        $service->addAction(CreateVarcharAttribute::getName(), new CreateVarcharAttribute());
+        $service->addAction(UpdateVarcharAttribute::getName(), new UpdateVarcharAttribute());
+
+        // Attribute: Text
+        $service->addAction(CreateTextAttribute::getName(), new CreateTextAttribute());
+        $service->addAction(UpdateTextAttribute::getName(), new UpdateTextAttribute());
+
+        // Attribute: Mediumtext
+        $service->addAction(CreateMediumtextAttribute::getName(), new CreateMediumtextAttribute());
+        $service->addAction(UpdateMediumtextAttribute::getName(), new UpdateMediumtextAttribute());
+
+        // Attribute: Longtext
+        $service->addAction(CreateLongtextAttribute::getName(), new CreateLongtextAttribute());
+        $service->addAction(UpdateLongtextAttribute::getName(), new UpdateLongtextAttribute());
     }
 
     private function registerIndexActions(Service $service): void
