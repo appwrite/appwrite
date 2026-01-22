@@ -4,7 +4,7 @@
  * Handles messages, topics, providers, subscribers, and targets.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, queryOptions } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
@@ -221,6 +221,85 @@ export async function fetchProvider(
 }
 
 // ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching paginated messages for a project
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function messagesQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: ['messages', 'project', projectId, page, limit, search],
+    queryFn: () => fetchProjectMessages(projectId!, page, limit, search),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching paginated topics for a project
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function topicsQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: ['topics', 'project', projectId, page, limit, search],
+    queryFn: () => fetchProjectTopics(projectId!, page, limit, search),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching paginated providers for a project
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function providersQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: ['providers', 'project', projectId, page, limit, search],
+    queryFn: () => fetchProjectProviders(projectId!, page, limit, search),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
@@ -233,19 +312,13 @@ export function useProjectMessages(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
-  const queryClient = useQueryClient()
   const {
     data: messagesData,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['messages', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectMessages(projectId!, page, limit, search),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(messagesQueryOptions(projectId, page, limit, search))
 
   const messages = useMemo(() => {
     if (!messagesData?.messages) return []
@@ -309,19 +382,13 @@ export function useProjectTopics(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
-  const queryClient = useQueryClient()
   const {
     data: topicsData,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['topics', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectTopics(projectId!, page, limit, search),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(topicsQueryOptions(projectId, page, limit, search))
 
   const topics = useMemo(() => {
     if (!topicsData?.topics) return []
@@ -422,19 +489,13 @@ export function useProjectProviders(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
-  const queryClient = useQueryClient()
   const {
     data: providersData,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['providers', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectProviders(projectId!, page, limit, search),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(providersQueryOptions(projectId, page, limit, search))
 
   const providers = useMemo(() => {
     if (!providersData?.providers) return []

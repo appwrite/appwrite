@@ -2,8 +2,8 @@ import { DomainDetailView } from '@/components/pages/organizations/$orgId/domain
 import { createFileRoute } from '@tanstack/react-router'
 import {
   fetchOrganizations,
-  fetchDomain,
-  fetchDomainRecords,
+  domainQueryOptions,
+  domainRecordsQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const RECORDS_PER_PAGE = 25
@@ -31,17 +31,11 @@ export const Route = createFileRoute(
     if (domainId) {
       await Promise.all([
         // Fetch domain details - blocks navigation until ready
-        queryClient.fetchQuery({
-          queryKey: ['domain', domainId],
-          queryFn: () => fetchDomain(domainId),
-          staleTime: 30 * 1000, // 30 seconds
-        }),
+        queryClient.ensureQueryData(domainQueryOptions(domainId)),
         // Fetch first page of DNS records - blocks navigation until ready
-        queryClient.fetchQuery({
-          queryKey: ['dns-records', 'domain', domainId, 0, RECORDS_PER_PAGE],
-          queryFn: () => fetchDomainRecords(domainId, 0, RECORDS_PER_PAGE),
-          staleTime: 30 * 1000, // 30 seconds
-        }),
+        queryClient.ensureQueryData(
+          domainRecordsQueryOptions(domainId, 0, RECORDS_PER_PAGE),
+        ),
       ])
     }
   },

@@ -9,6 +9,7 @@ import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
+  queryOptions,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
@@ -139,6 +140,36 @@ export async function fetchProjectVariables(
   } catch (error) {
     return { variables: [], total: 0 }
   }
+}
+
+// ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching active projects for an organization
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ * Note: Uses 'active' key format to match component usage.
+ */
+export function activeProjectsQueryOptions(
+  orgId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search: string = '',
+) {
+  return queryOptions({
+    queryKey: ['projects', 'active', page, search, orgId],
+    queryFn: () => fetchActiveProjects(orgId!, page, limit, search),
+    enabled: !!orgId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: orgId ? 5 * 60 * 1000 : 0,
+  })
 }
 
 // ============================================================================

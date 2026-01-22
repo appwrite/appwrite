@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { AuthView } from '@/components/pages/projects/$projectId/auth/View'
-import { fetchProjectUsers } from '@/lib/react-query/hooks'
+import { usersQueryOptions } from '@/lib/react-query/hooks'
 
 const USERS_PER_PAGE = 25
 
@@ -17,11 +17,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
     // Fetch users for the project (initial page, no search)
     if (projectId) {
       // Fetch first page of users - blocks navigation until ready
-      await queryClient.fetchQuery({
-        queryKey: ['users', 'project', projectId, 0, USERS_PER_PAGE, ''],
-        queryFn: () => fetchProjectUsers(projectId, 0, USERS_PER_PAGE, ''),
-        staleTime: 30 * 1000, // 30 seconds
-      })
+      // ensureQueryData uses cache if fresh, fetches if stale/missing
+      await queryClient.ensureQueryData(
+        usersQueryOptions(projectId, 0, USERS_PER_PAGE, ''),
+      )
     }
   },
   component: AuthIndexPage,

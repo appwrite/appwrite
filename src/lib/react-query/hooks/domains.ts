@@ -5,7 +5,12 @@
  * All operations use the Console SDK (sdk.forConsole.domains).
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  queryOptions,
+} from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
@@ -409,6 +414,72 @@ export async function fetchPresetRecords(
 }
 
 // ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching paginated domains for an organization
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function organizationDomainsQueryOptions(
+  organizationId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: ['domains', 'organization', organizationId, page, limit, search],
+    queryFn: () =>
+      fetchOrganizationDomains(organizationId!, page, limit, search),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching a single domain by ID
+ */
+export function domainQueryOptions(domainId: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['domain', domainId],
+    queryFn: () => fetchDomain(domainId!),
+    enabled: !!domainId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+/**
+ * Query options for fetching DNS records for a domain
+ */
+export function domainRecordsQueryOptions(
+  domainId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: ['dns-records', 'domain', domainId, page, limit],
+    queryFn: () => fetchDomainRecords(domainId!, page, limit),
+    enabled: !!domainId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
@@ -427,20 +498,15 @@ export function useOrganizationDomains(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
-  const queryClient = useQueryClient()
   const {
     data: domainsData,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['domains', 'organization', organizationId, page, limit, search],
-    queryFn: () =>
-      fetchOrganizationDomains(organizationId!, page, limit, search),
-    enabled: !!organizationId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(
+    organizationDomainsQueryOptions(organizationId, page, limit, search),
+  )
 
   const domains = useMemo(() => {
     if (!domainsData?.domains) return []
@@ -470,12 +536,7 @@ export function useOrganizationDomains(
  * @returns Domain details with loading state
  */
 export function useDomain(domainId: string | null | undefined) {
-  return useQuery({
-    queryKey: ['domain', domainId],
-    queryFn: () => fetchDomain(domainId!),
-    enabled: !!domainId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(domainQueryOptions(domainId))
 }
 
 /**
@@ -605,12 +666,7 @@ export function useDomainRecords(
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['dns-records', 'domain', domainId, page, limit],
-    queryFn: () => fetchDomainRecords(domainId!, page, limit),
-    enabled: !!domainId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(domainRecordsQueryOptions(domainId, page, limit))
 
   const dnsRecords = useMemo(() => {
     if (!recordsData?.dnsRecords) return []

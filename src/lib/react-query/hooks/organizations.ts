@@ -4,7 +4,12 @@
  * Handles organizations, plans, and invoices.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  queryOptions,
+} from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID, BillingPlan } from '@appwrite.io/console'
 import type { Organization } from '@/lib/utils/mock-data'
@@ -937,6 +942,30 @@ export async function deleteBillingAddress(params: {
 }
 
 // ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching organization plan details
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function organizationPlanQueryOptions(orgId: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['organization', 'plan', orgId],
+    queryFn: () => fetchOrganizationPlan(orgId!),
+    enabled: !!orgId,
+    staleTime: LONG_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnWindowFocus: false,
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: !!orgId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
@@ -1070,16 +1099,7 @@ export function useOrganizationPlan(orgId: string | null | undefined) {
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['organization', 'plan', orgId],
-    queryFn: () => fetchOrganizationPlan(orgId!),
-    enabled: !!orgId,
-    staleTime: LONG_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnWindowFocus: false,
-    // Don't keep disabled queries in cache
-    gcTime: !!orgId ? 5 * 60 * 1000 : 0,
-  })
+  } = useQuery(organizationPlanQueryOptions(orgId))
 
   return {
     plan: planData,
@@ -1087,6 +1107,155 @@ export function useOrganizationPlan(orgId: string | null | undefined) {
     error,
     refetch,
   }
+}
+
+/**
+ * Query options for fetching invoices for an organization
+ */
+export function organizationInvoicesQueryOptions(
+  organizationId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  queries?: string[],
+) {
+  return queryOptions({
+    queryKey: [
+      'invoices',
+      'organization',
+      organizationId,
+      page,
+      limit,
+      queries ?? null,
+    ],
+    queryFn: () =>
+      fetchOrganizationInvoices(organizationId!, page, limit, queries),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+/**
+ * Query options for fetching billing aggregation for an organization
+ */
+export function organizationBillingAggregationQueryOptions(
+  organizationId: string | null | undefined,
+  aggregationId?: string | null | undefined,
+  limit: number = 10,
+  offset: number = 0,
+) {
+  return queryOptions({
+    queryKey: [
+      'billing-aggregation',
+      'organization',
+      organizationId,
+      aggregationId ?? null, // Normalize undefined to null for consistent query keys
+      limit,
+      offset,
+    ],
+    queryFn: () =>
+      fetchOrganizationBillingAggregation(
+        organizationId!,
+        aggregationId,
+        limit,
+        offset,
+      ),
+    enabled: !!organizationId && !!aggregationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+/**
+ * Query options for fetching credits for an organization
+ */
+export function organizationCreditsQueryOptions(
+  organizationId: string | null | undefined,
+  page: number = 0,
+  limit: number = 5,
+) {
+  return queryOptions({
+    queryKey: ['credits', 'organization', organizationId, page, limit],
+    queryFn: () => fetchOrganizationCredits(organizationId!, page, limit),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+/**
+ * Query options for fetching payment methods
+ */
+export function paymentMethodsQueryOptions() {
+  return queryOptions({
+    queryKey: ['payment-methods', 'account'],
+    queryFn: fetchPaymentMethods,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+/**
+ * Query options for fetching billing addresses
+ */
+export function billingAddressesQueryOptions() {
+  return queryOptions({
+    queryKey: ['billing-addresses', 'account'],
+    queryFn: fetchBillingAddresses,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+/**
+ * Query options for fetching a specific payment method
+ */
+export function paymentMethodQueryOptions(
+  paymentMethodId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['payment-method', paymentMethodId],
+    queryFn: () => fetchPaymentMethod(paymentMethodId!),
+    enabled: !!paymentMethodId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+/**
+ * Query options for fetching a specific billing address
+ */
+export function billingAddressQueryOptions(
+  billingAddressId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['billing-address', billingAddressId],
+    queryFn: () => fetchBillingAddress(billingAddressId!),
+    enabled: !!billingAddressId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
 }
 
 /**
@@ -1104,20 +1273,9 @@ export function useOrganizationInvoices(
   limit: number = DEFAULT_PAGE_SIZE,
   queries?: string[],
 ) {
-  const { data, isLoading, isFetching, isPending, error, refetch } = useQuery({
-    queryKey: [
-      'invoices',
-      'organization',
-      organizationId,
-      page,
-      limit,
-      queries ?? null,
-    ],
-    queryFn: () =>
-      fetchOrganizationInvoices(organizationId!, page, limit, queries),
-    enabled: !!organizationId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, isFetching, isPending, error, refetch } = useQuery(
+    organizationInvoicesQueryOptions(organizationId, page, limit, queries),
+  )
 
   return {
     invoices: data?.invoices || [],
@@ -1146,25 +1304,14 @@ export function useOrganizationBillingAggregation(
   limit: number = 10,
   offset: number = 0,
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: [
-      'billing-aggregation',
-      'organization',
+  const { data, isLoading, error, refetch } = useQuery(
+    organizationBillingAggregationQueryOptions(
       organizationId,
       aggregationId,
       limit,
       offset,
-    ],
-    queryFn: () =>
-      fetchOrganizationBillingAggregation(
-        organizationId!,
-        aggregationId,
-        limit,
-        offset,
-      ),
-    enabled: !!organizationId && !!aggregationId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+    ),
+  )
 
   return {
     aggregation: data,
@@ -1187,12 +1334,9 @@ export function useOrganizationCredits(
   page: number = 0,
   limit: number = 5,
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['credits', 'organization', organizationId, page, limit],
-    queryFn: () => fetchOrganizationCredits(organizationId!, page, limit),
-    enabled: !!organizationId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    organizationCreditsQueryOptions(organizationId, page, limit),
+  )
 
   return {
     credits: data?.credits || [],
@@ -1209,13 +1353,9 @@ export function useOrganizationCredits(
  * @returns Payment methods list with loading state
  */
 export function usePaymentMethods() {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['payment-methods', 'account'],
-    queryFn: fetchPaymentMethods,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    refetchOnWindowFocus: false,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    paymentMethodsQueryOptions(),
+  )
 
   return {
     paymentMethods: data?.paymentMethods || [],
@@ -1233,12 +1373,9 @@ export function usePaymentMethods() {
  * @returns Payment method details with loading state
  */
 export function usePaymentMethod(paymentMethodId: string | null | undefined) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['payment-method', paymentMethodId],
-    queryFn: () => fetchPaymentMethod(paymentMethodId!),
-    enabled: !!paymentMethodId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    paymentMethodQueryOptions(paymentMethodId),
+  )
 
   return {
     paymentMethod: data,
@@ -1254,11 +1391,9 @@ export function usePaymentMethod(paymentMethodId: string | null | undefined) {
  * @returns Billing addresses list with loading state
  */
 export function useBillingAddresses() {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['billing-addresses', 'account'],
-    queryFn: fetchBillingAddresses,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    billingAddressesQueryOptions(),
+  )
 
   return {
     addresses: data?.addresses || [],
@@ -1276,12 +1411,9 @@ export function useBillingAddresses() {
  * @returns Billing address details with loading state
  */
 export function useBillingAddress(billingAddressId: string | null | undefined) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['billing-address', billingAddressId],
-    queryFn: () => fetchBillingAddress(billingAddressId!),
-    enabled: !!billingAddressId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    billingAddressQueryOptions(billingAddressId),
+  )
 
   return {
     address: data,

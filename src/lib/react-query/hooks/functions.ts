@@ -4,7 +4,12 @@
  * Handles functions, deployments, executions, templates, and variables.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  queryOptions,
+} from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
@@ -334,6 +339,35 @@ export async function fetchFunctionSpecifications(projectId: string) {
 }
 
 // ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching paginated functions for a project
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function functionsQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: ['functions', 'project', projectId, page, limit, search],
+    queryFn: () => fetchProjectFunctions(projectId!, page, limit, search),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
@@ -360,29 +394,21 @@ export function useProjectFunctions(
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['functions', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectFunctions(projectId!, page, limit, search),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    // Don't keep disabled queries in cache
-    gcTime: projectId ? 5 * 60 * 1000 : 0,
-  })
+  } = useQuery(functionsQueryOptions(projectId, page, limit, search))
 
   const functions = useMemo(() => {
-    if (!functionsData?.functions) return []
-    return functionsData.functions
+    if (!functionsData || !('functions' in functionsData)) return []
+    return functionsData.functions || []
   }, [functionsData])
 
   const totalPages = useMemo(() => {
-    if (!functionsData?.total) return 0
-    return Math.ceil(functionsData.total / limit)
-  }, [functionsData?.total, limit])
+    if (!functionsData || !('total' in functionsData)) return 0
+    return Math.ceil((functionsData.total || 0) / limit)
+  }, [functionsData, limit])
 
   return {
     functions,
-    total: functionsData?.total || 0,
+    total: functionsData && 'total' in functionsData ? functionsData.total || 0 : 0,
     totalPages,
     isLoading,
     isFetching,
@@ -521,6 +547,9 @@ export function useFunctionTemplates(
       ),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME, // Matches org view pattern
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
     gcTime: LONG_STALE_TIME, // Keep cache for a reasonable time
   })
 

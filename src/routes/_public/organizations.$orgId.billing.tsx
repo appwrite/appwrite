@@ -1,13 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
   fetchOrganizations,
-  fetchOrganizationInvoices,
+  organizationInvoicesQueryOptions,
   fetchOrganizationById,
-  fetchOrganizationPlan,
-  fetchOrganizationBillingAggregation,
-  fetchOrganizationCredits,
-  fetchPaymentMethods,
-  fetchBillingAddresses,
+  organizationBillingAggregationQueryOptions,
+  organizationCreditsQueryOptions,
+  paymentMethodsQueryOptions,
+  billingAddressesQueryOptions,
+  paymentMethodQueryOptions,
+  billingAddressQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const INVOICES_PER_PAGE = 5
@@ -54,24 +55,14 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
 
     // Now load aggregation using orgData (must be after orgData is loaded)
     const aggregationPromise = orgData?.billingAggregationId
-      ? queryClient.ensureQueryData({
-          queryKey: [
-            'billing-aggregation',
-            'organization',
+      ? queryClient.ensureQueryData(
+          organizationBillingAggregationQueryOptions(
             orgId,
             orgData.billingAggregationId,
             PROJECTS_PER_PAGE,
             0,
-          ],
-          queryFn: () =>
-            fetchOrganizationBillingAggregation(
-              orgId,
-              orgData.billingAggregationId,
-              PROJECTS_PER_PAGE,
-              0,
-            ),
-          staleTime: 30 * 1000, // 30 seconds
-        })
+          ),
+        )
       : Promise.resolve(null)
 
     // Fetch remaining critical data before rendering - blocks navigation until ready
@@ -79,88 +70,70 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
       aggregationPromise,
 
       // Fetch first page of invoices - blocks navigation until ready
-      queryClient.ensureQueryData({
-        queryKey: [
-          'invoices',
-          'organization',
-          orgId,
-          0,
-          INVOICES_PER_PAGE,
-          null,
-        ],
-        queryFn: () => fetchOrganizationInvoices(orgId, 0, INVOICES_PER_PAGE),
-        staleTime: 30 * 1000, // 30 seconds
-      }),
+      // Component uses page 0, limit 5, no queries parameter (undefined)
+      queryClient.ensureQueryData(
+        organizationInvoicesQueryOptions(orgId, 0, INVOICES_PER_PAGE),
+      ),
 
-      // Fetch first page of credits - blocks navigation until ready
-      queryClient.ensureQueryData({
-        queryKey: ['credits', 'organization', orgId, 0, CREDITS_PER_PAGE],
-        queryFn: () => fetchOrganizationCredits(orgId, 0, CREDITS_PER_PAGE),
-        staleTime: 30 * 1000, // 30 seconds
-      }),
+      // Fetch credits - blocks navigation until ready
+      // PlanSummary uses limit 1, AvailableCreditsSection uses limit 5
+      // Prefetch both to avoid duplicate calls
+      queryClient.ensureQueryData(
+        organizationCreditsQueryOptions(orgId, 0, 1), // For PlanSummary
+      ),
+      queryClient.ensureQueryData(
+        organizationCreditsQueryOptions(orgId, 0, CREDITS_PER_PAGE), // For AvailableCreditsSection
+      ),
 
       // Fetch payment methods - blocks navigation until ready
-      queryClient.ensureQueryData({
-        queryKey: ['payment-methods', 'account'],
-        queryFn: fetchPaymentMethods,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      }),
+      queryClient.ensureQueryData(paymentMethodsQueryOptions()),
 
       // Fetch billing addresses - blocks navigation until ready
-      queryClient.ensureQueryData({
-        queryKey: ['billing-addresses', 'account'],
-        queryFn: fetchBillingAddresses,
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      }),
+      queryClient.ensureQueryData(billingAddressesQueryOptions()),
     ])
 
-    // Prefetch optional payment method details (non-blocking)
+    // Prefetch optional payment method details and billing address (non-blocking)
+    // These are prefetched but errors don't block navigation
+    const optionalPrefetches = []
     if (orgData?.paymentMethodId) {
-      queryClient
-        .prefetchQuery({
-          queryKey: ['payment-method', orgData.paymentMethodId],
-          queryFn: async () => {
-            const { fetchPaymentMethod } =
-              await import('@/lib/react-query/hooks')
-            return fetchPaymentMethod(orgData.paymentMethodId)
-          },
-          staleTime: 5 * 60 * 1000,
-        })
-        .catch(() => {
-          // Ignore errors
-        })
+      optionalPrefetches.push(
+        queryClient
+          .ensureQueryData(
+            paymentMethodQueryOptions(orgData.paymentMethodId),
+          )
+          .catch(() => {
+            // Ignore errors
+          }),
+      )
     }
 
     if (orgData?.backupPaymentMethodId) {
-      queryClient
-        .prefetchQuery({
-          queryKey: ['payment-method', orgData.backupPaymentMethodId],
-          queryFn: async () => {
-            const { fetchPaymentMethod } =
-              await import('@/lib/react-query/hooks')
-            return fetchPaymentMethod(orgData.backupPaymentMethodId)
-          },
-          staleTime: 5 * 60 * 1000,
-        })
-        .catch(() => {
-          // Ignore errors
-        })
+      optionalPrefetches.push(
+        queryClient
+          .ensureQueryData(
+            paymentMethodQueryOptions(orgData.backupPaymentMethodId),
+          )
+          .catch(() => {
+            // Ignore errors
+          }),
+      )
     }
 
     if (orgData?.billingAddressId) {
-      queryClient
-        .prefetchQuery({
-          queryKey: ['billing-address', orgData.billingAddressId],
-          queryFn: async () => {
-            const { fetchBillingAddress } =
-              await import('@/lib/react-query/hooks')
-            return fetchBillingAddress(orgData.billingAddressId)
-          },
-          staleTime: 5 * 60 * 1000,
-        })
-        .catch(() => {
-          // Ignore errors
-        })
+      optionalPrefetches.push(
+        queryClient
+          .ensureQueryData(
+            billingAddressQueryOptions(orgData.billingAddressId),
+          )
+          .catch(() => {
+            // Ignore errors
+          }),
+      )
+    }
+
+    // Wait for optional prefetches to complete (but don't block on errors)
+    if (optionalPrefetches.length > 0) {
+      await Promise.all(optionalPrefetches)
     }
   },
   component: BillingPage,

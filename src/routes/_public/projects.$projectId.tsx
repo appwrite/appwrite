@@ -3,7 +3,10 @@ import { useState, useEffect } from 'react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
-import { fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  fetchProject,
+  organizationPlanQueryOptions,
+} from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
   loader: async ({ params, context }) => {
@@ -29,11 +32,7 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
         // Use ensureQueryData to avoid duplicate calls if already fetching
         if (projectData?.teamId) {
           await queryClient
-            .ensureQueryData({
-              queryKey: ['organization', 'plan', projectData.teamId],
-              queryFn: () => fetchOrganizationPlan(projectData.teamId),
-              staleTime: 5 * 60 * 1000, // 5 minutes
-            })
+            .ensureQueryData(organizationPlanQueryOptions(projectData.teamId))
             .catch(() => {
               // Ignore errors for optional prefetch - plan might not be available
             })

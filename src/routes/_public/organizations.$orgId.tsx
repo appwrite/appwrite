@@ -33,14 +33,8 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     // Fetch organization plan - CRITICAL: blocks navigation until ready
     if (orgId) {
       try {
-        await queryClient.ensureQueryData({
-          queryKey: ['organization', 'plan', orgId],
-          queryFn: () => {
-            const { fetchOrganizationPlan } = require('@/lib/react-query/hooks')
-            return fetchOrganizationPlan(orgId)
-          },
-          staleTime: 5 * 60 * 1000, // 5 minutes
-        })
+        const { organizationPlanQueryOptions } = require('@/lib/react-query/hooks')
+        await queryClient.ensureQueryData(organizationPlanQueryOptions(orgId))
       } catch (error) {
         // Don't block navigation if plan fetch fails - component will handle
         console.warn('Failed to fetch organization plan in loader:', error)

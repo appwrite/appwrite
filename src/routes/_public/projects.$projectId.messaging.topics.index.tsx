@@ -1,9 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { MessagingView } from '@/components/pages/projects/$projectId/messaging/View'
 import {
-  fetchProjectTopics,
+  topicsQueryOptions,
   fetchProject,
-  fetchOrganizationPlan,
+  organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const TOPICS_PER_PAGE = 25
@@ -27,28 +27,24 @@ export const Route = createFileRoute(
 
     if (projectId) {
       // Fetch project data (needed for header/sidebar) - blocks navigation
-      const projectData = await queryClient.fetchQuery({
+      const projectData = await queryClient.ensureQueryData({
         queryKey: ['project', projectId],
         queryFn: () => fetchProject(projectId),
         staleTime: 5 * 60 * 1000, // 5 minutes
       })
 
       // Fetch critical data before rendering to prevent layout shifts
-      // fetchQuery blocks navigation and respects staleTime (uses cached data if fresh)
+      // ensureQueryData blocks navigation and uses cache if fresh, fetches if stale/missing
       await Promise.all([
         // Fetch first page of topics - blocks navigation until ready
-        queryClient.fetchQuery({
-          queryKey: ['topics', 'project', projectId, 0, TOPICS_PER_PAGE, ''],
-          queryFn: () => fetchProjectTopics(projectId, 0, TOPICS_PER_PAGE, ''),
-          staleTime: 30 * 1000, // 30 seconds - uses cached data if fresh
-        }),
+        queryClient.ensureQueryData(
+          topicsQueryOptions(projectId, 0, TOPICS_PER_PAGE, ''),
+        ),
         // Fetch organization plan if we have a teamId - CRITICAL for limit checking
         projectData?.teamId
-          ? queryClient.fetchQuery({
-              queryKey: ['organization', 'plan', projectData.teamId],
-              queryFn: () => fetchOrganizationPlan(projectData.teamId),
-              staleTime: 5 * 60 * 1000, // 5 minutes - uses cached data if fresh
-            })
+          ? queryClient.ensureQueryData(
+              organizationPlanQueryOptions(projectData.teamId),
+            )
           : Promise.resolve(),
       ])
     }

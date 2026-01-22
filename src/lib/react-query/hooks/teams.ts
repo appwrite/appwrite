@@ -4,7 +4,12 @@
  * Handles teams (derived from organizations), memberships, and team member management.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  queryOptions,
+} from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Team, TeamMember } from '@/lib/utils/mock-data'
@@ -78,6 +83,43 @@ export async function fetchOrganizationMemberships(
 }
 
 // ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching organization memberships
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function organizationMembershipsQueryOptions(
+  organizationId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: [
+      'memberships',
+      'organization',
+      organizationId,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () =>
+      fetchOrganizationMemberships(organizationId!, page, limit, search),
+    enabled: !!organizationId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: organizationId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
@@ -129,27 +171,15 @@ export function useOrganizationMemberships(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
-  const queryClient = useQueryClient()
   const {
     data: membershipsData,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: [
-      'memberships',
-      'organization',
-      organizationId,
-      page,
-      limit,
-      search,
-    ],
-    queryFn: () =>
-      fetchOrganizationMemberships(organizationId!, page, limit, search),
-    enabled: !!organizationId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(
+    organizationMembershipsQueryOptions(organizationId, page, limit, search),
+  )
 
   // Map memberships to our TeamMember type
   const memberships = useMemo(() => {

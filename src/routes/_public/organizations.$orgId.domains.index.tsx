@@ -2,7 +2,7 @@ import { DomainsView } from '@/components/pages/organizations/$orgId/domains/Vie
 import { createFileRoute } from '@tanstack/react-router'
 import {
   fetchOrganizations,
-  fetchOrganizationDomains,
+  organizationDomainsQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const DOMAINS_PER_PAGE = 25
@@ -27,11 +27,9 @@ export const Route = createFileRoute('/_public/organizations/$orgId/domains/')({
     // Fetch domains for the organization (initial page, no search)
     if (orgId) {
       // Fetch first page of domains - blocks navigation until ready
-      await queryClient.fetchQuery({
-        queryKey: ['domains', 'organization', orgId, 0, DOMAINS_PER_PAGE, ''],
-        queryFn: () => fetchOrganizationDomains(orgId, 0, DOMAINS_PER_PAGE, ''),
-        staleTime: 30 * 1000, // 30 seconds
-      })
+      await queryClient.ensureQueryData(
+        organizationDomainsQueryOptions(orgId, 0, DOMAINS_PER_PAGE, ''),
+      )
     }
   },
   component: DomainsIndexPage,

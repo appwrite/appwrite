@@ -4,7 +4,7 @@
  * Handles buckets, files, and file tokens.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, queryOptions } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
@@ -155,6 +155,35 @@ export async function fetchFileTokens(
 }
 
 // ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching paginated buckets for a project
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function bucketsQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: ['buckets', 'project', projectId, page, limit, search],
+    queryFn: () => fetchProjectBuckets(projectId!, page, limit, search),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
@@ -181,15 +210,7 @@ export function useProjectBuckets(
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['buckets', 'project', projectId, page, limit, search],
-    queryFn: () => fetchProjectBuckets(projectId!, page, limit, search),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-    retry: false, // Don't retry on error
-    // Don't keep disabled queries in cache
-    gcTime: projectId ? 5 * 60 * 1000 : 0,
-  })
+  } = useQuery(bucketsQueryOptions(projectId, page, limit, search))
 
   const buckets = useMemo(() => {
     if (!bucketsData?.buckets) return []

@@ -162,7 +162,18 @@ export function AuthView() {
     total: usersTotal,
     isLoading: usersLoading,
   } = useProjectUsers(
-    projectId,
+    (() => {
+      // Log the values passed to useProjectUsers
+      // eslint-disable-next-line no-console
+      console.log(
+        '[AuthView] useProjectUsers:',
+        'projectId=', projectId,
+        'usersPageIndexed=', usersPageIndexed,
+        'usersPageSize=', usersPageSize,
+        'usersSearchValue=', usersSearchValue
+      )
+      return projectId
+    })(),
     usersPageIndexed,
     usersPageSize,
     usersSearchValue,

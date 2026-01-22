@@ -313,8 +313,8 @@ async function fetchDatabases(projectId: string): Promise<Models.DatabaseList> {
 **fetchQuery / ensureQueryData** (use in loaders for critical data):
 
 - **Blocks navigation** until data is ready when properly awaited
-- `fetchQuery`: Always fetches (ignores cache)
-- `ensureQueryData`: Uses cache if fresh, fetches if stale/missing
+- `fetchQuery`: Always fetches (ignores cache) - **AVOID** for prefetched data
+- `ensureQueryData`: Uses cache if fresh, fetches if stale/missing - **USE THIS** for prefetched data
 - Use for: Critical data that must be available before rendering
 - **Always await** these calls to ensure navigation blocks until data is ready
 
@@ -324,10 +324,70 @@ async function fetchDatabases(projectId: string): Promise<Models.DatabaseList> {
 - Fetches in background, doesn't wait
 - Use for: Optional data, supporting data, non-critical prefetching
 
-**Pattern:**
+### QueryOptions Pattern (CRITICAL - Prevents Duplicate API Calls)
+
+**Always use `queryOptions` pattern for hooks that are prefetched in route loaders.** This ensures the route loader and component hook share the exact same query configuration, preventing duplicate API calls.
+
+**Step 1: Create `queryOptions` function in hooks file**
 
 ```typescript
-// Route with loader for all critical data
+import { queryOptions } from '@tanstack/react-query'
+
+// In hooks file (e.g., src/lib/react-query/hooks/storage.ts)
+
+/**
+ * Query options for fetching paginated buckets for a project
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function bucketsQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: ['buckets', 'project', projectId, page, limit, search],
+    queryFn: () => fetchProjectBuckets(projectId!, page, limit, search),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+```
+
+**Step 2: Update hook to use `queryOptions`**
+
+```typescript
+export function useProjectBuckets(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  const {
+    data: bucketsData,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery(bucketsQueryOptions(projectId, page, limit, search))
+
+  // ... rest of hook implementation
+}
+```
+
+**Step 3: Use `queryOptions` in route loader**
+
+```typescript
+// Route loader (e.g., src/routes/_public/projects.$projectId.storage.index.tsx)
+import { bucketsQueryOptions, fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
+
 export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
@@ -355,12 +415,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
         })
     }
 
-    // Page-specific critical data - blocks navigation until ready
-    await queryClient.fetchQuery({
-      queryKey: ['buckets', 'project', projectId, 0, 25, ''],
-      queryFn: () => fetchProjectBuckets(projectId, 0, 25, ''),
-      staleTime: 30 * 1000,
-    })
+    // Page-specific critical data - USE queryOptions to prevent duplicate calls
+    await queryClient.ensureQueryData(
+      bucketsQueryOptions(projectId, 0, DEFAULT_PAGE_SIZE, ''),
+    )
 
     // Optional data - doesn't block
     queryClient
@@ -374,6 +432,20 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
   },
 })
 ```
+
+**Why This Works:**
+
+1. **Shared Configuration**: Route loader and hook use the exact same `queryOptions`, ensuring identical query keys and settings
+2. **Cache Matching**: React Query recognizes prefetched data because query keys match exactly
+3. **No Duplicates**: `ensureQueryData` uses cached data if fresh, and hook reads from same cache
+4. **Type Safety**: TypeScript ensures query keys and functions match between loader and hook
+
+**When to Use QueryOptions:**
+
+- ✅ **DO**: Use for all hooks that are prefetched in route loaders (buckets, functions, databases, users, providers, etc.)
+- ✅ **DO**: Use for list views that are loaded on initial page load
+- ❌ **DON'T**: Use for hooks that are only called conditionally or on user interaction
+- ❌ **DON'T**: Use for single resource queries that aren't prefetched (unless you want to prefetch them)
 
 **Critical data to prefetch:**
 

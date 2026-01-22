@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import {
   fetchOrganizations,
-  fetchOrganizationDomains,
+  organizationDomainsQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const DOMAINS_PER_PAGE = 25
@@ -27,11 +27,9 @@ export const Route = createFileRoute('/_public/organizations/$orgId/domains')({
     // This ensures data is ready even if index route hasn't matched yet
     if (orgId) {
       // Fetch first page of domains - blocks navigation until ready
-      await queryClient.fetchQuery({
-        queryKey: ['domains', 'organization', orgId, 0, DOMAINS_PER_PAGE, ''],
-        queryFn: () => fetchOrganizationDomains(orgId, 0, DOMAINS_PER_PAGE, ''),
-        staleTime: 30 * 1000, // 30 seconds
-      })
+      await queryClient.ensureQueryData(
+        organizationDomainsQueryOptions(orgId, 0, DOMAINS_PER_PAGE, ''),
+      )
     }
   },
   component: DomainsLayout,

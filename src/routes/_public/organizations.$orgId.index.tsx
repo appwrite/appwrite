@@ -1,9 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  fetchOrganizationMemberships,
+  organizationMembershipsQueryOptions,
   fetchOrganizations,
-  fetchActiveProjects,
-  fetchOrganizationPlan,
+  activeProjectsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
@@ -33,25 +32,18 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
     if (orgId) {
       await Promise.all([
         // Fetch first page of projects - blocks navigation until ready
-        queryClient.ensureQueryData({
-          queryKey: ['projects', 'active', 0, '', orgId],
-          queryFn: () => fetchActiveProjects(orgId, 0, DEFAULT_PAGE_SIZE, ''),
-          staleTime: 30 * 1000, // 30 seconds
-        }),
+        queryClient.ensureQueryData(
+          activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+        ),
         // Fetch first page of memberships - blocks navigation until ready
-        queryClient.ensureQueryData({
-          queryKey: [
-            'memberships',
-            'organization',
+        queryClient.ensureQueryData(
+          organizationMembershipsQueryOptions(
             orgId,
             0,
             DEFAULT_PAGE_SIZE,
             '',
-          ],
-          queryFn: () =>
-            fetchOrganizationMemberships(orgId, 0, DEFAULT_PAGE_SIZE, ''),
-          staleTime: 30 * 1000, // 30 seconds
-        }),
+          ),
+        ),
       ])
     }
   },
