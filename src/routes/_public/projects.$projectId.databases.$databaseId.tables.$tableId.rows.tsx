@@ -109,7 +109,14 @@ export const Route = createFileRoute(
 
         // Rows - CRITICAL: blocks navigation until ready (prevents loader when switching tables)
         queryClient.ensureQueryData(
-          tableRowsQueryOptions(projectId, databaseId, tableId, 0, ROWS_PER_PAGE, ''),
+          tableRowsQueryOptions(
+            projectId,
+            databaseId,
+            tableId,
+            0,
+            ROWS_PER_PAGE,
+            '',
+          ),
         ),
 
         // Database details - blocks navigation until ready
@@ -138,7 +145,8 @@ export const Route = createFileRoute(
         queryClient
           .prefetchQuery({
             queryKey: ['indexes', 'project', projectId, databaseId, tableId],
-            queryFn: () => fetchProjectTableIndexes(projectId, databaseId, tableId),
+            queryFn: () =>
+              fetchProjectTableIndexes(projectId, databaseId, tableId),
             staleTime: 30 * 1000,
           })
           .catch(() => {

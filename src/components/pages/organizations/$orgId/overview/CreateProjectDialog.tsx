@@ -272,7 +272,8 @@ export function CreateProjectDialog({
                             )
                             if (!region) return 'Select a region'
                             const flagCode = region.flag || ''
-                            const regionName = region.name || region.$id || 'Unknown'
+                            const regionName =
+                              region.name || region.$id || 'Unknown'
                             const flagUrl = flagCode
                               ? `${sdk.forConsole.client.config.endpoint}/avatars/flags/${flagCode.toLowerCase()}?width=80&height=80&quality=100&project=console`
                               : null
@@ -284,7 +285,8 @@ export function CreateProjectDialog({
                                     alt={`${regionName} flag`}
                                     className="h-4 w-4 shrink-0 rounded border border-border/50 object-cover"
                                     onError={(e) => {
-                                      const target = e.target as HTMLImageElement
+                                      const target =
+                                        e.target as HTMLImageElement
                                       target.style.display = 'none'
                                     }}
                                   />
@@ -317,7 +319,10 @@ export function CreateProjectDialog({
                       return (
                         <>
                           {isFirstInactive && (
-                            <SelectSeparator key={`separator-${region.$id}`} className="my-1" />
+                            <SelectSeparator
+                              key={`separator-${region.$id}`}
+                              className="my-1"
+                            />
                           )}
                           <SelectItem
                             key={region.$id}

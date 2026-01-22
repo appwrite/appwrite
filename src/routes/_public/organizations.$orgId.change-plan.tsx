@@ -36,9 +36,7 @@ export const Route = createFileRoute(
     try {
       await Promise.all([
         // Organizations list
-        queryClient
-          .prefetchQuery(organizationsQueryOptions())
-          .catch(() => {}),
+        queryClient.prefetchQuery(organizationsQueryOptions()).catch(() => {}),
 
         // Organization details
         queryClient

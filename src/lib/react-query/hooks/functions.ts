@@ -408,7 +408,8 @@ export function useProjectFunctions(
 
   return {
     functions,
-    total: functionsData && 'total' in functionsData ? functionsData.total || 0 : 0,
+    total:
+      functionsData && 'total' in functionsData ? functionsData.total || 0 : 0,
     totalPages,
     isLoading,
     isFetching,

@@ -30,11 +30,9 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
     }
 
     // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
-    queryClient
-      .prefetchQuery(organizationsQueryOptions())
-      .catch(() => {
-        // Don't block on optional data
-      })
+    queryClient.prefetchQuery(organizationsQueryOptions()).catch(() => {
+      // Don't block on optional data
+    })
 
     // Fetch critical data before rendering to prevent layout shifts
     // Note: Organization plan is already loaded in parent route's loader
@@ -90,9 +88,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
     if (orgData?.paymentMethodId) {
       optionalPrefetches.push(
         queryClient
-          .ensureQueryData(
-            paymentMethodQueryOptions(orgData.paymentMethodId),
-          )
+          .ensureQueryData(paymentMethodQueryOptions(orgData.paymentMethodId))
           .catch(() => {
             // Ignore errors
           }),
@@ -114,9 +110,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
     if (orgData?.billingAddressId) {
       optionalPrefetches.push(
         queryClient
-          .ensureQueryData(
-            billingAddressQueryOptions(orgData.billingAddressId),
-          )
+          .ensureQueryData(billingAddressQueryOptions(orgData.billingAddressId))
           .catch(() => {
             // Ignore errors
           }),

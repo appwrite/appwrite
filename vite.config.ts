@@ -36,7 +36,11 @@ const config = defineConfig({
           // Exclude routes that require search params (they'll be handled client-side)
           if (path === '/reset') return false
           // Exclude authentication routes - they handle redirects client-side and cause infinite loops
-          if (path.startsWith('/sign-in') || path.startsWith('/sign-up') || path.startsWith('/mfa')) {
+          if (
+            path.startsWith('/sign-in') ||
+            path.startsWith('/sign-up') ||
+            path.startsWith('/mfa')
+          ) {
             return false
           }
           // Exclude any routes with query parameters (they're dynamic and shouldn't be prerendered)

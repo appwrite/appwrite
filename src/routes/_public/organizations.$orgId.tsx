@@ -23,11 +23,9 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     const { queryClient } = context
 
     // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
-    queryClient
-      .prefetchQuery(organizationsQueryOptions())
-      .catch(() => {
-        // Don't block on optional data
-      })
+    queryClient.prefetchQuery(organizationsQueryOptions()).catch(() => {
+      // Don't block on optional data
+    })
 
     // Fetch organization plan - CRITICAL: blocks navigation until ready
     if (orgId) {

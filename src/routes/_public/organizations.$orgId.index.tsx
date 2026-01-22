@@ -17,11 +17,9 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
     const { queryClient } = context
 
     // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
-    queryClient
-      .prefetchQuery(organizationsQueryOptions())
-      .catch(() => {
-        // Don't block on optional data
-      })
+    queryClient.prefetchQuery(organizationsQueryOptions()).catch(() => {
+      // Don't block on optional data
+    })
 
     // Fetch critical page-specific data before rendering to prevent layout shifts
     // Note: Organization plan is already loaded in parent route's loader
@@ -33,12 +31,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
         ),
         // Fetch first page of memberships - blocks navigation until ready
         queryClient.ensureQueryData(
-          organizationMembershipsQueryOptions(
-            orgId,
-            0,
-            DEFAULT_PAGE_SIZE,
-            '',
-          ),
+          organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
         ),
       ])
     }

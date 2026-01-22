@@ -386,7 +386,11 @@ export function useProjectBuckets(
 
 ```typescript
 // Route loader (e.g., src/routes/_public/projects.$projectId.storage.index.tsx)
-import { bucketsQueryOptions, fetchProject, fetchOrganizationPlan } from '@/lib/react-query/hooks'
+import {
+  bucketsQueryOptions,
+  fetchProject,
+  fetchOrganizationPlan,
+} from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
   loader: async ({ params, context }) => {

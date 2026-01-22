@@ -167,10 +167,14 @@ export function AuthView() {
       // eslint-disable-next-line no-console
       console.log(
         '[AuthView] useProjectUsers:',
-        'projectId=', projectId,
-        'usersPageIndexed=', usersPageIndexed,
-        'usersPageSize=', usersPageSize,
-        'usersSearchValue=', usersSearchValue
+        'projectId=',
+        projectId,
+        'usersPageIndexed=',
+        usersPageIndexed,
+        'usersPageSize=',
+        usersPageSize,
+        'usersSearchValue=',
+        usersSearchValue,
       )
       return projectId
     })(),

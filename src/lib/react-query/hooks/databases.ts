@@ -1230,7 +1230,13 @@ export function tablesQueryOptions(
       normalizedSearch,
     ],
     queryFn: () =>
-      fetchProjectTables(projectId!, databaseId!, page, limit, normalizedSearch),
+      fetchProjectTables(
+        projectId!,
+        databaseId!,
+        page,
+        limit,
+        normalizedSearch,
+      ),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -1270,7 +1276,14 @@ export function tableRowsQueryOptions(
       normalizedSearch,
     ],
     queryFn: () =>
-      fetchProjectTableRows(projectId!, databaseId!, tableId!, page, limit, normalizedSearch),
+      fetchProjectTableRows(
+        projectId!,
+        databaseId!,
+        tableId!,
+        page,
+        limit,
+        normalizedSearch,
+      ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false, // Don't retry on error
@@ -1598,7 +1611,14 @@ export function useProjectTableRows(
     error,
     refetch,
   } = useQuery(
-    tableRowsQueryOptions(projectId, databaseId, tableId, page, limit, normalizedSearch),
+    tableRowsQueryOptions(
+      projectId,
+      databaseId,
+      tableId,
+      page,
+      limit,
+      normalizedSearch,
+    ),
   )
 
   const totalPages = useMemo(() => {
