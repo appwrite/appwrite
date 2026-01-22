@@ -118,9 +118,10 @@ class Realtime extends MessagingAdapter
      * @param string $projectId
      * @param string $role
      * @param string $channel
+     * @param array<string> $queries
      * @return bool
      */
-    public function hasSubscriber(string $projectId, string $role, string $channel = ''): bool
+    public function hasSubscriber(string $projectId, string $role, string $channel = '', array $queries = []): bool
     {
         //TODO: look into moving it to an abstract class in the parent class
         if (empty($channel)) {
@@ -128,9 +129,40 @@ class Realtime extends MessagingAdapter
                 && array_key_exists($role, $this->subscriptions[$projectId]);
         }
 
-        return array_key_exists($projectId, $this->subscriptions)
+        $hasBasicSubscription = array_key_exists($projectId, $this->subscriptions)
             && array_key_exists($role, $this->subscriptions[$projectId])
             && array_key_exists($channel, $this->subscriptions[$projectId][$role]);
+
+        if (!$hasBasicSubscription) {
+            return false;
+        }
+
+        if (empty($queries)) {
+            return true;
+        }
+
+        $queries = Realtime::convertQueries($queries);
+
+        $queryStrings = array_map(fn ($query) => $query->toString(), $queries);
+
+        foreach (array_keys($this->subscriptions[$projectId][$role][$channel]) as $connectionId) {
+            if (!isset($this->connections[$connectionId])) {
+                continue;
+            }
+            $connection = $this->connections[$connectionId];
+            if ($connection['projectId'] === $projectId && isset($connection['channels'][$channel])) {
+                $connectionQueries = $connection['queries'] ?? [];
+                if (empty($connectionQueries)) {
+                    continue;
+                }
+                $connectionQueryStrings = array_map(fn ($query) => $query->toString(), $connectionQueries);
+                if (empty(array_diff($queryStrings, $connectionQueryStrings))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

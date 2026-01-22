@@ -417,6 +417,24 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         /**
          * Sending test message for SDK E2E tests every 5 seconds.
          */
+        if ($realtime->hasSubscriber('console', Role::guests()->toString(), 'tests', [Query::equal('type', ['tests'])->toString()])) {
+            $payload = ['response' => 'WS:/v1/realtime:passed', 'type' => 'tests'];
+
+            $event = [
+                'project' => 'console',
+                'roles' => [Role::guests()->toString()],
+                'data' => [
+                    'events' => ['test.event'],
+                    'channels' => ['tests'],
+                    'timestamp' => DateTime::formatTz(DateTime::now()),
+                    'payload' => $payload,
+                ]
+            ];
+            $server->send($realtime->getSubscribers($event), json_encode([
+                'type' => 'event',
+                'data' => $event['data']
+            ]));
+        }
         if ($realtime->hasSubscriber('console', Role::guests()->toString(), 'tests')) {
             $payload = ['response' => 'WS:/v1/realtime:passed'];
 
