@@ -4,6 +4,7 @@ namespace Appwrite\GraphQL\Promises\Adapter;
 
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\Promises\Swoole as SwoolePromise;
+use GraphQL\Executor\Promise\Adapter\SyncPromise;
 use GraphQL\Executor\Promise\Promise as GQLPromise;
 
 class Swoole extends Adapter
@@ -20,13 +21,27 @@ class Swoole extends Adapter
         /** @var SwoolePromise $swoolePromise */
         $swoolePromise = $promise->adoptedPromise;
 
-        // Run any pending queue tasks (for compatibility with graphql-php's deferred execution)
-        $taskQueue = SwoolePromise::getQueue();
-        while (
-            $swoolePromise->state === SwoolePromise::PENDING
-            && !$taskQueue->isEmpty()
-        ) {
-            SwoolePromise::runQueue();
+        // Run both graphql-php's SyncPromise queue and our SwoolePromise queue
+        // graphql-php's Deferred uses SyncPromise::getQueue() internally
+        $syncQueue = SyncPromise::getQueue();
+        $swooleQueue = SwoolePromise::getQueue();
+
+        while ($swoolePromise->state === SwoolePromise::PENDING) {
+            // Run graphql-php's SyncPromise queue first (handles Deferred)
+            if (!$syncQueue->isEmpty()) {
+                SyncPromise::runQueue();
+                continue;
+            }
+
+            // Then run our SwoolePromise queue
+            if (!$swooleQueue->isEmpty()) {
+                SwoolePromise::runQueue();
+                continue;
+            }
+
+            // Both queues empty but promise still pending - this shouldn't happen
+            // in a properly resolved promise chain
+            break;
         }
 
         if ($swoolePromise->state === SwoolePromise::FULFILLED) {
