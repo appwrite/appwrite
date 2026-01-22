@@ -8,16 +8,16 @@ class Projects extends Base
         'name',
         'teamId',
         'labels',
-        'search',
+        'search'
     ];
 
     /**
-     * @param array|null $allowedAttributes
-     * @throws \Exception
+     * Expression constructor
+     *
      */
-    public function __construct(array $allowedAttributes = null)
+    public function __construct()
     {
-        parent::__construct('projects', $allowedAttributes ?? static::ALLOWED_ATTRIBUTES);
+        parent::__construct('projects', self::ALLOWED_ATTRIBUTES);
     }
 
     public function isSelectQueryAllowed(): bool
