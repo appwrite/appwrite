@@ -15,7 +15,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 const VALID_TABS = ['overview', 'sessions', 'payments'] as const
 
 export const Route = createFileRoute('/_public/account/$tab')({
-  beforeLoad: ({ params }) => {
+  loader: async ({ params, context }) => {
     // Redirect invalid tabs to overview
     if (params.tab && !VALID_TABS.includes(params.tab as any)) {
       throw redirect({
@@ -23,8 +23,8 @@ export const Route = createFileRoute('/_public/account/$tab')({
         replace: true,
       })
     }
-  },
-  loader: async ({ params, context }) => {
+
+    // Only run on client side (SDK requires browser environment)
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return

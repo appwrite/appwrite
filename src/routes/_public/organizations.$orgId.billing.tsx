@@ -38,7 +38,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/billing')({
     })
 
     // Fetch critical data before rendering to prevent layout shifts
-    // Note: Organization plan is already loaded in parent route's beforeLoad
+    // Note: Organization plan is already loaded in parent route's loader
     // Load organization first, then use its data for aggregation
 
     const [orgData] = await Promise.all([

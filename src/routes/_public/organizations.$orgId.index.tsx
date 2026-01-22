@@ -27,7 +27,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
     })
 
     // Fetch critical page-specific data before rendering to prevent layout shifts
-    // Note: Organization plan is already loaded in parent route's beforeLoad
+    // Note: Organization plan is already loaded in parent route's loader
     if (orgId) {
       await Promise.all([
         // Fetch first page of projects - blocks navigation until ready

@@ -10,7 +10,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute('/_public/organizations/$orgId')({
   validateSearch: searchSchema,
-  beforeLoad: async ({ params, context }) => {
+  loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -28,8 +28,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
       // Don't block on optional data
     })
 
-    // Fetch organization plan - CRITICAL: blocks rendering until ready
-    // Use beforeLoad to ensure plan is available before any child routes render
+    // Fetch organization plan - CRITICAL: blocks navigation until ready
     if (orgId) {
       try {
         await queryClient.ensureQueryData({
@@ -42,11 +41,9 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
         })
       } catch (error) {
         // Don't block navigation if plan fetch fails - component will handle
-        console.warn('Failed to fetch organization plan in beforeLoad:', error)
+        console.warn('Failed to fetch organization plan in loader:', error)
       }
     }
-
-    return {}
   },
   component: OrganizationLayout,
 })

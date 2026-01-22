@@ -289,33 +289,31 @@ async function fetchDatabases(projectId: string): Promise<Models.DatabaseList> {
 
 **Critical data must be prefetched** to prevent layout shifts.
 
-### beforeLoad vs loader
-
-**beforeLoad:**
-- Runs **sequentially** from parent to child routes
-- **Blocks rendering** until all beforeLoad functions complete
-- Best for: Critical data needed by layout/parent routes (project, organization plan)
-- Context flows parent-to-child, merged into single context object
+### loader for Data Loading
 
 **loader:**
-- Runs **in parallel** after all beforeLoad functions complete
-- Should block navigation, but components may render if not properly awaited
-- Best for: Page-specific critical data (list data, detail data)
-- Each loader's return is isolated, not shared between routes
+- **Blocks navigation** until all awaited promises complete
+- Runs for each route, ensuring data is ready before component renders
+- Best for: All critical data (layout data, page-specific data)
+- Use `await` on all critical data fetches to ensure proper blocking
+
+**beforeLoad:**
+- Only use for redirects or validation (not data loading)
+- Runs before loader, but should not be used for data fetching
 
 **When to use each:**
 
-- **beforeLoad**: Data needed by layout/header/sidebar (project, organization plan)
-- **loader**: Page-specific data (lists, detail views)
+- **loader**: All critical data (project, organization plan, lists, detail views)
 - **prefetchQuery**: Only for truly optional/non-critical data (doesn't block)
 
 ### React Query Methods
 
 **fetchQuery / ensureQueryData** (use in loaders for critical data):
-- **Blocks navigation** until data is ready
+- **Blocks navigation** until data is ready when properly awaited
 - `fetchQuery`: Always fetches (ignores cache)
 - `ensureQueryData`: Uses cache if fresh, fetches if stale/missing
 - Use for: Critical data that must be available before rendering
+- **Always await** these calls to ensure navigation blocks until data is ready
 
 **prefetchQuery** (use for optional data):
 - **Does NOT block** navigation
@@ -325,31 +323,33 @@ async function fetchDatabases(projectId: string): Promise<Models.DatabaseList> {
 **Pattern:**
 
 ```typescript
-// Route with beforeLoad for layout-critical data
+// Route with loader for all critical data
 export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
-  beforeLoad: async ({ params, context }) => {
-    if (typeof window === 'undefined') return
-
-    const { projectId } = params
-    const { queryClient } = context
-
-    // Critical layout data - blocks rendering
-    const projectData = await queryClient.ensureQueryData({
-      queryKey: ['project', projectId],
-      queryFn: () => fetchProject(projectId),
-      staleTime: 5 * 60 * 1000,
-    })
-
-    // Return data to be merged into context
-    return { projectData }
-  },
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 
     const { projectId } = params
     const { queryClient } = context
 
-    // Page-specific critical data - blocks navigation
+    // Critical layout data - blocks navigation until ready
+    const projectData = await queryClient.ensureQueryData({
+      queryKey: ['project', projectId],
+      queryFn: () => fetchProject(projectId),
+      staleTime: 5 * 60 * 1000,
+    })
+
+    // Organization plan - blocks navigation until ready
+    if (projectData?.teamId) {
+      await queryClient.ensureQueryData({
+        queryKey: ['organization', 'plan', projectData.teamId],
+        queryFn: () => fetchOrganizationPlan(projectData.teamId),
+        staleTime: 5 * 60 * 1000,
+      }).catch(() => {
+        // Ignore errors for optional data
+      })
+    }
+
+    // Page-specific critical data - blocks navigation until ready
     await queryClient.fetchQuery({
       queryKey: ['buckets', 'project', projectId, 0, 25, ''],
       queryFn: () => fetchProjectBuckets(projectId, 0, 25, ''),

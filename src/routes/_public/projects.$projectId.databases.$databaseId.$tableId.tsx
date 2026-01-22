@@ -11,7 +11,7 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/$tableId',
 )({
   validateSearch: tableSearchSchema,
-  beforeLoad: ({ params, search }) => {
+  loader: ({ params, search }) => {
     // Redirect to new nested route structure
     const tabRoutes = {
       rows: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
