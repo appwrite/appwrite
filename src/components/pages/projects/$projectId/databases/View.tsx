@@ -67,6 +67,7 @@ import {
   fetchProjectDatabases,
   createProjectDatabase,
   createProjectTable,
+  tablesQueryOptions,
 } from '@/lib/react-query/hooks'
 import { ColumnDrawer, ColumnFormData } from './tables/Column'
 import { IndexDrawer, IndexFormData } from './tables/Index'
@@ -1258,16 +1259,53 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
           <div className="mb-1 px-2">
             <Select
               value={databaseId}
-              onValueChange={(newDatabaseId) => {
-                // Navigate to the database rows view with '-' as tableId
-                navigate({
-                  to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
-                  params: {
-                    projectId,
-                    databaseId: newDatabaseId,
-                    tableId: '-',
-                  },
-                })
+              onValueChange={async (newDatabaseId) => {
+                // Prefetch tables for the new database to get the first table ID
+                // This prevents the redirect flash by navigating directly to the first table
+                try {
+                  const tablesData = await queryClient.ensureQueryData(
+                    tablesQueryOptions(projectId, newDatabaseId, 0, 100, undefined),
+                  )
+                  
+                  // Sort tables by name to get the first one (matching redirect logic)
+                  const sortedTables = [...(tablesData.tables || [])].sort((a, b) => {
+                    const nameA = a.name?.toLowerCase() || ''
+                    const nameB = b.name?.toLowerCase() || ''
+                    return nameA.localeCompare(nameB)
+                  })
+                  
+                  const firstTable = sortedTables[0]
+                  
+                  if (firstTable?.$id) {
+                    // Navigate directly to the first table - no redirect needed
+                    navigate({
+                      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                      params: {
+                        projectId,
+                        databaseId: newDatabaseId,
+                        tableId: firstTable.$id,
+                      },
+                    })
+                  } else {
+                    // No tables exist, navigate to database overview
+                    navigate({
+                      to: '/projects/$projectId/databases/$databaseId/',
+                      params: {
+                        projectId,
+                        databaseId: newDatabaseId,
+                      },
+                    })
+                  }
+                } catch (error) {
+                  // Fallback: navigate to database overview if prefetch fails
+                  navigate({
+                    to: '/projects/$projectId/databases/$databaseId/',
+                    params: {
+                      projectId,
+                      databaseId: newDatabaseId,
+                    },
+                  })
+                }
               }}
             >
               <SelectTrigger className="h-8 w-full text-[13px]">
@@ -4677,8 +4715,9 @@ function RowsSpreadsheet({
 
   // The parent container constrains height with overflow-hidden
   // This component fills available space and handles its own scrolling
-  // Only show loading on initial load, not during pagination (use isFetching for that)
-  if (rowsLoading || columnsLoading) {
+  // Only show loading if we don't have data yet (data is prefetched in route loader)
+  // This prevents showing loading when switching tables since data is already cached
+  if ((rowsLoading && apiRows.length === 0) || (columnsLoading && apiColumns.length === 0)) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-muted-foreground">Loading rows...</div>

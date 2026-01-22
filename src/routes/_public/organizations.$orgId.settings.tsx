@@ -11,7 +11,11 @@ export const Route = createFileRoute('/_public/organizations/$orgId/settings')({
     const { queryClient } = context
 
     // Prefetch organizations if not already loaded
-    await queryClient.prefetchQuery(organizationsQueryOptions())
+    await queryClient.prefetchQuery({
+      queryKey: ['organizations', 'console'],
+      queryFn: fetchOrganizations,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    })
   },
   component: SettingsPage,
 })

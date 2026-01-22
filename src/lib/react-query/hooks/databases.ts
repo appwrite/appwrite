@@ -1204,6 +1204,155 @@ export function databasesQueryOptions(
   })
 }
 
+/**
+ * Query options for fetching paginated tables for a database
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function tablesQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  // Normalize search to undefined if empty string for consistent query keys
+  const normalizedSearch = search?.trim() || undefined
+
+  return queryOptions({
+    queryKey: [
+      'tables',
+      'project',
+      projectId,
+      databaseId,
+      page,
+      limit,
+      normalizedSearch,
+    ],
+    queryFn: () =>
+      fetchProjectTables(projectId!, databaseId!, page, limit, normalizedSearch),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching paginated rows for a table
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function tableRowsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  // Normalize search to undefined if empty string for consistent query keys
+  const normalizedSearch = search?.trim() || undefined
+
+  return queryOptions({
+    queryKey: [
+      'rows',
+      'project',
+      projectId,
+      databaseId,
+      tableId,
+      page,
+      limit,
+      normalizedSearch,
+    ],
+    queryFn: () =>
+      fetchProjectTableRows(projectId!, databaseId!, tableId!, page, limit, normalizedSearch),
+    enabled: !!projectId && !!databaseId && !!tableId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching a single database by ID
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function databaseQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['database', 'project', projectId, databaseId],
+    queryFn: () => fetchProjectDatabase(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching columns (attributes) for a table
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function tableColumnsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['columns', 'project', projectId, databaseId, tableId],
+    queryFn: () => fetchProjectTableColumns(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching a single table by ID
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function tableQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['table', 'project', projectId, databaseId, tableId],
+    queryFn: () => fetchProjectTable(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+    // Don't keep disabled queries in cache
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -1307,20 +1456,13 @@ export function useProjectDatabase(
   projectId: string | null | undefined,
   databaseId: string | null | undefined,
 ) {
-  const isEnabled = !!projectId && !!databaseId
-
   const {
     data: databaseData,
     isLoading,
     isPending,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['database', 'project', projectId, databaseId],
-    queryFn: () => fetchProjectDatabase(projectId!, databaseId!),
-    enabled: isEnabled,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(databaseQueryOptions(projectId, databaseId))
 
   return {
     database: databaseData || null,
@@ -1358,27 +1500,9 @@ export function useProjectTables(
     isPending,
     error,
     refetch,
-  } = useQuery({
-    queryKey: [
-      'tables',
-      'project',
-      projectId,
-      databaseId,
-      page,
-      limit,
-      normalizedSearch,
-    ],
-    queryFn: () =>
-      fetchProjectTables(
-        projectId!,
-        databaseId!,
-        page,
-        limit,
-        normalizedSearch,
-      ),
-    enabled: !!projectId && !!databaseId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(
+    tablesQueryOptions(projectId, databaseId, page, limit, normalizedSearch),
+  )
 
   // Map tables to our Collection type
   const tables = useMemo(() => {
@@ -1464,35 +1588,18 @@ export function useProjectTableRows(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
+  // Normalize search to undefined if empty string for consistent query keys
+  const normalizedSearch = search?.trim() || undefined
+
   const {
     data: rowsData,
     isLoading,
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: [
-      'rows',
-      'project',
-      projectId,
-      databaseId,
-      tableId,
-      page,
-      limit,
-      search,
-    ],
-    queryFn: () =>
-      fetchProjectTableRows(
-        projectId!,
-        databaseId!,
-        tableId!,
-        page,
-        limit,
-        search,
-      ),
-    enabled: !!projectId && !!databaseId && !!tableId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(
+    tableRowsQueryOptions(projectId, databaseId, tableId, page, limit, normalizedSearch),
+  )
 
   const totalPages = useMemo(() => {
     if (!rowsData?.total) return 0
@@ -1528,12 +1635,7 @@ export function useProjectTableColumns(
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['columns', 'project', projectId, databaseId, tableId],
-    queryFn: () => fetchProjectTableColumns(projectId!, databaseId!, tableId!),
-    enabled: !!projectId && !!databaseId && !!tableId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(tableColumnsQueryOptions(projectId, databaseId, tableId))
 
   return {
     columns: columnsData?.columns || [],
@@ -1589,20 +1691,13 @@ export function useProjectTable(
   databaseId: string | null | undefined,
   tableId: string | null | undefined,
 ) {
-  const isEnabled = !!projectId && !!databaseId && !!tableId
-
   const {
     data: tableData,
     isLoading,
     isPending,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['table', 'project', projectId, databaseId, tableId],
-    queryFn: () => fetchProjectTable(projectId!, databaseId!, tableId!),
-    enabled: isEnabled,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(tableQueryOptions(projectId, databaseId, tableId))
 
   return {
     table: tableData || null,

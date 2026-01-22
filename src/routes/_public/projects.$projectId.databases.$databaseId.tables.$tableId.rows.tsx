@@ -1,12 +1,14 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { TableView } from '@/components/pages/projects/$projectId/databases/View'
 import {
-  fetchProjectTables,
-  fetchProjectDatabase,
-  fetchProjectTableColumns,
+  tablesQueryOptions,
+  databaseQueryOptions,
+  tableColumnsQueryOptions,
   fetchProjectTableIndexes,
-  fetchProjectTableRows,
-  fetchProjectTable,
+  tableRowsQueryOptions,
+  tableQueryOptions,
+  fetchProject,
+  organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const TABLES_PER_PAGE = 100
@@ -15,6 +17,11 @@ const ROWS_PER_PAGE = 25
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
 )({
+  pendingComponent: () => (
+    <div className="flex h-full items-center justify-center">
+      <div className="text-muted-foreground">Loading rows...</div>
+    </div>
+  ),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -29,26 +36,10 @@ export const Route = createFileRoute(
     }
 
     // Fetch tables list (needed for redirect logic) - blocks navigation
-    const tablesPromise = queryClient.fetchQuery({
-      queryKey: [
-        'tables',
-        'project',
-        projectId,
-        databaseId,
-        0,
-        TABLES_PER_PAGE,
-        undefined,
-      ],
-      queryFn: () =>
-        fetchProjectTables(
-          projectId,
-          databaseId,
-          0,
-          TABLES_PER_PAGE,
-          undefined,
-        ),
-      staleTime: 30 * 1000, // 30 seconds
-    })
+    // Use ensureQueryData to ensure it's cached and blocks navigation
+    const tablesPromise = queryClient.ensureQueryData(
+      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+    )
 
     // If tableId is '-', fetch first table and redirect to it
     if (tableId === '-') {
@@ -102,62 +93,57 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
+      // Fetch project data (needed for header/sidebar) - blocks navigation
+      const projectData = await queryClient.ensureQueryData({
+        queryKey: ['project', projectId],
+        queryFn: () => fetchProject(projectId),
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      })
+
       // Fetch critical data before rendering to prevent layout shifts
-      const databasePromise = queryClient.fetchQuery({
-        queryKey: ['database', 'project', projectId, databaseId],
-        queryFn: () => fetchProjectDatabase(projectId, databaseId),
-        staleTime: 30 * 1000,
-      })
-
-      const columnsPromise = queryClient.fetchQuery({
-        queryKey: ['columns', 'project', projectId, databaseId, tableId],
-        queryFn: () => fetchProjectTableColumns(projectId, databaseId, tableId),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-
-      // Prefetch indexes (optional data, not critical for rows tab)
-      const indexesPromise = queryClient.prefetchQuery({
-        queryKey: ['indexes', 'project', projectId, databaseId, tableId],
-        queryFn: () => fetchProjectTableIndexes(projectId, databaseId, tableId),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-
-      const rowsPromise = queryClient.fetchQuery({
-        queryKey: [
-          'rows',
-          'project',
-          projectId,
-          databaseId,
-          tableId,
-          0,
-          ROWS_PER_PAGE,
-          '',
-        ],
-        queryFn: () =>
-          fetchProjectTableRows(
-            projectId,
-            databaseId,
-            tableId,
-            0,
-            ROWS_PER_PAGE,
-            '',
-          ),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-
-      const tablePromise = queryClient.fetchQuery({
-        queryKey: ['table', 'project', projectId, databaseId, tableId],
-        queryFn: () => fetchProjectTable(projectId, databaseId, tableId),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-
+      // All of these must complete before navigation proceeds to prevent loading states
+      // This ensures both tables list and rows are loaded before navigation, just like buckets/users/functions
       await Promise.all([
+        // Tables list - CRITICAL: blocks navigation until ready (prevents loader when switching tables)
         tablesPromise,
-        databasePromise,
-        columnsPromise,
-        indexesPromise,
-        rowsPromise,
-        tablePromise,
+
+        // Rows - CRITICAL: blocks navigation until ready (prevents loader when switching tables)
+        queryClient.ensureQueryData(
+          tableRowsQueryOptions(projectId, databaseId, tableId, 0, ROWS_PER_PAGE, ''),
+        ),
+
+        // Database details - blocks navigation until ready
+        queryClient.ensureQueryData(
+          databaseQueryOptions(projectId, databaseId),
+        ),
+
+        // Columns - blocks navigation until ready
+        queryClient.ensureQueryData(
+          tableColumnsQueryOptions(projectId, databaseId, tableId),
+        ),
+
+        // Table details - blocks navigation until ready
+        queryClient.ensureQueryData(
+          tableQueryOptions(projectId, databaseId, tableId),
+        ),
+
+        // Organization plan - CRITICAL for limit checking
+        projectData?.teamId
+          ? queryClient.ensureQueryData(
+              organizationPlanQueryOptions(projectData.teamId),
+            )
+          : Promise.resolve(),
+
+        // Prefetch indexes (optional data, not critical for rows tab) - doesn't block
+        queryClient
+          .prefetchQuery({
+            queryKey: ['indexes', 'project', projectId, databaseId, tableId],
+            queryFn: () => fetchProjectTableIndexes(projectId, databaseId, tableId),
+            staleTime: 30 * 1000,
+          })
+          .catch(() => {
+            // Don't block on optional data errors
+          }),
       ])
     } else {
       await tablesPromise
