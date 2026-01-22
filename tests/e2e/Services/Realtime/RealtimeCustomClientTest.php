@@ -12,6 +12,7 @@ use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
@@ -3121,5 +3122,90 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayNotHasKey('level2Ref', $event['data']['payload']);
 
         $client->close();
+    }
+
+    public function testChannelTestsWithoutQueries()
+    {
+        /**
+         * Test for connection without queries to 'tests' channel
+         */
+        $client = $this->getWebsocket(
+            ['tests'],
+            ['origin' => 'http://localhost'],
+            'console'
+        );
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('tests', $response['data']['channels']);
+
+        /**
+         * Wait for the test event from realtime.php
+         * The realtime.php sends test events every 5 seconds to all subscribers
+         * on the 'tests' channel without query filtering
+         */
+        $testEvent = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $testEvent);
+        $this->assertArrayHasKey('data', $testEvent);
+        $this->assertEquals('event', $testEvent['type']);
+        $this->assertNotEmpty($testEvent['data']);
+        $this->assertArrayHasKey('payload', $testEvent['data']);
+        $this->assertArrayHasKey('response', $testEvent['data']['payload']);
+        $this->assertEquals('WS:/v1/realtime:passed', $testEvent['data']['payload']['response']);
+        $this->assertContains('test.event', $testEvent['data']['events']);
+        $this->assertContains('tests', $testEvent['data']['channels']);
+
+        $client->close();
+    }
+
+    public function testChannelTestsQueryFiltering()
+    {
+        /**
+         * Test that queries properly filter events
+         * Connect two clients: one with queries, one without
+         */
+        $clientWithQuery = $this->getWebsocket(
+            ['tests'],
+            ['origin' => 'http://localhost'],
+            'console',
+            [Query::equal('type', ['tests'])->toString()]
+        );
+
+        $clientWithoutQuery = $this->getWebsocket(
+            ['tests'],
+            ['origin' => 'http://localhost'],
+            'console'
+        );
+
+        // Receive connection confirmations
+        $response1 = json_decode($clientWithQuery->receive(), true);
+        $this->assertEquals('connected', $response1['type']);
+
+        $response2 = json_decode($clientWithoutQuery->receive(), true);
+        $this->assertEquals('connected', $response2['type']);
+
+        /**
+         * Both clients should receive events from the test broadcaster
+         * Client with query should receive events with type='tests'
+         * Client without query should receive all events
+         */
+        $eventWithQuery = json_decode($clientWithQuery->receive(), true);
+        $this->assertEquals('event', $eventWithQuery['type']);
+        $this->assertArrayHasKey('type', $eventWithQuery['data']['payload']);
+        $this->assertEquals('tests', $eventWithQuery['data']['payload']['type']);
+
+        $eventWithoutQuery = json_decode($clientWithoutQuery->receive(), true);
+        $this->assertEquals('event', $eventWithoutQuery['type']);
+        $this->assertArrayHasKey('response', $eventWithoutQuery['data']['payload']);
+        $this->assertEquals('WS:/v1/realtime:passed', $eventWithoutQuery['data']['payload']['response']);
+
+        $clientWithQuery->close();
+        $clientWithoutQuery->close();
     }
 }
