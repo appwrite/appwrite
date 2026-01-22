@@ -30,9 +30,3 @@ export const SMALL_PAGE_SIZE = 10
  * Default page size for very small lists (e.g., backup archives)
  */
 export const TINY_PAGE_SIZE = 6
-
-/**
- * Placeholder data function for pagination
- * Keeps previous data visible during pagination to prevent loading flicker.
- */
-export const keepPreviousData = <T>(previousData: T | undefined) => previousData

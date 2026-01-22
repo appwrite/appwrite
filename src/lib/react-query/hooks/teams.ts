@@ -13,7 +13,6 @@ import { useOrganizations } from './organizations'
 import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 
 // ============================================================================
@@ -153,18 +152,6 @@ export function useOrganizationMemberships(
       fetchOrganizationMemberships(organizationId!, page, limit, search),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
-    initialData: () => {
-      // Use cached data from route loader if available
-      return queryClient.getQueryData([
-        'memberships',
-        'organization',
-        organizationId,
-        page,
-        limit,
-        search,
-      ])
-    },
   })
 
   // Map memberships to our TeamMember type

@@ -12,7 +12,6 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 
 // ============================================================================
@@ -249,11 +248,6 @@ export function useProjectMessages(
     queryFn: () => fetchProjectMessages(projectId!, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
-    initialData: () => {
-      // Use cached data from route loader if available
-      return queryClient.getQueryData(['messages', 'project', projectId, page, limit, search])
-    },
   })
 
   const messages = useMemo(() => {
@@ -306,7 +300,6 @@ export function useMessageTargets(
     queryFn: () => fetchMessageTargets(projectId!, messageId!, page, limit),
     enabled: !!projectId && !!messageId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 }
 
@@ -331,11 +324,6 @@ export function useProjectTopics(
     queryFn: () => fetchProjectTopics(projectId!, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
-    initialData: () => {
-      // Use cached data from route loader if available
-      return queryClient.getQueryData(['topics', 'project', projectId, page, limit, search])
-    },
   })
 
   const topics = useMemo(() => {
@@ -405,7 +393,6 @@ export function useTopicSubscribers(
       fetchTopicSubscribers(projectId!, topicId!, page, limit, search),
     enabled: !!projectId && !!topicId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   const subscribers = useMemo(() => {
@@ -450,11 +437,6 @@ export function useProjectProviders(
     queryFn: () => fetchProjectProviders(projectId!, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
-    initialData: () => {
-      // Use cached data from route loader if available
-      return queryClient.getQueryData(['providers', 'project', projectId, page, limit, search])
-    },
   })
 
   const providers = useMemo(() => {

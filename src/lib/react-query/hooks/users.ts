@@ -12,7 +12,6 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 
 // ============================================================================
@@ -235,7 +234,6 @@ export function useProjectUsers(
     queryFn: () => fetchProjectUsers(projectId!, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
     retry: false, // Don't retry on error
     // Don't keep disabled queries in cache
     gcTime: projectId ? 5 * 60 * 1000 : 0,
@@ -340,7 +338,6 @@ export function useProjectTeams(
     queryFn: () => fetchProjectTeams(projectId!, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
     retry: false, // Don't retry on error
     // Don't keep disabled queries in cache
     gcTime: projectId ? 5 * 60 * 1000 : 0,
@@ -947,7 +944,6 @@ export function useUserIdentities(
       fetchUserIdentities(projectId!, userId!, page, limit, search),
     enabled: !!projectId && !!userId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 }
 
@@ -965,7 +961,6 @@ export function useUserTargets(
     queryFn: () => fetchUserTargets(projectId!, userId!, page, limit),
     enabled: !!projectId && !!userId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 }
 
@@ -1625,7 +1620,6 @@ export function useTeamMemberships(
       fetchTeamMemberships(projectId!, teamId!, page, limit, search),
     enabled: !!projectId && !!teamId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 }
 

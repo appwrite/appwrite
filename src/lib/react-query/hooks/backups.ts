@@ -11,7 +11,6 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_STALE_TIME,
   TINY_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 
 // ============================================================================
@@ -87,7 +86,6 @@ export function useBackupPolicies(
     queryFn: () => fetchBackupPolicies(projectId!, databaseId!),
     enabled: !!projectId && !!databaseId && (options?.enabled ?? true),
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 }
 
@@ -114,6 +112,5 @@ export function useBackupArchives(
     queryFn: () => fetchBackupArchives(projectId!, databaseId!, page, limit),
     enabled: !!projectId && !!databaseId && (options?.enabled ?? true),
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 }

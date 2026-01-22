@@ -5,8 +5,7 @@ import {
   fetchProject,
   fetchOrganizationPlan,
 } from '@/lib/react-query/hooks'
-
-const FUNCTIONS_PER_PAGE = 25
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute('/_public/projects/$projectId/functions/')(
   {
@@ -42,11 +41,11 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/')(
               'project',
               projectId,
               0,
-              FUNCTIONS_PER_PAGE,
+              DEFAULT_PAGE_SIZE,
               undefined,
             ],
             queryFn: () =>
-              fetchProjectFunctions(projectId, 0, FUNCTIONS_PER_PAGE, undefined),
+              fetchProjectFunctions(projectId, 0, DEFAULT_PAGE_SIZE, undefined),
             staleTime: 30 * 1000, // 30 seconds - uses cached data if fresh
           }),
           // Fetch organization plan if we have a teamId - CRITICAL for limit checking

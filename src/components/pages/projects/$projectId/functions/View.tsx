@@ -116,20 +116,6 @@ export function FunctionsView() {
     enabled: !!projectId,
     staleTime: 30 * 1000, // 30 seconds
     refetchOnMount: false, // Data is fresh from route loader, no need to refetch
-    placeholderData: (previousData) => {
-      // First, try to get cached data from route loader
-      const cachedData = queryClient.getQueryData([
-        'functions',
-        'project',
-        projectId,
-        0,
-        pageSize,
-        undefined,
-      ])
-      if (cachedData) return cachedData
-      // Keep previous data visible while loading new data
-      return previousData
-    },
   })
 
   // Get project to get teamId for organization plan

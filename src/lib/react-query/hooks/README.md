@@ -11,7 +11,7 @@ All hooks have been successfully migrated from the monolithic `hooks.ts` file (5
 - **`organizations.ts`** - Organizations, plans, and invoices
 - **`teams.ts`** - Teams and memberships
 - **`dependencies.ts`** - Query key dependencies for cache invalidation
-- **`constants.ts`** - Shared constants (stale times, page sizes, placeholder data)
+- **`constants.ts`** - Shared constants (stale times, page sizes)
 - **`projects.ts`** - Projects, project variables, and API keys
 - **`users.ts`** - Project users and project teams
 - **`databases.ts`** - Databases, tables, rows, columns, and indexes
@@ -90,7 +90,6 @@ export function use[Resource](...) {
 6. **Cache Management** - Proper query invalidation using `Dependencies` constants
 7. **Constants Usage** - All magic numbers replaced with constants from `constants.ts`
 8. **Consistent Imports** - Standardized import order across all modules
-9. **Placeholder Data** - Consistent use of `keepPreviousData` for pagination hooks
 
 ## Constants
 
@@ -101,7 +100,6 @@ All hooks use centralized constants from `constants.ts`:
 - **`DEFAULT_PAGE_SIZE`** (25) - Standard pagination
 - **`SMALL_PAGE_SIZE`** (10) - For smaller lists
 - **`TINY_PAGE_SIZE`** (6) - For very small lists
-- **`keepPreviousData`** - Placeholder data function for pagination
 
 See `STANDARDIZATION.md` for detailed patterns and guidelines.
 

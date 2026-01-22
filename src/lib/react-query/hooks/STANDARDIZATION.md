@@ -62,15 +62,7 @@ limit: number = DEFAULT_PAGE_SIZE
 
 ## Placeholder Data
 
-For paginated queries, always use the `keepPreviousData` constant:
-
-```typescript
-// ❌ WRONG
-placeholderData: (previousData) => previousData, // Keep previous data visible during pagination
-
-// ✅ CORRECT
-placeholderData: keepPreviousData,
-```
+**Note:** We no longer use `placeholderData` or `initialData` in React Query hooks. The cache is used automatically when query keys match exactly between route loaders and hooks.
 
 ## Query Function Patterns
 
@@ -133,7 +125,6 @@ export function useResources(
     queryFn: () => fetchResources(projectId!, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   const resources = useMemo(() => {

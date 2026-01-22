@@ -14,7 +14,6 @@ import {
   LONG_STALE_TIME,
   DEFAULT_PAGE_SIZE,
   SMALL_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 import { Dependencies } from './dependencies'
 
@@ -366,7 +365,6 @@ export function useProjectFunctions(
     queryFn: () => fetchProjectFunctions(projectId!, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
     retry: false, // Don't retry on error
     // Don't keep disabled queries in cache
     gcTime: projectId ? 5 * 60 * 1000 : 0,
@@ -438,7 +436,6 @@ export function useFunctionDeployments(
       fetchFunctionDeployments(projectId!, functionId!, page, limit, queries),
     enabled: !!projectId && !!functionId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   return {
@@ -525,8 +522,6 @@ export function useFunctionTemplates(
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME, // Matches org view pattern
     gcTime: LONG_STALE_TIME, // Keep cache for a reasonable time
-    // Remove placeholderData to prevent showing stale items from previous pages
-    // This ensures each page shows only its own data, preventing duplicates
   })
 
   return {
@@ -571,7 +566,6 @@ export function useFunctionExecutions(
       fetchFunctionExecutions(projectId!, functionId!, page, limit, queries),
     enabled: !!projectId && !!functionId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   return {
@@ -604,7 +598,6 @@ export function useFunctionVariables(
     queryFn: () => fetchFunctionVariables(projectId!, functionId!, page, limit),
     enabled: !!projectId && !!functionId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   return {

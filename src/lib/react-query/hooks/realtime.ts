@@ -1,4 +1,4 @@
-import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { DateRange } from 'react-day-picker'
 import {
   subMinutes,
@@ -272,7 +272,6 @@ export function useRealtimeMessages(
     },
     enabled: !!projectId,
     staleTime: 10000,
-    placeholderData: keepPreviousData,
   })
 
   return {
@@ -301,7 +300,6 @@ export function useRealtimeChannels(
     },
     enabled: !!projectId,
     staleTime: 10000,
-    placeholderData: keepPreviousData,
   })
 
   return {

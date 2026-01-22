@@ -13,7 +13,6 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 import { Dependencies } from './dependencies'
 
@@ -444,11 +443,6 @@ export function useOrganizationDomains(
       fetchOrganizationDomains(organizationId!, page, limit, search),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
-    initialData: () => {
-      // Use cached data from route loader if available
-      return queryClient.getQueryData(['domains', 'organization', organizationId, page, limit, search])
-    },
   })
 
   const domains = useMemo(() => {
@@ -619,7 +613,6 @@ export function useDomainRecords(
     queryFn: () => fetchDomainRecords(domainId!, page, limit),
     enabled: !!domainId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   const dnsRecords = useMemo(() => {

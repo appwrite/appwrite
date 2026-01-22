@@ -251,20 +251,6 @@ export function DatabasesListView() {
     enabled: !!projectId,
     staleTime: 30 * 1000, // 30 seconds
     refetchOnMount: false, // Data is fresh from route loader, no need to refetch
-    placeholderData: (previousData) => {
-      // First, try to get cached data from route loader
-      const cachedData = queryClient.getQueryData([
-        'databases',
-        'project',
-        projectId,
-        0,
-        pageSize,
-        '',
-      ])
-      if (cachedData) return cachedData
-      // Keep previous data visible while loading new data
-      return previousData
-    },
   })
 
   // Paginated data - databases are already paginated by the API

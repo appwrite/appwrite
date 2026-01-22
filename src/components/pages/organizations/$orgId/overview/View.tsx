@@ -545,7 +545,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const orgTeamId = orgId || null
 
   // Use loader data for initial load (blocking, synchronous)
-  // For pagination/search, use useQuery but with initialData from loader
+  // For pagination/search, use useQuery which will use cached data from route loader
   const {
     data: activeProjectsData,
     isLoading: activeProjectsLoading,
@@ -562,14 +562,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       ),
     staleTime: 30 * 1000, // 30 seconds
     enabled: !!orgTeamId, // Always fetch when we have an org ID
-    placeholderData: (previousData) => previousData, // Keep previous data visible while loading new data
-    initialData: () => {
-      // Use cached data from route loader if available (for first page, no search)
-      if (activeProjectsPage === 0 && !searchQuery) {
-        return queryClient.getQueryData(['projects', 'active', 0, '', orgId])
-      }
-      return undefined
-    },
   })
 
   // Get total count from the first page query (no search) - already fetched in route loader
@@ -579,10 +571,6 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     queryFn: () => fetchActiveProjects(orgTeamId!, 0, PROJECTS_PER_PAGE, ''),
     staleTime: 30 * 1000, // 30 seconds
     enabled: !!orgTeamId, // Always fetch when we have an org ID
-    initialData: () => {
-      // Use cached data from route loader if available
-      return queryClient.getQueryData(['projects', 'active', 0, '', orgId])
-    },
   })
 
   // Fetch archived projects from Console SDK with server-side filtering
@@ -1322,7 +1310,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       </div>
                     )}
 
-                    {/* Projects Content - placeholderData keeps previous data visible while loading */}
+                    {/* Projects Content */}
                     {!activeProjectsError && (
                       <>
                         {/* Toolbar: Search + Filters + Create */}

@@ -13,7 +13,6 @@ import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
   DEFAULT_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 
 // ============================================================================
@@ -238,7 +237,6 @@ export function useProjectSites(
     queryFn: () => fetchProjectSites(projectId!, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   const sites = useMemo(() => {

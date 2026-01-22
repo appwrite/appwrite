@@ -12,7 +12,6 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 
 // ============================================================================
@@ -1206,7 +1205,6 @@ export function useProjectDatabases(
     queryFn: () => fetchProjectDatabases(projectId!, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
     retry: false, // Don't retry on error
     // Don't keep disabled queries in cache
     gcTime: projectId ? 5 * 60 * 1000 : 0,
@@ -1357,7 +1355,6 @@ export function useProjectTables(
       ),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   // Map tables to our Collection type
@@ -1472,7 +1469,6 @@ export function useProjectTableRows(
       ),
     enabled: !!projectId && !!databaseId && !!tableId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   const totalPages = useMemo(() => {

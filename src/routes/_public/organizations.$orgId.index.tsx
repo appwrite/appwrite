@@ -5,9 +5,7 @@ import {
   fetchActiveProjects,
   fetchOrganizationPlan,
 } from '@/lib/react-query/hooks'
-
-const PROJECTS_PER_PAGE = 25
-const MEMBERSHIPS_PER_PAGE = 25
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/')({
   loader: async ({ params, context }) => {
@@ -40,7 +38,7 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
         // Fetch first page of projects - blocks navigation until ready
         queryClient.ensureQueryData({
           queryKey: ['projects', 'active', 0, '', orgId],
-          queryFn: () => fetchActiveProjects(orgId, 0, PROJECTS_PER_PAGE, ''),
+          queryFn: () => fetchActiveProjects(orgId, 0, DEFAULT_PAGE_SIZE, ''),
           staleTime: 30 * 1000, // 30 seconds
         }),
         // Fetch first page of memberships - blocks navigation until ready
@@ -50,11 +48,11 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
             'organization',
             orgId,
             0,
-            MEMBERSHIPS_PER_PAGE,
+            DEFAULT_PAGE_SIZE,
             '',
           ],
           queryFn: () =>
-            fetchOrganizationMemberships(orgId, 0, MEMBERSHIPS_PER_PAGE, ''),
+            fetchOrganizationMemberships(orgId, 0, DEFAULT_PAGE_SIZE, ''),
           staleTime: 30 * 1000, // 30 seconds
         }),
       ])

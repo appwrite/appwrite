@@ -19,7 +19,6 @@ import {
   LONG_STALE_TIME,
   DEFAULT_PAGE_SIZE,
   SMALL_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 
 // ============================================================================
@@ -227,7 +226,6 @@ export function useProjectsForTeam(
     queryFn: () => fetchActiveProjects(teamId!, page, limit, search),
     enabled: !!teamId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
     retry: false, // Don't retry on error
     // Don't keep disabled queries in cache
     gcTime: teamId ? 5 * 60 * 1000 : 0,

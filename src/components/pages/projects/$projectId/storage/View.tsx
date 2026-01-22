@@ -89,38 +89,12 @@ export function StorageView() {
 
   // Get total count from the first page query (no search) - already fetched in route loader
   // This is used for limit checking and doesn't change when searching
-  // Data is guaranteed to be available from route loader, so we can use initialData
   const { data: totalBucketsData } = useQuery({
     queryKey: ['buckets', 'project', projectId, 0, pageSize, ''],
     queryFn: () => fetchProjectBuckets(projectId!, 0, pageSize, ''),
     enabled: !!projectId,
     staleTime: 30 * 1000, // 30 seconds
     refetchOnMount: false, // Data is fresh from route loader, no need to refetch
-    // Use initialData to ensure data is available immediately (from route loader)
-    initialData: () => {
-      return queryClient.getQueryData<Models.BucketList>([
-        'buckets',
-        'project',
-        projectId,
-        0,
-        pageSize,
-        '',
-      ])
-    },
-    placeholderData: (previousData) => {
-      // First, try to get cached data from route loader
-      const cachedData = queryClient.getQueryData<Models.BucketList>([
-        'buckets',
-        'project',
-        projectId,
-        0,
-        pageSize,
-        '',
-      ])
-      if (cachedData) return cachedData
-      // Keep previous data visible while loading new data
-      return previousData
-    },
   })
 
   // Paginated data - buckets are already paginated by the API
@@ -132,7 +106,6 @@ export function StorageView() {
 
   // Get organization plan to check limits
   // Data is guaranteed to be available from route loader if project has teamId
-  // Use initialData to ensure immediate availability from cache
   const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
 
   // Total count of all buckets (without search) - for limit checking

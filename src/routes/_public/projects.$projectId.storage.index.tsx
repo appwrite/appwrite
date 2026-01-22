@@ -5,8 +5,7 @@ import {
   fetchProject,
   fetchOrganizationPlan,
 } from '@/lib/react-query/hooks'
-
-const BUCKETS_PER_PAGE = 25
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
   pendingComponent: () => (
@@ -36,8 +35,8 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
       await Promise.all([
         // Fetch first page of buckets - blocks navigation until ready
         queryClient.fetchQuery({
-          queryKey: ['buckets', 'project', projectId, 0, BUCKETS_PER_PAGE, ''],
-          queryFn: () => fetchProjectBuckets(projectId, 0, BUCKETS_PER_PAGE, ''),
+          queryKey: ['buckets', 'project', projectId, 0, DEFAULT_PAGE_SIZE, ''],
+          queryFn: () => fetchProjectBuckets(projectId, 0, DEFAULT_PAGE_SIZE, ''),
           staleTime: 30 * 1000, // 30 seconds - uses cached data if fresh
         }),
         // Fetch organization plan if we have a teamId - CRITICAL for limit checking

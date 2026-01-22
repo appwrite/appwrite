@@ -12,7 +12,6 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_STALE_TIME,
   DEFAULT_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 
 // ============================================================================
@@ -190,7 +189,6 @@ export function useProjectBuckets(
     queryFn: () => fetchProjectBuckets(projectId!, page, limit, search),
     enabled: !!projectId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
     retry: false, // Don't retry on error
     // Don't keep disabled queries in cache
     gcTime: projectId ? 5 * 60 * 1000 : 0,
@@ -256,7 +254,6 @@ export function useBucketFiles(
     queryFn: () => fetchBucketFiles(projectId!, bucketId!, page, limit, search),
     enabled: !!projectId && !!bucketId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 }
 
@@ -300,6 +297,5 @@ export function useFileTokens(
     queryFn: () => fetchFileTokens(projectId!, bucketId!, fileId!, page, limit),
     enabled: !!projectId && !!bucketId && !!fileId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 }

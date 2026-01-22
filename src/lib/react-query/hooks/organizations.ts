@@ -14,7 +14,6 @@ import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
   DEFAULT_PAGE_SIZE,
-  keepPreviousData,
 } from './constants'
 
 /**
@@ -1118,7 +1117,6 @@ export function useOrganizationInvoices(
       fetchOrganizationInvoices(organizationId!, page, limit, queries),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   return {
@@ -1194,7 +1192,6 @@ export function useOrganizationCredits(
     queryFn: () => fetchOrganizationCredits(organizationId!, page, limit),
     enabled: !!organizationId,
     staleTime: DEFAULT_STALE_TIME,
-    placeholderData: keepPreviousData,
   })
 
   return {
