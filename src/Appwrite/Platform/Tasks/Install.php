@@ -56,6 +56,9 @@ class Install extends Action
 
         Console::success('Starting Appwrite installation...');
 
+        $isLocalInstall = !empty(getenv('APPWRITE_INSTALLER_LOCAL'));
+
+        // Create directory with write permissions
         if (!\file_exists(\dirname($this->path))) {
             if (!@\mkdir(\dirname($this->path), 0755, true)) {
                 Console::error('Can\'t create directory ' . \dirname($this->path));
@@ -63,13 +66,16 @@ class Install extends Action
             }
         }
 
+        // Check for existing installation
         $data = @file_get_contents($this->path . '/docker-compose.yml');
         $existingInstallation = $data !== false;
 
         if ($existingInstallation) {
             $time = \time();
-            Console::info('Compose file found, creating backup: docker-compose.yml.' . $time . '.backup');
-            file_put_contents($this->path . '/docker-compose.yml.' . $time . '.backup', $data);
+            if (!$isLocalInstall) {
+                Console::info('Compose file found, creating backup: docker-compose.yml.' . $time . '.backup');
+                file_put_contents($this->path . '/docker-compose.yml.' . $time . '.backup', $data);
+            }
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
             $oldVersion = $appwrite?->getImageVersion();
@@ -106,8 +112,10 @@ class Install extends Action
                 $envData = @file_get_contents($this->path . '/.env');
 
                 if ($envData !== false) {
-                    Console::info('Env file found, creating backup: .env.' . $time . '.backup');
-                    file_put_contents($this->path . '/.env.' . $time . '.backup', $envData);
+                    if (!$isLocalInstall) {
+                        Console::info('Env file found, creating backup: .env.' . $time . '.backup');
+                        file_put_contents($this->path . '/.env.' . $time . '.backup', $envData);
+                    }
                     $env = new Env($envData);
 
                     foreach ($env->list() as $key => $value) {
@@ -134,6 +142,7 @@ class Install extends Action
             }
         }
 
+        // If interactive and web mode enabled, start web server
         if ($interactive === 'Y' && Console::isInteractive()) {
             Console::success('Starting web installer...');
             Console::info('Open your browser at: http://localhost:8080');
@@ -143,6 +152,7 @@ class Install extends Action
             return;
         }
 
+        // Fall back to CLI mode
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHTTPPort . ')');
             $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
@@ -286,9 +296,11 @@ class Install extends Action
         $host = '0.0.0.0';
         $url = "http://localhost:$port";
 
+        // Create a router script for handling requests
         $routerScript = \sys_get_temp_dir() . '/appwrite-installer-router.php';
         $this->createRouterScript($routerScript, $defaultHTTPPort, $defaultHTTPSPort, $organization, $image, $noStart, $vars, $isUpgrade, $lockedDatabase);
 
+        // Start PHP built-in server in background
         $command = \sprintf(
             'php -S %s:%d %s >/dev/null 2>&1 & echo $!',
             $host,
@@ -296,6 +308,7 @@ class Install extends Action
             \escapeshellarg($routerScript)
         );
 
+        // Start the server
         $output = [];
         $exitCode = 0;
         \exec($command, $output, $exitCode);
@@ -311,12 +324,14 @@ class Install extends Action
         });
         \sleep(3);
 
+        // Check if the server actually started
         $handle = @fsockopen('localhost', $port, $errno, $errstr, 1);
         if ($handle === false) {
             Console::exit(1);
         }
         \fclose($handle);
 
+        // Wait for the server process to finish
         while (true) {
             $handle = @fsockopen('localhost', $port, $errno, $errstr, 1);
             if ($handle === false) {
@@ -326,6 +341,7 @@ class Install extends Action
             \sleep(1);
         }
 
+        // Cleanup
         if (\file_exists($routerScript)) {
             \unlink($routerScript);
         }
@@ -387,6 +403,10 @@ function globalLockPath(): string
 function isGlobalLockActive(?array $lock): bool
 {
     if (!$lock || !isset($lock['updatedAt'])) {
+        return false;
+    }
+
+    if (isset($lock['status']) && in_array($lock['status'], ['completed', 'error'], true)) {
         return false;
     }
 
@@ -630,6 +650,7 @@ function sendInstallerHtmlHeaders(): void
     header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
 }
 
+// Serve static files
 if ($uri !== '/' && $uri !== '') {
     $requestPath = $uri;
     $publicBase = realpath(PUBLIC_PATH);
@@ -651,6 +672,7 @@ if ($uri !== '/' && $uri !== '') {
     }
 
     if ($filePath && is_file($filePath)) {
+        // Determine content type
         $extension = pathinfo($filePath, PATHINFO_EXTENSION);
         $mimeTypes = [
             'css' => 'text/css',
@@ -698,6 +720,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $uri === '/install/status') {
     exit;
 }
 
+// Handle POST request (completion)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $uri === '/install/complete') {
+    header('Content-Type: application/json');
+
+    $input = json_decode(file_get_contents('php://input'), true);
+    $installId = sanitizeInstallId($input['installId'] ?? '');
+
+    if ($installId !== '') {
+        updateGlobalLock($installId, 'completed');
+    }
+
+    echo json_encode(['success' => true]);
+
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    }
+
+    if (function_exists('posix_getpid') && PHP_OS_FAMILY !== 'Windows') {
+        $pid = posix_getpid();
+        if ($pid) {
+            $delay = 3;
+            $command = 'sh -c ' . escapeshellarg("sleep {$delay}; kill {$pid} >/dev/null 2>&1");
+            @exec($command . ' >/dev/null 2>&1 &');
+        }
+    }
+
+    exit;
+}
+
+// Handle POST request (installation)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $uri === '/install') {
     $acceptHeader = $_SERVER['HTTP_ACCEPT'] ?? '';
     $acceptsStream = stripos($acceptHeader, 'text/event-stream') !== false;
@@ -813,6 +865,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $uri === '/install') {
 
         updateGlobalLock($installId, 'in-progress');
 
+        // Prepare user inputs - use locked database if in upgrade mode
         $payloadInput = [
             '_APP_ENV' => 'production',
             '_APP_OPENSSL_KEY_V1' => $input['opensslKey'] ?? '',
@@ -834,9 +887,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $uri === '/install') {
         ];
         foreach ($fieldsToCompare as $field) {
             if (isset($stored[$field]) && isset($input[$field]) && (string) $stored[$field] !== (string) $input[$field]) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Installation payload mismatch']);
-                exit;
+                if ($installId !== '') {
+                    updateGlobalLock($installId, 'error');
+                }
+                respondBadRequest('Installation payload mismatch', $wantsStream);
             }
         }
 
@@ -851,14 +905,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $uri === '/install') {
             $incomingHash = hashSensitiveValue((string) ($input[$field] ?? ''));
             if (isset($stored[$hashField])) {
                 if ((string) $stored[$hashField] !== $incomingHash) {
-                    http_response_code(400);
-                    echo json_encode(['success' => false, 'message' => 'Installation payload mismatch']);
-                    exit;
+                    if ($installId !== '') {
+                        updateGlobalLock($installId, 'error');
+                    }
+                    respondBadRequest('Installation payload mismatch', $wantsStream);
                 }
             } elseif (isset($stored[$field]) && isset($input[$field]) && (string) $stored[$field] !== (string) $input[$field]) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Installation payload mismatch']);
-                exit;
+                if ($installId !== '') {
+                    updateGlobalLock($installId, 'error');
+                }
+                respondBadRequest('Installation payload mismatch', $wantsStream);
             }
         }
 
@@ -870,6 +926,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $uri === '/install') {
             $input['httpsPort'] = $stored['httpsPort'] ?? $input['httpsPort'] ?? DEFAULT_HTTPS_PORT;
         }
 
+        // Use the prepareEnvironmentVariables method to merge with defaults
         $vars = json_decode(VARS_JSON, true);
         $envVars = $installer->prepareEnvironmentVariables($payloadInput, $vars);
 
@@ -909,6 +966,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $uri === '/install') {
             }
         };
 
+        // Call performInstallation method
         $installer->performInstallation(
             $input['httpPort'] ?? DEFAULT_HTTP_PORT,
             $input['httpsPort'] ?? DEFAULT_HTTPS_PORT,
@@ -931,11 +989,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $uri === '/install') {
             ]);
         }
         updateGlobalLock($installId, 'completed');
-
-        register_shutdown_function(function() {
-            sleep(2);
-            posix_kill(posix_getpid(), SIGTERM);
-        });
 
     } catch (\Throwable $e) {
         http_response_code(500);
@@ -970,6 +1023,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $uri === '/install') {
     exit;
 }
 
+// Serve installer UI
 if ($uri === '/' || $uri === '') {
     sendInstallerHtmlHeaders();
 
@@ -983,6 +1037,7 @@ if ($uri === '/' || $uri === '') {
     exit;
 }
 
+// 404
 http_response_code(404);
 echo '404 Not Found';
 PHP;
@@ -1014,6 +1069,7 @@ PHP;
         $password = new Password();
         $token = new Token();
 
+        // Start with all defaults
         foreach ($vars as $var) {
             if (!empty($var['filter']) && $var['filter'] === 'token') {
                 $input[$var['name']] = $token->generate();
@@ -1024,12 +1080,14 @@ PHP;
             }
         }
 
+        // Override with user inputs
         foreach ($userInput as $key => $value) {
             if ($value !== null && $value !== '') {
                 $input[$key] = $value;
             }
         }
 
+        // Set database-specific connection details
         $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
         if ($database === 'mongodb') {
             $input['_APP_DB_HOST'] = 'mongodb';
@@ -1073,6 +1131,9 @@ PHP;
         bool $isUpgrade = false
     ): void {
         $isCLI = php_sapi_name() === 'cli';
+        $useExistingConfig = !empty(getenv('APPWRITE_INSTALLER_LOCAL'))
+            && file_exists($this->path . '/docker-compose.yml')
+            && file_exists($this->path . '/.env');
 
         if (getenv('APPWRITE_INSTALLER_LOCAL')) {
             $organization = 'appwrite';
@@ -1158,8 +1219,10 @@ PHP;
                 $this->reportProgress($progress, 'docker-compose', 'in-progress', $messages['docker-compose']['start']);
                 $this->delayProgress($progress, 'in-progress');
 
-                if (!\file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
-                    throw new \Exception('Failed to save Docker Compose file');
+                if (!$useExistingConfig) {
+                    if (!\file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
+                        throw new \Exception('Failed to save Docker Compose file');
+                    }
                 }
 
                 $this->reportProgress($progress, 'docker-compose', 'completed', $messages['docker-compose']['done']);
@@ -1170,15 +1233,17 @@ PHP;
                 $this->reportProgress($progress, 'env-vars', 'in-progress', $messages['env-vars']['start']);
                 $this->delayProgress($progress, 'in-progress');
 
-                if (!\file_put_contents($this->path . '/.env', $templateForEnv->render(false))) {
-                    throw new \Exception('Failed to save environment variables file');
+                if (!$useExistingConfig) {
+                    if (!\file_put_contents($this->path . '/.env', $templateForEnv->render(false))) {
+                        throw new \Exception('Failed to save environment variables file');
+                    }
                 }
 
                 $this->reportProgress($progress, 'env-vars', 'completed', $messages['env-vars']['done']);
                 $this->reportProgress($progress, 'config-files', 'completed', $messages['config-files']['done']);
             }
 
-            if ($database === 'mongodb') {
+            if ($database === 'mongodb' && !$useExistingConfig) {
                 $mongoEntrypoint = __DIR__ . '/../../../../mongo-entrypoint.sh';
 
                 if (file_exists($mongoEntrypoint)) {
@@ -1194,14 +1259,16 @@ PHP;
                 if (!is_array($envVars)) {
                     $envVars = [];
                 }
-                foreach ($input as $key => $value) {
-                    if ($value === null || $value === '') {
-                        continue;
+                if (!$useExistingConfig) {
+                    foreach ($input as $key => $value) {
+                        if ($value === null || $value === '') {
+                            continue;
+                        }
+                        if (!preg_match('/^[A-Z0-9_]+$/', $key)) {
+                            throw new \Exception('Invalid environment variable name');
+                        }
+                        $envVars[$key] = (string) $value;
                     }
-                    if (!preg_match('/^[A-Z0-9_]+$/', $key)) {
-                        throw new \Exception('Invalid environment variable name');
-                    }
-                    $envVars[$key] = (string) $value;
                 }
 
                 if ($isCLI) {

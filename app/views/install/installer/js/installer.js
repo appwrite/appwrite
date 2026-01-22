@@ -34,7 +34,7 @@
             }
             const prev = stepFlow[index - 1] ?? null;
             const next = stepFlow[index + 1] ?? null;
-            const label = next === 4 ? (isUpgrade ? 'Upgrade' : 'Install') : 'Next';
+            const label = next === 4 ? (isUpgrade ? 'Update' : 'Install') : 'Next';
             config[step] = {
                 back: { target: prev },
                 next: { label, target: next }

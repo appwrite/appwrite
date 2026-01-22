@@ -4,6 +4,7 @@
         errorClearMs: 180,
         installPollIntervalMs: 4000,
         installFallbackDelayMs: 12000,
+        redirectDelayMs: 500,
         mockStepDelayMs: 1800,
         progressTransitionDelayMs: 200,
         mockErrorDetails: {

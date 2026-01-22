@@ -212,22 +212,30 @@ body {
 }
 
 .installer-page[data-step='4'] .installer-backdrop {
-    opacity: 1;
+    opacity: 0.4;
 }
 
 .installer-blob {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
+    left: 0;
+    top: 0;
+    --blob-x: 0px;
+    --blob-y: 0px;
+    transform: translate(var(--blob-x), var(--blob-y)) scale(1);
+    transform-origin: center;
+    animation: none;
 }
 
 .installer-blob.blob-one {
-    transform: translate(-50%, -50%) translate(-111px, -100px);
+    --blob-x: 609px;
+    --blob-y: 412px;
+    opacity: 0.4;
 }
 
 .installer-blob.blob-two {
-    transform: translate(-50%, -50%) translate(-278px, -107px);
+    --blob-x: 442px;
+    --blob-y: 405px;
+    opacity: 0.28;
 }
 
 .installer-card {

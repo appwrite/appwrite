@@ -1,5 +1,6 @@
 (() => {
     const INSTALL_LOCK_KEY = 'appwrite-install-lock';
+    const INSTALL_ID_KEY = 'appwrite-install-id';
     const isMockMode = () => document.body?.dataset.installMode === 'mock'
         || (typeof navigator !== 'undefined' && navigator.webdriver);
     const getBodyDataset = () => document.body?.dataset ?? {};
@@ -62,6 +63,7 @@
         errorClear: CONSTANTS.errorClearMs ?? 180,
         installPollInterval: CONSTANTS.installPollIntervalMs ?? 4000,
         installFallbackDelay: CONSTANTS.installFallbackDelayMs ?? 12000,
+        redirectDelay: CONSTANTS.redirectDelayMs ?? 500,
         mockStepDelay: CONSTANTS.mockStepDelayMs ?? 1800,
         progressTransitionDelay: CONSTANTS.progressTransitionDelayMs ?? 140
     };
@@ -310,7 +312,9 @@
         if (data.lockedDatabase) {
             formState.database = data.lockedDatabase;
         }
-        setStateIfEmpty('database', data.defaultDatabase);
+        if (!isUpgradeMode()) {
+            setStateIfEmpty('database', data.defaultDatabase);
+        }
     };
 
     const toDatabaseLabel = (value) => {
@@ -542,6 +546,15 @@
             lockDatabaseSelection(root, lockedDatabase);
         } else {
             bindDatabaseSelection(root);
+        }
+
+        if (isUpgradeMode()) {
+            const radios = root.querySelectorAll('input[name="database"]');
+            radios.forEach((radio) => {
+                radio.checked = false;
+            });
+            const cards = root.querySelectorAll('.selector-card');
+            cards.forEach((card) => card.classList.remove('selected'));
         }
 
         const hostname = root.querySelector('#hostname');
@@ -821,8 +834,6 @@
             const row = fragment.querySelector('.install-row');
             if (!row) return null;
             const toggle = row.querySelector('[data-install-toggle]');
-            const copyButton = row.querySelector('[data-install-copy]');
-            const copyWrapper = copyButton?.closest('.tooltip-wrapper');
             const setOpenState = (isOpen) => {
                 row.classList.toggle('is-open', isOpen);
                 if (toggle) {
@@ -851,22 +862,6 @@
                 toggle.addEventListener('click', (event) => {
                     event.stopPropagation();
                     toggleRow();
-                });
-            }
-            if (copyWrapper) {
-                copyWrapper.addEventListener('mouseenter', () => resetTooltipText(copyWrapper));
-                copyWrapper.addEventListener('focusin', () => resetTooltipText(copyWrapper));
-            }
-            if (copyButton) {
-                copyButton.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    const traceNode = row.querySelector('[data-install-trace]');
-                    const text = traceNode?.textContent?.trim() || '';
-                    copyToClipboard(text);
-                    if (copyWrapper) {
-                        const successText = copyWrapper.dataset.tooltipSuccess || 'Copied';
-                        setTooltipText(copyWrapper, successText);
-                    }
                 });
             }
         updateInstallRow(row, step, 'in-progress');
@@ -938,9 +933,21 @@
         window.location.href = url;
     };
 
+    const notifyInstallComplete = (installId) => {
+        if (isMockProgressMode()) return Promise.resolve();
+        if (!installId) return Promise.resolve();
+        return fetch('/install/complete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ installId })
+        }).catch(() => {});
+    };
+
     const getStoredInstallId = () => {
         try {
-            return sessionStorage.getItem('appwrite-install-id');
+            return sessionStorage.getItem(INSTALL_ID_KEY);
         } catch (error) {
             return null;
         }
@@ -948,13 +955,13 @@
 
     const storeInstallId = (installId) => {
         try {
-            sessionStorage.setItem('appwrite-install-id', installId);
+            sessionStorage.setItem(INSTALL_ID_KEY, installId);
         } catch (error) {}
     };
 
     const clearInstallId = () => {
         try {
-            sessionStorage.removeItem('appwrite-install-id');
+            sessionStorage.removeItem(INSTALL_ID_KEY);
         } catch (error) {}
     };
 
@@ -1350,8 +1357,21 @@
                         return;
                     }
                     if (event === 'done') {
+                        const lastStep = INSTALLATION_STEPS[INSTALLATION_STEPS.length - 1];
+                        if (lastStep) {
+                            const lastState = progressState.get(lastStep.id);
+                            if (!lastState || lastState.status !== 'completed') {
+                                progressState.set(lastStep.id, {
+                                    status: 'completed',
+                                    message: lastStep.done,
+                                    details: lastState?.details
+                                });
+                                renderProgress();
+                            }
+                        }
                         finalizeInstall();
-                        redirectToApp();
+                        notifyInstallComplete(activeInstall?.installId);
+                        setTimeout(() => redirectToApp(), TIMINGS.redirectDelay);
                         return;
                     }
                     if (event === 'error') {

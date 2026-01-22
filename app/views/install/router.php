@@ -152,7 +152,7 @@ function startDockerInstaller(array $opts): void
     removeDockerInstallerContainer($container);
 
     $cwd = getcwd() ?: '.';
-    $volumePath = $cwd . '/appwrite';
+    $volumePath = $cwd;
     $envArgs = [];
     $envArgs[] = ['-e', 'APPWRITE_INSTALLER_LOCAL=1'];
     if (isset($opts['mock'])) {
