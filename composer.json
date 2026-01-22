@@ -14,7 +14,12 @@
         "lint": "vendor/bin/pint --test --config pint.json",
         "format": "vendor/bin/pint --config pint.json",
         "bench": "vendor/bin/phpbench run --report=benchmark",
-        "check": "./vendor/bin/phpstan analyse -c phpstan.neon"
+        "check": "./vendor/bin/phpstan analyse -c phpstan.neon",
+        "installer:clean": "php app/views/install/router.php --clean",
+        "installer:dev": "composer installer:clean && php app/views/install/router.php --docker",
+        "installer:dev-upgrade": "composer installer:clean && php app/views/install/router.php --docker --upgrade",
+        "installer:mock": "composer installer:clean && php app/views/install/router.php --mock",
+        "installer:mock-upgrade": "composer installer:clean && php app/views/install/router.php --mock --upgrade --locked-database=mongodb"
     },
     "autoload": {
         "psr-4": {

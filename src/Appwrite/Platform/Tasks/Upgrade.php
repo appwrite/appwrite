@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\CLI\Console;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
@@ -30,7 +31,7 @@ class Upgrade extends Install
             ->callback($this->action(...));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart): void
+    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, bool $isUpgrade = false): void
     {
         // Check for previous installation
         $data = @file_get_contents($this->path . '/docker-compose.yml');
@@ -47,7 +48,7 @@ class Upgrade extends Install
         $database = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
         $this->lockedDatabase = $database;
 
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
+        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, true);
     }
 
     protected function startWebServer(string $defaultHTTPPort, string $defaultHTTPSPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
