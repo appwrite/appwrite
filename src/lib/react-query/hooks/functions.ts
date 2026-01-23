@@ -482,6 +482,82 @@ export function functionExecutionsQueryOptions(
   })
 }
 
+/**
+ * Query options for fetching function domains (proxy rules)
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function functionDomainsQueryOptions(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+) {
+  return queryOptions({
+    queryKey: [
+      'proxy-rules',
+      'function',
+      projectId,
+      functionId,
+      page,
+      limit,
+      search,
+    ],
+    queryFn: () =>
+      fetchFunctionDomains(projectId!, functionId!, page, limit, search),
+    enabled: !!projectId && !!functionId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching function runtimes
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function projectRuntimesQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['runtimes', 'project', projectId],
+    queryFn: () => fetchProjectRuntimes(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching function specifications
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function functionSpecificationsQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['specifications', 'function', projectId],
+    queryFn: () => fetchFunctionSpecifications(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -732,21 +808,9 @@ export function useFunctionDomains(
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
 ) {
-  return useQuery({
-    queryKey: [
-      'proxy-rules',
-      'function',
-      projectId,
-      functionId,
-      page,
-      limit,
-      search,
-    ],
-    queryFn: () =>
-      fetchFunctionDomains(projectId!, functionId!, page, limit, search),
-    enabled: !!projectId && !!functionId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(
+    functionDomainsQueryOptions(projectId, functionId, page, limit, search),
+  )
 }
 
 /**
@@ -902,12 +966,7 @@ export async function deleteFunctionDeployment(
  * Hook to fetch function runtimes
  */
 export function useProjectRuntimes(projectId: string | null | undefined) {
-  return useQuery({
-    queryKey: ['runtimes', 'project', projectId],
-    queryFn: () => fetchProjectRuntimes(projectId!),
-    enabled: !!projectId,
-    staleTime: LONG_STALE_TIME,
-  })
+  return useQuery(projectRuntimesQueryOptions(projectId))
 }
 
 /**
@@ -916,12 +975,7 @@ export function useProjectRuntimes(projectId: string | null | undefined) {
 export function useFunctionSpecifications(
   projectId: string | null | undefined,
 ) {
-  return useQuery({
-    queryKey: ['specifications', 'function', projectId],
-    queryFn: () => fetchFunctionSpecifications(projectId!),
-    enabled: !!projectId,
-    staleTime: LONG_STALE_TIME,
-  })
+  return useQuery(functionSpecificationsQueryOptions(projectId))
 }
 
 /**

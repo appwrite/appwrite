@@ -2,10 +2,12 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { FunctionDeployments } from '@/components/pages/projects/$projectId/functions/Deployments'
 import {
-  fetchProjectFunction,
-  fetchFunctionDeployments,
-  fetchFunctionDeployment,
-  fetchFunctionDomains,
+  projectFunctionQueryOptions,
+  functionDeploymentsQueryOptions,
+  functionDeploymentQueryOptions,
+  functionDomainsQueryOptions,
+  projectRuntimesQueryOptions,
+  functionSpecificationsQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const DEPLOYMENTS_PER_PAGE = 25
@@ -34,72 +36,47 @@ export const Route = createFileRoute(
     const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
     const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
 
-    // Fetch function first to get deploymentId
-    const func = await queryClient.fetchQuery({
-      queryKey: ['function', 'project', projectId, functionId],
-      queryFn: () => fetchProjectFunction(projectId, functionId),
-      staleTime: 30 * 1000,
-    })
+    // Fetch function first to get deploymentId - blocks navigation until ready
+    const func = await queryClient.ensureQueryData(
+      projectFunctionQueryOptions(projectId, functionId),
+    )
 
     // Fetch critical data before rendering to prevent layout shifts
+    // All data is prefetched using queryOptions to prevent duplicate API calls
     const criticalPromises: Promise<unknown>[] = [
       // Fetch deployments list for the requested page - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: [
-          'deployments',
-          'function',
+      queryClient.ensureQueryData(
+        functionDeploymentsQueryOptions(
           projectId,
           functionId,
           pageIndex,
           DEPLOYMENTS_PER_PAGE,
-          undefined,
-        ],
-        queryFn: () =>
-          fetchFunctionDeployments(
-            projectId,
-            functionId,
-            pageIndex,
-            DEPLOYMENTS_PER_PAGE,
-          ),
-        staleTime: 30 * 1000,
-      }),
+        ),
+      ),
+      // Fetch domains/rules (for overview card) - blocks navigation until ready
+      queryClient.ensureQueryData(
+        functionDomainsQueryOptions(projectId, functionId, 0, DOMAINS_LIMIT),
+      ),
+      // Fetch runtimes (for runtime name display) - blocks navigation until ready
+      queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),
+      // Fetch specifications (for resource limits) - blocks navigation until ready
+      queryClient.ensureQueryData(
+        functionSpecificationsQueryOptions(projectId),
+      ),
     ]
 
-    // Fetch active deployment if function has a deploymentId
+    // Fetch active deployment if function has a deploymentId - blocks navigation until ready
     if (func?.deploymentId) {
       criticalPromises.push(
-        queryClient.fetchQuery({
-          queryKey: [
-            'deployment',
-            'function',
+        queryClient.ensureQueryData(
+          functionDeploymentQueryOptions(
             projectId,
             functionId,
             func.deploymentId,
-          ],
-          queryFn: () =>
-            fetchFunctionDeployment(projectId, functionId, func.deploymentId!),
-          staleTime: 30 * 1000,
-        }),
+          ),
+        ),
       )
     }
-
-    // Fetch domains/rules (for overview card) - blocks navigation until ready
-    criticalPromises.push(
-      queryClient.fetchQuery({
-        queryKey: [
-          'proxy-rules',
-          'function',
-          projectId,
-          functionId,
-          0,
-          DOMAINS_LIMIT,
-          undefined,
-        ],
-        queryFn: () =>
-          fetchFunctionDomains(projectId, functionId, 0, DOMAINS_LIMIT),
-        staleTime: 30 * 1000,
-      }),
-    )
 
     await Promise.all(criticalPromises)
   },
