@@ -23,6 +23,10 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\IP\Create a
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\IP\Update as UpdateIP;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Line\Create as CreateLine;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Line\Update as UpdateLine;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Longtext\Create as CreateLongtext;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Longtext\Update as UpdateLongtext;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Mediumtext\Create as CreateMediumtext;
+use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Mediumtext\Update as UpdateMediumtext;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Point\Create as CreatePoint;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Point\Update as UpdatePoint;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Polygon\Create as CreatePolygon;
@@ -37,10 +41,6 @@ use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\URL\Create 
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\URL\Update as UpdateURL;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Varchar\Create as CreateVarchar;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Varchar\Update as UpdateVarchar;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Mediumtext\Create as CreateMediumtext;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Mediumtext\Update as UpdateMediumtext;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Longtext\Create as CreateLongtext;
-use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Longtext\Update as UpdateLongtext;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\XList as ListColumns;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Create as CreateTable;
 use Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Delete as DeleteTable;
