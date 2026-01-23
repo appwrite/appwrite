@@ -7080,8 +7080,7 @@
                                 "enabled"
                             ],
                             "required": [
-                                "databaseId",
-                                "name"
+                                "databaseId"
                             ],
                             "responses": [
                                 {
@@ -7135,10 +7134,7 @@
                                     "default": true,
                                     "x-example": false
                                 }
-                            },
-                            "required": [
-                                "name"
-                            ]
+                            }
                         }
                     }
                 ]
@@ -7634,10 +7630,7 @@
                                     "default": true,
                                     "x-example": false
                                 }
-                            },
-                            "required": [
-                                "name"
-                            ]
+                            }
                         }
                     }
                 ]
@@ -37153,10 +37146,7 @@
                                     "default": true,
                                     "x-example": false
                                 }
-                            },
-                            "required": [
-                                "name"
-                            ]
+                            }
                         }
                     }
                 ]
@@ -37616,10 +37606,7 @@
                                     "default": true,
                                     "x-example": false
                                 }
-                            },
-                            "required": [
-                                "name"
-                            ]
+                            }
                         }
                     }
                 ]

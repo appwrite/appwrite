@@ -6427,8 +6427,7 @@
                                 "enabled"
                             ],
                             "required": [
-                                "databaseId",
-                                "name"
+                                "databaseId"
                             ],
                             "responses": [
                                 {
@@ -6484,10 +6483,7 @@
                                         "description": "Is database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.",
                                         "x-example": false
                                     }
-                                },
-                                "required": [
-                                    "name"
-                                ]
+                                }
                             }
                         }
                     }
@@ -6993,10 +6989,7 @@
                                         "description": "Is collection enabled? When set to 'disabled', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.",
                                         "x-example": false
                                     }
-                                },
-                                "required": [
-                                    "name"
-                                ]
+                                }
                             }
                         }
                     }
@@ -26760,10 +26753,7 @@
                                         "description": "Is database enabled? When set to 'disabled', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.",
                                         "x-example": false
                                     }
-                                },
-                                "required": [
-                                    "name"
-                                ]
+                                }
                             }
                         }
                     }
@@ -27232,10 +27222,7 @@
                                         "description": "Is table enabled? When set to 'disabled', users cannot access the table but Server SDKs with and API key can still read and write to the table. No data is lost when this is toggled.",
                                         "x-example": false
                                     }
-                                },
-                                "required": [
-                                    "name"
-                                ]
+                                }
                             }
                         }
                     }
