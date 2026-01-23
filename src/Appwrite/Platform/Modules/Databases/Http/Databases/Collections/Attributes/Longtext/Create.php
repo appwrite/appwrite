@@ -89,7 +89,7 @@ class Create extends Action
             new Document([
                 'key' => $key,
                 'type' => Database::VAR_LONGTEXT,
-                'size' => 4294967295,
+                'size' => 2147483647,
                 'required' => $required,
                 'default' => $default,
                 'array' => $array,
