@@ -73,16 +73,25 @@ abstract class Adapter implements PromiseAdapter
     /**
      * Create a new promise that is rejected with the given reason.
      *
-     * @param mixed $reason
+     * @param \Throwable $reason
      * @return GQLPromise
      */
-    abstract public function createRejected(mixed $reason): GQLPromise;
+    abstract public function createRejected(\Throwable $reason): GQLPromise;
 
     /**
      * Create a new promise that resolves when all passed in promises resolve.
      *
-     * @param array $promisesOrValues
+     * @param iterable $promisesOrValues
      * @return GQLPromise
      */
-    abstract public function all(array $promisesOrValues): GQLPromise;
+    abstract public function all(iterable $promisesOrValues): GQLPromise;
+
+    /**
+     * Synchronously wait for promise completion and return the result.
+     *
+     * @param GQLPromise $promise
+     * @return mixed
+     * @throws \Throwable
+     */
+    abstract public function wait(GQLPromise $promise): mixed;
 }

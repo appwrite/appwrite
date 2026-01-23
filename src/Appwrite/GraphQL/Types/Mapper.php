@@ -16,19 +16,27 @@ use Utopia\Validator\Nullable;
 
 class Mapper
 {
-    private static array $models = [];
-    private static array $args = [];
-    private static array $blacklist = [
+    private Registry $registry;
+    private array $models;
+    private array $args;
+    private array $blacklist = [
         '/v1/mock',
         '/v1/graphql',
         '/v1/account/sessions/oauth2',
     ];
 
-    public static function init(array $models): void
+    /**
+     * Create a new Mapper instance.
+     *
+     * @param Registry $registry The type registry instance
+     * @param array $models The response models
+     */
+    public function __construct(Registry $registry, array $models)
     {
-        self::$models = $models;
+        $this->registry = $registry;
+        $this->models = $models;
 
-        self::$args = [
+        $this->args = [
             'id' => [
                 'id' => [
                     'type' => Type::nonNull(Type::string()),
@@ -41,6 +49,10 @@ class Mapper
                 ],
             ],
             'mutate' => [
+                'id' => [
+                    'type' => Type::string(),
+                    'defaultValue' => null,
+                ],
                 'permissions' => [
                     'type' => Type::listOf(Type::nonNull(Type::string())),
                     'defaultValue' => [],
@@ -62,9 +74,7 @@ class Mapper
             'enum' => Type::string()
         ];
 
-        foreach ($defaults as $type => $default) {
-            Registry::set($type, $default);
-        }
+        $this->registry->initBaseTypes($defaults);
     }
 
     /**
@@ -73,18 +83,27 @@ class Mapper
      * @param string $key
      * @return array
      */
-    public static function args(string $key): array
+    public function args(string $key): array
     {
-        return self::$args[$key] ?? [];
+        return $this->args[$key] ?? [];
     }
 
-    public static function route(
+    /**
+     * Map a route to GraphQL fields.
+     *
+     * @param App $utopia
+     * @param Route $route
+     * @param Method $method
+     * @param callable $complexity
+     * @return iterable<array> Iterator of GraphQL field definitions
+     */
+    public function route(
         App $utopia,
         Route $route,
         Method $method,
         callable $complexity
     ): iterable {
-        foreach (self::$blacklist as $blacklist) {
+        foreach ($this->blacklist as $blacklist) {
             if (\str_starts_with($route->getPath(), $blacklist)) {
                 return;
             }
@@ -100,20 +119,20 @@ class Mapper
 
                 if (\is_array($modelName)) {
                     foreach ($modelName as $name) {
-                        $models[] = static::$models[$name];
+                        $models[] = $this->models[$name];
                     }
                 } else {
-                    $models[] = static::$models[$modelName];
+                    $models[] = $this->models[$modelName];
                 }
             }
         } else {
             // If single response, get its model and wrap in array
             $modelName = $responses->getModel();
-            $models = [static::$models[$modelName]];
+            $models = [$this->models[$modelName]];
         }
 
         foreach ($models as $model) {
-            $type = Mapper::model(\ucfirst($model->getType()));
+            $type = $this->model(\ucfirst($model->getType()));
             $description = $route->getDesc();
             $params = [];
             $list = false;
@@ -140,7 +159,7 @@ class Mapper
                     $list = true;
                 }
 
-                $parameterType = Mapper::param(
+                $parameterType = $this->param(
                     $utopia,
                     $parameter['validator'],
                     !$optional,
@@ -173,14 +192,14 @@ class Mapper
      * @param string $name
      * @return Type
      */
-    public static function model(string $name): Type
+    public function model(string $name): Type
     {
-        if (Registry::has($name)) {
-            return Registry::get($name);
+        if ($this->registry->has($name)) {
+            return $this->registry->get($name);
         }
 
         $fields = [];
-        $model = self::$models[\lcfirst($name)];
+        $model = $this->models[\lcfirst($name)];
 
         // If model has additional properties, explicitly add a 'data' field
         if ($model->isAny()) {
@@ -213,9 +232,9 @@ class Mapper
             $escapedKey = str_replace('$', '_', $key);
 
             if (\is_array($rule['type'])) {
-                $type = self::getUnionType($escapedKey, $rule);
+                $type = $this->getUnionType($escapedKey, $rule);
             } else {
-                $type = self::getObjectType($rule);
+                $type = $this->getObjectType($rule);
             }
 
             if ($rule['array']) {
@@ -237,7 +256,7 @@ class Mapper
             'fields' => $fields,
         ]);
 
-        Registry::set($name, $type);
+        $this->registry->set($name, $type);
 
         return $type;
     }
@@ -252,7 +271,7 @@ class Mapper
      * @return Type
      * @throws Exception
      */
-    public static function param(
+    public function param(
         App $utopia,
         Validator|callable $validator,
         bool $required,
@@ -322,7 +341,7 @@ class Mapper
                 $type = Type::boolean();
                 break;
             case 'Utopia\Validator\ArrayList':
-                $type = Type::listOf(self::param(
+                $type = Type::listOf($this->param(
                     $utopia,
                     $validator->getValidator(),
                     $required,
@@ -371,10 +390,10 @@ class Mapper
      * @return Type
      * @throws Exception
      */
-    public static function attribute(string $type, bool $array, bool $required): Type
+    public function attribute(string $type, bool $array, bool $required): Type
     {
         if ($array) {
-            return Type::listOf(self::attribute(
+            return Type::listOf($this->attribute(
                 $type,
                 false,
                 $required
@@ -395,103 +414,102 @@ class Mapper
         return $type;
     }
 
-    private static function getObjectType(array $rule): Type
+    private function getObjectType(array $rule): Type
     {
         $type = $rule['type'];
 
-        if (Registry::has($type)) {
-            return Registry::get($type);
+        if ($this->registry->has($type)) {
+            return $this->registry->get($type);
         }
 
-        $complexModel = self::$models[$type];
-        return self::model(\ucfirst($complexModel->getType()));
+        $complexModel = $this->models[$type];
+        return $this->model(\ucfirst($complexModel->getType()));
     }
 
-    private static function getUnionType(string $name, array $rule): Type
+    private function getUnionType(string $name, array $rule): Type
     {
         $unionName = \ucfirst($name);
 
-        if (Registry::has($unionName)) {
-            return Registry::get($unionName);
+        if ($this->registry->has($unionName)) {
+            return $this->registry->get($unionName);
         }
 
         $types = [];
         foreach ($rule['type'] as $type) {
-            $types[] = self::model(\ucfirst($type));
+            $types[] = $this->model(\ucfirst($type));
         }
 
+        // resolveType returns a string type name instead of a Type object.
+        // This ensures GraphQL looks up the type from the schema's type map,
+        // which is essential for cached schemas where the original type instances
+        // must be used (not newly created ones from calling model()).
         $unionType = new UnionType([
             'name' => $unionName,
             'types' => $types,
             'resolveType' => static function ($object) use ($unionName) {
-                return static::getUnionImplementation($unionName, $object);
+                return self::getUnionTypeName($unionName, $object);
             },
         ]);
 
-        Registry::set($unionName, $unionType);
+        $this->registry->set($unionName, $unionType);
 
         return $unionType;
     }
 
-    private static function getUnionImplementation(string $name, array $object): Type
+    /**
+     * Get the type name for a union member based on the object data.
+     * Returns a string type name that GraphQL will look up in the schema.
+     *
+     * @param string $name The union type name
+     * @param array $object The object data
+     * @return string The type name
+     * @throws Exception
+     */
+    public static function getUnionTypeName(string $name, array $object): string
     {
-        // TODO: Find a better way to do this
-
-        switch ($name) {
-            case 'Attributes':
-                return static::getColumnImplementation($object);
-            case 'Columns':
-                return static::getColumnImplementation($object, true);
-            case 'HashOptions':
-                return static::getHashOptionsImplementation($object);
-        }
-
-        throw new Exception('Unknown union type: ' . $name);
+        return match ($name) {
+            'Attributes' => self::getColumnTypeName($object),
+            'Columns' => self::getColumnTypeName($object, true),
+            'HashOptions' => self::getHashOptionsTypeName($object),
+            default => throw new Exception('Unknown union type: ' . $name),
+        };
     }
 
-    private static function getColumnImplementation(array $object, bool $isColumns = false): Type
+    private static function getColumnTypeName(array $object, bool $isColumns = false): string
     {
         $prefix = $isColumns ? 'Column' : 'Attribute';
 
         return match ($object['type']) {
             'string' => match ($object['format'] ?? '') {
-                'email' => static::model("{$prefix}Email"),
-                'url' => static::model("{$prefix}Url"),
-                'ip' => static::model("{$prefix}Ip"),
-                default => static::model("{$prefix}String"),
+                'email' => "{$prefix}Email",
+                'url' => "{$prefix}Url",
+                'ip' => "{$prefix}Ip",
+                default => "{$prefix}String",
             },
-            'enum' => static::model("{$prefix}String"), // TODO: Add enum type (breaking change if added)
-            'integer' => static::model("{$prefix}Integer"),
-            'double' => static::model("{$prefix}Float"),
-            'boolean' => static::model("{$prefix}Boolean"),
-            'datetime' => static::model("{$prefix}Datetime"),
-            'relationship' => static::model("{$prefix}Relationship"),
-            'point' => static::model("{$prefix}Point"),
-            'linestring' => static::model("{$prefix}Line"),
-            'polygon' => static::model("{$prefix}Polygon"),
+            'enum' => "{$prefix}String", // TODO: Add enum type (breaking change if added)
+            'integer' => "{$prefix}Integer",
+            'double' => "{$prefix}Float",
+            'boolean' => "{$prefix}Boolean",
+            'datetime' => "{$prefix}Datetime",
+            'relationship' => "{$prefix}Relationship",
+            'point' => "{$prefix}Point",
+            'linestring' => "{$prefix}Line",
+            'polygon' => "{$prefix}Polygon",
             default => throw new Exception('Unknown ' . strtolower($prefix) . ' implementation'),
         };
     }
 
-    private static function getHashOptionsImplementation(array $object): Type
+    private static function getHashOptionsTypeName(array $object): string
     {
-        switch ($object['type']) {
-            case 'argon2':
-                return static::model('AlgoArgon2');
-            case 'bcrypt':
-                return static::model('AlgoBcrypt');
-            case 'md5':
-                return static::model('AlgoMd5');
-            case 'phpass':
-                return static::model('AlgoPhpass');
-            case 'scrypt':
-                return static::model('AlgoScrypt');
-            case 'scryptMod':
-                return static::model('AlgoScryptModified');
-            case 'sha':
-                return static::model('AlgoSha');
-        }
-
-        throw new Exception('Unknown hash options implementation');
+        return match ($object['type']) {
+            'argon2' => 'AlgoArgon2',
+            'bcrypt' => 'AlgoBcrypt',
+            'md5' => 'AlgoMd5',
+            'phpass' => 'AlgoPhpass',
+            'scrypt' => 'AlgoScrypt',
+            'scryptMod' => 'AlgoScryptModified',
+            'sha' => 'AlgoSha',
+            default => throw new Exception('Unknown hash options implementation'),
+        };
     }
 }

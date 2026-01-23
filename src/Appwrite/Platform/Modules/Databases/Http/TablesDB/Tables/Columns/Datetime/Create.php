@@ -33,7 +33,7 @@ class Create extends DatetimeCreate
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/datetime')
             ->desc('Create datetime column')
-            ->groups(['api', 'database'])
+            ->groups(['api', 'database', 'schema'])
             ->label('scope', ['tables.write', 'collections.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].tables.[tableId].columns.[columnId].create')

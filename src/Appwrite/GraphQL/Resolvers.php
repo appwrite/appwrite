@@ -117,6 +117,7 @@ class Resolvers
      * @param string $collectionId
      * @param callable $url
      * @param callable $params
+     * @param string $listKey The key in the response containing the list (e.g., 'documents' or 'rows')
      * @return callable
      */
     public static function documentList(
@@ -125,9 +126,10 @@ class Resolvers
         string $collectionId,
         callable $url,
         callable $params,
+        string $listKey = 'documents',
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(
-            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $type, $args) {
+            function (callable $resolve, callable $reject) use ($utopia, $databaseId, $collectionId, $url, $params, $listKey, $type, $args) {
                 $utopia = $utopia->getResource('utopia:graphql', true);
                 $request = $utopia->getResource('request', true);
                 $response = $utopia->getResource('response', true);
@@ -136,8 +138,8 @@ class Resolvers
                 $request->setURI($url($databaseId, $collectionId, $args));
                 $request->setQueryString($params($databaseId, $collectionId, $args));
 
-                $beforeResolve = function ($payload) {
-                    return $payload['documents'];
+                $beforeResolve = function ($payload) use ($listKey) {
+                    return $payload[$listKey];
                 };
 
                 self::resolve($utopia, $request, $response, $resolve, $reject, $beforeResolve);
@@ -286,7 +288,7 @@ class Resolvers
                 $payload = $beforeReject($payload);
             }
             $reject(new GQLException(
-                message: $payload['message'],
+                message: $payload['message'] ?? 'Server Error',
                 code: $response->getStatusCode()
             ));
             return;

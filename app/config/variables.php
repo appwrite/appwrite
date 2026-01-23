@@ -1321,6 +1321,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_GRAPHQL_SCHEMA_CACHE_MB',
+                'description' => 'Maximum memory in megabytes for the GraphQL schema LRU cache. Each project with database collections generates its own schema. Schemas are evicted when the cache exceeds this limit. Default is 50 MB.',
+                'introduction' => '1.8.0',
+                'default' => '50',
+                'required' => false,
+                'question' => '',
+                'filter' => 'integer'
+            ],
         ],
     ],
     [

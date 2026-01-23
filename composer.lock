@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "33da844fdf5648d1d1a027dfb6ae42bc",
+    "content-hash": "7d3c04ff783454cb9ae8eff5f3e7088e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5415,38 +5415,47 @@
         },
         {
             "name": "webonyx/graphql-php",
-            "version": "v14.11.10",
+            "version": "v15.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webonyx/graphql-php.git",
-                "reference": "d9c2fdebc6aa01d831bc2969da00e8588cffef19"
+                "reference": "030a04d22d52d7fc07049d0e3b683d2b40f90457"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webonyx/graphql-php/zipball/d9c2fdebc6aa01d831bc2969da00e8588cffef19",
-                "reference": "d9c2fdebc6aa01d831bc2969da00e8588cffef19",
+                "url": "https://api.github.com/repos/webonyx/graphql-php/zipball/030a04d22d52d7fc07049d0e3b683d2b40f90457",
+                "reference": "030a04d22d52d7fc07049d0e3b683d2b40f90457",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-mbstring": "*",
-                "php": "^7.1 || ^8"
+                "php": "^7.4 || ^8"
             },
             "require-dev": {
-                "amphp/amp": "^2.3",
-                "doctrine/coding-standard": "^6.0",
-                "nyholm/psr7": "^1.2",
+                "amphp/amp": "^2.6",
+                "amphp/http-server": "^2.1",
+                "dms/phpunit-arraysubset-asserts": "dev-master",
+                "ergebnis/composer-normalize": "^2.28",
+                "friendsofphp/php-cs-fixer": "3.86.0",
+                "mll-lab/php-cs-fixer-config": "5.11.0",
+                "nyholm/psr7": "^1.5",
                 "phpbench/phpbench": "^1.2",
-                "phpstan/extension-installer": "^1.0",
-                "phpstan/phpstan": "0.12.82",
-                "phpstan/phpstan-phpunit": "0.12.18",
-                "phpstan/phpstan-strict-rules": "0.12.9",
-                "phpunit/phpunit": "^7.2 || ^8.5",
-                "psr/http-message": "^1.0",
-                "react/promise": "2.*",
-                "simpod/php-coveralls-mirror": "^3.0"
+                "phpstan/extension-installer": "^1.1",
+                "phpstan/phpstan": "2.1.22",
+                "phpstan/phpstan-phpunit": "2.0.7",
+                "phpstan/phpstan-strict-rules": "2.0.6",
+                "phpunit/phpunit": "^9.5 || ^10.5.21 || ^11",
+                "psr/http-message": "^1 || ^2",
+                "react/http": "^1.6",
+                "react/promise": "^2.0 || ^3.0",
+                "rector/rector": "^2.0",
+                "symfony/polyfill-php81": "^1.23",
+                "symfony/var-exporter": "^5 || ^6 || ^7",
+                "thecodingmachine/safe": "^1.3 || ^2 || ^3"
             },
             "suggest": {
+                "amphp/http-server": "To leverage async resolving with webserver on AMPHP platform",
                 "psr/http-message": "To use standard GraphQL server",
                 "react/promise": "To leverage async resolving on React PHP platform"
             },
@@ -5468,7 +5477,7 @@
             ],
             "support": {
                 "issues": "https://github.com/webonyx/graphql-php/issues",
-                "source": "https://github.com/webonyx/graphql-php/tree/v14.11.10"
+                "source": "https://github.com/webonyx/graphql-php/tree/v15.24.0"
             },
             "funding": [
                 {
@@ -5476,7 +5485,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2023-07-05T14:23:37+00:00"
+            "time": "2025-08-20T10:09:37+00:00"
         }
     ],
     "packages-dev": [
@@ -8988,7 +8997,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -9012,5 +9021,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.9.0"
 }

@@ -1064,7 +1064,17 @@ App::setResource('promiseAdapter', function ($register) {
     return $register->get('promiseAdapter');
 }, ['register']);
 
-App::setResource('schema', function ($utopia, $dbForProject, $authorization) {
+App::setResource('graphqlCache', function ($register) {
+    return $register->get('graphqlCache');
+}, ['register']);
+
+App::setResource('graphqlAPISchema', function ($register) {
+    return $register->get('graphqlAPISchema');
+}, ['register']);
+
+App::setResource('schema', function ($utopia, $dbForProject, $project, $graphqlCache, $authorization) {
+
+    $projectId = $project->getId();
 
     $complexity = function (int $complexity, array $args) {
         $queries = Query::parseQueries($args['queries'] ?? []);
@@ -1074,82 +1084,174 @@ App::setResource('schema', function ($utopia, $dbForProject, $authorization) {
         return $complexity * $limit;
     };
 
-    $attributes = function (int $limit, int $offset) use ($dbForProject, $authorization) {
-        $attrs = $authorization->skip(fn () => $dbForProject->find('attributes', [
-            Query::limit($limit),
-            Query::offset($offset),
-        ]));
+    $types = null;
 
-        return \array_map(function ($attr) {
-            return $attr->getArrayCopy();
-        }, $attrs);
+    $attributes = function (int $limit, ?Document $last) use ($dbForProject, $projectId, $authorization, &$types) {
+        // Console project doesn't have user-created databases/collections
+        if ($projectId === 'console') {
+            return [];
+        }
+
+        // Lazy load database types on first pagination call
+        if ($types === null) {
+            $types = [];
+            $databases = $authorization->skip(fn () => $dbForProject->find('databases', [
+                Query::limit(APP_LIMIT_COUNT),
+            ]));
+            foreach ($databases as $db) {
+                $dbType = $db->getAttribute('type', 'legacy');
+                if (!\in_array($dbType, ['legacy', 'tablesdb'])) {
+                    Console::warning("Unknown database type '{$dbType}' for database {$db->getId()}, using 'legacy'");
+                    $dbType = 'legacy';
+                }
+                $types[$db->getId()] = $dbType;
+            }
+        }
+
+        $queries = [
+            Query::equal('status', ['available']),
+            Query::limit($limit),
+        ];
+
+        if ($last !== null) {
+            $queries[] = Query::cursorAfter($last);
+        }
+
+        $attributes = $authorization->skip(fn () => $dbForProject->find('attributes', $queries));
+
+        foreach ($attributes as $attribute) {
+            $dbId = $attribute->getAttribute('databaseId');
+            $attribute->setAttribute('databaseType', $types[$dbId] ?? 'legacy');
+        }
+
+        return $attributes;
     };
 
     $urls = [
-        'list' => function (string $databaseId, string $collectionId, array $args) {
-            return "/v1/databases/$databaseId/collections/$collectionId/documents";
-        },
-        'create' => function (string $databaseId, string $collectionId, array $args) {
-            return "/v1/databases/$databaseId/collections/$collectionId/documents";
-        },
-        'read' => function (string $databaseId, string $collectionId, array $args) {
-            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
-        },
-        'update' => function (string $databaseId, string $collectionId, array $args) {
-            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
-        },
-        'delete' => function (string $databaseId, string $collectionId, array $args) {
-            return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['documentId']}";
-        },
+        'legacy' => [
+            'list' => function (string $databaseId, string $collectionId, array $args) {
+                return "/v1/databases/$databaseId/collections/$collectionId/documents";
+            },
+            'create' => function (string $databaseId, string $collectionId, array $args) {
+                return "/v1/databases/$databaseId/collections/$collectionId/documents";
+            },
+            'read' => function (string $databaseId, string $collectionId, array $args) {
+                return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
+            },
+            'update' => function (string $databaseId, string $collectionId, array $args) {
+                return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
+            },
+            'delete' => function (string $databaseId, string $collectionId, array $args) {
+                return "/v1/databases/$databaseId/collections/$collectionId/documents/{$args['id']}";
+            },
+        ],
+        'tablesdb' => [
+            'list' => function (string $databaseId, string $tableId, array $args) {
+                return "/v1/tablesdb/$databaseId/tables/$tableId/rows";
+            },
+            'create' => function (string $databaseId, string $tableId, array $args) {
+                return "/v1/tablesdb/$databaseId/tables/$tableId/rows";
+            },
+            'read' => function (string $databaseId, string $tableId, array $args) {
+                return "/v1/tablesdb/$databaseId/tables/$tableId/rows/{$args['id']}";
+            },
+            'update' => function (string $databaseId, string $tableId, array $args) {
+                return "/v1/tablesdb/$databaseId/tables/$tableId/rows/{$args['id']}";
+            },
+            'delete' => function (string $databaseId, string $tableId, array $args) {
+                return "/v1/tablesdb/$databaseId/tables/$tableId/rows/{$args['id']}";
+            },
+        ],
     ];
 
-    // NOTE: `params` and `urls` are not used internally in the `Schema::build` function below!
     $params = [
-        'list' => function (string $databaseId, string $collectionId, array $args) {
-            return ['queries' => $args['queries']];
-        },
-        'create' => function (string $databaseId, string $collectionId, array $args) {
-            $id = $args['id'] ?? 'unique()';
-            $permissions = $args['permissions'] ?? null;
+        'legacy' => [
+            'list' => function (string $databaseId, string $collectionId, array $args) {
+                return ['queries' => $args['queries'] ?? []];
+            },
+            'create' => function (string $databaseId, string $collectionId, array $args) {
+                $id = $args['id'] ?? 'unique()';
+                $permissions = $args['permissions'] ?? null;
 
-            unset($args['id']);
-            unset($args['permissions']);
+                unset($args['id']);
+                unset($args['permissions']);
 
-            // Order must be the same as the route params
-            return [
-                'databaseId' => $databaseId,
-                'documentId' => $id,
-                'collectionId' => $collectionId,
-                'data' => $args,
-                'permissions' => $permissions,
-            ];
-        },
-        'update' => function (string $databaseId, string $collectionId, array $args) {
-            $documentId = $args['id'];
-            $permissions = $args['permissions'] ?? null;
+                // Order must be the same as the route params
+                return [
+                    'databaseId' => $databaseId,
+                    'documentId' => $id,
+                    'collectionId' => $collectionId,
+                    'data' => $args,
+                    'permissions' => $permissions,
+                ];
+            },
+            'update' => function (string $databaseId, string $collectionId, array $args) {
+                $documentId = $args['id'];
+                $permissions = $args['permissions'] ?? null;
 
-            unset($args['id']);
-            unset($args['permissions']);
+                unset($args['id']);
+                unset($args['permissions']);
 
-            // Order must be the same as the route params
-            return [
-                'databaseId' => $databaseId,
-                'collectionId' => $collectionId,
-                'documentId' => $documentId,
-                'data' => $args,
-                'permissions' => $permissions,
-            ];
-        },
+                // Order must be the same as the route params
+                return [
+                    'databaseId' => $databaseId,
+                    'collectionId' => $collectionId,
+                    'documentId' => $documentId,
+                    'data' => $args,
+                    'permissions' => $permissions,
+                ];
+            },
+        ],
+        'tablesdb' => [
+            'list' => function (string $databaseId, string $tableId, array $args) {
+                return ['queries' => $args['queries'] ?? []];
+            },
+            'create' => function (string $databaseId, string $tableId, array $args) {
+                $id = $args['id'] ?? 'unique()';
+                $permissions = $args['permissions'] ?? null;
+
+                unset($args['id']);
+                unset($args['permissions']);
+
+                // Order must be the same as the route params
+                return [
+                    'databaseId' => $databaseId,
+                    'rowId' => $id,
+                    'tableId' => $tableId,
+                    'data' => $args,
+                    'permissions' => $permissions,
+                ];
+            },
+            'update' => function (string $databaseId, string $tableId, array $args) {
+                $rowId = $args['id'];
+                $permissions = $args['permissions'] ?? null;
+
+                unset($args['id']);
+                unset($args['permissions']);
+
+                // Order must be the same as the route params
+                return [
+                    'databaseId' => $databaseId,
+                    'tableId' => $tableId,
+                    'rowId' => $rowId,
+                    'data' => $args,
+                    'permissions' => $permissions,
+                ];
+            },
+        ],
     ];
 
-    return Schema::build(
+    $schema = new Schema($projectId);
+
+    return $schema->build(
         $utopia,
+        $graphqlCache,
         $complexity,
         $attributes,
         $urls,
         $params,
     );
-}, ['utopia', 'dbForProject', 'authorization']);
+}, ['utopia', 'dbForProject', 'project', 'graphqlCache', 'authorization']);
 
 App::setResource('gitHub', function (Cache $cache) {
     return new VcsGitHub($cache);

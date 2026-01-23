@@ -5,53 +5,49 @@ namespace Appwrite\GraphQL;
 use Appwrite\GraphQL\Types\Assoc;
 use Appwrite\GraphQL\Types\InputFile;
 use Appwrite\GraphQL\Types\Json;
-use Appwrite\GraphQL\Types\Registry;
 use GraphQL\Type\Definition\Type;
 
 class Types
 {
-    /**
-     * Get the JSON type.
-     *
-     * @return Json
-     */
-    public static function json(): Type
-    {
-        if (Registry::has(Json::class)) {
-            return Registry::get(Json::class);
-        }
-        $type = new Json();
-        Registry::set(Json::class, $type);
-        return $type;
-    }
+    private static ?Json $json = null;
+    private static ?Assoc $assoc = null;
+    private static ?InputFile $inputFile = null;
 
     /**
      * Get the JSON type.
      *
-     * @return Json
+     * Thread-safety note: In Swoole, each worker is a separate process with its own
+     * static variables. Within a worker, coroutines are cooperative and only yield
+     * at I/O points. Since these constructors have no I/O, the null check and
+     * assignment execute atomically without needing locks.
+     */
+    public static function json(): Type
+    {
+        if (self::$json === null) {
+            self::$json = new Json();
+        }
+        return self::$json;
+    }
+
+    /**
+     * Get the Assoc type.
      */
     public static function assoc(): Type
     {
-        if (Registry::has(Assoc::class)) {
-            return Registry::get(Assoc::class);
+        if (self::$assoc === null) {
+            self::$assoc = new Assoc();
         }
-        $type = new Assoc();
-        Registry::set(Assoc::class, $type);
-        return $type;
+        return self::$assoc;
     }
 
     /**
      * Get the InputFile type.
-     *
-     * @return InputFile
      */
     public static function inputFile(): Type
     {
-        if (Registry::has(InputFile::class)) {
-            return Registry::get(InputFile::class);
+        if (self::$inputFile === null) {
+            self::$inputFile = new InputFile();
         }
-        $type = new InputFile();
-        Registry::set(InputFile::class, $type);
-        return $type;
+        return self::$inputFile;
     }
 }

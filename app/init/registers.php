@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
+use Appwrite\GraphQL\Cache as GraphQLCache;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
@@ -8,6 +9,7 @@ use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Swoole\Table;
 use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
@@ -391,6 +393,23 @@ $register->set('passwordsDictionary', function () {
 $register->set('promiseAdapter', function () {
     return new Swoole();
 });
+
+$graphqlFlags = new Table(100_000); // 100k projects max
+$graphqlFlags->column('timestamp', Table::TYPE_INT, 8);
+$graphqlFlags->create();
+
+$register->set('graphqlFlags', fn () => $graphqlFlags);
+
+$register->set('graphqlCache', function () use ($graphqlFlags) {
+    $maxMB = (int) System::getEnv('_APP_GRAPHQL_SCHEMA_CACHE_MB', 50);
+    return new GraphQLCache($maxMB, $graphqlFlags);
+});
+
+$register->set('graphqlAPISchema', function () {
+    // Container for API queries/mutations lazy init
+    return new \stdClass();
+});
+
 $register->set('hooks', function () {
     return new Hooks();
 });

@@ -3,12 +3,18 @@
 namespace Appwrite\GraphQL\Types;
 
 use GraphQL\Language\AST\Node;
+use GraphQL\Type\Definition\ScalarType;
 
 // https://github.com/webonyx/graphql-php/issues/129#issuecomment-309366803
-class Assoc extends Json
+class Assoc extends ScalarType
 {
-    public $name = 'Assoc';
-    public $description = 'The `Assoc` scalar type represents associative array values.';
+    public function __construct()
+    {
+        parent::__construct([
+            'name' => 'Assoc',
+            'description' => 'The `Assoc` scalar type represents associative array values.',
+        ]);
+    }
 
     public function serialize($value)
     {

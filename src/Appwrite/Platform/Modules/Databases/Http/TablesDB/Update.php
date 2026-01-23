@@ -26,7 +26,7 @@ class Update extends DatabaseUpdate
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PUT)
             ->setHttpPath('/v1/tablesdb/:databaseId')
             ->desc('Update database')
-            ->groups(['api', 'database', 'schema'])
+            ->groups(['api', 'database'])
             ->label('scope', 'databases.write')
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
             ->label('event', 'databases.[databaseId].update')
