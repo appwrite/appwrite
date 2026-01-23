@@ -367,6 +367,121 @@ export function functionsQueryOptions(
   })
 }
 
+/**
+ * Query options for fetching a single function by ID
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function projectFunctionQueryOptions(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['function', 'project', projectId, functionId],
+    queryFn: () => fetchProjectFunction(projectId!, functionId!),
+    enabled: !!projectId && !!functionId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching a single deployment
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function functionDeploymentQueryOptions(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+  deploymentId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['deployment', 'function', projectId, functionId, deploymentId],
+    queryFn: () =>
+      fetchFunctionDeployment(projectId!, functionId!, deploymentId!),
+    enabled: !!projectId && !!functionId && !!deploymentId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime:
+      projectId && functionId && deploymentId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching function deployments
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function functionDeploymentsQueryOptions(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  queries?: string[],
+) {
+  return queryOptions({
+    queryKey: [
+      'deployments',
+      'function',
+      projectId,
+      functionId,
+      page,
+      limit,
+      queries,
+    ],
+    queryFn: () =>
+      fetchFunctionDeployments(projectId!, functionId!, page, limit, queries),
+    enabled: !!projectId && !!functionId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching function executions
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function functionExecutionsQueryOptions(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  queries?: string[],
+) {
+  return queryOptions({
+    queryKey: [
+      'executions',
+      'function',
+      projectId,
+      functionId,
+      page,
+      limit,
+      queries,
+    ],
+    queryFn: () =>
+      fetchFunctionExecutions(projectId!, functionId!, page, limit, queries),
+    enabled: !!projectId && !!functionId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -425,12 +540,7 @@ export function useProjectFunction(
   projectId: string | null | undefined,
   functionId: string | null | undefined,
 ) {
-  return useQuery({
-    queryKey: ['function', 'project', projectId, functionId],
-    queryFn: () => fetchProjectFunction(projectId!, functionId!),
-    enabled: !!projectId && !!functionId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(projectFunctionQueryOptions(projectId, functionId))
 }
 
 /**
@@ -449,21 +559,9 @@ export function useFunctionDeployments(
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: [
-      'deployments',
-      'function',
-      projectId,
-      functionId,
-      page,
-      limit,
-      queries,
-    ],
-    queryFn: () =>
-      fetchFunctionDeployments(projectId!, functionId!, page, limit, queries),
-    enabled: !!projectId && !!functionId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(
+    functionDeploymentsQueryOptions(projectId, functionId, page, limit, queries),
+  )
 
   return {
     data: deploymentsData,
@@ -484,13 +582,9 @@ export function useFunctionDeployment(
   functionId: string | null | undefined,
   deploymentId: string | null | undefined,
 ) {
-  return useQuery({
-    queryKey: ['deployment', 'function', projectId, functionId, deploymentId],
-    queryFn: () =>
-      fetchFunctionDeployment(projectId!, functionId!, deploymentId!),
-    enabled: !!projectId && !!functionId && !!deploymentId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(
+    functionDeploymentQueryOptions(projectId, functionId, deploymentId),
+  )
 }
 
 /**
@@ -582,21 +676,9 @@ export function useFunctionExecutions(
     isFetching,
     error,
     refetch,
-  } = useQuery({
-    queryKey: [
-      'executions',
-      'function',
-      projectId,
-      functionId,
-      page,
-      limit,
-      queries,
-    ],
-    queryFn: () =>
-      fetchFunctionExecutions(projectId!, functionId!, page, limit, queries),
-    enabled: !!projectId && !!functionId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(
+    functionExecutionsQueryOptions(projectId, functionId, page, limit, queries),
+  )
 
   return {
     executions: executionsData?.executions || [],

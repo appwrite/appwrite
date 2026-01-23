@@ -438,10 +438,6 @@ export function FunctionDeployments() {
     toast.info('Download functionality coming soon')
   }
 
-  const handleViewBuildLogs = () => {
-    // TODO: Navigate to build logs
-    toast.info('Build logs coming soon')
-  }
 
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
@@ -839,7 +835,18 @@ export function FunctionDeployments() {
                     <DropdownMenuItem onClick={handleDownloadSource}>
                       Download source
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleViewBuildLogs}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        navigate({
+                          to: '/projects/$projectId/functions/$functionId/deployments/$deploymentId',
+                          params: {
+                            projectId: projectId!,
+                            functionId: functionId!,
+                            deploymentId: activeDeployment.$id,
+                          },
+                        })
+                      }}
+                    >
                       Build logs
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -865,7 +872,21 @@ export function FunctionDeployments() {
                   This may take a few minutes. We'll update automatically when
                   it's ready.
                 </p>
-                <Button variant="outline" onClick={handleViewBuildLogs}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (activeDeployment) {
+                      navigate({
+                        to: '/projects/$projectId/functions/$functionId/deployments/$deploymentId',
+                        params: {
+                          projectId: projectId!,
+                          functionId: functionId!,
+                          deploymentId: activeDeployment.$id,
+                        },
+                      })
+                    }
+                  }}
+                >
                   View logs
                 </Button>
               </div>
@@ -936,7 +957,18 @@ export function FunctionDeployments() {
                             selectedDeployments.has(deployment.$id)
                               ? 'bg-sky-100 dark:bg-sky-950'
                               : 'hover:bg-muted/50',
+                            'cursor-pointer',
                           )}
+                          onClick={() => {
+                            navigate({
+                              to: '/projects/$projectId/functions/$functionId/deployments/$deploymentId',
+                              params: {
+                                projectId: projectId!,
+                                functionId: functionId!,
+                                deploymentId: deployment.$id,
+                              },
+                            })
+                          }}
                         >
                           <TableCell onClick={(e) => e.stopPropagation()}>
                             <Checkbox

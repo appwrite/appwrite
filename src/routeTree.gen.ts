@@ -117,6 +117,7 @@ import { Route as PublicProjectsProjectIdAuthUsersUserIdIdentitiesRouteImport } 
 import { Route as PublicProjectsProjectIdAuthUsersUserIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId.activity'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdMembersRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.members'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId.activity'
+import { Route as PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport } from './routes/_public/projects.$projectId.functions.$functionId.deployments.$deploymentId.index'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.tables.$tableId.index'
 import { Route as PublicProjectsProjectIdStorageBucketIdFilesFileIdTokensRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.files.$fileId.tokens'
 import { Route as PublicProjectsProjectIdStorageBucketIdFilesFileIdSecurityRouteImport } from './routes/_public/projects.$projectId.storage.$bucketId.files.$fileId.security'
@@ -755,6 +756,14 @@ const PublicProjectsProjectIdAuthTeamsTeamIdActivityRoute =
     path: '/activity',
     getParentRoute: () => PublicProjectsProjectIdAuthTeamsTeamIdRoute,
   } as any)
+const PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute =
+  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport.update(
+    {
+      id: '/deployments/$deploymentId/',
+      path: '/deployments/$deploymentId/',
+      getParentRoute: () => PublicProjectsProjectIdFunctionsFunctionIdRoute,
+    } as any,
+  )
 const PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexRoute =
   PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexRouteImport.update(
     {
@@ -938,6 +947,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/storage/$bucketId/files/$fileId/security': typeof PublicProjectsProjectIdStorageBucketIdFilesFileIdSecurityRoute
   '/projects/$projectId/storage/$bucketId/files/$fileId/tokens': typeof PublicProjectsProjectIdStorageBucketIdFilesFileIdTokensRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexRoute
+  '/projects/$projectId/functions/$functionId/deployments/$deploymentId': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/hello': typeof ApiHelloRoute
@@ -1035,6 +1045,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/storage/$bucketId/files/$fileId/security': typeof PublicProjectsProjectIdStorageBucketIdFilesFileIdSecurityRoute
   '/projects/$projectId/storage/$bucketId/files/$fileId/tokens': typeof PublicProjectsProjectIdStorageBucketIdFilesFileIdTokensRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexRoute
+  '/projects/$projectId/functions/$functionId/deployments/$deploymentId': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -1154,6 +1165,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/storage/$bucketId/files/$fileId/security': typeof PublicProjectsProjectIdStorageBucketIdFilesFileIdSecurityRoute
   '/_public/projects/$projectId/storage/$bucketId/files/$fileId/tokens': typeof PublicProjectsProjectIdStorageBucketIdFilesFileIdTokensRoute
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexRoute
+  '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/': typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -1271,6 +1283,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/storage/$bucketId/files/$fileId/security'
     | '/projects/$projectId/storage/$bucketId/files/$fileId/tokens'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/'
+    | '/projects/$projectId/functions/$functionId/deployments/$deploymentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/hello'
@@ -1368,6 +1381,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/storage/$bucketId/files/$fileId/security'
     | '/projects/$projectId/storage/$bucketId/files/$fileId/tokens'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId'
+    | '/projects/$projectId/functions/$functionId/deployments/$deploymentId'
   id:
     | '__root__'
     | '/_auth'
@@ -1486,6 +1500,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/storage/$bucketId/files/$fileId/security'
     | '/_public/projects/$projectId/storage/$bucketId/files/$fileId/tokens'
     | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/'
+    | '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -2253,6 +2268,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdActivityRouteImport
       parentRoute: typeof PublicProjectsProjectIdAuthTeamsTeamIdRoute
     }
+    '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/': {
+      id: '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId/'
+      path: '/deployments/$deploymentId'
+      fullPath: '/projects/$projectId/functions/$functionId/deployments/$deploymentId'
+      preLoaderRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRouteImport
+      parentRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdRoute
+    }
     '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/': {
       id: '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/'
       path: '/'
@@ -2636,6 +2658,7 @@ interface PublicProjectsProjectIdFunctionsFunctionIdRouteChildren {
   PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdSettingsRoute
   PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute
   PublicProjectsProjectIdFunctionsFunctionIdIndexRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdIndexRoute
+  PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute: typeof PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute
 }
 
 const PublicProjectsProjectIdFunctionsFunctionIdRouteChildren: PublicProjectsProjectIdFunctionsFunctionIdRouteChildren =
@@ -2652,6 +2675,8 @@ const PublicProjectsProjectIdFunctionsFunctionIdRouteChildren: PublicProjectsPro
       PublicProjectsProjectIdFunctionsFunctionIdVariablesRoute,
     PublicProjectsProjectIdFunctionsFunctionIdIndexRoute:
       PublicProjectsProjectIdFunctionsFunctionIdIndexRoute,
+    PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute:
+      PublicProjectsProjectIdFunctionsFunctionIdDeploymentsDeploymentIdIndexRoute,
   }
 
 const PublicProjectsProjectIdFunctionsFunctionIdRouteWithChildren =

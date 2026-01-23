@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { FunctionLayout } from '@/components/pages/projects/$projectId/functions/FunctionLayout'
 import { fetchProjectFunction } from '@/lib/react-query/hooks'
 
@@ -21,5 +21,28 @@ export const Route = createFileRoute(
       staleTime: 30 * 1000,
     })
   },
-  component: FunctionLayout,
+  component: FunctionLayoutWrapper,
 })
+
+function FunctionLayoutWrapper() {
+  const matches = useMatches()
+
+  // Check if we're on a deployment detail route (should not have function tabs)
+  const isDeploymentDetailRoute = matches.some(
+    (match) =>
+      match.routeId.includes('/deployments/$deploymentId') ||
+      match.routeId ===
+        '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId' ||
+      match.routeId.startsWith(
+        '/_public/projects/$projectId/functions/$functionId/deployments/$deploymentId',
+      ),
+  )
+
+  if (isDeploymentDetailRoute) {
+    // For deployment detail routes, render outlet directly (they have their own layout)
+    return <Outlet />
+  }
+
+  // For other routes, render FunctionLayout which provides tabs
+  return <FunctionLayout />
+}
