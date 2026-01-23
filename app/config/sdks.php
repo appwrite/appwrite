@@ -227,7 +227,7 @@ return [
             [
                 'key' => 'cli',
                 'name' => 'Command Line',
-                'version' => '13.1.0-rc.2',
+                'version' => '13.1.0-rc.3',
                 'url' => 'https://github.com/appwrite/sdk-for-cli',
                 'package' => 'https://www.npmjs.com/package/appwrite-cli',
                 'enabled' => true,

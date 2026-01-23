@@ -1,5 +1,10 @@
 # Change Log
 
+## 13.1.0-rc.3
+
+- Allow generation of server side CRUD operations on databases and tables
+- Fix npm distribution failing due to missing template files in bundle
+
 ## 13.1.0-rc.2
 
 - Update generated `databases` services to automatically initialize a client instance
