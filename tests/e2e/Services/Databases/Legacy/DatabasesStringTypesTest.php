@@ -441,6 +441,8 @@ class DatabasesStringTypesTest extends Scope
      */
     public function testUpdateVarcharAttribute(array $data): array
     {
+        $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports VARCHAR type');
+
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
 
@@ -495,6 +497,8 @@ class DatabasesStringTypesTest extends Scope
      */
     public function testUpdateTextAttribute(array $data): array
     {
+        $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports TEXT type');
+
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
 
@@ -519,6 +523,8 @@ class DatabasesStringTypesTest extends Scope
      */
     public function testUpdateMediumtextAttribute(array $data): array
     {
+        $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports MEDIUMTEXT type');
+
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
 
@@ -543,6 +549,8 @@ class DatabasesStringTypesTest extends Scope
      */
     public function testUpdateLongtextAttribute(array $data): array
     {
+        $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports LONGTEXT type');
+
         $databaseId = $data['databaseId'];
         $collectionId = $data['collectionId'];
 
