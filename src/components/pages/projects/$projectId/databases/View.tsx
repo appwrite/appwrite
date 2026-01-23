@@ -8,6 +8,7 @@ import {
   LayoutGrid,
   Settings,
   Key,
+  Lock,
   Table2,
   ChevronLeft,
   ChevronDown,
@@ -949,7 +950,7 @@ export function DatabaseDetailLayout({
             params={{ projectId, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
-            <Key className="h-3.5 w-3.5 shrink-0" />
+            <Lock className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[13px]">Security</span>
           </Link>
 
@@ -1414,7 +1415,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
             params={{ projectId, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
-            <Key className="h-3.5 w-3.5 shrink-0" />
+            <Lock className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[13px]">Security</span>
           </Link>
 
@@ -1791,7 +1792,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
             params={{ projectId, databaseId }}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
           >
-            <Key className="h-3.5 w-3.5 shrink-0" />
+            <Lock className="h-3.5 w-3.5 shrink-0" />
             <span className="text-[13px]">Security</span>
           </Link>
 

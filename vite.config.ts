@@ -63,6 +63,15 @@ const config = defineConfig({
     allowedHosts: true,
     hmr: true,
   },
+  preview: {
+    port: 4173,
+    host: '::',
+  },
+  build: {
+    // TanStack Start outputs to dist/client, but vite preview reads from build.outDir
+    // Setting this ensures vite preview can find the built assets
+    outDir: 'dist/client',
+  },
 })
 
 export default config
