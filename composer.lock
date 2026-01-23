@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7693a5e55b07163a3435bd88cbd7daf0",
+    "content-hash": "33da844fdf5648d1d1a027dfb6ae42bc",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4059,16 +4059,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "dev-ser-1063",
+            "version": "0.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "66148f7b542a5500a11c9df21153f5110c10c24c"
+                "reference": "63fc5b9b58a32a5efd426510bbab4199db24593b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/66148f7b542a5500a11c9df21153f5110c10c24c",
-                "reference": "66148f7b542a5500a11c9df21153f5110c10c24c",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/63fc5b9b58a32a5efd426510bbab4199db24593b",
+                "reference": "63fc5b9b58a32a5efd426510bbab4199db24593b",
                 "shasum": ""
             },
             "require": {
@@ -4115,9 +4115,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/ser-1063"
+                "source": "https://github.com/utopia-php/domains/tree/0.11.1"
             },
-            "time": "2026-01-23T08:10:04+00:00"
+            "time": "2026-01-23T09:28:08+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -8986,18 +8986,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/domains",
-            "version": "dev-ser-1063",
-            "alias": "0.11.99",
-            "alias_normalized": "0.11.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/domains": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
