@@ -54,7 +54,7 @@
         "utopia-php/config": "1.*",
         "utopia-php/database": "4.*",
         "utopia-php/detector": "0.2.*",
-        "utopia-php/domains": "0.11.*",
+        "utopia-php/domains": "dev-ser-1063 as 0.11.99",
         "utopia-php/emails": "0.6.*",
         "utopia-php/dns": "1.5.*",
         "utopia-php/dsn": "0.2.1",
