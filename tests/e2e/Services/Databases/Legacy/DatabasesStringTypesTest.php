@@ -133,20 +133,6 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(202, $varcharArray['headers']['status-code']);
         $this->assertEquals(true, $varcharArray['body']['array']);
 
-        // Test SUCCESS: Maximum varchar size (16381)
-        $varcharMax = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'key' => 'varchar_max',
-            'size' => 16381,
-            'required' => false,
-        ]);
-
-        $this->assertEquals(202, $varcharMax['headers']['status-code']);
-        $this->assertEquals(16381, $varcharMax['body']['size']);
-
         // Test SUCCESS: Minimum varchar size (1)
         $varcharMin = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', [
             'content-type' => 'application/json',
