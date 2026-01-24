@@ -111,7 +111,7 @@ $ git push origin [name_of_your_new_branch]
 
 ## Setup From Source
 
-To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
+To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and run the docker-compose stack.
 
 > If you just want to install Appwrite for day-to-day use and not as a contributor, you can reference the [installation guide](https://github.com/appwrite/appwrite#installation), the [getting started guide](https://appwrite.io/docs/quick-starts), or the main [README](README.md) file.
 
@@ -173,12 +173,12 @@ Learn more at our [Technology Stack](#technology-stack) section.
 - [MVVM](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93viewmodel) - Appwrite console architecture
 
 ##### Container Namespace Conventions
-To keep our services easy to understand within Docker we follow a naming convention for all our containers depending on it's intended use.
+To keep our services easy to understand within Docker we follow a naming convention for all our containers depending on its intended use.
 
 `appwrite-worker-X` - Workers (`src/Appwrite/Platform/Workers/*`)
 `appwrite-task-X` - Tasks (`src/Appwrite/Platform/Tasks/*`)
 
-Other containes should be named the same as their service, for example `redis` should just be called `redis`.
+Other containers should be named the same as their service, for example `redis` should just be called `redis`.
 
 ##### Security
 
@@ -189,7 +189,7 @@ Other containes should be named the same as their service, for example `redis` s
 
 ## Modules
 
-As Appwrite grows, we noticed approach of having all service endpoints in `app/controllers/api/[service].php` is not maintainable. Not only it creates massive files, it also doesnt contain all product's features such as workers or tasks. While there might still be some occurances of those controller files, we avoid it in all new development, and gradually migrate existing controllers to **HTTP modules**.
+As Appwrite grows, we noticed approach of having all service endpoints in `app/controllers/api/[service].php` is not maintainable. Not only it creates massive files, it also doesn't contain all product's features such as workers or tasks. While there might still be some occurances of those controller files, we avoid it in all new development, and gradually migrate existing controllers to **HTTP modules**.
 
 ### HTTP Endpoints
 
@@ -204,7 +204,7 @@ Tips and tricks:
 1. If endpoint doesn't have resource, use service name as resource name too
 > Example: `Modules/Sites/Http/Sites/Get.php`
 
-2. If there are multiple resources, use then all in folder structure
+2. If there are multiple resources, use them all in folder structure
 > Example: `Modules/Sites/Http/Deployments/Builds/Create.php`
 
 3. Action can only be `Get`, `Create`, `Update`, `Delete` or `XList`
@@ -417,7 +417,7 @@ These are the current metrics we collect usage stats for:
 
 > Note: The curly brackets in the metric name represents a template and is replaced with a value when the metric is processed.
 
-Metrics are collected within 3 scopes Daily, monthly, an infinity. Adding new usage metric in order to aggregate usage stats is very simple, but very much dependent on where do you want to collect
+Metrics are collected within 3 scopes Daily, monthly, and infinity. Adding new usage metric in order to aggregate usage stats is very simple, but very much dependent on where do you want to collect
 statistics ,via API or via background worker. For both cases you will need to add a `const` variable in `app/init.php` under the usage metrics list using the naming convention `METRIC_<RESOURCE_NAME>` as shown below.
 
 ```php
@@ -683,7 +683,7 @@ docker compose exec redis redis-cli FLUSHALL
 
 ## Using preview domains locally
 
-Appwrite Functions are automatically given a domain you can visit to execute the function. This domain has format `[SOMETHING].functions.localhost` unless you changed `_APP_DOMAIN_FUNCTIONS` environment variable. This default value works great when running Appwrite locally, but it can be impossible to use preview domains with Cloud woekspaces such as Gitpod or GitHub Codespaces.
+Appwrite Functions are automatically given a domain you can visit to execute the function. This domain has format `[SOMETHING].functions.localhost` unless you changed `_APP_DOMAIN_FUNCTIONS` environment variable. This default value works great when running Appwrite locally, but it can be impossible to use preview domains with Cloud workspaces such as Gitpod or GitHub Codespaces.
 
 To use preview domains on Cloud workspaces, you can visit hostname provided by them, and supply function's preview domain as URL parameter:
 
