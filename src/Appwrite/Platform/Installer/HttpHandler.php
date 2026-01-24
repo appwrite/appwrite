@@ -233,7 +233,7 @@ class HttpHandler
         $rawBody = file_get_contents('php://input');
         $input = json_decode($rawBody, true);
 
-        if (!$input) {
+        if (!is_array($input)) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Invalid request']);
             return true;

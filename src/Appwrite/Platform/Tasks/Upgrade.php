@@ -44,7 +44,7 @@ class Upgrade extends Install
             Console::log('Please navigate to the parent directory of the Appwrite installation and try again.');
             Console::log('  parent_directory <= you run the command in this directory');
             Console::log('  └── appwrite');
-            Console::log('      └── docker-compose.yml');
+            Console::log('      └── ' . $this->getComposeFileName());
             return;
         }
 
