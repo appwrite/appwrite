@@ -12,7 +12,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
-  ExternalLink,
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
@@ -46,7 +45,6 @@ import {
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 
 // ANSI color code mapping
@@ -86,7 +84,6 @@ function parseAnsiLogs(
   const coloredSegments = parseAnsiLogsWithoutHighlight(text)
   
   // Then highlight search terms in each segment
-  const searchLower = searchTerm.toLowerCase()
   const highlightedParts: React.ReactNode[] = []
   let keyCounter = 0
 
@@ -527,14 +524,10 @@ export function DeploymentDetailView({
   isLoading,
   parentResource,
   deployments,
-  relatedData,
   deploymentDetailRoute,
   listRoute,
-  relatedRoute,
   onDelete,
   onDownload,
-  onNavigateToRelated,
-  relatedDataLabel = 'Logs',
   showRuntime = false,
   RuntimeIcon,
   invalidateQueries,
@@ -544,6 +537,10 @@ export function DeploymentDetailView({
   const queryClient = useQueryClient()
   const [logsSearch, setLogsSearch] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  // Determine if this is a site or function deployment (needed for navigation)
+  const isSiteDeployment = resourceId.includes('site') || deploymentDetailRoute.includes('sites')
+  const parentResourceParam = isSiteDeployment ? 'siteId' : 'functionId'
 
   // Get current deployment index and find previous/next
   const deploymentIndex = useMemo(() => {
@@ -588,14 +585,15 @@ export function DeploymentDetailView({
     },
     onSuccess: () => {
       invalidateQueries.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey })
+        const normalizedKey: readonly unknown[] = Array.isArray(queryKey) ? queryKey : [queryKey]
+        queryClient.invalidateQueries({ queryKey: normalizedKey })
       })
       toast.success('Deployment deleted successfully')
       setDeleteDialogOpen(false)
       // Navigate back to list
       navigate({
         to: listRoute as any,
-        params: { projectId, [resourceId.includes('site') ? 'siteId' : 'functionId']: resourceId },
+        params: { projectId, [parentResourceParam]: resourceId } as any,
       })
     },
     onError: (error: Error) => {
@@ -673,13 +671,12 @@ export function DeploymentDetailView({
 
   // Extract route params for navigation
   const routeParams = useMemo(() => {
-    const isSite = resourceId.includes('site') || deploymentDetailRoute.includes('sites')
     return {
       projectId,
-      [isSite ? 'siteId' : 'functionId']: resourceId,
+      [parentResourceParam]: resourceId,
       deploymentId,
     }
-  }, [projectId, resourceId, deploymentId, deploymentDetailRoute])
+  }, [projectId, resourceId, deploymentId, parentResourceParam])
 
   if (isLoading) {
     return (
@@ -718,9 +715,6 @@ export function DeploymentDetailView({
       </WizardLayout>
     )
   }
-
-  const isSite = resourceId.includes('site') || deploymentDetailRoute.includes('sites')
-  const parentResourceParam = isSite ? 'siteId' : 'functionId'
 
   return (
     <WizardLayout
@@ -1056,22 +1050,6 @@ export function DeploymentDetailView({
           
           {/* Right side - Individual buttons */}
           <div className="flex items-center gap-2 ml-auto">
-            {onNavigateToRelated && relatedRoute && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onNavigateToRelated(deploymentId)}
-                className="h-9 text-[13px]"
-              >
-                <ExternalLink className="mr-1.5 h-4 w-4" />
-                {relatedDataLabel}
-                {relatedData?.total !== undefined && relatedData.total > 0 && (
-                  <span className="ml-1.5 text-xs text-muted-foreground">
-                    ({relatedData.total})
-                  </span>
-                )}
-              </Button>
-            )}
             <Button
               variant="outline"
               size="sm"
@@ -1079,7 +1057,7 @@ export function DeploymentDetailView({
               className="h-9 text-[13px]"
             >
               <Download className="mr-1.5 h-4 w-4" />
-              Download
+              Download build
             </Button>
             {!isActiveDeployment && (
               <Button

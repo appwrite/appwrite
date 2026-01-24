@@ -1,10 +1,8 @@
-import { useParams, useNavigate } from '@tanstack/react-router'
-import { Query } from '@appwrite.io/console'
+import { useParams } from '@tanstack/react-router'
 import {
   useFunctionDeployment,
   useProjectFunction,
   useFunctionDeployments,
-  useFunctionExecutions,
   deleteFunctionDeployment,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -14,7 +12,6 @@ import { toast } from 'sonner'
 
 export function FunctionDeploymentDetailView() {
   const { projectId, functionId, deploymentId } = useParams({ strict: false })
-  const navigate = useNavigate()
 
   const { data: deployment, isLoading } = useFunctionDeployment(
     projectId,
@@ -30,15 +27,6 @@ export function FunctionDeploymentDetailView() {
     functionId,
     0,
     1000, // Get enough to find current deployment
-  )
-
-  // Get executions count for this deployment
-  const { total: executionsTotal } = useFunctionExecutions(
-    projectId,
-    functionId,
-    0,
-    1,
-    deploymentId ? [Query.equal('deploymentId', deploymentId)] : undefined,
   )
 
   const handleDelete = async (deploymentId: string): Promise<void> => {
@@ -67,17 +55,6 @@ export function FunctionDeploymentDetailView() {
     }
   }
 
-  const handleNavigateToExecutions = (deploymentId: string) => {
-    navigate({
-      to: '/projects/$projectId/functions/$functionId/executions',
-      params: {
-        projectId: projectId!,
-        functionId: functionId!,
-      },
-      search: { deploymentId } as any,
-    })
-  }
-
   return (
     <DeploymentDetailView
       projectId={projectId!}
@@ -91,14 +68,10 @@ export function FunctionDeploymentDetailView() {
         runtime: func?.runtime,
       }}
       deployments={deployments || []}
-      relatedData={{ total: executionsTotal }}
       deploymentDetailRoute="/projects/$projectId/functions/$functionId/deployments/$deploymentId"
       listRoute="/projects/$projectId/functions/$functionId"
-      relatedRoute="/projects/$projectId/functions/$functionId/executions"
       onDelete={handleDelete}
       onDownload={handleDownload}
-      onNavigateToRelated={handleNavigateToExecutions}
-      relatedDataLabel="Executions"
       showRuntime={true}
       RuntimeIcon={RuntimeIcon as any}
       invalidateQueries={[

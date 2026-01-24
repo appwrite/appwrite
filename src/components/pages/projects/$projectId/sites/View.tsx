@@ -57,6 +57,7 @@ export function SitesView() {
   const [pageSize, setPageSize] = useState(SITES_PER_PAGE)
   const [selectedSites, setSelectedSites] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [loadedScreenshots, setLoadedScreenshots] = useState<Set<string>>(new Set())
 
   // Get theme for screenshot selection
   const isDark = useMemo(() => {
@@ -68,6 +69,11 @@ export function SitesView() {
       theme === 'dark'
     )
   }, [theme, resolvedTheme])
+
+  // Reset loaded screenshots when theme changes
+  useEffect(() => {
+    setLoadedScreenshots(new Set())
+  }, [isDark])
 
   // Helper function to get screenshot URL
   const getScreenshotUrl = (site: Models.Site) => {
@@ -334,12 +340,20 @@ export function SitesView() {
                           <TableCell className="px-4 py-3">
                             {(() => {
                               const screenshotUrl = getScreenshotUrl(siteData)
+                              const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
+                              const isLoaded = loadedScreenshots.has(screenshotKey)
                               if (screenshotUrl) {
                                 return (
                                   <img
                                     src={screenshotUrl}
                                     alt={`${siteData.name || 'Site'} preview`}
-                                    className="h-12 w-20 rounded border border-border object-cover"
+                                    onLoad={() => {
+                                      setLoadedScreenshots((prev) => new Set(prev).add(screenshotKey))
+                                    }}
+                                    className={cn(
+                                      'h-12 w-20 rounded border border-border object-cover transition-opacity duration-500',
+                                      isLoaded ? 'opacity-100' : 'opacity-0',
+                                    )}
                                   />
                                 )
                               }
@@ -475,11 +489,23 @@ export function SitesView() {
                         {/* Preview Image */}
                         {screenshotUrl ? (
                           <div className="aspect-video w-full overflow-hidden bg-muted">
-                            <img
-                              src={screenshotUrl}
-                              alt={`${siteData.name || 'Site'} preview`}
-                              className="h-full w-full object-cover"
-                            />
+                            {(() => {
+                              const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
+                              const isLoaded = loadedScreenshots.has(screenshotKey)
+                              return (
+                                <img
+                                  src={screenshotUrl}
+                                  alt={`${siteData.name || 'Site'} preview`}
+                                  onLoad={() => {
+                                    setLoadedScreenshots((prev) => new Set(prev).add(screenshotKey))
+                                  }}
+                                  className={cn(
+                                    'h-full w-full object-cover transition-opacity duration-500',
+                                    isLoaded ? 'opacity-100' : 'opacity-0',
+                                  )}
+                                />
+                              )
+                            })()}
                           </div>
                         ) : (
                           <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20 border-b border-border/50 relative overflow-hidden">

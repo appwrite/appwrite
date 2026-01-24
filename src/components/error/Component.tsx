@@ -20,7 +20,48 @@ export function ErrorComponent({
   )
   const location = useLocation()
   const navigate = useNavigate()
-  const formattedError = formatError(error, 'An unexpected error occurred.')
+  
+  // Check if this is a project route and if the error is project-related
+  const isProjectRoute = location.pathname.startsWith('/projects/')
+  const errorMessage = error.message || ''
+  const lowerMessage = errorMessage.toLowerCase()
+  const errorCode = (error as any).code
+  
+  const isProjectNotFound =
+    isProjectRoute &&
+    (error.name === 'NotFoundError' ||
+      errorCode === 404 ||
+      lowerMessage.includes('not found') ||
+      lowerMessage.includes('404') ||
+      lowerMessage.includes('does not exist'))
+  
+  const isProjectAccessDenied =
+    isProjectRoute &&
+    (error.name === 'UnauthorizedError' ||
+      error.name === 'ForbiddenError' ||
+      errorCode === 401 ||
+      errorCode === 403 ||
+      lowerMessage.includes('unauthorized') ||
+      lowerMessage.includes('forbidden') ||
+      lowerMessage.includes('permission denied') ||
+      lowerMessage.includes('access denied'))
+  
+  // Use project-specific messages for project routes
+  const formattedError = isProjectNotFound
+    ? {
+        title: 'Project Not Found',
+        message:
+          'This project could not be found or you do not have access to view it.',
+        isUserFriendly: true,
+      }
+    : isProjectAccessDenied
+      ? {
+          title: 'Access Denied',
+          message:
+            'You do not have permission to access this project. Please contact your administrator if you believe this is an error.',
+          isUserFriendly: true,
+        }
+      : formatError(error, 'An unexpected error occurred.')
 
   const message = {
     type: 'NOTIFY_ERROR',
@@ -95,7 +136,8 @@ export function ErrorComponent({
           </p>
         </div>
 
-        <div className="mt-2 relative w-full max-w-full rounded-lg border bg-card px-4 py-3">
+        {!(isProjectNotFound || isProjectAccessDenied) && (
+          <div className="mt-2 relative w-full max-w-full rounded-lg border bg-card px-4 py-3">
           <div className="flex items-start gap-2 pr-8 min-w-0 w-full">
             <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
             <div
@@ -118,7 +160,8 @@ export function ErrorComponent({
               <Copy className="h-4 w-4" />
             )}
           </Button>
-        </div>
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-3 mt-4 w-full">
           <Button variant="outline" onClick={handleGoHome} className="flex-1">

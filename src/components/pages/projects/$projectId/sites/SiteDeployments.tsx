@@ -37,6 +37,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import {
   Table,
   TableBody,
@@ -197,6 +198,7 @@ export function SiteDeploymentsView() {
   )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [screenshotTheme, setScreenshotTheme] = useState<'dark' | 'light'>('dark')
+  const [screenshotLoaded, setScreenshotLoaded] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const { data: site, isLoading: siteLoading } = useProjectSite(
@@ -305,6 +307,11 @@ export function SiteDeploymentsView() {
     siteId,
     site?.deploymentId || undefined,
   )
+
+  // Reset screenshot loaded state when active deployment or theme changes
+  useEffect(() => {
+    setScreenshotLoaded(false)
+  }, [activeDeployment?.$id, screenshotTheme])
 
   // Fetch proxy rules for active deployment
   const { data: proxyRulesData } = useDeploymentProxyRules(
@@ -528,16 +535,40 @@ export function SiteDeploymentsView() {
                       
                       return (
                         <div className="w-full lg:w-1/2 relative group">
-                          <img
-                            src={screenshotUrl}
-                            alt="Deployment screenshot"
-                            className="w-full h-auto rounded-lg border border-border object-cover max-h-[400px]"
-                          />
-                          {/* Theme Toggle Overlay */}
-                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-full aspect-video rounded-lg border border-border overflow-hidden bg-muted relative">
+                            <img
+                              key={screenshotId}
+                              src={screenshotUrl}
+                              alt="Deployment screenshot"
+                              onLoad={() => setScreenshotLoaded(true)}
+                              className={cn(
+                                'w-full h-full object-cover transition-opacity duration-500',
+                                screenshotLoaded ? 'opacity-100' : 'opacity-0',
+                              )}
+                            />
+                            {/* Framework Icon - Bottom Left */}
+                            {site && (
+                              <div className="absolute bottom-2 left-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm shadow-lg">
+                                  <FrameworkIcon
+                                    framework={
+                                      (site as any).buildFramework ||
+                                      (site as any).buildFrameworkId ||
+                                      (site as any).framework
+                                    }
+                                    size="sm"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            {/* Theme Toggle Overlay */}
+                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="flex items-center gap-1 rounded-lg border border-border bg-background/95 backdrop-blur-sm p-1 shadow-lg">
                               <button
-                                onClick={() => setScreenshotTheme('light')}
+                                onClick={() => {
+                                  setScreenshotTheme('light')
+                                  setScreenshotLoaded(false)
+                                }}
                                 className={cn(
                                   "p-1.5 rounded transition-colors",
                                   screenshotTheme === 'light'
@@ -549,7 +580,10 @@ export function SiteDeploymentsView() {
                                 <Sun className="h-3.5 w-3.5" />
                               </button>
                               <button
-                                onClick={() => setScreenshotTheme('dark')}
+                                onClick={() => {
+                                  setScreenshotTheme('dark')
+                                  setScreenshotLoaded(false)
+                                }}
                                 className={cn(
                                   "p-1.5 rounded transition-colors",
                                   screenshotTheme === 'dark'
@@ -562,6 +596,7 @@ export function SiteDeploymentsView() {
                               </button>
                             </div>
                           </div>
+                          </div>
                         </div>
                       )
                     }
@@ -573,6 +608,21 @@ export function SiteDeploymentsView() {
                         <p className="relative text-[12px] font-medium text-muted-foreground/60">
                           Preview not available
                         </p>
+                        {/* Framework Icon - Bottom Left */}
+                        {site && (
+                          <div className="absolute bottom-2 left-2">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm shadow-lg">
+                              <FrameworkIcon
+                                framework={
+                                  (site as any).buildFramework ||
+                                  (site as any).buildFrameworkId ||
+                                  (site as any).framework
+                                }
+                                size="sm"
+                              />
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )
                   })()}

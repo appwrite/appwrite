@@ -6,7 +6,9 @@ import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
   fetchProject,
   organizationPlanQueryOptions,
+  useProject,
 } from '@/lib/react-query/hooks'
+import { ErrorComponent } from '@/components/error/Component'
 
 export const Route = createFileRoute('/_public/projects/$projectId')({
   loader: async ({ params, context }) => {
@@ -38,8 +40,8 @@ export const Route = createFileRoute('/_public/projects/$projectId')({
             })
         }
       } catch (error) {
-        // If authentication is not set up yet, the component will handle it via RequireAuth
-        // Don't block navigation - let the component handle the error
+        // Don't throw - let the component handle the error to avoid blocking navigation
+        // The component will check the error and display appropriate message
         console.warn('Failed to fetch project in loader:', error)
       }
     }
@@ -51,6 +53,7 @@ function ProjectLayout() {
   const { projectId } = Route.useParams()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { isLoading: isProjectLoading, error: projectError } = useProject(projectId)
 
   // Extract active section from pathname
   const pathParts = location.pathname.split('/')
@@ -108,6 +111,52 @@ function ProjectLayout() {
   useEffect(() => {
     setSidebarOpen(false)
   }, [location.pathname])
+
+  // Check if this is a project not found or access denied error
+  // Do this AFTER all hooks are called to avoid hooks order violation
+  const errorMessage = projectError?.message || ''
+  const lowerMessage = errorMessage.toLowerCase()
+  const errorCode = (projectError as any)?.code
+  const errorName = (projectError as any)?.name || (projectError instanceof Error ? projectError.name : '')
+
+  const isNotFound =
+    projectError &&
+    (errorName === 'NotFoundError' ||
+      errorCode === 404 ||
+      lowerMessage.includes('not found') ||
+      lowerMessage.includes('404') ||
+      lowerMessage.includes('does not exist'))
+
+  const isAccessDenied =
+    projectError &&
+    (errorName === 'UnauthorizedError' ||
+      errorName === 'ForbiddenError' ||
+      errorCode === 401 ||
+      errorCode === 403 ||
+      lowerMessage.includes('unauthorized') ||
+      lowerMessage.includes('forbidden') ||
+      lowerMessage.includes('permission denied') ||
+      lowerMessage.includes('access denied'))
+
+  // Show error component if project is not found or access denied
+  // Only show after loading is complete to avoid flashing
+  if (!isProjectLoading && projectError && (isNotFound || isAccessDenied)) {
+    // Ensure we have an Error object for the ErrorComponent
+    const errorObj = projectError instanceof Error 
+      ? projectError 
+      : new Error(errorMessage || 'Project error occurred')
+    
+    return (
+      <ErrorComponent
+        error={errorObj}
+        info={undefined}
+        reset={() => {
+          // Refetch project on reset
+          window.location.reload()
+        }}
+      />
+    )
+  }
 
   return (
     <RequireAuth>

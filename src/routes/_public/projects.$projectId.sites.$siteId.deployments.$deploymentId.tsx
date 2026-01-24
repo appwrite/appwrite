@@ -6,7 +6,6 @@ import {
   siteDeploymentsQueryOptions,
   deploymentProxyRulesQueryOptions,
 } from '@/lib/react-query/hooks/sites'
-import { Query } from '@appwrite.io/console'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId',

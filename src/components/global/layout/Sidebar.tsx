@@ -266,7 +266,10 @@ export function ConsoleSidebar({
           <img
             src="/imagine-icon.svg"
             alt=""
-            className={cn('h-4 w-4 shrink-0', isMobile && 'h-[18px] w-[18px]')}
+            className={cn(
+              'h-4 w-4 shrink-0 brightness-0 dark:brightness-100',
+              isMobile && 'h-[18px] w-[18px]',
+            )}
           />
         )
       }

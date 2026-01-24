@@ -1,10 +1,8 @@
-import { useParams, useNavigate } from '@tanstack/react-router'
-import { Query } from '@appwrite.io/console'
+import { useParams } from '@tanstack/react-router'
 import {
   useSiteDeployment,
   useProjectSite,
   useSiteDeployments,
-  useSiteLogs,
   deleteSiteDeployment,
   Dependencies,
 } from '@/lib/react-query/hooks'
@@ -15,7 +13,6 @@ import { toast } from 'sonner'
 
 export function SiteDeploymentDetailView() {
   const { projectId, siteId, deploymentId } = useParams({ strict: false })
-  const navigate = useNavigate()
 
   const { data: deployment, isLoading } = useSiteDeployment(
     projectId,
@@ -31,15 +28,6 @@ export function SiteDeploymentDetailView() {
     siteId,
     0,
     1000, // Get enough to find current deployment
-  )
-
-  // Get logs count for this deployment
-  const { total: logsTotal } = useSiteLogs(
-    projectId,
-    siteId,
-    0,
-    1,
-    deploymentId ? [Query.equal('deploymentId', deploymentId)] : undefined,
   )
 
   const handleDelete = async (deploymentId: string): Promise<void> => {
@@ -68,17 +56,6 @@ export function SiteDeploymentDetailView() {
     }
   }
 
-  const handleNavigateToLogs = (deploymentId: string) => {
-    navigate({
-      to: '/projects/$projectId/sites/$siteId/logs',
-      params: {
-        projectId: projectId!,
-        siteId: siteId!,
-      },
-      search: { deploymentId } as any,
-    })
-  }
-
   return (
     <DeploymentDetailView
       projectId={projectId!}
@@ -91,14 +68,10 @@ export function SiteDeploymentDetailView() {
         deploymentId: site?.deploymentId,
       }}
       deployments={deployments || []}
-      relatedData={{ total: logsTotal }}
       deploymentDetailRoute="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
       listRoute="/projects/$projectId/sites/$siteId/"
-      relatedRoute="/projects/$projectId/sites/$siteId/logs"
       onDelete={handleDelete}
       onDownload={handleDownload}
-      onNavigateToRelated={handleNavigateToLogs}
-      relatedDataLabel="Logs"
       invalidateQueries={[[...Dependencies.DEPLOYMENTS], [...Dependencies.SITE]]}
       fallbackPath={`/projects/${projectId}/sites/${siteId}`}
     />
