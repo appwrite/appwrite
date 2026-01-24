@@ -241,8 +241,10 @@ export function SitesView() {
         onSearchChange={handleSearchChange}
         createLabel="Create site"
         onCreate={() => {
-          // TODO: Implement create site dialog
-          toast.info('Create site functionality coming soon')
+          navigate({
+            to: '/projects/$projectId/sites/create-site',
+            params: { projectId: projectId! },
+          })
         }}
         createDisabled={isCreateDisabled}
         showFilters={false}

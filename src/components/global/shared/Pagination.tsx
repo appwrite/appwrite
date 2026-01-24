@@ -15,6 +15,117 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+// ============================================================================
+// SIMPLE PAGINATION (when total is unknown)
+// ============================================================================
+
+export interface SimplePaginationProps {
+  /** Current page (1-indexed) */
+  currentPage: number
+  /** Whether there are more items (i.e., can go to next page) */
+  hasMore: boolean
+  /** Callback when page changes */
+  onPageChange: (page: number) => void
+  /** Whether navigation is disabled (e.g., during loading) */
+  disabled?: boolean
+  /** Optional className for the container */
+  className?: string
+}
+
+/**
+ * SimplePagination - A minimal pagination component for when total count is unknown.
+ * Only shows Previous/Next buttons and current page number.
+ */
+export function SimplePagination({
+  currentPage,
+  hasMore,
+  onPageChange,
+  disabled = false,
+  className,
+}: SimplePaginationProps) {
+  const prevPageRef = useRef(currentPage)
+  const isUserInitiatedRef = useRef(false)
+
+  const canGoPrevious = currentPage > 1
+  const canGoNext = hasMore
+
+  const scrollToTop = () => {
+    setTimeout(() => {
+      if (document.documentElement.scrollTop > 0) {
+        document.documentElement.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+      if (window.scrollY > 0) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }, 150)
+  }
+
+  useEffect(() => {
+    if (prevPageRef.current !== currentPage) {
+      if (!isUserInitiatedRef.current) {
+        scrollToTop()
+      }
+      isUserInitiatedRef.current = false
+      prevPageRef.current = currentPage
+    }
+  }, [currentPage])
+
+  const handlePreviousPage = () => {
+    if (canGoPrevious && !disabled) {
+      isUserInitiatedRef.current = true
+      onPageChange(currentPage - 1)
+      scrollToTop()
+    }
+  }
+
+  const handleNextPage = () => {
+    if (canGoNext && !disabled) {
+      isUserInitiatedRef.current = true
+      onPageChange(currentPage + 1)
+      scrollToTop()
+    }
+  }
+
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-center gap-1',
+        className,
+      )}
+    >
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={handlePreviousPage}
+        disabled={!canGoPrevious || disabled}
+        aria-label="Go to previous page"
+      >
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+
+      <span className="flex items-center justify-center min-w-[2rem] h-8 px-2 text-[12px] font-medium text-muted-foreground tabular-nums">
+        {currentPage}
+      </span>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={handleNextPage}
+        disabled={!canGoNext || disabled}
+        aria-label="Go to next page"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  )
+}
+
+// ============================================================================
+// FULL PAGINATION (when total is known)
+// ============================================================================
+
 export interface PaginationProps {
   /** Current page (1-indexed) */
   currentPage: number

@@ -27,7 +27,7 @@ export function ConsoleFooter() {
 
   const socialLinks = [
     { label: 'GitHub', href: 'https://github.com/appwrite', icon: '/icons/github.svg' },
-    { label: 'X', href: 'https://x.com/appwrite', icon: '/icons/twitter.svg' },
+    { label: 'X', href: 'https://x.com/appwrite', icon: '/icons/x.svg' },
     { label: 'YouTube', href: 'https://youtube.com/@appwrite', icon: '/icons/youtube.svg' },
     { label: 'Discord', href: 'https://appwrite.io/discord', icon: '/icons/discord-simple.svg' },
   ]

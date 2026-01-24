@@ -1,0 +1,343 @@
+/**
+ * Finish View Component
+ *
+ * Success screen with site preview and next steps.
+ */
+
+import { useState, useMemo } from 'react'
+import { useParams, useNavigate, Link } from '@tanstack/react-router'
+import { useTheme } from 'next-themes'
+import { Button } from '@/components/ui/button'
+import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
+import { CopyableId } from '@/components/global/shared/CopyableId'
+import { sdk } from '@/lib/appwrite/sdk'
+import {
+  CheckCircle2,
+  ExternalLink,
+  Globe,
+  GitBranch,
+  Share2,
+  Smartphone,
+  Plus,
+  ArrowRight,
+} from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
+  useProjectSite,
+  useSiteDeployment,
+  useSiteDomains,
+} from '@/lib/react-query/hooks'
+import { cn } from '@/lib/utils'
+import { useWizard } from './WizardContext'
+
+const SCREENSHOTS_BUCKET_ID = 'screenshots'
+
+interface FinishViewProps {
+  siteId?: string
+  deploymentId?: string
+}
+
+export function FinishView({ siteId, deploymentId }: FinishViewProps) {
+  const { projectId } = useParams({ strict: false })
+  const navigate = useNavigate()
+  const { theme, resolvedTheme } = useTheme()
+  const { formData, frameworks, resetFormData } = useWizard()
+
+  // Use provided IDs or fall back to form data
+  const actualSiteId = siteId || formData.createdSiteId
+  const actualDeploymentId = deploymentId || formData.createdDeploymentId
+
+  // Local state
+  const [qrDialogOpen, setQrDialogOpen] = useState(false)
+
+  // Fetch site details
+  const { data: site } = useProjectSite(projectId, actualSiteId)
+
+  // Fetch deployment details
+  const { data: deployment } = useSiteDeployment(
+    projectId,
+    actualSiteId,
+    actualDeploymentId,
+  )
+
+  // Fetch site domains
+  const { rules: domains } = useSiteDomains(projectId, actualSiteId, 0, 10)
+
+  // Determine theme for screenshots
+  const isDark = useMemo(() => {
+    if (typeof window === 'undefined') return true
+    return (
+      resolvedTheme === 'dark' ||
+      (resolvedTheme === 'system' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches) ||
+      theme === 'dark'
+    )
+  }, [theme, resolvedTheme])
+
+  // Get screenshot URL
+  const screenshotUrl = useMemo(() => {
+    if (!deployment) return null
+    const screenshotId = isDark
+      ? (deployment as any).screenshotDark
+      : (deployment as any).screenshotLight
+    if (!screenshotId) return null
+    return sdk.forConsole.storage.getFileDownload({
+      bucketId: SCREENSHOTS_BUCKET_ID,
+      fileId: screenshotId,
+    })
+  }, [deployment, isDark])
+
+  // Get primary domain
+  const primaryDomain = useMemo(() => {
+    if (domains.length > 0) {
+      return domains[0].domain
+    }
+    return null
+  }, [domains])
+
+  const siteUrl = primaryDomain ? `https://${primaryDomain}` : null
+
+  const frameworkInfo = site
+    ? frameworks.find((f) => f.key === site.framework)
+    : null
+
+  const handleGoToDashboard = () => {
+    // Reset wizard state
+    resetFormData()
+
+    if (actualSiteId) {
+      navigate({
+        to: '/projects/$projectId/sites/$siteId',
+        params: { projectId: projectId!, siteId: actualSiteId },
+      })
+    } else {
+      navigate({
+        to: '/projects/$projectId/sites',
+        params: { projectId: projectId! },
+      })
+    }
+  }
+
+  const sidebarContent = (
+    <div className="space-y-4">
+      {/* Success message */}
+      <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-4">
+        <div className="flex items-center gap-3">
+          <CheckCircle2 className="h-6 w-6 text-green-500 shrink-0" />
+          <div>
+            <p className="text-[14px] font-semibold text-green-600 dark:text-green-400">
+              Deployment successful!
+            </p>
+            <p className="text-[12px] text-muted-foreground mt-0.5">
+              Your site is now live
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* QR code dialog */}
+      <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 text-left">
+            <DialogTitle>View on mobile</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Scan this QR code to open your site on a mobile device
+            </DialogDescription>
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 py-6 flex items-center justify-center">
+            {siteUrl && (
+              <div className="p-4 bg-white rounded-lg">
+                {/* QR code would be generated here */}
+                <div className="h-48 w-48 flex items-center justify-center bg-muted rounded">
+                  <p className="text-[12px] text-muted-foreground text-center px-4">
+                    QR code for {siteUrl}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
+            <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+
+  return (
+    <WizardLayout
+      title="Site deployed"
+      fallbackPath={`/projects/${projectId}/sites`}
+      fullscreen
+      footerAlign="right"
+      sidebar={sidebarContent}
+      footer={
+        <Button onClick={handleGoToDashboard}>
+          Go to dashboard
+        </Button>
+      }
+    >
+      {/* Site preview card */}
+      {site && (
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          {/* Screenshot */}
+          {screenshotUrl ? (
+            <div className="aspect-video w-full overflow-hidden bg-muted">
+              <img
+                src={screenshotUrl}
+                alt={`${site.name} preview`}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
+              <FrameworkIcon framework={site.framework} size="lg" />
+            </div>
+          )}
+
+          {/* Content */}
+          <div className="p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <FrameworkIcon framework={site.framework} size="md" />
+                </div>
+                <div>
+                  <h3 className="text-[16px] font-semibold text-foreground">
+                    {site.name}
+                  </h3>
+                  <CopyableId id={site.$id} size="xs" />
+                  {siteUrl && (
+                    <a
+                      href={siteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 flex items-center gap-1 text-[12px] text-primary hover:underline"
+                    >
+                      <Globe className="h-3.5 w-3.5" />
+                      {primaryDomain}
+                    </a>
+                  )}
+                </div>
+              </div>
+              {siteUrl && (
+                <Button asChild>
+                  <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-1.5 h-4 w-4" />
+                    Visit site
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Next steps */}
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Next steps
+          </h3>
+        </div>
+        <div className="border-t border-border" />
+        <div className="divide-y divide-border">
+          {/* Add repository (if not connected) */}
+          {site && !site.installationId && (
+            <Link
+              to="/projects/$projectId/sites/$siteId/settings"
+              params={{ projectId: projectId!, siteId: actualSiteId! }}
+              className="flex items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <GitBranch className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[13px] font-medium text-foreground">
+                  Add repository
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Connect a Git repository for automatic deployments
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          )}
+
+          {/* Add custom domain */}
+          <Link
+            to="/projects/$projectId/sites/$siteId/domains"
+            params={{ projectId: projectId!, siteId: actualSiteId! }}
+            className="flex items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <Globe className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[13px] font-medium text-foreground">
+                Add custom domain
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Configure your own domain name
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+
+          {/* Share site */}
+          <button
+            onClick={() => {
+              if (siteUrl) {
+                navigator.clipboard.writeText(siteUrl)
+              }
+            }}
+            className="flex w-full items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors text-left"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <Share2 className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[13px] font-medium text-foreground">
+                Share site
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Copy the site URL to share with others
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+
+          {/* Open on mobile */}
+          <button
+            onClick={() => setQrDialogOpen(true)}
+            className="flex w-full items-center gap-4 px-6 py-4 hover:bg-accent/50 transition-colors text-left"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <Smartphone className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[13px] font-medium text-foreground">
+                Open on mobile
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Scan QR code to view on your phone
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
+      </div>
+    </WizardLayout>
+  )
+}

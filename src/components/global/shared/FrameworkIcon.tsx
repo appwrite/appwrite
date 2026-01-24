@@ -58,7 +58,8 @@ export function FrameworkIcon({
   className,
   size = 'md',
 }: FrameworkIconProps) {
-  if (!framework) {
+  // Handle null, undefined, or non-string values
+  if (!framework || typeof framework !== 'string') {
     return <Globe className={cn(sizeClasses[size], className)} />
   }
 

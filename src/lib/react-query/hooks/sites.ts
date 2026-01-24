@@ -967,3 +967,380 @@ export function useDeleteSite(projectId: string | null | undefined) {
     },
   })
 }
+
+// ============================================================================
+// SITE TEMPLATES QUERY FUNCTIONS
+// ============================================================================
+
+/**
+ * Query function to fetch site templates
+ *
+ * @param projectId - The project ID
+ * @param frameworks - Optional array of framework keys to filter by
+ * @param useCases - Optional array of use case names to filter by
+ * @param limit - Maximum number of templates to return (default: 100)
+ * @param offset - Offset for pagination (default: 0)
+ * @returns Templates list response from the API
+ */
+export async function fetchSiteTemplates(
+  projectId: string,
+  frameworks?: string[],
+  useCases?: string[],
+  limit: number = 100,
+  offset: number = 0,
+): Promise<Models.TemplateSiteList> {
+  if (!projectId) {
+    return { templates: [], total: 0 }
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const response = await projectSdk.sites.listTemplates({
+    frameworks,
+    useCases,
+    limit,
+    offset,
+  })
+
+  return {
+    templates: response.templates ? [...response.templates] : [],
+    total: response.total || 0,
+  }
+}
+
+/**
+ * Query function to fetch a single site template by ID
+ *
+ * @param projectId - The project ID
+ * @param templateId - The template ID
+ * @returns Template details from the API
+ */
+export async function fetchSiteTemplate(
+  projectId: string,
+  templateId: string,
+): Promise<Models.TemplateSite> {
+  if (!projectId || !templateId) {
+    throw new Error('Project ID and Template ID are required')
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.sites.getTemplate({ templateId })
+}
+
+// ============================================================================
+// SITE TEMPLATES QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching site templates
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function siteTemplatesQueryOptions(
+  projectId: string | null | undefined,
+  frameworks?: string[],
+  useCases?: string[],
+  limit: number = 100,
+  offset: number = 0,
+) {
+  // Serialize arrays for stable query keys
+  const frameworksKey =
+    frameworks && frameworks.length > 0 ? [...frameworks].sort().join(',') : null
+  const useCasesKey =
+    useCases && useCases.length > 0 ? [...useCases].sort().join(',') : null
+
+  return queryOptions({
+    queryKey: [
+      'site-templates',
+      'project',
+      projectId,
+      limit,
+      offset,
+      frameworksKey,
+      useCasesKey,
+    ],
+    queryFn: () =>
+      fetchSiteTemplates(projectId!, frameworks, useCases, limit, offset),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching a single site template
+ */
+export function siteTemplateQueryOptions(
+  projectId: string | null | undefined,
+  templateId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['site-template', 'project', projectId, templateId],
+    queryFn: () => fetchSiteTemplate(projectId!, templateId!),
+    enabled: !!projectId && !!templateId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && templateId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+// ============================================================================
+// SITE TEMPLATES HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch site templates
+ *
+ * @param projectId - The project ID
+ * @param frameworks - Optional array of framework keys to filter by
+ * @param useCases - Optional array of use case names to filter by
+ * @param limit - Maximum number of templates to return (default: 100)
+ * @param offset - Offset for pagination (default: 0)
+ * @returns Templates list with loading state
+ */
+export function useSiteTemplates(
+  projectId: string | null | undefined,
+  frameworks?: string[],
+  useCases?: string[],
+  limit: number = 100,
+  offset: number = 0,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    siteTemplatesQueryOptions(projectId, frameworks, useCases, limit, offset),
+  )
+
+  return {
+    templates: data?.templates || [],
+    total: data?.total || 0,
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to fetch a single site template
+ *
+ * @param projectId - The project ID
+ * @param templateId - The template ID
+ * @returns Template details with loading state
+ */
+export function useSiteTemplate(
+  projectId: string | null | undefined,
+  templateId: string | null | undefined,
+) {
+  return useQuery(siteTemplateQueryOptions(projectId, templateId))
+}
+
+// ============================================================================
+// SITE CREATION MUTATIONS
+// ============================================================================
+
+/**
+ * Interface for creating a new site
+ */
+export interface CreateSiteParams {
+  siteId?: string
+  name: string
+  framework: string
+  buildRuntime?: string
+  enabled?: boolean
+  logging?: boolean
+  timeout?: number
+  installCommand?: string
+  buildCommand?: string
+  outputDirectory?: string
+  adapter?: string
+  fallbackFile?: string
+  installationId?: string
+  providerRepositoryId?: string
+  providerBranch?: string
+  providerSilentMode?: boolean
+  providerRootDirectory?: string
+  specification?: string
+}
+
+/**
+ * Interface for creating a site variable
+ */
+export interface CreateSiteVariableParams {
+  siteId: string
+  key: string
+  value: string
+  secret?: boolean
+}
+
+/**
+ * Hook to create a new site
+ */
+export function useCreateSite(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: CreateSiteParams) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.create(params as any)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.SITES,
+      })
+    },
+  })
+}
+
+/**
+ * Hook to create a site variable
+ */
+export function useCreateSiteVariable(
+  projectId: string | null | undefined,
+  siteId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: Omit<CreateSiteVariableParams, 'siteId'>) => {
+      if (!projectId || !siteId) {
+        throw new Error('Project ID and Site ID are required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.createVariable({
+        siteId,
+        key: params.key,
+        value: params.value,
+        secret: params.secret,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['variables', 'site', projectId, siteId],
+      })
+    },
+  })
+}
+
+/**
+ * Interface for creating a VCS deployment
+ */
+export interface CreateVcsDeploymentParams {
+  siteId: string
+  type: 'branch' | 'tag' | 'commit'
+  reference: string
+  activate?: boolean
+}
+
+/**
+ * Hook to create a VCS deployment
+ */
+export function useCreateVcsDeployment(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: CreateVcsDeploymentParams) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.createVcsDeployment({
+        siteId: params.siteId,
+        type: params.type as any,
+        reference: params.reference,
+        activate: params.activate,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.DEPLOYMENTS,
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.SITE,
+      })
+    },
+  })
+}
+
+/**
+ * Interface for creating a template deployment
+ */
+export interface CreateTemplateDeploymentParams {
+  siteId: string
+  repository: string
+  owner: string
+  rootDirectory?: string
+  type: 'branch' | 'tag' | 'commit'
+  reference: string
+  activate?: boolean
+}
+
+/**
+ * Hook to create a template deployment
+ */
+export function useCreateTemplateDeployment(
+  projectId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: CreateTemplateDeploymentParams) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.createTemplateDeployment({
+        siteId: params.siteId,
+        repository: params.repository,
+        owner: params.owner,
+        rootDirectory: params.rootDirectory,
+        type: params.type as any,
+        reference: params.reference,
+        activate: params.activate,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.DEPLOYMENTS,
+      })
+      queryClient.invalidateQueries({
+        queryKey: Dependencies.SITE,
+      })
+    },
+  })
+}
+
+/**
+ * Hook to create a site domain rule via proxy
+ */
+export function useCreateSiteDomain(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ domain, siteId }: { domain: string; siteId: string }) => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.proxy.createSiteRule({
+        domain,
+        siteId,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['proxy-rules'],
+      })
+    },
+  })
+}

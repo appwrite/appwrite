@@ -1,0 +1,254 @@
+/**
+ * Site Creation Wizard Context
+ *
+ * Provides shared state and utilities for the multi-step site creation wizard.
+ * Manages form data, navigation state, and SDK calls across all wizard screens.
+ */
+
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  ReactNode,
+} from 'react'
+import type { Models } from '@appwrite.io/console'
+
+/**
+ * Environment variable entry for the wizard
+ */
+export interface WizardVariable {
+  key: string
+  value: string
+  secret: boolean
+}
+
+/**
+ * Wizard form data shape
+ */
+export interface WizardFormData {
+  // Site details
+  siteName: string
+  siteId: string | undefined
+  
+  // Git configuration
+  installationId: string | undefined
+  providerRepositoryId: string | undefined
+  providerBranch: string
+  providerRootDirectory: string
+  providerSilentMode: boolean
+  
+  // Template configuration
+  templateId: string | undefined
+  template: Models.TemplateSite | undefined
+  
+  // Framework and build settings
+  framework: string
+  buildRuntime: string | undefined
+  installCommand: string
+  buildCommand: string
+  outputDirectory: string
+  
+  // Environment variables
+  variables: WizardVariable[]
+  
+  // Domain configuration
+  domain: string
+  domainValid: boolean
+  
+  // Repository info (for display)
+  repositoryOwner: string | undefined
+  repositoryName: string | undefined
+  repositoryUrl: string | undefined
+  
+  // Created resources (for deploying/finish screens)
+  createdSiteId: string | undefined
+  createdDeploymentId: string | undefined
+  
+  // Upload file (for manual path)
+  uploadFile: File | undefined
+}
+
+/**
+ * Default wizard form data
+ */
+const defaultFormData: WizardFormData = {
+  siteName: '',
+  siteId: undefined,
+  installationId: undefined,
+  providerRepositoryId: undefined,
+  providerBranch: 'main',
+  providerRootDirectory: './',
+  providerSilentMode: false,
+  templateId: undefined,
+  template: undefined,
+  framework: '',
+  buildRuntime: undefined,
+  installCommand: '',
+  buildCommand: '',
+  outputDirectory: '',
+  variables: [],
+  domain: '',
+  domainValid: false,
+  repositoryOwner: undefined,
+  repositoryName: undefined,
+  repositoryUrl: undefined,
+  createdSiteId: undefined,
+  createdDeploymentId: undefined,
+  uploadFile: undefined,
+}
+
+/**
+ * Wizard path type
+ */
+export type WizardPath = 'repository' | 'template' | 'manual' | 'deploy'
+
+/**
+ * Wizard context value
+ */
+interface WizardContextValue {
+  // Form data
+  formData: WizardFormData
+  updateFormData: (updates: Partial<WizardFormData>) => void
+  resetFormData: () => void
+  
+  // Navigation
+  currentPath: WizardPath | undefined
+  setCurrentPath: (path: WizardPath | undefined) => void
+  
+  // Installations (shared across wizard)
+  installations: Models.Installation[]
+  setInstallations: (installations: Models.Installation[]) => void
+  
+  // Frameworks (shared across wizard)
+  frameworks: Models.Framework[]
+  setFrameworks: (frameworks: Models.Framework[]) => void
+  
+  // Helper to get framework by key
+  getFramework: (key: string) => Models.Framework | undefined
+  
+  // Helper to get default build commands for a framework
+  getFrameworkDefaults: (frameworkKey: string) => {
+    installCommand: string
+    buildCommand: string
+    outputDirectory: string
+  }
+  
+  // Domain generation helper
+  generateDomain: (name: string) => string
+  baseDomain: string
+  setBaseDomain: (domain: string) => void
+}
+
+const WizardContext = createContext<WizardContextValue | null>(null)
+
+/**
+ * Hook to access wizard context
+ */
+export function useWizard() {
+  const context = useContext(WizardContext)
+  if (!context) {
+    throw new Error('useWizard must be used within a WizardProvider')
+  }
+  return context
+}
+
+/**
+ * Wizard provider component
+ */
+export function WizardProvider({ children }: { children: ReactNode }) {
+  const [formData, setFormData] = useState<WizardFormData>(defaultFormData)
+  const [currentPath, setCurrentPath] = useState<WizardPath | undefined>(undefined)
+  const [installations, setInstallations] = useState<Models.Installation[]>([])
+  const [frameworks, setFrameworks] = useState<Models.Framework[]>([])
+  const [baseDomain, setBaseDomain] = useState<string>('appwrite.network')
+
+  const updateFormData = useCallback((updates: Partial<WizardFormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }))
+  }, [])
+
+  const resetFormData = useCallback(() => {
+    setFormData(defaultFormData)
+  }, [])
+
+  const getFramework = useCallback(
+    (key: string) => {
+      return frameworks.find((f) => f.key === key)
+    },
+    [frameworks],
+  )
+
+  const getFrameworkDefaults = useCallback(
+    (frameworkKey: string) => {
+      const framework = getFramework(frameworkKey)
+      if (!framework) {
+        return {
+          installCommand: 'npm install',
+          buildCommand: 'npm run build',
+          outputDirectory: '.output',
+        }
+      }
+      return {
+        installCommand: framework.installCommand || 'npm install',
+        buildCommand: framework.buildCommand || 'npm run build',
+        outputDirectory: framework.outputDirectory || '.output',
+      }
+    },
+    [getFramework],
+  )
+
+  const generateDomain = useCallback(
+    (name: string) => {
+      // Convert name to URL-safe subdomain
+      const subdomain = name
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 63) // Max subdomain length
+      
+      return subdomain ? `${subdomain}.${baseDomain}` : ''
+    },
+    [baseDomain],
+  )
+
+  const value = useMemo<WizardContextValue>(
+    () => ({
+      formData,
+      updateFormData,
+      resetFormData,
+      currentPath,
+      setCurrentPath,
+      installations,
+      setInstallations,
+      frameworks,
+      setFrameworks,
+      getFramework,
+      getFrameworkDefaults,
+      generateDomain,
+      baseDomain,
+      setBaseDomain,
+    }),
+    [
+      formData,
+      updateFormData,
+      resetFormData,
+      currentPath,
+      setCurrentPath,
+      installations,
+      setInstallations,
+      frameworks,
+      setFrameworks,
+      getFramework,
+      getFrameworkDefaults,
+      generateDomain,
+      baseDomain,
+      setBaseDomain,
+    ],
+  )
+
+  return (
+    <WizardContext.Provider value={value}>{children}</WizardContext.Provider>
+  )
+}

@@ -33,10 +33,14 @@ interface WizardLayoutProps {
   constrainWidth?: boolean
   /** Whether to constrain footer width with max-w-7xl (default: true) */
   constrainFooterWidth?: boolean
-  /** Whether to show a back button instead of X button (default: false) */
+  /** Custom max-width class for content (default: 'max-w-7xl') */
+  maxWidth?: string
+  /** Whether to show a back button in addition to X button (default: false) */
   showBackButton?: boolean
   /** Custom label for the back button (default: 'Back') */
   backButtonLabel?: string
+  /** Handler for back button click (if not provided, uses browser history) */
+  onBack?: () => void
   /** Footer button alignment (default: 'left') */
   footerAlign?: 'left' | 'right'
 }
@@ -82,8 +86,10 @@ export function WizardLayout({
   useSidebar = true,
   constrainWidth = true,
   constrainFooterWidth = true,
+  maxWidth = 'max-w-7xl',
   showBackButton = false,
   backButtonLabel = 'Back',
+  onBack,
   footerAlign = 'left',
 }: WizardLayoutProps) {
   // Use smart navigation hook for consistent back behavior
@@ -98,6 +104,17 @@ export function WizardLayout({
       onClose()
     } else {
       smartGoBack()
+    }
+  }
+
+  /**
+   * Handle back button: uses onBack if provided, otherwise uses browser history
+   */
+  const handleBack = () => {
+    if (onBack) {
+      onBack()
+    } else {
+      window.history.back()
     }
   }
 
@@ -138,7 +155,7 @@ export function WizardLayout({
         <div
           className={cn(
             'mx-auto w-full',
-            constrainWidth && 'max-w-7xl',
+            constrainWidth && maxWidth,
           )}
         >
           {/* Original header content with padding */}
@@ -153,7 +170,7 @@ export function WizardLayout({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={handleClose}
+                    onClick={handleBack}
                     className={fullscreen ? 'h-8 w-8 p-0' : undefined}
                     aria-label={backButtonLabel}
                   >
@@ -187,20 +204,18 @@ export function WizardLayout({
                 {headerActions && (
                   <>
                     {headerActions}
-                    {!showBackButton && <div className="h-5 w-px bg-border" />}
+                    <div className="h-5 w-px bg-border" />
                   </>
                 )}
-                {!showBackButton && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClose}
-                    className={fullscreen ? 'h-8 w-8 p-0' : undefined}
-                    aria-label="Close wizard"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClose}
+                  className={fullscreen ? 'h-8 w-8 p-0' : undefined}
+                  aria-label="Close wizard"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
@@ -215,7 +230,7 @@ export function WizardLayout({
           <div
             className={cn(
               'mx-auto w-full px-6',
-              constrainWidth && 'max-w-7xl',
+              constrainWidth && maxWidth,
               fullscreen ? 'py-6' : 'pt-6',
             )}
           >
@@ -260,7 +275,7 @@ export function WizardLayout({
           <div
             className={cn(
               'mx-auto w-full flex items-center gap-3',
-              constrainFooterWidth && 'max-w-7xl',
+              constrainFooterWidth && maxWidth,
               fullscreen && 'px-6 py-4',
               footerAlign === 'right' && 'justify-end',
             )}
