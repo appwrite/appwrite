@@ -17,7 +17,12 @@ use Utopia\Validator\Text;
 class Install extends Action
 {
     private const int INSTALL_STEP_DELAY_SECONDS = 2;
+    private const int WEB_SERVER_CHECK_ATTEMPTS = 10;
+    private const int WEB_SERVER_CHECK_DELAY_SECONDS = 1;
 
+    protected string $hostPath = '';
+    protected ?bool $isLocalInstall = null;
+    protected ?array $installerConfig = null;
     protected string $path = '/usr/src/code/appwrite';
 
     public static function getName(): string
@@ -36,7 +41,6 @@ class Install extends Action
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
             ->callback($this->action(...));
-
     }
 
     public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, bool $isUpgrade = false): void
@@ -55,7 +59,8 @@ class Install extends Action
 
         Console::success('Starting Appwrite installation...');
 
-        $isLocalInstall = !empty(getenv('APPWRITE_INSTALLER_LOCAL'));
+        $isLocalInstall = $this->isLocalInstall();
+        $this->applyLocalPaths($isLocalInstall, true);
 
         // Create directory with write permissions
         if (!\file_exists(\dirname($this->path))) {
@@ -66,15 +71,14 @@ class Install extends Action
         }
 
         // Check for existing installation
-        $data = @file_get_contents($this->path . '/docker-compose.yml');
-        $existingInstallation = $data !== false;
+        $data = $this->readExistingCompose();
+        $existingInstallation = $data !== '';
 
         if ($existingInstallation) {
             $time = \time();
-            if (!$isLocalInstall) {
-                Console::info('Compose file found, creating backup: docker-compose.yml.' . $time . '.backup');
-                file_put_contents($this->path . '/docker-compose.yml.' . $time . '.backup', $data);
-            }
+            $composeFileName = $this->getComposeFileName();
+            Console::info('Compose file found, creating backup: ' . $composeFileName . '.' . $time . '.backup');
+            file_put_contents($this->path . '/' . $composeFileName . '.' . $time . '.backup', $data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
             $oldVersion = $appwrite?->getImageVersion();
@@ -108,7 +112,7 @@ class Install extends Action
                     }
                 }
 
-                $envData = @file_get_contents($this->path . '/.env');
+                $envData = @file_get_contents($this->path . '/' . $this->getEnvFileName());
 
                 if ($envData !== false) {
                     if (!$isLocalInstall) {
@@ -239,45 +243,49 @@ class Install extends Action
 
     protected function startWebServer(string $defaultHTTPPort, string $defaultHTTPSPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
     {
-        $port = getenv('APPWRITE_INSTALLER_LOCAL')
+        $host = '0.0.0.0';
+        $port = $this->isLocalInstall()
             ? InstallerServer::INSTALLER_WEB_PORT_INTERNAL
             : InstallerServer::INSTALLER_WEB_PORT;
-        $host = '0.0.0.0';
 
-        // Create a router script for handling requests
-        $routerScript = \sys_get_temp_dir() . '/appwrite-installer-router.php';
-        $this->createRouterScript($routerScript, $defaultHTTPPort, $defaultHTTPSPort, $organization, $image, $noStart, $vars, $isUpgrade, $lockedDatabase);
+        $this->setInstallerConfig([
+            'defaultHttpPort' => $defaultHTTPPort,
+            'defaultHttpsPort' => $defaultHTTPSPort,
+            'organization' => $organization,
+            'image' => $image,
+            'noStart' => $noStart,
+            'vars' => $vars,
+            'isUpgrade' => $isUpgrade,
+            'lockedDatabase' => $lockedDatabase,
+            'isLocal' => $this->isLocalInstall(),
+            'hostPath' => $this->hostPath ?: null,
+        ]);
+        $routerScript = dirname(__DIR__) . '/Installer/Server.php';
+        $docroot = $this->buildFromProjectPath('/app/views/install');
 
         // Start PHP built-in server in background
         $command = \sprintf(
-            'php -S %s:%d %s >/dev/null 2>&1 & echo $!',
+            'php -S %s:%d -t %s %s 2>&1 & echo $!',
             $host,
             $port,
+            \escapeshellarg($docroot),
             \escapeshellarg($routerScript)
         );
-
-        // Start the server
         $output = [];
-        $exitCode = 0;
-        \exec($command, $output, $exitCode);
+        \exec($command, $output);
         $pid = isset($output[0]) ? (int) $output[0] : 0;
 
-        \register_shutdown_function(function () use ($routerScript, $pid) {
-            if (\file_exists($routerScript)) {
-                \unlink($routerScript);
-            }
+        \register_shutdown_function(function () use ($pid) {
             if ($pid > 0 && \function_exists('posix_kill')) {
                 @\posix_kill($pid, SIGTERM);
             }
         });
         \sleep(3);
 
-        // Check if the server actually started
-        $handle = @fsockopen('localhost', $port, $errno, $errstr, 1);
-        if ($handle === false) {
-            Console::exit(1);
+        if (!$this->waitForWebServer($port)) {
+            Console::warning('Web installer did not respond in time. Please refresh the browser.');
+            return;
         }
-        \fclose($handle);
 
         // Wait for the server process to finish
         while (true) {
@@ -288,37 +296,6 @@ class Install extends Action
             \fclose($handle);
             \sleep(1);
         }
-
-        // Cleanup
-        if (\file_exists($routerScript)) {
-            \unlink($routerScript);
-        }
-    }
-
-    private function createRouterScript(string $path, string $defaultHTTPPort, string $defaultHTTPSPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
-    {
-        $installPhpPath = __FILE__;
-        $appViewsPath = __DIR__ . '/../../../../app/views/install';
-        $publicPath = __DIR__ . '/../../../../public';
-        $vendorPath = __DIR__ . '/../../../../vendor/autoload.php';
-        $appwritePath = __DIR__ . '/../../../../app/init.php';
-
-        InstallerServer::writeRouterScript(
-            $path,
-            $installPhpPath,
-            $appViewsPath,
-            $publicPath,
-            $vendorPath,
-            $appwritePath,
-            $defaultHTTPPort,
-            $defaultHTTPSPort,
-            $organization,
-            $image,
-            $noStart,
-            $vars,
-            $isUpgrade,
-            $lockedDatabase
-        );
     }
 
     public function prepareEnvironmentVariables(array $userInput, array $vars): array
@@ -329,12 +306,17 @@ class Install extends Action
 
         // Start with all defaults
         foreach ($vars as $var) {
+            $default = $var['default'] ?? null;
+            $hasDefault = $default !== null && $default !== '';
             if (!empty($var['filter']) && $var['filter'] === 'token') {
-                $input[$var['name']] = $token->generate();
+                $input[$var['name']] = $hasDefault ? $default : $token->generate();
             } elseif (!empty($var['filter']) && $var['filter'] === 'password') {
-                $input[$var['name']] = $password->generate();
+                /*;#+@:/?& broke DSNs locally */
+                $input[$var['name']] = $hasDefault
+                    ? $default
+                    : $this->generatePasswordValue($var['name'], $password);
             } else {
-                $input[$var['name']] = $var['default'];
+                $input[$var['name']] = $default;
             }
         }
 
@@ -342,6 +324,15 @@ class Install extends Action
         foreach ($userInput as $key => $value) {
             if ($value !== null && ($value !== '' || $key === '_APP_ASSISTANT_OPENAI_API_KEY')) {
                 $input[$key] = $value;
+            }
+        }
+
+        foreach ($input as $key => $value) {
+            if (!is_string($value)) {
+                continue;
+            }
+            if (str_contains($value, "\n") || str_contains($value, "\r")) {
+                throw new \InvalidArgumentException('Invalid value for ' . $key);
             }
         }
 
@@ -358,23 +349,44 @@ class Install extends Action
         return $input;
     }
 
-    private function reportProgress(?callable $progress, string $step, string $status, string $message, array $details = []): void
+    private function updateProgress(?callable $progress, string $step, string $status, array $messages = [], array $details = [], ?string $messageOverride = null): void
     {
         if (!$progress) {
             return;
+        }
+
+        if ($messageOverride !== null) {
+            $message = $messageOverride;
+        } else {
+            $key = $status === InstallerServer::STATUS_COMPLETED ? 'done' : 'start';
+            $message = $messages[$step][$key] ?? null;
+            if ($message === null) {
+                return;
+            }
         }
 
         try {
             $progress($step, $status, $message, $details);
         } catch (\Throwable $e) {
         }
-    }
-
-    private function delayProgress(?callable $progress, string $status): void
-    {
-        if ($progress && $status !== 'error') {
+        if ($status === InstallerServer::STATUS_IN_PROGRESS) {
             sleep(self::INSTALL_STEP_DELAY_SECONDS);
         }
+    }
+
+    private function setInstallerConfig(array $config): void
+    {
+        $json = json_encode($config, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            return;
+        }
+
+        putenv('APPWRITE_INSTALLER_CONFIG=' . $json);
+        $path = InstallerServer::INSTALLER_CONFIG_FILE;
+        if (@file_put_contents($path, $json) === false) {
+            return;
+        }
+        @chmod($path, 0600);
     }
 
     public function performInstallation(
@@ -388,25 +400,34 @@ class Install extends Action
         ?string $resumeFromStep = null,
         bool $isUpgrade = false
     ): void {
-        $isCLI = php_sapi_name() === 'cli';
-        $useExistingConfig = !empty(getenv('APPWRITE_INSTALLER_LOCAL'))
-            && file_exists($this->path . '/docker-compose.yml')
-            && file_exists($this->path . '/.env');
+        $isLocalInstall = $this->isLocalInstall();
+        $this->applyLocalPaths($isLocalInstall, false);
 
-        if (getenv('APPWRITE_INSTALLER_LOCAL')) {
+        $isCLI = php_sapi_name() === 'cli';
+        if ($isLocalInstall) {
+            $useExistingConfig = false;
+        } else {
+            $useExistingConfig = file_exists($this->path . '/' . $this->getComposeFileName())
+                    && file_exists($this->path . '/' . $this->getEnvFileName());
+        }
+
+        if ($isLocalInstall) {
             $organization = 'appwrite';
             $image = 'appwrite';
         }
 
-        $templateForCompose = new View(__DIR__ . '/../../../../app/views/install/compose.phtml');
-        $templateForEnv = new View(__DIR__ . '/../../../../app/views/install/env.phtml');
+        $templateForEnv = new View($this->buildFromProjectPath('/app/views/install/env.phtml'));
+        $templateForCompose = new View($this->buildFromProjectPath('/app/views/install/compose.phtml'));
 
         $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
 
         $version = \defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest';
-        if (getenv('APPWRITE_INSTALLER_LOCAL')) {
+        if ($isLocalInstall) {
             $version = 'local';
         }
+
+        $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
+        $enableAssistant = trim($assistantKey) !== '';
 
         $templateForCompose
             ->setParam('httpPort', $httpPort)
@@ -414,11 +435,18 @@ class Install extends Action
             ->setParam('version', $version)
             ->setParam('organization', $organization)
             ->setParam('image', $image)
-            ->setParam('database', $database);
+            ->setParam('database', $database)
+            ->setParam('hostPath', $this->hostPath)
+            ->setParam('enableAssistant', $enableAssistant);
 
         $templateForEnv->setParam('vars', $input);
 
-        $steps = ['docker-compose', 'env-vars', 'docker-containers'];
+        $steps = [
+            InstallerServer::STEP_DOCKER_COMPOSE,
+            InstallerServer::STEP_ENV_VARS,
+            InstallerServer::STEP_DOCKER_CONTAINERS
+        ];
+
         $startIndex = 0;
         if ($resumeFromStep !== null) {
             $resumeIndex = array_search($resumeFromStep, $steps, true);
@@ -429,144 +457,46 @@ class Install extends Action
 
         $currentStep = null;
 
-        $messages = $isUpgrade ? [
-            'config-files' => [
-                'start' => 'Updating configuration files...',
-                'done' => 'Configuration files updated',
-            ],
-            'docker-compose' => [
-                'start' => 'Updating Docker Compose file...',
-                'done' => 'Docker Compose file updated',
-            ],
-            'env-vars' => [
-                'start' => 'Updating environment variables...',
-                'done' => 'Environment variables updated',
-            ],
-            'docker-containers' => [
-                'start' => 'Restarting Docker containers...',
-                'done' => 'Docker containers restarted',
-            ],
-        ] : [
-            'config-files' => [
-                'start' => 'Creating configuration files...',
-                'done' => 'Configuration files created',
-            ],
-            'docker-compose' => [
-                'start' => 'Generating Docker Compose file...',
-                'done' => 'Docker Compose file generated',
-            ],
-            'env-vars' => [
-                'start' => 'Configuring environment variables...',
-                'done' => 'Environment variables configured',
-            ],
-            'docker-containers' => [
-                'start' => 'Starting Docker containers...',
-                'done' => 'Docker containers started',
-            ],
-        ];
+        $messages = $this->buildStepMessages($isUpgrade);
 
         try {
             if ($startIndex <= 1) {
-                $this->reportProgress($progress, 'config-files', 'in-progress', $messages['config-files']['start']);
-                $this->delayProgress($progress, 'in-progress');
+                $this->updateProgress($progress, InstallerServer::STEP_CONFIG_FILES, InstallerServer::STATUS_IN_PROGRESS, $messages);
             }
 
             if ($startIndex <= 0) {
-                $currentStep = 'docker-compose';
-                $this->reportProgress($progress, 'docker-compose', 'in-progress', $messages['docker-compose']['start']);
-                $this->delayProgress($progress, 'in-progress');
+                $currentStep = InstallerServer::STEP_DOCKER_COMPOSE;
+                $this->updateProgress($progress, InstallerServer::STEP_DOCKER_COMPOSE, InstallerServer::STATUS_IN_PROGRESS, $messages);
 
                 if (!$useExistingConfig) {
-                    if (!\file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
-                        throw new \Exception('Failed to save Docker Compose file');
-                    }
+                    $this->writeComposeFile($templateForCompose, $isLocalInstall);
                 }
 
-                $this->reportProgress($progress, 'docker-compose', 'completed', $messages['docker-compose']['done']);
+                $this->updateProgress($progress, InstallerServer::STEP_DOCKER_COMPOSE, InstallerServer::STATUS_COMPLETED, $messages);
             }
 
             if ($startIndex <= 1) {
-                $currentStep = 'env-vars';
-                $this->reportProgress($progress, 'env-vars', 'in-progress', $messages['env-vars']['start']);
-                $this->delayProgress($progress, 'in-progress');
+                $currentStep = InstallerServer::STEP_ENV_VARS;
+                $this->updateProgress($progress, InstallerServer::STEP_ENV_VARS, InstallerServer::STATUS_IN_PROGRESS, $messages);
 
                 if (!$useExistingConfig) {
-                    if (!\file_put_contents($this->path . '/.env', $templateForEnv->render(false))) {
-                        throw new \Exception('Failed to save environment variables file');
-                    }
+                    $this->writeEnvFile($templateForEnv, $isLocalInstall);
                 }
 
-                $this->reportProgress($progress, 'env-vars', 'completed', $messages['env-vars']['done']);
-                $this->reportProgress($progress, 'config-files', 'completed', $messages['config-files']['done']);
+                $this->updateProgress($progress, InstallerServer::STEP_ENV_VARS, InstallerServer::STATUS_COMPLETED, $messages);
+                $this->updateProgress($progress, InstallerServer::STEP_CONFIG_FILES, InstallerServer::STATUS_COMPLETED, $messages);
             }
 
             if ($database === 'mongodb' && !$useExistingConfig) {
-                $mongoEntrypoint = __DIR__ . '/../../../../mongo-entrypoint.sh';
-
-                if (file_exists($mongoEntrypoint)) {
-                    copy($mongoEntrypoint, $this->path . '/mongo-entrypoint.sh');
-                }
+                $this->copyMongoEntrypointIfNeeded();
             }
 
             if (!$noStart && $startIndex <= 2) {
-                $currentStep = 'docker-containers';
-                $this->reportProgress($progress, 'docker-containers', 'in-progress', $messages['docker-containers']['start']);
-                $this->delayProgress($progress, 'in-progress');
-                $envVars = getenv();
-                if (!is_array($envVars)) {
-                    $envVars = [];
-                }
-                if (!$useExistingConfig) {
-                    foreach ($input as $key => $value) {
-                        if ($value === null || $value === '') {
-                            continue;
-                        }
-                        if (!preg_match('/^[A-Z0-9_]+$/', $key)) {
-                            throw new \Exception('Invalid environment variable name');
-                        }
-                        $envVars[$key] = (string) $value;
-                    }
-                }
+                $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
+                $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
+                $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI);
 
-                if ($isCLI) {
-                    Console::log("Running \"docker compose up -d --remove-orphans --renew-anon-volumes\"");
-                }
-
-                $command = [
-                    'docker',
-                    'compose',
-                    '--project-directory',
-                    $this->path,
-                    'up',
-                    '-d',
-                    '--remove-orphans',
-                    '--renew-anon-volumes'
-                ];
-                $descriptorSpec = [
-                    1 => ['pipe', 'w'],
-                    2 => ['pipe', 'w'],
-                ];
-                $process = \proc_open($command, $descriptorSpec, $pipes, null, $envVars);
-                if (!is_resource($process)) {
-                    throw new \Exception('Failed to start Docker Compose');
-                }
-                $stdout = stream_get_contents($pipes[1]);
-                $stderr = stream_get_contents($pipes[2]);
-                if (is_resource($pipes[1])) {
-                    fclose($pipes[1]);
-                }
-                if (is_resource($pipes[2])) {
-                    fclose($pipes[2]);
-                }
-                $exit = \proc_close($process);
-
-                if ($exit !== 0) {
-                    $output = trim(($stderr ?: '') . ($stdout ?: ''));
-                    $previous = $output !== '' ? new \RuntimeException($output) : null;
-                    throw new \RuntimeException('Failed to start containers', 0, $previous);
-                }
-
-                $this->reportProgress($progress, 'docker-containers', 'completed', $messages['docker-containers']['done']);
+                $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
 
                 if ($isCLI) {
                     Console::success('Appwrite installed successfully');
@@ -585,9 +515,244 @@ class Install extends Action
                 if ($previous instanceof \Throwable && $previous->getMessage() !== '') {
                     $details['output'] = $previous->getMessage();
                 }
-                $this->reportProgress($progress, $currentStep, 'error', $e->getMessage(), $details);
+                $this->updateProgress($progress, $currentStep, InstallerServer::STATUS_ERROR, $messages, $details, $e->getMessage());
             }
             throw $e;
         }
+    }
+
+    private function buildStepMessages(bool $isUpgrade): array
+    {
+        $isUpgradeLabel = $isUpgrade ? 'updated' : 'created';
+        $verbs = [
+            InstallerServer::STEP_CONFIG_FILES => $isUpgrade ? 'Updating' : 'Creating',
+            InstallerServer::STEP_DOCKER_COMPOSE => $isUpgrade ? 'Updating' : 'Generating',
+            InstallerServer::STEP_ENV_VARS => $isUpgrade ? 'Updating' : 'Configuring',
+            InstallerServer::STEP_DOCKER_CONTAINERS => $isUpgrade ? 'Restarting' : 'Starting',
+        ];
+
+        return [
+            InstallerServer::STEP_CONFIG_FILES => [
+                'start' => $verbs[InstallerServer::STEP_CONFIG_FILES] . ' configuration files...',
+                'done' => 'Configuration files ' . $isUpgradeLabel,
+            ],
+            InstallerServer::STEP_DOCKER_COMPOSE => [
+                'start' => $verbs[InstallerServer::STEP_DOCKER_COMPOSE] . ' Docker Compose file...',
+                'done' => 'Docker Compose file ' . $isUpgradeLabel,
+            ],
+            InstallerServer::STEP_ENV_VARS => [
+                'start' => $verbs[InstallerServer::STEP_ENV_VARS] . ' environment variables...',
+                'done' => 'Environment variables ' . $isUpgradeLabel,
+            ],
+            InstallerServer::STEP_DOCKER_CONTAINERS => [
+                'start' => $verbs[InstallerServer::STEP_DOCKER_CONTAINERS] . ' Docker containers...',
+                'done' => $isUpgrade ? 'Docker containers restarted' : 'Docker containers started',
+            ],
+        ];
+    }
+
+    private function writeComposeFile(View $template, bool $isLocalInstall): void
+    {
+        // Always use container path for file operations
+        // Use a separate file for web installer to avoid conflicts
+        $composeFileName = $this->getComposeFileName();
+        $targetPath = $this->path . '/' . $composeFileName;
+        $renderedContent = $template->render(false);
+
+        $result = @file_put_contents($targetPath, $renderedContent);
+        if ($result === false) {
+            $lastError = error_get_last();
+            $errorMsg = $lastError ? $lastError['message'] : 'Unknown error';
+            throw new \Exception('Failed to save Docker Compose file: ' . $errorMsg . ' (path: ' . $targetPath . ')');
+        }
+    }
+
+    private function writeEnvFile(View $template, bool $isLocalInstall): void
+    {
+        // Always use container path for file operations
+        // Use a separate env file for installer to avoid conflicts
+        $envFileName = $this->getEnvFileName();
+        if (!\file_put_contents($this->path . '/' . $envFileName, $template->render(false))) {
+            throw new \Exception('Failed to save environment variables file');
+        }
+    }
+
+    private function copyMongoEntrypointIfNeeded(): void
+    {
+        $mongoEntrypoint = $this->buildFromProjectPath('/mongo-entrypoint.sh');
+
+        if (file_exists($mongoEntrypoint)) {
+            // Always use container path for file operations
+            copy($mongoEntrypoint, $this->path . '/mongo-entrypoint.sh');
+        }
+    }
+
+    protected function runDockerCompose(array $input, bool $isLocalInstall, bool $useExistingConfig, bool $isCLI): void
+    {
+        $env = '';
+        if (!$useExistingConfig) {
+            foreach ($input as $key => $value) {
+                if ($value === null || $value === '') {
+                    continue;
+                }
+                if (!preg_match('/^[A-Z0-9_]+$/', $key)) {
+                    throw new \Exception('Invalid environment variable name');
+                }
+                $env .= $key . '=' . \escapeshellarg((string) $value) . ' ';
+            }
+        }
+
+        if ($isCLI) {
+            Console::log("Running \"docker compose up -d --remove-orphans --renew-anon-volumes\"");
+        }
+
+        // Docker compose runs inside container, so use container paths
+        // The compose file itself contains host paths for volume mounts
+        $composeFileName = $this->getComposeFileName();
+        $composeFile = $this->path . '/' . $composeFileName;
+
+        $command = [
+            'docker',
+            'compose',
+            '-f',
+            $composeFile,
+        ];
+
+        if ($isLocalInstall) {
+            $command[] = '--project-name';
+            $command[] = 'appwrite';
+        }
+
+        $command[] = '--project-directory';
+        $command[] = $this->path;
+        $command[] = 'up';
+        $command[] = '-d';
+        $command[] = '--remove-orphans';
+        $command[] = '--renew-anon-volumes';
+        $escaped = array_map('escapeshellarg', $command);
+        $commandLine = $env . implode(' ', $escaped) . ' 2>&1';
+        \exec($commandLine, $output, $exit);
+
+        if ($exit !== 0) {
+            $message = trim(implode("\n", $output));
+            $previous = $message !== '' ? new \RuntimeException($message) : null;
+            throw new \RuntimeException('Failed to start containers', 0, $previous);
+        }
+        if ($isLocalInstall && $isCLI && !empty($output)) {
+            Console::log(implode("\n", $output));
+        }
+    }
+
+    protected function isLocalInstall(): bool
+    {
+        $config = null;
+        if ($this->isLocalInstall === null) {
+            $config = $this->readInstallerConfig();
+            $this->isLocalInstall = !empty($config['isLocal']);
+        }
+
+        return $this->isLocalInstall;
+    }
+
+    protected function readInstallerConfig(): array
+    {
+        if ($this->installerConfig !== null) {
+            return $this->installerConfig;
+        }
+
+        $this->installerConfig = [];
+        $decodeConfig = static function (string $json): ?array {
+            $decoded = json_decode($json, true);
+            return is_array($decoded) ? $decoded : null;
+        };
+
+        $json = getenv('APPWRITE_INSTALLER_CONFIG');
+        $path = InstallerServer::INSTALLER_CONFIG_FILE;
+        $fileJson = file_exists($path) ? file_get_contents($path) : null;
+
+        foreach ([$json, $fileJson] as $candidate) {
+            if (!is_string($candidate) || $candidate === '') {
+                continue;
+            }
+
+            $decoded = $decodeConfig($candidate);
+            if ($decoded !== null) {
+                $this->installerConfig = $decoded;
+                return $this->installerConfig;
+            }
+        }
+
+        return $this->installerConfig;
+    }
+
+    protected function getInstallerHostPath(): string
+    {
+        $config = $this->readInstallerConfig();
+        if (!empty($config['hostPath'])) {
+            return (string) $config['hostPath'];
+        }
+
+        $cwd = getcwd();
+        return $cwd !== false ? $cwd : '.';
+    }
+
+    protected function buildFromProjectPath(string $suffix): string
+    {
+        if ($suffix !== '' && $suffix[0] !== '/') {
+            $suffix = '/' . $suffix;
+        }
+        return dirname(__DIR__, 4) . $suffix;
+    }
+
+    protected function applyLocalPaths(bool $isLocalInstall, bool $force = false): void
+    {
+        if (!$isLocalInstall) {
+            return;
+        }
+        if (!$force && $this->hostPath !== '') {
+            return;
+        }
+        $this->path = '/usr/src/code';
+        $this->hostPath = $this->getInstallerHostPath();
+    }
+
+    protected function readExistingCompose(): string
+    {
+        $composeFile = $this->path . '/' . $this->getComposeFileName();
+        $data = @file_get_contents($composeFile);
+        return !empty($data) ? $data : '';
+    }
+
+    protected function generatePasswordValue(string $varName, Password $password): string
+    {
+        $value = $password->generate();
+        if (!\preg_match('/^_APP_DB_.*_PASS$/', $varName)) {
+            return $value;
+        }
+
+        return rtrim(strtr(base64_encode(hash('sha256', $value, true)), '+/', '-_'), '=');
+    }
+
+    protected function getComposeFileName(): string
+    {
+        return $this->isLocalInstall() ? 'docker-compose.web-installer.yml' : 'docker-compose.yml';
+    }
+
+    protected function getEnvFileName(): string
+    {
+        return $this->isLocalInstall() ? '.env.web-installer' : '.env';
+    }
+
+    private function waitForWebServer(int $port): bool
+    {
+        for ($attempt = 0; $attempt < self::WEB_SERVER_CHECK_ATTEMPTS; $attempt++) {
+            $handle = @fsockopen('localhost', $port, $errno, $errstr, 1);
+            if ($handle !== false) {
+                \fclose($handle);
+                return true;
+            }
+            \sleep(self::WEB_SERVER_CHECK_DELAY_SECONDS);
+        }
+        return false;
     }
 }

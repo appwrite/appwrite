@@ -4,7 +4,7 @@
         errorClearMs: 180,
         installPollIntervalMs: 4000,
         installFallbackDelayMs: 12000,
-        redirectDelayMs: 500,
+        redirectDelayMs: 2500,
         mockStepDelayMs: 1800,
         progressTransitionDelayMs: 320,
         progressCompleteDelayMs: 140,

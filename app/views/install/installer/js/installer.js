@@ -9,6 +9,10 @@
 
     if (!stepContainer || !installerCard) return;
 
+    const { isMockToastMode } = window.InstallerStepsContext || {};
+    const { validateInstallRequest } = window.InstallerStepsProgress || {};
+    const { showToast } = window.InstallerToast || {};
+
     const isUpgrade = document.body?.dataset.upgrade === 'true';
     const stepFlow = isUpgrade ? [1, 3, 4] : [1, 2, 3, 4];
     const cardSteps = stepFlow.filter((step) => step !== 4);
@@ -378,7 +382,7 @@
         loadStep(targetStep, pushState);
     };
 
-    document.addEventListener('click', (event) => {
+    document.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-step-target]');
         if (!button || button.disabled) return;
         event.preventDefault();
@@ -395,6 +399,21 @@
                     scrollToFirstError(panel);
                     return;
                 }
+            }
+        }
+        if (action === 'next' && String(target) === '4' && typeof isMockToastMode === 'function' && isMockToastMode()) {
+            showToast?.({
+                status: 'error',
+                title: 'Session expired',
+                description: 'Refresh the page and try again.',
+                dismissible: true
+            });
+            return;
+        }
+        if (action === 'next' && String(target) === '4' && typeof validateInstallRequest === 'function') {
+            const isValid = await validateInstallRequest();
+            if (!isValid) {
+                return;
             }
         }
         if (isInstallLocked() && Number(target) !== 4) {

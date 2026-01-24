@@ -20,3 +20,7 @@ appwrite.config.json
 /.zed/
 playwright-report
 test-results
+
+# Web installer test files
+docker-compose.web-installer.yml
+.env.web-installer

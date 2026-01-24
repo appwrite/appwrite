@@ -36,12 +36,13 @@
     --bgcolor-neutral-tertiary: var(--neutral-50);
     --bgcolor-neutral-invert-weaker: var(--neutral-500);
     --bgcolor-neutral-invert-weak: var(--neutral-700);
-    --bgcolor-success-weak: rgba(16, 185, 129, 0.16);
     --bgcolor-accent: var(--brand-pink-500);
     --bgcolor-accent-secondary: var(--brand-pink-600);
     --bgcolor-accent-tertiary: var(--brand-pink-700);
+    --bgcolor-success-weak: rgba(16, 185, 129, 0.16);
     --bgcolor-warning-weaker: rgba(254, 124, 67, 0.04);
     --bgcolor-warning-weak: rgba(254, 124, 67, 0.16);
+    --bgcolor-error: var(--web-red-500);
     --bgcolor-error-weaker: rgba(255, 69, 58, 0.04);
 
     /* Foreground colors */
@@ -55,8 +56,8 @@
     --fgcolor-on-success-weak: rgba(10, 113, 79, 1);
     --fgcolor-warning: rgba(97, 37, 10, 1);
     --fgcolor-on-warning-weak: var(--web-orange-700);
-    --fgcolor-success: rgba(16, 185, 129, 1);
     --fgcolor-error: var(--web-red-700);
+    --fgcolor-on-error: var(--neutral-0);
 
     /* Border colors */
     --border-neutral: var(--neutral-50);
@@ -167,6 +168,141 @@
     --fgColor-neutral-weak: var(--fgcolor-neutral-weak);
     --fgColor-accent: var(--fgcolor-accent);
     --fgColor-on-accent: var(--fgcolor-on-accent);
+}
+
+.installer-toast-stack {
+    position: fixed;
+    top: var(--base-12);
+    right: var(--base-12);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    z-index: 60;
+    pointer-events: none;
+}
+
+.installer-toast {
+    inline-size: 24rem;
+    display: inline-flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--space-6);
+    padding: var(--space-4);
+    border-radius: var(--border-radius-m);
+    border: var(--border-width-s) solid var(--border-neutral);
+    background: var(--bgcolor-neutral-primary);
+    box-shadow:
+        0px 2px 12px 0px rgba(0, 0, 0, 0.02),
+        0px 6px 8px 0px rgba(0, 0, 0, 0.02);
+    pointer-events: auto;
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    will-change: transform, opacity;
+    transition:
+        transform 400ms cubic-bezier(0.33, 1, 0.68, 1),
+        opacity 400ms cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.installer-toast.is-entering {
+    opacity: 0;
+    transform: translate3d(50px, 0, 0);
+}
+
+.installer-toast.is-leaving {
+    opacity: 0;
+    transform: translate3d(50px, 0, 0);
+    pointer-events: none;
+}
+
+.installer-toast-content {
+    display: flex;
+    align-items: start;
+    gap: var(--space-6);
+}
+
+.installer-toast-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-block: auto;
+}
+
+.installer-toast-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius-s);
+    background: var(--bgcolor-neutral-invert-weaker);
+    color: var(--fgcolor-on-invert);
+    flex-shrink: 0;
+}
+
+.installer-toast-icon svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.installer-toast-icon[data-status='error'] {
+    background: var(--bgcolor-error);
+    color: var(--fgcolor-on-error);
+}
+
+.installer-toast-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-3);
+    border: var(--border-width-s) solid transparent;
+    border-radius: var(--border-radius-s);
+    background: transparent;
+    color: var(--fgcolor-neutral-tertiary);
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+}
+
+.installer-toast-close svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.installer-toast-close:hover {
+    color: var(--fgcolor-neutral-secondary);
+    background: var(--overlay-neutral-hover);
+}
+
+.installer-toast-close:active {
+    color: var(--fgcolor-neutral-secondary);
+    background: var(--overlay-neutral-pressed);
+}
+
+.installer-toast-close:focus-visible {
+    outline: var(--border-width-l) solid var(--border-focus);
+    outline-offset: var(--border-width-s);
+}
+
+@media (min-width: 768px) {
+    .installer-toast-stack {
+        top: var(--base-24);
+        right: var(--base-24);
+    }
+}
+
+@media (max-width: 640px) {
+    .installer-toast-stack {
+        left: 0;
+        right: 0;
+        top: var(--base-12);
+        padding: 0 var(--space-4);
+        align-items: stretch;
+    }
+
+    .installer-toast {
+        inline-size: 100%;
+    }
 }
 
 * {

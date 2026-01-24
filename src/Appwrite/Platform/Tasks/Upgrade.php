@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Docker\Env;
 use Utopia\CLI\Console;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
@@ -33,20 +34,32 @@ class Upgrade extends Install
 
     public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, bool $isUpgrade = false): void
     {
+        $isLocalInstall = $this->isLocalInstall();
+        $this->applyLocalPaths($isLocalInstall, true);
+
         // Check for previous installation
-        $data = @file_get_contents($this->path . '/docker-compose.yml');
-        if (empty($data)) {
+        if (empty($this->readExistingCompose())) {
             Console::error('Appwrite installation not found.');
             Console::log('The command was not run in the parent folder of your appwrite installation.');
             Console::log('Please navigate to the parent directory of the Appwrite installation and try again.');
             Console::log('  parent_directory <= you run the command in this directory');
             Console::log('  └── appwrite');
             Console::log('      └── docker-compose.yml');
-            Console::exit(1);
+            return;
         }
 
-        $database = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
-        $this->lockedDatabase = $database;
+        $database = null;
+        $envPath = $this->path . '/' . $this->getEnvFileName();
+        $envData = @file_get_contents($envPath);
+        if ($envData !== false) {
+            $env = new Env($envData);
+            $envVars = $env->list();
+            $database = $envVars['_APP_DB_ADAPTER'] ?? null;
+        }
+        if (empty($database)) {
+            $database = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
+        }
+        $this->lockedDatabase = (string) $database;
 
         parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, true);
     }

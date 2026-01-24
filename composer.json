@@ -15,11 +15,11 @@
         "format": "vendor/bin/pint --config pint.json",
         "bench": "vendor/bin/phpbench run --report=benchmark",
         "check": "./vendor/bin/phpstan analyse -c phpstan.neon",
-        "installer:clean": "php app/views/install/router.php --clean",
-        "installer:dev": "docker compose build && composer installer:clean && php app/views/install/router.php --docker",
-        "installer:dev-upgrade": "docker compose build && composer installer:clean && php app/views/install/router.php --docker --upgrade",
-        "installer:mock": "composer installer:clean && php app/views/install/router.php --mock",
-        "installer:mock-upgrade": "composer installer:clean && php app/views/install/router.php --mock --upgrade --locked-database=mongodb"
+        "installer:clean": "php src/Appwrite/Platform/Installer/Server.php --clean",
+        "installer:dev": "docker compose build && composer installer:clean && php src/Appwrite/Platform/Installer/Server.php --docker",
+        "installer:dev-upgrade": "docker compose build && php src/Appwrite/Platform/Installer/Server.php --docker --upgrade",
+        "installer:mock": "composer installer:clean && php src/Appwrite/Platform/Installer/Server.php --mock",
+        "installer:mock-upgrade": "composer installer:clean && php src/Appwrite/Platform/Installer/Server.php --mock --upgrade --locked-database=mongodb"
     },
     "autoload": {
         "psr-4": {

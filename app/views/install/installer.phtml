@@ -1,6 +1,6 @@
 <?php
-$envMock = getenv('APPWRITE_INSTALLER_MOCK');
-$installMode = (!empty($_SERVER['APPWRITE_INSTALLER_MOCK']) || !empty($envMock)) ? 'mock' : 'live';
+$isMock = $isMock ?? false;
+$installMode = $isMock ? 'mock' : 'live';
 $isUpgrade = $isUpgrade ?? false;
 $lockedDatabase = $lockedDatabase ?? null;
 $vars = $vars ?? [];
@@ -13,7 +13,7 @@ $defaultSecretKey = $vars['_APP_OPENSSL_KEY_V1']['default'] ?? '';
 $defaultAssistantOpenAIKey = $vars['_APP_ASSISTANT_OPENAI_API_KEY']['default'] ?? '';
 $defaultDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? 'mongodb';
 $lockedDatabase = $isUpgrade && empty($lockedDatabase) ? $defaultDatabase : $lockedDatabase;
-$isLocalInstall = !empty(getenv('APPWRITE_INSTALLER_LOCAL'));
+$isLocalInstall = $isLocalInstall ?? false;
 if ($installMode === 'mock' && $defaultEmailCertificates === '') {
     $defaultEmailCertificates = 'walterobrien@example.com';
 }
@@ -42,6 +42,12 @@ if (!is_file($stepFile)) {
 $cssVersion = @filemtime(__DIR__ . '/installer/css/styles.css') ?: time();
 $tooltipsVersion = @filemtime(__DIR__ . '/installer/js/tooltips.js') ?: time();
 $constantsVersion = @filemtime(__DIR__ . '/installer/js/constants.js') ?: time();
+$stepsContextVersion = @filemtime(__DIR__ . '/installer/js/modules/context.js') ?: time();
+$stepsStateVersion = @filemtime(__DIR__ . '/installer/js/modules/state.js') ?: time();
+$stepsValidationVersion = @filemtime(__DIR__ . '/installer/js/modules/validation.js') ?: time();
+$stepsUiVersion = @filemtime(__DIR__ . '/installer/js/modules/ui.js') ?: time();
+$stepsToastVersion = @filemtime(__DIR__ . '/installer/js/modules/toast.js') ?: time();
+$stepsProgressVersion = @filemtime(__DIR__ . '/installer/js/modules/progress.js') ?: time();
 $stepsVersion = @filemtime(__DIR__ . '/installer/js/steps.js') ?: time();
 $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time();
 ?>
@@ -51,10 +57,18 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $isUpgrade ? 'Appwrite Update' : 'Appwrite Installation'; ?></title>
+    <meta name="appwrite-installer-csrf" content="<?php echo htmlspecialchars($csrfToken ?? '', ENT_QUOTES); ?>">
     <link rel="icon" type="image/svg+xml" href="installer/icons/appwrite-mark.svg">
     <link rel="stylesheet" href="installer/css/styles.css?v=<?php echo $cssVersion; ?>">
     <script src="installer/js/tooltips.js?v=<?php echo $tooltipsVersion; ?>" defer></script>
     <script src="installer/js/constants.js?v=<?php echo $constantsVersion; ?>" defer></script>
+    <!-- Load context first; other modules depend on InstallerStepsContext. -->
+    <script src="installer/js/modules/context.js?v=<?php echo $stepsContextVersion; ?>" defer></script>
+    <script src="installer/js/modules/state.js?v=<?php echo $stepsStateVersion; ?>" defer></script>
+    <script src="installer/js/modules/validation.js?v=<?php echo $stepsValidationVersion; ?>" defer></script>
+    <script src="installer/js/modules/ui.js?v=<?php echo $stepsUiVersion; ?>" defer></script>
+    <script src="installer/js/modules/toast.js?v=<?php echo $stepsToastVersion; ?>" defer></script>
+    <script src="installer/js/modules/progress.js?v=<?php echo $stepsProgressVersion; ?>" defer></script>
     <script src="installer/js/steps.js?v=<?php echo $stepsVersion; ?>" defer></script>
     <script src="installer/js/installer.js?v=<?php echo $installerVersion; ?>" defer></script>
 </head>
@@ -139,5 +153,7 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
             <span class="field-error-text"></span>
         </div>
     </template>
+
+    <div id="installer-toast-stack" class="installer-toast-stack" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
