@@ -55,7 +55,7 @@ class Update extends StringUpdate
                 ],
                 deprecated: new Deprecated(
                     since: '1.8.0',
-                    replaceWith: 'tablesDB.createTextColumn',
+                    replaceWith: 'tablesDB.updateTextColumn',
                 )
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
