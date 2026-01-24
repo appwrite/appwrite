@@ -72,6 +72,7 @@
     /* Overlay colors */
     --overlay-neutral-hover: rgba(25, 25, 28, 0.03);
     --overlay-neutral-pressed: rgba(25, 25, 28, 0.04);
+    --overlay-scrim: rgba(25, 25, 28, 0.8);
 
     /* Icon sizes */
     --icon-size-s: var(--base-16);
@@ -181,6 +182,235 @@
     pointer-events: none;
 }
 
+.installer-mock-dialog {
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    overflow: visible;
+}
+
+.installer-mock-dialog:focus {
+    outline: none;
+}
+
+.installer-mock-dialog::backdrop {
+    background: var(--overlay-scrim);
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-in-out);
+}
+
+.installer-mock-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    margin-inline: auto;
+    inline-size: 600px;
+    max-inline-size: 90vw;
+    border-radius: var(--border-radius-l);
+    border: var(--border-width-s) solid var(--border-neutral);
+    background: var(--bgcolor-neutral-primary);
+    color: var(--fgcolor-neutral-secondary);
+    box-shadow:
+        0px 56px 32px 0px rgba(0, 0, 0, 0.02),
+        0px 6px 14px 0px rgba(0, 0, 0, 0.04),
+        0px 24px 25px 0px rgba(0, 0, 0, 0.03);
+    transform: scale(0.96);
+    opacity: 0;
+    transition:
+        transform var(--duration-medium) var(--ease-in-out),
+        opacity var(--duration-medium) var(--ease-in-out);
+}
+
+.installer-mock-header {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--gap-xxxs);
+    padding: var(--space-8);
+    padding-block-start: var(--space-7);
+    border-bottom: var(--border-width-s) solid var(--border-neutral);
+    background: var(--bgcolor-neutral-primary);
+}
+
+.installer-mock-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-xl);
+    width: 100%;
+}
+
+.mock-dialog-close {
+    width: 32px;
+    height: 32px;
+    border: var(--border-width-s) solid transparent;
+    background: transparent;
+    color: var(--fgcolor-neutral-tertiary);
+    border-radius: var(--border-radius-s);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-in-out), background var(--duration-fast) var(--ease-in-out);
+}
+
+.mock-dialog-close svg {
+    width: 20px;
+    height: 20px;
+}
+
+.mock-dialog-close:hover {
+    color: var(--fgcolor-neutral-secondary);
+    background: var(--overlay-neutral-hover);
+}
+
+.mock-dialog-close:active {
+    color: var(--fgcolor-neutral-secondary);
+    background: var(--overlay-neutral-pressed);
+}
+
+.mock-dialog-close:focus-visible {
+    outline: var(--border-width-l) solid var(--border-focus);
+    outline-offset: var(--border-width-s);
+}
+
+.installer-mock-content {
+    width: 100%;
+    padding: var(--space-8);
+    max-height: 70vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.mock-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+.mock-control-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-none);
+}
+
+.mock-control-text p {
+    margin: 0;
+}
+
+.mock-control.is-disabled {
+    opacity: 0.5;
+}
+
+.mock-control.is-disabled .mock-switch {
+    cursor: not-allowed;
+}
+
+.mock-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.mock-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.mock-switch-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: var(--bgcolor-neutral-secondary);
+    border: 1px solid var(--border-neutral-strong);
+    transition: background var(--duration-medium) var(--ease-standard), border-color var(--duration-medium) var(--ease-standard);
+}
+
+.mock-switch-track::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 1px;
+    left: 1px;
+    border-radius: 999px;
+    background: var(--bgcolor-neutral-primary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    transition: transform var(--duration-medium) var(--ease-standard);
+}
+
+.mock-switch input:checked + .mock-switch-track {
+    background: var(--bgcolor-accent);
+    border-color: var(--bgcolor-accent);
+}
+
+.mock-switch input:checked + .mock-switch-track::after {
+    transform: translateX(16px);
+}
+
+.mock-switch input:focus-visible + .mock-switch-track {
+    box-shadow: 0 0 0 2px rgba(253, 54, 110, 0.3);
+}
+
+.mock-switch input:disabled + .mock-switch-track {
+    background: var(--bgcolor-neutral-tertiary);
+    border-color: var(--border-neutral);
+    cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .installer-mock-panel {
+        inline-size: 100%;
+        max-inline-size: calc(100% - 24px);
+    }
+
+    .installer-mock-header {
+        padding: var(--space-6);
+    }
+
+    .installer-mock-content {
+        padding: var(--space-6);
+    }
+
+    .mock-control {
+        align-items: flex-start;
+    }
+}
+
+.installer-mock-dialog[open]::backdrop {
+    opacity: 1;
+    animation: mock-backdrop-enter var(--duration-fast) var(--ease-in-out) forwards;
+}
+
+.installer-mock-dialog[open] .installer-mock-panel {
+    opacity: 1;
+    animation: mock-modal-show var(--duration-medium) var(--ease-in-out) forwards;
+}
+
+@keyframes mock-modal-show {
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes mock-backdrop-enter {
+    to {
+        opacity: 1;
+    }
+}
+
 .installer-toast {
     inline-size: 24rem;
     display: inline-flex;
@@ -284,6 +514,10 @@
     outline-offset: var(--border-width-s);
 }
 
+.is-hidden {
+    display: none !important;
+}
+
 @media (min-width: 768px) {
     .installer-toast-stack {
         top: var(--base-24);
@@ -348,7 +582,7 @@ body {
     z-index: 0;
 }
 
-.installer-page[data-step='4'] .installer-backdrop {
+.installer-page[data-step='5'] .installer-backdrop {
     opacity: 0.4;
 }
 
@@ -391,7 +625,7 @@ body {
     overflow: hidden;
 }
 
-.installer-page[data-step='4'] .installer-card {
+.installer-page[data-step='5'] .installer-card {
     opacity: 0;
     pointer-events: none;
 }
@@ -439,7 +673,7 @@ body {
     z-index: 1;
 }
 
-.installer-page[data-step='4'] .install-screen {
+.installer-page[data-step='5'] .install-screen {
     opacity: 1;
     pointer-events: auto;
 }
@@ -834,6 +1068,8 @@ body {
     border-radius: 0 0 var(--border-radius-m) var(--border-radius-m);
     display: flex;
     justify-content: flex-end;
+    flex-direction: row;
+    gap: var(--gap-m);
 }
 
 .install-error-details .button {
@@ -1346,10 +1582,17 @@ body {
     gap: var(--gap-m);
     width: 100%;
     padding: var(--space-6);
-    background: var(--bgcolor-warning-weaker);
+    background: var(--bgcolor-neutral-default);
     border-radius: var(--border-radius-s);
-    outline: var(--border-width-s) solid var(--border-warning-weak);
+    outline: var(--border-width-s) solid var(--border-neutral-strong);
     outline-offset: -1px;
+    --alert-primary-color: var(--fgcolor-neutral-secondary);
+}
+
+.inline-alert--warning {
+    background: var(--bgcolor-warning-weaker);
+    outline-color: var(--border-warning-weak);
+    --alert-primary-color: var(--fgcolor-warning);
 }
 
 .inline-alert-content {
@@ -1365,7 +1608,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--fgcolor-warning);
+    color: var(--alert-primary-color);
     flex-shrink: 0;
 }
 
@@ -1488,12 +1731,37 @@ body {
     background: transparent;
     color: var(--fgcolor-neutral-secondary);
     cursor: pointer;
+    border-radius: var(--border-radius-xs);
 }
 
 .input-icon-button svg {
     width: 16px;
     height: 16px;
     display: block;
+}
+
+.input-icon-button:hover {
+    background: var(--overlay-neutral-hover);
+}
+
+.input-icon-button:active {
+    background: var(--overlay-neutral-pressed);
+}
+
+.password-toggle-icon {
+    display: inline-flex;
+}
+
+.password-toggle-icon.is-hidden {
+    display: none;
+}
+
+.password-toggle.is-visible [data-password-icon="show"] {
+    display: none;
+}
+
+.password-toggle.is-visible [data-password-icon="hide"] {
+    display: inline-flex;
 }
 
 .icon-button {

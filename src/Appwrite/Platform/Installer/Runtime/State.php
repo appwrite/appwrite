@@ -329,7 +329,7 @@ class State
 
     private function globalLockPath(): string
     {
-        return sys_get_temp_dir() . '/appwrite-install-lock.json';
+        return Server::INSTALLER_LOCK_FILE;
     }
 
     private function isGlobalLockActive(?array $lock): bool

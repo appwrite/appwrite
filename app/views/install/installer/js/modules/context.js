@@ -2,27 +2,13 @@
     const getBodyDataset = () => document.body?.dataset ?? {};
     const isUpgradeMode = () => getBodyDataset().upgrade === 'true';
     const getLockedDatabase = () => getBodyDataset().lockedDatabase || '';
-    const isMockMode = () => document.body?.dataset.installMode === 'mock'
-        || (typeof navigator !== 'undefined' && navigator.webdriver);
-    const isMockErrorMode = () => {
-        if (typeof window === 'undefined') return false;
-        const params = new URLSearchParams(window.location.search);
-        return params.get('mock-error') === '1';
-    };
-    const getMockToastParam = () => {
-        if (typeof window === 'undefined') return false;
-        const params = new URLSearchParams(window.location.search);
-        return params.get('mock-toast') === '1';
-    };
-    const MOCK_TOAST_ENABLED = getMockToastParam();
-    const isMockToastMode = () => MOCK_TOAST_ENABLED;
-    const isMockProgressMode = () => isMockMode() || isMockErrorMode();
 
     const STEP_IDS = Object.freeze({
         CONFIG_FILES: 'config-files',
         DOCKER_COMPOSE: 'docker-compose',
         ENV_VARS: 'env-vars',
-        DOCKER_CONTAINERS: 'docker-containers'
+        DOCKER_CONTAINERS: 'docker-containers',
+        ACCOUNT_SETUP: 'account-setup'
     });
 
     const STATUS = Object.freeze({
@@ -80,6 +66,11 @@
             id: STEP_IDS.DOCKER_CONTAINERS,
             inProgress: 'Starting Docker containers...',
             done: 'Docker containers started'
+        },
+        {
+            id: STEP_IDS.ACCOUNT_SETUP,
+            inProgress: 'Creating Appwrite account...',
+            done: 'Appwrite account created (redirecting...)'
         }
     ]);
 
@@ -98,17 +89,13 @@
     const clampStep = (step) => {
         const numeric = Number(step);
         if (Number.isNaN(numeric)) return 1;
-        return Math.max(1, Math.min(4, numeric));
+        return Math.max(1, Math.min(5, numeric));
     };
 
     window.InstallerStepsContext = Object.freeze({
         getBodyDataset,
         isUpgradeMode,
         getLockedDatabase,
-        isMockMode,
-        isMockErrorMode,
-        isMockToastMode,
-        isMockProgressMode,
         STEP_IDS,
         STATUS,
         SSE_EVENTS,

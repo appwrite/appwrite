@@ -9,13 +9,11 @@
 
     if (!stepContainer || !installerCard) return;
 
-    const { isMockToastMode } = window.InstallerStepsContext || {};
     const { validateInstallRequest } = window.InstallerStepsProgress || {};
-    const { showToast } = window.InstallerToast || {};
 
     const isUpgrade = document.body?.dataset.upgrade === 'true';
-    const stepFlow = isUpgrade ? [1, 3, 4] : [1, 2, 3, 4];
-    const cardSteps = stepFlow.filter((step) => step !== 4);
+    const stepFlow = isUpgrade ? [1, 4, 5] : [1, 2, 3, 4, 5];
+    const cardSteps = stepFlow.filter((step) => step !== 5);
 
     const normalizeStep = (step) => {
         const numeric = clampStep(step);
@@ -32,13 +30,13 @@
     const buildStepConfig = () => {
         const config = {};
         stepFlow.forEach((step, index) => {
-            if (step === 4) {
+            if (step === 5) {
                 config[step] = { back: { target: null }, next: { target: null } };
                 return;
             }
             const prev = stepFlow[index - 1] ?? null;
             const next = stepFlow[index + 1] ?? null;
-            const label = next === 4 ? (isUpgrade ? 'Update' : 'Install') : 'Next';
+            const label = next === 5 ? (isUpgrade ? 'Update' : 'Install') : 'Next';
             config[step] = {
                 back: { target: prev },
                 next: { label, target: next }
@@ -55,7 +53,7 @@
     let pendingStep = null;
     let pendingPushState = false;
 
-    const clampStep = (step) => Math.max(1, Math.min(4, step));
+    const clampStep = (step) => Math.max(1, Math.min(5, step));
     const isInstallLocked = () => Boolean(window.InstallerSteps?.isInstallLocked?.());
 
     const scrollToFirstError = (panel) => {
@@ -331,7 +329,7 @@
 
         fetchStepHtml(targetStep, url)
             .then((html) => {
-                if (targetStep === 4) {
+                if (targetStep === 5) {
                     showInstallScreen(targetStep, html);
                     isTransitioning = false;
                     if (pendingStep !== null && pendingStep !== targetStep) {
@@ -370,8 +368,8 @@
 
     const requestStep = (step, pushState) => {
         const targetStep = normalizeStep(Number(step));
-        if (isInstallLocked() && targetStep !== 4) {
-            loadStep(4, true);
+        if (isInstallLocked() && targetStep !== 5) {
+            loadStep(5, true);
             return;
         }
         if (isTransitioning) {
@@ -401,23 +399,14 @@
                 }
             }
         }
-        if (action === 'next' && String(target) === '4' && typeof isMockToastMode === 'function' && isMockToastMode()) {
-            showToast?.({
-                status: 'error',
-                title: 'Session expired',
-                description: 'Refresh the page and try again.',
-                dismissible: true
-            });
-            return;
-        }
-        if (action === 'next' && String(target) === '4' && typeof validateInstallRequest === 'function') {
+        if (action === 'next' && String(target) === '5' && typeof validateInstallRequest === 'function') {
             const isValid = await validateInstallRequest();
             if (!isValid) {
                 return;
             }
         }
-        if (isInstallLocked() && Number(target) !== 4) {
-            requestStep(4, true);
+        if (isInstallLocked() && Number(target) !== 5) {
+            requestStep(5, true);
             return;
         }
         requestStep(target, true);
@@ -425,8 +414,8 @@
 
     window.addEventListener('popstate', (event) => {
         const step = event.state?.step || getStepFromUrl();
-        if (isInstallLocked() && Number(step) !== 4) {
-            requestStep(4, false);
+        if (isInstallLocked() && Number(step) !== 5) {
+            requestStep(5, false);
             return;
         }
         requestStep(step, false);
@@ -434,10 +423,10 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         let step = getStepFromUrl();
-        if (isInstallLocked() && step !== 4) {
-            const url = buildStepUrl(4);
-            window.history.replaceState({ step: 4 }, '', url.toString());
-            step = 4;
+        if (isInstallLocked() && step !== 5) {
+            const url = buildStepUrl(5);
+            window.history.replaceState({ step: 5 }, '', url.toString());
+            step = 5;
         } else {
             const url = buildStepUrl(step);
             window.history.replaceState({ step }, '', url.toString());
@@ -445,7 +434,7 @@
         const activePanel = stepContainer.querySelector('.step-panel') || stepContainer;
         runStepInit(step, activePanel);
         measureStepHeight(activePanel);
-        if (step === 4 && installScreen) {
+        if (step === 5 && installScreen) {
             runStepInit(step, installScreen);
         }
         const preload = () => {

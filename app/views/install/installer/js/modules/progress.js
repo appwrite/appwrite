@@ -2,15 +2,18 @@
     const {
         INSTALLATION_STEPS,
         TIMINGS,
-        isMockMode,
-        isMockErrorMode,
-        isMockProgressMode,
-        isMockToastMode,
         getBodyDataset,
         STEP_IDS,
         STATUS,
         SSE_EVENTS
     } = window.InstallerStepsContext;
+    const {
+        isMockMode,
+        isMockErrorMode,
+        isMockAccountErrorMode,
+        isMockProgressMode,
+        isMockToastMode
+    } = window.InstallerMock || {};
     const {
         formState,
         applyLockPayload,
@@ -49,11 +52,11 @@
     };
 
     const validateInstallRequest = async () => {
-        if (isMockProgressMode?.()) return true;
         if (isMockToastMode?.()) {
             showCsrfToast();
             return false;
         }
+        if (isMockProgressMode?.()) return true;
         try {
             const response = await fetch('/install/validate', {
                 method: 'POST',
@@ -135,6 +138,13 @@
         const text = row.querySelector('[data-install-text]');
         if (text) {
             text.textContent = label;
+        }
+
+        // Show/hide "Navigate to Console" button for account setup errors
+        const consoleBtn = row.querySelector('[data-install-console]');
+        if (consoleBtn) {
+            const shouldShow = step.id === STEP_IDS.ACCOUNT_SETUP && status === STATUS.ERROR;
+            consoleBtn.classList.toggle('is-hidden', !shouldShow);
         }
     };
 
@@ -255,15 +265,28 @@
         window.location.href = url;
     };
 
-    const notifyInstallComplete = (installId) => {
+    const notifyInstallComplete = (installId, session) => {
         if (isMockProgressMode?.()) return Promise.resolve();
         if (!installId) return Promise.resolve();
+        const payload = { installId };
+        const sessionSecret = session?.sessionSecret || session?.secret;
+        const sessionId = session?.sessionId || session?.id;
+        const sessionExpire = session?.sessionExpire || session?.expire;
+        if (sessionSecret) {
+            payload.sessionSecret = sessionSecret;
+        }
+        if (sessionId) {
+            payload.sessionId = sessionId;
+        }
+        if (sessionExpire) {
+            payload.sessionExpire = sessionExpire;
+        }
         return fetch('/install/complete', {
             method: 'POST',
             headers: withCsrfHeader({
                 'Content-Type': 'application/json'
             }),
-            body: JSON.stringify({ installId })
+            body: JSON.stringify(payload)
         }).catch(() => {});
     };
 
@@ -277,6 +300,9 @@
         const normalizedHttpsPort = (formState?.httpsPort || '').trim() || '443';
         const normalizedEmail = (formState?.emailCertificates || '').trim();
         const normalizedAssistantKey = (formState?.assistantOpenAIKey || '').trim();
+        const normalizedAccountName = (formState?.accountName || '').trim();
+        const normalizedAccountEmail = (formState?.accountEmail || '').trim();
+        const normalizedAccountPassword = (formState?.accountPassword || '').trim();
 
         return {
             installId,
@@ -286,7 +312,10 @@
             appDomain: normalizedDomain,
             emailCertificates: normalizedEmail,
             opensslKey: (formState?.opensslKey || '').trim(),
-            assistantOpenAIKey: normalizedAssistantKey
+            assistantOpenAIKey: normalizedAssistantKey,
+            accountName: normalizedAccountName,
+            accountEmail: normalizedAccountEmail,
+            accountPassword: normalizedAccountPassword
         };
     };
 
@@ -358,7 +387,7 @@
         }
     };
 
-    const initStep4 = (root) => {
+    const initStep5 = (root) => {
         if (!root) return;
         if (isMockProgressMode?.()) {
             clearInstallLock?.();
@@ -697,7 +726,7 @@
                         const lastStep = INSTALLATION_STEPS[INSTALLATION_STEPS.length - 1];
                         if (lastStep) {
                         const lastState = progressState.get(lastStep.id);
-                        if (!lastState || lastState.status !== STATUS.COMPLETED) {
+                        if (!lastState || (lastState.status !== STATUS.COMPLETED && lastState.status !== STATUS.ERROR)) {
                             progressState.set(lastStep.id, {
                                 status: STATUS.COMPLETED,
                                 message: lastStep.done,
@@ -706,9 +735,26 @@
                             renderProgress();
                         }
                         }
+                        const accountState = progressState.get(STEP_IDS.ACCOUNT_SETUP);
+                        const accountRequired = INSTALLATION_STEPS.some((step) => step.id === STEP_IDS.ACCOUNT_SETUP);
+                        if (accountRequired && accountState?.status === STATUS.ERROR) {
+                            finalizeInstall();
+                            return;
+                        }
+                        const sessionDetails = accountState?.details;
+                        if (accountRequired && !(sessionDetails?.sessionSecret || sessionDetails?.secret)) {
+                            handleProgress({
+                                step: STEP_IDS.ACCOUNT_SETUP,
+                                status: STATUS.ERROR,
+                                message: 'Account creation did not complete. Please retry.'
+                            });
+                            finalizeInstall();
+                            return;
+                        }
                         finalizeInstall();
-                        notifyInstallComplete(activeInstall?.installId);
-                        setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);
+                        notifyInstallComplete(activeInstall?.installId, sessionDetails).finally(() => {
+                            setTimeout(() => redirectToApp(), TIMINGS?.redirectDelay ?? 0);
+                        });
                         return;
                     }
                     if (event === SSE_EVENTS.ERROR) {
@@ -808,24 +854,36 @@
         };
 
         list.addEventListener('click', (event) => {
-            const button = event.target.closest('[data-install-retry]');
-            if (!button) return;
-            const row = button.closest('.install-row');
-            const stepId = row?.dataset.step;
-            retryInstallStep(stepId);
+            const consoleButton = event.target.closest('[data-install-console]');
+            const retryButton = event.target.closest('[data-install-retry]');
+
+            if (consoleButton) {
+                redirectToApp();
+                return;
+            }
+
+            if (retryButton) {
+                const row = retryButton.closest('.install-row');
+                const stepId = row?.dataset.step;
+                retryInstallStep(stepId);
+            }
         });
 
         const simulateInstallProgress = (options = {}) => {
             if (activeInstall?.pollTimer) {
                 clearInterval(activeInstall.pollTimer);
             }
-            const startIndex = options.retryStep
+
+            let index = options.retryStep
                 ? Math.max(0, INSTALLATION_STEPS.findIndex((step) => step.id === options.retryStep))
                 : 0;
-            let index = startIndex;
-            const errorStepId = isMockErrorMode?.() && !options.retryStep
-                ? STEP_IDS.DOCKER_CONTAINERS
-                : null;
+
+            let errorStepId = null;
+            if (isMockErrorMode?.() && !options.retryStep) {
+                errorStepId = isMockAccountErrorMode?.()
+                    ? STEP_IDS.ACCOUNT_SETUP
+                    : STEP_IDS.DOCKER_CONTAINERS;
+            }
             const mockErrorDetails = (window.InstallerConstants || {}).mockErrorDetails || {
                 output: 'Error response from daemon: manifest for appwrite/appwrite:local not found: manifest unknown',
                 trace: '#0 /usr/src/code/src/Appwrite/Platform/Tasks/Install.php(540): Appwrite\\\\Platform\\\\Tasks\\\\Install->performInstallation(...)\\n#1 {main}'
@@ -858,10 +916,13 @@
                 if (errorStepId && step.id === errorStepId) {
                     index += 1;
                     activeInstall.pollTimer = setTimeout(() => {
+                        const errorMessage = errorStepId === STEP_IDS.ACCOUNT_SETUP
+                            ? 'A user with the same email already exists'
+                            : 'Failed to start containers';
                         handleProgress({
                             step: step.id,
                             status: STATUS.ERROR,
-                            message: 'Failed to start containers',
+                            message: errorMessage,
                             details: mockErrorDetails
                         });
                         finalizeInstall();
@@ -902,7 +963,7 @@
     };
 
     window.InstallerStepsProgress = {
-        initStep4,
+        initStep5,
         cleanupInstallFlow,
         validateInstallRequest
     };

@@ -10,6 +10,7 @@ use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -19,6 +20,8 @@ class Install extends Action
     private const int INSTALL_STEP_DELAY_SECONDS = 2;
     private const int WEB_SERVER_CHECK_ATTEMPTS = 10;
     private const int WEB_SERVER_CHECK_DELAY_SECONDS = 1;
+    private const int HEALTH_CHECK_ATTEMPTS = 10;
+    private const int HEALTH_CHECK_DELAY_SECONDS = 3;
 
     protected string $hostPath = '';
     protected ?bool $isLocalInstall = null;
@@ -72,7 +75,8 @@ class Install extends Action
 
         // Check for existing installation
         $data = $this->readExistingCompose();
-        $existingInstallation = $data !== '';
+        $envFileExists = file_exists($this->path . '/' . $this->getEnvFileName());
+        $existingInstallation = $data !== '' || $envFileExists;
 
         if ($existingInstallation) {
             $time = \time();
@@ -236,7 +240,8 @@ class Install extends Action
             }
         }
 
-        $input = $this->prepareEnvironmentVariables($userInput, $vars);
+        $shouldGenerateSecrets = !$existingInstallation && !$isUpgrade;
+        $input = $this->prepareEnvironmentVariables($userInput, $vars, $shouldGenerateSecrets);
         $this->performInstallation($httpPort, $httpsPort, $organization, $image, $input, $noStart, null, null, $isUpgrade);
     }
 
@@ -298,7 +303,7 @@ class Install extends Action
         }
     }
 
-    public function prepareEnvironmentVariables(array $userInput, array $vars): array
+    public function prepareEnvironmentVariables(array $userInput, array $vars, bool $shouldGenerateSecrets = true): array
     {
         $input = [];
         $password = new Password();
@@ -309,12 +314,22 @@ class Install extends Action
             $default = $var['default'] ?? null;
             $hasDefault = $default !== null && $default !== '';
             if (!empty($var['filter']) && $var['filter'] === 'token') {
-                $input[$var['name']] = $hasDefault ? $default : $token->generate();
+                if ($hasDefault) {
+                    $input[$var['name']] = $default;
+                } elseif ($shouldGenerateSecrets) {
+                    $input[$var['name']] = $token->generate();
+                } else {
+                    $input[$var['name']] = '';
+                }
             } elseif (!empty($var['filter']) && $var['filter'] === 'password') {
                 /*;#+@:/?& broke DSNs locally */
-                $input[$var['name']] = $hasDefault
-                    ? $default
-                    : $this->generatePasswordValue($var['name'], $password);
+                if ($hasDefault) {
+                    $input[$var['name']] = $default;
+                } elseif ($shouldGenerateSecrets) {
+                    $input[$var['name']] = $this->generatePasswordValue($var['name'], $password);
+                } else {
+                    $input[$var['name']] = '';
+                }
             } else {
                 $input[$var['name']] = $default;
             }
@@ -347,6 +362,18 @@ class Install extends Action
         }
 
         return $input;
+    }
+
+    public function hasExistingConfig(): bool
+    {
+        $isLocalInstall = $this->isLocalInstall();
+        $this->applyLocalPaths($isLocalInstall, true);
+
+        if ($this->readExistingCompose() !== '') {
+            return true;
+        }
+
+        return file_exists($this->path . '/' . $this->getEnvFileName());
     }
 
     private function updateProgress(?callable $progress, string $step, string $status, array $messages = [], array $details = [], ?string $messageOverride = null): void
@@ -398,7 +425,8 @@ class Install extends Action
         bool $noStart,
         ?callable $progress = null,
         ?string $resumeFromStep = null,
-        bool $isUpgrade = false
+        bool $isUpgrade = false,
+        array $account = []
     ): void {
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, false);
@@ -412,8 +440,8 @@ class Install extends Action
         }
 
         if ($isLocalInstall) {
-            $organization = 'appwrite';
             $image = 'appwrite';
+            $organization = 'appwrite';
         }
 
         $templateForEnv = new View($this->buildFromProjectPath('/app/views/install/env.phtml'));
@@ -469,7 +497,7 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_COMPOSE, InstallerServer::STATUS_IN_PROGRESS, $messages);
 
                 if (!$useExistingConfig) {
-                    $this->writeComposeFile($templateForCompose, $isLocalInstall);
+                    $this->writeComposeFile($templateForCompose);
                 }
 
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_COMPOSE, InstallerServer::STATUS_COMPLETED, $messages);
@@ -480,7 +508,7 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_ENV_VARS, InstallerServer::STATUS_IN_PROGRESS, $messages);
 
                 if (!$useExistingConfig) {
-                    $this->writeEnvFile($templateForEnv, $isLocalInstall);
+                    $this->writeEnvFile($templateForEnv);
                 }
 
                 $this->updateProgress($progress, InstallerServer::STEP_ENV_VARS, InstallerServer::STATUS_COMPLETED, $messages);
@@ -495,8 +523,14 @@ class Install extends Action
                 $currentStep = InstallerServer::STEP_DOCKER_CONTAINERS;
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_IN_PROGRESS, $messages);
                 $this->runDockerCompose($input, $isLocalInstall, $useExistingConfig, $isCLI);
+                $this->connectInstallerToAppwriteNetwork();
 
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
+
+                if (!$isUpgrade) {
+                    // Create console account on fresh install only
+                    $this->createInitialAdminAccount($account, $progress);
+                }
 
                 if ($isCLI) {
                     Console::success('Appwrite installed successfully');
@@ -519,6 +553,135 @@ class Install extends Action
             }
             throw $e;
         }
+    }
+
+    private function createInitialAdminAccount(array $account, ?callable $progress): void
+    {
+        $name = $account['name'] ?? 'Admin';
+        $email = $account['email'] ?? null;
+        $password = $account['password'] ?? null;
+
+        if (!$email || !$password) {
+            return;
+        }
+
+        try {
+            $this->updateProgress(
+                $progress,
+                InstallerServer::STEP_ACCOUNT_SETUP,
+                InstallerServer::STATUS_IN_PROGRESS,
+                messageOverride: 'Creating Appwrite account'
+            );
+
+            $this->waitForApiReady();
+
+            // Create account and session
+            $userId = $this->makeApiCall('/v1/account', [
+                'userId' => 'unique()',
+                'email' => $email,
+                'password' => $password,
+                'name' => $name
+            ]);
+
+            $session = $this->makeApiCall('/v1/account/sessions/email', [
+                'email' => $email,
+                'password' => $password
+            ], true);
+
+            $this->updateProgress(
+                $progress,
+                InstallerServer::STEP_ACCOUNT_SETUP,
+                InstallerServer::STATUS_COMPLETED,
+                details: [
+                    'userId' => $userId,
+                    'sessionId' => $session['id'],
+                    'sessionSecret' => $session['secret'],
+                    'sessionExpire' => $session['expire'] ?? null
+                ],
+                messageOverride: 'Account created successfully'
+            );
+        } catch (\Throwable $e) {
+            $this->updateProgress(
+                $progress,
+                InstallerServer::STEP_ACCOUNT_SETUP,
+                InstallerServer::STATUS_ERROR,
+                messageOverride: 'Account creation failed: ' . $e->getMessage()
+            );
+        }
+    }
+
+    private function waitForApiReady(): void
+    {
+        $client = new Client();
+        $client->setTimeout(5);
+
+        $pingHealth = function () use ($client): bool {
+            try {
+                return $client->fetch("http://traefik:80/v1/health/version")->getStatusCode() === 200;
+            } catch (\Throwable $e) {
+                return false;
+            }
+        };
+
+        for ($i = 0; $i < self::HEALTH_CHECK_ATTEMPTS; $i++) {
+            if ($pingHealth()) {
+                return;
+            }
+
+            if ($i < self::HEALTH_CHECK_ATTEMPTS - 1) {
+                sleep(self::HEALTH_CHECK_DELAY_SECONDS);
+            }
+        }
+
+        throw new \Exception('Failed to connect with Appwrite in time');
+    }
+
+    /* easier to just connect and call traefik endpoint */
+    private function connectInstallerToAppwriteNetwork(): void
+    {
+        $network = escapeshellarg('appwrite');
+        $container = escapeshellarg(InstallerServer::DEFAULT_CONTAINER);
+        @exec("docker network connect $network $container 2>/dev/null");
+    }
+
+    private function makeApiCall(string $endpoint, array $body, bool $extractSession = false)
+    {
+        $client = new Client();
+        $client
+            ->setTimeout(30)
+            ->addHeader('Content-Type', 'application/json')
+            ->addHeader('X-Appwrite-Project', 'console');
+
+        $url = "http://traefik:80$endpoint";
+        $response = $client->fetch($url, Client::METHOD_POST, $body);
+
+        if ($response->getStatusCode() !== 201) {
+            $error = $response->json();
+            $message = $error['message'] ?? 'Unknown error';
+            throw new \Exception($message);
+        }
+
+        $data = $response->json();
+        if (!isset($data['$id'])) {
+            throw new \Exception('API response missing ID field');
+        }
+
+        if ($extractSession) {
+            $headers = $response->getHeaders();
+            $setCookie = $headers['set-cookie'] ?? $headers['Set-Cookie'] ?? null;
+
+            if (!$setCookie || !preg_match('/a_session_console=([^;]+)/', $setCookie, $matches)) {
+                throw new \Exception('Session created but no cookie found');
+            }
+
+            return [
+                'id' => $data['$id'],
+                'secret' => $matches[1],
+                'expire' => $data['expire'] ?? null
+            ];
+        }
+
+        return $data['$id'];
     }
 
     private function buildStepMessages(bool $isUpgrade): array
@@ -551,10 +714,8 @@ class Install extends Action
         ];
     }
 
-    private function writeComposeFile(View $template, bool $isLocalInstall): void
+    private function writeComposeFile(View $template): void
     {
-        // Always use container path for file operations
-        // Use a separate file for web installer to avoid conflicts
         $composeFileName = $this->getComposeFileName();
         $targetPath = $this->path . '/' . $composeFileName;
         $renderedContent = $template->render(false);
@@ -567,10 +728,8 @@ class Install extends Action
         }
     }
 
-    private function writeEnvFile(View $template, bool $isLocalInstall): void
+    private function writeEnvFile(View $template): void
     {
-        // Always use container path for file operations
-        // Use a separate env file for installer to avoid conflicts
         $envFileName = $this->getEnvFileName();
         if (!\file_put_contents($this->path . '/' . $envFileName, $template->render(false))) {
             throw new \Exception('Failed to save environment variables file');
@@ -596,7 +755,7 @@ class Install extends Action
                     continue;
                 }
                 if (!preg_match('/^[A-Z0-9_]+$/', $key)) {
-                    throw new \Exception('Invalid environment variable name');
+                    throw new \Exception("Invalid environment variable name: $key");
                 }
                 $env .= $key . '=' . \escapeshellarg((string) $value) . ' ';
             }
@@ -606,8 +765,6 @@ class Install extends Action
             Console::log("Running \"docker compose up -d --remove-orphans --renew-anon-volumes\"");
         }
 
-        // Docker compose runs inside container, so use container paths
-        // The compose file itself contains host paths for volume mounts
         $composeFileName = $this->getComposeFileName();
         $composeFile = $this->path . '/' . $composeFileName;
 
@@ -645,7 +802,6 @@ class Install extends Action
 
     protected function isLocalInstall(): bool
     {
-        $config = null;
         if ($this->isLocalInstall === null) {
             $config = $this->readInstallerConfig();
             $this->isLocalInstall = !empty($config['isLocal']);

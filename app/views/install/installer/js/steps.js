@@ -8,9 +8,9 @@
 
     const {
         INSTALLATION_STEPS,
-        clampStep,
-        isMockMode
+        clampStep
     } = Context;
+    const { isMockMode } = window.InstallerMock || {};
 
     const {
         formState,
@@ -28,7 +28,8 @@
     const {
         isValidEmail,
         isValidPort,
-        isValidHostnameInput
+        isValidHostnameInput,
+        isValidPassword
     } = Validation;
 
     const {
@@ -260,7 +261,62 @@
         }
     };
 
+    const hydrateStep3State = (root) => {
+        State.setStateIfEmpty?.('accountName', root.querySelector('#account-name')?.value);
+        State.setStateIfEmpty?.('accountEmail', root.querySelector('#account-email')?.value);
+        State.setStateIfEmpty?.('accountPassword', root.querySelector('#account-password')?.value);
+    };
+
+    const applyStep3State = (root) => {
+        const name = root.querySelector('#account-name');
+        if (name && formState.accountName) name.value = formState.accountName;
+
+        const email = root.querySelector('#account-email');
+        if (email && formState.accountEmail) email.value = formState.accountEmail;
+
+        const password = root.querySelector('#account-password');
+        if (password && formState.accountPassword) password.value = formState.accountPassword;
+    };
+
     const initStep3 = (root) => {
+        if (!root) return;
+        if (isMockMode?.()) {
+            clearInstallLock?.();
+            clearInstallId?.();
+        }
+        syncInstallLockFlag?.();
+        applyLockPayload?.();
+        applyBodyDefaults?.();
+        hydrateStep3State(root);
+        applyStep3State(root);
+
+        const name = root.querySelector('#account-name');
+        const email = root.querySelector('#account-email');
+        const password = root.querySelector('#account-password');
+        const passwordToggle = root.querySelector('[data-password-toggle="account-password"]');
+
+        bindInputToState(name, 'accountName');
+        bindInputToState(email, 'accountEmail');
+        bindInputToState(password, 'accountPassword');
+
+        bindErrorClear?.(name);
+        bindErrorClear?.(email);
+        bindErrorClear?.(password);
+
+        if (password && passwordToggle) {
+            passwordToggle.addEventListener('click', () => {
+                const isVisible = passwordToggle.classList.toggle('is-visible');
+                password.type = isVisible ? 'text' : 'password';
+                passwordToggle.setAttribute('aria-label', isVisible ? 'Hide password' : 'Show password');
+            });
+        }
+
+        if (isInstallLocked?.()) {
+            disableControls?.(root);
+        }
+    };
+
+    const initStep4 = (root) => {
         if (!root) return;
         if (isMockMode?.()) {
             clearInstallLock?.();
@@ -285,24 +341,26 @@
         const root = container.querySelector('.step-layout') || container;
         const normalized = clampStep?.(step) ?? 1;
         Tooltips?.cleanupTooltipPortals?.();
-        if (normalized !== 3 && reviewListener) {
+        if (normalized !== 4 && reviewListener) {
             document.removeEventListener('installer:state-change', reviewListener);
             reviewListener = null;
         }
-        if (normalized !== 4) {
+        if (normalized !== 5) {
             Progress.cleanupInstallFlow?.();
         }
         if (normalized === 1) initStep1(root);
         if (normalized === 2) initStep2(root);
         if (normalized === 3) initStep3(root);
-        if (normalized === 4) Progress.initStep4?.(root);
+        if (normalized === 4) initStep4(root);
+        if (normalized === 5) Progress.initStep5?.(root);
     };
 
     window.InstallerSteps = {
         initStep1,
         initStep2,
         initStep3,
-        initStep4: Progress.initStep4,
+        initStep4,
+        initStep5: Progress.initStep5,
         installationSteps: INSTALLATION_STEPS || [],
         isInstallLocked,
         getInstallLock,
@@ -366,6 +424,37 @@
                     setFieldError?.(secretKey, 'Secret API key must be 1-64 characters');
                     return false;
                 }
+            }
+
+            if (normalized === 3) {
+                clearFieldErrors?.(root);
+                let valid = true;
+                const name = root?.querySelector('#account-name');
+                const email = root?.querySelector('#account-email');
+                const password = root?.querySelector('#account-password');
+
+                if (!name || !name.value.trim()) {
+                    setFieldError?.(name, 'Please enter a name');
+                    valid = false;
+                }
+
+                if (!email || !email.value.trim()) {
+                    setFieldError?.(email, 'Please enter an email address');
+                    valid = false;
+                } else if (!isValidEmail?.(email.value.trim())) {
+                    setFieldError?.(email, 'Please enter a valid email address');
+                    valid = false;
+                }
+
+                if (!password || !password.value.trim()) {
+                    setFieldError?.(password, 'Please enter a password');
+                    valid = false;
+                } else if (!isValidPassword?.(password.value.trim())) {
+                    setFieldError?.(password, 'Password must be at least 8 characters');
+                    valid = false;
+                }
+
+                return valid;
             }
 
             return true;

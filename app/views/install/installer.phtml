@@ -19,9 +19,9 @@ if ($installMode === 'mock' && $defaultEmailCertificates === '') {
 }
 
 $step = isset($_GET['step']) ? (int) $_GET['step'] : 1;
-$step = max(1, min(4, $step));
-if ($isUpgrade && $step === 2) {
-    $step = 3;
+$step = max(1, min(5, $step));
+if ($isUpgrade && ($step === 2 || $step === 3)) {
+    $step = 4;
 }
 
 $partialFile = __DIR__ . "/installer/templates/steps/step-{$step}.phtml";
@@ -34,7 +34,7 @@ if (isset($_GET['partial'])) {
     exit;
 }
 
-$cardStep = min(3, $step);
+$cardStep = min(4, $step);
 $stepFile = __DIR__ . "/installer/templates/steps/step-{$cardStep}.phtml";
 if (!is_file($stepFile)) {
     $stepFile = __DIR__ . "/installer/templates/steps/step-1.phtml";
@@ -43,6 +43,8 @@ $cssVersion = @filemtime(__DIR__ . '/installer/css/styles.css') ?: time();
 $tooltipsVersion = @filemtime(__DIR__ . '/installer/js/tooltips.js') ?: time();
 $constantsVersion = @filemtime(__DIR__ . '/installer/js/constants.js') ?: time();
 $stepsContextVersion = @filemtime(__DIR__ . '/installer/js/modules/context.js') ?: time();
+$mockModuleVersion = @filemtime(__DIR__ . '/installer/js/modules/mock.js') ?: time();
+$mockControlsVersion = @filemtime(__DIR__ . '/installer/js/modules/mock-controls.js') ?: time();
 $stepsStateVersion = @filemtime(__DIR__ . '/installer/js/modules/state.js') ?: time();
 $stepsValidationVersion = @filemtime(__DIR__ . '/installer/js/modules/validation.js') ?: time();
 $stepsUiVersion = @filemtime(__DIR__ . '/installer/js/modules/ui.js') ?: time();
@@ -64,6 +66,10 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
     <script src="installer/js/constants.js?v=<?php echo $constantsVersion; ?>" defer></script>
     <!-- Load context first; other modules depend on InstallerStepsContext. -->
     <script src="installer/js/modules/context.js?v=<?php echo $stepsContextVersion; ?>" defer></script>
+    <script src="installer/js/modules/mock.js?v=<?php echo $mockModuleVersion; ?>" defer></script>
+    <?php if ($installMode === 'mock') { ?>
+        <script src="installer/js/modules/mock-controls.js?v=<?php echo $mockControlsVersion; ?>" defer></script>
+    <?php } ?>
     <script src="installer/js/modules/state.js?v=<?php echo $stepsStateVersion; ?>" defer></script>
     <script src="installer/js/modules/validation.js?v=<?php echo $stepsValidationVersion; ?>" defer></script>
     <script src="installer/js/modules/ui.js?v=<?php echo $stepsUiVersion; ?>" defer></script>
@@ -127,6 +133,10 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
                             <span class="indicator-active"><?php include __DIR__ . '/installer/icons/indicator-active.svg'; ?></span>
                             <span class="indicator-inactive"><?php include __DIR__ . '/installer/icons/indicator-inactive.svg'; ?></span>
                         </span>
+                        <span class="step-indicator" data-step="4">
+                            <span class="indicator-active"><?php include __DIR__ . '/installer/icons/indicator-active.svg'; ?></span>
+                            <span class="indicator-inactive"><?php include __DIR__ . '/installer/icons/indicator-inactive.svg'; ?></span>
+                        </span>
                     </div>
 
                     <button class="button primary" type="button" data-action="next">
@@ -137,7 +147,7 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
         </div>
         <div class="install-screen" aria-live="polite">
             <div class="install-screen-content">
-                <?php if ($step === 4) { include __DIR__ . '/installer/templates/steps/step-4.phtml'; } ?>
+                <?php if ($step === 5) { include __DIR__ . '/installer/templates/steps/step-5.phtml'; } ?>
             </div>
         </div>
     </main>
@@ -147,6 +157,56 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
             <?php include __DIR__ . '/installer/icons/appwrite-logo.svg'; ?>
         </div>
     </footer>
+
+    <?php if ($installMode === 'mock') { ?>
+        <dialog class="installer-mock-dialog" data-mock-dialog aria-labelledby="mock-dialog-title" aria-describedby="mock-dialog-description">
+            <section class="installer-mock-panel">
+                <header class="installer-mock-header">
+                    <div class="installer-mock-titlebar">
+                        <p id="mock-dialog-title" class="typography-title-s text-neutral-primary">Mock settings</p>
+                        <button type="button" class="mock-dialog-close" data-mock-close aria-label="Close">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M5.293 5.293a1 1 0 0 1 1.414 0L10 8.586l3.293-3.293a1 1 0 1 1 1.414 1.414L11.414 10l3.293 3.293a1 1 0 0 1-1.414 1.414L10 11.414l-3.293 3.293a1 1 0 0 1-1.414-1.414L8.586 10 5.293 6.707a1 1 0 0 1 0-1.414Z"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="mock-dialog-description" class="typography-text-m-400 text-neutral-secondary">Adjust mock responses for this session.</p>
+                </header>
+                <div class="installer-mock-content">
+                    <div class="mock-control">
+                        <div class="mock-control-text">
+                            <p class="typography-text-m-500 text-neutral-primary">Simulate session expiry</p>
+                            <p class="typography-text-xs-400 text-neutral-secondary">Show the toast error before install starts.</p>
+                        </div>
+                        <label class="mock-switch">
+                            <input type="checkbox" data-mock-toggle="toast" aria-label="Simulate session expiry">
+                            <span class="mock-switch-track" aria-hidden="true"></span>
+                        </label>
+                    </div>
+                    <div class="mock-control">
+                        <div class="mock-control-text">
+                            <p class="typography-text-m-500 text-neutral-primary">Simulate install error</p>
+                            <p class="typography-text-xs-400 text-neutral-secondary">Show a failed step and retry flow.</p>
+                        </div>
+                        <label class="mock-switch">
+                            <input type="checkbox" data-mock-toggle="error" aria-label="Simulate install error">
+                            <span class="mock-switch-track" aria-hidden="true"></span>
+                        </label>
+                    </div>
+                    <div class="mock-control">
+                        <div class="mock-control-text">
+                            <p class="typography-text-m-500 text-neutral-primary">Simulate account error</p>
+                            <p class="typography-text-xs-400 text-neutral-secondary">Fail the account creation step.</p>
+                        </div>
+                        <label class="mock-switch">
+                            <input type="checkbox" data-mock-toggle="accountError" aria-label="Simulate account error">
+                            <span class="mock-switch-track" aria-hidden="true"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+        </dialog>
+    <?php } ?>
 
     <template id="field-error-template">
         <div class="field-error typography-text-xs-400 text-error">

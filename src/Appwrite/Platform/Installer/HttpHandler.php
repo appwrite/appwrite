@@ -172,10 +172,40 @@ class HttpHandler
             $input = [];
         }
         $installId = $this->state->sanitizeInstallId($input['installId'] ?? '');
+        $sessionId = is_string($input['sessionId'] ?? null) ? $input['sessionId'] : null;
+        $sessionSecret = is_string($input['sessionSecret'] ?? null) ? $input['sessionSecret'] : null;
+        $sessionExpire = is_string($input['sessionExpire'] ?? null) ? $input['sessionExpire'] : null;
 
         if ($installId !== '') {
             $this->state->updateGlobalLock($installId, Server::STATUS_COMPLETED);
         }
+
+        if ($sessionSecret) {
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+            $sameSite = $isHttps ? 'None' : 'Lax';
+            $expires = 0;
+            if ($sessionExpire) {
+                $timestamp = strtotime($sessionExpire);
+                if ($timestamp !== false) {
+                    $expires = $timestamp;
+                }
+            }
+            $cookieOptions = [
+                'expires' => $expires,
+                'path' => '/',
+                'secure' => $isHttps,
+                'httponly' => true,
+                'samesite' => $sameSite,
+            ];
+            setcookie('a_session_console', $sessionSecret, $cookieOptions);
+            setcookie('a_session_console_legacy', $sessionSecret, $cookieOptions);
+            if ($sessionId) {
+                header('X-Appwrite-Session: ' . $sessionId);
+            }
+        }
+
+        @unlink(Server::INSTALLER_CONFIG_FILE);
 
         echo json_encode(['success' => true]);
 
@@ -405,13 +435,19 @@ class HttpHandler
             }
 
             $vars = $this->config->getVars();
-            $envVars = $installer->prepareEnvironmentVariables($payloadInput, $vars);
+            $shouldGenerateSecrets = !$installer->hasExistingConfig() && !$this->config->isUpgrade();
+            $envVars = $installer->prepareEnvironmentVariables($payloadInput, $vars, $shouldGenerateSecrets);
+            $account = [
+                'name' => $input['accountName'] ?? '',
+                'email' => $input['accountEmail'] ?? '',
+                'password' => $input['accountPassword'] ?? '',
+            ];
 
             $this->state->writeProgressFile($installId, [
                 'payload' => [
                     'httpPort' => $input['httpPort'] ?? $this->config->getDefaultHttpPort(),
                     'httpsPort' => $input['httpsPort'] ?? $this->config->getDefaultHttpsPort(),
-                    'database' => $input['database'] ?? 'mongodb',
+                    'database' => $lockedDatabase ?? ($input['database'] ?? 'mongodb'),
                     'appDomain' => $input['appDomain'] ?? 'localhost',
                     'emailCertificates' => $input['emailCertificates'] ?? '',
                     'opensslKeyHash' => $this->state->hashSensitiveValue((string) ($input['opensslKey'] ?? '')),
@@ -450,7 +486,8 @@ class HttpHandler
                 $this->config->getNoStart(),
                 $progress,
                 $retryStep,
-                $this->config->isUpgrade()
+                $this->config->isUpgrade(),
+                $account
             );
 
             if ($wantsStream) {
@@ -487,6 +524,7 @@ class HttpHandler
             if ($installId !== '') {
                 $this->state->updateGlobalLock($installId, Server::STATUS_ERROR);
             }
+            @unlink(Server::INSTALLER_CONFIG_FILE);
             if ($wantsStream) {
                 $details = ['trace' => $e->getTraceAsString()];
                 $previous = $e->getPrevious();

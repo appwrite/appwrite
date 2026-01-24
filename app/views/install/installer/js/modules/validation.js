@@ -11,6 +11,11 @@
         return numeric >= 1 && numeric <= 65535;
     };
 
+    const isValidPassword = (value) => {
+        if (!value) return false;
+        return value.trim().length >= 8;
+    };
+
     const isValidIPv4 = (host) => {
         if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return false;
         return host.split('.').every((part) => {
@@ -104,6 +109,7 @@
     window.InstallerStepsValidation = {
         isValidEmail,
         isValidPort,
+        isValidPassword,
         isValidHostnameInput,
         extractHostname,
         isLocalHost

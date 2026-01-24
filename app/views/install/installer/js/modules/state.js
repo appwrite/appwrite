@@ -2,9 +2,9 @@
     const {
         getBodyDataset,
         isUpgradeMode,
-        getLockedDatabase,
-        isMockProgressMode
+        getLockedDatabase
     } = window.InstallerStepsContext || {};
+    const { isMockProgressMode } = window.InstallerMock || {};
 
     const INSTALL_LOCK_KEY = 'appwrite-install-lock';
     const INSTALL_ID_KEY = 'appwrite-install-id';
@@ -16,7 +16,10 @@
         httpsPort: null,
         emailCertificates: null,
         opensslKey: null,
-        assistantOpenAIKey: null
+        assistantOpenAIKey: null,
+        accountName: null,
+        accountEmail: null,
+        accountPassword: null
     };
 
     const dispatchStateChange = (key) => {
@@ -112,6 +115,9 @@
         setStateIfEmpty('emailCertificates', payload.emailCertificates);
         setStateIfEmpty('opensslKey', payload.opensslKey);
         setStateIfEmpty('assistantOpenAIKey', payload.assistantOpenAIKey);
+        setStateIfEmpty('accountName', payload.accountName);
+        setStateIfEmpty('accountEmail', payload.accountEmail);
+        setStateIfEmpty('accountPassword', payload.accountPassword);
     };
 
     const getStoredInstallId = () => {

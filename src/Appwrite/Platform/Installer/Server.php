@@ -12,19 +12,23 @@ class Server
 {
     public const int INSTALLER_WEB_PORT = 20080;
     public const int INSTALLER_WEB_PORT_INTERNAL = 20080;
+
+    // temp files for state and config management!
+    public const string INSTALLER_LOCK_FILE = '/tmp/appwrite-install-lock.json';
     public const string INSTALLER_CONFIG_FILE = '/tmp/appwrite-installer-config.json';
 
     public const string STEP_ENV_VARS = 'env-vars';
     public const string STEP_CONFIG_FILES = 'config-files';
     public const string STEP_DOCKER_COMPOSE = 'docker-compose';
     public const string STEP_DOCKER_CONTAINERS = 'docker-containers';
+    public const string STEP_ACCOUNT_SETUP = 'account-setup';
 
     public const string STATUS_IN_PROGRESS = 'in-progress';
     public const string STATUS_COMPLETED = 'completed';
     public const string STATUS_ERROR = 'error';
 
     private const string DEFAULT_IMAGE = 'appwrite-dev';
-    private const string DEFAULT_CONTAINER = 'appwrite-installer';
+    public const string DEFAULT_CONTAINER = 'appwrite-installer';
     private const string DEV_SERVER_START_PATTERN = '/PHP\s+\d+\.\d+\.\d+\s+Development Server .* started/';
 
     private State $state;
@@ -218,7 +222,8 @@ class Server
         }
 
         $tempDir = sys_get_temp_dir();
-        @unlink($tempDir . '/appwrite-install-lock.json');
+        @unlink(self::INSTALLER_LOCK_FILE);
+        @unlink(self::INSTALLER_CONFIG_FILE);
         foreach (glob($tempDir . '/appwrite-install-*.json') ?: [] as $file) {
             @unlink($file);
         }
