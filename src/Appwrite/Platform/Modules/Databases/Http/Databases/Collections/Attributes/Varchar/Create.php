@@ -62,7 +62,7 @@ class Create extends Action
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
             ->param('key', '', new Key(), 'Attribute Key.')
-            ->param('size', null, new Range(1, 16381, Validator::TYPE_INTEGER), 'Attribute size for text attributes, in number of characters. Maximum size is 16381.')
+            ->param('size', null, new Range(1, 16381, Validator::TYPE_INTEGER), 'Attribute size for varchar attributes, in number of characters. Maximum size is 16381.')
             ->param('required', null, new Boolean(), 'Is attribute required?')
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
