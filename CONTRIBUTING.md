@@ -189,7 +189,7 @@ Other containers should be named the same as their service, for example `redis` 
 
 ## Modules
 
-As Appwrite grows, we noticed approach of having all service endpoints in `app/controllers/api/[service].php` is not maintainable. Not only it creates massive files, it also doesn't contain all product's features such as workers or tasks. While there might still be some occurances of those controller files, we avoid it in all new development, and gradually migrate existing controllers to **HTTP modules**.
+As Appwrite grows, we noticed approach of having all service endpoints in `app/controllers/api/[service].php` is not maintainable. Not only it creates massive files, it also doesn't contain all product's features such as workers or tasks. While there might still be some occurrences of those controller files, we avoid it in all new development, and gradually migrate existing controllers to **HTTP modules**.
 
 ### HTTP Endpoints
 
