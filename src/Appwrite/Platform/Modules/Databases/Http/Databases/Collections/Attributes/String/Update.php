@@ -59,7 +59,7 @@ class Update extends Action
                 ],
                 contentType: ContentType::JSON,
                 deprecated: new Deprecated(
-                    since: '1.9.0',
+                    since: '1.8.0',
                     replaceWith: 'tablesDB.updateStringColumn',
                 ),
             ))

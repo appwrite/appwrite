@@ -61,7 +61,7 @@ class Create extends Action
                     )
                 ],
                 deprecated: new Deprecated(
-                    since: '1.9.0',
+                    since: '1.8.0',
                     replaceWith: 'tablesDB.createStringColumn',
                 ),
             ))
