@@ -1,4 +1,160 @@
-# v4
+# Appwrite Console v4 - Work in progress
+
+A modern, full-featured web console for managing Appwrite projects, organizations, and resources. Built with TanStack Start, Tailwind CSS, and ShadCN UI.
+
+## Overview
+
+The Appwrite Console provides a comprehensive interface for managing all aspects of your Appwrite infrastructure, including projects, authentication, databases, storage, functions, messaging, sites, and more. It offers an intuitive user experience with real-time updates, advanced search capabilities, and powerful management tools.
+
+## Features
+
+### Core Management
+- **Project Management** - Create, configure, and manage Appwrite projects
+- **Organization Management** - Handle teams, billing, and organization settings
+- **Account Management** - User profiles, authentication, and security settings
+
+### Service Management
+- **Authentication** - User management, sessions, OAuth providers, and security policies
+- **Databases** - Document and table-based database management, queries, indexes, and relationships
+- **Storage** - File uploads, bucket management, previews, and CDN configuration
+- **Functions** - Serverless function deployment, execution monitoring, and environment variables
+- **Messaging** - Push notifications, SMS, email delivery, and provider configuration
+- **Sites** - Deploy and host web applications at the edge
+
+### Developer Experience
+- **Command Center** - Quick navigation and search across all resources
+- **AI Chat** - Integrated AI assistant for help and guidance
+- **Performance Monitoring** - Built-in tools for debugging performance issues
+- **Real-time Updates** - Live synchronization with Appwrite backend
+- **Dark Mode** - Multiple theme options including light, dark, and custom themes
+
+## Tech Stack
+
+- **Framework**: [TanStack Start](https://tanstack.com/start) - Full-stack React framework
+- **Routing**: [TanStack Router](https://tanstack.com/router) - Type-safe routing
+- **State Management**: [TanStack Query](https://tanstack.com/query) - Server state management
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- **UI Components**: [ShadCN UI](https://ui.shadcn.com/) - High-quality React components
+- **SDK**: [Appwrite Console SDK](https://github.com/appwrite/console) - Official Appwrite Console SDK
+- **Runtime**: [Bun](https://bun.sh/) - Fast JavaScript runtime
+
+## Prerequisites
+
+- [Bun](https://bun.sh/) (v1.0 or later)
+- Node.js 18+ (if not using Bun)
+- An Appwrite instance or Appwrite Cloud account
+
+## Getting Started
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd vibes
+```
+
+2. Install dependencies:
+```bash
+bun install
+```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and configure the following variables:
+
+```env
+# Required
+VITE_APPWRITE_ENDPOINT=https://cloud.appwrite.io/v1
+
+# Optional
+VITE_INSTRUMENTATION_SCRIPT_SRC=https://your-analytics-script.js
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_... # For billing features
+VITE_COMPANY_NAME=Appwrite
+VITE_CONTACT_SALES_URL=https://appwrite.io/contact
+VITE_LEGAL_EMAIL=legal@appwrite.io
+```
+
+### Development
+
+Start the development server:
+
+```bash
+bun run dev
+```
+
+The application will be available at `http://localhost:3000`.
+
+### Building for Production
+
+Build the application:
+
+```bash
+bun run build
+```
+
+For Node.js deployment:
+
+```bash
+bun run build:node
+```
+
+Preview the production build:
+
+```bash
+bun run serve
+```
+
+## Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `bun run dev` | Start development server on port 3000 |
+| `bun run start` | Start production server |
+| `bun run build` | Build for production |
+| `bun run build:node` | Build for Node.js deployment |
+| `bun run serve` | Preview production build |
+| `bun run test` | Run tests with Vitest |
+| `bun run lint` | Run ESLint |
+| `bun run format` | Format code with Prettier |
+| `bun run format:check` | Check code formatting |
+| `bun run generate:routes` | Generate route types |
+| `bun run generate:icons` | Generate Apple touch icons |
+| `bun run clean` | Clean build artifacts |
+
+## Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── global/         # Global components (layout, auth, shared)
+│   └── pages/          # Page-specific components (route-aligned)
+├── hooks/              # Custom React hooks
+├── lib/                # Utilities and configurations
+│   ├── appwrite/       # Appwrite SDK setup
+│   └── react-query/    # React Query hooks and utilities
+├── routes/             # TanStack Router route files
+├── server/             # Server-side utilities
+└── styles.css          # Global styles
+
+public/                 # Static assets
+scripts/                # Build and utility scripts
+```
+
+## Development Guidelines
+
+This project follows strict development guidelines to ensure consistency and maintainability. Key principles include:
+
+- **SDK Usage**: Always use `src/lib/appwrite/sdk.ts` for Appwrite operations
+- **Type Safety**: Always use `Models.*` types from `@appwrite.io/console`
+- **Route Prefetching**: Critical data must be prefetched at route level
+- **Component Organization**: Route-aligned structure with clear naming conventions
+- **React Query Patterns**: Use `queryOptions` pattern for prefetched data
+
+For detailed development guidelines, see [AGENTS.md](./AGENTS.md).
 
 ## Performance Monitoring
 
@@ -25,7 +181,6 @@ window.performanceMonitor.generateReport()
 ### When to Use
 
 Use the performance monitor when:
-
 - CPU usage is unexpectedly high
 - The app feels sluggish
 - You need to identify what's causing performance issues
@@ -33,4 +188,52 @@ Use the performance monitor when:
 
 The monitor tracks intervals, React Query queries, frame rate, and memory usage without impacting performance when not actively monitoring.
 
-For detailed debugging instructions, see [PERFORMANCE_DEBUG.md](./PERFORMANCE_DEBUG.md).
+## Testing
+
+This project uses [Vitest](https://vitest.dev/) for testing. Run tests with:
+
+```bash
+bun run test
+```
+
+## Linting & Formatting
+
+This project uses ESLint and Prettier for code quality:
+
+```bash
+# Lint code
+bun run lint
+
+# Format code
+bun run format
+
+# Check formatting
+bun run format:check
+```
+
+## Contributing
+
+1. Follow the development guidelines in [AGENTS.md](./AGENTS.md)
+2. Ensure all tests pass
+3. Run linting and formatting before committing
+4. Write clear commit messages
+5. Create descriptive pull requests
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `VITE_APPWRITE_ENDPOINT` | Yes | `https://cloud.appwrite.io/v1` | Appwrite API endpoint |
+| `VITE_INSTRUMENTATION_SCRIPT_SRC` | No | - | Analytics/instrumentation script URL |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | No | - | Stripe publishable key for billing |
+| `VITE_COMPANY_NAME` | No | `Appwrite` | Company name for branding |
+| `VITE_CONTACT_SALES_URL` | No | - | Contact sales page URL |
+| `VITE_LEGAL_EMAIL` | No | `legal@appwrite.io` | Legal contact email |
+
+## License
+
+[Add your license here]
+
+## Support
+
+For issues, questions, or contributions, please open an issue on GitHub or refer to the [Appwrite documentation](https://appwrite.io/docs).
