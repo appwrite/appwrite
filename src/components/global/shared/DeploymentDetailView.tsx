@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import * as React from 'react'
 import { Link } from '@tanstack/react-router'
 import {
@@ -12,6 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Play,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
@@ -23,7 +25,6 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Dialog,
   DialogContent,
@@ -537,6 +538,9 @@ export function DeploymentDetailView({
   const queryClient = useQueryClient()
   const [logsSearch, setLogsSearch] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const logsContainerRef = useRef<HTMLDivElement>(null)
+  const [isAtTop, setIsAtTop] = useState(true)
+  const [isAtBottom, setIsAtBottom] = useState(false)
 
   // Determine if this is a site or function deployment (needed for navigation)
   const isSiteDeployment = resourceId.includes('site') || deploymentDetailRoute.includes('sites')
@@ -638,6 +642,72 @@ export function DeploymentDetailView({
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
     toast.success('Logs downloaded')
+  }
+
+  // Find the scrollable parent element (WizardLayout's content wrapper)
+  const getScrollContainer = useCallback((): HTMLElement | null => {
+    if (!logsContainerRef.current) return null
+    // Walk up the DOM to find the scrollable parent
+    let element: HTMLElement | null = logsContainerRef.current.parentElement
+    while (element) {
+      const style = window.getComputedStyle(element)
+      const overflowY = style.overflowY
+      if (overflowY === 'auto' || overflowY === 'scroll') {
+        return element
+      }
+      element = element.parentElement
+    }
+    return null
+  }, [])
+
+  // Update scroll position state
+  const updateScrollPosition = useCallback(() => {
+    const scrollContainer = getScrollContainer()
+    if (!scrollContainer) return
+    
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainer
+    const threshold = 10 // Small threshold to account for rounding
+    
+    setIsAtTop(scrollTop <= threshold)
+    setIsAtBottom(scrollTop + clientHeight >= scrollHeight - threshold)
+  }, [getScrollContainer])
+
+  // Track scroll position
+  useEffect(() => {
+    const scrollContainer = getScrollContainer()
+    if (!scrollContainer) return
+
+    // Initial check
+    updateScrollPosition()
+
+    // Listen for scroll events
+    scrollContainer.addEventListener('scroll', updateScrollPosition)
+    
+    // Also listen for resize to recalculate
+    window.addEventListener('resize', updateScrollPosition)
+
+    return () => {
+      scrollContainer.removeEventListener('scroll', updateScrollPosition)
+      window.removeEventListener('resize', updateScrollPosition)
+    }
+  }, [getScrollContainer, updateScrollPosition, buildLogs])
+
+  // Scroll handlers for logs
+  const handleScrollToTop = () => {
+    const scrollContainer = getScrollContainer()
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const handleScrollToBottom = () => {
+    const scrollContainer = getScrollContainer()
+    if (scrollContainer) {
+      scrollContainer.scrollTo({ 
+        top: scrollContainer.scrollHeight, 
+        behavior: 'smooth' 
+      })
+    }
   }
 
   // Parse and filter logs - MUST be called before any conditional returns
@@ -1077,21 +1147,57 @@ export function DeploymentDetailView({
         </div>
       }
     >
-      <div className="flex flex-col flex-1 min-h-0 overflow-hidden relative">
+      <div ref={logsContainerRef} className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Build Logs */}
         {buildLogs ? (
-          <div className="flex-1 min-h-0 w-full">
-            <ScrollArea className="h-full w-full">
-              <div className="px-4 sm:px-6 py-4 min-w-0">
-                <pre className="text-[11px] sm:text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
-                  {parsedLogs}
-                </pre>
-              </div>
-            </ScrollArea>
+          <div className="px-4 sm:px-6 py-4 min-w-0">
+            <pre className="text-[11px] sm:text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
+              {parsedLogs}
+            </pre>
           </div>
         ) : (
           <div className="px-4 sm:px-6 py-4 text-[12px] sm:text-[13px] text-muted-foreground">
             No build logs available.
+          </div>
+        )}
+        
+        {/* Scroll Control Buttons - Fixed position in viewport */}
+        {buildLogs && (
+          <div className="fixed bottom-24 right-8 flex flex-col gap-2 z-[101]">
+            <TooltipProvider>
+              <TooltipPrimitive.Root>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleScrollToTop}
+                    disabled={isAtTop}
+                    className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Scroll to top</p>
+                </TooltipContent>
+              </TooltipPrimitive.Root>
+              <TooltipPrimitive.Root>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleScrollToBottom}
+                    disabled={isAtBottom}
+                    className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Scroll to bottom</p>
+                </TooltipContent>
+              </TooltipPrimitive.Root>
+            </TooltipProvider>
           </div>
         )}
       </div>
