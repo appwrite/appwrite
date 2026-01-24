@@ -98,11 +98,6 @@ export function AuthView() {
     )
   }, [location.pathname])
 
-  // Don't render if we're on a detail route (those have their own components)
-  if (isUserDetailRoute || isTeamDetailRoute) {
-    return null
-  }
-
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
@@ -578,6 +573,12 @@ export function AuthView() {
       </Button>
     </div>
   )
+
+  // Don't render if we're on a detail route (those have their own components)
+  // This check is placed after all hooks to comply with React's rules of hooks
+  if (isUserDetailRoute || isTeamDetailRoute) {
+    return null
+  }
 
   return (
     <div className="flex h-full flex-col">

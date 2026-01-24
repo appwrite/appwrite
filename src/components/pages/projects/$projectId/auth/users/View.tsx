@@ -107,7 +107,6 @@ import {
 import { useProject } from '@/lib/react-query/hooks'
 import { ID, Browser } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { ActivityPunchcard } from './ActivityPunchcard'
 
 const DEFAULT_PAGE_SIZE = 25
 
@@ -165,38 +164,15 @@ export function UserDetailView() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // Early return if missing required params
-  if (!projectId || !userId) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">
-            Missing project ID or user ID
-          </p>
-          {!projectId && (
-            <p className="text-[12px] text-muted-foreground mt-2">
-              Project ID is required
-            </p>
-          )}
-          {!userId && (
-            <p className="text-[12px] text-muted-foreground mt-2">
-              User ID is required
-            </p>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  // Fetch user data
+  // Fetch user data - hooks must be called unconditionally
   const {
     data: user,
     isLoading: userLoading,
     error: userError,
     isFetching,
     isError,
-  } = useUser(projectId, userId)
-  const { data: mfaFactors } = useUserMFAFactors(projectId, userId)
+  } = useUser(projectId ?? '', userId ?? '')
+  const { data: mfaFactors } = useUserMFAFactors(projectId ?? '', userId ?? '')
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
@@ -273,6 +249,29 @@ export function UserDetailView() {
       to: '/projects/$projectId/auth',
       params: { projectId: projectId! },
     })
+  }
+
+  // Early return if missing required params - after all hooks are called
+  if (!projectId || !userId) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
+          <p className="text-[13px] text-muted-foreground">
+            Missing project ID or user ID
+          </p>
+          {!projectId && (
+            <p className="text-[12px] text-muted-foreground mt-2">
+              Project ID is required
+            </p>
+          )}
+          {!userId && (
+            <p className="text-[12px] text-muted-foreground mt-2">
+              User ID is required
+            </p>
+          )}
+        </div>
+      </div>
+    )
   }
 
   if (userLoading) {
@@ -424,9 +423,6 @@ function OverviewTab({
   userId,
   displayName,
 }: OverviewTabProps) {
-  const { data: sessionsData } = useUserSessions(projectId, userId)
-  const sessions = sessionsData?.sessions || []
-
   return (
     <div className="space-y-6 overflow-x-hidden w-full min-w-0">
       <UserStatusCard
@@ -435,7 +431,6 @@ function OverviewTab({
         userId={userId}
         displayName={displayName}
       />
-      <ActivityPunchcard sessions={sessions} />
       <UpdateNameSection user={user} projectId={projectId} userId={userId} />
       <UpdateEmailSection user={user} projectId={projectId} userId={userId} />
       <UpdatePhoneSection user={user} projectId={projectId} userId={userId} />

@@ -17,34 +17,12 @@ export function TeamDetailView() {
   const location = useLocation()
   const navigate = useNavigate()
 
+  // All hooks must be called unconditionally before any early returns
   const {
     data: team,
     isLoading: teamLoading,
     error: teamError,
-  } = useTeam(projectId, teamId)
-
-  // Early return if missing required params
-  if (!projectId || !teamId) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
-          <p className="text-[13px] text-muted-foreground">
-            Missing project ID or team ID
-          </p>
-          {!projectId && (
-            <p className="text-[12px] text-muted-foreground mt-2">
-              Project ID is required
-            </p>
-          )}
-          {!teamId && (
-            <p className="text-[12px] text-muted-foreground mt-2">
-              Team ID is required
-            </p>
-          )}
-        </div>
-      </div>
-    )
-  }
+  } = useTeam(projectId ?? '', teamId ?? '')
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
@@ -93,6 +71,29 @@ export function TeamDetailView() {
       to: '/projects/$projectId/auth/teams',
       params: { projectId: projectId! },
     })
+  }
+
+  // Early return if missing required params - after all hooks are called
+  if (!projectId || !teamId) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="rounded-lg border border-border bg-card py-12 px-6 text-center">
+          <p className="text-[13px] text-muted-foreground">
+            Missing project ID or team ID
+          </p>
+          {!projectId && (
+            <p className="text-[12px] text-muted-foreground mt-2">
+              Project ID is required
+            </p>
+          )}
+          {!teamId && (
+            <p className="text-[12px] text-muted-foreground mt-2">
+              Team ID is required
+            </p>
+          )}
+        </div>
+      </div>
+    )
   }
 
   if (teamLoading) {
