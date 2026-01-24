@@ -20,7 +20,9 @@ import {
   useProjectsForTeamInfinite,
   useOrganizationPlan,
   useProjectsForTeam,
+  fetchActiveProjects,
 } from '@/lib/react-query/hooks'
+import { useQueryClient } from '@tanstack/react-query'
 import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
 import { CreateProjectDialog } from '@/components/pages/organizations/$orgId/overview/CreateProjectDialog'
 
@@ -99,8 +101,6 @@ export function ProjectSelector({
   // Fetch projects for selected team with infinite scroll
   const {
     projects: paginatedProjects,
-    total: totalProjects,
-    isLoading: projectsLoading,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
@@ -108,6 +108,55 @@ export function ProjectSelector({
     selectedTeam?.$id,
     projectsPageSize,
     projectSearch,
+  )
+
+  // Query client for prefetching
+  const queryClient = useQueryClient()
+
+  // Prefetch projects for a team on hover
+  const handlePrefetchTeamProjects = useCallback(
+    (teamId: string) => {
+      // Only prefetch if not already the selected team
+      if (teamId === selectedTeam?.$id) return
+
+      // Prefetch the first page of projects for this team
+      queryClient.prefetchInfiniteQuery({
+        queryKey: ['projects', 'team', 'infinite', teamId, projectsPageSize, ''],
+        queryFn: ({ pageParam = 0 }) =>
+          fetchActiveProjects(teamId, pageParam, projectsPageSize, ''),
+        initialPageParam: 0,
+        staleTime: 5 * 60 * 1000, // 5 minutes
+      })
+    },
+    [queryClient, selectedTeam?.$id, projectsPageSize],
+  )
+
+  // Handle team selection - ensure data is ready before switching
+  const handleSelectTeam = useCallback(
+    async (team: Team) => {
+      // If same team, do nothing
+      if (team.$id === selectedTeam?.$id) return
+
+      // Check if we already have cached data for this team
+      const queryKey = ['projects', 'team', 'infinite', team.$id, projectsPageSize, '']
+      const cachedData = queryClient.getQueryData(queryKey)
+
+      if (cachedData) {
+        // Data is already cached, switch immediately
+        setSelectedTeam(team)
+      } else {
+        // Data not cached, fetch it first then switch
+        await queryClient.fetchInfiniteQuery({
+          queryKey,
+          queryFn: ({ pageParam = 0 }) =>
+            fetchActiveProjects(team.$id, pageParam, projectsPageSize, ''),
+          initialPageParam: 0,
+          staleTime: 5 * 60 * 1000,
+        })
+        setSelectedTeam(team)
+      }
+    },
+    [queryClient, selectedTeam?.$id, projectsPageSize],
   )
 
   // Find the team for the current project (for display in trigger)
@@ -220,7 +269,7 @@ export function ProjectSelector({
           >
             <ProjectSelectorContent
               selectedTeam={selectedTeam}
-              setSelectedTeam={setSelectedTeam}
+              onSelectTeam={handleSelectTeam}
               selectedProject={selectedProject}
               handleSelectProject={handleSelectProject}
               teamSearch={teamSearch}
@@ -229,14 +278,13 @@ export function ProjectSelector({
               setProjectSearch={setProjectSearch}
               filteredTeams={filteredTeams}
               displayProjects={displayProjects}
-              totalProjects={totalProjects}
               isFetchingNextPage={isFetchingNextPage}
               hasNextPage={hasNextPage}
               fetchNextPage={fetchNextPage}
-              projectsLoading={projectsLoading}
               organizations={organizations}
               currentProjectId={projectId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
+              onPrefetchTeamProjects={handlePrefetchTeamProjects}
             />
           </PopoverContent>
         </Popover>
@@ -310,7 +358,7 @@ export function ProjectSelector({
             {/* Content */}
             <MobileProjectSelectorContent
               selectedTeam={selectedTeam}
-              setSelectedTeam={setSelectedTeam}
+              onSelectTeam={handleSelectTeam}
               selectedProject={selectedProject}
               handleSelectProject={handleSelectProject}
               teamSearch={teamSearch}
@@ -319,14 +367,13 @@ export function ProjectSelector({
               setProjectSearch={setProjectSearch}
               filteredTeams={filteredTeams}
               displayProjects={displayProjects}
-              totalProjects={totalProjects}
               isFetchingNextPage={isFetchingNextPage}
               hasNextPage={hasNextPage}
               fetchNextPage={fetchNextPage}
-              projectsLoading={projectsLoading}
               organizations={organizations}
               currentProjectId={projectId}
               onCreateProject={() => setCreateProjectDialogOpen(true)}
+              onPrefetchTeamProjects={handlePrefetchTeamProjects}
             />
           </DialogContent>
         </Dialog>
@@ -383,7 +430,7 @@ export function ProjectSelector({
         >
           <ProjectSelectorContent
             selectedTeam={selectedTeam}
-            setSelectedTeam={setSelectedTeam}
+            onSelectTeam={handleSelectTeam}
             selectedProject={selectedProject}
             handleSelectProject={handleSelectProject}
             teamSearch={teamSearch}
@@ -392,14 +439,13 @@ export function ProjectSelector({
             setProjectSearch={setProjectSearch}
             filteredTeams={filteredTeams}
             displayProjects={displayProjects}
-            totalProjects={totalProjects}
             isFetchingNextPage={isFetchingNextPage}
             hasNextPage={hasNextPage}
             fetchNextPage={fetchNextPage}
-            projectsLoading={projectsLoading}
             organizations={organizations}
             currentProjectId={projectId}
             onCreateProject={() => setCreateProjectDialogOpen(true)}
+            onPrefetchTeamProjects={handlePrefetchTeamProjects}
           />
         </PopoverContent>
       </Popover>
@@ -418,7 +464,7 @@ export function ProjectSelector({
 
 interface ProjectSelectorContentProps {
   selectedTeam: Team | null
-  setSelectedTeam: (team: Team) => void
+  onSelectTeam: (team: Team) => Promise<void>
   selectedProject: Project | null
   handleSelectProject: (project: Project) => void
   teamSearch: string
@@ -427,19 +473,18 @@ interface ProjectSelectorContentProps {
   setProjectSearch: (search: string) => void
   filteredTeams: Team[]
   displayProjects: Project[]
-  totalProjects: number
   isFetchingNextPage: boolean
   hasNextPage: boolean
   fetchNextPage: () => void
-  projectsLoading: boolean
   organizations: Organization[]
   currentProjectId?: string
   onCreateProject: () => void
+  onPrefetchTeamProjects: (teamId: string) => void
 }
 
 function ProjectSelectorContent({
   selectedTeam,
-  setSelectedTeam,
+  onSelectTeam,
   selectedProject,
   handleSelectProject,
   teamSearch,
@@ -448,14 +493,13 @@ function ProjectSelectorContent({
   setProjectSearch,
   filteredTeams,
   displayProjects,
-  totalProjects,
   isFetchingNextPage,
   hasNextPage,
   fetchNextPage,
-  projectsLoading,
   organizations,
   currentProjectId,
   onCreateProject,
+  onPrefetchTeamProjects,
 }: ProjectSelectorContentProps) {
   // Ref for the scrollable container
   const projectsScrollRef = useRef<HTMLDivElement>(null)
@@ -531,7 +575,8 @@ function ProjectSelectorContent({
                 return (
                   <button
                     key={team.$id}
-                    onClick={() => setSelectedTeam(team)}
+                    onClick={() => onSelectTeam(team)}
+                    onMouseEnter={() => onPrefetchTeamProjects(team.$id)}
                     className={cn(
                       'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
                       selectedTeam.$id === team.$id
@@ -599,11 +644,7 @@ function ProjectSelectorContent({
             Projects
           </p>
           <div className="space-y-0.5">
-            {projectsLoading ? (
-              <div className="px-2 py-4 text-center text-[12px] text-muted-foreground">
-                Loading...
-              </div>
-            ) : displayProjects.length === 0 ? (
+            {displayProjects.length === 0 ? (
               <p className="px-2 py-4 text-center text-[12px] text-muted-foreground">
                 {selectedTeam ? 'No projects found' : 'Select a team'}
               </p>
@@ -671,7 +712,7 @@ function ProjectSelectorContent({
 // Mobile-optimized content with stacked layout
 function MobileProjectSelectorContent({
   selectedTeam,
-  setSelectedTeam,
+  onSelectTeam,
   selectedProject,
   handleSelectProject,
   teamSearch,
@@ -680,14 +721,13 @@ function MobileProjectSelectorContent({
   setProjectSearch,
   filteredTeams,
   displayProjects,
-  totalProjects,
   isFetchingNextPage,
   hasNextPage,
   fetchNextPage,
-  projectsLoading,
   organizations,
   currentProjectId,
   onCreateProject,
+  onPrefetchTeamProjects,
 }: ProjectSelectorContentProps) {
   const [activeTab, setActiveTab] = useState<'teams' | 'projects'>('projects')
 
@@ -795,10 +835,11 @@ function MobileProjectSelectorContent({
                   return (
                     <button
                       key={team.$id}
-                      onClick={() => {
-                        setSelectedTeam(team)
+                      onClick={async () => {
+                        await onSelectTeam(team)
                         setActiveTab('projects')
                       }}
+                      onMouseEnter={() => onPrefetchTeamProjects(team.$id)}
                       className={cn(
                         'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition-colors',
                         selectedTeam.$id === team.$id
@@ -876,11 +917,7 @@ function MobileProjectSelectorContent({
             className="min-h-[280px] flex-1 overflow-y-auto p-2"
           >
             <div className="space-y-0.5">
-              {projectsLoading ? (
-                <div className="px-3 py-6 text-center text-[13px] text-muted-foreground">
-                  Loading...
-                </div>
-              ) : displayProjects.length === 0 ? (
+              {displayProjects.length === 0 ? (
                 <p className="px-3 py-6 text-center text-[13px] text-muted-foreground">
                   {selectedTeam ? 'No projects found' : 'Select a team'}
                 </p>

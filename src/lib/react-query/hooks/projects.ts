@@ -346,17 +346,20 @@ export function useProjectsForTeamInfinite(
   const {
     data,
     isLoading,
+    isFetching,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
     error,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['projects', 'team', 'infinite', teamId, limit, search],
+    queryKey: ['projects', 'team', 'infinite', teamId, limit, search ?? ''],
     queryFn: ({ pageParam = 0 }) =>
       fetchActiveProjects(teamId!, pageParam, limit, search),
     enabled: !!teamId,
     staleTime: DEFAULT_STALE_TIME,
+    // Rely on prefetching on hover - don't refetch if data is already cached
+    refetchOnMount: false,
     getNextPageParam: (lastPage, allPages) => {
       // If we have more items than what we've loaded, return next page number
       const loadedCount = allPages.reduce(
@@ -396,6 +399,7 @@ export function useProjectsForTeamInfinite(
     projects,
     total,
     isLoading,
+    isFetching,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
