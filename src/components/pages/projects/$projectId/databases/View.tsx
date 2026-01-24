@@ -938,7 +938,7 @@ export function DatabaseDetailLayout({
               {/* Create Table Button */}
               <button
                 onClick={() => setCreateTableDialogOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-[13px]">Create table</span>
@@ -1389,7 +1389,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
               {/* Create Table Button */}
               <button
                 onClick={() => setCreateTableDialogOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-[13px]">Create table</span>
@@ -1776,7 +1776,7 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
               {/* Create Table Button */}
               <button
                 onClick={() => setCreateTableDialogOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 shrink-0" />
                 <span className="text-[13px]">Create table</span>
