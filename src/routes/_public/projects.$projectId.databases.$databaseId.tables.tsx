@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import {
-  fetchProjectDatabase,
-  fetchProjectTables,
+  databaseQueryOptions,
+  tablesQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const TABLES_PER_PAGE = 25
@@ -19,35 +19,17 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     // Fetch critical data before rendering to prevent layout shifts
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     if (projectId && databaseId) {
       await Promise.all([
         // Fetch database - blocks navigation until ready
-        queryClient.fetchQuery({
-          queryKey: ['database', 'project', projectId, databaseId],
-          queryFn: () => fetchProjectDatabase(projectId, databaseId),
-          staleTime: 30 * 1000, // 30 seconds
-        }),
+        queryClient.ensureQueryData(
+          databaseQueryOptions(projectId, databaseId),
+        ),
         // Fetch first page of tables - blocks navigation until ready
-        queryClient.fetchQuery({
-          queryKey: [
-            'tables',
-            'project',
-            projectId,
-            databaseId,
-            0,
-            TABLES_PER_PAGE,
-            undefined,
-          ],
-          queryFn: () =>
-            fetchProjectTables(
-              projectId,
-              databaseId,
-              0,
-              TABLES_PER_PAGE,
-              undefined,
-            ),
-          staleTime: 30 * 1000, // 30 seconds
-        }),
+        queryClient.ensureQueryData(
+          tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE),
+        ),
       ])
     }
   },

@@ -4,7 +4,7 @@
  * Handles backup policies and archives for databases.
  */
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, queryOptions } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -67,6 +67,70 @@ export async function fetchBackupArchives(
 }
 
 // ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching backup policies for a database
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function backupPoliciesQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'backup-policies',
+      'project',
+      projectId,
+      'database',
+      databaseId,
+    ],
+    queryFn: () => fetchBackupPolicies(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching backup archives for a database
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function backupArchivesQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  page: number = 0,
+  limit: number = TINY_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: [
+      'backup-archives',
+      'project',
+      projectId,
+      'database',
+      databaseId,
+      page,
+      limit,
+    ],
+    queryFn: () => fetchBackupArchives(projectId!, databaseId!, page, limit),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
@@ -78,11 +142,10 @@ export function useBackupPolicies(
   databaseId: string | null | undefined,
   options?: { enabled?: boolean },
 ) {
+  const queryOpts = backupPoliciesQueryOptions(projectId, databaseId)
   return useQuery({
-    queryKey: ['backup-policies', 'project', projectId, 'database', databaseId],
-    queryFn: () => fetchBackupPolicies(projectId!, databaseId!),
-    enabled: !!projectId && !!databaseId && (options?.enabled ?? true),
-    staleTime: DEFAULT_STALE_TIME,
+    ...queryOpts,
+    enabled: queryOpts.enabled && (options?.enabled ?? true),
   })
 }
 
@@ -96,18 +159,9 @@ export function useBackupArchives(
   limit: number = TINY_PAGE_SIZE,
   options?: { enabled?: boolean },
 ) {
+  const queryOpts = backupArchivesQueryOptions(projectId, databaseId, page, limit)
   return useQuery({
-    queryKey: [
-      'backup-archives',
-      'project',
-      projectId,
-      'database',
-      databaseId,
-      page,
-      limit,
-    ],
-    queryFn: () => fetchBackupArchives(projectId!, databaseId!, page, limit),
-    enabled: !!projectId && !!databaseId && (options?.enabled ?? true),
-    staleTime: DEFAULT_STALE_TIME,
+    ...queryOpts,
+    enabled: queryOpts.enabled && (options?.enabled ?? true),
   })
 }

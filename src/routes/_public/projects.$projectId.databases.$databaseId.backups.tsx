@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { DatabaseOverview } from '@/components/pages/projects/$projectId/databases/View'
 import {
-  fetchProjectDatabase,
-  fetchBackupPolicies,
-  fetchBackupArchives,
-  fetchProject,
-  fetchOrganizationPlan,
+  databaseQueryOptions,
+  backupPoliciesQueryOptions,
+  backupArchivesQueryOptions,
+  projectQueryOptions,
+  organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -25,22 +25,19 @@ export const Route = createFileRoute(
     }
 
     // Fetch critical data before rendering to prevent layout shifts
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
+
     // First fetch project to get teamId (organization ID)
-    const project = await queryClient.fetchQuery({
-      queryKey: ['project', projectId],
-      queryFn: () => fetchProject(projectId),
-      staleTime: 30 * 1000,
-    })
+    const project = await queryClient.ensureQueryData(
+      projectQueryOptions(projectId),
+    )
 
     // Then fetch organization plan if we have a teamId
-    // Use ensureQueryData to avoid duplicate calls if already fetching
     let plan = null
     if (project?.teamId) {
-      plan = await queryClient.ensureQueryData({
-        queryKey: ['organization', 'plan', project.teamId],
-        queryFn: () => fetchOrganizationPlan(project.teamId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
+      plan = await queryClient.ensureQueryData(
+        organizationPlanQueryOptions(project.teamId),
+      )
     }
 
     // Only fetch backup data if backups are enabled in the plan
@@ -48,43 +45,21 @@ export const Route = createFileRoute(
     if (backupsEnabled) {
       // Fetch all backup data in parallel - blocks navigation until ready
       await Promise.all([
-        queryClient.fetchQuery({
-          queryKey: ['database', 'project', projectId, databaseId],
-          queryFn: () => fetchProjectDatabase(projectId, databaseId),
-          staleTime: 30 * 1000,
-        }),
-        queryClient.fetchQuery({
-          queryKey: [
-            'backup-policies',
-            'project',
-            projectId,
-            'database',
-            databaseId,
-          ],
-          queryFn: () => fetchBackupPolicies(projectId, databaseId),
-          staleTime: 30 * 1000,
-        }),
-        queryClient.fetchQuery({
-          queryKey: [
-            'backup-archives',
-            'project',
-            projectId,
-            'database',
-            databaseId,
-            0,
-            10,
-          ],
-          queryFn: () => fetchBackupArchives(projectId, databaseId, 0, 10),
-          staleTime: 30 * 1000,
-        }),
+        queryClient.ensureQueryData(
+          databaseQueryOptions(projectId, databaseId),
+        ),
+        queryClient.ensureQueryData(
+          backupPoliciesQueryOptions(projectId, databaseId),
+        ),
+        queryClient.ensureQueryData(
+          backupArchivesQueryOptions(projectId, databaseId, 0, 10),
+        ),
       ])
     } else {
       // Still fetch database for metadata even if backups are disabled - blocks navigation until ready
-      await queryClient.fetchQuery({
-        queryKey: ['database', 'project', projectId, databaseId],
-        queryFn: () => fetchProjectDatabase(projectId, databaseId),
-        staleTime: 30 * 1000,
-      })
+      await queryClient.ensureQueryData(
+        databaseQueryOptions(projectId, databaseId),
+      )
     }
   },
   component: DatabaseOverviewBackups,

@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { DatabaseOverview } from '@/components/pages/projects/$projectId/databases/View'
-import { fetchProjectDatabase } from '@/lib/react-query/hooks'
+import { databaseQueryOptions } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/browser',
@@ -15,13 +15,11 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     // Fetch critical data before rendering to prevent layout shifts
-    // fetchQuery blocks navigation until ready
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     if (projectId && databaseId) {
-      await queryClient.fetchQuery({
-        queryKey: ['database', 'project', projectId, databaseId],
-        queryFn: () => fetchProjectDatabase(projectId, databaseId),
-        staleTime: 30 * 1000, // 30 seconds
-      })
+      await queryClient.ensureQueryData(
+        databaseQueryOptions(projectId, databaseId),
+      )
     }
   },
   component: BrowserPage,

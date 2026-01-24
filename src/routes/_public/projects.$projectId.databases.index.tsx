@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { DatabasesListView } from '@/components/pages/projects/$projectId/databases/View'
 import {
   databasesQueryOptions,
-  fetchProject,
+  projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 
@@ -26,11 +26,10 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
 
       if (projectId) {
         // Fetch project data (needed for header/sidebar) - blocks navigation
-        const projectData = await queryClient.ensureQueryData({
-          queryKey: ['project', projectId],
-          queryFn: () => fetchProject(projectId),
-          staleTime: 5 * 60 * 1000, // 5 minutes
-        })
+        // Uses ensureQueryData with queryOptions to prevent duplicate API calls
+        const projectData = await queryClient.ensureQueryData(
+          projectQueryOptions(projectId),
+        )
 
         // Fetch critical data before rendering to prevent layout shifts
         // ensureQueryData blocks navigation and uses cache if fresh, fetches if stale/missing

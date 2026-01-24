@@ -1366,6 +1366,51 @@ export function tableQueryOptions(
   })
 }
 
+/**
+ * Query options for fetching indexes for a table
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function tableIndexesQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['indexes', 'project', projectId, databaseId, tableId],
+    queryFn: () => fetchProjectTableIndexes(projectId!, databaseId!, tableId!),
+    enabled: !!projectId && !!databaseId && !!tableId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId && tableId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching all tables with full details for visualizer
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function allTablesForVisualizerQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['tables', 'visualizer', 'project', projectId, databaseId],
+    queryFn: () => fetchAllProjectTablesForVisualizer(projectId!, databaseId!),
+    enabled: !!projectId && !!databaseId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && databaseId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -1566,12 +1611,7 @@ export function useAllProjectTablesForVisualizer(
     isPending,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['tables', 'visualizer', 'project', projectId, databaseId],
-    queryFn: () => fetchAllProjectTablesForVisualizer(projectId!, databaseId!),
-    enabled: !!projectId && !!databaseId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(allTablesForVisualizerQueryOptions(projectId, databaseId))
 
   return {
     tables: tablesData?.tables ?? [],
@@ -1683,12 +1723,7 @@ export function useProjectTableIndexes(
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['indexes', 'project', projectId, databaseId, tableId],
-    queryFn: () => fetchProjectTableIndexes(projectId!, databaseId!, tableId!),
-    enabled: !!projectId && !!databaseId && !!tableId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  } = useQuery(tableIndexesQueryOptions(projectId, databaseId, tableId))
 
   return {
     indexes: indexesData?.indexes || [],

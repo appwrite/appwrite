@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { DatabaseOverview } from '@/components/pages/projects/$projectId/databases/View'
 import {
-  fetchProjectDatabase,
-  fetchAllProjectTablesForVisualizer,
+  databaseQueryOptions,
+  allTablesForVisualizerQueryOptions,
 } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -18,20 +18,15 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     // Fetch critical data before rendering to prevent layout shifts
-    // fetchQuery blocks navigation until ready
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     if (projectId && databaseId) {
       await Promise.all([
-        queryClient.fetchQuery({
-          queryKey: ['database', 'project', projectId, databaseId],
-          queryFn: () => fetchProjectDatabase(projectId, databaseId),
-          staleTime: 30 * 1000, // 30 seconds
-        }),
-        queryClient.fetchQuery({
-          queryKey: ['tables', 'visualizer', 'project', projectId, databaseId],
-          queryFn: () =>
-            fetchAllProjectTablesForVisualizer(projectId, databaseId),
-          staleTime: 30 * 1000, // 30 seconds
-        }),
+        queryClient.ensureQueryData(
+          databaseQueryOptions(projectId, databaseId),
+        ),
+        queryClient.ensureQueryData(
+          allTablesForVisualizerQueryOptions(projectId, databaseId),
+        ),
       ])
     }
   },

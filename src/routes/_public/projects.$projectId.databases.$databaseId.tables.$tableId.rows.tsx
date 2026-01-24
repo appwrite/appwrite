@@ -4,10 +4,10 @@ import {
   tablesQueryOptions,
   databaseQueryOptions,
   tableColumnsQueryOptions,
-  fetchProjectTableIndexes,
+  tableIndexesQueryOptions,
   tableRowsQueryOptions,
   tableQueryOptions,
-  fetchProject,
+  projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 
@@ -94,11 +94,10 @@ export const Route = createFileRoute(
         })
       }
       // Fetch project data (needed for header/sidebar) - blocks navigation
-      const projectData = await queryClient.ensureQueryData({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      })
+      // Uses ensureQueryData with queryOptions to prevent duplicate API calls
+      const projectData = await queryClient.ensureQueryData(
+        projectQueryOptions(projectId),
+      )
 
       // Fetch critical data before rendering to prevent layout shifts
       // All of these must complete before navigation proceeds to prevent loading states
@@ -143,12 +142,7 @@ export const Route = createFileRoute(
 
         // Prefetch indexes (optional data, not critical for rows tab) - doesn't block
         queryClient
-          .prefetchQuery({
-            queryKey: ['indexes', 'project', projectId, databaseId, tableId],
-            queryFn: () =>
-              fetchProjectTableIndexes(projectId, databaseId, tableId),
-            staleTime: 30 * 1000,
-          })
+          .prefetchQuery(tableIndexesQueryOptions(projectId, databaseId, tableId))
           .catch(() => {
             // Don't block on optional data errors
           }),
