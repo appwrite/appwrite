@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { FunctionVariables } from '@/components/pages/projects/$projectId/functions/Variables'
 import {
-  fetchProjectFunction,
-  fetchFunctionVariables,
+  projectFunctionQueryOptions,
+  functionVariablesQueryOptions,
 } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -18,19 +18,16 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     // Fetch critical data before rendering to prevent layout shifts
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
       // Fetch function - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: ['function', 'project', projectId, functionId],
-        queryFn: () => fetchProjectFunction(projectId, functionId),
-        staleTime: 30 * 1000,
-      }),
+      queryClient.ensureQueryData(
+        projectFunctionQueryOptions(projectId, functionId),
+      ),
       // Fetch function variables - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: ['variables', 'function', projectId, functionId],
-        queryFn: () => fetchFunctionVariables(projectId, functionId),
-        staleTime: 30 * 1000,
-      }),
+      queryClient.ensureQueryData(
+        functionVariablesQueryOptions(projectId, functionId),
+      ),
     ])
   },
   component: FunctionVariables,

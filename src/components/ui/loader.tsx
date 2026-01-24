@@ -107,8 +107,9 @@ export function FullscreenLoader({
               )}
             </div>
             {/* Appwrite logo at the bottom */}
-            <div className="absolute bottom-8" suppressHydrationWarning>
+            <div className="absolute bottom-8 flex items-center gap-1.5" suppressHydrationWarning>
               <img src={logoSrc} alt="Appwrite" className="h-6 w-auto" />
+              <span className="text-foreground/60 text-xl font-extralight tracking-tight">/ 2.0</span>
             </div>
           </div>
         </motion.div>

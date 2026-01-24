@@ -306,6 +306,35 @@ export async function fetchFunctionDomains(
 }
 
 /**
+ * Query function to fetch proxy rules for a function deployment
+ */
+export async function fetchFunctionDeploymentProxyRules(
+  projectId: string,
+  functionId: string,
+  deploymentId: string,
+) {
+  if (!projectId || !functionId || !deploymentId) {
+    return { rules: [], total: 0 }
+  }
+
+  const projectSdk = sdk.forProject(projectId)
+  const queries = [
+    Query.equal('type', 'deployment'),
+    Query.equal('deploymentId', deploymentId),
+    Query.equal('deploymentResourceType', 'function'),
+    Query.equal('deploymentResourceId', functionId),
+    Query.orderDesc('$createdAt'),
+  ]
+
+  const response = await projectSdk.proxy.listRules({ queries })
+
+  return {
+    rules: response.rules || [],
+    total: response.total || 0,
+  }
+}
+
+/**
  * Query function to fetch function runtimes
  *
  * This is extracted so it can be reused in both hooks and route loaders.
@@ -517,6 +546,35 @@ export function functionDomainsQueryOptions(
 }
 
 /**
+ * Query options for fetching function deployment proxy rules
+ */
+export function functionDeploymentProxyRulesQueryOptions(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+  deploymentId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: [
+      'proxy-rules',
+      'deployment',
+      'function',
+      projectId,
+      functionId,
+      deploymentId,
+    ],
+    queryFn: () =>
+      fetchFunctionDeploymentProxyRules(projectId!, functionId!, deploymentId!),
+    enabled: !!projectId && !!functionId && !!deploymentId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && functionId && deploymentId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
  * Query options for fetching function runtimes
  *
  * This can be used in both route loaders and hooks to ensure consistent query configuration.
@@ -534,6 +592,30 @@ export function projectRuntimesQueryOptions(
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching function variables
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function functionVariablesQueryOptions(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+  page: number = 0,
+  limit: number = SMALL_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: ['variables', 'function', projectId, functionId, page, limit],
+    queryFn: () => fetchFunctionVariables(projectId!, functionId!, page, limit),
+    enabled: !!projectId && !!functionId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && functionId ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -781,12 +863,9 @@ export function useFunctionVariables(
   page: number = 0,
   limit: number = SMALL_PAGE_SIZE,
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['variables', 'function', projectId, functionId, page, limit],
-    queryFn: () => fetchFunctionVariables(projectId!, functionId!, page, limit),
-    enabled: !!projectId && !!functionId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    functionVariablesQueryOptions(projectId, functionId, page, limit),
+  )
 
   return {
     data,
@@ -811,6 +890,27 @@ export function useFunctionDomains(
   return useQuery(
     functionDomainsQueryOptions(projectId, functionId, page, limit, search),
   )
+}
+
+/**
+ * Hook to fetch function deployment proxy rules
+ */
+export function useFunctionDeploymentProxyRules(
+  projectId: string | null | undefined,
+  functionId: string | null | undefined,
+  deploymentId: string | null | undefined,
+) {
+  const { data, isLoading, error, refetch } = useQuery(
+    functionDeploymentProxyRulesQueryOptions(projectId, functionId, deploymentId),
+  )
+
+  return {
+    rules: data?.rules || [],
+    total: data?.total || 0,
+    isLoading,
+    error,
+    refetch,
+  }
 }
 
 /**

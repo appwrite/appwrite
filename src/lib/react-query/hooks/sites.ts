@@ -537,6 +537,104 @@ export function siteUsageQueryOptions(
   })
 }
 
+/**
+ * Query options for fetching sites usage (all sites in project)
+ */
+export function sitesUsageQueryOptions(
+  projectId: string | null | undefined,
+  range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
+) {
+  return queryOptions({
+    queryKey: ['sites-usage', 'project', projectId, range],
+    queryFn: () => fetchSitesUsage(projectId!, range),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching site variables
+ */
+export function siteVariablesQueryOptions(
+  projectId: string | null | undefined,
+  siteId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['variables', 'site', projectId, siteId],
+    queryFn: () => fetchSiteVariables(projectId!, siteId!),
+    enabled: !!projectId && !!siteId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && siteId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching site frameworks
+ */
+export function siteFrameworksQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['frameworks', 'sites', projectId],
+    queryFn: () => fetchSiteFrameworks(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME, // Frameworks don't change often
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching site specifications
+ */
+export function siteSpecificationsQueryOptions(
+  projectId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['specifications', 'site', projectId],
+    queryFn: () => fetchSiteSpecifications(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching a single proxy rule
+ */
+export function proxyRuleQueryOptions(
+  projectId: string | null | undefined,
+  ruleId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['proxy-rule', 'project', projectId, ruleId],
+    queryFn: () => fetchProxyRule(projectId!, ruleId!),
+    enabled: !!projectId && !!ruleId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId && ruleId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -663,12 +761,9 @@ export function useSiteVariables(
   projectId: string | null | undefined,
   siteId: string | null | undefined,
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['variables', 'site', projectId, siteId],
-    queryFn: () => fetchSiteVariables(projectId!, siteId!),
-    enabled: !!projectId && !!siteId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    siteVariablesQueryOptions(projectId, siteId),
+  )
 
   return {
     variables: data?.variables || [],
@@ -683,24 +778,14 @@ export function useSiteVariables(
  * Hook to fetch site frameworks
  */
 export function useSiteFrameworks(projectId: string | null | undefined) {
-  return useQuery({
-    queryKey: ['frameworks', 'sites', projectId],
-    queryFn: () => fetchSiteFrameworks(projectId!),
-    enabled: !!projectId,
-    staleTime: LONG_STALE_TIME, // Frameworks don't change often
-  })
+  return useQuery(siteFrameworksQueryOptions(projectId))
 }
 
 /**
  * Hook to fetch site specifications
  */
 export function useSiteSpecifications(projectId: string | null | undefined) {
-  return useQuery({
-    queryKey: ['specifications', 'site', projectId],
-    queryFn: () => fetchSiteSpecifications(projectId!),
-    enabled: !!projectId,
-    staleTime: LONG_STALE_TIME,
-  })
+  return useQuery(siteSpecificationsQueryOptions(projectId))
 }
 
 /**
@@ -710,12 +795,7 @@ export function useSitesUsage(
   projectId: string | null | undefined,
   range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
 ) {
-  return useQuery({
-    queryKey: ['sites-usage', 'project', projectId, range],
-    queryFn: () => fetchSitesUsage(projectId!, range),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(sitesUsageQueryOptions(projectId, range))
 }
 
 /**
@@ -726,12 +806,7 @@ export function useSiteUsage(
   siteId: string | null | undefined,
   range: 'ThirtyDays' | 'SevenDays' | 'OneDay' = 'ThirtyDays',
 ) {
-  return useQuery({
-    queryKey: ['site-usage', 'project', projectId, siteId, range],
-    queryFn: () => fetchSiteUsage(projectId!, siteId!, range),
-    enabled: !!projectId && !!siteId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(siteUsageQueryOptions(projectId, siteId, range))
 }
 
 /**
@@ -764,12 +839,7 @@ export function useProxyRule(
   projectId: string | null | undefined,
   ruleId: string | null | undefined,
 ) {
-  return useQuery({
-    queryKey: ['proxy-rule', 'project', projectId, ruleId],
-    queryFn: () => fetchProxyRule(projectId!, ruleId!),
-    enabled: !!projectId && !!ruleId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(proxyRuleQueryOptions(projectId, ruleId))
 }
 
 /**

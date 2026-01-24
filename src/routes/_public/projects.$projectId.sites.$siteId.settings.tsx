@@ -2,15 +2,13 @@ import { createFileRoute } from '@tanstack/react-router'
 import { SiteSettingsView } from '@/components/pages/projects/$projectId/sites/SiteSettings'
 import {
   siteQueryOptions,
-  fetchProject,
-  fetchProjectVariables,
-  fetchVcsInstallations,
+  siteVariablesQueryOptions,
+  siteFrameworksQueryOptions,
+  siteSpecificationsQueryOptions,
+  projectQueryOptions,
+  projectVariablesQueryOptions,
+  vcsInstallationsQueryOptions,
 } from '@/lib/react-query/hooks'
-import {
-  fetchSiteVariables,
-  fetchSiteFrameworks,
-  fetchSiteSpecifications,
-} from '@/lib/react-query/hooks/sites'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/settings',
@@ -28,45 +26,27 @@ export const Route = createFileRoute(
     await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
 
     // Fetch project data (needed for header/sidebar) - blocks navigation
-    await queryClient.ensureQueryData({
-      queryKey: ['project', projectId],
-      queryFn: () => fetchProject(projectId),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    })
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
     // Fetch critical data before rendering to prevent layout shifts
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
       // Fetch project variables
-      queryClient.ensureQueryData({
-        queryKey: ['variables', 'project', projectId],
-        queryFn: () => fetchProjectVariables(projectId),
-        staleTime: 5 * 60 * 1000,
-      }),
+      queryClient.ensureQueryData(projectVariablesQueryOptions(projectId)),
       // Fetch site variables
-      queryClient.ensureQueryData({
-        queryKey: ['variables', 'site', projectId, siteId],
-        queryFn: () => fetchSiteVariables(projectId, siteId),
-        staleTime: 5 * 60 * 1000,
-      }),
+      queryClient.ensureQueryData(
+        siteVariablesQueryOptions(projectId, siteId),
+      ),
       // Fetch frameworks
-      queryClient.ensureQueryData({
-        queryKey: ['frameworks', 'sites', projectId],
-        queryFn: () => fetchSiteFrameworks(projectId),
-        staleTime: 5 * 60 * 1000,
-      }),
+      queryClient.ensureQueryData(siteFrameworksQueryOptions(projectId)),
       // Fetch VCS installations
-      queryClient.ensureQueryData({
-        queryKey: ['vcs', 'installations', projectId, 0, 25],
-        queryFn: () => fetchVcsInstallations(projectId, 0, 25),
-        staleTime: 5 * 60 * 1000,
-      }),
+      queryClient.ensureQueryData(
+        vcsInstallationsQueryOptions(projectId, 0, 25),
+      ),
       // Fetch specifications (cloud only)
       queryClient
-        .ensureQueryData({
-          queryKey: ['specifications', 'site', projectId],
-          queryFn: () => fetchSiteSpecifications(projectId),
-          staleTime: 5 * 60 * 1000,
-        })
+        .ensureQueryData(siteSpecificationsQueryOptions(projectId))
         .catch(() => {
           // Ignore errors - specifications might not be available in self-hosted
         }),

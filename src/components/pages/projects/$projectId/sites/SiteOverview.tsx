@@ -1,19 +1,63 @@
 import { useParams, Link } from '@tanstack/react-router'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   useProjectSite,
   useSiteDeployments,
   useSiteDeployment,
   useDeploymentProxyRules,
+  deleteSiteDeployment,
+  Dependencies,
 } from '@/lib/react-query/hooks'
-import { CheckCircle2, Loader2, Clock, AlertCircle, Globe } from 'lucide-react'
+import {
+  CheckCircle2,
+  Loader2,
+  Clock,
+  AlertCircle,
+  Globe,
+  Download,
+  Trash2,
+  RefreshCw,
+  Play,
+  FileCode,
+  Package,
+  ChevronDown,
+  ExternalLink,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Info } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip'
+import * as TooltipPrimitive from '@radix-ui/react-tooltip'
+import { useQueryClient, useMutation } from '@tanstack/react-query'
+import { sdk } from '@/lib/appwrite/sdk'
+import { DeploymentDownloadType } from '@appwrite.io/console'
 import { cn } from '@/lib/utils'
 import { formatBytes } from '@/lib/utils/mock-data'
 import { Query } from '@appwrite.io/console'
@@ -22,6 +66,7 @@ import {
   getDeploymentStatusBadge,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
+import { toast } from 'sonner'
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -33,10 +78,14 @@ function formatDuration(seconds: number): string {
 
 export function SiteOverviewView() {
   const { projectId, siteId } = useParams({ strict: false })
+  const queryClient = useQueryClient()
   const { data: site, isLoading: siteLoading } = useProjectSite(
     projectId,
     siteId,
   )
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
+  const [activateDialogOpen, setActivateDialogOpen] = useState(false)
 
   // Fetch recent deployments (first 4)
   const { data: recentDeploymentsData } = useSiteDeployments(
@@ -104,6 +153,120 @@ export function SiteOverviewView() {
   const isBuilding =
     activeDeployment?.status === 'building' ||
     activeDeployment?.status === 'processing'
+
+  // Handlers
+  const handleDownloadSource = () => {
+    if (!projectId || !siteId || !activeDeployment) return
+    try {
+      const projectSdk = sdk.forProject(projectId)
+      const url = projectSdk.sites.getDeploymentDownload({
+        siteId,
+        deploymentId: activeDeployment.$id,
+        type: DeploymentDownloadType.Source,
+      })
+      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      window.open(urlWithMode, '_blank')
+      toast.success('Download started')
+    } catch (error) {
+      toast.error('Failed to download source code')
+    }
+  }
+
+  const handleDownloadBuild = () => {
+    if (!projectId || !siteId || !activeDeployment) return
+    try {
+      const projectSdk = sdk.forProject(projectId)
+      const url = projectSdk.sites.getDeploymentDownload({
+        siteId,
+        deploymentId: activeDeployment.$id,
+        type: DeploymentDownloadType.Output,
+      })
+      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      window.open(urlWithMode, '_blank')
+      toast.success('Download started')
+    } catch (error) {
+      toast.error('Failed to download build output')
+    }
+  }
+
+  // Redeploy mutation
+  const redeployMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.createDuplicateDeployment({
+        siteId,
+        deploymentId: activeDeployment.$id,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...Dependencies.DEPLOYMENTS],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [...Dependencies.SITE],
+      })
+      toast.success('Deployment rebuild started')
+      setRedeployDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to redeploy')
+    },
+  })
+
+  // Activate mutation (disabled for active deployment, but included for consistency)
+  const activateMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.updateSiteDeployment({
+        siteId,
+        deploymentId: activeDeployment.$id,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...Dependencies.DEPLOYMENTS],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [...Dependencies.SITE],
+      })
+      toast.success('Deployment activated successfully')
+      setActivateDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to activate deployment')
+    },
+  })
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      throw new Error(
+        'Cannot delete the active deployment. Please activate another deployment first.',
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...Dependencies.DEPLOYMENTS],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [...Dependencies.SITE],
+      })
+      toast.success('Deployment deleted successfully')
+      setDeleteDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete deployment')
+    },
+  })
 
   if (siteLoading) {
     return (
@@ -207,7 +370,40 @@ export function SiteOverviewView() {
                   </div>
                 </div>
               </div>
-              <div className="px-6 py-4 border-t border-border bg-muted/30">
+              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 text-[13px]"
+                    >
+                      <Download className="mr-1.5 h-4 w-4" />
+                      Download
+                      <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="z-[200]">
+                    <DropdownMenuItem onClick={handleDownloadSource}>
+                      <FileCode className="mr-2 h-4 w-4" />
+                      Source code
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownloadBuild}>
+                      <Package className="mr-2 h-4 w-4" />
+                      Build output
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRedeployDialogOpen(true)}
+                  disabled={redeployMutation.isPending}
+                  className="h-9 text-[13px]"
+                >
+                  <RefreshCw className="mr-1.5 h-4 w-4" />
+                  Redeploy
+                </Button>
                 <Link
                   to="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
                   params={{
@@ -220,6 +416,46 @@ export function SiteOverviewView() {
                     Build logs
                   </Button>
                 </Link>
+                {proxyRules.length > 0 && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                      >
+                        <Globe className="mr-1.5 h-4 w-4" />
+                        Visit
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="z-[200] w-80">
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="text-[13px] font-semibold text-foreground mb-2">
+                            Domains
+                          </h4>
+                          <div className="space-y-1.5">
+                            {proxyRules.map((rule) => (
+                              <a
+                                key={rule.$id}
+                                href={`https://${rule.domain}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
+                              >
+                                <Globe className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                <span className="text-[12px] font-mono text-foreground group-hover:text-primary flex-1 truncate">
+                                  {rule.domain}
+                                </span>
+                                <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-foreground shrink-0" />
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
             </div>
           )}
@@ -307,6 +543,134 @@ export function SiteOverviewView() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {activeDeployment && (
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogTitle>Delete deployment</DialogTitle>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-4">
+              <DialogDescription className="text-[13px] mb-4">
+                Are you sure you want to delete this deployment? This action cannot be undone.
+              </DialogDescription>
+              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                className="h-9 text-[13px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Redeploy Confirmation Dialog */}
+      {activeDeployment && (
+        <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogTitle>Redeploy deployment</DialogTitle>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-4">
+              <DialogDescription className="text-[13px] mb-4">
+                This will create a new build for this deployment using the current site configuration. The original deployment's code will be preserved and used for the new build.
+              </DialogDescription>
+              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setRedeployDialogOpen(false)}
+                disabled={redeployMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => redeployMutation.mutate()}
+                disabled={redeployMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {redeployMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    Redeploying...
+                  </>
+                ) : (
+                  'Redeploy'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Activate Confirmation Dialog */}
+      {activeDeployment && (
+        <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogTitle>Activate deployment</DialogTitle>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-4">
+              <DialogDescription className="text-[13px] mb-4">
+                This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.
+              </DialogDescription>
+              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setActivateDialogOpen(false)}
+                disabled={activateMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => activateMutation.mutate()}
+                disabled={activateMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {activateMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    Activating...
+                  </>
+                ) : (
+                  'Activate'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

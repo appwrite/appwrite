@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { FunctionDomains } from '@/components/pages/projects/$projectId/functions/Domains'
 import {
-  fetchProjectFunction,
-  fetchFunctionDomains,
+  projectFunctionQueryOptions,
+  functionDomainsQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const DOMAINS_PER_PAGE = 25
@@ -20,28 +20,22 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     // Fetch critical data before rendering to prevent layout shifts
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
       // Fetch function - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: ['function', 'project', projectId, functionId],
-        queryFn: () => fetchProjectFunction(projectId, functionId),
-        staleTime: 30 * 1000,
-      }),
+      queryClient.ensureQueryData(
+        projectFunctionQueryOptions(projectId, functionId),
+      ),
       // Fetch first page of proxy rules - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: [
-          'proxy-rules',
-          'function',
+      queryClient.ensureQueryData(
+        functionDomainsQueryOptions(
           projectId,
           functionId,
           0,
           DOMAINS_PER_PAGE,
           '',
-        ],
-        queryFn: () =>
-          fetchFunctionDomains(projectId, functionId, 0, DOMAINS_PER_PAGE, ''),
-        staleTime: 30 * 1000,
-      }),
+        ),
+      ),
     ])
   },
   component: FunctionDomains,

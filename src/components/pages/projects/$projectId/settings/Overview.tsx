@@ -32,6 +32,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useProject, useOrganizations } from '@/lib/react-query/hooks'
+import { getMCPIDEs } from '@/lib/config/ide'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -623,41 +624,8 @@ export function ProjectSettingsOverview({
     return `${endpoint}/vcs/github/authorize?project=${projectId}&success=${encodeURIComponent(successUrl)}&failure=${encodeURIComponent(failureUrl)}&mode=admin`
   }
 
-  // MCP integration links
-  const mcpIntegrations = useMemo(() => {
-    return [
-      {
-        label: 'Claude Code',
-        href: 'https://appwrite.io/docs/tooling/mcp/claude',
-        iconPath: 'claude.svg',
-      },
-      {
-        label: 'Cursor',
-        href: 'https://appwrite.io/docs/tooling/mcp/cursor',
-        iconPath: 'cursor-ai.svg',
-      },
-      {
-        label: 'Windsurf',
-        href: 'https://appwrite.io/docs/tooling/mcp/windsurf',
-        iconPath: 'windsurf.svg',
-      },
-      {
-        label: 'VS Code',
-        href: 'https://appwrite.io/docs/tooling/mcp/vscode',
-        iconPath: 'vscode.svg',
-      },
-      {
-        label: 'Google Antigravity',
-        href: 'https://appwrite.io/docs/tooling/mcp/antigravity',
-        iconPath: 'google-antigravity.svg',
-      },
-      {
-        label: 'OpenCode',
-        href: 'https://appwrite.io/docs/tooling/mcp/opencode',
-        iconPath: 'opencode.svg',
-      },
-    ]
-  }, [])
+  // MCP integration links - using centralized IDE config
+  const mcpIntegrations = useMemo(() => getMCPIDEs(), [])
 
   if (projectLoading) {
     return (
@@ -1001,22 +969,23 @@ export function ProjectSettingsOverview({
                   <div className="h-px flex-1 bg-border" />
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2">
-                  {mcpIntegrations.map((tool, index) => {
+                  {mcpIntegrations.map((ide) => {
+                    if (!ide.mcpDocsUrl) return null
                     return (
                       <Button
-                        key={index}
+                        key={ide.id}
                         variant="secondary"
                         size="sm"
                         className="h-9 text-[13px]"
                         asChild
                       >
-                        <a href={tool.href} target="_blank" rel="noreferrer">
+                        <a href={ide.mcpDocsUrl} target="_blank" rel="noreferrer">
                           <img
-                            src={`/icons/${tool.iconPath}`}
+                            src={ide.iconPath}
                             alt=""
                             className="mr-1.5 h-4 w-4 brightness-0 dark:brightness-100"
                           />
-                          {tool.label}
+                          {ide.name}
                         </a>
                       </Button>
                     )

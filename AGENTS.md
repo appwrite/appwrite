@@ -321,6 +321,7 @@ const pageIndexed = currentPage - 1
 
 - **Never change button text during actions** - Keep text consistent, use `disabled` state
 - **Use "Update" not "Edit"** - Align with API terminology
+- **Disable with tooltip, don't hide** - Always prefer disabling buttons with a tooltip explaining why they are disabled over hiding them completely. This helps users understand what actions exist and why they can't perform them (e.g., "Upgrade your plan to access this feature", "Complete the form to continue"). Only hide buttons if explicitly requested.
 
 ### Loading & Navigation
 
@@ -716,6 +717,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Create resource      | Form resets and closes dialog on success           |
 | Update resource      | Use "Update" terminology, not "Edit"               |
 | Button during action | Keep text, use `disabled` state                    |
+| Unavailable action   | Disable button with tooltip, don't hide            |
 | Service avatar       | `bg-muted text-muted-foreground` (never colored)   |
 | Icon spacing         | `mr-1.5` or `gap-1.5`                              |
 | Date display         | Always include DateTooltip                         |

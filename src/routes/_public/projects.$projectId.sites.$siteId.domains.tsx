@@ -3,9 +3,9 @@ import { SiteDomainsView } from '@/components/pages/projects/$projectId/sites/Si
 import {
   siteQueryOptions,
   siteDomainsQueryOptions,
-  fetchProject,
+  projectQueryOptions,
+  organizationDomainsQueryOptions,
 } from '@/lib/react-query/hooks'
-import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
 export const Route = createFileRoute(
@@ -26,13 +26,13 @@ export const Route = createFileRoute(
     )
 
     // Fetch project data (needed for header/sidebar) - blocks navigation
-    const projectData = await queryClient.ensureQueryData({
-      queryKey: ['project', projectId],
-      queryFn: () => fetchProject(projectId),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    })
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
+    const projectData = await queryClient.ensureQueryData(
+      projectQueryOptions(projectId),
+    )
 
     // Fetch critical data before rendering to prevent layout shifts
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
       // Fetch first page of domains - blocks navigation until ready
       queryClient.ensureQueryData(
@@ -41,11 +41,9 @@ export const Route = createFileRoute(
       // Fetch organization domains (for verification status) - cloud only
       projectData?.teamId
         ? queryClient
-            .ensureQueryData({
-              queryKey: ['domains', 'organization', projectData.teamId],
-              queryFn: () => fetchOrganizationDomains(projectData.teamId),
-              staleTime: 5 * 60 * 1000,
-            })
+            .ensureQueryData(
+              organizationDomainsQueryOptions(projectData.teamId),
+            )
             .catch(() => {
               // Ignore errors - domains API might not be available in self-hosted
             })

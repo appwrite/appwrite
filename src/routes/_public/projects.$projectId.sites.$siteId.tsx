@@ -5,7 +5,7 @@ import {
   siteDeploymentsQueryOptions,
   siteDeploymentQueryOptions,
   siteDomainsQueryOptions,
-  fetchProject,
+  projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { Query } from '@appwrite.io/console'
 
@@ -27,11 +27,8 @@ export const Route = createFileRoute(
     )
 
     // Fetch project data (needed for header/sidebar) - blocks navigation
-    await queryClient.ensureQueryData({
-      queryKey: ['project', projectId],
-      queryFn: () => fetchProject(projectId),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    })
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
     // Fetch critical data before rendering to prevent layout shifts
     await Promise.all([

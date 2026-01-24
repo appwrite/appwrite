@@ -4,7 +4,7 @@ import { SiteLogsView } from '@/components/pages/projects/$projectId/sites/SiteL
 import {
   siteQueryOptions,
   siteLogsQueryOptions,
-  fetchProject,
+  projectQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const LOGS_PER_PAGE = 25
@@ -34,17 +34,12 @@ export const Route = createFileRoute(
     const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
 
     // Fetch critical data before rendering to prevent layout shifts
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
       // Fetch site - blocks navigation until ready
-      queryClient.ensureQueryData(
-        siteQueryOptions(projectId, siteId),
-      ),
+      queryClient.ensureQueryData(siteQueryOptions(projectId, siteId)),
       // Fetch project data (needed for header/sidebar) - blocks navigation
-      queryClient.ensureQueryData({
-        queryKey: ['project', projectId],
-        queryFn: () => fetchProject(projectId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      }),
+      queryClient.ensureQueryData(projectQueryOptions(projectId)),
       // Fetch logs for the requested page - blocks navigation until ready
       queryClient.ensureQueryData(
         siteLogsQueryOptions(projectId, siteId, pageIndex, LOGS_PER_PAGE),

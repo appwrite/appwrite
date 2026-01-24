@@ -11,17 +11,31 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Play,
   ArrowUp,
   ArrowDown,
+  HelpCircle,
+  FileCode,
+  Package,
+  BrainCircuit,
+  ExternalLink,
+  RefreshCw,
+  Globe,
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
+import {
+  getAIChatIDEs,
+  generateAIChatDeeplink,
+  type IDEConfig,
+} from '@/lib/config/ide'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,10 +57,20 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { useNavigate, useLocation, useSearch } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
+import {
+  useDeploymentProxyRules,
+  useFunctionDeploymentProxyRules,
+} from '@/lib/react-query/hooks'
 
 // ANSI color code mapping
 const ANSI_COLORS: Record<number, string> = {
@@ -484,6 +508,74 @@ function getBranchUrl(deployment: any): string | null {
   return null
 }
 
+/**
+ * Generate the AI fix prompt for a failed deployment
+ */
+function generateAIFixPrompt(
+  deployment: Models.Deployment,
+  runtime?: string,
+  resourceName?: string,
+  isSite?: boolean,
+): string {
+  const resourceType = isSite ? 'Site' : 'Function'
+  const buildLogs = deployment.buildLogs || ''
+  
+  // Get the last 100 lines of logs to avoid overly long prompts
+  const logLines = buildLogs.split('\n')
+  const lastLogs = logLines.slice(-100).join('\n')
+  
+  // Strip ANSI codes from logs for clean markdown
+  const cleanLogs = lastLogs.replace(/\x1b\[(\d+(?:;\d+)*)?m/g, '')
+  
+  let prompt = `# Fix Appwrite ${resourceType} Deployment Failure
+
+## Context
+`
+
+  if (resourceName) {
+    prompt += `- **${resourceType} Name**: ${resourceName}\n`
+  }
+  
+  prompt += `- **Deployment ID**: ${deployment.$id}\n`
+  
+  if (runtime) {
+    prompt += `- **Runtime**: ${runtime}\n`
+  }
+  
+  prompt += `- **Status**: Failed\n`
+  prompt += `- **Created**: ${new Date(deployment.$createdAt).toISOString()}\n`
+  
+  if (deployment.providerBranch) {
+    prompt += `- **Branch**: ${deployment.providerBranch}\n`
+  }
+  
+  if (deployment.providerCommitHash) {
+    prompt += `- **Commit**: ${deployment.providerCommitHash.slice(0, 7)}\n`
+  }
+  
+  if (deployment.providerCommitMessage) {
+    prompt += `- **Commit Message**: ${deployment.providerCommitMessage}\n`
+  }
+
+  prompt += `
+## Build Logs (Last 100 lines)
+
+\`\`\`
+${cleanLogs || 'No build logs available'}
+\`\`\`
+
+## Task
+
+Please analyze the build logs above and help me fix the deployment failure. Identify:
+1. The root cause of the failure
+2. Specific code changes or configuration updates needed
+3. Any missing dependencies or incorrect settings
+
+Provide clear, actionable steps to resolve this issue.`
+
+  return prompt
+}
+
 export interface DeploymentDetailViewConfig {
   // Data
   projectId: string
@@ -502,7 +594,10 @@ export interface DeploymentDetailViewConfig {
   
   // Actions
   onDelete: (deploymentId: string) => Promise<void>
-  onDownload: (projectId: string, resourceId: string, deploymentId: string) => void
+  onDownloadSource: (projectId: string, resourceId: string, deploymentId: string) => void
+  onDownloadBuild: (projectId: string, resourceId: string, deploymentId: string) => void
+  onRedeploy?: (projectId: string, resourceId: string, deploymentId: string) => Promise<void>
+  onActivate?: (projectId: string, resourceId: string, deploymentId: string) => Promise<void>
   onNavigateToRelated?: (deploymentId: string) => void
   
   // UI
@@ -528,19 +623,50 @@ export function DeploymentDetailView({
   deploymentDetailRoute,
   listRoute,
   onDelete,
-  onDownload,
+  onDownloadSource,
+  onDownloadBuild,
+  onRedeploy,
+  onActivate,
   showRuntime = false,
   RuntimeIcon,
   invalidateQueries,
   fallbackPath,
 }: DeploymentDetailViewConfig) {
   const navigate = useNavigate()
+  const location = useLocation()
+  const search = useSearch({ strict: false })
   const queryClient = useQueryClient()
   const [logsSearch, setLogsSearch] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
+  const [activateDialogOpen, setActivateDialogOpen] = useState(false)
   const logsContainerRef = useRef<HTMLDivElement>(null)
+  const lineRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const [isAtTop, setIsAtTop] = useState(true)
   const [isAtBottom, setIsAtBottom] = useState(false)
+
+  // Get selected line from URL query params
+  const selectedLine = useMemo(() => {
+    // Handle both object and string search params
+    if (typeof search === 'object' && search !== null && 'line' in search) {
+      const lineParam = search.line
+      if (typeof lineParam === 'number') {
+        return lineParam
+      }
+      if (typeof lineParam === 'string') {
+        const parsed = parseInt(lineParam, 10)
+        return isNaN(parsed) ? null : parsed
+      }
+      return null
+    }
+    
+    // Fallback to string parsing
+    const searchParams = new URLSearchParams(
+      typeof location.search === 'string' ? location.search : '',
+    )
+    const lineParam = searchParams.get('line')
+    return lineParam ? parseInt(lineParam, 10) : null
+  }, [search, location.search])
 
   // Determine if this is a site or function deployment (needed for navigation)
   const isSiteDeployment = resourceId.includes('site') || deploymentDetailRoute.includes('sites')
@@ -561,6 +687,59 @@ export function DeploymentDetailView({
 
   // Check if this is the active deployment
   const isActiveDeployment = parentResource?.deploymentId === deploymentId
+
+  // Fetch proxy rules for this deployment
+  const siteProxyRules = useDeploymentProxyRules(
+    isSiteDeployment ? projectId : null,
+    isSiteDeployment ? resourceId : null,
+    isSiteDeployment ? deploymentId : null,
+  )
+
+  const functionProxyRules = useFunctionDeploymentProxyRules(
+    !isSiteDeployment ? projectId : null,
+    !isSiteDeployment ? resourceId : null,
+    !isSiteDeployment ? deploymentId : null,
+  )
+
+  const proxyRules = isSiteDeployment ? siteProxyRules : functionProxyRules
+
+  // Check if deployment failed (including timeout)
+  const isDeploymentFailed = deployment
+    ? deployment.status === 'failed' || isDeploymentTimeout(deployment.status, deployment.$createdAt)
+    : false
+
+  // Generate AI fix prompt
+  const aiFixPrompt = useMemo(() => {
+    if (!deployment || !isDeploymentFailed) return ''
+    return generateAIFixPrompt(
+      deployment,
+      parentResource?.runtime,
+      parentResource?.name,
+      isSiteDeployment,
+    )
+  }, [deployment, isDeploymentFailed, parentResource?.runtime, parentResource?.name, isSiteDeployment])
+
+  // IDE configurations (only those that support AI chat)
+  const aiChatIDEs = useMemo(() => getAIChatIDEs(), [])
+
+  // Handle opening IDE with prompt
+  const handleOpenInIDE = (ide: IDEConfig) => {
+    const deeplink = generateAIChatDeeplink(ide, aiFixPrompt)
+    if (deeplink) {
+      window.open(deeplink, '_blank')
+      toast.success(`Opening ${ide.name}...`)
+    }
+  }
+
+  // Handle copy prompt as markdown
+  const handleCopyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(aiFixPrompt)
+      toast.success('Prompt copied to clipboard')
+    } catch (error) {
+      toast.error('Failed to copy prompt')
+    }
+  }
 
   // Get VCS provider info
   const vcsProvider = deployment ? getVcsProvider(deployment) : null
@@ -605,9 +784,56 @@ export function DeploymentDetailView({
     },
   })
 
-  // Handle download deployment
-  const handleDownloadDeployment = () => {
-    onDownload(projectId, resourceId, deploymentId)
+  // Redeploy mutation
+  const redeployMutation = useMutation({
+    mutationFn: async () => {
+      if (!onRedeploy) {
+        throw new Error('Redeploy is not available for this deployment type')
+      }
+      return await onRedeploy(projectId, resourceId, deploymentId)
+    },
+    onSuccess: () => {
+      invalidateQueries.forEach((queryKey) => {
+        const normalizedKey: readonly unknown[] = Array.isArray(queryKey) ? queryKey : [queryKey]
+        queryClient.invalidateQueries({ queryKey: normalizedKey })
+      })
+      toast.success('Deployment rebuild started')
+      setRedeployDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to redeploy')
+    },
+  })
+
+  // Activate mutation
+  const activateMutation = useMutation({
+    mutationFn: async () => {
+      if (!onActivate) {
+        throw new Error('Activate is not available for this deployment type')
+      }
+      return await onActivate(projectId, resourceId, deploymentId)
+    },
+    onSuccess: () => {
+      invalidateQueries.forEach((queryKey) => {
+        const normalizedKey: readonly unknown[] = Array.isArray(queryKey) ? queryKey : [queryKey]
+        queryClient.invalidateQueries({ queryKey: normalizedKey })
+      })
+      toast.success('Deployment activated successfully')
+      setActivateDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to activate deployment')
+    },
+  })
+
+  // Handle download source code
+  const handleDownloadSource = () => {
+    onDownloadSource(projectId, resourceId, deploymentId)
+  }
+
+  // Handle download build output
+  const handleDownloadBuild = () => {
+    onDownloadBuild(projectId, resourceId, deploymentId)
   }
 
   // Handle copy logs
@@ -692,6 +918,47 @@ export function DeploymentDetailView({
     }
   }, [getScrollContainer, updateScrollPosition, buildLogs])
 
+  // Scroll to selected line when it changes
+  useEffect(() => {
+    if (selectedLine === null) return
+    if (!buildLogs) return // Wait for logs to be available
+
+    // Retry mechanism to ensure DOM has updated with refs
+    let retryCount = 0
+    const maxRetries = 10
+    
+    const tryScroll = () => {
+      const lineElement = lineRefs.current.get(selectedLine)
+      if (!lineElement) {
+        // Retry if element not found yet
+        if (retryCount < maxRetries) {
+          retryCount++
+          setTimeout(tryScroll, 100)
+        }
+        return
+      }
+
+      const scrollContainer = getScrollContainer()
+      if (!scrollContainer) return
+
+      // Calculate position relative to scroll container
+      const containerRect = scrollContainer.getBoundingClientRect()
+      const elementRect = lineElement.getBoundingClientRect()
+      const relativeTop = elementRect.top - containerRect.top + scrollContainer.scrollTop
+
+      // Scroll to line with some padding from top
+      scrollContainer.scrollTo({
+        top: relativeTop - 20, // 20px padding from top
+        behavior: 'smooth',
+      })
+    }
+
+    // Start trying after a short delay
+    const timeoutId = setTimeout(tryScroll, 100)
+
+    return () => clearTimeout(timeoutId)
+  }, [selectedLine, getScrollContainer, buildLogs])
+
   // Scroll handlers for logs
   const handleScrollToTop = () => {
     const scrollContainer = getScrollContainer()
@@ -710,34 +977,109 @@ export function DeploymentDetailView({
     }
   }
 
-  // Parse and filter logs - MUST be called before any conditional returns
+  // Parse and filter logs with line numbers - MUST be called before any conditional returns
   const parsedLogs = useMemo(() => {
     if (!buildLogs) return null
 
-    let logsToDisplay = buildLogs
     const searchTerm = logsSearch.trim()
+    const allLines = buildLogs.split('\n')
 
-    // Apply search filter if needed
+    // When filtering, track which original line numbers match
+    let linesToDisplay: Array<{ line: string; originalLineNumber: number }>
+    
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase()
-      const lines = buildLogs.split('\n')
-      logsToDisplay = lines
-        .filter((line: string) => line.toLowerCase().includes(searchLower))
-        .join('\n')
+      linesToDisplay = allLines
+        .map((line, index) => ({ line, originalLineNumber: index + 1 }))
+        .filter(({ line }) => line.toLowerCase().includes(searchLower))
+    } else {
+      linesToDisplay = allLines.map((line, index) => ({
+        line,
+        originalLineNumber: index + 1,
+      }))
     }
 
-    // Split by lines and parse ANSI codes for each line with highlighting
-    const lines = logsToDisplay.split('\n')
-    return lines.map((line, lineIndex) => {
+    // Calculate max line number width for alignment (using ch units for monospace)
+    const maxLineNumber = allLines.length
+    const lineNumberDigits = maxLineNumber.toString().length
+    // Add extra space: digits + 2ch for padding + 1ch buffer
+    const lineNumberWidth = `${lineNumberDigits + 3}ch`
+
+    return linesToDisplay.map(({ line, originalLineNumber }, displayIndex) => {
       const parsedLine = parseAnsiLogs(line, searchTerm || undefined)
+      const isSelected = selectedLine === originalLineNumber
+      
+      const handleLineNumberClick = async (e: React.MouseEvent) => {
+        e.preventDefault()
+        
+        // Toggle selection: if already selected, unselect it
+        if (isSelected) {
+          navigate({
+            to: location.pathname,
+            search: (prev: any) => {
+              const newSearch = { ...(prev || {}) }
+              delete newSearch.line
+              return Object.keys(newSearch).length === 0 ? {} : newSearch
+            },
+            replace: true,
+          })
+        } else {
+          // Update URL with line query param
+          navigate({
+            to: location.pathname,
+            search: (prev: any) => ({
+              ...(prev || {}),
+              line: originalLineNumber,
+            }),
+            replace: true,
+          })
+
+          // Also copy to clipboard
+          const lineRef = `Line ${originalLineNumber}`
+          try {
+            await navigator.clipboard.writeText(lineRef)
+            toast.success(`Copied "${lineRef}" to clipboard`)
+          } catch (error) {
+            // Ignore clipboard errors, URL update is the main action
+          }
+        }
+      }
+
       return (
-        <span key={lineIndex}>
-          {parsedLine}
-          {lineIndex < lines.length - 1 && '\n'}
-        </span>
+        <div
+          key={`${originalLineNumber}-${displayIndex}`}
+          ref={(el) => {
+            if (el) {
+              lineRefs.current.set(originalLineNumber, el)
+            } else {
+              lineRefs.current.delete(originalLineNumber)
+            }
+          }}
+          onClick={handleLineNumberClick}
+          className={`flex items-start gap-3 group transition-colors pl-4 sm:pl-6 pr-4 sm:pr-6 cursor-pointer ${
+            isSelected
+              ? 'bg-yellow-100/50 dark:bg-yellow-900/20'
+              : 'hover:bg-muted/30'
+          }`}
+          title={`Click to highlight and copy "Line ${originalLineNumber}"`}
+        >
+          <span
+            className={`text-[11px] sm:text-[12px] font-mono select-none shrink-0 text-right tabular-nums pr-2 mr-3 transition-colors ${
+              isSelected
+                ? 'text-yellow-600 dark:text-yellow-400 font-semibold'
+                : 'text-muted-foreground'
+            }`}
+            style={{ width: lineNumberWidth, minWidth: lineNumberWidth }}
+          >
+            {originalLineNumber}
+          </span>
+          <span className="flex-1 min-w-0">
+            {parsedLine}
+          </span>
+        </div>
       )
     })
-  }, [buildLogs, logsSearch])
+  }, [buildLogs, logsSearch, selectedLine, location.pathname, location.search, navigate])
 
   // Extract route params for navigation
   const routeParams = useMemo(() => {
@@ -996,18 +1338,45 @@ export function DeploymentDetailView({
                 {/* Type */}
                 <div className="flex items-center gap-2">
                   <span className="text-[13px] text-muted-foreground">Type</span>
-                  <span className="text-[13px] font-medium text-foreground">
-                    {deployment.type === 'cli'
-                      ? 'CLI'
-                      : deployment.type === 'manual'
-                        ? 'Manual'
-                        : deployment.type || 'N/A'}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[13px] font-medium text-foreground">
+                      {deployment.type === 'cli'
+                        ? 'CLI'
+                        : deployment.type === 'manual'
+                          ? 'Manual'
+                          : deployment.type === 'vcs'
+                            ? 'VCS'
+                            : deployment.type || 'N/A'}
+                    </span>
+                    <TooltipProvider delayDuration={0}>
+                      <TooltipPrimitive.Root>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center focus:outline-none"
+                          >
+                            <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" sideOffset={4} className="max-w-xs z-[200]">
+                          <p className="text-[12px]">
+                            {deployment.type === 'vcs'
+                              ? 'VCS (Version Control System) deployments are triggered from a connected Git repository and enable automatic deployments on code pushes.'
+                              : deployment.type === 'cli'
+                                ? 'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.'
+                                : deployment.type === 'manual'
+                                  ? 'Manual deployments are created by uploading code directly through the Console or API, useful for quick testing.'
+                                  : 'The deployment type indicates how this deployment was created.'}
+                          </p>
+                        </TooltipContent>
+                      </TooltipPrimitive.Root>
+                    </TooltipProvider>
+                  </div>
                 </div>
 
                 {/* Build duration and Status - at end */}
                 {(deployment.buildDuration || statusBadge) && (
-                  <div className="flex items-center gap-3 sm:gap-6 ml-auto">
+                  <div className="flex items-center gap-2 sm:gap-3 ml-auto">
                     {deployment.buildDuration != null &&
                       deployment.buildDuration > 0 &&
                       !isDeploymentTimeout(
@@ -1032,6 +1401,36 @@ export function DeploymentDetailView({
                         })()}
                         {statusBadge.label}
                       </Badge>
+                    )}
+                    {/* Fix with AI button - only shown for failed deployments */}
+                    {isDeploymentFailed && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-[12px] px-2.5 gap-1"
+                          >
+                            <BrainCircuit className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Fix with AI</span>
+                            <ChevronDown className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="z-[200] min-w-[180px]">
+                          {aiChatIDEs.map((ide) => (
+                            <DropdownMenuItem key={ide.id} onClick={() => handleOpenInIDE(ide)}>
+                              <img src={ide.iconPath} alt={ide.name} className="h-4 w-4" />
+                              <span className="ml-2">Prompt {ide.name}</span>
+                              <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
+                            </DropdownMenuItem>
+                          ))}
+                          <div className="h-px bg-border my-1" />
+                          <DropdownMenuItem onClick={handleCopyPrompt}>
+                            <Copy className="h-4 w-4" />
+                            <span className="ml-2">Copy prompt</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
                 )}
@@ -1105,43 +1504,145 @@ export function DeploymentDetailView({
         <div className="hidden sm:flex flex-row items-center justify-between gap-2 w-full">
           {/* Left side - Delete button */}
           <div className="flex items-center">
-            {!isActiveDeployment && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setDeleteDialogOpen(true)}
-                className="h-9 text-[13px]"
-              >
-                <Trash2 className="mr-1.5 h-4 w-4" />
-                Delete
-              </Button>
-            )}
+            <TooltipProvider delayDuration={0}>
+              <TooltipPrimitive.Root>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setDeleteDialogOpen(true)}
+                      disabled={isActiveDeployment}
+                      className="h-9 text-[13px]"
+                    >
+                      <Trash2 className="mr-1.5 h-4 w-4" />
+                      Delete
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {isActiveDeployment && (
+                  <TooltipContent sideOffset={4} className="z-[200]">
+                    <p>Cannot delete the active deployment. Please activate another deployment first.</p>
+                  </TooltipContent>
+                )}
+              </TooltipPrimitive.Root>
+            </TooltipProvider>
           </div>
           
           {/* Right side - Individual buttons */}
           <div className="flex items-center gap-2 ml-auto">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadDeployment}
-              className="h-9 text-[13px]"
-            >
-              <Download className="mr-1.5 h-4 w-4" />
-              Download build
-            </Button>
-            {!isActiveDeployment && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 text-[13px]"
+                >
+                  <Download className="mr-1.5 h-4 w-4" />
+                  Download
+                  <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="z-[200]">
+                <DropdownMenuItem onClick={handleDownloadSource}>
+                  <FileCode className="mr-2 h-4 w-4" />
+                  Source code
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadBuild}>
+                  <Package className="mr-2 h-4 w-4" />
+                  Build output
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {onRedeploy && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  // TODO: Implement activate deployment
-                  toast.info('Activate deployment functionality coming soon')
-                }}
+                onClick={() => setRedeployDialogOpen(true)}
+                disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                <Play className="mr-1.5 h-4 w-4" />
-                Activate
+                <RefreshCw className="mr-1.5 h-4 w-4" />
+                Redeploy
               </Button>
+            )}
+            <TooltipProvider delayDuration={0}>
+              <TooltipPrimitive.Root>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (onActivate) {
+                          setActivateDialogOpen(true)
+                        } else {
+                          toast.info('Activate deployment functionality coming soon')
+                        }
+                      }}
+                      disabled={isActiveDeployment || activateMutation.isPending}
+                      className="h-9 text-[13px]"
+                    >
+                      {activateMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                          Activating...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="mr-1.5 h-4 w-4" />
+                          Activate
+                        </>
+                      )}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {isActiveDeployment && (
+                  <TooltipContent sideOffset={4} className="z-[200]">
+                    <p>This deployment is already active.</p>
+                  </TooltipContent>
+                )}
+              </TooltipPrimitive.Root>
+            </TooltipProvider>
+            {proxyRules.rules.length > 0 && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-[13px]"
+                  >
+                    <Globe className="mr-1.5 h-4 w-4" />
+                    Visit
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="z-[200] w-80">
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="text-[13px] font-semibold text-foreground mb-2">
+                        Domains
+                      </h4>
+                      <div className="space-y-1.5">
+                        {proxyRules.rules.map((rule) => (
+                          <a
+                            key={rule.$id}
+                            href={`https://${rule.domain}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
+                          >
+                            <Globe className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
+                            <span className="text-[12px] font-mono text-foreground group-hover:text-primary flex-1 truncate">
+                              {rule.domain}
+                            </span>
+                            <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-foreground shrink-0" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
         </div>
@@ -1150,10 +1651,36 @@ export function DeploymentDetailView({
       <div ref={logsContainerRef} className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Build Logs */}
         {buildLogs ? (
-          <div className="px-4 sm:px-6 py-4 min-w-0">
-            <pre className="text-[11px] sm:text-[12px] font-mono text-foreground whitespace-pre-wrap break-all overflow-x-auto max-w-full min-w-0">
+          <div className="py-4 min-w-0 relative">
+            {/* Edge-to-edge border for line numbers */}
+            {(() => {
+              const allLines = buildLogs.split('\n')
+              const maxLineNumber = allLines.length
+              const lineNumberDigits = maxLineNumber.toString().length
+              const lineNumberWidth = `${lineNumberDigits + 3}ch`
+              // Position border at: padding-left + line number width
+              return (
+                <>
+                  {/* Mobile: 1rem padding */}
+                  <div 
+                    className="absolute top-0 bottom-0 border-r border-border/50 pointer-events-none sm:hidden"
+                    style={{ 
+                      left: `calc(1rem + ${lineNumberWidth})`,
+                    }}
+                  />
+                  {/* Desktop: 1.5rem padding */}
+                  <div 
+                    className="absolute top-0 bottom-0 border-r border-border/50 pointer-events-none hidden sm:block"
+                    style={{ 
+                      left: `calc(1.5rem + ${lineNumberWidth})`,
+                    }}
+                  />
+                </>
+              )
+            })()}
+            <div className="text-[11px] sm:text-[12px] font-mono text-foreground break-all overflow-x-auto max-w-full min-w-0 relative">
               {parsedLogs}
-            </pre>
+            </div>
           </div>
         ) : (
           <div className="px-4 sm:px-6 py-4 text-[12px] sm:text-[13px] text-muted-foreground">
@@ -1207,22 +1734,13 @@ export function DeploymentDetailView({
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete deployment</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete this deployment? This action cannot be undone.
-            </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
-          <div className="px-6 pb-4 pt-0">
-            <div className="rounded-lg border border-border bg-muted/30 p-3">
-              <div className="flex items-center gap-2">
-                <CopyableId id={deployment.$id} size="xs" />
-                {deployment.providerCommitHash && (
-                  <span className="text-[11px] text-muted-foreground font-mono">
-                    {deployment.providerCommitHash.slice(0, 7)}
-                  </span>
-                )}
-              </div>
-            </div>
+          <div className="px-6 pb-4 pt-4">
+            <DialogDescription className="text-[13px] mb-4">
+              Are you sure you want to delete this deployment? This action cannot be undone.
+            </DialogDescription>
+            <DeploymentInfo deployment={deployment} showStatus={true} />
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
@@ -1250,6 +1768,92 @@ export function DeploymentDetailView({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Redeploy Confirmation Dialog */}
+      {onRedeploy && (
+        <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogTitle>Redeploy deployment</DialogTitle>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-4">
+              <DialogDescription className="text-[13px] mb-4">
+                This will create a new build for this deployment using the current function configuration. The original deployment's code will be preserved and used for the new build.
+              </DialogDescription>
+              <DeploymentInfo deployment={deployment} showStatus={true} />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setRedeployDialogOpen(false)}
+                disabled={redeployMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => redeployMutation.mutate()}
+                disabled={redeployMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {redeployMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    Redeploying...
+                  </>
+                ) : (
+                  'Redeploy'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Activate Confirmation Dialog */}
+      {onActivate && (
+        <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogTitle>Activate deployment</DialogTitle>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-4">
+              <DialogDescription className="text-[13px] mb-4">
+                This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.
+              </DialogDescription>
+              <DeploymentInfo deployment={deployment} showStatus={true} />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setActivateDialogOpen(false)}
+                disabled={activateMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => activateMutation.mutate()}
+                disabled={activateMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {activateMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    Activating...
+                  </>
+                ) : (
+                  'Activate'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </WizardLayout>
   )
 }

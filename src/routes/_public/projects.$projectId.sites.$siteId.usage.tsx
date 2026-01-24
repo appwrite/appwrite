@@ -2,9 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { SiteUsageView } from '@/components/pages/projects/$projectId/sites/SiteUsage'
 import {
   siteQueryOptions,
-  fetchProject,
+  siteUsageQueryOptions,
+  projectQueryOptions,
 } from '@/lib/react-query/hooks'
-import { siteUsageQueryOptions } from '@/lib/react-query/hooks/sites'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/usage',
@@ -22,11 +22,8 @@ export const Route = createFileRoute(
     await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
 
     // Fetch project data (needed for header/sidebar) - blocks navigation
-    await queryClient.ensureQueryData({
-      queryKey: ['project', projectId],
-      queryFn: () => fetchProject(projectId),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    })
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
     // Fetch critical data before rendering to prevent layout shifts
     await queryClient.ensureQueryData(

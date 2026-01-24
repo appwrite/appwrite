@@ -4,7 +4,12 @@
  * Handles installations, repositories, branches, and repository contents.
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  queryOptions,
+} from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import { VCSDetectionType } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
@@ -126,6 +131,33 @@ export async function fetchRepositoryContents(
 }
 
 // ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching VCS installations with pagination
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function vcsInstallationsQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = 25,
+) {
+  return queryOptions({
+    queryKey: ['vcs', 'installations', projectId, page, limit],
+    queryFn: () => fetchVcsInstallations(projectId!, page, limit),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+// ============================================================================
 // HOOKS
 // ============================================================================
 
@@ -137,12 +169,7 @@ export function useVcsInstallations(
   page: number = 0,
   limit: number = 25,
 ) {
-  return useQuery({
-    queryKey: ['vcs', 'installations', projectId, page, limit],
-    queryFn: () => fetchVcsInstallations(projectId!, page, limit),
-    enabled: !!projectId,
-    staleTime: LONG_STALE_TIME,
-  })
+  return useQuery(vcsInstallationsQueryOptions(projectId, page, limit))
 }
 
 /**

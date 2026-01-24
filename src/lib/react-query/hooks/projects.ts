@@ -172,6 +172,48 @@ export function activeProjectsQueryOptions(
   })
 }
 
+/**
+ * Query options for fetching project variables
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function projectVariablesQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = SMALL_PAGE_SIZE,
+) {
+  return queryOptions({
+    queryKey: ['variables', 'project', projectId, page, limit],
+    queryFn: () => fetchProjectVariables(projectId!, page, limit),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+/**
+ * Query options for fetching a single project by ID
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function projectQueryOptions(projectId: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['project', projectId],
+    queryFn: () => fetchProject(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
 // ============================================================================
 // HOOKS
 // ============================================================================
@@ -190,15 +232,7 @@ export function useProject(projectId: string | undefined) {
     isLoading,
     error,
     refetch,
-  } = useQuery({
-    queryKey: ['project', projectId],
-    queryFn: () => fetchProject(projectId!),
-    enabled: !!projectId,
-    staleTime: LONG_STALE_TIME,
-    retry: false, // Don't retry on error
-    // Don't keep disabled queries in cache
-    gcTime: projectId ? 5 * 60 * 1000 : 0,
-  })
+  } = useQuery(projectQueryOptions(projectId))
 
   // Map the API response to our Project type
   const project = useMemo(() => {
@@ -553,12 +587,9 @@ export function useProjectVariables(
   page: number = 0,
   limit: number = SMALL_PAGE_SIZE,
 ) {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['variables', 'project', projectId, page, limit],
-    queryFn: () => fetchProjectVariables(projectId!, page, limit),
-    enabled: !!projectId,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  const { data, isLoading, error, refetch } = useQuery(
+    projectVariablesQueryOptions(projectId, page, limit),
+  )
 
   return {
     variables: data?.variables || [],

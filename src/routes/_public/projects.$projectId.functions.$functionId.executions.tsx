@@ -2,8 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { FunctionExecutions } from '@/components/pages/projects/$projectId/functions/Executions'
 import {
-  fetchProjectFunction,
-  fetchFunctionExecutions,
+  projectFunctionQueryOptions,
+  functionExecutionsQueryOptions,
 } from '@/lib/react-query/hooks'
 
 const EXECUTIONS_PER_PAGE = 25
@@ -33,33 +33,21 @@ export const Route = createFileRoute(
     const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
 
     // Fetch critical data before rendering to prevent layout shifts
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
       // Fetch function - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: ['function', 'project', projectId, functionId],
-        queryFn: () => fetchProjectFunction(projectId, functionId),
-        staleTime: 30 * 1000,
-      }),
+      queryClient.ensureQueryData(
+        projectFunctionQueryOptions(projectId, functionId),
+      ),
       // Fetch executions for the requested page - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: [
-          'executions',
-          'function',
+      queryClient.ensureQueryData(
+        functionExecutionsQueryOptions(
           projectId,
           functionId,
           pageIndex,
           EXECUTIONS_PER_PAGE,
-          undefined,
-        ],
-        queryFn: () =>
-          fetchFunctionExecutions(
-            projectId,
-            functionId,
-            pageIndex,
-            EXECUTIONS_PER_PAGE,
-          ),
-        staleTime: 30 * 1000,
-      }),
+        ),
+      ),
     ])
   },
   component: FunctionExecutions,

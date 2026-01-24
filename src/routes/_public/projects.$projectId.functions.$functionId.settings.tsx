@@ -1,11 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { FunctionSettings } from '@/components/pages/projects/$projectId/functions/Settings'
 import {
-  fetchProjectFunction,
-  fetchFunctionVariables,
-  fetchProjectRuntimes,
+  projectFunctionQueryOptions,
+  functionVariablesQueryOptions,
+  projectRuntimesQueryOptions,
+  projectVariablesQueryOptions,
 } from '@/lib/react-query/hooks'
-import { fetchProjectVariables } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/settings',
@@ -20,31 +20,20 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     // Fetch critical data before rendering to prevent layout shifts
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
       // Fetch function - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: ['function', 'project', projectId, functionId],
-        queryFn: () => fetchProjectFunction(projectId, functionId),
-        staleTime: 30 * 1000,
-      }),
+      queryClient.ensureQueryData(
+        projectFunctionQueryOptions(projectId, functionId),
+      ),
       // Fetch function variables - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: ['variables', 'function', projectId, functionId],
-        queryFn: () => fetchFunctionVariables(projectId, functionId),
-        staleTime: 30 * 1000,
-      }),
+      queryClient.ensureQueryData(
+        functionVariablesQueryOptions(projectId, functionId),
+      ),
       // Fetch global variables - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: ['variables', 'project', projectId],
-        queryFn: () => fetchProjectVariables(projectId),
-        staleTime: 30 * 1000,
-      }),
+      queryClient.ensureQueryData(projectVariablesQueryOptions(projectId)),
       // Fetch runtimes - blocks navigation until ready
-      queryClient.fetchQuery({
-        queryKey: ['runtimes', 'project', projectId],
-        queryFn: () => fetchProjectRuntimes(projectId),
-        staleTime: 5 * 60 * 1000, // 5 minutes
-      }),
+      queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),
     ])
   },
   component: FunctionSettings,

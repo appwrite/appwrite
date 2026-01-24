@@ -21,6 +21,13 @@ import {
   Download,
   Sun,
   Moon,
+  RefreshCw,
+  Play,
+  FileCode,
+  Package,
+  ChevronDown,
+  Globe,
+  ExternalLink,
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
@@ -32,6 +39,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import * as TooltipPrimitive from '@radix-ui/react-tooltip'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -39,6 +52,7 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
 import {
   Table,
   TableBody,
@@ -72,6 +86,7 @@ import {
   Dependencies,
 } from '@/lib/react-query/hooks'
 import { sdk } from '@/lib/appwrite/sdk'
+import { DeploymentDownloadType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Query } from '@appwrite.io/console'
@@ -198,6 +213,9 @@ export function SiteDeploymentsView() {
     new Set(),
   )
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteActiveDialogOpen, setDeleteActiveDialogOpen] = useState(false)
+  const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
+  const [activateDialogOpen, setActivateDialogOpen] = useState(false)
   const [screenshotTheme, setScreenshotTheme] = useState<'dark' | 'light'>('dark')
   const [screenshotLoaded, setScreenshotLoaded] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -352,31 +370,118 @@ export function SiteDeploymentsView() {
     activeDeployment?.status === 'building' ||
     activeDeployment?.status === 'processing'
 
-  const handleRedeploy = () => {
-    if (!activeDeployment || activeDeployment.sourceSize === 0) {
-      toast.error('Cannot redeploy: no source code available')
-      return
+  const handleDownloadSource = () => {
+    if (!projectId || !siteId || !activeDeployment) return
+    try {
+      const projectSdk = sdk.forProject(projectId)
+      const url = projectSdk.sites.getDeploymentDownload({
+        siteId,
+        deploymentId: activeDeployment.$id,
+        type: DeploymentDownloadType.Source,
+      })
+      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      window.open(urlWithMode, '_blank')
+      toast.success('Download started')
+    } catch (error) {
+      toast.error('Failed to download source code')
     }
-    // TODO: Open redeploy dialog
-    toast.info('Redeploy functionality coming soon')
   }
 
-  const handleDownloadSource = async () => {
-    if (!activeDeployment) return
+  const handleDownloadBuild = () => {
+    if (!projectId || !siteId || !activeDeployment) return
     try {
-      const projectSdk = sdk.forProject(projectId!)
-      const response = await projectSdk.sites.getDeploymentDownload({
-        siteId: siteId!,
+      const projectSdk = sdk.forProject(projectId)
+      const url = projectSdk.sites.getDeploymentDownload({
+        siteId,
         deploymentId: activeDeployment.$id,
-        type: 'source',
+        type: DeploymentDownloadType.Output,
       })
-      if (response.url) {
-        window.open(response.url, '_blank')
-      }
+      const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
+      window.open(urlWithMode, '_blank')
+      toast.success('Download started')
     } catch (error) {
-      toast.error(getErrorMessage(error) || 'Failed to download source')
+      toast.error('Failed to download build output')
     }
   }
+
+  // Redeploy mutation
+  const redeployMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.createDuplicateDeployment({
+        siteId,
+        deploymentId: activeDeployment.$id,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...Dependencies.DEPLOYMENTS],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success('Deployment rebuild started')
+      setRedeployDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to redeploy')
+    },
+  })
+
+  // Activate mutation (disabled for active deployment, but included for consistency)
+  const activateMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.updateSiteDeployment({
+        siteId,
+        deploymentId: activeDeployment.$id,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...Dependencies.DEPLOYMENTS],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success('Deployment activated successfully')
+      setActivateDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to activate deployment')
+    },
+  })
+
+  // Delete mutation for active deployment
+  const deleteActiveMutation = useMutation({
+    mutationFn: async () => {
+      if (!projectId || !siteId || !activeDeployment) {
+        throw new Error('Project ID, Site ID, and Deployment ID are required')
+      }
+      throw new Error(
+        'Cannot delete the active deployment. Please activate another deployment first.',
+      )
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...Dependencies.DEPLOYMENTS],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['site', 'project', projectId, siteId],
+      })
+      toast.success('Deployment deleted successfully')
+      setDeleteActiveDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete deployment')
+    },
+  })
 
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
@@ -843,36 +948,32 @@ export function SiteDeploymentsView() {
                       size="sm"
                       className="h-9 text-[13px]"
                     >
-                      <MoreHorizontal className="mr-1.5 h-4 w-4" />
-                      More
+                      <Download className="mr-1.5 h-4 w-4" />
+                      Download
+                      <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={handleRedeploy}
-                      disabled={activeDeployment.sourceSize === 0}
-                    >
-                      Redeploy
-                    </DropdownMenuItem>
+                  <DropdownMenuContent align="end" className="z-[200]">
                     <DropdownMenuItem onClick={handleDownloadSource}>
-                      Download source
+                      <FileCode className="mr-2 h-4 w-4" />
+                      Source code
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        navigate({
-                          to: '/projects/$projectId/sites/$siteId/deployments/$deploymentId',
-                          params: {
-                            projectId: projectId!,
-                            siteId: siteId!,
-                            deploymentId: activeDeployment.$id,
-                          },
-                        })
-                      }}
-                    >
-                      Build logs
+                    <DropdownMenuItem onClick={handleDownloadBuild}>
+                      <Package className="mr-2 h-4 w-4" />
+                      Build output
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRedeployDialogOpen(true)}
+                  disabled={redeployMutation.isPending}
+                  className="h-9 text-[13px]"
+                >
+                  <RefreshCw className="mr-1.5 h-4 w-4" />
+                  Redeploy
+                </Button>
                 <Link
                   to="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
                   params={{
@@ -885,6 +986,55 @@ export function SiteDeploymentsView() {
                     Build logs
                   </Button>
                 </Link>
+                {activeDomains.length > 0 && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 text-[13px]"
+                      >
+                        <Globe className="mr-1.5 h-4 w-4" />
+                        Visit
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="z-[200] w-80">
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="text-[13px] font-semibold text-foreground mb-2">
+                            Domains
+                          </h4>
+                          <div className="space-y-1.5">
+                            {activeDomains.map((rule) => (
+                              <a
+                                key={rule.$id}
+                                href={`https://${rule.domain}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
+                              >
+                                <Globe className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                <span className="text-[12px] font-mono text-foreground group-hover:text-primary flex-1 truncate">
+                                  {rule.domain}
+                                </span>
+                                <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-foreground shrink-0" />
+                              </a>
+                            ))}
+                            {hasMoreDomains && (
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/domains"
+                                params={{ projectId: projectId!, siteId: siteId! }}
+                                className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors text-[12px] text-muted-foreground hover:text-foreground"
+                              >
+                                <span>View all {totalActiveDomains} domains</span>
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                )}
               </div>
             </div>
           )}
@@ -950,7 +1100,7 @@ export function SiteDeploymentsView() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border">
-                      <TableHead className="w-[40px] px-4">
+                      <TableHead className="w-[40px] px-4 py-3">
                         <Checkbox
                           checked={(() => {
                             const activeDeploymentId = activeDeployment?.$id
@@ -987,6 +1137,8 @@ export function SiteDeploymentsView() {
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                         Created
                       </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]">
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1017,7 +1169,7 @@ export function SiteDeploymentsView() {
                             })
                           }}
                         >
-                          <TableCell onClick={(e) => e.stopPropagation()}>
+                          <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                             <Checkbox
                               checked={selectedDeployments.has(deploymentData.$id)}
                               onCheckedChange={() =>
@@ -1026,14 +1178,14 @@ export function SiteDeploymentsView() {
                               disabled={isActive}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <CopyableId
                               id={deploymentData.$id}
                               size="sm"
                               maxWidth={180}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             {isActive ? (
                               <Badge
                                 variant="active"
@@ -1055,7 +1207,7 @@ export function SiteDeploymentsView() {
                               </Badge>
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             {(() => {
                               const vcsProvider = getVcsProvider(deploymentData)
                               if (vcsProvider) {
@@ -1102,7 +1254,7 @@ export function SiteDeploymentsView() {
                               )
                             })()}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             {(() => {
                               const vcsProvider = getVcsProvider(deploymentData)
                               if (!vcsProvider) {
@@ -1190,7 +1342,7 @@ export function SiteDeploymentsView() {
                               )
                             })()}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <code className="text-[12px] font-mono text-muted-foreground">
                               {formatSize(
                                 (deploymentData.buildSize || 0) +
@@ -1198,7 +1350,7 @@ export function SiteDeploymentsView() {
                               )}
                             </code>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <code className="text-[12px] font-mono text-muted-foreground">
                               {deploymentData.buildDuration &&
                               !isDeploymentTimeout(
@@ -1209,11 +1361,109 @@ export function SiteDeploymentsView() {
                                 : '—'}
                             </code>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <DateTooltip
                               date={deploymentData.$createdAt}
                               className="text-[12px] font-medium text-muted-foreground"
                             />
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                  disabled={isActive}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Open menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="z-[200]">
+                                {!isActive && (
+                                  <>
+                                    <DropdownMenuItem
+                                      onClick={async (e) => {
+                                        e.stopPropagation()
+                                        try {
+                                          const projectSdk = sdk.forProject(projectId!)
+                                          await projectSdk.sites.updateSiteDeployment({
+                                            siteId: siteId!,
+                                            deploymentId: deploymentData.$id,
+                                          })
+                                          queryClient.invalidateQueries({
+                                            queryKey: [...Dependencies.DEPLOYMENTS],
+                                          })
+                                          queryClient.invalidateQueries({
+                                            queryKey: ['site', 'project', projectId, siteId],
+                                          })
+                                          toast.success('Deployment activated successfully')
+                                        } catch (error) {
+                                          toast.error('Failed to activate deployment')
+                                        }
+                                      }}
+                                    >
+                                      <Play className="mr-2 h-4 w-4" />
+                                      Activate
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={async (e) => {
+                                        e.stopPropagation()
+                                        try {
+                                          const projectSdk = sdk.forProject(projectId!)
+                                          await projectSdk.sites.createDuplicateDeployment({
+                                            siteId: siteId!,
+                                            deploymentId: deploymentData.$id,
+                                          })
+                                          queryClient.invalidateQueries({
+                                            queryKey: [...Dependencies.DEPLOYMENTS],
+                                          })
+                                          toast.success('Deployment rebuild started')
+                                        } catch (error) {
+                                          toast.error('Failed to redeploy')
+                                        }
+                                      }}
+                                    >
+                                      <RefreshCw className="mr-2 h-4 w-4" />
+                                      Redeploy
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                {!isActive && (
+                                  <DropdownMenuItem
+                                    onClick={async (e) => {
+                                      e.stopPropagation()
+                                      try {
+                                        await deleteSiteDeployment(
+                                          projectId!,
+                                          siteId!,
+                                          deploymentData.$id,
+                                        )
+                                        queryClient.invalidateQueries({
+                                          queryKey: [...Dependencies.DEPLOYMENTS],
+                                        })
+                                        queryClient.invalidateQueries({
+                                          queryKey: ['site', 'project', projectId, siteId],
+                                        })
+                                        toast.success('Deployment deleted successfully')
+                                      } catch (error) {
+                                        toast.error(
+                                          error instanceof Error
+                                            ? error.message
+                                            : 'Failed to delete deployment',
+                                        )
+                                      }
+                                    }}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       )
@@ -1279,15 +1529,29 @@ export function SiteDeploymentsView() {
       {/* Bulk Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete Deployments</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
+          </DialogHeader>
+          <div className="border-t border-border" />
+          <div className="px-6 pb-4 pt-4">
+            <DialogDescription className="text-[13px] mb-4">
               Are you sure you want to delete {selectedDeployments.size}{' '}
               deployment{selectedDeployments.size > 1 ? 's' : ''}? This action
               cannot be undone.
             </DialogDescription>
-          </DialogHeader>
-
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              {displayedDeployments
+                ?.filter((d) => selectedDeployments.has(d.$id))
+                .map((deployment) => (
+                  <DeploymentInfo
+                    key={deployment.$id}
+                    deployment={deployment}
+                    showStatus={true}
+                    compact={true}
+                  />
+                ))}
+            </div>
+          </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"
@@ -1306,6 +1570,134 @@ export function SiteDeploymentsView() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog for Active Deployment */}
+      {activeDeployment && (
+        <Dialog open={deleteActiveDialogOpen} onOpenChange={setDeleteActiveDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogTitle>Delete deployment</DialogTitle>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-4">
+              <DialogDescription className="text-[13px] mb-4">
+                Are you sure you want to delete this deployment? This action cannot be undone.
+              </DialogDescription>
+              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteActiveDialogOpen(false)}
+                className="h-9 text-[13px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => deleteActiveMutation.mutate()}
+                disabled={deleteActiveMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {deleteActiveMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Redeploy Confirmation Dialog for Active Deployment */}
+      {activeDeployment && (
+        <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogTitle>Redeploy deployment</DialogTitle>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-4">
+              <DialogDescription className="text-[13px] mb-4">
+                This will create a new build for this deployment using the current site configuration. The original deployment's code will be preserved and used for the new build.
+              </DialogDescription>
+              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setRedeployDialogOpen(false)}
+                disabled={redeployMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => redeployMutation.mutate()}
+                disabled={redeployMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {redeployMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    Redeploying...
+                  </>
+                ) : (
+                  'Redeploy'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Activate Confirmation Dialog for Active Deployment */}
+      {activeDeployment && (
+        <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 text-left">
+              <DialogTitle>Activate deployment</DialogTitle>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 pb-4 pt-4">
+              <DialogDescription className="text-[13px] mb-4">
+                This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.
+              </DialogDescription>
+              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+            </div>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setActivateDialogOpen(false)}
+                disabled={activateMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={() => activateMutation.mutate()}
+                disabled={activateMutation.isPending}
+                className="h-9 text-[13px]"
+              >
+                {activateMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    Activating...
+                  </>
+                ) : (
+                  'Activate'
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

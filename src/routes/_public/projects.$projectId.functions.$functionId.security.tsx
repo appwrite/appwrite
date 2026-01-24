@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { FunctionSecurity } from '@/components/pages/projects/$projectId/functions/Security'
-import { fetchProjectFunction } from '@/lib/react-query/hooks'
+import { projectFunctionQueryOptions } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/security',
@@ -15,11 +15,10 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     // Fetch function - blocks navigation until ready
-    await queryClient.fetchQuery({
-      queryKey: ['function', 'project', projectId, functionId],
-      queryFn: () => fetchProjectFunction(projectId, functionId),
-      staleTime: 30 * 1000,
-    })
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
+    await queryClient.ensureQueryData(
+      projectFunctionQueryOptions(projectId, functionId),
+    )
   },
   component: FunctionSecurity,
 })

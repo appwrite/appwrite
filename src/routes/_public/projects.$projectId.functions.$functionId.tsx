@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { FunctionLayout } from '@/components/pages/projects/$projectId/functions/FunctionLayout'
-import { fetchProjectFunction } from '@/lib/react-query/hooks'
+import { projectFunctionQueryOptions } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId',
@@ -15,11 +15,10 @@ export const Route = createFileRoute(
     const { queryClient } = context
 
     // Fetch function data (needed for layout) - blocks navigation
-    await queryClient.fetchQuery({
-      queryKey: ['function', 'project', projectId, functionId],
-      queryFn: () => fetchProjectFunction(projectId, functionId),
-      staleTime: 30 * 1000,
-    })
+    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
+    await queryClient.ensureQueryData(
+      projectFunctionQueryOptions(projectId, functionId),
+    )
   },
   component: FunctionLayoutWrapper,
 })
