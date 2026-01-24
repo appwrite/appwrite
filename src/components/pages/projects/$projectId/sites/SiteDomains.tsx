@@ -4,6 +4,7 @@ import { MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
   Table,
   TableBody,
@@ -205,20 +206,17 @@ export function SiteDomainsView() {
             />
           </>
         ) : (
-          <div className="flex h-full items-center justify-center py-16">
-            <div className="text-center">
-              <p className="mb-1 text-[14px] font-medium text-foreground">
-                {searchValue
-                  ? 'No domains found'
-                  : 'Use a custom domain for your site'}
-              </p>
-              <p className="mb-4 text-[13px] text-muted-foreground">
-                {searchValue
-                  ? 'No domains match your search. Try a different query.'
-                  : 'Connect a custom domain to your site for a branded experience.'}
-              </p>
-            </div>
-          </div>
+          <EmptyState
+            title={searchValue ? 'No domains found' : 'Use a custom domain for your site'}
+            description={
+              searchValue
+                ? 'No domains match your search. Try a different query.'
+                : 'Connect a custom domain to your site for a branded experience.'
+            }
+            isEmpty={!searchValue}
+            hasFilters={!!searchValue}
+            variant="centered"
+          />
         )}
       </div>
     </div>

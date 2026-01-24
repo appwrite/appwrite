@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useParams, useSearch } from '@tanstack/react-router'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
   Table,
   TableBody,
@@ -79,145 +80,161 @@ export function FunctionDomains() {
 
   if (domainsLoading) {
     return (
-      <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground">Loading domains...</p>
+      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    )
+  }
+
+  if (rules.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+        <div className="rounded-lg border border-border bg-card py-12">
+          <EmptyState
+            title={searchValue ? 'No domains found' : 'Use a custom domain for your function'}
+            description={
+              searchValue
+                ? 'No domains match your search. Try a different query.'
+                : 'Connect a custom domain to your function for a branded experience.'
+            }
+            isEmpty={!searchValue}
+            hasFilters={!!searchValue}
+            iconSize="md"
+          />
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1">
-      <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6 pt-4 sm:pt-6">
-        {/* Domains Table */}
-        {rules.length > 0 ? (
-          <>
-            <div className="rounded-lg border border-border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Domain</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="w-[80px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rules.map((rule) => {
-                    const statusBadge = getDomainStatusBadge(rule.status)
+    <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
+      <div className="space-y-0">
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Domain
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Type
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Status
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Created
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rules.map((rule) => {
+                const statusBadge = getDomainStatusBadge(rule.status)
 
-                    return (
-                      <TableRow key={rule.$id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <a
-                              href={`https://${rule.domain}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-mono text-[13px] text-foreground hover:underline"
-                            >
-                              {rule.domain}
-                            </a>
-                            {rule.status === 'verified' && (
-                              <Badge
-                                variant="default"
-                                className="h-5 text-[10px]"
-                              >
-                                Verified
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-[13px] text-muted-foreground">
-                          {rule.redirectUrl ? (
-                            <span>Redirect to {rule.redirectUrl}</span>
-                          ) : rule.deploymentVcsProviderBranch ? (
-                            <span>
-                              Deployed from {rule.deploymentVcsProviderBranch}
-                            </span>
-                          ) : (
-                            <span>Active deployment</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={statusBadge.variant}>
-                            {statusBadge.label}
+                return (
+                  <TableRow key={rule.$id}>
+                    <TableCell className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`https://${rule.domain}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono text-[13px] font-medium text-foreground hover:underline"
+                        >
+                          {rule.domain}
+                        </a>
+                        {rule.status === 'verified' && (
+                          <Badge
+                            variant="default"
+                            className="h-5 text-[10px]"
+                          >
+                            Verified
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <DateTooltip date={rule.$createdAt} />
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {(rule.status === 'created' ||
-                                rule.status === 'unverified') && (
-                                <DropdownMenuItem
-                                  onClick={() => handleRetry(rule.$id)}
-                                >
-                                  Retry
-                                </DropdownMenuItem>
-                              )}
-                              {rule.logs && rule.logs.length > 0 && (
-                                <DropdownMenuItem
-                                  onClick={() => handleViewLogs(rule.$id)}
-                                >
-                                  View logs
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem
-                                onClick={() => handleDelete(rule.$id)}
-                              >
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-[13px]">
+                      {rule.redirectUrl ? (
+                        <span>Redirect to {rule.redirectUrl}</span>
+                      ) : rule.deploymentVcsProviderBranch ? (
+                        <span>
+                          Deployed from {rule.deploymentVcsProviderBranch}
+                        </span>
+                      ) : (
+                        <span>Active deployment</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <Badge variant={statusBadge.variant}>
+                        {statusBadge.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <DateTooltip
+                        date={rule.$createdAt}
+                        className="text-[12px] text-muted-foreground"
+                      />
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {(rule.status === 'created' ||
+                            rule.status === 'unverified') && (
+                            <DropdownMenuItem
+                              onClick={() => handleRetry(rule.$id)}
+                            >
+                              Retry
+                            </DropdownMenuItem>
+                          )}
+                          {rule.logs && rule.logs.length > 0 && (
+                            <DropdownMenuItem
+                              onClick={() => handleViewLogs(rule.$id)}
+                            >
+                              View logs
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(rule.$id)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
 
-            <Pagination
-              currentPage={currentPage + 1}
-              totalItems={total}
-              pageSize={pageSize}
-              pageSizeOptions={[10, 25, 50, 100]}
-              onPageChange={(page) => setCurrentPage(page - 1)}
-              onPageSizeChange={(size) => {
-                setPageSize(size)
-                setCurrentPage(0)
-              }}
-              itemLabel="domains"
-            />
-          </>
-        ) : (
-          <div className="flex h-full items-center justify-center py-16">
-            <div className="text-center">
-              <p className="mb-1 text-[14px] font-medium text-foreground">
-                {searchValue
-                  ? 'No domains found'
-                  : 'Use a custom domain for your function'}
-              </p>
-              <p className="mb-4 text-[13px] text-muted-foreground">
-                {searchValue
-                  ? 'No domains match your search. Try a different query.'
-                  : 'Connect a custom domain to your function for a branded experience.'}
-              </p>
-            </div>
-          </div>
-        )}
+        <Pagination
+          currentPage={currentPage + 1}
+          totalItems={total}
+          pageSize={pageSize}
+          pageSizeOptions={[10, 25, 50, 100]}
+          onPageChange={(page) => setCurrentPage(page - 1)}
+          onPageSizeChange={(size) => {
+            setPageSize(size)
+            setCurrentPage(0)
+          }}
+          itemLabel="domains"
+          className="mt-0"
+        />
       </div>
     </div>
   )

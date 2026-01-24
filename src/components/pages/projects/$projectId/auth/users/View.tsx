@@ -34,6 +34,7 @@ import { ServiceHeader, type Tab } from '../../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -1739,18 +1740,24 @@ function MembershipsTab({
 
   if (memberships.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground mb-2">
-          No memberships available
-        </p>
-        <a
-          href="https://appwrite.io/docs/users"
-          className="text-[13px] text-primary hover:underline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn more about memberships
-        </a>
+      <div className="rounded-lg border border-border bg-card py-12">
+        <EmptyState
+          icon={Users}
+          title="No memberships available"
+          description="This user is not a member of any teams."
+          isEmpty={true}
+          iconSize="md"
+        />
+        <div className="mt-4 text-center">
+          <a
+            href="https://appwrite.io/docs/users"
+            className="text-[13px] text-primary hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Learn more about memberships
+          </a>
+        </div>
       </div>
     )
   }
@@ -1994,18 +2001,24 @@ function IdentitiesTab({
 
   if (identities.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground mb-2">
-          No identities available
-        </p>
-        <a
-          href="https://appwrite.io/docs/users"
-          className="text-[13px] text-primary hover:underline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn more about identities
-        </a>
+      <div className="rounded-lg border border-border bg-card py-12">
+        <EmptyState
+          icon={Key}
+          title="No identities available"
+          description="No OAuth identities linked to this user."
+          isEmpty={true}
+          iconSize="md"
+        />
+        <div className="mt-4 text-center">
+          <a
+            href="https://appwrite.io/docs/users"
+            className="text-[13px] text-primary hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Learn more about identities
+          </a>
+        </div>
       </div>
     )
   }
@@ -2266,18 +2279,24 @@ function TargetsTab({
         )}
 
         {targets.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <p className="text-[13px] text-muted-foreground mb-2">
-              No targets available
-            </p>
-            <a
-              href="https://appwrite.io/docs/users"
-              className="text-[13px] text-primary hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn more about targets
-            </a>
+          <div className="rounded-lg border border-border bg-card py-12">
+            <EmptyState
+              icon={Smartphone}
+              title="No targets available"
+              description="No messaging targets configured for this user."
+              isEmpty={true}
+              iconSize="md"
+            />
+            <div className="mt-4 text-center">
+              <a
+                href="https://appwrite.io/docs/users"
+                className="text-[13px] text-primary hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Learn more about targets
+              </a>
+            </div>
           </div>
         ) : (
           <>
@@ -2690,18 +2709,24 @@ function SessionsTab({
 
   if (sessions.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card py-12 text-center">
-        <p className="text-[13px] text-muted-foreground mb-2">
-          No sessions available
-        </p>
-        <a
-          href="https://appwrite.io/docs/users"
-          className="text-[13px] text-primary hover:underline"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn more about sessions
-        </a>
+      <div className="rounded-lg border border-border bg-card py-12">
+        <EmptyState
+          icon={Activity}
+          title="No sessions available"
+          description="No active sessions for this user."
+          isEmpty={true}
+          iconSize="md"
+        />
+        <div className="mt-4 text-center">
+          <a
+            href="https://appwrite.io/docs/users"
+            className="text-[13px] text-primary hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Learn more about sessions
+          </a>
+        </div>
       </div>
     )
   }

@@ -44,6 +44,7 @@ import {
 import { cn } from '@/lib/utils'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -555,21 +556,19 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
         {!hasRepository ? (
           // No repository connected state
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-              <GitBranch className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <p className="mb-1 text-[14px] font-medium text-foreground">
-              No repository connected
-            </p>
-            <p className="mb-4 text-[13px] text-muted-foreground">
-              Connect a repository to enable automatic deployments
-            </p>
+            <EmptyState
+              icon={GitBranch}
+              title="No repository connected"
+              description="Connect a repository to enable automatic deployments"
+              isEmpty={true}
+              iconSize="md"
+            />
             <Dialog
               open={connectDialogOpen}
               onOpenChange={setConnectDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button size="sm" className="h-9 text-[13px]">
+                <Button size="sm" className="h-9 text-[13px] mt-4">
                   Connect repository
                 </Button>
               </DialogTrigger>

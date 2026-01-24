@@ -36,6 +36,7 @@ import { Badge } from '@/components/ui/badge'
 import { useProjectUsers, useProjectTeams } from '@/lib/react-query/hooks'
 import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 
 export interface PermissionsEditorProps {
   permissions: string[]
@@ -408,9 +409,14 @@ function UserSelectionModal({
                   Loading users...
                 </div>
               ) : users.length === 0 ? (
-                <div className="text-center py-8 text-sm text-muted-foreground">
-                  No users found
-                </div>
+                <EmptyState
+                  icon={User}
+                  title="No users found"
+                  description="Try adjusting your search"
+                  isEmpty={!searchQuery}
+                  hasFilters={!!searchQuery}
+                  className="py-8"
+                />
               ) : (
                 users.map((user) => {
                   const isSelected = selectedUserIds.has(user.$id)
@@ -580,9 +586,14 @@ function TeamSelectionModal({
                   Loading teams...
                 </div>
               ) : teams.length === 0 ? (
-                <div className="text-center py-8 text-sm text-muted-foreground">
-                  No teams found
-                </div>
+                <EmptyState
+                  icon={Users}
+                  title="No teams found"
+                  description="Try adjusting your search"
+                  isEmpty={!searchQuery}
+                  hasFilters={!!searchQuery}
+                  className="py-8"
+                />
               ) : (
                 teams.map((team) => {
                   const isSelected = selectedTeamIds.has(team.id)

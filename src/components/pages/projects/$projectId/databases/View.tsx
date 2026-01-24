@@ -997,17 +997,13 @@ export function DatabaseDetailLayout({
           </div>
         ) : (
           <div className="flex flex-1 items-center justify-center">
-            <div className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                <Table2 className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <p className="mb-1 text-[14px] font-medium text-foreground">
-                No tables yet
-              </p>
-              <p className="text-[13px] text-muted-foreground">
-                Create your first table to get started
-              </p>
-            </div>
+            <EmptyState
+              icon={Table2}
+              title="No tables yet"
+              description="Create your first table to get started"
+              isEmpty={true}
+              iconSize="md"
+            />
           </div>
         )}
       </div>
@@ -1840,16 +1836,14 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
 
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-              <Table2 className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <p className="mb-1 text-[14px] font-medium text-foreground">
-              No tables yet
-            </p>
-            <p className="mb-4 text-[13px] text-muted-foreground">
-              Create your first table to get started
-            </p>
-            <Button onClick={() => setCreateTableDialogOpen(true)}>
+            <EmptyState
+              icon={Table2}
+              title="No tables yet"
+              description="Create your first table to get started"
+              isEmpty={true}
+              iconSize="md"
+            />
+            <Button onClick={() => setCreateTableDialogOpen(true)} className="mt-4">
               <Plus className="mr-1.5 h-4 w-4" />
               Create table
             </Button>
@@ -2749,19 +2743,20 @@ export function DatabaseOverview({
               </>
             ) : (
               <div className="py-12 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                  <Table2 className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <p className="mb-1 text-[14px] font-medium text-foreground">
-                  {searchValue ? 'No tables found' : 'No tables yet'}
-                </p>
-                <p className="mb-4 text-[13px] text-muted-foreground">
-                  {searchValue
-                    ? 'Try a different search term'
-                    : 'Create your first table to get started'}
-                </p>
+                <EmptyState
+                  icon={Table2}
+                  title={searchValue ? 'No tables found' : 'No tables yet'}
+                  description={
+                    searchValue
+                      ? 'Try a different search term'
+                      : 'Create your first table to get started'
+                  }
+                  isEmpty={!searchValue}
+                  hasFilters={!!searchValue}
+                  iconSize="md"
+                />
                 {!searchValue && (
-                  <Button onClick={() => setCreateTableDialogOpen(true)}>
+                  <Button onClick={() => setCreateTableDialogOpen(true)} className="mt-4">
                     <Plus className="mr-1.5 h-4 w-4" />
                     Create table
                   </Button>

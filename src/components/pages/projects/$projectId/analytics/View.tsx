@@ -21,6 +21,7 @@ import {
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -456,16 +457,15 @@ export function AnalyticsView() {
               ))}
 
               {paginatedWebsites.length === 0 && (
-                <div className="col-span-full py-12 text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                    <Globe className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="mb-1 text-[14px] font-medium text-foreground">
-                    No websites found
-                  </p>
-                  <p className="text-[13px] text-muted-foreground">
-                    Try adjusting your search or add a new website
-                  </p>
+                <div className="col-span-full py-12">
+                  <EmptyState
+                    icon={Globe}
+                    title="No websites found"
+                    description="Try adjusting your search or add a new website"
+                    isEmpty={!searchValue}
+                    hasFilters={!!searchValue}
+                    iconSize="md"
+                  />
                 </div>
               )}
             </div>
@@ -658,17 +658,15 @@ export function AnalyticsView() {
             />
           </>
         ) : (
-          <div className="rounded-lg border border-border bg-card py-12 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-              <Globe className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <p className="mb-1 text-[14px] font-medium text-foreground">
-              No websites found
-            </p>
-            <p className="text-[13px] text-muted-foreground">
-              Try adjusting your search or add a new website
-            </p>
-          </div>
+          <EmptyState
+            icon={Globe}
+            title="No websites found"
+            description="Try adjusting your search or add a new website"
+            isEmpty={!searchValue}
+            hasFilters={!!searchValue}
+            variant="card"
+            iconSize="md"
+          />
         )}
       </div>
     </div>

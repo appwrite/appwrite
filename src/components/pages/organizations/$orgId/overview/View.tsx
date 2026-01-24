@@ -111,6 +111,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 
 // Environment variables for whitelabeling
 const COMPANY_NAME = import.meta.env.VITE_COMPANY_NAME || 'Appwrite'
@@ -1432,19 +1433,19 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
 
                         {/* Empty State */}
                         {filteredProjectsByTeam.length === 0 && (
-                          <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                              <Search className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <h3 className="text-[15px] font-medium text-foreground">
-                              No projects found
-                            </h3>
-                            <p className="mt-1 text-[13px] text-muted-foreground">
-                              {searchQuery
+                          <EmptyState
+                            icon={Search}
+                            title="No projects found"
+                            description={
+                              searchQuery
                                 ? 'Try adjusting your search query'
-                                : 'Create your first project to get started'}
-                            </p>
-                          </div>
+                                : 'Create your first project to get started'
+                            }
+                            isEmpty={!searchQuery}
+                            hasFilters={!!searchQuery}
+                            variant="centered"
+                            iconSize="md"
+                          />
                         )}
 
                         {/* Pagination for Active Projects */}
@@ -1809,19 +1810,19 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             )}
                           </>
                         ) : (
-                          <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                              <Users className="h-6 w-6 text-muted-foreground" />
-                            </div>
-                            <h3 className="text-[15px] font-medium text-foreground">
-                              No members found
-                            </h3>
-                            <p className="mt-1 text-[13px] text-muted-foreground">
-                              {membershipsSearchQuery
+                          <EmptyState
+                            icon={Users}
+                            title="No members found"
+                            description={
+                              membershipsSearchQuery
                                 ? 'Try adjusting your search query'
-                                : 'Invite team members to collaborate on your projects'}
-                            </p>
-                          </div>
+                                : 'Invite team members to collaborate on your projects'
+                            }
+                            isEmpty={!membershipsSearchQuery}
+                            hasFilters={!!membershipsSearchQuery}
+                            variant="centered"
+                            iconSize="md"
+                          />
                         )}
                       </>
                     )}

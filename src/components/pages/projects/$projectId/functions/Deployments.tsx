@@ -34,6 +34,7 @@ import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
   Table,
   TableBody,
@@ -1164,17 +1165,14 @@ export function FunctionDeployments() {
               />
             </>
           ) : (
-            <div className="rounded-lg border border-border bg-card py-12 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                <Clock className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <p className="mb-1 text-[14px] font-medium text-foreground">
-                No deployments yet
-              </p>
-              <p className="text-[13px] text-muted-foreground">
-                Create your first deployment to get started
-              </p>
-            </div>
+            <EmptyState
+              icon={Clock}
+              title="No deployments yet"
+              description="Create your first deployment to get started"
+              isEmpty={true}
+              variant="card"
+              iconSize="md"
+            />
           )}
         </div>
       </div>

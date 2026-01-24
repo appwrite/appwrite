@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -295,10 +296,12 @@ export function SiteOverviewView() {
                 })}
               </div>
             ) : (
-              <div className="px-6 py-8 text-center">
-                <p className="text-[13px] text-muted-foreground">
-                  No deployments yet
-                </p>
+              <div className="px-6 py-4">
+                <EmptyState
+                  title="No deployments yet"
+                  description="Deployments will appear here when available"
+                  isEmpty={true}
+                />
               </div>
             )}
           </div>

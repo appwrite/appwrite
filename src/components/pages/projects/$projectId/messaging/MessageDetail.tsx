@@ -13,6 +13,8 @@ import {
   Calendar,
   Send,
   AlertCircle,
+  Users,
+  Hash,
 } from 'lucide-react'
 import {
   useMessage,
@@ -1693,9 +1695,14 @@ function TopicsSelectionModal({
                   Loading topics...
                 </div>
               ) : filteredTopics.length === 0 ? (
-                <div className="text-center py-8 text-sm text-muted-foreground">
-                  No topics found
-                </div>
+                <EmptyState
+                  icon={Hash}
+                  title="No topics found"
+                  description="Try adjusting your search"
+                  isEmpty={!search}
+                  hasFilters={!!search}
+                  className="py-8"
+                />
               ) : (
                 filteredTopics.map((topic) => {
                   const isSelected = selectedTopicIds.has(topic.$id)
@@ -1858,9 +1865,14 @@ function TargetsSelectionModal({
                   Loading users...
                 </div>
               ) : users.length === 0 ? (
-                <div className="text-center py-8 text-sm text-muted-foreground">
-                  No users found
-                </div>
+                <EmptyState
+                  icon={Users}
+                  title="No users found"
+                  description="Try adjusting your search"
+                  isEmpty={!search}
+                  hasFilters={!!search}
+                  className="py-8"
+                />
               ) : (
                 users.map((user) => {
                   const isSelected = selectedUserIds.has(user.$id)

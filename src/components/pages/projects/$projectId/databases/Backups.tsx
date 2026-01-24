@@ -33,6 +33,7 @@ import {
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { CopyableId } from '@/components/global/shared/CopyableId'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
   Tooltip,
   TooltipContent,
@@ -399,14 +400,13 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
             </div>
             <div className="border-t border-border" />
             <div className="px-6 py-4 min-h-[400px] flex flex-col items-center justify-center">
-              <Archive className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-[14px] font-medium text-foreground mb-1">
-                Ensure your data stays safe
-              </p>
-              <p className="text-[13px] text-muted-foreground text-center max-w-md">
-                Create backup policies to automate regular and secure data
-                protection for your databases.
-              </p>
+              <EmptyState
+                icon={Archive}
+                title="Ensure your data stays safe"
+                description="Create backup policies to automate regular and secure data protection for your databases."
+                isEmpty={true}
+                iconSize="lg"
+              />
             </div>
           </div>
         </UpgradeCurtain>
@@ -480,19 +480,18 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                 <div className="text-muted-foreground">Loading policies...</div>
               </div>
             ) : policies.length === 0 ? (
-              <div className="rounded-lg border border-border bg-card py-12 text-center min-h-[280px] flex flex-col items-center justify-center">
-                <Archive className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="text-[14px] font-medium text-foreground mb-1">
-                  Ensure your data stays safe
-                </p>
-                <p className="text-[13px] text-muted-foreground mb-4">
-                  Create a backup policy to automate regular and secure data
-                  protection.
-                </p>
+              <div className="rounded-lg border border-border bg-card py-12 min-h-[280px] flex flex-col items-center justify-center">
+                <EmptyState
+                  icon={Archive}
+                  title="Ensure your data stays safe"
+                  description="Create a backup policy to automate regular and secure data protection."
+                  isEmpty={true}
+                  iconSize="lg"
+                />
                 <Button
                   onClick={() => setCreatePolicyDialogOpen(true)}
                   size="sm"
-                  className="h-9 text-[13px]"
+                  className="h-9 text-[13px] mt-4"
                 >
                   <Plus className="mr-1.5 h-4 w-4" />
                   Create policy
@@ -619,18 +618,18 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                 <div className="text-muted-foreground">Loading backups...</div>
               </div>
             ) : archives.length === 0 ? (
-              <div className="rounded-lg border border-border bg-card py-12 text-center min-h-[280px] flex flex-col items-center justify-center">
-                <Archive className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="text-[14px] font-medium text-foreground mb-1">
-                  No backups yet
-                </p>
-                <p className="text-[13px] text-muted-foreground mb-4">
-                  Create a manual backup or set up a policy to get started.
-                </p>
+              <div className="rounded-lg border border-border bg-card py-12 min-h-[280px] flex flex-col items-center justify-center">
+                <EmptyState
+                  icon={Archive}
+                  title="No backups yet"
+                  description="Create a manual backup or set up a policy to get started."
+                  isEmpty={true}
+                  iconSize="lg"
+                />
                 <Button
                   onClick={() => setCreateManualBackupDialogOpen(true)}
                   size="sm"
-                  className="h-9 text-[13px]"
+                  className="h-9 text-[13px] mt-4"
                 >
                   <Plus className="mr-1.5 h-4 w-4" />
                   Create manual backup

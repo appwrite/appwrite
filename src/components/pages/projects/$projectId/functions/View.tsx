@@ -295,10 +295,11 @@ export function FunctionsView() {
                 isEmpty={false}
                 hasFilters={true}
                 variant="card"
+                iconSize="md"
               >
-                <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                    <Play className="h-5 w-5 text-muted-foreground" />
+                <div className="flex flex-col items-center text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                    <Play className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="mb-1 text-[14px] font-medium text-foreground">
                     No functions found
@@ -332,17 +333,17 @@ export function FunctionsView() {
                 description="Deploy and manage serverless functions with Appwrite Functions."
                 isEmpty={true}
                 variant="card"
+                iconSize="md"
               >
-                <div className="text-center">
-                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
-                    <Play className="h-5 w-5 text-muted-foreground" />
+                <div className="flex flex-col items-center text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                    <Play className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="mb-1 text-[14px] font-medium text-foreground">
                     Create your first function
                   </p>
                   <p className="mb-4 text-[13px] text-muted-foreground">
-                    Deploy and manage serverless functions with Appwrite
-                    Functions.
+                    Deploy and manage serverless functions with Appwrite Functions.
                   </p>
                   <div className="flex items-center justify-center gap-2">
                     <Button variant="outline" asChild className="gap-1.5">
