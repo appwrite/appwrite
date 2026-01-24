@@ -1,0 +1,94 @@
+import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
+import { SiteLayout } from '@/components/pages/projects/$projectId/sites/SiteLayout'
+import {
+  siteQueryOptions,
+  siteDeploymentsQueryOptions,
+  siteDeploymentQueryOptions,
+  siteDomainsQueryOptions,
+  fetchProject,
+} from '@/lib/react-query/hooks'
+import { Query } from '@appwrite.io/console'
+
+export const Route = createFileRoute(
+  '/_public/projects/$projectId/sites/$siteId',
+)({
+  loader: async ({ params, context }) => {
+    // Only run on client side (SDK requires browser environment)
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const { projectId, siteId } = params
+    const { queryClient } = context
+
+    // Fetch site first - blocks navigation until ready
+    const site = await queryClient.ensureQueryData(
+      siteQueryOptions(projectId, siteId),
+    )
+
+    // Fetch project data (needed for header/sidebar) - blocks navigation
+    await queryClient.ensureQueryData({
+      queryKey: ['project', projectId],
+      queryFn: () => fetchProject(projectId),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    })
+
+    // Fetch critical data before rendering to prevent layout shifts
+    await Promise.all([
+      // Fetch recent deployments (first 4)
+      queryClient.ensureQueryData(
+        siteDeploymentsQueryOptions(projectId, siteId, 0, 4, [
+          Query.select([
+            'status',
+            'type',
+            'resourceId',
+            'providerRepositoryUrl',
+            'providerRepositoryOwner',
+            'providerRepositoryName',
+            'providerBranchUrl',
+            'providerBranch',
+            'providerCommitMessage',
+            'providerCommitHash',
+            'providerCommitUrl',
+          ]),
+        ]),
+      ),
+      // Fetch production-ready deployments (for active deployment info)
+      site.deploymentId
+        ? queryClient.ensureQueryData(
+            siteDeploymentQueryOptions(projectId, siteId, site.deploymentId),
+          )
+        : Promise.resolve(),
+      // Fetch first page of domains
+      queryClient.ensureQueryData(
+        siteDomainsQueryOptions(projectId, siteId, 0, 25, ''),
+      ),
+    ])
+  },
+  component: SiteLayoutPage,
+})
+
+function SiteLayoutPage() {
+  const matches = useMatches()
+
+  // Check if we're on a deployment detail route (should not have site tabs)
+  const isDeploymentDetailRoute = matches.some(
+    (match) =>
+      match.routeId.includes('/deployments/$deploymentId') ||
+      match.routeId ===
+        '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId' ||
+      match.routeId ===
+        '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId/' ||
+      match.routeId.startsWith(
+        '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId',
+      ),
+  )
+
+  if (isDeploymentDetailRoute) {
+    // For deployment detail routes, render outlet directly (they have their own layout)
+    return <Outlet />
+  }
+
+  // For other routes, render SiteLayout which provides tabs
+  return <SiteLayout />
+}

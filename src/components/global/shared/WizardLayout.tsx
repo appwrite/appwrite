@@ -37,6 +37,8 @@ interface WizardLayoutProps {
   showBackButton?: boolean
   /** Custom label for the back button (default: 'Back') */
   backButtonLabel?: string
+  /** Footer button alignment (default: 'left') */
+  footerAlign?: 'left' | 'right'
 }
 
 /**
@@ -52,6 +54,7 @@ interface WizardLayoutProps {
  *   description="Upgrade or downgrade your organization's billing plan"
  *   fallbackPath="/organizations/$orgId/billing"
  *   sidebar={<EstimatedTotalBox />}
+ *   footerAlign="right"
  *   footer={
  *     <>
  *       <Button variant="outline" onClick={handleCancel}>Cancel</Button>
@@ -81,6 +84,7 @@ export function WizardLayout({
   constrainFooterWidth = true,
   showBackButton = false,
   backButtonLabel = 'Back',
+  footerAlign = 'left',
 }: WizardLayoutProps) {
   // Use smart navigation hook for consistent back behavior
   const smartGoBack = useSmartNavigation({ fallbackPath })
@@ -258,6 +262,7 @@ export function WizardLayout({
               'mx-auto w-full flex items-center gap-3',
               constrainFooterWidth && 'max-w-7xl',
               fullscreen && 'px-6 py-4',
+              footerAlign === 'right' && 'justify-end',
             )}
           >
             {footer}

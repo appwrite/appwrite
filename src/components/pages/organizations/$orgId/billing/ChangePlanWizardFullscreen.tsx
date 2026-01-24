@@ -472,6 +472,7 @@ export function ChangePlanWizardFullscreen() {
       title="Change plan"
       fullscreen
       fallbackPath={`/organizations/${orgId}/billing`}
+      footerAlign="right"
       sidebar={
         <>
           {showEstimatedTotal && (
