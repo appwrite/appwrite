@@ -847,17 +847,35 @@ export function DomainDetailView() {
                   <div className="rounded-lg border border-border bg-card overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow className="hover:bg-transparent">
-                          <TableHead className="w-[180px]">Name</TableHead>
-                          <TableHead className="w-[90px]">Type</TableHead>
-                          <TableHead>Value</TableHead>
-                          <TableHead className="w-[70px]">TTL</TableHead>
-                          <TableHead className="w-[80px]">Priority</TableHead>
-                          <TableHead className="w-[70px]">Weight</TableHead>
-                          <TableHead className="w-[70px]">Port</TableHead>
-                          <TableHead className="w-[150px]">Comment</TableHead>
-                          <TableHead className="w-[120px]">Created</TableHead>
-                          <TableHead className="w-[100px] text-right pr-4"></TableHead>
+                        <TableRow className="hover:bg-transparent border-b border-border">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                            Name
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[90px]">
+                            Type
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                            Value
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[70px]">
+                            TTL
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]">
+                            Priority
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[70px]">
+                            Weight
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[70px]">
+                            Port
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                            Comment
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                            Created
+                          </TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px] pr-4"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -875,7 +893,7 @@ export function DomainDetailView() {
 
                           return (
                             <TableRow key={record.$id}>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2 group/name">
                                   <code className="text-[12px] font-mono text-foreground bg-muted/50 px-1.5 py-0.5 rounded">
                                     {nameValue}
@@ -899,7 +917,7 @@ export function DomainDetailView() {
                                   </Button>
                                 </div>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <Badge
                                   variant="outline"
                                   className={cn(
@@ -910,7 +928,7 @@ export function DomainDetailView() {
                                   {record.type}
                                 </Badge>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2 max-w-[400px] group/value">
                                   {isAppwriteManaged ? (
                                     <Badge
@@ -972,33 +990,33 @@ export function DomainDetailView() {
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <code className="text-[12px] font-mono text-muted-foreground">
                                   {record.ttl}
                                 </code>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <code className="text-[12px] font-mono text-muted-foreground">
                                   {showPriority && record.priority !== undefined
                                     ? record.priority
                                     : '—'}
                                 </code>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <code className="text-[12px] font-mono text-muted-foreground">
                                   {showSRVFields && record.weight !== undefined
                                     ? record.weight
                                     : '—'}
                                 </code>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <code className="text-[12px] font-mono text-muted-foreground">
                                   {showSRVFields && record.port !== undefined
                                     ? record.port
                                     : '—'}
                                 </code>
                               </TableCell>
-                              <TableCell className="w-[150px]">
+                              <TableCell className="px-4 py-3 w-[150px]">
                                 {record.comment ? (
                                   <TooltipProvider delayDuration={0}>
                                     <Tooltip>
@@ -1023,13 +1041,13 @@ export function DomainDetailView() {
                                   </span>
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <DateTooltip
                                   date={record.$createdAt}
                                   className="text-[12px] font-medium text-muted-foreground"
                                 />
                               </TableCell>
-                              <TableCell className="text-right pr-4">
+                              <TableCell className="px-4 py-3 text-right pr-4">
                                 {record.lock ? (
                                   <div className="flex justify-end">
                                     <Button

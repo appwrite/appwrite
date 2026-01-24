@@ -487,14 +487,26 @@ export function AnalyticsView() {
             <div className="rounded-lg border border-border bg-card">
               <Table>
                 <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[250px]">Website</TableHead>
-                    <TableHead className="w-[100px]">Visitors</TableHead>
-                    <TableHead className="w-[100px]">Page Views</TableHead>
-                    <TableHead className="w-[100px]">Avg. Duration</TableHead>
-                    <TableHead className="w-[100px]">Bounce Rate</TableHead>
-                    <TableHead className="w-[120px]">Last Activity</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[250px]">
+                      Website
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                      Visitors
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                      Page Views
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                      Avg. Duration
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                      Bounce Rate
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                      Last Activity
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

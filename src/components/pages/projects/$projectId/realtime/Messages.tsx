@@ -95,14 +95,22 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
         <>
           <Table className="border-b border-border">
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[200px] pl-6 sm:pl-8">
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] pl-6 sm:pl-8">
                   Message ID
                 </TableHead>
-                <TableHead className="w-[250px]">Channel</TableHead>
-                <TableHead className="w-[200px]">Events</TableHead>
-                <TableHead className="w-[150px]">Payload Size</TableHead>
-                <TableHead className="w-[180px]">Timestamp</TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[250px]">
+                  Channel
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                  Events
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                  Payload Size
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                  Timestamp
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -114,10 +122,10 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
                     index === messages.length - 1 && 'border-b border-border',
                   )}
                 >
-                  <TableCell className="pl-6 sm:pl-8">
+                  <TableCell className="pl-6 sm:pl-8 py-3">
                     <CopyableId id={message.id} size="sm" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-1.5 min-w-0">
                       {message.channels.slice(0, 2).map((channel) => (
                         <code
@@ -134,7 +142,7 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-1 min-w-0">
                       {message.events.slice(0, 2).map((event) => (
                         <Badge
@@ -152,12 +160,12 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <span className="text-[13px] text-muted-foreground">
                       {message.payloadSize}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <DateTooltip
                       date={message.timestamp}
                       className="text-[12px] text-muted-foreground"

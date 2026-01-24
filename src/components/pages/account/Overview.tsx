@@ -473,12 +473,20 @@ function IdentitiesSection() {
         <div className="rounded-lg border border-border overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[200px]">Provider</TableHead>
-                <TableHead className="w-[250px]">Email</TableHead>
-                <TableHead className="w-[180px]">Created At</TableHead>
-                <TableHead className="w-[180px]">Expiry Date</TableHead>
-                <TableHead className="w-[80px]"></TableHead>
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                  Provider
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[250px]">
+                  Email
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                  Created At
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                  Expiry Date
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

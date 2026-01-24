@@ -298,17 +298,17 @@ export function GitConfigurationCard({
                   <div className="rounded-lg border border-border overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow>
-                          <TableHead className="min-w-[150px] max-w-[500px]">
+                        <TableRow className="hover:bg-transparent border-b border-border">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
                             Owner
                           </TableHead>
-                          <TableHead className="min-w-[150px] max-w-[500px]">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
                             Created
                           </TableHead>
-                          <TableHead className="min-w-[150px] max-w-[500px]">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[150px] max-w-[500px]">
                             Updated
                           </TableHead>
-                          <TableHead className="w-[60px]"></TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[60px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -319,7 +319,7 @@ export function GitConfigurationCard({
                           )
                           return (
                             <TableRow key={installation.$id}>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <div className="flex items-center gap-2">
                                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted">
                                     {getProviderIcon(installation.provider)}
@@ -340,13 +340,13 @@ export function GitConfigurationCard({
                                   )}
                                 </div>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <DateTooltip date={installation.$createdAt} />
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <DateTooltip date={installation.$updatedAt} />
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="px-4 py-3">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
                                     <Button

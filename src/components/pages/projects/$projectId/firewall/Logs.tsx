@@ -274,47 +274,63 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
         <div className="rounded-xl border border-border bg-card/50">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">Action</TableHead>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Path</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Rule</TableHead>
-                <TableHead>Country</TableHead>
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]">
+                  Action
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Timestamp
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  IP Address
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Path
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Method
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Status
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Rule
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Country
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredLogs.map((log) => (
                 <TableRow key={log.$id}>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <div className="flex items-center">
                       {getActionIcon(log.action)}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <DateTooltip
                       date={log.timestamp}
                       className="text-[12px] text-muted-foreground"
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <span className="text-[12px] font-mono text-foreground">
                       {log.ipAddress}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <span className="text-[12px] text-foreground">
                       {log.path || '-'}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <Badge variant="outline" className="text-[10px] font-mono">
                       {log.method || '-'}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     {log.statusCode ? (
                       <span
                         className={cn(
@@ -330,7 +346,7 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     {log.ruleName ? (
                       <span className="text-[12px] text-foreground">
                         {log.ruleName}
@@ -341,7 +357,7 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     {log.country ? (
                       <span className="text-[12px] text-muted-foreground">
                         {log.country}

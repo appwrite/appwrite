@@ -1138,17 +1138,25 @@ export function PermissionsEditor({
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="min-w-[220px]">Role</TableHead>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[220px]">
+                Role
+              </TableHead>
               {withCreate && (
-                <TableHead className="min-w-[64px] text-center">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center min-w-[64px]">
                   Create
                 </TableHead>
               )}
-              <TableHead className="min-w-[64px] text-center">Read</TableHead>
-              <TableHead className="min-w-[64px] text-center">Update</TableHead>
-              <TableHead className="min-w-[64px] text-center">Delete</TableHead>
-              <TableHead className="w-[40px]"></TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center min-w-[64px]">
+                Read
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center min-w-[64px]">
+                Update
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-center min-w-[64px]">
+                Delete
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[40px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -1156,11 +1164,11 @@ export function PermissionsEditor({
               const actions = permissionsMap.get(role)!
               return (
                 <TableRow key={role}>
-                  <TableCell className="min-w-[220px]">
+                  <TableCell className="px-4 py-3 min-w-[220px]">
                     <RoleDisplay role={role} projectId={projectId} />
                   </TableCell>
                   {withCreate && (
-                    <TableCell className="min-w-[64px] text-center">
+                    <TableCell className="px-4 py-3 min-w-[64px] text-center">
                       <Checkbox
                         checked={actions.create}
                         onCheckedChange={(checked) =>
@@ -1174,7 +1182,7 @@ export function PermissionsEditor({
                       />
                     </TableCell>
                   )}
-                  <TableCell className="min-w-[64px] text-center">
+                  <TableCell className="px-4 py-3 min-w-[64px] text-center">
                     <Checkbox
                       checked={actions.read}
                       onCheckedChange={(checked) =>
@@ -1183,7 +1191,7 @@ export function PermissionsEditor({
                       aria-label={`Read permission for ${role}`}
                     />
                   </TableCell>
-                  <TableCell className="min-w-[64px] text-center">
+                  <TableCell className="px-4 py-3 min-w-[64px] text-center">
                     <Checkbox
                       checked={actions.update}
                       onCheckedChange={(checked) =>
@@ -1192,7 +1200,7 @@ export function PermissionsEditor({
                       aria-label={`Update permission for ${role}`}
                     />
                   </TableCell>
-                  <TableCell className="min-w-[64px] text-center">
+                  <TableCell className="px-4 py-3 min-w-[64px] text-center">
                     <Checkbox
                       checked={actions.delete}
                       onCheckedChange={(checked) =>
@@ -1201,7 +1209,7 @@ export function PermissionsEditor({
                       aria-label={`Delete permission for ${role}`}
                     />
                   </TableCell>
-                  <TableCell className="w-[40px]">
+                  <TableCell className="px-4 py-3 w-[40px]">
                     <Button
                       variant="ghost"
                       size="icon"

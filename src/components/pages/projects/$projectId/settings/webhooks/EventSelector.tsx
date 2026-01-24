@@ -167,15 +167,17 @@ export function EventSelector({
               <div className="max-h-[400px] overflow-auto rounded-lg border border-border">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[50px]"></TableHead>
-                      <TableHead>Event</TableHead>
+                    <TableRow className="hover:bg-transparent border-b border-border">
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Event
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredEvents.map((event) => (
                       <TableRow key={event}>
-                        <TableCell>
+                        <TableCell className="px-4 py-3">
                           <Checkbox
                             checked={tempSelectedEvents.includes(event)}
                             onCheckedChange={() => handleToggleEvent(event)}
@@ -185,7 +187,7 @@ export function EventSelector({
                             }
                           />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="px-4 py-3">
                           <code className="text-[13px] font-mono">{event}</code>
                         </TableCell>
                       </TableRow>

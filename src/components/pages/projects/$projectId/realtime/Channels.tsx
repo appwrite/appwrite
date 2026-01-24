@@ -94,14 +94,22 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
         <>
           <Table className="border-b border-border">
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[300px] pl-6 sm:pl-8">
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[300px] pl-6 sm:pl-8">
                   Channel
                 </TableHead>
-                <TableHead className="w-[150px]">Type</TableHead>
-                <TableHead className="w-[150px]">Subscribers</TableHead>
-                <TableHead className="w-[150px]">Messages</TableHead>
-                <TableHead className="w-[180px]">Last Activity</TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                  Type
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                  Subscribers
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                  Messages
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                  Last Activity
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -113,27 +121,27 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
                     index === channels.length - 1 && 'border-b border-border',
                   )}
                 >
-                  <TableCell className="pl-6 sm:pl-8">
+                  <TableCell className="pl-6 sm:pl-8 py-3">
                     <code className="text-[12px] text-foreground font-mono">
                       {channel.name}
                     </code>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <Badge variant="secondary" className="text-[12px]">
                       {channel.type}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <span className="text-[13px] text-muted-foreground">
                       {channel.subscribers.toLocaleString()}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <span className="text-[13px] text-muted-foreground">
                       {channel.messageCount.toLocaleString()}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     {channel.lastActivity ? (
                       <DateTooltip
                         date={channel.lastActivity}

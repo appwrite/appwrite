@@ -570,15 +570,23 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
           <>
             <Table className="border-b border-border">
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[200px] pl-6 sm:pl-8">
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] pl-6 sm:pl-8">
                     Event
                   </TableHead>
-                  <TableHead className="w-[200px]">Resource</TableHead>
-                  <TableHead className="w-[180px]">User</TableHead>
-                  <TableHead className="w-[280px]">Description</TableHead>
-                  <TableHead className="w-[140px]">Time</TableHead>
-                  <TableHead className="w-[50px] pr-6 sm:pr-8"></TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                    Resource
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                    User
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[280px]">
+                    Description
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
+                    Time
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px] pr-6 sm:pr-8"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -592,7 +600,7 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
                     )}
                     onClick={() => {}}
                   >
-                    <TableCell className="pl-6 sm:pl-8">
+                    <TableCell className="pl-6 sm:pl-8 py-3">
                       <div className="flex items-center gap-2.5">
                         <div
                           className={cn(
@@ -607,7 +615,7 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-muted text-muted-foreground">
                           {resourceIcons[activity.resourceType]}
@@ -622,7 +630,7 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
                         <InitialsAvatar name={activity.userName} size="sm" />
                         <div className="min-w-0">
@@ -635,18 +643,18 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <p className="truncate text-[12px] text-muted-foreground">
                         {activity.description || '—'}
                       </p>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <DateTooltip
                         date={activity.timestamp}
                         className="text-[12px] text-muted-foreground"
                       />
                     </TableCell>
-                    <TableCell className="pr-6 sm:pr-8">
+                    <TableCell className="pr-6 sm:pr-8 py-3">
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button

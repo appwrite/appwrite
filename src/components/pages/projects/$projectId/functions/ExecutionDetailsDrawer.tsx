@@ -454,20 +454,22 @@ export function ExecutionDetailsDrawer({
                           <div className="rounded-lg border border-border overflow-hidden">
                             <Table>
                               <TableHeader>
-                                <TableRow>
-                                  <TableHead className="w-[200px]">
+                                <TableRow className="hover:bg-transparent border-b border-border">
+                                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
                                     Key
                                   </TableHead>
-                                  <TableHead>Value</TableHead>
+                                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                    Value
+                                  </TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
                                 {queryParams.map((param, index) => (
                                   <TableRow key={index}>
-                                    <TableCell className="font-mono text-[13px]">
+                                    <TableCell className="px-4 py-3 font-mono text-[13px]">
                                       {param.name}
                                     </TableCell>
-                                    <TableCell className="font-mono text-[13px]">
+                                    <TableCell className="px-4 py-3 font-mono text-[13px]">
                                       {param.value}
                                     </TableCell>
                                   </TableRow>
@@ -493,21 +495,23 @@ export function ExecutionDetailsDrawer({
                             <div className="rounded-lg border border-border overflow-hidden">
                               <Table>
                                 <TableHeader>
-                                  <TableRow>
-                                    <TableHead className="w-[200px]">
+                                  <TableRow className="hover:bg-transparent border-b border-border">
+                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
                                       Key
                                     </TableHead>
-                                    <TableHead>Value</TableHead>
+                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                      Value
+                                    </TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                   {execution.requestHeaders.map(
                                     (header, index) => (
                                       <TableRow key={index}>
-                                        <TableCell className="font-mono text-[13px]">
+                                        <TableCell className="px-4 py-3 font-mono text-[13px]">
                                           {header.name}
                                         </TableCell>
-                                        <TableCell className="font-mono text-[13px]">
+                                        <TableCell className="px-4 py-3 font-mono text-[13px]">
                                           {header.value}
                                         </TableCell>
                                       </TableRow>
@@ -764,21 +768,23 @@ export function ExecutionDetailsDrawer({
                             <div className="rounded-lg border border-border overflow-hidden">
                               <Table>
                                 <TableHeader>
-                                  <TableRow>
-                                    <TableHead className="w-[200px]">
+                                  <TableRow className="hover:bg-transparent border-b border-border">
+                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
                                       Key
                                     </TableHead>
-                                    <TableHead>Value</TableHead>
+                                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                      Value
+                                    </TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                   {execution.responseHeaders.map(
                                     (header, index) => (
                                       <TableRow key={index}>
-                                        <TableCell className="font-mono text-[13px]">
+                                        <TableCell className="px-4 py-3 font-mono text-[13px]">
                                           {header.name}
                                         </TableCell>
-                                        <TableCell className="font-mono text-[13px]">
+                                        <TableCell className="px-4 py-3 font-mono text-[13px]">
                                           {header.value}
                                         </TableCell>
                                       </TableRow>

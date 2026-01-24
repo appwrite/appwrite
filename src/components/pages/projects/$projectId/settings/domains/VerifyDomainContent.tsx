@@ -112,25 +112,33 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
             <div className="rounded-lg border border-border bg-card">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Name/Host</TableHead>
-                    <TableHead>Value/Target</TableHead>
-                    <TableHead>TTL</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Type
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Name/Host
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Value/Target
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      TTL
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell>CNAME</TableCell>
-                    <TableCell className="font-mono text-[13px]">
+                    <TableCell className="px-4 py-3">CNAME</TableCell>
+                    <TableCell className="px-4 py-3 font-mono text-[13px]">
                       {rule.domain}
                     </TableCell>
-                    <TableCell className="font-mono text-[13px]">
+                    <TableCell className="px-4 py-3 font-mono text-[13px]">
                       {vars.cname}
                     </TableCell>
-                    <TableCell>3600</TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">3600</TableCell>
+                    <TableCell className="px-4 py-3">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -160,17 +168,19 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
             <div className="rounded-lg border border-border bg-card">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Nameserver</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Nameserver
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-mono text-[13px]">
+                    <TableCell className="px-4 py-3 font-mono text-[13px]">
                       ns1.appwrite.io
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -186,10 +196,10 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="font-mono text-[13px]">
+                    <TableCell className="px-4 py-3 font-mono text-[13px]">
                       ns2.appwrite.io
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -219,25 +229,33 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
             <div className="rounded-lg border border-border bg-card">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Name/Host</TableHead>
-                    <TableHead>Value/Target</TableHead>
-                    <TableHead>TTL</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Type
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Name/Host
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Value/Target
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      TTL
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell>A</TableCell>
-                    <TableCell className="font-mono text-[13px]">
+                    <TableCell className="px-4 py-3">A</TableCell>
+                    <TableCell className="px-4 py-3 font-mono text-[13px]">
                       {rule.domain}
                     </TableCell>
-                    <TableCell className="font-mono text-[13px]">
+                    <TableCell className="px-4 py-3 font-mono text-[13px]">
                       {vars.a}
                     </TableCell>
-                    <TableCell>3600</TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">3600</TableCell>
+                    <TableCell className="px-4 py-3">
                       <Button
                         variant="ghost"
                         size="sm"

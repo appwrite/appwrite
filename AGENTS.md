@@ -166,6 +166,111 @@ const { account, isAuthenticated } = useAuth()
 
 **Rules**: Never use Card/CardHeader/CardContent components. Always include separators. Footer only for update buttons.
 
+### Table Structure
+
+All tables must use consistent styling matching the users table pattern for visual consistency across the application.
+
+**Header Row Styling:**
+
+```tsx
+<TableHeader>
+  <TableRow className="hover:bg-transparent border-b border-border">
+    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+      Column Name
+    </TableHead>
+    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+      Another Column
+    </TableHead>
+    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]">
+      Actions
+    </TableHead>
+  </TableRow>
+</TableHeader>
+```
+
+**Body Row Styling:**
+
+```tsx
+<TableBody>
+  {items.map((item) => (
+    <TableRow key={item.$id}>
+      <TableCell className="px-4 py-3">
+        {/* Content */}
+      </TableCell>
+      <TableCell className="px-4 py-3">
+        {/* Content */}
+      </TableCell>
+      <TableCell className="px-4 py-3 text-right">
+        {/* Actions */}
+      </TableCell>
+    </TableRow>
+  ))}
+</TableBody>
+```
+
+**Rules:**
+
+- **Header Row**: Always use `hover:bg-transparent border-b border-border` on `TableRow` in `TableHeader`
+- **TableHead**: Always include `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider`
+- **Column Names**: Use uppercase/capitalized text (e.g., "User ID", "Created At", "Actions")
+- **TableCell**: Always use `px-4 py-3` for consistent padding
+- **Special Cases**: 
+  - First column with checkbox: Keep `w-[40px] px-4` on `TableHead`, add `py-3` to `TableCell`
+  - Columns with `pl-6 sm:pl-8`: Add `py-3` to maintain vertical consistency
+  - Right-aligned columns: Add `text-right` to both `TableHead` and `TableCell` if needed
+  - Width constraints: Preserve `w-[...]`, `min-w-[...]`, `max-w-[...]` classes on `TableHead`
+
+**Complete Example:**
+
+```tsx
+<Table>
+  <TableHeader>
+    <TableRow className="hover:bg-transparent border-b border-border">
+      <TableHead className="w-[40px] px-4">
+        <Checkbox
+          checked={allSelected}
+          onCheckedChange={toggleAll}
+        />
+      </TableHead>
+      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+        Name
+      </TableHead>
+      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+        Status
+      </TableHead>
+      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+        Created
+      </TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {items.map((item) => (
+      <TableRow key={item.$id}>
+        <TableCell className="px-4 py-3">
+          <Checkbox
+            checked={selectedItems.has(item.$id)}
+            onCheckedChange={() => toggleItem(item.$id)}
+          />
+        </TableCell>
+        <TableCell className="px-4 py-3">
+          <span className="text-[13px] font-medium">{item.name}</span>
+        </TableCell>
+        <TableCell className="px-4 py-3">
+          <Badge variant="secondary">{item.status}</Badge>
+        </TableCell>
+        <TableCell className="px-4 py-3 text-right">
+          <DateTooltip date={item.$createdAt} />
+        </TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
+```
+
+**Reference Implementation:**
+
+See `src/components/pages/projects/$projectId/auth/View.tsx` for the canonical users table implementation.
+
 ### Service View Pattern
 
 Standard structure for service pages (Storage, Functions, Databases, etc.):
@@ -616,6 +721,8 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Date display         | Always include DateTooltip                         |
 | Route prefetch       | All crucial data at route level                    |
 | Models types         | Always `Models.*` from `@appwrite.io/console`      |
+| Table header         | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head |
+| Table cells          | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed) |
 
 ---
 

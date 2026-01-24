@@ -949,8 +949,8 @@ export function SiteDeploymentsView() {
               <div className="rounded-lg border border-border bg-card">
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-[40px]">
+                    <TableRow className="hover:bg-transparent border-b border-border">
+                      <TableHead className="w-[40px] px-4">
                         <Checkbox
                           checked={(() => {
                             const activeDeploymentId = activeDeployment?.$id
@@ -966,13 +966,27 @@ export function SiteDeploymentsView() {
                           onCheckedChange={toggleAllDeployments}
                         />
                       </TableHead>
-                      <TableHead className="w-[180px]">Deployment ID</TableHead>
-                      <TableHead className="w-[120px]">Status</TableHead>
-                      <TableHead className="w-[150px]">Type</TableHead>
-                      <TableHead className="w-[200px]">Source</TableHead>
-                      <TableHead className="w-[100px]">Total size</TableHead>
-                      <TableHead className="w-[100px]">Duration</TableHead>
-                      <TableHead className="w-[150px]">Created</TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                        Deployment ID
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                        Status
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                        Type
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                        Source
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                        Total Size
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                        Duration
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                        Created
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

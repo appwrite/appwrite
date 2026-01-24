@@ -640,8 +640,8 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                 <div className="rounded-lg border border-border bg-card">
                   <Table>
                     <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[50px]">
+                      <TableRow className="hover:bg-transparent border-b border-border">
+                        <TableHead className="w-[50px] px-4">
                           <Checkbox
                             checked={
                               archives.length > 0 &&
@@ -660,12 +660,22 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                             }}
                           />
                         </TableHead>
-                        <TableHead className="w-[180px]">Backup ID</TableHead>
-                        <TableHead className="w-[150px]">Created</TableHead>
-                        <TableHead className="w-[100px]">Size</TableHead>
-                        <TableHead className="w-[120px]">Status</TableHead>
-                        <TableHead>Policy</TableHead>
-                        <TableHead className="w-[100px] text-right pr-4"></TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                          Backup ID
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                          Created
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                          Size
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                          Status
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          Policy
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px] pr-4"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -739,7 +749,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                 </span>
                               )}
                             </TableCell>
-                            <TableCell className="text-right pr-4">
+                            <TableCell className="px-4 py-3 text-right pr-4">
                               <div className="flex justify-end">
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>

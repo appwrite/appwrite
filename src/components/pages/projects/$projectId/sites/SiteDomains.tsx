@@ -96,12 +96,22 @@ export function SiteDomainsView() {
             <div className="rounded-lg border border-border">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Domain</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="w-[80px]">Actions</TableHead>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Domain
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Type
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Status
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Created
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -131,7 +141,7 @@ export function SiteDomainsView() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-[13px] text-muted-foreground">
+                        <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
                           {ruleData.redirectUrl ? (
                             <span>Redirect to {ruleData.redirectUrl}</span>
                           ) : ruleData.deploymentVcsProviderBranch ? (
@@ -142,15 +152,15 @@ export function SiteDomainsView() {
                             <span>Active deployment</span>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="px-4 py-3">
                           <Badge variant={statusBadge.variant}>
                             {statusBadge.label}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="px-4 py-3">
                           <DateTooltip date={ruleData.$createdAt} />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="px-4 py-3">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button

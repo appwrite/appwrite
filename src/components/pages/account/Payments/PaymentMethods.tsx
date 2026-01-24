@@ -229,15 +229,27 @@ export function AccountPaymentMethods({
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[220px]">Card</TableHead>
-                  <TableHead className="w-[180px]">Cardholder</TableHead>
-                  <TableHead className="w-[140px]">Expires</TableHead>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[220px]">
+                    Card
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                    Cardholder
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
+                    Expires
+                  </TableHead>
                   {hasPaymentError && (
-                    <TableHead className="w-[120px]">Status</TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                      Status
+                    </TableHead>
                   )}
-                  <TableHead>Linked to</TableHead>
-                  <TableHead className="w-[60px] text-right">Actions</TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Linked To
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[60px]">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -262,7 +274,7 @@ export function AccountPaymentMethods({
                         hasError && 'bg-red-50/50 dark:bg-red-950/10',
                       )}
                     >
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
                             <CreditCard className="h-4 w-4 text-muted-foreground" />
@@ -283,14 +295,14 @@ export function AccountPaymentMethods({
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <p className="text-[13px] text-foreground">
                           {method.name || (
                             <span className="text-muted-foreground">—</span>
                           )}
                         </p>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         {method.expiryMonth && method.expiryYear ? (
                           <p className="text-[13px] text-foreground">
                             {formatCardExpiry(
@@ -305,7 +317,7 @@ export function AccountPaymentMethods({
                         )}
                       </TableCell>
                       {hasPaymentError && (
-                        <TableCell>
+                        <TableCell className="px-4 py-3">
                           {hasError ? (
                             <Badge
                               variant="destructive"
@@ -327,7 +339,7 @@ export function AccountPaymentMethods({
                           )}
                         </TableCell>
                       )}
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         {isLinked ? (
                           <Popover>
                             <PopoverTrigger asChild>
@@ -365,7 +377,7 @@ export function AccountPaymentMethods({
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="px-4 py-3 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button

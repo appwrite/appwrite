@@ -67,18 +67,20 @@ export function RetryVerificationDialog({
             <div className="rounded-lg border border-border bg-card">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Nameserver</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Nameserver
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {NAMESERVERS.map((nameserver) => (
                     <TableRow key={nameserver}>
-                      <TableCell className="font-mono text-[13px]">
+                      <TableCell className="px-4 py-3 font-mono text-[13px]">
                         {nameserver}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <Button
                           variant="ghost"
                           size="sm"

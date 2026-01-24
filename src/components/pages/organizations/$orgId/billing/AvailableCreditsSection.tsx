@@ -224,18 +224,18 @@ export function AvailableCreditsSection({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Code
                   </TableHead>
-                  <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground text-right">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                     Total
                   </TableHead>
-                  <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground text-right">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
                     Remaining
                   </TableHead>
-                  <TableHead className="h-9 text-[11px] font-medium uppercase tracking-wider text-muted-foreground text-right">
-                    Expires at
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right">
+                    Expires At
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -252,18 +252,18 @@ export function AvailableCreditsSection({
                         (isFullyUsed || isExpired) && 'opacity-50',
                       )}
                     >
-                      <TableCell className="py-2.5">
+                      <TableCell className="px-4 py-3">
                         <code className="rounded bg-muted px-1.5 py-0.5 text-[12px] font-mono text-foreground">
                           {credit.couponId || '-'}
                         </code>
                       </TableCell>
-                      <TableCell className="py-2.5 text-right text-[13px] text-muted-foreground">
+                      <TableCell className="px-4 py-3 text-right text-[13px] text-muted-foreground">
                         {formatCurrency(
                           credit.total || 0,
                           credit.currency || 'USD',
                         )}
                       </TableCell>
-                      <TableCell className="py-2.5 text-right">
+                      <TableCell className="px-4 py-3 text-right">
                         <span
                           className={cn(
                             'text-[13px] font-medium',
@@ -278,7 +278,7 @@ export function AvailableCreditsSection({
                           )}
                         </span>
                       </TableCell>
-                      <TableCell className="py-2.5 text-right">
+                      <TableCell className="px-4 py-3 text-right">
                         {credit.expiresAt ? (
                           <div className="flex items-center justify-end gap-2">
                             <span

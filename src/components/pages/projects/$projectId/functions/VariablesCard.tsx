@@ -677,23 +677,23 @@ export function FunctionVariablesCard({
                   <div className="rounded-lg border border-border overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow>
-                          <TableHead className="min-w-[200px] max-w-[400px]">
+                        <TableRow className="hover:bg-transparent border-b border-border">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
                             Key
                           </TableHead>
-                          <TableHead className="min-w-[200px] max-w-[400px]">
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider min-w-[200px] max-w-[400px]">
                             Value
                           </TableHead>
-                          <TableHead className="w-[50px]"></TableHead>
+                          <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {variables.map((variable) => (
                           <TableRow key={variable.$id}>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <CopyableText value={variable.key} />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               {variable.secret ? (
                                 <Badge
                                   variant="secondary"
@@ -708,7 +708,7 @@ export function FunctionVariablesCard({
                                 />
                               )}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button

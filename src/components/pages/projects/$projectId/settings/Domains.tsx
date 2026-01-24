@@ -192,17 +192,23 @@ export function Domains({
           <div className="rounded-lg border border-border bg-card">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Domain</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Domain
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Status
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Created
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedRules.map((rule) => (
                   <TableRow key={rule.$id}>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <a
                         href={`https://${rule.domain}`}
                         target="_blank"
@@ -213,7 +219,7 @@ export function Domains({
                         <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                       </a>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         {getStatusBadge(rule.status)}
                         {canRetry(rule.status) && (
@@ -228,10 +234,10 @@ export function Domains({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <DateTooltip date={rule.$createdAt} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button

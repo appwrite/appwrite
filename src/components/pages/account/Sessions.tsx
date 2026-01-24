@@ -171,24 +171,32 @@ export function AccountSessions() {
             <div className="rounded-lg border border-border overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[300px]">Device</TableHead>
-                    <TableHead className="w-[200px]">Location</TableHead>
-                    <TableHead className="w-[180px]">Created At</TableHead>
-                    <TableHead className="w-[180px]">Expires At</TableHead>
-                    <TableHead className="w-[80px] text-right"></TableHead>
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[300px]">
+                      Device
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                      Location
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                      Created At
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                      Expires At
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {Array.from({ length: 3 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Skeleton className="h-4 w-4 shrink-0 rounded" />
                           <Skeleton className="h-4 w-32" />
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-center gap-2">
                             <Skeleton className="h-4 w-4 shrink-0 rounded" />
@@ -197,13 +205,13 @@ export function AccountSessions() {
                           <Skeleton className="h-3 w-20 ml-6" />
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <Skeleton className="h-4 w-28" />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <Skeleton className="h-4 w-28" />
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="px-4 py-3 text-right">
                         <Skeleton className="h-7 w-20 ml-auto" />
                       </TableCell>
                     </TableRow>
@@ -274,12 +282,20 @@ export function AccountSessions() {
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[300px]">Device</TableHead>
-                  <TableHead className="w-[200px]">Location</TableHead>
-                  <TableHead className="w-[180px]">Created At</TableHead>
-                  <TableHead className="w-[180px]">Expires At</TableHead>
-                  <TableHead className="w-[80px] text-right"></TableHead>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[300px]">
+                    Device
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                    Location
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                    Created At
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                    Expires At
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -291,7 +307,7 @@ export function AccountSessions() {
 
                   return (
                     <TableRow key={session.$id}>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <DeviceIcon className="h-4 w-4 text-muted-foreground" />
                           <div className="flex items-center gap-2">
@@ -306,7 +322,7 @@ export function AccountSessions() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-center gap-2">
                             {flagUrl ? (
@@ -332,19 +348,19 @@ export function AccountSessions() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <DateTooltip
                           date={session.$createdAt}
                           className="text-[12px] text-muted-foreground"
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <DateTooltip
                           date={session.expire}
                           className="text-[12px] text-muted-foreground"
                         />
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="px-4 py-3 text-right">
                         <Button
                           variant="ghost"
                           size="sm"

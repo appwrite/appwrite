@@ -165,17 +165,31 @@ export function LogsListView({
         <>
           <Table className="border-b border-border">
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[200px] pl-6 sm:pl-8">
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px] pl-6 sm:pl-8">
                   Execution ID
                 </TableHead>
-                <TableHead className="w-[200px]">Status</TableHead>
-                <TableHead className="w-[150px]">Trigger</TableHead>
-                <TableHead className="w-[120px]">Status Code</TableHead>
-                <TableHead className="w-[120px]">Method</TableHead>
-                <TableHead className="w-[280px]">Path</TableHead>
-                <TableHead className="w-[150px]">Duration</TableHead>
-                <TableHead className="w-[140px]">Created</TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                  Status
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                  Trigger
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                  Status Code
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                  Method
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[280px]">
+                  Path
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                  Duration
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
+                  Created
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -205,7 +219,7 @@ export function LogsListView({
                     )}
                     onClick={() => onExecutionSelect(executionId)}
                   >
-                    <TableCell className="pl-6 sm:pl-8">
+                    <TableCell className="pl-6 sm:pl-8 py-3">
                       <div className="flex items-center gap-2 group/id">
                         <CopyableId id={executionId} size="sm" />
                         <Button
@@ -225,17 +239,17 @@ export function LogsListView({
                         </Button>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <Badge variant={statusBadge.variant}>
                         {statusBadge.label}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <code className="text-[12px] font-mono text-foreground bg-muted/50 px-1.5 py-0.5 rounded">
                         {triggerBadge.label}
                       </code>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       {executionData.responseStatusCode ? (
                         <Badge variant={statusCodeBadge?.variant || 'outline'}>
                           {executionData.responseStatusCode}
@@ -246,7 +260,7 @@ export function LogsListView({
                         </span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <div className="flex items-center gap-2 group/method">
                         <code className="text-[12px] font-mono text-foreground bg-muted/50 px-1.5 py-0.5 rounded">
                           {method}

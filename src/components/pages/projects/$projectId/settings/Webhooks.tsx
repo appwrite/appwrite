@@ -88,14 +88,28 @@ export function Webhooks({
           <div className="rounded-lg border border-border bg-card">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Webhook ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Events</TableHead>
-                  <TableHead>URL</TableHead>
-                  <TableHead>Enabled</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Updated</TableHead>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Webhook ID
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Name
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Events
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    URL
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Enabled
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Created
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Updated
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -110,25 +124,25 @@ export function Webhooks({
                       })
                     }
                   >
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <code className="text-[13px] font-mono text-muted-foreground">
                         {webhook.$id.slice(0, 8)}...
                       </code>
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="px-4 py-3 font-medium">
                       {webhook.name}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <Badge variant="secondary" className="text-[12px]">
                         {webhook.events?.length || 0} events
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <span className="truncate text-[13px] text-muted-foreground">
                         {webhook.url}
                       </span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       {webhook.enabled ? (
                         <Badge variant="default" className="text-[12px]">
                           Enabled
@@ -139,10 +153,10 @@ export function Webhooks({
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <DateTooltip date={webhook.$createdAt} />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="px-4 py-3">
                       <DateTooltip date={webhook.$updatedAt} />
                     </TableCell>
                   </TableRow>

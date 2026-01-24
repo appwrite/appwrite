@@ -213,10 +213,16 @@ export function AccountBillingAddresses() {
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead>Address</TableHead>
-                  <TableHead>Linked to</TableHead>
-                  <TableHead className="w-[60px] text-right">Actions</TableHead>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Address
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Linked To
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[60px]">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -229,7 +235,7 @@ export function AccountBillingAddresses() {
                       key={address.$id}
                       className="hover:bg-muted/50 transition-colors"
                     >
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
                             <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -239,7 +245,7 @@ export function AccountBillingAddresses() {
                           </p>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         {isLinked ? (
                           <Popover>
                             <PopoverTrigger asChild>
@@ -277,7 +283,7 @@ export function AccountBillingAddresses() {
                           </span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="px-4 py-3 text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button

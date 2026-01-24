@@ -319,8 +319,8 @@ export function DomainsView() {
               <div className="rounded-lg border border-border bg-card">
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-[40px]">
+                    <TableRow className="hover:bg-transparent border-b border-border">
+                      <TableHead className="w-[40px] px-4">
                         <Checkbox
                           checked={
                             paginatedDomains.length > 0 &&
@@ -329,11 +329,19 @@ export function DomainsView() {
                           onCheckedChange={toggleAllDomains}
                         />
                       </TableHead>
-                      <TableHead className="w-[200px]">Domain</TableHead>
-                      <TableHead className="w-[120px]">Status</TableHead>
-                      <TableHead className="w-[150px]">Nameservers</TableHead>
-                      <TableHead className="w-[120px]">Created</TableHead>
-                      <TableHead className="w-[80px]"></TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                        Domain
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                        Status
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                        Nameservers
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                        Created
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

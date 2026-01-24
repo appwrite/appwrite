@@ -188,8 +188,8 @@ export function TeamMembers() {
           <div className="rounded-lg border border-border bg-card">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[40px]">
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="w-[40px] px-4">
                     <Checkbox
                       checked={
                         memberships.length > 0 &&
@@ -198,10 +198,16 @@ export function TeamMembers() {
                       onCheckedChange={toggleAll}
                     />
                   </TableHead>
-                  <TableHead className="w-[220px]">Name</TableHead>
-                  <TableHead className="w-[200px]">Roles</TableHead>
-                  <TableHead className="w-[180px]">Joined</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[220px]">
+                    Name
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                    Roles
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                    Joined
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

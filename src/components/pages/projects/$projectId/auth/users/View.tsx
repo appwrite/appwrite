@@ -1475,9 +1475,11 @@ function UpdateMFASection({
                 <div className="rounded-lg border border-border">
                   <Table>
                     <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead>Type</TableHead>
-                        <TableHead className="w-[100px] text-right">
+                      <TableRow className="hover:bg-transparent border-b border-border">
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          Type
+                        </TableHead>
+                        <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]">
                           Actions
                         </TableHead>
                       </TableRow>
@@ -1485,12 +1487,12 @@ function UpdateMFASection({
                     <TableBody>
                       {authenticators.map((auth) => (
                         <TableRow key={auth.$id}>
-                          <TableCell className="text-[13px]">
+                          <TableCell className="px-4 py-3 text-[13px]">
                             {auth.type === AuthenticatorType.Totp
                               ? 'TOTP'
                               : auth.type}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="px-4 py-3 text-right">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -1767,8 +1769,8 @@ function MembershipsTab({
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[40px]">
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className="w-[40px] px-4">
                 <Checkbox
                   checked={
                     memberships.length > 0 &&
@@ -1785,16 +1787,24 @@ function MembershipsTab({
                   }}
                 />
               </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Roles</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Name
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Roles
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Joined
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {memberships.map((membership) => (
               <TableRow key={membership.$id}>
-                <TableCell>
+                <TableCell className="px-4 py-3">
                   <Checkbox
                     checked={selectedMemberships.has(membership.$id)}
                     onCheckedChange={(checked) => {
@@ -1808,7 +1818,7 @@ function MembershipsTab({
                     }}
                   />
                 </TableCell>
-                <TableCell>
+                <TableCell className="px-4 py-3">
                   <Link
                     to="/projects/$projectId/auth/teams/$teamId"
                     params={{ projectId, teamId: membership.teamId }}
@@ -1820,7 +1830,7 @@ function MembershipsTab({
                     </span>
                   </Link>
                 </TableCell>
-                <TableCell>
+                <TableCell className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
                     {membership.roles.map((role) => (
                       <Badge
@@ -1833,13 +1843,13 @@ function MembershipsTab({
                     ))}
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="px-4 py-3">
                   <DateTooltip
                     date={new Date(membership.joined)}
                     className="text-[12px] text-muted-foreground"
                   />
                 </TableCell>
-                <TableCell>
+                <TableCell className="px-4 py-3">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -2055,8 +2065,8 @@ function IdentitiesTab({
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <Table>
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-[40px]">
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="w-[40px] px-4">
                   <Checkbox
                     checked={
                       identities.length > 0 &&
@@ -2073,17 +2083,27 @@ function IdentitiesTab({
                     }}
                   />
                 </TableHead>
-                <TableHead>Identity ID</TableHead>
-                <TableHead>Provider</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Identity ID
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Provider
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Email
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Created
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {identities.map((identity) => (
                 <TableRow key={identity.$id}>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <Checkbox
                       checked={selectedIdentities.has(identity.$id)}
                       onCheckedChange={(checked) => {
@@ -2097,10 +2117,10 @@ function IdentitiesTab({
                       }}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <CopyableId id={identity.$id} size="xs" />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <img
                         src={`/icons/${getProviderIcon(identity.provider)}`}
@@ -2115,16 +2135,16 @@ function IdentitiesTab({
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-[13px]">
+                  <TableCell className="px-4 py-3 text-[13px]">
                     {identity.providerEmail || '-'}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <DateTooltip
                       date={new Date(identity.$createdAt)}
                       className="text-[12px] text-muted-foreground"
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -2303,8 +2323,8 @@ function TargetsTab({
             <div className="rounded-lg border border-border bg-card overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="w-[40px]">
+                  <TableRow className="hover:bg-transparent border-b border-border">
+                    <TableHead className="w-[40px] px-4">
                       <Checkbox
                         checked={
                           targets.length > 0 &&
@@ -2321,17 +2341,27 @@ function TargetsTab({
                         }}
                       />
                     </TableHead>
-                    <TableHead>Target ID</TableHead>
-                    <TableHead>Target</TableHead>
-                    <TableHead>Provider Type</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Target ID
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Target
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Provider Type
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      Created
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {targets.map((target) => (
                     <TableRow key={target.$id}>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <Checkbox
                           checked={selectedTargets.has(target.$id)}
                           onCheckedChange={(checked) => {
@@ -2345,24 +2375,24 @@ function TargetsTab({
                           }}
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <CopyableId id={target.$id} size="xs" />
                       </TableCell>
-                      <TableCell className="text-[13px]">
+                      <TableCell className="px-4 py-3 text-[13px]">
                         {target.name || target.identifier}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <Badge variant="secondary" className="text-[12px]">
                           {target.providerType}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <DateTooltip
                           date={new Date(target.$createdAt)}
                           className="text-[12px] text-muted-foreground"
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-3">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -2748,17 +2778,25 @@ function SessionsTab({
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>Client</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>IP</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Client
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Location
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                IP
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sessions.map((session) => (
               <TableRow key={session.$id}>
-                <TableCell>
+                <TableCell className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <BrowserIcon clientCode={session.clientCode} />
                     <div>
@@ -2778,15 +2816,15 @@ function SessionsTab({
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-[13px]">
+                <TableCell className="px-4 py-3 text-[13px]">
                   {session.countryCode && session.countryCode !== '--'
                     ? session.countryName || session.countryCode
                     : 'Unknown'}
                 </TableCell>
-                <TableCell className="text-[13px] font-mono">
+                <TableCell className="px-4 py-3 text-[13px] font-mono">
                   {session.ip}
                 </TableCell>
-                <TableCell>
+                <TableCell className="px-4 py-3">
                   <Button
                     variant="ghost"
                     size="sm"

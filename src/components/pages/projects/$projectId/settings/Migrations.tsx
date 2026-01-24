@@ -87,22 +87,28 @@ export function Migrations({ projectId }: MigrationsProps) {
         <div className="rounded-lg border border-border bg-card">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[100px]"></TableHead>
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Date
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Source
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Status
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {migrations.map((migration) => (
                 <TableRow key={migration.$id}>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <DateTooltip date={migration.$createdAt} />
                   </TableCell>
-                  <TableCell>{migration.source}</TableCell>
-                  <TableCell>{getStatusBadge(migration.status)}</TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">{migration.source}</TableCell>
+                  <TableCell className="px-4 py-3">{getStatusBadge(migration.status)}</TableCell>
+                  <TableCell className="px-4 py-3">
                     <Button
                       variant="outline"
                       size="sm"

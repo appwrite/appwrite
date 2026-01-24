@@ -895,8 +895,8 @@ export function FunctionDeployments() {
               <div className="rounded-lg border border-border bg-card">
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-[40px]">
+                    <TableRow className="hover:bg-transparent border-b border-border">
+                      <TableHead className="w-[40px] px-4">
                         <Checkbox
                           checked={(() => {
                             const activeDeploymentId = activeDeployment?.$id
@@ -912,13 +912,27 @@ export function FunctionDeployments() {
                           onCheckedChange={toggleAllDeployments}
                         />
                       </TableHead>
-                      <TableHead className="w-[180px]">Deployment ID</TableHead>
-                      <TableHead className="w-[120px]">Status</TableHead>
-                      <TableHead className="w-[150px]">Type</TableHead>
-                      <TableHead className="w-[200px]">Source</TableHead>
-                      <TableHead className="w-[100px]">Total size</TableHead>
-                      <TableHead className="w-[100px]">Duration</TableHead>
-                      <TableHead className="w-[150px]">Created</TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                        Deployment ID
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                        Status
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                        Type
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[200px]">
+                        Source
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                        Total Size
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                        Duration
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
+                        Created
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -948,7 +962,7 @@ export function FunctionDeployments() {
                             })
                           }}
                         >
-                          <TableCell onClick={(e) => e.stopPropagation()}>
+                          <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                             <Checkbox
                               checked={selectedDeployments.has(deployment.$id)}
                               onCheckedChange={() =>
@@ -957,14 +971,14 @@ export function FunctionDeployments() {
                               disabled={isActive}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <CopyableId
                               id={deployment.$id}
                               size="sm"
                               maxWidth={180}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             {isActive ? (
                               <Badge
                                 variant="active"
@@ -986,7 +1000,7 @@ export function FunctionDeployments() {
                               </Badge>
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             {(() => {
                               const vcsProvider = getVcsProvider(deployment)
                               if (vcsProvider) {
@@ -1035,7 +1049,7 @@ export function FunctionDeployments() {
                               )
                             })()}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             {(() => {
                               const vcsProvider = getVcsProvider(deployment)
                               if (!vcsProvider) {
@@ -1123,7 +1137,7 @@ export function FunctionDeployments() {
                               )
                             })()}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <code className="text-[12px] font-mono text-muted-foreground">
                               {formatSize(
                                 (deployment.buildSize || 0) +
@@ -1131,7 +1145,7 @@ export function FunctionDeployments() {
                               )}
                             </code>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <code className="text-[12px] font-mono text-muted-foreground">
                               {deployment.buildDuration &&
                               !isDeploymentTimeout(
@@ -1142,7 +1156,7 @@ export function FunctionDeployments() {
                                 : '—'}
                             </code>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="px-4 py-3">
                             <DateTooltip
                               date={deployment.$createdAt}
                               className="text-[12px] font-medium text-muted-foreground"

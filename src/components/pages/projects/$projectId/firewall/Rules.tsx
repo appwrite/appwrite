@@ -405,21 +405,35 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
         <div className="rounded-xl border border-border bg-card/50">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">Status</TableHead>
-                <TableHead>Rule</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Conditions</TableHead>
-                <TableHead>Stats</TableHead>
-                <TableHead>Last triggered</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]">
+                  Status
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Rule
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Action
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Priority
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Conditions
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Stats
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Last Triggered
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredRules.map((rule) => (
                 <TableRow key={rule.$id}>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <div className="flex items-center">
                       {rule.enabled ? (
                         <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -428,7 +442,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2">
                         {getActionIcon(rule.action)}
@@ -443,8 +457,8 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>{getActionBadge(rule.action)}</TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">{getActionBadge(rule.action)}</TableCell>
+                  <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <span className="text-[12px] font-mono text-muted-foreground">
                         {rule.priority}
@@ -465,7 +479,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <div className="flex flex-col gap-0.5">
                       {rule.conditions.ipAddress && (
                         <span className="text-[11px] text-muted-foreground">
@@ -490,7 +504,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[12px] text-foreground">
                         {rule.stats.totalRequests.toLocaleString()} total
@@ -507,7 +521,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     {rule.stats.lastTriggered ? (
                       <DateTooltip
                         date={rule.stats.lastTriggered}
@@ -519,7 +533,7 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="px-4 py-3">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button

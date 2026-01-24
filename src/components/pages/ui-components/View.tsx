@@ -1039,22 +1039,28 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
       <div className="rounded-md border">
         <TableComponent>
           <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Role</TableHead>
+            <TableRow className="hover:bg-transparent border-b border-border">
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Name
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Status
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Role
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow>
-              <TableCell>John Doe</TableCell>
-              <TableCell>Active</TableCell>
-              <TableCell>Admin</TableCell>
+              <TableCell className="px-4 py-3">John Doe</TableCell>
+              <TableCell className="px-4 py-3">Active</TableCell>
+              <TableCell className="px-4 py-3">Admin</TableCell>
             </TableRow>
             <TableRow>
-              <TableCell>Jane Smith</TableCell>
-              <TableCell>Active</TableCell>
-              <TableCell>User</TableCell>
+              <TableCell className="px-4 py-3">Jane Smith</TableCell>
+              <TableCell className="px-4 py-3">Active</TableCell>
+              <TableCell className="px-4 py-3">User</TableCell>
             </TableRow>
           </TableBody>
         </TableComponent>
