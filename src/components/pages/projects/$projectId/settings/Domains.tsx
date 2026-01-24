@@ -177,10 +177,10 @@ export function Domains({
       ) : paginatedRules.length === 0 ? (
         <EmptyState
           icon={ExternalLink}
-          title={searchValueProp ? 'No domains found' : 'No domains yet'}
+          title={searchValueProp ? undefined : 'No domains yet'}
           description={
             searchValueProp
-              ? 'Try adjusting your search'
+              ? undefined
               : 'Add a custom domain to serve your Appwrite API on your own domain'
           }
           isEmpty={!searchValueProp}

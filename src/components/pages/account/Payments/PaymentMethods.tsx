@@ -183,6 +183,8 @@ export function AccountPaymentMethods({
             icon={CreditCard}
             title="No payment methods"
             description="Add a payment method to get started"
+            isEmpty={true}
+            hasFilters={false}
             variant="default"
           >
             <div className="mt-4">

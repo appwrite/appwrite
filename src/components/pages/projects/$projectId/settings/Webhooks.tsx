@@ -73,10 +73,10 @@ export function Webhooks({
       ) : paginatedWebhooks.length === 0 ? (
         <EmptyState
           icon={WebhookIcon}
-          title={searchValueProp ? 'No webhooks found' : 'No webhooks yet'}
+          title={searchValueProp ? undefined : 'No webhooks yet'}
           description={
             searchValueProp
-              ? 'Try adjusting your search'
+              ? undefined
               : 'Set up webhooks to receive real-time notifications about events in your project'
           }
           isEmpty={!searchValueProp}

@@ -372,8 +372,8 @@ export function TopicDetailView() {
             ) : (
               <EmptyState
                 icon={Hash}
-                title="No subscribers found"
-                description="Add subscribers to this topic"
+                title="No subscribers yet"
+                description="Add subscribers to this topic to start sending messages"
                 isEmpty={!searchValue}
                 hasFilters={!!searchValue}
                 variant="card"

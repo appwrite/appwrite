@@ -647,7 +647,7 @@ export function DatabasesListView() {
           ) : (
             <EmptyState
               icon={Database}
-              title="No databases found"
+              title="No databases yet"
               description="Create your first database to get started"
               isEmpty={!searchValue}
               hasFilters={!!searchValue}
@@ -719,7 +719,7 @@ export function DatabasesListView() {
                 <div className="col-span-full">
                   <EmptyState
                     icon={Database}
-                    title="No databases found"
+                    title="No databases yet"
                     description="Create your first database to get started"
                     isEmpty={!searchValue}
                     hasFilters={!!searchValue}
@@ -728,15 +728,17 @@ export function DatabasesListView() {
                 </div>
               )}
             </div>
-            <Pagination
-              currentPage={currentPage}
-              totalItems={databasesTotal}
-              pageSize={pageSize}
-              pageSizeOptions={[10, 25, 50, 100]}
-              onPageChange={handlePageChange}
-              onPageSizeChange={handlePageSizeChange}
-              itemLabel="databases"
-            />
+            {paginatedDatabases.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={databasesTotal}
+                pageSize={pageSize}
+                pageSizeOptions={[10, 25, 50, 100]}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                itemLabel="databases"
+              />
+            )}
           </>
         )}
 
@@ -2745,10 +2747,10 @@ export function DatabaseOverview({
               <div className="py-12 text-center">
                 <EmptyState
                   icon={Table2}
-                  title={searchValue ? 'No tables found' : 'No tables yet'}
+                  title={searchValue ? undefined : 'No tables yet'}
                   description={
                     searchValue
-                      ? 'Try a different search term'
+                      ? undefined
                       : 'Create your first table to get started'
                   }
                   isEmpty={!searchValue}

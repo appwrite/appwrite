@@ -458,7 +458,7 @@ export function SitesView() {
           ) : (
             <EmptyState
               icon={Globe}
-              title="No sites found"
+              title="No sites yet"
               description="Create your first site to start deploying static sites"
               isEmpty={!searchValue}
               hasFilters={!!searchValue}
@@ -553,7 +553,7 @@ export function SitesView() {
             ) : (
               <EmptyState
                 icon={Globe}
-                title="No sites found"
+                title="No sites yet"
                 description="Create your first site to start deploying static sites"
                 isEmpty={!searchValue}
                 hasFilters={!!searchValue}

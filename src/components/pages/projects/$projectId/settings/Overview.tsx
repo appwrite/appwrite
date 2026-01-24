@@ -996,7 +996,7 @@ export function ProjectSettingsOverview({
                 <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
                   <div className="h-px flex-1 bg-border" />
                   <span className="font-medium text-foreground/80">
-                    Integrations
+                    Apps
                   </span>
                   <div className="h-px flex-1 bg-border" />
                 </div>

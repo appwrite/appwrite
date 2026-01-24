@@ -174,7 +174,11 @@ export function RealtimeChannels({ projectId }: RealtimeChannelsProps) {
           <EmptyState
             icon={Hash}
             title="No channels found"
-            description="Active realtime channels will appear here"
+            description={
+              dateRange
+                ? undefined
+                : 'Active realtime channels will appear here when they are created'
+            }
             isEmpty={!dateRange}
             hasFilters={!!dateRange}
             variant="card"

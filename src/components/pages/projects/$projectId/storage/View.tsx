@@ -465,7 +465,7 @@ export function StorageView() {
           ) : (
             <EmptyState
               icon={FolderOpen}
-              title="No buckets found"
+              title="No buckets yet"
               description="Create your first bucket to start storing files"
               isEmpty={!searchValue}
               hasFilters={!!searchValue}
@@ -555,7 +555,7 @@ export function StorageView() {
             ) : (
               <EmptyState
                 icon={HardDrive}
-                title="No buckets found"
+                title="No buckets yet"
                 description="Create your first bucket to start storing files"
                 isEmpty={!searchValue}
                 hasFilters={!!searchValue}

@@ -411,8 +411,6 @@ function UserSelectionModal({
               ) : users.length === 0 ? (
                 <EmptyState
                   icon={User}
-                  title="No users found"
-                  description="Try adjusting your search"
                   isEmpty={!searchQuery}
                   hasFilters={!!searchQuery}
                   className="py-8"
@@ -588,8 +586,6 @@ function TeamSelectionModal({
               ) : teams.length === 0 ? (
                 <EmptyState
                   icon={Users}
-                  title="No teams found"
-                  description="Try adjusting your search"
                   isEmpty={!searchQuery}
                   hasFilters={!!searchQuery}
                   className="py-8"

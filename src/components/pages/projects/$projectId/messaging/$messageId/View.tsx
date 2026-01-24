@@ -1697,8 +1697,6 @@ function TopicsSelectionModal({
               ) : filteredTopics.length === 0 ? (
                 <EmptyState
                   icon={Hash}
-                  title="No topics found"
-                  description="Try adjusting your search"
                   isEmpty={!search}
                   hasFilters={!!search}
                   className="py-8"
@@ -1867,8 +1865,6 @@ function TargetsSelectionModal({
               ) : users.length === 0 ? (
                 <EmptyState
                   icon={Users}
-                  title="No users found"
-                  description="Try adjusting your search"
                   isEmpty={!search}
                   hasFilters={!!search}
                   className="py-8"

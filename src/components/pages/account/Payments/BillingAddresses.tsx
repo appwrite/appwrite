@@ -175,6 +175,8 @@ export function AccountBillingAddresses() {
             icon={MapPin}
             title="No billing addresses"
             description="Add a billing address to get started"
+            isEmpty={true}
+            hasFilters={false}
             variant="default"
           >
             <div className="mt-4">

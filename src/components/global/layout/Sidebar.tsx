@@ -67,7 +67,7 @@ const getNavItems = (projectId: string) => {
       items: [
         {
           id: 'integrations',
-          label: 'Integrations',
+          label: 'Apps',
           icon: Plug,
           path: `/projects/${projectId}/integrations`,
         },

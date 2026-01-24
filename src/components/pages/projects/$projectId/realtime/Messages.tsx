@@ -192,7 +192,11 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
           <EmptyState
             icon={MessageSquare}
             title="No messages found"
-            description="Realtime messages will appear here when they are received"
+            description={
+              dateRange
+                ? undefined
+                : 'Realtime messages will appear here when they are received'
+            }
             isEmpty={!dateRange}
             hasFilters={!!dateRange}
             variant="card"

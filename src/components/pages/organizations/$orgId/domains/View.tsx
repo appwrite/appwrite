@@ -479,7 +479,7 @@ export function DomainsView() {
           ) : (
             <EmptyState
               icon={Globe}
-              title="No domains found"
+              title="No domains yet"
               description="Create your first domain to get started"
               isEmpty={!searchValue}
               hasFilters={!!searchValue}
@@ -559,7 +559,7 @@ export function DomainsView() {
             ) : (
               <EmptyState
                 icon={Globe}
-                title="No domains found"
+                title="No domains yet"
                 description="Create your first domain to get started"
                 isEmpty={!searchValue}
                 hasFilters={!!searchValue}

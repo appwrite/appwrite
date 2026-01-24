@@ -661,7 +661,7 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
         <div className="mt-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-[15px] font-semibold text-foreground">
-              Integrations
+              Apps
             </h2>
             <Button
               onClick={() => handleConnectPlatform()}
@@ -670,7 +670,7 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
               style={{ backgroundColor: '#f02e65' }}
             >
               <Plus className="h-3.5 w-3.5" />
-              Add platform
+              Add app
             </Button>
           </div>
           {integrations.length === 0 ? (
@@ -680,10 +680,10 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
                   <Plug2 className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <h3 className="mb-2 text-[15px] font-medium text-foreground">
-                  No platforms connected
+                  No apps connected
                 </h3>
                 <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  Connect your first platform to start building with Appwrite.
+                  Connect your first app to start building with Appwrite.
                   Add web apps, mobile apps, or server SDKs to get started.
                 </p>
                 <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">

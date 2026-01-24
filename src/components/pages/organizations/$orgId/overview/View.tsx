@@ -175,7 +175,7 @@ function ProjectCardFooter({
           className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
         >
           <Globe className="h-3 w-3" />
-          {platformsCount} platform{platformsCount !== 1 ? 's' : ''}
+          {platformsCount} app{platformsCount !== 1 ? 's' : ''}
         </Badge>
       ) : (
         <Badge
@@ -183,7 +183,7 @@ function ProjectCardFooter({
           className="h-6 gap-1.5 px-2 text-[11px] font-medium border-0"
         >
           <AlertTriangle className="h-3 w-3" />
-          No platforms
+          No apps
         </Badge>
       )}
 
@@ -1438,7 +1438,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             title="No projects found"
                             description={
                               searchQuery
-                                ? 'Try adjusting your search query'
+                                ? undefined
                                 : 'Create your first project to get started'
                             }
                             isEmpty={!searchQuery}
@@ -1815,7 +1815,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             title="No members found"
                             description={
                               membershipsSearchQuery
-                                ? 'Try adjusting your search query'
+                                ? undefined
                                 : 'Invite team members to collaborate on your projects'
                             }
                             isEmpty={!membershipsSearchQuery}

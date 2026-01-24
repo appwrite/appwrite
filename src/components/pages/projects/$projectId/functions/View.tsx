@@ -290,8 +290,6 @@ export function FunctionsView() {
             ) : noSearchResults ? (
               <EmptyState
                 icon={Play}
-                title="No functions found"
-                description={`No functions match "${searchValue}"`}
                 isEmpty={false}
                 hasFilters={true}
                 variant="card"
@@ -302,10 +300,10 @@ export function FunctionsView() {
                     <Play className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="mb-1 text-[14px] font-medium text-foreground">
-                    No functions found
+                    No results found
                   </p>
                   <p className="mb-4 text-[13px] text-muted-foreground">
-                    No functions match "{searchValue}"
+                    Try adjusting your search or filters to see more results.
                   </p>
                   <Button
                     variant="outline"
@@ -329,8 +327,8 @@ export function FunctionsView() {
             ) : !hasFunctions ? (
               <EmptyState
                 icon={Play}
-                title="Create your first function"
-                description="Deploy and manage serverless functions with Appwrite Functions."
+                title="No functions yet"
+                description="Deploy and manage serverless functions with Appwrite Functions"
                 isEmpty={true}
                 variant="card"
                 iconSize="md"
@@ -340,10 +338,10 @@ export function FunctionsView() {
                     <Play className="h-6 w-6 text-muted-foreground" />
                   </div>
                   <p className="mb-1 text-[14px] font-medium text-foreground">
-                    Create your first function
+                    No functions yet
                   </p>
                   <p className="mb-4 text-[13px] text-muted-foreground">
-                    Deploy and manage serverless functions with Appwrite Functions.
+                    Deploy and manage serverless functions with Appwrite Functions
                   </p>
                   <div className="flex items-center justify-center gap-2">
                     <Button variant="outline" asChild className="gap-1.5">

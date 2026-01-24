@@ -418,7 +418,7 @@ export function CommandCenter({
       },
       {
         id: 'nav-integrations',
-        label: 'Go to Integrations',
+        label: 'Go to Apps',
         description: 'Third-party integrations',
         icon: Plug,
         type: 'navigation',

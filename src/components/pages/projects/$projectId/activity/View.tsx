@@ -738,7 +738,7 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
             title="No activities found"
             description={
               hasActiveFilters || searchValue
-                ? 'Try adjusting your search or filters'
+                ? undefined
                 : 'Activity will appear here as you use your project'
             }
             isEmpty={!hasActiveFilters && !searchValue}

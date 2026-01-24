@@ -861,13 +861,23 @@ export function MessagingView() {
           ) : (
             <EmptyState
               icon={MessageSquare}
-              title={`No ${activeTab} found`}
+              title={
+                searchValue
+                  ? undefined
+                  : activeTab === 'messages'
+                    ? 'No messages yet'
+                    : activeTab === 'topics'
+                      ? 'No topics yet'
+                      : 'No providers yet'
+              }
               description={
-                activeTab === 'messages'
-                  ? 'Create your first message to start sending notifications'
-                  : activeTab === 'topics'
-                    ? 'Create your first topic to organize subscribers'
-                    : 'Create your first provider to send messages'
+                searchValue
+                  ? undefined
+                  : activeTab === 'messages'
+                    ? 'Create your first message to start sending notifications'
+                    : activeTab === 'topics'
+                      ? 'Create your first topic to organize subscribers'
+                      : 'Create your first provider to send messages'
               }
               isEmpty={!searchValue}
               hasFilters={!!searchValue}

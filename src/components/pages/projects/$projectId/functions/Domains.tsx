@@ -93,11 +93,11 @@ export function FunctionDomains() {
       <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
         <div className="rounded-lg border border-border bg-card py-12">
           <EmptyState
-            title={searchValue ? 'No domains found' : 'Use a custom domain for your function'}
+            title={searchValue ? undefined : 'No domains yet'}
             description={
               searchValue
-                ? 'No domains match your search. Try a different query.'
-                : 'Connect a custom domain to your function for a branded experience.'
+                ? undefined
+                : 'Connect a custom domain to your function for a branded experience'
             }
             isEmpty={!searchValue}
             hasFilters={!!searchValue}

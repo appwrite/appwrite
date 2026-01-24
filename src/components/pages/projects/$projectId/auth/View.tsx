@@ -965,8 +965,12 @@ export function AuthView() {
               ) : (
                 <EmptyState
                   icon={Users}
-                  title="No users found"
-                  description="Try adjusting your search or filters"
+                  title={usersSearchValue ? undefined : 'No users yet'}
+                  description={
+                    usersSearchValue
+                      ? undefined
+                      : 'Create your first user to get started with authentication'
+                  }
                   isEmpty={!usersSearchValue}
                   hasFilters={!!usersSearchValue}
                   variant="card"
@@ -1017,8 +1021,12 @@ export function AuthView() {
                     <div className="col-span-full">
                       <EmptyState
                         icon={Users}
-                        title="No users found"
-                        description="Try adjusting your search or filters"
+                        title={usersSearchValue ? undefined : 'No users yet'}
+                        description={
+                          usersSearchValue
+                            ? undefined
+                            : 'Create your first user to get started with authentication'
+                        }
                         isEmpty={!usersSearchValue}
                         hasFilters={!!usersSearchValue}
                         variant="card"
@@ -1026,15 +1034,17 @@ export function AuthView() {
                     </div>
                   )}
                 </div>
-                <Pagination
-                  currentPage={usersPage}
-                  totalItems={usersTotal}
-                  pageSize={usersPageSize}
-                  pageSizeOptions={[10, 25, 50, 100]}
-                  onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                  itemLabel="users"
-                />
+                {paginatedUsers.length > 0 && (
+                  <Pagination
+                    currentPage={usersPage}
+                    totalItems={usersTotal}
+                    pageSize={usersPageSize}
+                    pageSizeOptions={[10, 25, 50, 100]}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                    itemLabel="users"
+                  />
+                )}
               </div>
             )}
 
@@ -1229,8 +1239,12 @@ export function AuthView() {
               ) : (
                 <EmptyState
                   icon={Users}
-                  title="No teams found"
-                  description="Try adjusting your search"
+                  title={teamsSearchValue ? undefined : 'No teams yet'}
+                  description={
+                    teamsSearchValue
+                      ? undefined
+                      : 'Create your first team to organize users into groups'
+                  }
                   isEmpty={!teamsSearchValue}
                   hasFilters={!!teamsSearchValue}
                   variant="card"
@@ -1268,8 +1282,12 @@ export function AuthView() {
                     <div className="col-span-full">
                       <EmptyState
                         icon={Users}
-                        title="No teams found"
-                        description="Try adjusting your search"
+                        title={teamsSearchValue ? undefined : 'No teams yet'}
+                        description={
+                          teamsSearchValue
+                            ? undefined
+                            : 'Create your first team to organize users into groups'
+                        }
                         isEmpty={!teamsSearchValue}
                         hasFilters={!!teamsSearchValue}
                         variant="card"
@@ -1277,15 +1295,17 @@ export function AuthView() {
                     </div>
                   )}
                 </div>
-                <Pagination
-                  currentPage={teamsPage}
-                  totalItems={teamsTotal}
-                  pageSize={teamsPageSize}
-                  pageSizeOptions={[10, 25, 50, 100]}
-                  onPageChange={handleTeamsPageChange}
-                  onPageSizeChange={handleTeamsPageSizeChange}
-                  itemLabel="teams"
-                />
+                {paginatedTeams.length > 0 && (
+                  <Pagination
+                    currentPage={teamsPage}
+                    totalItems={teamsTotal}
+                    pageSize={teamsPageSize}
+                    pageSizeOptions={[10, 25, 50, 100]}
+                    onPageChange={handleTeamsPageChange}
+                    onPageSizeChange={handleTeamsPageSizeChange}
+                    itemLabel="teams"
+                  />
+                )}
               </div>
             )}
 

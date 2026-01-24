@@ -8,5 +8,5 @@ export const Route = createFileRoute(
 })
 
 function IntegrationsPage() {
-  return <ComingSoonView title="Integrations" />
+  return <ComingSoonView title="Apps" />
 }

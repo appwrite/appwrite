@@ -259,8 +259,8 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
           title="No logs found"
           description={
             searchValue || filterAction !== 'all' || filterRule !== 'all'
-              ? 'Try adjusting your filters to see more logs.'
-              : 'Firewall logs will appear here once rules start processing requests.'
+              ? undefined
+              : 'Firewall logs will appear here once rules start processing requests'
           }
           isEmpty={
             !searchValue && filterAction === 'all' && filterRule === 'all'

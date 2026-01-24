@@ -818,16 +818,6 @@ export function BucketDetailView() {
                     <div>
                       <EmptyState
                         icon={File}
-                        title={
-                          searchValue
-                            ? `Sorry, we couldn't find '${searchValue}'`
-                            : 'No files found'
-                        }
-                        description={
-                          searchValue
-                            ? 'Try adjusting your search'
-                            : 'Create your first file to start storing files'
-                        }
                         isEmpty={!searchValue}
                         hasFilters={!!searchValue}
                         variant="card"

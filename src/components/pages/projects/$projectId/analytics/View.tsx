@@ -460,8 +460,8 @@ export function AnalyticsView() {
                 <div className="col-span-full py-12">
                   <EmptyState
                     icon={Globe}
-                    title="No websites found"
-                    description="Try adjusting your search or add a new website"
+                    title="No websites yet"
+                    description="Add your first website to start tracking analytics"
                     isEmpty={!searchValue}
                     hasFilters={!!searchValue}
                     iconSize="md"
@@ -469,18 +469,20 @@ export function AnalyticsView() {
                 </div>
               )}
             </div>
-            <Pagination
-              currentPage={page}
-              totalItems={filteredWebsites.length}
-              pageSize={pageSize}
-              pageSizeOptions={[10, 25, 50, 100]}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPageSize(size)
-                setPage(1)
-              }}
-              itemLabel="websites"
-            />
+            {paginatedWebsites.length > 0 && (
+              <Pagination
+                currentPage={page}
+                totalItems={filteredWebsites.length}
+                pageSize={pageSize}
+                pageSizeOptions={[10, 25, 50, 100]}
+                onPageChange={setPage}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  setPage(1)
+                }}
+                itemLabel="websites"
+              />
+            )}
           </div>
         ) : paginatedWebsites.length > 0 ? (
           <>
@@ -672,8 +674,8 @@ export function AnalyticsView() {
         ) : (
           <EmptyState
             icon={Globe}
-            title="No websites found"
-            description="Try adjusting your search or add a new website"
+            title="No websites yet"
+            description="Add your first website to start tracking analytics"
             isEmpty={!searchValue}
             hasFilters={!!searchValue}
             variant="card"
