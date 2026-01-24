@@ -98,12 +98,20 @@ function ProjectLayout() {
     pathParts.length >= 6 &&
     pathParts[5] === 'executions'
 
-  // Hide footer for usage view, database spreadsheet view, visualizer, detail routes, and function executions tab
+  // Check if we're on the site logs tab
+  // Pattern: /projects/:projectId/sites/:siteId/logs
+  const isSiteLogsTab =
+    activeSection === 'sites' &&
+    pathParts.length >= 6 &&
+    pathParts[5] === 'logs'
+
+  // Hide footer for usage view, database spreadsheet view, visualizer, detail routes, function executions tab, and site logs tab
   const hideFooter =
     isDatabaseSpreadsheetView ||
     isDatabaseVisualizerView ||
     activeSection === 'usage' ||
     isFunctionExecutionsTab ||
+    isSiteLogsTab ||
     activeSection === 'activity' ||
     isDetailRoute
 

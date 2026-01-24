@@ -6,6 +6,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { LogsListView } from '@/components/global/shared/LogsListView'
 import { Route } from '@/routes/_public/projects.$projectId.sites.$siteId.logs'
+import { useRefreshOptional } from '@/components/global/shared/RefreshContext'
 
 const LOGS_PER_PAGE = 25
 
@@ -24,6 +25,8 @@ export function SiteLogsView() {
   const [selectedExecutionId, setSelectedExecutionId] = useState<string | null>(
     urlExecutionId || null,
   )
+
+  const refreshContext = useRefreshOptional()
 
   const { data: site, isLoading: siteLoading } = useProjectSite(
     projectId,
@@ -44,6 +47,7 @@ export function SiteLogsView() {
     total,
     isLoading: logsLoading,
     isFetching: logsFetching,
+    refetch,
   } = useSiteLogs(projectId, siteId, requestedPage, pageSize)
 
   // Fetch data for the displayed page (this is what we show)
@@ -68,6 +72,18 @@ export function SiteLogsView() {
 
   // Use displayed logs for rendering (stays on current page until new data is ready)
   const logs = displayedLogs
+
+  // Register refetch function with the context for the layout's refresh button
+  useEffect(() => {
+    if (refreshContext) {
+      refreshContext.registerRefreshHandler(async () => {
+        await refetch()
+      }, 'Logs')
+      return () => {
+        refreshContext.unregisterRefreshHandler()
+      }
+    }
+  }, [refreshContext, refetch])
 
   const handlePageChange = (page: number) => {
     // Update URL with new page (1-indexed)

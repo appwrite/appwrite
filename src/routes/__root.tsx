@@ -15,6 +15,7 @@ import {
 import { DebugMenu } from '@/components/global/providers/DebugMenu'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
+import { SentryContextProvider } from '@/components/global/providers/SentryContext'
 import { FullscreenLoader } from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
@@ -99,19 +100,21 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           themes={['light', 'dark', 'system', 'crazy', 'stealth']}
         >
           <FullscreenLoader isVisible={isLoading} />
-          <DebugModeProvider>
-            <AIChatProvider>
-              <PromoBannerProvider>
-                <div className="flex h-screen w-screen overflow-hidden root-container">
-                  <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                    {children}
+          <SentryContextProvider>
+            <DebugModeProvider>
+              <AIChatProvider>
+                <PromoBannerProvider>
+                  <div className="flex h-screen w-screen overflow-hidden root-container">
+                    <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                      {children}
+                    </div>
+                    <AIChatPanel />
                   </div>
-                  <AIChatPanel />
-                </div>
-                <DebugMenu />
-              </PromoBannerProvider>
-            </AIChatProvider>
-          </DebugModeProvider>
+                  <DebugMenu />
+                </PromoBannerProvider>
+              </AIChatProvider>
+            </DebugModeProvider>
+          </SentryContextProvider>
           <Toaster />
           <GlobalUploadProgress />
           {/* <TanStackDevtools

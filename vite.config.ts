@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import { sentryTanstackStart } from '@sentry/tanstackstart-react'
 import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
@@ -57,6 +58,12 @@ const config = defineConfig({
     }),
     devtoolsJson(),
     viteReact(),
+    // Sentry plugin for source maps upload and error tracking
+    sentryTanstackStart({
+      org: 'appwrite',
+      project: 'console-v4',
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
   ],
   server: {
     host: '::',

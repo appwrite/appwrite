@@ -1,10 +1,99 @@
 import { useLocation } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, RefreshCw, Home, Copy, Check } from 'lucide-react'
+import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 import { formatError } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
+
+/**
+ * Extracts resource IDs from URL pathname for error context
+ */
+function extractRouteContext(pathname: string): {
+  projectId?: string
+  orgId?: string
+  functionId?: string
+  bucketId?: string
+  fileId?: string
+  databaseId?: string
+  collectionId?: string
+  documentId?: string
+  userId?: string
+  siteId?: string
+  deploymentId?: string
+  providerId?: string
+  topicId?: string
+  messageId?: string
+  service?: string
+} {
+  const context: Record<string, string> = {}
+
+  // Extract project ID
+  const projectMatch = pathname.match(/\/projects\/([^/]+)/)
+  if (projectMatch) context.projectId = projectMatch[1]
+
+  // Extract organization ID
+  const orgMatch = pathname.match(/\/organizations\/([^/]+)/)
+  if (orgMatch) context.orgId = orgMatch[1]
+
+  // Extract function ID
+  const functionMatch = pathname.match(/\/functions\/([^/]+)/)
+  if (functionMatch && functionMatch[1] !== 'executions')
+    context.functionId = functionMatch[1]
+
+  // Extract bucket ID
+  const bucketMatch = pathname.match(/\/storage\/([^/]+)/)
+  if (bucketMatch && bucketMatch[1] !== 'files')
+    context.bucketId = bucketMatch[1]
+
+  // Extract file ID
+  const fileMatch = pathname.match(/\/files\/([^/]+)/)
+  if (fileMatch) context.fileId = fileMatch[1]
+
+  // Extract database ID
+  const dbMatch = pathname.match(/\/databases\/([^/]+)/)
+  if (dbMatch) context.databaseId = dbMatch[1]
+
+  // Extract collection ID
+  const collectionMatch = pathname.match(/\/collections\/([^/]+)/)
+  if (collectionMatch) context.collectionId = collectionMatch[1]
+
+  // Extract document ID
+  const documentMatch = pathname.match(/\/documents\/([^/]+)/)
+  if (documentMatch) context.documentId = documentMatch[1]
+
+  // Extract user ID (auth section)
+  const userMatch = pathname.match(/\/auth\/([^/]+)/)
+  if (userMatch && userMatch[1] !== 'settings' && userMatch[1] !== 'teams')
+    context.userId = userMatch[1]
+
+  // Extract site ID
+  const siteMatch = pathname.match(/\/sites\/([^/]+)/)
+  if (siteMatch) context.siteId = siteMatch[1]
+
+  // Extract deployment ID
+  const deploymentMatch = pathname.match(/\/deployments\/([^/]+)/)
+  if (deploymentMatch) context.deploymentId = deploymentMatch[1]
+
+  // Extract messaging provider ID
+  const providerMatch = pathname.match(/\/providers\/([^/]+)/)
+  if (providerMatch) context.providerId = providerMatch[1]
+
+  // Extract topic ID
+  const topicMatch = pathname.match(/\/topics\/([^/]+)/)
+  if (topicMatch) context.topicId = topicMatch[1]
+
+  // Extract message ID
+  const messageMatch = pathname.match(/\/messages\/([^/]+)/)
+  if (messageMatch) context.messageId = messageMatch[1]
+
+  // Extract current service
+  const serviceMatch = pathname.match(/\/projects\/[^/]+\/([^/]+)/)
+  if (serviceMatch) context.service = serviceMatch[1]
+
+  return context
+}
 
 export function ErrorComponent({
   error,
@@ -74,6 +163,38 @@ export function ErrorComponent({
       errorComponentStack: info?.componentStack,
     },
   }
+
+  // Extract all available context from the current route
+  const routeContext = extractRouteContext(location.pathname)
+
+  // Capture error in Sentry with full context
+  useEffect(() => {
+    captureExceptionWithContext(error, {
+      // Route-based context
+      ...routeContext,
+      // Error metadata
+      errorId: randomErrorId.current,
+      errorName: error.name,
+      errorCode: (error as any).code,
+      errorType: (error as any).type,
+      // Component stack trace
+      componentStack: info?.componentStack,
+      // URL information
+      url: location.href,
+      pathname: location.pathname,
+      // Error classification
+      isProjectNotFound,
+      isProjectAccessDenied,
+      // Browser info
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      language: typeof navigator !== 'undefined' ? navigator.language : undefined,
+      // Screen info
+      screenWidth: typeof window !== 'undefined' ? window.screen.width : undefined,
+      screenHeight: typeof window !== 'undefined' ? window.screen.height : undefined,
+      viewportWidth: typeof window !== 'undefined' ? window.innerWidth : undefined,
+      viewportHeight: typeof window !== 'undefined' ? window.innerHeight : undefined,
+    })
+  }, [error, info, location.href, location.pathname, isProjectNotFound, isProjectAccessDenied])
 
   // Every 2 seconds, notify parent that an error exists
   useEffect(() => {

@@ -5,11 +5,25 @@ import { useMemo } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import {
+  RefreshProvider,
+  useRefresh,
+} from '@/components/global/shared/RefreshContext'
+import { toast } from 'sonner'
 
 export function SiteLayout() {
+  return (
+    <RefreshProvider>
+      <SiteLayoutContent />
+    </RefreshProvider>
+  )
+}
+
+function SiteLayoutContent() {
   const { projectId, siteId } = useParams({ strict: false })
   const location = useLocation()
   const navigate = useNavigate()
+  const { isRefreshing, triggerRefresh, hasRefreshHandler } = useRefresh()
   const { data: site } = useProjectSite(projectId, siteId)
 
   const handleBack = () => {
@@ -17,6 +31,11 @@ export function SiteLayout() {
       to: '/projects/$projectId/sites',
       params: { projectId: projectId! },
     })
+  }
+
+  const handleFilterClick = () => {
+    // TODO: Open filters dialog
+    toast.info('Filters coming soon')
   }
 
   // Derive active tab from pathname
@@ -81,6 +100,11 @@ export function SiteLayout() {
         tabs={tabs}
         activeTab={activeTab}
         fullWidthBorder
+        showFilters={activeTab === 'logs'}
+        onFilterClick={activeTab === 'logs' ? handleFilterClick : undefined}
+        showRefresh={activeTab === 'logs' && hasRefreshHandler}
+        onRefresh={activeTab === 'logs' ? triggerRefresh : undefined}
+        isRefreshing={isRefreshing}
       />
       <div className="flex-1 min-h-0">
         <Outlet />

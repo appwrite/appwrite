@@ -741,7 +741,7 @@ export function useSiteLogs(
   limit: number = DEFAULT_PAGE_SIZE,
   queries?: string[],
 ) {
-  const { data, isLoading, error, refetch } = useQuery(
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
     siteLogsQueryOptions(projectId, siteId, page, limit, queries),
   )
 
@@ -749,6 +749,7 @@ export function useSiteLogs(
     logs: data?.logs || [],
     total: data?.total || 0,
     isLoading,
+    isFetching,
     error,
     refetch,
   }

@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { cn } from '@/lib/utils'
 import {
   useParams,
   useLocation,
@@ -13,11 +12,24 @@ import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'
+import {
+  RefreshProvider,
+  useRefresh,
+} from '@/components/global/shared/RefreshContext'
 
 export function FunctionLayout() {
+  return (
+    <RefreshProvider>
+      <FunctionLayoutContent />
+    </RefreshProvider>
+  )
+}
+
+function FunctionLayoutContent() {
   const { projectId, functionId } = useParams({ strict: false })
   const location = useLocation()
   const navigate = useNavigate()
+  const { isRefreshing, triggerRefresh, hasRefreshHandler } = useRefresh()
 
   const { data: func, isLoading } = useProjectFunction(projectId, functionId)
 
@@ -300,6 +312,9 @@ export function FunctionLayout() {
             ? handleFilterClick
             : undefined
         }
+        showRefresh={activeTab === 'executions' && hasRefreshHandler}
+        onRefresh={activeTab === 'executions' ? triggerRefresh : undefined}
+        isRefreshing={isRefreshing}
         createLabel={
           activeTab === 'deployments'
             ? 'Create deployment'

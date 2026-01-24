@@ -21,6 +21,7 @@ import {
   Globe,
   Building2,
   FolderPlus,
+  Bug,
 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
@@ -401,6 +402,24 @@ export function ConsoleHeader({
 
           {/* Divider - hidden on small containers */}
           <div className="mx-2 hidden h-5 w-px bg-border @[700px]:block" />
+
+          {/* Sentry Test Button - triggers a test error */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => {
+                  throw new Error('Sentry Test Error')
+                }}
+                className="hidden h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive @[700px]:flex"
+              >
+                <Bug className="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Test Sentry Error</p>
+            </TooltipContent>
+          </Tooltip>
 
           {/* User Menu */}
           <DropdownMenu>

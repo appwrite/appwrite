@@ -6,6 +6,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { LogsListView } from '@/components/global/shared/LogsListView'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.executions'
+import { useRefreshOptional } from '@/components/global/shared/RefreshContext'
 
 const EXECUTIONS_PER_PAGE = 25
 
@@ -55,6 +56,8 @@ export function FunctionExecutions() {
     urlExecutionId || null,
   )
 
+  const refreshContext = useRefreshOptional()
+
   const { data: func, isLoading: funcLoading } = useProjectFunction(
     projectId,
     functionId,
@@ -74,6 +77,7 @@ export function FunctionExecutions() {
     total,
     isLoading: executionsLoading,
     isFetching: executionsFetching,
+    refetch,
   } = useFunctionExecutions(projectId, functionId, requestedPage, pageSize)
 
   // Fetch data for the displayed page (this is what we show)
@@ -98,6 +102,18 @@ export function FunctionExecutions() {
 
   // Use displayed executions for rendering (stays on current page until new data is ready)
   const executions = displayedExecutions
+
+  // Register refetch function with the context for the layout's refresh button
+  useEffect(() => {
+    if (refreshContext) {
+      refreshContext.registerRefreshHandler(async () => {
+        await refetch()
+      }, 'Executions')
+      return () => {
+        refreshContext.unregisterRefreshHandler()
+      }
+    }
+  }, [refreshContext, refetch])
 
   const handlePageChange = (page: number) => {
     // Update URL with new page (1-indexed)
