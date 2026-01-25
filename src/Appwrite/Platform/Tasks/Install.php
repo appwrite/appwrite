@@ -248,10 +248,10 @@ class Install extends Action
 
     protected function startWebServer(string $defaultHTTPPort, string $defaultHTTPSPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
     {
-        $host = '0.0.0.0';
-        $port = $this->isLocalInstall()
-            ? InstallerServer::INSTALLER_WEB_PORT_INTERNAL
-            : InstallerServer::INSTALLER_WEB_PORT;
+        $host = InstallerServer::INSTALLER_WEB_HOST;
+        $port = InstallerServer::INSTALLER_WEB_PORT;
+
+        @unlink(InstallerServer::INSTALLER_COMPLETE_FILE);
 
         $this->setInstallerConfig([
             'defaultHttpPort' => $defaultHTTPPort,
@@ -292,14 +292,8 @@ class Install extends Action
             return;
         }
 
-        // Wait for the server process to finish
-        while (true) {
-            $handle = @fsockopen('localhost', $port, $errno, $errstr, 1);
-            if ($handle === false) {
-                break;
-            }
-            \fclose($handle);
-            \sleep(1);
+        if ($this->isInstallationComplete($port)) {
+            Console::success('Installation completed.');
         }
     }
 
@@ -897,6 +891,21 @@ class Install extends Action
     protected function getEnvFileName(): string
     {
         return $this->isLocalInstall() ? '.env.web-installer' : '.env';
+    }
+
+    private function isInstallationComplete(int $port): bool
+    {
+        while (true) {
+            if (file_exists(InstallerServer::INSTALLER_COMPLETE_FILE)) {
+                return true;
+            }
+            $handle = @fsockopen('localhost', $port, $errno, $errstr, 1);
+            if ($handle === false) {
+                return false;
+            }
+            \fclose($handle);
+            \sleep(1);
+        }
     }
 
     private function waitForWebServer(int $port): bool

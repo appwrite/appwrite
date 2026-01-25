@@ -11,11 +11,12 @@ use Appwrite\Platform\Installer\Runtime\State;
 class Server
 {
     public const int INSTALLER_WEB_PORT = 20080;
-    public const int INSTALLER_WEB_PORT_INTERNAL = 20080;
+    public const string INSTALLER_WEB_HOST = '0.0.0.0';
 
     // temp files for state and config management!
     public const string INSTALLER_LOCK_FILE = '/tmp/appwrite-install-lock.json';
     public const string INSTALLER_CONFIG_FILE = '/tmp/appwrite-installer-config.json';
+    public const string INSTALLER_COMPLETE_FILE = '/tmp/appwrite-installer-complete';
 
     public const string STEP_ENV_VARS = 'env-vars';
     public const string STEP_CONFIG_FILES = 'config-files';
@@ -91,9 +92,8 @@ class Server
         }
         $this->state->applyEnvConfig($cfg);
 
-        $isLocalInstall = $cfg->isLocal();
-        $host = '0.0.0.0';
-        $port = $isLocalInstall ? (string)self::INSTALLER_WEB_PORT_INTERNAL : (string)self::INSTALLER_WEB_PORT;
+        $host = self::INSTALLER_WEB_HOST;
+        $port = (string)self::INSTALLER_WEB_PORT;
         $isMock = $cfg->isMock();
 
         if (isset($opts['clean'])) {
@@ -114,7 +114,7 @@ class Server
 
     private function printInstallerUrl(bool $isMock, string $host, string $port): void
     {
-        $displayHost = $host === '0.0.0.0' ? 'localhost' : $host;
+        $displayHost = $host === self::INSTALLER_WEB_HOST ? 'localhost' : $host;
         $url = "http://$displayHost:$port";
         $message = $isMock ? "Mock mode enabled: $url" : "Open $url";
         fwrite(STDOUT, $message . PHP_EOL);
@@ -298,7 +298,7 @@ class Server
             '-i',
             '--rm',
             '--name', $container,
-            '-p', "127.0.0.1:$port:" . self::INSTALLER_WEB_PORT_INTERNAL,
+            '-p', "127.0.0.1:$port:" . self::INSTALLER_WEB_PORT,
             '--volume', '/var/run/docker.sock:/var/run/docker.sock',
             '--volume', "$volumePath:/usr/src/code:rw",
         ];

@@ -180,6 +180,8 @@ class HttpHandler
             $this->state->updateGlobalLock($installId, Server::STATUS_COMPLETED);
         }
 
+        @touch(Server::INSTALLER_COMPLETE_FILE);
+
         if ($sessionSecret) {
             $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
                 || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
@@ -313,6 +315,8 @@ class HttpHandler
         if ($installId === '') {
             $installId = bin2hex(random_bytes(8));
         }
+
+        @unlink(Server::INSTALLER_COMPLETE_FILE);
 
         try {
             $lockResult = $this->state->reserveGlobalLock($installId);
