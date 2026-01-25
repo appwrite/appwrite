@@ -244,6 +244,8 @@ App::init()
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
+            $scopes = []; // Reset scope if admin
+
             $teamWideRoles = \array_filter($adminRoles, fn ($role) => !str_starts_with($role, "project-"));
             foreach ($teamWideRoles as $teamRole) {
                 $scopes = \array_merge($scopes, $roles[$teamRole]['scopes']);
