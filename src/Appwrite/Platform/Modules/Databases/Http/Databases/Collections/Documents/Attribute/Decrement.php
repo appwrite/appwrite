@@ -80,6 +80,7 @@ class Decrement extends Action
             ->param('value', 1, new Numeric(), 'Value to increment the attribute by. The value must be a number.', true)
             ->param('min', null, new Nullable(new Numeric()), 'Minimum value for the attribute. If the current value is lesser than this value, an exception will be thrown.', true)
             ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
+            ->inject('requestTimestamp')
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -89,7 +90,7 @@ class Decrement extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $documentId, string $attribute, int|float $value, int|float|null $min, ?string $transactionId, ?\DateTime $requestTimestamp, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, StatsUsage $queueForStatsUsage, array $plan, Authorization $authorization): void
     {
         $isAPIKey = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
@@ -171,12 +172,15 @@ class Decrement extends Action
         }
 
         try {
-            $document = $dbForProject->decreaseDocumentAttribute(
-                collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                id: $documentId,
-                attribute: $attribute,
-                value: $value,
-                min: $min
+            $document = $dbForProject->withRequestTimestamp(
+                $requestTimestamp,
+                fn () => $dbForProject->decreaseDocumentAttribute(
+                    collection: 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                    id: $documentId,
+                    attribute: $attribute,
+                    value: $value,
+                    min: $min
+                )
             );
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
         } catch (ConflictException) {
