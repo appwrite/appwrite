@@ -18,7 +18,8 @@
   },
   "scripts": {
     "test": "playwright test",
-    "test:installer": "playwright test tests/playwright/installer.spec.js",
+    "test:installer": "TEST_MODE=install playwright test tests/playwright/installer.spec.js",
+    "test:installer:upgrade": "TEST_MODE=upgrade playwright test tests/playwright/installer.spec.js",
     "test:screenshots": "playwright test tests/playwright/installer-screenshots.spec.js --project=chromium",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui"
@@ -32,6 +33,6 @@
   },
   "homepage": "https://github.com/appwrite/appwrite#readme",
   "devDependencies": {
-    "@playwright/test": "^1.56.0"
+    "@playwright/test": "^1.58.0"
   }
 }
