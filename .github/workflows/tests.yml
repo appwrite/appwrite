@@ -76,6 +76,51 @@ jobs:
           key: ${{ env.CACHE_KEY }}
           path: /tmp/${{ env.IMAGE }}.tar
 
+  installer_ui_test:
+    name: Installer UI Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Composer dependencies
+        run: composer install --ignore-platform-reqs --no-scripts --prefer-dist --no-progress
+
+      - name: Install Playwright
+        run: |
+          npm install --no-fund --no-audit
+          npx playwright install --with-deps chromium
+
+      - name: Run installer tests (install)
+        run: TEST_MODE=install npx playwright test tests/playwright/installer.spec.js --project=chromium
+
+      - name: Run installer tests (upgrade)
+        run: TEST_MODE=upgrade npx playwright test tests/playwright/installer.spec.js --project=chromium
+
+      - name: Run installer screenshots (install)
+        run: TEST_MODE=install npx playwright test tests/playwright/installer-screenshots.spec.js --project=chromium
+
+      - name: Run installer screenshots (upgrade)
+        run: TEST_MODE=upgrade npx playwright test tests/playwright/installer-screenshots.spec.js --project=chromium
+
+      - name: Upload installer screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-screenshots
+          path: tests/playwright/screenshots
+
   unit_test:
     name: Unit Test
     runs-on: ubuntu-latest
