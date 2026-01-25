@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react'
+import { ReactNode, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { X, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -93,30 +93,32 @@ export function WizardLayout({
   footerAlign = 'left',
 }: WizardLayoutProps) {
   // Use smart navigation hook for consistent back behavior
+  // Navigation priority: fallbackPath (if provided) > browser history > root
   const smartGoBack = useSmartNavigation({ fallbackPath })
 
   /**
    * Handle wizard close: use custom onClose or smart navigation
+   * Memoized to prevent unnecessary re-renders of the ESC key effect
    */
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     // Custom onClose takes precedence (backward compatibility)
     if (onClose) {
       onClose()
     } else {
       smartGoBack()
     }
-  }
+  }, [onClose, smartGoBack])
 
   /**
    * Handle back button: uses onBack if provided, otherwise uses browser history
    */
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (onBack) {
       onBack()
     } else {
       window.history.back()
     }
-  }
+  }, [onBack])
 
   /**
    * Handle ESC key to close wizard

@@ -56,9 +56,8 @@ export function ChangePlanWizardFullscreen() {
   const orgId = params.orgId as string | undefined
 
   // Smart navigation for cancel/close actions
-  const handleCancel = useSmartNavigation({
-    fallbackPath: orgId ? `/organizations/${orgId}/billing` : '/',
-  })
+  // No fallbackPath - uses internal console history or root
+  const handleCancel = useSmartNavigation()
 
   // Fetch data using hooks (data is already prefetched by route loader)
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
@@ -471,7 +470,6 @@ export function ChangePlanWizardFullscreen() {
     <WizardLayout
       title="Change plan"
       fullscreen
-      fallbackPath={`/organizations/${orgId}/billing`}
       footerAlign="right"
       sidebar={
         <>

@@ -16,6 +16,7 @@ import { DebugMenu } from '@/components/global/providers/DebugMenu'
 import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
+import { NavigationHistoryProvider } from '@/components/global/providers/NavigationHistoryProvider'
 import { FullscreenLoader } from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
@@ -99,24 +100,26 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           disableTransitionOnChange
           themes={['light', 'dark', 'system', 'crazy', 'stealth']}
         >
-          <FullscreenLoader isVisible={isLoading} />
-          <SentryContextProvider>
-            <DebugModeProvider>
-              <AIChatProvider>
-                <PromoBannerProvider>
-                  <div className="flex h-screen w-screen overflow-hidden root-container">
-                    <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
-                      {children}
+          <NavigationHistoryProvider>
+            <FullscreenLoader isVisible={isLoading} />
+            <SentryContextProvider>
+              <DebugModeProvider>
+                <AIChatProvider>
+                  <PromoBannerProvider>
+                    <div className="flex h-screen w-screen overflow-hidden root-container">
+                      <div className="root-scroll-container flex-1 overflow-hidden min-h-0 h-full">
+                        {children}
+                      </div>
+                      <AIChatPanel />
                     </div>
-                    <AIChatPanel />
-                  </div>
-                  <DebugMenu />
-                </PromoBannerProvider>
-              </AIChatProvider>
-            </DebugModeProvider>
-          </SentryContextProvider>
-          <Toaster />
-          <GlobalUploadProgress />
+                    <DebugMenu />
+                  </PromoBannerProvider>
+                </AIChatProvider>
+              </DebugModeProvider>
+            </SentryContextProvider>
+            <Toaster />
+            <GlobalUploadProgress />
+          </NavigationHistoryProvider>
           {/* <TanStackDevtools
             config={{
               position: 'bottom-left',

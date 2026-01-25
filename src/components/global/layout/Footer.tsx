@@ -33,8 +33,8 @@ export function ConsoleFooter() {
   ]
 
   return (
-    <footer className="@container shrink-0 border-t border-border px-3 py-3">
-      <div className="mx-auto max-w-7xl flex flex-col gap-3 @[640px]:flex-row @[640px]:items-center @[640px]:justify-between">
+    <footer className="@container flex h-[54px] shrink-0 items-center border-t border-border px-3">
+      <div className="mx-auto w-full max-w-7xl flex flex-col gap-3 @[640px]:flex-row @[640px]:items-center @[640px]:justify-between">
         {/* Left section: Logo, Resource Links, and Social Icons */}
         <div className="flex items-center gap-2">
           {/* Logo */}

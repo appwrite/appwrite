@@ -92,7 +92,7 @@ function RepositorySkeleton({ index = 0, provider }: { index?: number; provider?
   const dateWidths = ['w-14', 'w-16', 'w-12', 'w-18', 'w-14']
   
   return (
-    <div className="flex w-full items-center gap-3 px-3 py-3">
+    <div className="flex w-full items-center gap-3 px-4 py-3.5">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
         <ProviderIcon provider={provider} className="h-3.5 w-3.5" />
       </div>
@@ -108,11 +108,16 @@ function RepositorySkeleton({ index = 0, provider }: { index?: number; provider?
 // Template skeleton
 function TemplateSkeleton() {
   return (
-    <div className="rounded-lg border border-border overflow-hidden">
-      <Skeleton className="aspect-video w-full" />
-      <div className="p-3">
-        <Skeleton className="h-4 w-24 mb-1" />
-        <Skeleton className="h-3 w-32" />
+    <div className="h-[180px] rounded-2xl border border-border bg-card overflow-hidden flex flex-col">
+      <div className="px-3 pt-3 pb-1.5 h-[80px]">
+        <Skeleton className="h-3.5 w-24 mb-1.5" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-3/4 mt-0.5" />
+      </div>
+      <div className="relative flex-1 overflow-hidden">
+        <div className="absolute inset-x-3 top-2 transform -rotate-3">
+          <Skeleton className="w-full h-[120px] rounded-lg" />
+        </div>
       </div>
     </div>
   )
@@ -136,7 +141,7 @@ function FadeImage({ src, alt, className }: { src: string; alt: string; classNam
   )
 }
 
-const REPO_PAGE_SIZE = 6
+const REPO_PAGE_SIZE = 7
 const DEFAULT_TEMPLATE_PAGE_SIZE = 9
 
 export function CreateSiteView() {
@@ -355,8 +360,8 @@ export function CreateSiteView() {
     >
       <div className="grid gap-8 lg:grid-cols-5">
         {/* Left: Repositories (2/5 width) */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-[14px] font-semibold text-foreground">
+        <div className="lg:col-span-2 flex flex-col">
+          <h2 className="text-[14px] font-semibold text-foreground mb-4">
             Import repository
           </h2>
 
@@ -381,9 +386,9 @@ export function CreateSiteView() {
               </Button>
             </div>
           ) : (
-            <>
+            <div className="flex flex-1 flex-col">
               {/* Controls */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-4">
                 <Select
                   value={selectedInstallationId}
                   onValueChange={(value) => {
@@ -450,7 +455,7 @@ export function CreateSiteView() {
               </div>
 
               {/* Repository list */}
-              <div className="rounded-lg border border-border overflow-hidden">
+              <div className="rounded-lg border border-border overflow-hidden mb-4">
                 {reposLoading ? (
                   <div className="divide-y divide-border">
                     {Array.from({ length: REPO_PAGE_SIZE }).map((_, i) => (
@@ -465,7 +470,7 @@ export function CreateSiteView() {
                     {repositories.map((repo: any) => (
                       <div
                         key={repo.id}
-                        className="flex w-full items-center gap-3 px-3 py-3 hover:bg-accent/50 transition-colors"
+                        className="flex w-full items-center gap-3 px-4 py-3.5 hover:bg-accent/50 transition-colors"
                       >
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
                           {repo.framework ? (
@@ -516,7 +521,7 @@ export function CreateSiteView() {
               />
 
               {/* Help note for missing repos */}
-              <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
+              <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-3">
                 <p className="text-[12px] font-medium text-foreground mb-1">
                   Can't find a repository?
                 </p>
@@ -531,7 +536,7 @@ export function CreateSiteView() {
                   Update GitHub permissions
                 </a>
               </div>
-            </>
+            </div>
           )}
         </div>
 
@@ -579,14 +584,14 @@ export function CreateSiteView() {
 
           {/* Templates grid */}
           {templatesLoading ? (
-            <div className="grid gap-3 grid-cols-3">
+            <div className="grid gap-4 grid-cols-3">
               {Array.from({ length: templatePageSize }).map((_, i) => (
                 <TemplateSkeleton key={i} />
               ))}
             </div>
           ) : filteredTemplates.length > 0 ? (
             <div className={cn(
-              'grid gap-3 grid-cols-3',
+              'grid gap-4 grid-cols-3',
               templatesFetching && 'opacity-60 pointer-events-none'
             )}>
               {filteredTemplates.map((template) => {
@@ -595,37 +600,33 @@ export function CreateSiteView() {
                   <button
                     key={template.key}
                     onClick={() => handleSelectTemplate(template)}
-                    className="group text-left rounded-lg border border-border bg-card/50 overflow-hidden transition-colors cursor-pointer hover:bg-accent/30"
+                    className="group h-[180px] text-left rounded-2xl border border-border bg-card overflow-hidden transition-all cursor-pointer hover:border-border/80 hover:shadow-md flex flex-col"
                   >
-                    <div className="relative">
-                      {screenshotUrl ? (
-                        <div className="aspect-video w-full overflow-hidden bg-muted">
-                          <FadeImage
-                            src={screenshotUrl}
-                            alt={template.name}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="aspect-video w-full flex items-center justify-center bg-muted/50">
-                          <LayoutTemplate className="h-6 w-6 text-muted-foreground/30" />
-                        </div>
-                      )}
-                      <div className="absolute bottom-1.5 left-1.5 flex h-6 w-6 items-center justify-center rounded bg-background/90 backdrop-blur-sm border border-border/50">
-                        <FrameworkIcon
-                          framework={getFrameworkString(template.frameworks?.[0])}
-                          size="sm"
-                        />
-                      </div>
-                    </div>
-                    <div className="p-2.5">
-                      <h3 className="text-[12px] font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                    <div className="px-3 pt-3 pb-1.5 h-[80px]">
+                      <h3 className="text-[13px] font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
                         {template.name}
                       </h3>
                       {template.tagline && (
-                        <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                        <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
                           {template.tagline}
                         </p>
+                      )}
+                    </div>
+                    <div className="relative flex-1 overflow-hidden">
+                      {screenshotUrl ? (
+                        <div className="absolute left-6 -right-4 top-2 transform -rotate-3 transition-transform group-hover:-rotate-2">
+                          <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-border">
+                            <FadeImage
+                              src={screenshotUrl}
+                              alt={template.name}
+                              className="w-full object-cover object-top"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="absolute left-6 -right-4 top-2 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 shadow-lg ring-1 ring-border">
+                          <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" />
+                        </div>
                       )}
                     </div>
                   </button>
