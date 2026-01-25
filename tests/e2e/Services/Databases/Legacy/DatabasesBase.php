@@ -2435,7 +2435,7 @@ trait DatabasesBase
         $sequence = (string)$response['body']['$sequence'];
 
         // Query by sequence
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2445,14 +2445,10 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-
-        $response = $response['body']['documents'][0];
-
         $this->assertEquals(1, $response['body']['total']);
-        $this->assertEquals($document['title'], $response['body']['title']);
-        $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
-        $this->assertTrue(array_key_exists('$sequence', $response['body']));
-        $this->assertEquals($document['$sequence'], $response['body']['$sequence']);
+        $this->assertEquals($document['title'], $response['body']['documents'][0]['title']);
+        $this->assertEquals($document['releaseYear'], $response['body']['documents'][0]['releaseYear']);
+        $this->assertEquals($document['$sequence'], $response['body']['documents'][0]['$sequence']);
     }
 
     /**
