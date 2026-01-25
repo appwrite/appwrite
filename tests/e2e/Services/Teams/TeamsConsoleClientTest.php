@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\Database\Helpers\ID;
 
 class TeamsConsoleClientTest extends Scope
 {
@@ -251,5 +252,110 @@ class TeamsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         return [];
+    }
+
+    public function testProjectSpecificMembership()
+    {
+        // Create team.
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Arsenal',
+            'roles' => ['owner'],
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $this->assertNotEmpty($team['body']['$id']);
+        $teamId = $team['body']['$id'];
+
+        // Create user.
+        $user = $this->client->call(Client::METHOD_POST, '/account', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => 'unique()',
+            'email' => uniqid() . 'friend@localhost.test',
+            'password' => 'password',
+            'name' => 'Friend User',
+        ], false);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        // Create project.
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Test Project',
+            'teamId' => $teamId
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $this->assertNotEmpty($project['body']['$id']);
+        $projectId = $project['body']['$id'];
+
+        // Create project-specific membership.
+        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => uniqid() . 'friend@localhost.test',
+            'name' => 'Friend User',
+            'roles' => ["project-$projectId-owner"],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $membershipId = $response['body']['$id'];
+        $membershipRoles = $response['body']['roles'];
+        $this->assertEquals(1, count($membershipRoles));
+        $this->assertContains("project-$projectId-owner", $membershipRoles);
+
+        // Update the membership to team.
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membershipId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => ['owner'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $membershipRoles = $response['body']['roles'];
+        $this->assertEquals(1, count($membershipRoles));
+        $this->assertContains('owner', $membershipRoles);
+
+        // Again update the membership to project.
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membershipId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => ["project-$projectId-owner"],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $membershipRoles = $response['body']['roles'];
+        $this->assertEquals(1, count($membershipRoles));
+        $this->assertContains("project-$projectId-owner", $membershipRoles);
+
+        // Delete the membership.
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId . '/memberships/' . $membershipId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        // Cleanup team for other tests to work.
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
     }
 }
