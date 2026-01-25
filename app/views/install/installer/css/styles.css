@@ -583,7 +583,16 @@ body {
 }
 
 .installer-page[data-step='5'] .installer-backdrop {
-    opacity: 0.4;
+    opacity: 1;
+}
+
+.installer-gradients {
+    left: 25%;
+    top: 47.5%;
+    opacity: 0.32;
+    position: absolute;
+    pointer-events: none;
+    transform: translate(-101.3px, -295.3px);
 }
 
 .installer-blob {
@@ -598,15 +607,13 @@ body {
 }
 
 .installer-blob.blob-one {
-    --blob-x: 609px;
-    --blob-y: 412px;
-    opacity: 0.4;
+    --blob-x: 268.3px;
+    --blob-y: 108.3px;
 }
 
 .installer-blob.blob-two {
-    --blob-x: 442px;
-    --blob-y: 405px;
-    opacity: 0.28;
+    --blob-x: 101.3px;
+    --blob-y: 101.3px;
 }
 
 .installer-card {
@@ -801,7 +808,7 @@ body {
     flex-direction: column;
     align-items: stretch;
     gap: var(--gap-xxxs);
-    transition: height var(--duration-slow) var(--ease-standard);
+    transition: height 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .install-header {
@@ -830,8 +837,8 @@ body {
     overflow: hidden;
     opacity: 1;
     transform: translateY(0);
-    transition: opacity var(--duration-medium) var(--ease-standard),
-        transform var(--duration-extended) var(--ease-standard);
+    transition: opacity 0.2s ease,
+        transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
     will-change: transform, opacity;
 }
 
@@ -839,7 +846,11 @@ body {
     display: flex;
     align-items: center;
     gap: var(--gap-s);
-    padding: var(--space-3) var(--space-6);
+    height: 44px;
+    padding: 0 var(--space-6);
+    transition: height 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+        opacity 0.2s ease,
+        transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .install-row-label {
@@ -847,12 +858,19 @@ body {
     align-items: center;
     gap: var(--gap-s);
     min-width: 0;
-    min-height: 32px;
-    padding-block-start: var(--space-2);
+    min-height: 0;
+    padding-block-start: 0;
 }
 
 .install-text {
     min-width: 0;
+    display: inline-flex;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.install-text.is-enter {
+    opacity: 0;
+    transform: translateY(10px);
 }
 
 .install-row-toggle {
@@ -908,7 +926,13 @@ body {
 
 .install-row.is-entering {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-20px);
+}
+
+.install-row.is-entering .install-row-main {
+    height: 0;
+    opacity: 0;
+    transform: translateY(-20px);
 }
 
 .install-icon {
@@ -929,7 +953,7 @@ body {
     justify-content: center;
     position: absolute;
     inset: 0;
-    transition: opacity var(--duration-fast) var(--ease-standard);
+    transition: opacity 200ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .install-icon-error {
@@ -939,7 +963,7 @@ body {
     position: absolute;
     inset: 0;
     opacity: 0;
-    transition: opacity var(--duration-fast) var(--ease-standard);
+    transition: opacity 200ms cubic-bezier(0.32, 0.72, 0, 1);
     color: var(--fgcolor-error);
 }
 
@@ -948,7 +972,8 @@ body {
 }
 
 .install-icon-spinner svg {
-    animation: install-spin 1s linear infinite;
+    animation: none;
+    transform: rotate(var(--spinner-rotation, 0deg));
 }
 
 .install-row[data-status='completed'] .install-icon-spinner {
@@ -963,25 +988,7 @@ body {
     opacity: 1;
 }
 
-.install-icon-check .check-bg {
-    opacity: 0;
-    transition: opacity var(--duration-fast) var(--ease-standard);
-}
-
-.install-icon-check .check-mark {
-    stroke-dasharray: 14;
-    stroke-dashoffset: 14;
-    transition: stroke-dashoffset var(--duration-medium) var(--ease-standard);
-}
-
-.install-row[data-status='completed'] .install-icon-check .check-bg {
-    opacity: 1;
-}
-
-.install-row[data-status='completed'] .install-icon-check .check-mark {
-    stroke-dashoffset: 0;
-    transition-delay: 40ms;
-}
+/* Keep the checkmark subtle: rely on container fade only (no stroke drawing). */
 
 .install-row[data-status='error'] {
     height: auto;
@@ -1752,7 +1759,7 @@ body {
     display: inline-flex;
 }
 
-.password-toggle-icon.is-hidden {
+.password-toggle [data-password-icon="hide"] {
     display: none;
 }
 

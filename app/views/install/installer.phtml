@@ -98,11 +98,13 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
     <?php } ?>
 >
     <div class="installer-backdrop" aria-hidden="true">
-        <span class="installer-blob blob-one">
-            <?php include __DIR__ . '/installer/icons/install-bg-1.svg'; ?>
-        </span>
-        <span class="installer-blob blob-two">
-            <?php include __DIR__ . '/installer/icons/install-bg-2.svg'; ?>
+        <span class="installer-gradients">
+            <span class="installer-blob blob-one">
+                <?php include __DIR__ . '/installer/icons/install-bg-1.svg'; ?>
+            </span>
+            <span class="installer-blob blob-two">
+                <?php include __DIR__ . '/installer/icons/install-bg-2.svg'; ?>
+            </span>
         </span>
     </div>
 

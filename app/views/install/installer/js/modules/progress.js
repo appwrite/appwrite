@@ -108,6 +108,7 @@
             }
             activeInstall = null;
         }
+        stopSyncedSpinnerRotation();
         setUnloadGuard(false);
     };
 
@@ -137,7 +138,14 @@
         const label = getProgressLabel(step, status, message);
         const text = row.querySelector('[data-install-text]');
         if (text) {
-            text.textContent = label;
+            if (text.textContent !== label) {
+                text.classList.remove('is-enter');
+                text.textContent = label;
+                text.classList.add('is-enter');
+                requestAnimationFrame(() => {
+                    text.classList.remove('is-enter');
+                });
+            }
         }
 
         // Show/hide "Navigate to Console" button for account setup errors
@@ -163,6 +171,28 @@
             return { summary: text.slice(0, 180).trim() + '…', details: text };
         }
         return { summary: text, details: '' };
+    };
+
+    let spinnerAnimationFrame = null;
+    const stopSyncedSpinnerRotation = () => {
+        if (spinnerAnimationFrame) {
+            cancelAnimationFrame(spinnerAnimationFrame);
+            spinnerAnimationFrame = null;
+        }
+    };
+
+    const startSyncedSpinnerRotation = (container) => {
+        stopSyncedSpinnerRotation();
+        if (!container) return;
+        let startTime = null;
+        const animate = (timestamp) => {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+            const rotation = ((elapsed / 1000) * 360 * 1.5) % 360;
+            container.style.setProperty('--spinner-rotation', `${rotation}deg`);
+            spinnerAnimationFrame = requestAnimationFrame(animate);
+        };
+        spinnerAnimationFrame = requestAnimationFrame(animate);
     };
 
     const updateInstallErrorDetails = (row, error) => {
@@ -408,6 +438,7 @@
         const list = root.querySelector('[data-install-list]');
         const template = root.querySelector('#install-row-template');
         if (!list || !template) return;
+        startSyncedSpinnerRotation(list);
 
         list.innerHTML = '';
         const rowsById = new Map();
@@ -645,6 +676,7 @@
             if (activeInstall.fallbackTimer) {
                 clearTimeout(activeInstall.fallbackTimer);
             }
+            stopSyncedSpinnerRotation();
             setUnloadGuard(false);
         };
 
