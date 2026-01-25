@@ -2449,6 +2449,30 @@ trait DatabasesBase
         $this->assertEquals($document['title'], $response['body']['documents'][0]['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['documents'][0]['releaseYear']);
         $this->assertEquals($document['$sequence'], $response['body']['documents'][0]['$sequence']);
+
+        /**
+         * Use specific X-Appwrite-Response-Format 1.8.0
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'X-Appwrite-Response-Format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'queries' => [
+                '{"method":"select","values":["title"]}',
+            ],
+        ]);
+
+        var_dump($response);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('title', $response['body']['documents'][0]);
+        $this->assertArrayNotHasKey('birthDay', $response['body']['documents'][0]);
+        $this->assertArrayHasKey('$sequence', $response['body']['documents'][0]);
+        $this->assertArrayHasKey('$id', $response['body']['documents'][0]);
+        $this->assertArrayHasKey('$createdAt', $response['body']['documents'][0]);
+        $this->assertArrayHasKey('$updatedAt', $response['body']['documents'][0]);
+        $this->assertArrayHasKey('$permissions', $response['body']['documents'][0]);
     }
 
     /**

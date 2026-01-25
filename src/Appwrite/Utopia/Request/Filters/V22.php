@@ -31,12 +31,15 @@ class V22 extends Filter
         }
 
         $queries = [];
+        $internals = false;
+        $values = [];
 
         foreach ($parsed as $query) {
             try {
                 if ($query->getMethod() === 'select') {
                     foreach ($query->getValues() as $select) {
                         $queries[] = Query::select($select);
+                        $values[] = $select;
                     }
                 } else {
                     $queries[] = $query;
@@ -45,6 +48,14 @@ class V22 extends Filter
             } catch (\Throwable $th) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $th->getMessage());
             }
+        }
+
+        if (count($values)) {
+            $queries[] = Query::select('$sequence');
+            $queries[] = Query::select('$id');
+            $queries[] = Query::select('$updatedAt');
+            $queries[] = Query::select('$createdAt');
+            $queries[] = Query::select('$permissions');
         }
 
         $resolvedQueries = [];
