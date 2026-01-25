@@ -24,7 +24,7 @@ module.exports = defineConfig({
             : 'composer installer:mock',
         url: 'http://localhost:20080',
         timeout: 120000,
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: false,
     },
 
     projects: [
