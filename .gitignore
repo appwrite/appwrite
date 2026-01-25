@@ -27,3 +27,6 @@ docker-compose.web-installer.yml
 
 # backups when testing upgrade mode.
 docker-compose.web-installer.yml.**.backup
+
+# screenshots
+tests/playwright/screenshots
