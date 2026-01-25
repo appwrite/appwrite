@@ -79,12 +79,18 @@ class Role extends Validator
         $role = $value;
 
         if (str_starts_with($value, "project-")) {
-            $parts = explode("-", $value);
-            if (\count($parts) !== 3) {
+            $prefix = "project-";
+            $rest = \substr($value, \strlen($prefix));
+            $lastDash = \strrpos($rest, '-');
+            if ($lastDash === false) {
                 return false;
             }
 
-            $role = $parts[2];
+            $projectId = \substr($rest, 0, $lastDash);
+            $role = \substr($rest, $lastDash + 1);
+            if ($projectId === '' || $role === '') {
+                return false;
+            }
         }
 
         if (!\in_array($role, $this->roles)) {

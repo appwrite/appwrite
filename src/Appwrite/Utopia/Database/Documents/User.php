@@ -73,17 +73,28 @@ class User extends Document
             if ($projectId !== 'console') {
                 $roles[] = Role::team($node['teamId'])->toString(); // Populate team-wide base role.
             } else {
-                $teamWideRoles = \array_filter($nodeRoles, fn ($role) => !str_starts_with($role, "project-"));
+                $projectRolePrefix = "project-";
+
+                $teamWideRoles = \array_filter($nodeRoles, fn ($role) => !str_starts_with($role, $projectRolePrefix));
                 $populateTeamWideRole = !str_starts_with($path, "/v1/projects") || !empty($teamWideRoles);
 
                 if ($populateTeamWideRole) {
                     $roles[] = Role::team($node['teamId'])->toString(); // Populate team-wide base role.
                 }
 
-                $projectSpecificRoles = \array_filter($nodeRoles, fn ($role) => str_starts_with($role, "project-"));
+                $projectSpecificRoles = \array_filter($nodeRoles, fn ($role) => str_starts_with($role, $projectRolePrefix));
                 foreach ($projectSpecificRoles as $projectRole) {
-                    $parts = explode("-", $projectRole);
-                    $roles[] = Role::team($node['teamId'], "$parts[0]-$parts[1]")->toString(); // Populate project-wide base role.
+                    $rest = \substr($projectRole, \strlen($projectRolePrefix));
+                    $lastDash = \strrpos($rest, '-');
+                    if ($lastDash === false) {
+                        continue;
+                    }
+
+                    $projectId = \substr($rest, 0, $lastDash);
+                    if ($projectId === '') {
+                        continue;
+                    }
+                    $roles[] = Role::team($node['teamId'], "{$projectRolePrefix}{$projectId}")->toString(); // Populate project-wide base role.
                 }
             }
 

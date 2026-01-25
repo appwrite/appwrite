@@ -247,6 +247,7 @@ App::init()
             $teamWideRoles = \array_filter($adminRoles, fn ($role) => !str_starts_with($role, "project-"));
             foreach ($teamWideRoles as $teamRole) {
                 $scopes = \array_merge($scopes, $roles[$teamRole]['scopes']);
+                $authorization->addRole($teamRole);
             }
 
             $projectId = $project->getId();
@@ -260,8 +261,12 @@ App::init()
 
             $projectSpecificRoles = \array_filter($adminRoles, fn ($role) => str_starts_with($role, "project-$projectId"));
             foreach ($projectSpecificRoles as $projectRole) {
-                $actualRole = explode('-', $projectRole)[2];
+                $actualRole = \substr($projectRole, \strlen("project-$projectId-"));
+                if ($actualRole === '' || !isset($roles[$actualRole])) {
+                    continue;
+                }
                 $scopes = \array_merge($scopes, $roles[$actualRole]['scopes']);
+                $authorization->addRole($actualRole);
             }
 
             $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
