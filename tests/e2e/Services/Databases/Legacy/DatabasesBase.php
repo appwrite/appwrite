@@ -2421,14 +2421,18 @@ trait DatabasesBase
                 Query::select('title')->toString(),
                 Query::select('releaseYear')->toString(),
                 Query::select('$id')->toString(),
+                Query::select('$sequence')->toString(),
             ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($document['title'], $response['body']['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
+        $this->assertEquals($document['$sequence'], $response['body']['$sequence']);
         $this->assertArrayNotHasKey('birthDay', $response['body']);
-        $sequence = $response['body']['$sequence'];
+        $this->assertArrayHasKey('$sequence', $response['body']);
+
+        $sequence = (string)$response['body']['$sequence'];
 
         // Query by sequence
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
@@ -2436,14 +2440,19 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('$sequence', [$sequence])
+                Query::equal('$sequence', [$sequence])->toString(),
             ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $response['body']['documents'][0];
+
+        $this->assertEquals(1, $response['body']['total']);
         $this->assertEquals($document['title'], $response['body']['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
         $this->assertTrue(array_key_exists('$sequence', $response['body']));
+        $this->assertEquals($document['$sequence'], $response['body']['$sequence']);
     }
 
     /**
