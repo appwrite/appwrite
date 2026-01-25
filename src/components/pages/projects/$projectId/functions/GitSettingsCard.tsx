@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +8,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -27,24 +26,16 @@ import type { Models } from '@appwrite.io/console'
 import { VCSDetectionType } from '@appwrite.io/console'
 import {
   useRepository,
-  useRepositoryBranches,
   useVcsInstallations,
   useRepositories,
-  useRepositoryContents,
 } from '@/lib/react-query/hooks'
-import {
-  GitBranch,
-  Lock,
-  ExternalLink,
-  FolderOpen,
-  ChevronRight,
-  Loader2,
-  X,
-} from 'lucide-react'
+import { GitBranch, Lock, ExternalLink, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
+import { BranchSelector } from '@/components/global/shared/BranchSelector'
+import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -69,7 +60,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const queryClient = useQueryClient()
 
   const [connectDialogOpen, setConnectDialogOpen] = useState(false)
-  const [rootDirectoryDialogOpen, setRootDirectoryDialogOpen] = useState(false)
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false)
 
   // Form state
@@ -89,12 +79,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const [repositoryPage, setRepositoryPage] = useState(0)
   const [debouncedSearch, setDebouncedSearch] = useState('')
 
-  // Root directory picker state
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set())
-  const [directoryCache, setDirectoryCache] = useState<
-    Map<string, { contents: Models.VcsContent[]; runtime?: string }>
-  >(new Map())
-
   // Fetch repository details if connected
   const hasRepository = func.installationId && func.providerRepositoryId
 
@@ -103,13 +87,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
     func.installationId || null,
     func.providerRepositoryId || null,
   )
-
-  const { data: branchesData, isLoading: branchesLoading } =
-    useRepositoryBranches(
-      projectId,
-      func.installationId || null,
-      func.providerRepositoryId || null,
-    )
 
   // Fetch installations for connect modal
   const { data: installationsData } = useVcsInstallations(projectId)
@@ -144,25 +121,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
       setSelectedInstallationId(installationsData.installations[0].$id)
     }
   }, [installationsData, selectedInstallationId])
-
-  // Sort branches: main/master first, then alphabetically
-  const sortedBranches = useMemo(() => {
-    if (!branchesData?.branches) return []
-    const branches = [...branchesData.branches]
-    branches.sort((a, b) => {
-      if (a.name === 'main' || a.name === 'master') return -1
-      if (b.name === 'main' || b.name === 'master') return 1
-      return a.name.localeCompare(b.name)
-    })
-    return branches
-  }, [branchesData])
-
-  // Set default branch when branches load
-  useEffect(() => {
-    if (sortedBranches.length > 0 && !selectedBranch) {
-      setSelectedBranch(func.providerBranch || sortedBranches[0].name)
-    }
-  }, [sortedBranches, func.providerBranch, selectedBranch])
 
   // Update function mutation
   const updateFunctionMutation = useMutation({
@@ -333,201 +291,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
   const handleDisconnectRepository = () => {
     disconnectRepositoryMutation.mutate()
   }
-
-  // Root directory picker functions
-  const loadDirectoryContents = useCallback(
-    async (path: string): Promise<void> => {
-      if (!projectId || !func.installationId || !func.providerRepositoryId)
-        return
-      if (directoryCache.has(path)) return
-
-      try {
-        const contents = await queryClient.fetchQuery({
-          queryKey: [
-            'vcs',
-            'contents',
-            projectId,
-            func.installationId,
-            func.providerRepositoryId,
-            path,
-            selectedBranch || 'main',
-          ],
-          queryFn: async () => {
-            const projectSdk = sdk.forProject(projectId)
-            // Normalize path: API expects './' for root, or path without './' prefix for nested
-            let normalizedPath: string | undefined
-            if (path === './') {
-              normalizedPath = './'
-            } else {
-              // Remove leading ./ for nested directories
-              normalizedPath = path.replace(/^\.\//, '')
-              // If empty after removing ./, use undefined
-              if (normalizedPath === '') {
-                normalizedPath = undefined
-              }
-            }
-            const response = await projectSdk.vcs.getRepositoryContents({
-              installationId: func.installationId!,
-              providerRepositoryId: func.providerRepositoryId!,
-              providerRootDirectory: normalizedPath,
-              providerReference: selectedBranch || 'main',
-            })
-            return response
-          },
-          staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-        })
-
-        setDirectoryCache((prev) => {
-          const newCache = new Map(prev)
-          newCache.set(path, { contents: contents.contents })
-
-          // Preload all subdirectories found in this directory
-          const subdirectories = contents.contents.filter(
-            (item) => item.isDirectory,
-          )
-          subdirectories.forEach((dir) => {
-            // Construct path for subdirectory
-            let subdirPath: string
-            if (path === './') {
-              subdirPath = `./${dir.name}`
-            } else if (path.startsWith('./')) {
-              subdirPath = `${path}/${dir.name}`
-            } else {
-              subdirPath = `./${path}/${dir.name}`
-            }
-
-            // Preload subdirectory contents if not already cached
-            if (!newCache.has(subdirPath)) {
-              // Load asynchronously without blocking
-              queryClient
-                .fetchQuery({
-                  queryKey: [
-                    'vcs',
-                    'contents',
-                    projectId,
-                    func.installationId,
-                    func.providerRepositoryId,
-                    subdirPath,
-                    selectedBranch || 'main',
-                  ],
-                  queryFn: async () => {
-                    const projectSdk = sdk.forProject(projectId)
-                    let normalizedPath: string | undefined
-                    if (subdirPath === './') {
-                      normalizedPath = './'
-                    } else {
-                      normalizedPath = subdirPath.replace(/^\.\//, '')
-                      if (normalizedPath === '') {
-                        normalizedPath = undefined
-                      }
-                    }
-                    return await projectSdk.vcs.getRepositoryContents({
-                      installationId: func.installationId!,
-                      providerRepositoryId: func.providerRepositoryId!,
-                      providerRootDirectory: normalizedPath,
-                      providerReference: selectedBranch || 'main',
-                    })
-                  },
-                  staleTime: 5 * 60 * 1000,
-                })
-                .then((subdirContents) => {
-                  // Update cache with preloaded subdirectory contents
-                  setDirectoryCache((currentCache) => {
-                    const updatedCache = new Map(currentCache)
-                    updatedCache.set(subdirPath, {
-                      contents: subdirContents.contents,
-                    })
-                    return updatedCache
-                  })
-                })
-                .catch((error) => {
-                  console.error(
-                    `Failed to preload subdirectory ${subdirPath}:`,
-                    error,
-                  )
-                })
-            }
-          })
-
-          return newCache
-        })
-      } catch (error) {
-        console.error('Failed to load directory contents:', error)
-      }
-    },
-    [
-      projectId,
-      func.installationId,
-      func.providerRepositoryId,
-      selectedBranch,
-      directoryCache,
-      queryClient,
-    ],
-  )
-
-  const toggleDirectory = async (path: string) => {
-    const isCurrentlyExpanded = expandedPaths.has(path)
-
-    if (isCurrentlyExpanded) {
-      // Collapse: remove from expanded paths
-      setExpandedPaths((prev) => {
-        const newSet = new Set(prev)
-        newSet.delete(path)
-        return newSet
-      })
-    } else {
-      // Expand: load contents if not cached, then add to expanded paths
-      if (!directoryCache.has(path)) {
-        await loadDirectoryContents(path)
-      }
-      setExpandedPaths((prev) => {
-        const newSet = new Set(prev)
-        newSet.add(path)
-        return newSet
-      })
-    }
-  }
-
-  const selectDirectory = (path: string) => {
-    setSelectedDir(path)
-    setRootDirectoryDialogOpen(false)
-  }
-
-  // Load root directory contents when dialog opens
-  useEffect(() => {
-    if (rootDirectoryDialogOpen && hasRepository && !directoryCache.has('./')) {
-      loadDirectoryContents('./')
-      // Auto-expand root to show first level
-      setExpandedPaths(new Set(['./']))
-    }
-  }, [rootDirectoryDialogOpen, hasRepository, loadDirectoryContents])
-
-  // Preload first level directories after root is loaded
-  useEffect(() => {
-    if (rootDirectoryDialogOpen && hasRepository) {
-      const rootContents = directoryCache.get('./')
-      if (rootContents) {
-        const firstLevelDirs = rootContents.contents.filter(
-          (item) => item.isDirectory,
-        )
-        // Preload all first-level directories in parallel
-        firstLevelDirs.forEach((dir) => {
-          const dirPath = `./${dir.name}`
-          if (!directoryCache.has(dirPath)) {
-            // Load asynchronously without blocking
-            loadDirectoryContents(dirPath).catch((error) => {
-              console.error(`Failed to preload directory ${dirPath}:`, error)
-            })
-          }
-        })
-      }
-    }
-  }, [
-    rootDirectoryDialogOpen,
-    hasRepository,
-    directoryCache,
-    loadDirectoryContents,
-  ])
 
   const repositories = useMemo(() => {
     return repositoriesData?.runtimeProviderRepositories || []
@@ -809,132 +572,35 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
               </legend>
 
               {/* Branch selector */}
-              <div>
-                <Label htmlFor="branch" className="text-[13px]">
-                  Production Branch
-                </Label>
-                {branchesLoading ? (
-                  <div className="mt-2 flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <p className="text-[13px] text-muted-foreground">
-                      Loading branches...
-                    </p>
-                  </div>
-                ) : sortedBranches.length > 0 ? (
-                  <Select
-                    value={selectedBranch}
-                    onValueChange={setSelectedBranch}
-                  >
-                    <SelectTrigger
-                      id="branch"
-                      className="mt-2 h-9 border-border bg-background text-[13px]"
-                    >
-                      <SelectValue placeholder="Select branch" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sortedBranches.map((branch) => (
-                        <SelectItem key={branch.name} value={branch.name}>
-                          <div className="flex items-center gap-2">
-                            <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />
-                            {branch.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    id="branch"
-                    value={selectedBranch}
-                    onChange={(e) => setSelectedBranch(e.target.value)}
-                    placeholder="main"
-                    className="mt-2 h-9 font-mono border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                  />
-                )}
-              </div>
+              <BranchSelector
+                projectId={projectId}
+                installationId={func.installationId}
+                providerRepositoryId={func.providerRepositoryId}
+                value={selectedBranch}
+                onChange={setSelectedBranch}
+                label="Production branch"
+              />
 
               {/* Root directory selector */}
-              <div>
-                <Label htmlFor="rootDirectory" className="text-[13px]">
-                  Root Directory
-                </Label>
-                <div className="mt-2 flex gap-2">
-                  <Input
-                    id="rootDirectory"
-                    value={selectedDir}
-                    onChange={(e) => setSelectedDir(e.target.value)}
-                    placeholder="./"
-                    className="h-9 font-mono border-border bg-background text-[13px] text-foreground placeholder:text-muted-foreground focus:border-border focus:ring-0"
-                  />
-                  <Dialog
-                    open={rootDirectoryDialogOpen}
-                    onOpenChange={setRootDirectoryDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                      >
-                        Select
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-md p-0">
-                      <DialogHeader className="px-6 pt-6 text-left">
-                        <DialogTitle>Select Root Directory</DialogTitle>
-                        <DialogDescription className="text-[13px] mt-2">
-                          Choose the directory containing your function code
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="border-t border-border" />
-                      <div className="px-6 pb-4 pt-0 max-h-[400px] overflow-y-auto">
-                        {directoryCache.has('./') ? (
-                          <DirectoryTree
-                            path="./"
-                            selectedPath={selectedDir}
-                            onSelect={(path) => setSelectedDir(path)}
-                            onToggle={toggleDirectory}
-                            expandedPaths={expandedPaths}
-                            directoryCache={directoryCache}
-                            projectId={projectId!}
-                            installationId={func.installationId!}
-                            providerRepositoryId={func.providerRepositoryId!}
-                            branch={selectedBranch || 'main'}
-                            loadDirectoryContents={loadDirectoryContents}
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center py-8">
-                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                        <Button
-                          variant="outline"
-                          onClick={() => setRootDirectoryDialogOpen(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={() => selectDirectory(selectedDir)}
-                          disabled={!selectedDir}
-                        >
-                          Select
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
+              <RootDirectoryPicker
+                projectId={projectId}
+                installationId={func.installationId}
+                providerRepositoryId={func.providerRepositoryId}
+                branch={selectedBranch || 'main'}
+                value={selectedDir}
+                onChange={setSelectedDir}
+                label="Root directory"
+                description="Choose the directory containing your function code"
+              />
 
               {/* Silent mode toggle */}
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="silentMode" className="text-[13px]">
-                    Silent Mode
+                    Silent mode
                   </Label>
                   <p className="text-[12px] text-muted-foreground">
-                    Skip build logs in deployment output
+                    Disable automated comments on repository commits
                   </p>
                 </div>
                 <Switch
@@ -958,135 +624,6 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
           >
             Update
           </Button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// Directory Tree Component
-interface DirectoryTreeProps {
-  path: string
-  selectedPath: string
-  onSelect: (path: string) => void
-  onToggle: (path: string) => void
-  expandedPaths: Set<string>
-  directoryCache: Map<string, { contents: Models.VcsContent[] }>
-  projectId: string
-  installationId: string
-  providerRepositoryId: string
-  branch: string
-  loadDirectoryContents: (path: string) => Promise<void>
-  level?: number
-}
-
-function DirectoryTree({
-  path,
-  selectedPath,
-  onSelect,
-  onToggle,
-  expandedPaths,
-  directoryCache,
-  projectId,
-  installationId,
-  providerRepositoryId,
-  branch,
-  loadDirectoryContents,
-  level = 0,
-}: DirectoryTreeProps) {
-  const isExpanded = expandedPaths.has(path)
-  const contents = directoryCache.get(path)
-  const directories =
-    contents?.contents.filter((item) => item.isDirectory) || []
-  const hasSubdirectories = directories.length > 0
-  const hasContents = !!contents
-
-  // Load contents when expanded if not already loaded
-  useEffect(() => {
-    if (isExpanded && !hasContents) {
-      loadDirectoryContents(path)
-    }
-  }, [isExpanded, hasContents, path, loadDirectoryContents])
-
-  const handleRowClick = (e: React.MouseEvent) => {
-    // Only toggle if clicking on the row itself, not on the folder icon/name (which selects)
-    const target = e.target as HTMLElement
-    if (target.closest('.directory-select')) {
-      // Clicking folder icon or name selects the path
-      onSelect(path)
-      return
-    }
-    // Clicking elsewhere on the row toggles expand/collapse
-    onToggle(path)
-  }
-
-  // Get directory name for display (last part of path)
-  const displayName = path === './' ? './' : path.split('/').pop() || path
-
-  // Only show expand arrow if we have loaded contents and know there are subdirectories
-  const showExpandButton = hasContents && hasSubdirectories
-
-  return (
-    <div>
-      <div
-        onClick={handleRowClick}
-        className={cn(
-          'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] transition-colors hover:bg-accent cursor-pointer',
-          selectedPath === path && 'bg-accent',
-        )}
-        style={{ paddingLeft: `${level * 16 + 8}px` }}
-      >
-        {showExpandButton ? (
-          <ChevronRight
-            className={cn(
-              'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform',
-              isExpanded && 'rotate-90',
-            )}
-          />
-        ) : (
-          <div className="w-3.5 shrink-0" />
-        )}
-        <div
-          className="directory-select flex items-center gap-2 flex-1 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation()
-            onSelect(path)
-          }}
-        >
-          <FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span className="font-mono truncate">{displayName}</span>
-        </div>
-      </div>
-      {isExpanded && hasContents && hasSubdirectories && (
-        <div>
-          {directories.map((dir) => {
-            // Construct path correctly for nested directories
-            let dirPath: string
-            if (path === './') {
-              dirPath = `./${dir.name}`
-            } else if (path.startsWith('./')) {
-              dirPath = `${path}/${dir.name}`
-            } else {
-              dirPath = `./${path}/${dir.name}`
-            }
-            return (
-              <DirectoryTree
-                key={dirPath}
-                path={dirPath}
-                selectedPath={selectedPath}
-                onSelect={onSelect}
-                onToggle={onToggle}
-                expandedPaths={expandedPaths}
-                directoryCache={directoryCache}
-                projectId={projectId}
-                installationId={installationId}
-                providerRepositoryId={providerRepositoryId}
-                branch={branch}
-                loadDirectoryContents={loadDirectoryContents}
-                level={level + 1}
-              />
-            )
-          })}
         </div>
       )}
     </div>

@@ -19,6 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { Pagination, SimplePagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -29,6 +42,7 @@ import {
   Plus,
   LayoutTemplate,
   RefreshCw,
+  ChevronsUpDown,
 } from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
 import { useRepositories, useSiteTemplates, useProject } from '@/lib/react-query/hooks'
@@ -115,7 +129,7 @@ function TemplateSkeleton() {
         <Skeleton className="h-3 w-3/4 mt-0.5" />
       </div>
       <div className="relative flex-1 overflow-hidden">
-        <div className="absolute inset-x-3 top-2 transform -rotate-3">
+        <div className="absolute inset-x-3 top-4 transform -rotate-3">
           <Skeleton className="w-full h-[120px] rounded-lg" />
         </div>
       </div>
@@ -143,6 +157,17 @@ function FadeImage({ src, alt, className }: { src: string; alt: string; classNam
 
 const REPO_PAGE_SIZE = 7
 const DEFAULT_TEMPLATE_PAGE_SIZE = 9
+
+// Use case options for template filtering (must match API enum values)
+const USE_CASE_OPTIONS = [
+  { value: 'all', label: 'All use cases' },
+  { value: 'starter', label: 'Starter' },
+  { value: 'ai', label: 'AI' },
+  { value: 'databases', label: 'Databases' },
+  { value: 'messaging', label: 'Messaging' },
+  { value: 'dev-tools', label: 'Dev tools' },
+  { value: 'utilities', label: 'Utilities' },
+]
 
 export function CreateSiteView() {
   const { projectId } = useParams({ strict: false })
@@ -194,6 +219,9 @@ export function CreateSiteView() {
   const [templatePage, setTemplatePage] = useState(1)
   const [templatePageSize, setTemplatePageSize] = useState(DEFAULT_TEMPLATE_PAGE_SIZE)
   const [selectedFramework, setSelectedFramework] = useState<string>('all')
+  const [selectedUseCase, setSelectedUseCase] = useState<string>('all')
+  const [useCaseOpen, setUseCaseOpen] = useState(false)
+  const [frameworkOpen, setFrameworkOpen] = useState(false)
 
   // Set current path
   useEffect(() => {
@@ -271,12 +299,13 @@ export function CreateSiteView() {
 
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
 
-  // Fetch templates with pagination and framework filter
+  // Fetch templates with pagination, framework filter, and use case filter
   const frameworkFilter = selectedFramework !== 'all' ? [selectedFramework] : undefined
+  const useCaseFilter = selectedUseCase !== 'all' ? [selectedUseCase] : undefined
   const { templates, total: templatesTotal, isLoading: templatesLoading, isFetching: templatesFetching } = useSiteTemplates(
     projectId,
     frameworkFilter,
-    undefined,
+    useCaseFilter,
     templatePageSize,
     (templatePage - 1) * templatePageSize,
   )
@@ -358,7 +387,7 @@ export function CreateSiteView() {
       useSidebar={false}
       maxWidth="max-w-[1400px]"
     >
-      <div className="grid gap-8 lg:grid-cols-5">
+      <div className="grid gap-12 lg:grid-cols-5">
         {/* Left: Repositories (2/5 width) */}
         <div className="lg:col-span-2 flex flex-col">
           <h2 className="text-[14px] font-semibold text-foreground mb-4">
@@ -521,18 +550,18 @@ export function CreateSiteView() {
               />
 
               {/* Help note for missing repos */}
-              <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-3">
-                <p className="text-[12px] font-medium text-foreground mb-1">
+              <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-4">
+                <p className="text-[14px] font-semibold text-foreground leading-tight mb-1.5">
                   Can't find a repository?
                 </p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed mb-2">
+                <p className="text-[12px] text-muted-foreground leading-snug mb-3">
                   If you selected specific repositories during setup, you may need to update your GitHub permissions to include additional ones.
                 </p>
                 <a
                   href={getGitHubAuthUrl}
-                  className="inline-flex items-center gap-1.5 text-[11px] font-medium text-primary hover:underline"
+                  className="inline-flex items-center gap-1.5 text-[12px] font-medium text-primary hover:underline"
                 >
-                  <GitHubIcon className="h-3 w-3" />
+                  <GitHubIcon className="h-3.5 w-3.5" />
                   Update GitHub permissions
                 </a>
               </div>
@@ -557,29 +586,91 @@ export function CreateSiteView() {
                 className="h-9 pl-9 text-[13px]"
               />
             </div>
-            <Select
-              value={selectedFramework}
-              onValueChange={(value) => {
-                setSelectedFramework(value)
-                setTemplatePage(1)
-              }}
-            >
-              <SelectTrigger className="w-[160px] h-9 text-[13px]">
-                <SelectValue placeholder="All frameworks" />
-              </SelectTrigger>
-              <SelectContent>
-                {frameworkOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <span className="flex items-center gap-2">
-                      {option.value !== 'all' && (
-                        <FrameworkIcon framework={option.value} size="sm" />
-                      )}
-                      <span className="capitalize">{option.label}</span>
+            {/* Use case filter */}
+            <Popover open={useCaseOpen} onOpenChange={setUseCaseOpen} modal={true}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={useCaseOpen}
+                  className="w-[150px] h-9 justify-between text-[13px] font-normal"
+                >
+                  {USE_CASE_OPTIONS.find((opt) => opt.value === selectedUseCase)?.label || 'All use cases'}
+                  <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[200px] p-0 z-[100]" align="start" sideOffset={4}>
+                <Command>
+                  <CommandInput placeholder="Search use cases..." className="h-9" />
+                  <CommandList>
+                    <CommandEmpty>No use case found.</CommandEmpty>
+                    <CommandGroup>
+                      {USE_CASE_OPTIONS.map((option) => (
+                        <CommandItem
+                          key={option.value}
+                          value={option.value}
+                          onSelect={() => {
+                            setSelectedUseCase(option.value)
+                            setTemplatePage(1)
+                            setUseCaseOpen(false)
+                          }}
+                        >
+                          {option.label}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            {/* Framework filter */}
+            <Popover open={frameworkOpen} onOpenChange={setFrameworkOpen} modal={true}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={frameworkOpen}
+                  className="w-[160px] h-9 justify-between text-[13px] font-normal"
+                >
+                  <span className="flex items-center gap-2 truncate">
+                    {selectedFramework !== 'all' && (
+                      <FrameworkIcon framework={selectedFramework} size="sm" />
+                    )}
+                    <span className="capitalize truncate">
+                      {frameworkOptions.find((opt) => opt.value === selectedFramework)?.label || 'All frameworks'}
                     </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[220px] p-0 z-[100]" align="start" sideOffset={4}>
+                <Command>
+                  <CommandInput placeholder="Search frameworks..." className="h-9" />
+                  <CommandList>
+                    <CommandEmpty>No framework found.</CommandEmpty>
+                    <CommandGroup>
+                      {frameworkOptions.map((option) => (
+                        <CommandItem
+                          key={option.value}
+                          value={option.label}
+                          onSelect={() => {
+                            setSelectedFramework(option.value)
+                            setTemplatePage(1)
+                            setFrameworkOpen(false)
+                          }}
+                        >
+                          {option.value !== 'all' && (
+                            <FrameworkIcon framework={option.value} size="sm" className="mr-2" />
+                          )}
+                          <span className="capitalize">{option.label}</span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Templates grid */}
@@ -602,19 +693,19 @@ export function CreateSiteView() {
                     onClick={() => handleSelectTemplate(template)}
                     className="group h-[180px] text-left rounded-2xl border border-border bg-card overflow-hidden transition-all cursor-pointer hover:border-border/80 hover:shadow-md flex flex-col"
                   >
-                    <div className="px-3 pt-3 pb-1.5 h-[80px]">
-                      <h3 className="text-[13px] font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                    <div className="px-4 pt-4 pb-2 h-[80px]">
+                      <h3 className="text-[14px] font-semibold text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
                         {template.name}
                       </h3>
                       {template.tagline && (
-                        <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">
+                        <p className="text-[12px] text-muted-foreground line-clamp-2 mt-1.5 leading-snug">
                           {template.tagline}
                         </p>
                       )}
                     </div>
                     <div className="relative flex-1 overflow-hidden">
                       {screenshotUrl ? (
-                        <div className="absolute left-6 -right-4 top-2 transform -rotate-3 transition-transform group-hover:-rotate-2">
+                        <div className="absolute left-8 -right-4 top-4 transform -rotate-3 transition-transform group-hover:-rotate-2">
                           <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-border">
                             <FadeImage
                               src={screenshotUrl}
@@ -624,7 +715,7 @@ export function CreateSiteView() {
                           </div>
                         </div>
                       ) : (
-                        <div className="absolute left-6 -right-4 top-2 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 shadow-lg ring-1 ring-border">
+                        <div className="absolute left-8 -right-4 top-4 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 shadow-lg ring-1 ring-border">
                           <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" />
                         </div>
                       )}

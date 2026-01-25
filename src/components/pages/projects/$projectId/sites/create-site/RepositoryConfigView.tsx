@@ -21,27 +21,21 @@ import {
 import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
-import { CopyableId } from '@/components/global/shared/CopyableId'
-import {
-  GitBranch,
-  Folder,
-  ExternalLink,
-  Loader2,
-  ChevronLeft,
-} from 'lucide-react'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { BranchSelector } from '@/components/global/shared/BranchSelector'
+import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
+import { ExternalLink, Loader2, Lock, Globe, GitBranch, Key, FolderOpen, Layers } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { VCSDetectionType } from '@appwrite.io/console'
 import {
   useRepository,
-  useRepositoryBranches,
   useCreateSite,
   useCreateSiteDomain,
   useCreateVcsDeployment,
   Dependencies,
 } from '@/lib/react-query/hooks'
-import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
@@ -106,13 +100,6 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
     formData.providerRepositoryId || null,
   )
 
-  // Fetch branches
-  const { data: branchesData, isLoading: branchesLoading } = useRepositoryBranches(
-    projectId,
-    formData.installationId || null,
-    formData.providerRepositoryId || null,
-  )
-
   // Framework detection mutation
   const detectFrameworkMutation = useMutation({
     mutationFn: async () => {
@@ -137,28 +124,6 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
       }
     },
   })
-
-  // Sort branches: main/master first
-  const sortedBranches = useMemo(() => {
-    if (!branchesData?.branches) return []
-    const branches = [...branchesData.branches]
-    branches.sort((a, b) => {
-      if (a.name === 'main' || a.name === 'master') return -1
-      if (b.name === 'main' || b.name === 'master') return 1
-      return a.name.localeCompare(b.name)
-    })
-    return branches
-  }, [branchesData])
-
-  // Set default branch when loaded
-  useEffect(() => {
-    if (sortedBranches.length > 0 && !branch) {
-      const defaultBranch = sortedBranches.find(
-        (b) => b.name === 'main' || b.name === 'master',
-      )
-      setBranch(defaultBranch?.name || sortedBranches[0].name)
-    }
-  }, [sortedBranches, branch])
 
   // Detect framework on mount
   useEffect(() => {
@@ -275,61 +240,106 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
   }, [frameworks, framework])
 
   const sidebarContent = (
-    <div className="space-y-4">
-      {/* Framework info */}
-      {frameworkInfo && (
-        <div className="rounded-xl border border-border bg-card/50 p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <FrameworkIcon framework={framework} size="md" />
+    <div className="rounded-xl border border-border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm overflow-hidden">
+      {/* Header with framework */}
+      <div className="px-5 py-4 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
+              {frameworkInfo ? (
+                <FrameworkIcon framework={framework} size="md" />
+              ) : (
+                <GitHubIcon className="h-5 w-5 text-muted-foreground" />
+              )}
             </div>
-            <div>
-              <h3 className="text-[13px] font-semibold text-foreground">
-                {frameworkInfo.name}
+            {frameworkInfo && (
+              <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-2 ring-background">
+                <GitHubIcon className="h-3 w-3 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-[13px] font-semibold text-foreground truncate">
+                {frameworkInfo?.name || 'Repository'}
               </h3>
-              <p className="text-[11px] text-muted-foreground">
-                Detected framework
-              </p>
+              {repository?.private ? (
+                <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
+              ) : (
+                <Globe className="h-3 w-3 text-muted-foreground shrink-0" />
+              )}
             </div>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {repository ? `${repository.organization}/${repository.name}` : repoName}
+              {repository?.pushedAt && (
+                <>
+                  <span className="mx-1.5">·</span>
+                  <span>Updated <DateTooltip date={repository.pushedAt} /></span>
+                </>
+              )}
+            </p>
           </div>
-        </div>
-      )}
-
-      {/* Repository info */}
-      {repository && (
-        <div className="rounded-xl border border-border bg-card/50 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <GitHubIcon className="h-4 w-4 text-muted-foreground" />
-            <span className="text-[12px] text-muted-foreground">Repository</span>
-          </div>
-          <p className="text-[13px] font-medium text-foreground truncate">
-            {repository.organization}/{repository.name}
-          </p>
-          {repository.url && (
+          {repository?.url && (
             <a
               href={repository.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
             >
-              <ExternalLink className="h-3 w-3" />
-              View on GitHub
+              <ExternalLink className="h-4 w-4" />
             </a>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Branch and directory info */}
-      <div className="rounded-xl border border-border bg-card/50 p-4">
-        <div className="space-y-2 text-[12px]">
+      {/* Configuration details */}
+      <div className="px-5 py-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+            <GitBranch className="h-3.5 w-3.5" />
+            Branch
+          </span>
+          <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded">
+            {branch || repository?.defaultBranch || 'main'}
+          </code>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+            <FolderOpen className="h-3.5 w-3.5" />
+            Root directory
+          </span>
+          <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded max-w-[120px] truncate">
+            {rootDirectory || './'}
+          </code>
+        </div>
+        {framework && (
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Branch</span>
-            <span className="font-mono text-foreground">{branch}</span>
+            <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              <Layers className="h-3.5 w-3.5" />
+              Framework
+            </span>
+            <span className="flex items-center gap-1.5 text-[12px] text-foreground">
+              <FrameworkIcon framework={framework} size="sm" />
+              <span className="capitalize">{frameworkInfo?.name || framework}</span>
+            </span>
           </div>
+        )}
+        {variables.length > 0 && (
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Root directory</span>
-            <span className="font-mono text-foreground">{rootDirectory}</span>
+            <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              <Key className="h-3.5 w-3.5" />
+              Variables
+            </span>
+            <span className="text-[12px] text-foreground">{variables.length} configured</span>
           </div>
+        )}
+      </div>
+
+      {/* Status indicator */}
+      <div className="px-5 py-3 bg-muted/20 border-t border-border/50">
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[11px] text-muted-foreground">Ready to deploy</span>
         </div>
       </div>
     </div>
@@ -337,11 +347,12 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
 
   return (
     <WizardLayout
-      title="Configure site"
+      title="Create site"
       showBackButton
       backButtonLabel="Back"
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
+      maxWidth="max-w-[1400px]"
       footerAlign="right"
       sidebar={sidebarContent}
       footer={
@@ -437,99 +448,7 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
               placeholder="Auto-generated"
             />
           </div>
-        </div>
-      </div>
 
-      {/* Production branch section */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Production branch
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-4">
-          {/* Branch selector */}
-          <div className="space-y-2">
-            <Label htmlFor="branch" className="text-[13px]">
-              Branch
-            </Label>
-            {branchesLoading ? (
-              <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                <span className="text-[13px] text-muted-foreground">
-                  Loading branches...
-                </span>
-              </div>
-            ) : sortedBranches.length > 0 ? (
-              <Select value={branch} onValueChange={setBranch}>
-                <SelectTrigger className="h-9 text-[13px]">
-                  <SelectValue placeholder="Select branch" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sortedBranches.map((b) => (
-                    <SelectItem key={b.name} value={b.name}>
-                      <div className="flex items-center gap-2">
-                        <GitBranch className="h-3.5 w-3.5 text-muted-foreground" />
-                        {b.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : (
-              <Input
-                id="branch"
-                value={branch}
-                onChange={(e) => setBranch(e.target.value)}
-                placeholder="main"
-                className="h-9 font-mono text-[13px]"
-              />
-            )}
-          </div>
-
-          {/* Root directory */}
-          <div className="space-y-2">
-            <Label htmlFor="root-directory" className="text-[13px]">
-              Root directory
-            </Label>
-            <Input
-              id="root-directory"
-              value={rootDirectory}
-              onChange={(e) => setRootDirectory(e.target.value)}
-              placeholder="./"
-              className="h-9 font-mono text-[13px]"
-            />
-          </div>
-
-          {/* Silent mode */}
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="silent-mode" className="text-[13px]">
-                Silent mode
-              </Label>
-              <p className="text-[11px] text-muted-foreground">
-                Skip build logs in deployment output
-              </p>
-            </div>
-            <Switch
-              id="silent-mode"
-              checked={silentMode}
-              onCheckedChange={setSilentMode}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Configuration section */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Configuration
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-4">
           {/* Framework selector */}
           <div className="space-y-2">
             <Label htmlFor="framework" className="text-[13px]">
@@ -569,23 +488,6 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
               </Select>
             )}
           </div>
-
-          {/* Build settings */}
-          <BuildSettings
-            installCommand={installCommand}
-            buildCommand={buildCommand}
-            outputDirectory={outputDirectory}
-            onInstallCommandChange={setInstallCommand}
-            onBuildCommandChange={setBuildCommand}
-            onOutputDirectoryChange={setOutputDirectory}
-            frameworkKey={framework}
-          />
-
-          {/* Environment variables */}
-          <EnvironmentVariables
-            variables={variables}
-            onChange={setVariables}
-          />
         </div>
       </div>
 
@@ -593,6 +495,9 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            Your site will be accessible at this URL
+          </p>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
@@ -602,7 +507,88 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
             onValidChange={setDomainValid}
           />
         </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/20">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            <a
+              href="https://appwrite.io/docs/products/sites/domains"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover:underline font-medium"
+            >
+              Learn more →
+            </a>
+          </p>
+        </div>
       </div>
+
+      {/* Production branch section */}
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        <div className="px-6 py-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Production branch
+          </h3>
+        </div>
+        <div className="border-t border-border" />
+        <div className="px-6 py-4 space-y-4">
+          {/* Branch selector */}
+          <BranchSelector
+            projectId={projectId}
+            installationId={formData.installationId}
+            providerRepositoryId={formData.providerRepositoryId}
+            value={branch}
+            onChange={setBranch}
+            label="Branch"
+          />
+
+          {/* Root directory */}
+          <RootDirectoryPicker
+            projectId={projectId}
+            installationId={formData.installationId}
+            providerRepositoryId={formData.providerRepositoryId}
+            branch={branch || 'main'}
+            value={rootDirectory}
+            onChange={setRootDirectory}
+            label="Root directory"
+            description="Choose the directory containing your site code"
+          />
+
+          {/* Silent mode */}
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="silent-mode" className="text-[13px]">
+                Silent mode
+              </Label>
+              <p className="text-[11px] text-muted-foreground">
+                Disable automated comments on repository commits
+              </p>
+            </div>
+            <Switch
+              id="silent-mode"
+              checked={silentMode}
+              onCheckedChange={setSilentMode}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Build settings */}
+      <BuildSettings
+        installCommand={installCommand}
+        buildCommand={buildCommand}
+        outputDirectory={outputDirectory}
+        onInstallCommandChange={setInstallCommand}
+        onBuildCommandChange={setBuildCommand}
+        onOutputDirectoryChange={setOutputDirectory}
+        frameworkKey={framework}
+      />
+
+      {/* Environment variables */}
+      <EnvironmentVariables
+        variables={variables}
+        onChange={setVariables}
+      />
+
     </WizardLayout>
   )
 }

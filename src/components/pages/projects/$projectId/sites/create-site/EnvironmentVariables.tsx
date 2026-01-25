@@ -59,6 +59,7 @@ export function EnvironmentVariables({
   const [editorFormat, setEditorFormat] = useState<'env' | 'json'>('env')
   const [editorError, setEditorError] = useState<string | undefined>()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const newKeyInputRef = useRef<HTMLInputElement>(null)
 
   const handleAddVariable = () => {
     if (!newKey.trim()) {
@@ -79,6 +80,11 @@ export function EnvironmentVariables({
     setNewKey('')
     setNewValue('')
     setNewSecret(false)
+    
+    // Focus on the key input for the next variable
+    setTimeout(() => {
+      newKeyInputRef.current?.focus()
+    }, 0)
   }
 
   const handleRemoveVariable = (key: string) => {
@@ -257,21 +263,21 @@ export function EnvironmentVariables({
         type="single"
         collapsible
         defaultValue={defaultOpen ? 'env-vars' : undefined}
-        className={className}
+        className={cn('rounded-xl border border-border bg-card/50 overflow-hidden', className)}
       >
         <AccordionItem value="env-vars" className="border-none">
-          <AccordionTrigger className="py-0 hover:no-underline">
-            <span className="text-[13px] font-medium text-foreground">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
+            <span className="text-[15px] font-semibold text-foreground">
               Environment variables
               {variables.length > 0 && (
-                <span className="ml-2 text-muted-foreground">
+                <span className="ml-2 font-normal text-muted-foreground">
                   ({variables.length})
                 </span>
               )}
             </span>
           </AccordionTrigger>
-          <AccordionContent className="pt-4 pb-0">
-            <div className="space-y-4">
+          <AccordionContent className="px-6 pb-4 pt-0 border-t border-border">
+            <div className="space-y-4 pt-4">
               {/* Actions */}
               <div className="flex items-center gap-2">
                 <input
@@ -394,46 +400,58 @@ export function EnvironmentVariables({
               )}
 
               {/* Add New Variable */}
-              <div className="flex items-end gap-2">
-                <div className="flex-1">
-                  <Input
-                    value={newKey}
-                    onChange={(e) => setNewKey(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
-                    placeholder="KEY"
-                    disabled={disabled}
-                    className="h-9 font-mono text-[13px]"
-                  />
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-[12px] font-medium text-muted-foreground">
+                      Key
+                    </label>
+                    <Input
+                      ref={newKeyInputRef}
+                      value={newKey}
+                      onChange={(e) => setNewKey(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
+                      placeholder="VARIABLE_NAME"
+                      disabled={disabled}
+                      className="h-9 font-mono text-[13px]"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[12px] font-medium text-muted-foreground">
+                      Value
+                    </label>
+                    <Input
+                      value={newValue}
+                      onChange={(e) => setNewValue(e.target.value)}
+                      placeholder="Enter value"
+                      disabled={disabled}
+                      className="h-9 text-[13px]"
+                    />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <Input
-                    value={newValue}
-                    onChange={(e) => setNewValue(e.target.value)}
-                    placeholder="Value"
-                    disabled={disabled}
-                    className="h-9 text-[13px]"
-                  />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="new-secret"
+                      checked={newSecret}
+                      onCheckedChange={(checked) => setNewSecret(checked === true)}
+                      disabled={disabled}
+                    />
+                    <label htmlFor="new-secret" className="text-[12px] text-muted-foreground cursor-pointer">
+                      Mark as secret
+                    </label>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddVariable}
+                    disabled={disabled || !newKey.trim()}
+                    className="h-8 text-[12px]"
+                  >
+                    <Plus className="mr-1.5 h-3.5 w-3.5" />
+                    Add variable
+                  </Button>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="new-secret"
-                    checked={newSecret}
-                    onCheckedChange={(checked) => setNewSecret(checked === true)}
-                    disabled={disabled}
-                  />
-                  <label htmlFor="new-secret" className="text-[12px] text-muted-foreground">
-                    Secret
-                  </label>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddVariable}
-                  disabled={disabled || !newKey.trim()}
-                  className="h-9"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
               </div>
             </div>
           </AccordionContent>

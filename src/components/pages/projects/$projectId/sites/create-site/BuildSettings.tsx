@@ -79,16 +79,16 @@ export function BuildSettings({
       type="single"
       collapsible
       defaultValue={defaultOpen ? 'build-settings' : undefined}
-      className={className}
+      className={cn('rounded-xl border border-border bg-card/50 overflow-hidden', className)}
     >
       <AccordionItem value="build-settings" className="border-none">
-        <AccordionTrigger className="py-0 hover:no-underline">
-          <span className="text-[13px] font-medium text-foreground">
+        <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
+          <span className="text-[15px] font-semibold text-foreground">
             Build settings
           </span>
         </AccordionTrigger>
-        <AccordionContent className="pt-4 pb-0">
-          <div className="space-y-4">
+        <AccordionContent className="px-6 pb-4 pt-0 border-t border-border">
+          <div className="space-y-4 pt-4">
             {/* Install Command */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">

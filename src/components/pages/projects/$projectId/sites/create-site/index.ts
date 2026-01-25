@@ -15,9 +15,7 @@ export { EnvironmentVariables } from './EnvironmentVariables'
 
 // View components
 export { CreateSiteView } from './CreateSiteView'
-export { RepositoriesView } from './RepositoriesView'
 export { RepositoryConfigView } from './RepositoryConfigView'
-export { TemplatesView } from './TemplatesView'
 export { TemplateConfigView } from './TemplateConfigView'
 export { ManualUploadView } from './ManualUploadView'
 export { QuickDeployView } from './QuickDeployView'

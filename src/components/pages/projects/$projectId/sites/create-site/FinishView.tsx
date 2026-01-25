@@ -177,9 +177,10 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
 
   return (
     <WizardLayout
-      title="Site deployed"
+      title="Create site"
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
+      maxWidth="max-w-[1400px]"
       footerAlign="right"
       sidebar={sidebarContent}
       footer={

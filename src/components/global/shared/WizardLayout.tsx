@@ -139,16 +139,16 @@ export function WizardLayout({
     : 'flex h-full flex-col'
 
   const headerClasses = fullscreen
-    ? 'shrink-0 border-b border-border bg-background'
-    : 'border-b border-border bg-background'
+    ? 'shrink-0 border-b border-border/30 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40'
+    : 'border-b border-border/30 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40'
 
   const contentWrapperClasses = fullscreen
     ? 'flex-1 min-h-0 overflow-y-auto'
     : 'mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6'
 
   const footerClasses = fullscreen
-    ? 'shrink-0 border-t border-border bg-muted/30'
-    : 'border-t border-border bg-muted/30 px-4 py-4 sm:px-6'
+    ? 'shrink-0 border-t border-border/30 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40'
+    : 'border-t border-border/30 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 px-4 py-4 sm:px-6'
 
   return (
     <div className={containerClasses}>
@@ -246,7 +246,7 @@ export function WizardLayout({
                 </div>
 
                 {/* Sidebar */}
-                {sidebar && <div className="lg:col-span-1">{sidebar}</div>}
+                {sidebar && <div className="lg:col-span-1 self-start sticky top-6">{sidebar}</div>}
               </div>
             ) : (
               <div className={contentClassName}>{children}</div>
@@ -262,7 +262,7 @@ export function WizardLayout({
             </div>
 
             {/* Sidebar */}
-            {sidebar && <div className="lg:col-span-1">{sidebar}</div>}
+            {sidebar && <div className="lg:col-span-1 self-start sticky top-6">{sidebar}</div>}
           </div>
         )}
 

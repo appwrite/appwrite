@@ -267,6 +267,7 @@ export function ManualUploadView() {
       title="Create site"
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
+      maxWidth="max-w-[1400px]"
       footerAlign="right"
       sidebar={sidebarContent}
       footer={
@@ -398,18 +399,7 @@ export function ManualUploadView() {
               placeholder="Auto-generated"
             />
           </div>
-        </div>
-      </div>
 
-      {/* Configuration section */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Configuration
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-4">
           {/* Framework selector */}
           <div className="space-y-2">
             <Label htmlFor="framework" className="text-[13px]">
@@ -440,30 +430,33 @@ export function ManualUploadView() {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Build settings */}
-          <BuildSettings
-            installCommand={installCommand}
-            buildCommand={buildCommand}
-            outputDirectory={outputDirectory}
-            onInstallCommandChange={setInstallCommand}
-            onBuildCommandChange={setBuildCommand}
-            onOutputDirectoryChange={setOutputDirectory}
-            frameworkKey={framework}
-          />
-
-          {/* Environment variables */}
-          <EnvironmentVariables
-            variables={variables}
-            onChange={setVariables}
-          />
         </div>
       </div>
+
+      {/* Build settings */}
+      <BuildSettings
+        installCommand={installCommand}
+        buildCommand={buildCommand}
+        outputDirectory={outputDirectory}
+        onInstallCommandChange={setInstallCommand}
+        onBuildCommandChange={setBuildCommand}
+        onOutputDirectoryChange={setOutputDirectory}
+        frameworkKey={framework}
+      />
+
+      {/* Environment variables */}
+      <EnvironmentVariables
+        variables={variables}
+        onChange={setVariables}
+      />
 
       {/* Domain section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            Your site will be accessible at this URL
+          </p>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
@@ -472,6 +465,19 @@ export function ManualUploadView() {
             onChange={setDomain}
             onValidChange={setDomainValid}
           />
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/20">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            <a
+              href="https://appwrite.io/docs/products/sites/domains"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover:underline font-medium"
+            >
+              Learn more →
+            </a>
+          </p>
         </div>
       </div>
     </WizardLayout>

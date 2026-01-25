@@ -118,8 +118,6 @@ import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTableIdRouteImport }
 import { Route as PublicProjectsProjectIdAuthUsersUserIdRouteImport } from './routes/_public/projects.$projectId.auth.users.$userId'
 import { Route as PublicProjectsProjectIdAuthTeamsTeamIdRouteImport } from './routes/_public/projects.$projectId.auth.teams.$teamId'
 import { Route as PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport } from './routes/_public/organizations.$orgId.domains.$domainId.settings'
-import { Route as PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRouteImport } from './routes/_public/projects.$projectId.sites.create-site.templates.index'
-import { Route as PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRouteImport } from './routes/_public/projects.$projectId.sites.create-site.repositories.index'
 import { Route as PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRouteImport } from './routes/_public/projects.$projectId.sites.$siteId.deployments.index'
 import { Route as PublicProjectsProjectIdMessagingTopicsTopicIdIndexRouteImport } from './routes/_public/projects.$projectId.messaging.topics.$topicId.index'
 import { Route as PublicProjectsProjectIdMessagingProvidersProviderIdIndexRouteImport } from './routes/_public/projects.$projectId.messaging.providers.$providerId.index'
@@ -784,18 +782,6 @@ const PublicOrganizationsOrgIdDomainsDomainIdSettingsRoute =
     path: '/settings',
     getParentRoute: () => PublicOrganizationsOrgIdDomainsDomainIdRoute,
   } as any)
-const PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRoute =
-  PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRouteImport.update({
-    id: '/templates/',
-    path: '/templates/',
-    getParentRoute: () => PublicProjectsProjectIdSitesCreateSiteRoute,
-  } as any)
-const PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRoute =
-  PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRouteImport.update({
-    id: '/repositories/',
-    path: '/repositories/',
-    getParentRoute: () => PublicProjectsProjectIdSitesCreateSiteRoute,
-  } as any)
 const PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute =
   PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRouteImport.update({
     id: '/',
@@ -1127,8 +1113,6 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/messaging/providers/$providerId/': typeof PublicProjectsProjectIdMessagingProvidersProviderIdIndexRoute
   '/projects/$projectId/messaging/topics/$topicId/': typeof PublicProjectsProjectIdMessagingTopicsTopicIdIndexRoute
   '/projects/$projectId/sites/$siteId/deployments/': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
-  '/projects/$projectId/sites/create-site/repositories': typeof PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRoute
-  '/projects/$projectId/sites/create-site/templates': typeof PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdColumnsRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRowsRoute
@@ -1244,8 +1228,6 @@ export interface FileRoutesByTo {
   '/projects/$projectId/messaging/providers/$providerId': typeof PublicProjectsProjectIdMessagingProvidersProviderIdIndexRoute
   '/projects/$projectId/messaging/topics/$topicId': typeof PublicProjectsProjectIdMessagingTopicsTopicIdIndexRoute
   '/projects/$projectId/sites/$siteId/deployments': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
-  '/projects/$projectId/sites/create-site/repositories': typeof PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRoute
-  '/projects/$projectId/sites/create-site/templates': typeof PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdColumnsRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRowsRoute
@@ -1387,8 +1369,6 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/messaging/providers/$providerId/': typeof PublicProjectsProjectIdMessagingProvidersProviderIdIndexRoute
   '/_public/projects/$projectId/messaging/topics/$topicId/': typeof PublicProjectsProjectIdMessagingTopicsTopicIdIndexRoute
   '/_public/projects/$projectId/sites/$siteId/deployments/': typeof PublicProjectsProjectIdSitesSiteIdDeploymentsIndexRoute
-  '/_public/projects/$projectId/sites/create-site/repositories/': typeof PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRoute
-  '/_public/projects/$projectId/sites/create-site/templates/': typeof PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRoute
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdColumnsRoute
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRowsRoute
@@ -1528,8 +1508,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging/providers/$providerId/'
     | '/projects/$projectId/messaging/topics/$topicId/'
     | '/projects/$projectId/sites/$siteId/deployments/'
-    | '/projects/$projectId/sites/create-site/repositories'
-    | '/projects/$projectId/sites/create-site/templates'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/columns'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/rows'
@@ -1645,8 +1623,6 @@ export interface FileRouteTypes {
     | '/projects/$projectId/messaging/providers/$providerId'
     | '/projects/$projectId/messaging/topics/$topicId'
     | '/projects/$projectId/sites/$siteId/deployments'
-    | '/projects/$projectId/sites/create-site/repositories'
-    | '/projects/$projectId/sites/create-site/templates'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/columns'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/rows'
@@ -1787,8 +1763,6 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/messaging/providers/$providerId/'
     | '/_public/projects/$projectId/messaging/topics/$topicId/'
     | '/_public/projects/$projectId/sites/$siteId/deployments/'
-    | '/_public/projects/$projectId/sites/create-site/repositories/'
-    | '/_public/projects/$projectId/sites/create-site/templates/'
     | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/columns'
     | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/indexes'
     | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/rows'
@@ -2573,20 +2547,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizations/$orgId/domains/$domainId/settings'
       preLoaderRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdSettingsRouteImport
       parentRoute: typeof PublicOrganizationsOrgIdDomainsDomainIdRoute
-    }
-    '/_public/projects/$projectId/sites/create-site/templates/': {
-      id: '/_public/projects/$projectId/sites/create-site/templates/'
-      path: '/templates'
-      fullPath: '/projects/$projectId/sites/create-site/templates'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesCreateSiteRoute
-    }
-    '/_public/projects/$projectId/sites/create-site/repositories/': {
-      id: '/_public/projects/$projectId/sites/create-site/repositories/'
-      path: '/repositories'
-      fullPath: '/projects/$projectId/sites/create-site/repositories'
-      preLoaderRoute: typeof PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRouteImport
-      parentRoute: typeof PublicProjectsProjectIdSitesCreateSiteRoute
     }
     '/_public/projects/$projectId/sites/$siteId/deployments/': {
       id: '/_public/projects/$projectId/sites/$siteId/deployments/'
@@ -3452,8 +3412,6 @@ interface PublicProjectsProjectIdSitesCreateSiteRouteChildren {
   PublicProjectsProjectIdSitesCreateSiteIndexRoute: typeof PublicProjectsProjectIdSitesCreateSiteIndexRoute
   PublicProjectsProjectIdSitesCreateSiteRepositoriesRepositoryRoute: typeof PublicProjectsProjectIdSitesCreateSiteRepositoriesRepositoryRoute
   PublicProjectsProjectIdSitesCreateSiteTemplatesTemplateRoute: typeof PublicProjectsProjectIdSitesCreateSiteTemplatesTemplateRoute
-  PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRoute: typeof PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRoute
-  PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRoute: typeof PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRoute
 }
 
 const PublicProjectsProjectIdSitesCreateSiteRouteChildren: PublicProjectsProjectIdSitesCreateSiteRouteChildren =
@@ -3472,10 +3430,6 @@ const PublicProjectsProjectIdSitesCreateSiteRouteChildren: PublicProjectsProject
       PublicProjectsProjectIdSitesCreateSiteRepositoriesRepositoryRoute,
     PublicProjectsProjectIdSitesCreateSiteTemplatesTemplateRoute:
       PublicProjectsProjectIdSitesCreateSiteTemplatesTemplateRoute,
-    PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRoute:
-      PublicProjectsProjectIdSitesCreateSiteRepositoriesIndexRoute,
-    PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRoute:
-      PublicProjectsProjectIdSitesCreateSiteTemplatesIndexRoute,
   }
 
 const PublicProjectsProjectIdSitesCreateSiteRouteWithChildren =

@@ -18,33 +18,58 @@ const sizeClasses = {
 // Based on: src/components/pages/onboarding/onboarding-data.ts
 const frameworkIconMap: Record<string, string> = {
   // Supported frameworks
+  // Note: Keys use dashes instead of dots because normalization replaces dots with dashes
   react: 'react.svg',
-  'react.js': 'react.svg',
+  reactjs: 'react.svg',
+  'react-js': 'react.svg',
+  'react-native': 'react.svg',
+  reactnative: 'react.svg',
   
   nextjs: 'nextjs.svg',
-  'next.js': 'nextjs.svg',
+  'next-js': 'nextjs.svg',
   next: 'nextjs.svg',
   
-  remix: 'react.svg', // Remix is built on React
+  remix: 'remix.svg',
+  remixjs: 'remix.svg',
+  'remix-js': 'remix.svg',
   
   tanstack: 'tanstack.svg',
   'tanstack-start': 'tanstack.svg',
   tanstackstart: 'tanstack.svg',
   
   vue: 'vue.svg',
-  'vue.js': 'vue.svg',
+  vuejs: 'vue.svg',
+  'vue-js': 'vue.svg',
   
-  nuxt: 'vue.svg', // Nuxt is built on Vue
-  'nuxt.js': 'vue.svg',
+  nuxt: 'nuxt.svg',
+  nuxtjs: 'nuxt.svg',
+  'nuxt-js': 'nuxt.svg',
   
   angular: 'angular.svg',
-  'angular.js': 'angular.svg',
+  angularjs: 'angular.svg',
+  'angular-js': 'angular.svg',
   
-  svelte: 'js.svg', // Using JS icon as fallback
-  sveltekit: 'js.svg',
-  'svelte-kit': 'js.svg',
+  analog: 'analog.svg',
+  analogjs: 'analog.svg',
+  'analog-js': 'analog.svg',
   
-  astro: 'js.svg',
+  svelte: 'svelte.svg',
+  sveltekit: 'svelte.svg',
+  'svelte-kit': 'svelte.svg',
+  
+  astro: 'astro.svg',
+  astrojs: 'astro.svg',
+  'astro-js': 'astro.svg',
+  
+  vite: 'vite.svg',
+  vitejs: 'vite.svg',
+  'vite-js': 'vite.svg',
+  
+  flutter: 'flutter.svg',
+  
+  lynx: 'lynx.svg',
+  lynxjs: 'lynx.svg',
+  'lynx-js': 'lynx.svg',
   
   static: 'js.svg', // Static site
 }

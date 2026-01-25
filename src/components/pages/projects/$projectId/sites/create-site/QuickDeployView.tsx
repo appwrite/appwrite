@@ -20,11 +20,7 @@ import {
 import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
-import {
-  ExternalLink,
-  Loader2,
-  GitBranch,
-} from 'lucide-react'
+import { ExternalLink, Loader2 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -34,9 +30,11 @@ import {
   useCreateTemplateDeployment,
   Dependencies,
 } from '@/lib/react-query/hooks'
-import { useWizard, type WizardVariable } from './WizardContext'
+import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 import { BuildSettings } from './BuildSettings'
+import { EnvironmentVariables } from './EnvironmentVariables'
+import type { WizardVariable } from './WizardContext'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -280,9 +278,10 @@ export function QuickDeployView({
   if (!repo || !owner) {
     return (
       <WizardLayout
-        title="Quick deploy"
+        title="Create site"
         fallbackPath={`/projects/${projectId}/sites`}
         fullscreen
+        maxWidth="max-w-[1400px]"
       >
         <div className="rounded-xl border border-border bg-card/50 p-8 text-center">
           <p className="text-[13px] text-muted-foreground mb-4">
@@ -303,9 +302,10 @@ export function QuickDeployView({
 
   return (
     <WizardLayout
-      title="Quick deploy"
+      title="Create site"
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
+      maxWidth="max-w-[1400px]"
       footerAlign="right"
       sidebar={sidebarContent}
       footer={
@@ -452,64 +452,33 @@ export function QuickDeployView({
         </div>
       </div>
 
-      {/* Build configuration */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Build configuration
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <BuildSettings
-            installCommand={installCommand}
-            buildCommand={buildCommand}
-            outputDirectory={outputDirectory}
-            onInstallCommandChange={setInstallCommand}
-            onBuildCommandChange={setBuildCommand}
-            onOutputDirectoryChange={setOutputDirectory}
-            frameworkKey={framework}
-            defaultOpen={true}
-          />
-        </div>
-      </div>
+      {/* Build settings */}
+      <BuildSettings
+        installCommand={installCommand}
+        buildCommand={buildCommand}
+        outputDirectory={outputDirectory}
+        onInstallCommandChange={setInstallCommand}
+        onBuildCommandChange={setBuildCommand}
+        onOutputDirectoryChange={setOutputDirectory}
+        frameworkKey={framework}
+        defaultOpen={true}
+      />
 
-      {/* Environment variables (if keys provided) */}
-      {envKeysList.length > 0 && (
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              Environment variables
-            </h3>
-            <p className="text-[12px] text-muted-foreground mt-1">
-              Configure the required environment variables
-            </p>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4 space-y-3">
-            {variables.map((variable, index) => (
-              <div key={variable.key} className="space-y-2">
-                <Label className="text-[13px] font-mono">{variable.key}</Label>
-                <Input
-                  value={variable.value}
-                  onChange={(e) => {
-                    const newVars = [...variables]
-                    newVars[index] = { ...variable, value: e.target.value }
-                    setVariables(newVars)
-                  }}
-                  placeholder={`Enter ${variable.key}`}
-                  className="h-9 text-[13px]"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Environment variables */}
+      <EnvironmentVariables
+        variables={variables}
+        onChange={setVariables}
+        disabled={isDeploying}
+        defaultOpen={envKeysList.length > 0}
+      />
 
       {/* Domain section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
+          <p className="text-[12px] text-muted-foreground mt-1">
+            Your site will be accessible at this URL
+          </p>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
@@ -518,6 +487,19 @@ export function QuickDeployView({
             onChange={setDomain}
             onValidChange={setDomainValid}
           />
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/20">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            <a
+              href="https://appwrite.io/docs/products/sites/domains"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover:underline font-medium"
+            >
+              Learn more →
+            </a>
+          </p>
         </div>
       </div>
     </WizardLayout>

@@ -187,9 +187,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
 
   return (
     <WizardLayout
-      title="Deploying site"
+      title="Create site"
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
+      maxWidth="max-w-[1400px]"
       footerAlign="right"
       sidebar={sidebarContent}
       footer={

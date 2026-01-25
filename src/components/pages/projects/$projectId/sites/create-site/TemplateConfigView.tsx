@@ -8,6 +8,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
+import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -26,7 +27,11 @@ import {
   ExternalLink,
   Loader2,
   GitBranch,
-  Plus,
+  Layers,
+  Tag,
+  FolderOpen,
+  Key,
+  LayoutTemplate,
 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -39,7 +44,24 @@ import {
 } from '@/lib/react-query/hooks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
-import { EnvironmentVariables } from './EnvironmentVariables'
+
+// Fade-in image component
+function FadeImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  const [loaded, setLoaded] = useState(false)
+  
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={cn(
+        className,
+        'transition-opacity duration-300',
+        loaded ? 'opacity-100' : 'opacity-0'
+      )}
+      onLoad={() => setLoaded(true)}
+    />
+  )
+}
 
 /**
  * Helper to safely extract a framework string from template.frameworks
@@ -230,101 +252,150 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
     return frameworks.find((f) => f.key === framework)
   }, [frameworks, framework])
 
-  const sidebarContent = (
-    <div className="space-y-4">
-      {/* Template preview */}
-      {template && (
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          {screenshotUrl ? (
-            <div className="aspect-video w-full overflow-hidden bg-muted">
-              <img
-                src={screenshotUrl}
-                alt={`${template.name} preview`}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="aspect-video w-full flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
-              <FrameworkIcon
-                framework={getFrameworkString(template.frameworks?.[0])}
-                size="lg"
-              />
-            </div>
-          )}
-          <div className="p-4">
-            <h3 className="text-[13px] font-semibold text-foreground">
+  const sidebarContent = template ? (
+    <div className="rounded-xl border border-border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm overflow-hidden">
+      {/* Header with template info */}
+      <div className="px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
+            <FrameworkIcon framework={framework} size="md" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-[13px] font-semibold text-foreground truncate">
               {template.name}
             </h3>
-            {template.tagline && (
-              <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">
-                {template.tagline}
-              </p>
-            )}
-            <div className="mt-3 flex gap-2">
-              {template.demoUrl && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-[11px]"
-                  asChild
-                >
-                  <a
-                    href={template.demoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="mr-1 h-3 w-3" />
-                    Demo
-                  </a>
-                </Button>
-              )}
-              {template.providerRepositoryId && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-[11px]"
-                  asChild
-                >
-                  <a
-                    href={`https://github.com/${template.providerOwner}/${template.providerRepositoryId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <GitBranch className="mr-1 h-3 w-3" />
-                    Source
-                  </a>
-                </Button>
-              )}
+            <p className="text-[11px] text-muted-foreground truncate">
+              {template.tagline || `${template.providerOwner}/${template.providerRepositoryId}`}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Template preview - tilted screenshot style */}
+      <div className="relative h-[120px] overflow-hidden border-b border-border/50">
+        {screenshotUrl ? (
+          <div className="absolute left-6 -right-4 top-4 transform -rotate-3">
+            <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-border">
+              <FadeImage
+                src={screenshotUrl}
+                alt={`${template.name} preview`}
+                className="w-full object-cover object-top"
+              />
             </div>
           </div>
+        ) : (
+          <div className="absolute left-6 -right-4 top-4 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 shadow-lg ring-1 ring-border">
+            <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" />
+          </div>
+        )}
+      </div>
+
+      {/* Configuration details */}
+      <div className="px-5 py-4 space-y-3">
+        {frameworkInfo && (
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              <Layers className="h-3.5 w-3.5" />
+              Framework
+            </span>
+            <span className="flex items-center gap-1.5 text-[12px] text-foreground">
+              <FrameworkIcon framework={framework} size="sm" />
+              <span>{frameworkInfo.name}</span>
+            </span>
+          </div>
+        )}
+        {template.providerVersion && (
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              <Tag className="h-3.5 w-3.5" />
+              Version
+            </span>
+            <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded">
+              {template.providerVersion}
+            </code>
+          </div>
+        )}
+        {template.providerRootDirectory && template.providerRootDirectory !== './' && (
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              <FolderOpen className="h-3.5 w-3.5" />
+              Root directory
+            </span>
+            <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded max-w-[120px] truncate">
+              {template.providerRootDirectory}
+            </code>
+          </div>
+        )}
+        {template.variables && template.variables.length > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              <Key className="h-3.5 w-3.5" />
+              Variables
+            </span>
+            <span className="text-[12px] text-foreground">
+              {template.variables.length} required
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* CTA buttons */}
+      {(template.providerRepositoryId || template.demoUrl) && (
+        <div className="px-5 py-4 border-t border-border/50 flex gap-2">
+          {template.providerRepositoryId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-9 text-[13px]"
+              asChild
+            >
+              <a
+                href={`https://github.com/${template.providerOwner}/${template.providerRepositoryId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <GitBranch className="mr-1.5 h-4 w-4" />
+                View source
+              </a>
+            </Button>
+          )}
+          {template.demoUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-9 text-[13px]"
+              asChild
+            >
+              <a
+                href={template.demoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="mr-1.5 h-4 w-4" />
+                Live demo
+              </a>
+            </Button>
+          )}
         </div>
       )}
 
-      {/* Framework info */}
-      {frameworkInfo && (
-        <div className="rounded-xl border border-border bg-card/50 p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <FrameworkIcon framework={framework} size="sm" />
-            </div>
-            <div>
-              <p className="text-[12px] text-muted-foreground">Framework</p>
-              <p className="text-[13px] font-medium text-foreground">
-                {frameworkInfo.name}
-              </p>
-            </div>
-          </div>
+      {/* Status indicator */}
+      <div className="px-5 py-3 bg-muted/20 border-t border-border/50">
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[11px] text-muted-foreground">Ready to deploy</span>
         </div>
-      )}
+      </div>
     </div>
-  )
+  ) : null
 
   if (templateLoading) {
     return (
       <WizardLayout
-        title="Configure site"
+        title="Create site"
         fallbackPath={`/projects/${projectId}/sites`}
         fullscreen
+        maxWidth="max-w-[1400px]"
       >
         <div className="flex items-center justify-center py-16">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -336,9 +407,10 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   if (!template) {
     return (
       <WizardLayout
-        title="Template not found"
+        title="Create site"
         fallbackPath={`/projects/${projectId}/sites`}
         fullscreen
+        maxWidth="max-w-[1400px]"
       >
         <div className="text-center py-16">
           <p className="text-muted-foreground">Template not found</p>
@@ -361,11 +433,12 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
 
   return (
     <WizardLayout
-      title="Configure site"
+      title="Create site"
       showBackButton
       backButtonLabel="Back"
       fallbackPath={`/projects/${projectId}/sites`}
       fullscreen
+      maxWidth="max-w-[1400px]"
       footerAlign="right"
       sidebar={sidebarContent}
       footer={
@@ -460,41 +533,82 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         </div>
       </div>
 
-      {/* Git connection section */}
+      {/* Domain section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Git connection
-          </h3>
+          <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
           <p className="text-[12px] text-muted-foreground mt-1">
-            Optionally connect a repository for automatic deployments
+            Your site will be accessible at this URL
           </p>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
-          <RadioGroup
-            value={gitConnection}
-            onValueChange={(value) => setGitConnection(value as 'now' | 'later')}
-            className="space-y-3"
-          >
-            <div className="flex items-center space-x-3">
-              <RadioGroupItem value="later" id="git-later" />
-              <Label htmlFor="git-later" className="text-[13px] font-normal">
-                Connect later
-              </Label>
-            </div>
-            <div className="flex items-center space-x-3">
-              <RadioGroupItem value="now" id="git-now" disabled />
-              <Label
-                htmlFor="git-now"
-                className="text-[13px] font-normal text-muted-foreground"
-              >
-                Connect now (coming soon)
-              </Label>
-            </div>
-          </RadioGroup>
+          <DomainInput
+            value={domain}
+            onChange={setDomain}
+            onValidChange={setDomainValid}
+          />
+        </div>
+        <div className="px-6 py-4 border-t border-border bg-muted/20">
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            <a
+              href="https://appwrite.io/docs/products/sites/domains"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-foreground hover:underline font-medium"
+            >
+              Learn more →
+            </a>
+          </p>
         </div>
       </div>
+
+      {/* Git connection section */}
+      <RadioGroup
+        value={gitConnection}
+        onValueChange={(value) => setGitConnection(value as 'now' | 'later')}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+      >
+        <Label
+          htmlFor="git-now"
+          className={cn(
+            'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
+            gitConnection === 'now'
+              ? 'border-foreground bg-card/80'
+              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60'
+          )}
+        >
+          <RadioGroupItem value="now" id="git-now" className="mt-1 shrink-0" />
+          <div className="ml-3 flex-1">
+            <span className="text-[14px] font-medium text-foreground">
+              Connect your repository
+            </span>
+            <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+              Clone this template into a new Git repository or link it to an existing one.
+            </p>
+          </div>
+        </Label>
+        <Label
+          htmlFor="git-later"
+          className={cn(
+            'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
+            gitConnection === 'later'
+              ? 'border-foreground bg-card/80'
+              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60'
+          )}
+        >
+          <RadioGroupItem value="later" id="git-later" className="mt-1 shrink-0" />
+          <div className="ml-3 flex-1">
+            <span className="text-[14px] font-medium text-foreground">
+              Connect later
+            </span>
+            <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+              Deploy now and connect your version control later via CLI or Git integration in your settings.
+            </p>
+          </div>
+        </Label>
+      </RadioGroup>
 
       {/* Template variables section */}
       {template.variables && template.variables.length > 0 && (
@@ -556,36 +670,6 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         </div>
       )}
 
-      {/* Additional variables */}
-      <EnvironmentVariables
-        variables={variables.filter(
-          (v) => !template.variables?.some((tv) => tv.name === v.key),
-        )}
-        onChange={(newVars) => {
-          // Merge with template variables
-          const templateVarKeys = template.variables?.map((v) => v.name) || []
-          const templateVars = variables.filter((v) =>
-            templateVarKeys.includes(v.key),
-          )
-          setVariables([...templateVars, ...newVars])
-        }}
-        defaultOpen={false}
-      />
-
-      {/* Domain section */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Domain</h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <DomainInput
-            value={domain}
-            onChange={setDomain}
-            onValidChange={setDomainValid}
-          />
-        </div>
-      </div>
     </WizardLayout>
   )
 }
