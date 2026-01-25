@@ -122,10 +122,6 @@ class Server
 
     private function killInstallerDevServers(): void
     {
-        if (PHP_OS_FAMILY === 'Windows') {
-            return;
-        }
-
         $pattern = 'php -S .*app/views/install';
         $command = 'pkill -f ' . escapeshellarg($pattern) . ' >/dev/null 2>&1';
         exec($command);
