@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Phone;
+use Appwrite\Auth\Validator\Role as RoleValidator;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -58,7 +59,6 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
 App::post('/v1/teams')
     ->desc('Create team')
@@ -483,7 +483,7 @@ App::post('/v1/teams/:teamId/memberships')
             $roles = array_filter($roles, function ($role) {
                 return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
             });
-            return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
+            return new ArrayList(new RoleValidator($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }
         return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
     }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
@@ -1094,7 +1094,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
             $roles = array_filter($roles, function ($role) {
                 return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
             });
-            return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
+            return new ArrayList(new RoleValidator($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
         }
         return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
     }, 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])

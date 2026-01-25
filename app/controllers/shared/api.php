@@ -91,6 +91,7 @@ App::init()
     ->inject('authorization')
     ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
         $route = $utopia->getRoute();
+        $path = $route->getPath();
 
         /**
          * Handle user authentication and session validation.
@@ -243,9 +244,24 @@ App::init()
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
-            $scopes = []; // Reset scope if admin
-            foreach ($adminRoles as $role) {
-                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+            $teamWideRoles = \array_filter($adminRoles, fn ($role) => !str_starts_with($role, "project-"));
+            foreach ($teamWideRoles as $teamRole) {
+                $scopes = \array_merge($scopes, $roles[$teamRole]['scopes']);
+            }
+
+            $projectId = $project->getId();
+            if ($projectId === 'console') {
+                // Find the true project-id
+                if (str_starts_with($path, "/v1/projects/:projectId")) {
+                    $uri = $request->getURI();
+                    $projectId = explode('/', $uri)[3];
+                }
+            }
+
+            $projectSpecificRoles = \array_filter($adminRoles, fn ($role) => str_starts_with($role, "project-$projectId"));
+            foreach ($projectSpecificRoles as $projectRole) {
+                $actualRole = explode('-', $projectRole)[2];
+                $scopes = \array_merge($scopes, $roles[$actualRole]['scopes']);
             }
 
             $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
@@ -254,7 +270,7 @@ App::init()
         $scopes = \array_unique($scopes);
 
         $authorization->addRole($role);
-        foreach ($user->getRoles($authorization) as $authRole) {
+        foreach ($user->getRoles($authorization, $project->getId(), $path) as $authRole) {
             $authorization->addRole($authRole);
         }
 

@@ -7,6 +7,7 @@ use Utopia\Auth\Proofs\Token;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 
 class User extends Document
@@ -35,7 +36,7 @@ class User extends Document
      *
      * @return array<string>
      */
-    public function getRoles($authorization): array
+    public function getRoles(Authorization $authorization, string $projectId = '', string $path = ''): array
     {
         $roles = [];
 
@@ -60,19 +61,34 @@ class User extends Document
         }
 
         foreach ($this->getAttribute('memberships', []) as $node) {
-            if (!isset($node['confirm']) || !$node['confirm']) {
+            if (!isset($node['confirm']) || !$node['confirm'] || !isset($node['$id']) || !isset($node['teamId'])) {
                 continue;
             }
 
-            if (isset($node['$id']) && isset($node['teamId'])) {
-                $roles[] = Role::team($node['teamId'])->toString();
-                $roles[] = Role::member($node['$id'])->toString();
+            // Role for this membership id.
+            $roles[] = Role::member($node['$id'])->toString();
 
-                if (isset($node['roles'])) {
-                    foreach ($node['roles'] as $nodeRole) { // Set all team roles
-                        $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
-                    }
+            $nodeRoles = $node['roles'] ?? [];
+
+            if ($projectId !== 'console') {
+                $roles[] = Role::team($node['teamId'])->toString(); // Populate team-wide base role.
+            } else {
+                $teamWideRoles = \array_filter($nodeRoles, fn ($role) => !str_starts_with($role, "project-"));
+                $populateTeamWideRole = !str_starts_with($path, "/v1/projects") || !empty($teamWideRoles);
+
+                if ($populateTeamWideRole) {
+                    $roles[] = Role::team($node['teamId'])->toString(); // Populate team-wide base role.
                 }
+
+                $projectSpecificRoles = \array_filter($nodeRoles, fn ($role) => str_starts_with($role, "project-"));
+                foreach ($projectSpecificRoles as $projectRole) {
+                    $parts = explode("-", $projectRole);
+                    $roles[] = Role::team($node['teamId'], "$parts[0]-$parts[1]")->toString(); // Populate project-wide base role.
+                }
+            }
+
+            foreach ($nodeRoles as $nodeRole) {
+                $roles[] = Role::team($node['teamId'], $nodeRole)->toString(); // Set all team roles
             }
         }
 

@@ -175,11 +175,18 @@ App::post('/v1/projects')
             $project = $dbForPlatform->createDocument('projects', new Document([
                 '$id' => $projectId,
                 '$permissions' => [
+                    // Team-wide permissions
                     Permission::read(Role::team(ID::custom($teamId))),
                     Permission::update(Role::team(ID::custom($teamId), 'owner')),
                     Permission::update(Role::team(ID::custom($teamId), 'developer')),
                     Permission::delete(Role::team(ID::custom($teamId), 'owner')),
                     Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                    // Project-specific permissions
+                    Permission::read(Role::team(ID::custom($teamId), "project-$projectId")),
+                    Permission::update(Role::team(ID::custom($teamId), "project-$projectId-owner")),
+                    Permission::update(Role::team(ID::custom($teamId), "project-$projectId-developer")),
+                    Permission::delete(Role::team(ID::custom($teamId), "project-$projectId-owner")),
+                    Permission::delete(Role::team(ID::custom($teamId), "project-$projectId-developer")),
                 ],
                 'name' => $name,
                 'teamInternalId' => $team->getSequence(),
@@ -428,11 +435,18 @@ App::patch('/v1/projects/:projectId/team')
         }
 
         $permissions = [
+            // Team-wide permissions
             Permission::read(Role::team(ID::custom($teamId))),
             Permission::update(Role::team(ID::custom($teamId), 'owner')),
             Permission::update(Role::team(ID::custom($teamId), 'developer')),
             Permission::delete(Role::team(ID::custom($teamId), 'owner')),
             Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            // Project-specific permissions
+            Permission::read(Role::team(ID::custom($teamId), "project-$projectId")),
+            Permission::update(Role::team(ID::custom($teamId), "project-$projectId-owner")),
+            Permission::update(Role::team(ID::custom($teamId), "project-$projectId-developer")),
+            Permission::delete(Role::team(ID::custom($teamId), "project-$projectId-owner")),
+            Permission::delete(Role::team(ID::custom($teamId), "project-$projectId-developer")),
         ];
 
         $project
