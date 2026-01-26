@@ -9,21 +9,30 @@ use Utopia\Database\Query;
 
 class V22 extends Filter
 {
+    /**
+     * @var string[]
+     */
+    private array $internalAttributes = [
+        '$id',
+        '$sequence',
+        '$permissions',
+        '$createdAt',
+        '$updatedAt',
+    ];
+
     public function parse(array $content, string $model): array
     {
-        if (isset($content['queries'])) {
-            $content = $this->convertSelectQueries($content);
+        if (!isset($content['queries'])) {
+            return $content;
         }
+
+        $content = $this->convertSelectQueries($content);
 
         return $content;
     }
 
     private function convertSelectQueries(array $content): array
     {
-        if (!isset($content['queries'])) {
-            return $content;
-        }
-
         try {
             $parsed = Query::parseQueries($content['queries']);
         } catch (QueryException $e) {
@@ -31,35 +40,26 @@ class V22 extends Filter
         }
 
         $queries = [];
-        $internals = false;
-        $values = [];
+        $selects = [];
 
+        // Collect all selects
         foreach ($parsed as $query) {
-            try {
-                if ($query->getMethod() === 'select') {
-                    foreach ($query->getValues() as $select) {
-                        $queries[] = Query::select($select);
-                        $values[] = $select;
-                    }
-                } else {
-                    $queries[] = $query;
+            if ($query->getMethod() === 'select') {
+                foreach ($query->getValues() as $val) {
+                    $selects[] = $val;
                 }
-
-            } catch (\Throwable $th) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $th->getMessage());
+            } else {
+                $queries[] = $query;
             }
         }
 
-        if (count($values)) {
-            $queries[] = Query::select('$sequence');
-            $queries[] = Query::select('$id');
-            $queries[] = Query::select('$updatedAt');
-            $queries[] = Query::select('$createdAt');
-            $queries[] = Query::select('$permissions');
+        // Expand selects with internal attributes once per object level
+        if (!empty($selects)) {
+            $queries = array_merge($queries, $this->expandSelects($selects));
         }
 
+        // Convert all queries to string
         $resolvedQueries = [];
-
         foreach ($queries as $query) {
             $resolvedQueries[] = $query->toString();
         }
@@ -67,5 +67,34 @@ class V22 extends Filter
         $content['queries'] = $resolvedQueries;
 
         return $content;
+    }
+
+    private function expandSelects(array $selects): array
+    {
+        $expanded = [];
+        $addedInternalForLevel = [];
+
+        foreach ($selects as $select) {
+            $expanded[] = Query::select($select);
+
+            // Skip internal attribute expansion if wildcard *
+            if ($select === '*') {
+                continue;
+            }
+
+            // Determine prefix for this level
+            $parts = explode('.', $select);
+            $prefix = implode('.', array_slice($parts, 0, -1)); // empty string for top level
+
+            if (!isset($addedInternalForLevel[$prefix])) {
+                // Add internal attributes once per object level
+                foreach ($this->internalAttributes as $attr) {
+                    $expanded[] = Query::select($prefix ? "$prefix.$attr" : $attr);
+                }
+                $addedInternalForLevel[$prefix] = true;
+            }
+        }
+
+        return $expanded;
     }
 }

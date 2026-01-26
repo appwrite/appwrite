@@ -2463,8 +2463,6 @@ trait DatabasesBase
             ],
         ]);
 
-        var_dump($response);
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('title', $response['body']['documents'][0]);
         $this->assertArrayNotHasKey('birthDay', $response['body']['documents'][0]);

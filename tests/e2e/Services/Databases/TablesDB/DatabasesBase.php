@@ -2348,13 +2348,56 @@ trait DatabasesBase
                 Query::select('title')->toString(),
                 Query::select('releaseYear')->toString(),
                 Query::select('$id')->toString(),
+                Query::select('$sequence')->toString(),
             ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($row['title'], $response['body']['title']);
         $this->assertEquals($row['releaseYear'], $response['body']['releaseYear']);
+        $this->assertEquals($row['$sequence'], $response['body']['$sequence']);
         $this->assertArrayNotHasKey('birthDay', $response['body']);
+        $this->assertArrayHasKey('$sequence', $response['body']);
+
+        $sequence = (string)$response['body']['$sequence'];
+
+        // Query by sequence
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$tableId'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$sequence', [$sequence])->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertEquals($row['title'], $response['body']['rows'][0]['title']);
+        $this->assertEquals($row['releaseYear'], $response['body']['rows'][0]['releaseYear']);
+        $this->assertEquals($row['$sequence'], $response['body']['rows'][0]['$sequence']);
+
+        /**
+         * Use specific X-Appwrite-Response-Format 1.8.0
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$tableId'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'X-Appwrite-Response-Format' => '1.8.0',
+        ], $this->getHeaders()), [
+            'queries' => [
+                '{"method":"select","values":["title"]}',
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertArrayHasKey('title', $response['body']['rows'][0]);
+        $this->assertArrayNotHasKey('birthDay', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$sequence', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$id', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$createdAt', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$updatedAt', $response['body']['rows'][0]);
+        $this->assertArrayHasKey('$permissions', $response['body']['rows'][0]);
     }
 
     /**
