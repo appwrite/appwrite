@@ -28,6 +28,7 @@ docker run (temporary container)
 
 ```bash
 docker run -it --rm \
+    --name appwrite-installer \
     -p 20080:20080 \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
@@ -51,6 +52,7 @@ composer installer:clean            # Clean up installer containers and temp fil
 
 ```bash
 docker run -it --rm \
+    --name appwrite-installer \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
