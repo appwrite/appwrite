@@ -153,6 +153,7 @@ class Server
         stream_set_blocking($pipes[1], false);
         stream_set_blocking($pipes[2], false);
 
+        $lastStatus = null;
         while (true) {
             $read = [$pipes[1], $pipes[2]];
             $write = null;
@@ -180,6 +181,7 @@ class Server
             }
 
             $status = proc_get_status($process);
+            $lastStatus = $status;
             if (!$status['running']) {
                 break;
             }
@@ -192,6 +194,13 @@ class Server
         }
 
         $exitCode = proc_close($process);
+        /**
+         * Playwright terminates the dev server after tests, which can yield 255 or a signaled status.
+         * Treat that as a clean shutdown so webServer doesn't fail.
+         */
+        if ($exitCode === 255 || ($lastStatus['signaled'] ?? false)) {
+            $exitCode = 0;
+        }
         exit($exitCode);
     }
 
