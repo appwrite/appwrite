@@ -21,6 +21,15 @@ class HttpHandler
         "frame-ancestors 'none'",
     ];
 
+    private const int HTTP_CONFLICT = 409;
+    private const int HTTP_NOT_FOUND = 404;
+    private const int HTTP_BAD_REQUEST = 400;
+    private const int HTTP_SERVICE_UNAVAILABLE = 503;
+    private const int HTTP_INTERNAL_SERVER_ERROR = 500;
+
+    private const int SHUTDOWN_DELAY_SECONDS = 5;
+    private const int SSE_KEEPALIVE_DELAY_MICROSECONDS = 500000;
+
     private array $paths;
     private State $state;
     private Config $config;
@@ -57,7 +66,7 @@ class HttpHandler
             return;
         }
 
-        http_response_code(404);
+        http_response_code(self::HTTP_NOT_FOUND);
         echo '404 Not Found';
     }
 
@@ -130,14 +139,14 @@ class HttpHandler
 
         $installId = $this->state->sanitizeInstallId($_GET['installId'] ?? '');
         if ($installId === '') {
-            http_response_code(400);
+            http_response_code(self::HTTP_BAD_REQUEST);
             echo json_encode(['success' => false, 'message' => 'Missing installId']);
             return true;
         }
 
         $path = $this->state->progressFilePath($installId);
         if (!file_exists($path)) {
-            http_response_code(404);
+            http_response_code(self::HTTP_NOT_FOUND);
             echo json_encode(['success' => false, 'message' => 'Install not found']);
             return true;
         }
@@ -222,7 +231,7 @@ class HttpHandler
         if (function_exists('posix_getpid')) {
             $pid = posix_getpid();
             if ($pid) {
-                $command = 'sh -c ' . escapeshellarg("sleep 5; kill $pid >/dev/null 2>&1");
+                $command = 'sh -c ' . escapeshellarg("sleep " . self::SHUTDOWN_DELAY_SECONDS . "; kill $pid >/dev/null 2>&1");
                 @exec($command . ' >/dev/null 2>&1 &');
             }
         }
@@ -269,7 +278,7 @@ class HttpHandler
         $input = json_decode($rawBody, true);
 
         if (!is_array($input)) {
-            http_response_code(400);
+            http_response_code(self::HTTP_BAD_REQUEST);
             echo json_encode(['success' => false, 'message' => 'Invalid request']);
             return true;
         }
@@ -348,7 +357,7 @@ class HttpHandler
             if ($wantsStream) {
                 $this->sendSseEvent(Server::STATUS_ERROR, ['message' => 'Lock failed: ' . $e->getMessage()]);
             } else {
-                http_response_code(500);
+                http_response_code(self::HTTP_INTERNAL_SERVER_ERROR);
                 echo json_encode(['success' => false, 'message' => 'Lock failed: ' . $e->getMessage()]);
             }
             return true;
@@ -356,10 +365,10 @@ class HttpHandler
 
         if ($lockResult !== 'ok') {
             if ($lockResult === 'locked') {
-                http_response_code(409);
+                http_response_code(self::HTTP_CONFLICT);
                 echo json_encode(['success' => false, 'message' => 'Installation already in progress']);
             } else {
-                http_response_code(503);
+                http_response_code(self::HTTP_SERVICE_UNAVAILABLE);
                 echo json_encode(['success' => false, 'message' => 'Installer lock unavailable']);
             }
             return true;
@@ -376,7 +385,7 @@ class HttpHandler
         if (file_exists($existingPath)) {
             $existing = $this->state->readProgressFile($installId);
             if (!empty($existing['steps']) && $retryStep === null) {
-                http_response_code(409);
+                http_response_code(self::HTTP_CONFLICT);
                 echo json_encode(['success' => false, 'message' => 'Installation already started']);
                 return true;
             }
@@ -520,11 +529,11 @@ class HttpHandler
 
             if ($wantsStream) {
                 $this->sendSseEvent('done', ['installId' => $installId, 'success' => true]);
-                usleep(500000);
+                usleep(self::SSE_KEEPALIVE_DELAY_MICROSECONDS);
                 echo ": keepalive\n\n";
                 @ob_flush();
                 @flush();
-                usleep(500000);
+                usleep(self::SSE_KEEPALIVE_DELAY_MICROSECONDS);
             } else {
                 echo json_encode([
                     'success' => true,
@@ -611,7 +620,7 @@ class HttpHandler
         if ($wantsStream) {
             $this->sendSseEvent(Server::STATUS_ERROR, ['message' => $message, 'step' => $step]);
         } else {
-            http_response_code(400);
+            http_response_code(self::HTTP_BAD_REQUEST);
             echo json_encode(['success' => false, 'message' => $message]);
         }
         exit;
@@ -629,7 +638,7 @@ class HttpHandler
 
     private function handleInstallationError(\Throwable $e, string $installId, bool $wantsStream): void
     {
-        http_response_code(500);
+        http_response_code(self::HTTP_INTERNAL_SERVER_ERROR);
 
         if ($installId !== '') {
             $this->state->writeProgressFile($installId, [

@@ -12,6 +12,12 @@ class State
     private const string PATTERN_INSTALL_ID_SANITIZE = '/[^a-zA-Z0-9_-]/';
     private const string PATTERN_IPV6_WITH_PORT = '/^\[(.+)](?::(\d+))?$/';
 
+    private const int CONFIG_FILE_PERMISSION = 0600;
+    private const int GLOBAL_LOCK_TIMEOUT_SECONDS = 3600;
+
+    private const int PORT_MIN = 1;
+    private const int PORT_MAX = 65535;
+
     private array $paths;
     private bool $bootstrapped = false;
 
@@ -91,7 +97,7 @@ class State
         if (@file_put_contents($path, $json) === false) {
             return;
         }
-        @chmod($path, 0600);
+        @chmod($path, self::CONFIG_FILE_PERMISSION);
     }
 
 
@@ -136,7 +142,7 @@ class State
             return false;
         }
         $port = (int) $string;
-        return $port >= 1 && $port <= 65535;
+        return $port >= self::PORT_MIN && $port <= self::PORT_MAX;
     }
 
     public function isValidEmailAddress(string $value): bool
@@ -363,7 +369,7 @@ class State
             return false;
         }
 
-        if (time() - (int) $lock['updatedAt'] > 3600) {
+        if (time() - (int) $lock['updatedAt'] > self::GLOBAL_LOCK_TIMEOUT_SECONDS) {
             return false;
         }
 
