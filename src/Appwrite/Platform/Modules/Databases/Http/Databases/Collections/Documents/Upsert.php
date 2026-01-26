@@ -211,15 +211,8 @@ class Upsert extends Action
                 );
 
                 foreach ($relations as &$relation) {
-                    // If the relation is an array it can be either update or create a child document.
-                    if (
-                        \is_array($relation)
-                        && \array_values($relation) !== $relation
-                        && !isset($relation['$id'])
-                    ) {
-                        $relation['$id'] = ID::unique();
-                        $relation = new Document($relation);
-                    }
+                    [$relationId, $relation] = $this->validateRelationship($relation);
+
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 

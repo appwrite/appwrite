@@ -5,8 +5,10 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 
 abstract class Action extends DatabasesAction
@@ -247,6 +249,35 @@ abstract class Action extends DatabasesAction
             }
         }
         return $document;
+    }
+
+    /**
+     * Validate and normalize a relationship value.
+     * Returns the relation ID and normalized relation as an array.
+     */
+    protected function validateRelationship(mixed $relation): array
+    {
+        $relationId = null;
+
+        if ($relation instanceof Document) {
+            $relationId = $relation->getAttribute('$id');
+        } elseif (\is_string($relation)) {
+            $relationId = $relation;
+        } elseif (\is_array($relation) && \array_values($relation) !== $relation) {
+            $relation['$id'] = ID::unique();
+            $relation = new Document($relation);
+        } else {
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship value must be an object or document ID string, not ' . \gettype($relation));
+        }
+
+        if ($relationId !== null) {
+            $validator = new CustomId();
+            if (!$validator->isValid($relationId)) {
+                throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+            }
+        }
+
+        return [$relationId, $relation];
     }
 
     /**
