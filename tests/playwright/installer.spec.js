@@ -513,6 +513,7 @@ test.describe('@upgrade Appwrite Web Installer - Upgrade Flow', () => {
   });
 
   test('shows upgrade heading and locked database', async ({ page }) => {
+    await fillValidSetup(page);
     await expect(page.locator('h1')).toContainText(/Update your app/i);
     await expect(page.locator('.selector-group.is-locked')).toBeVisible();
     await expect(page.locator('input[name="database"][value="mariadb"]')).toBeDisabled();
@@ -521,13 +522,15 @@ test.describe('@upgrade Appwrite Web Installer - Upgrade Flow', () => {
   });
 
   test('skips account step and goes to review', async ({ page }) => {
+    await fillValidSetup(page);
     await page.locator('button:has-text("Next")').click();
     await page.waitForSelector('[data-review-value="appDomain"]', { state: 'visible', timeout: 10000 });
-    await expect(page.locator('h1')).toContainText(/Review your update/i);
+    await expect(page.getByRole('heading', { name: /Review your update/i })).toBeVisible();
     await expect(page.locator('button:has-text("Update")')).toBeVisible();
   });
 
   test('upgrade mock progresses without account step', async ({ page }) => {
+    await fillValidSetup(page);
     await page.locator('button:has-text("Next")').click();
     await page.waitForSelector('[data-review-value="appDomain"]', { state: 'visible', timeout: 10000 });
     await page.locator('button:has-text("Update")').click();
@@ -547,7 +550,8 @@ test.describe('@install Appwrite Web Installer - Toasts', () => {
   });
 });
 
-test.describe('Appwrite Web Installer - Navigation', () => {
+test.describe('@install Appwrite Web Installer - Navigation', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test('can navigate forward through all steps', async ({ page }) => {
     await page.goto('/?step=1');
     await page.waitForLoadState('networkidle');
@@ -600,7 +604,8 @@ test.describe('Appwrite Web Installer - Navigation', () => {
   });
 });
 
-test.describe('Appwrite Web Installer - URL Parameters', () => {
+test.describe('@install Appwrite Web Installer - URL Parameters', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test('supports ?step=1 parameter', async ({ page }) => {
     await page.goto('/?step=1');
     await expect(page.locator('.installer-card[data-step="1"]')).toBeVisible();
@@ -634,7 +639,8 @@ test.describe('Appwrite Web Installer - URL Parameters', () => {
   });
 });
 
-test.describe('Appwrite Web Installer - Accessibility', () => {
+test.describe('@install Appwrite Web Installer - Accessibility', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
   });
