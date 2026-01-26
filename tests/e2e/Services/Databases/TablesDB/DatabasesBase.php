@@ -7694,6 +7694,7 @@ trait DatabasesBase
 
         // Wait for relationship column to be available
         $maxAttempts = 10;
+        $childrenFound = false;
         for ($i = 0; $i < $maxAttempts; $i++) {
             $columns = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/columns', array_merge([
                 'content-type' => 'application/json',
@@ -7702,10 +7703,12 @@ trait DatabasesBase
             ]));
             $columnKeys = array_column($columns['body']['columns'], 'key');
             if (in_array('children', $columnKeys)) {
+                $childrenFound = true;
                 break;
             }
             usleep(200000);
         }
+        $this->assertTrue($childrenFound, "Relationship column 'children' not found in table {$parentTableId} of database {$databaseId}");
 
         // ID too long (>36 chars) should fail
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
