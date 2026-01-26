@@ -370,7 +370,7 @@ class Install extends Action
         return file_exists($this->path . '/' . $this->getEnvFileName());
     }
 
-    private function updateProgress(?callable $progress, string $step, string $status, array $messages = [], array $details = [], ?string $messageOverride = null): void
+    private function updateProgress(?callable $progress, string $step, string $status, array $messages, array $details = [], ?string $messageOverride = null): void
     {
         if (!$progress) {
             return;

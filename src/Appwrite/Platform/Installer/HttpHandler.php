@@ -418,7 +418,7 @@ class HttpHandler
                     if (isset($stored[$field]) && isset($input[$field])) {
                         $storedValue = (string) $stored[$field];
                         $inputValue = (string) $input[$field];
-                        if ($field === 'httpPort' || $field === 'httpsPort') {
+                        if (in_array($field, ['httpPort', 'httpsPort'], true)) {
                             $storedValue = trim($storedValue);
                             $inputValue = trim($inputValue);
                         }

@@ -94,7 +94,7 @@ class Server
         $this->state->applyEnvConfig($cfg);
 
         $host = self::INSTALLER_WEB_HOST;
-        $port = (string)self::INSTALLER_WEB_PORT;
+        $port = (string) self::INSTALLER_WEB_PORT;
         $isMock = $cfg->isMock();
 
         if (isset($opts['clean'])) {
