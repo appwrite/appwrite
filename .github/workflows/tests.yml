@@ -89,10 +89,10 @@ jobs:
           php-version: '8.3'
           tools: composer
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '20'
+          bun-version: '1.3.6'
 
       - name: Install Composer dependencies
         run: composer install --ignore-platform-reqs --no-scripts --prefer-dist --no-progress
