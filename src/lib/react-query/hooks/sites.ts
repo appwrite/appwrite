@@ -1214,12 +1214,99 @@ export function useCreateSiteVariable(
       if (!projectId || !siteId) {
         throw new Error('Project ID and Site ID are required')
       }
+      if (!params.key.trim()) {
+        throw new Error('Variable key is required')
+      }
+      if (params.value.length > 8192) {
+        throw new Error(
+          `Variable ${params.key} is longer than 8192 allowed characters`,
+        )
+      }
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.createVariable({
         siteId,
-        key: params.key,
+        key: params.key.trim(),
         value: params.value,
         secret: params.secret,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['variables', 'site', projectId, siteId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update a site variable
+ */
+export function useUpdateSiteVariable(
+  projectId: string | null | undefined,
+  siteId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      variableId,
+      key,
+      value,
+      secret,
+    }: {
+      variableId: string
+      key: string
+      value: string
+      secret?: boolean
+    }) => {
+      if (!projectId || !siteId) {
+        throw new Error('Project ID and Site ID are required')
+      }
+      if (!key.trim()) {
+        throw new Error('Variable key is required')
+      }
+      if (value.length > 8192) {
+        throw new Error(
+          `Variable ${key} is longer than 8192 allowed characters`,
+        )
+      }
+
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.updateVariable({
+        siteId,
+        variableId,
+        key: key.trim(),
+        value,
+        secret,
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['variables', 'site', projectId, siteId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to delete a site variable
+ */
+export function useDeleteSiteVariable(
+  projectId: string | null | undefined,
+  siteId: string | null | undefined,
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (variableId: string) => {
+      if (!projectId || !siteId) {
+        throw new Error('Project ID and Site ID are required')
+      }
+
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.sites.deleteVariable({
+        siteId,
+        variableId,
       })
     },
     onSuccess: () => {

@@ -43,6 +43,8 @@ interface WizardLayoutProps {
   onBack?: () => void
   /** Footer button alignment (default: 'left') */
   footerAlign?: 'left' | 'right'
+  /** Whether to apply default content padding (default: true) */
+  contentPadding?: boolean
 }
 
 /**
@@ -91,6 +93,7 @@ export function WizardLayout({
   backButtonLabel = 'Back',
   onBack,
   footerAlign = 'left',
+  contentPadding = true,
 }: WizardLayoutProps) {
   // Use smart navigation hook for consistent back behavior
   // Navigation priority: fallbackPath (if provided) > browser history > root
@@ -154,8 +157,8 @@ export function WizardLayout({
     : 'flex h-full flex-col'
 
   const headerClasses = fullscreen
-    ? 'shrink-0 border-b border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 h-14 min-h-14'
-    : 'border-b border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 h-14 min-h-14'
+    ? 'shrink-0 border-b border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80'
+    : 'border-b border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80'
 
   const contentWrapperClasses = fullscreen
     ? 'flex-1 min-h-0 overflow-y-auto'
@@ -171,14 +174,14 @@ export function WizardLayout({
       <div className={headerClasses}>
         <div
           className={cn(
-            'mx-auto w-full h-full',
+            'mx-auto w-full',
             constrainWidth && maxWidth,
           )}
         >
           {/* Original header content with padding */}
           <div
             className={cn(
-              'h-full flex items-center',
+              'h-14 flex items-center shrink-0',
               fullscreen ? 'px-6' : 'px-4 @[1000px]:px-6',
             )}
           >
@@ -249,7 +252,7 @@ export function WizardLayout({
             className={cn(
               'mx-auto w-full px-6',
               constrainWidth && maxWidth,
-              fullscreen ? 'py-6' : 'pt-6',
+              contentPadding && (fullscreen ? 'py-6' : 'pt-6'),
             )}
           >
             {useSidebar ? (
@@ -271,7 +274,7 @@ export function WizardLayout({
         )}
 
         {!fullscreen && useSidebar && (
-          <div className="grid gap-6 lg:grid-cols-3 pt-6">
+          <div className={cn('grid gap-6 lg:grid-cols-3', contentPadding && 'pt-6')}>
             {/* Main Content */}
             <div className={cn('lg:col-span-2 space-y-6', contentClassName)}>
               {children}
@@ -283,7 +286,7 @@ export function WizardLayout({
         )}
 
         {!fullscreen && !useSidebar && (
-          <div className={cn('pt-6', contentClassName)}>{children}</div>
+          <div className={cn(contentPadding && 'pt-6', contentClassName)}>{children}</div>
         )}
       </div>
 

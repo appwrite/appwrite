@@ -1,5 +1,10 @@
 import { Link } from '@tanstack/react-router'
 import { Progress } from '@/components/ui/progress'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { TrendingUp } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useOnboardingProgress } from '@/lib/hooks/useOnboardingProgress'
@@ -23,41 +28,50 @@ export function OnboardingCard({
   }
 
   if (collapsed) {
+    const linkContent = (
+      <Link
+        to="/onboarding"
+        className="flex w-full items-center justify-center py-2.5 text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <TrendingUp className="h-4 w-4" />
+      </Link>
+    )
+
     return (
-      <div className="flex h-[54px] w-full items-center border-b border-border px-3">
-        <div className="w-full">
-          <Link
-            to="/onboarding"
-            className="flex h-9 w-9 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
-            title="Get started"
-          >
-            <TrendingUp className="h-4 w-4" />
-          </Link>
-        </div>
+      <div className="rounded-md border border-border bg-card/50 overflow-hidden">
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+          <TooltipContent side="right" sideOffset={8}>
+            <p>Get started</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     )
   }
 
   return (
-    <div className="flex w-full flex-col border-b border-border px-3 py-3">
-      <div className="w-full">
+    <div className="rounded-md border border-border bg-card/50 overflow-hidden">
         <Link
           to="/onboarding"
-          className="group flex w-full flex-col gap-2 transition-colors"
+          className="group flex w-full flex-col transition-colors"
         >
-          <div className="space-y-1.5 px-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-muted-foreground">
-                Onboarding progress
-              </span>
-              <span className="text-[11px] font-medium text-muted-foreground">
-                {completedSteps}/{totalSteps}
-              </span>
+          <div className="px-3 pt-2 pb-2.5">
+            <h3 className="text-[13px] font-semibold text-foreground mb-1.5">
+              Get started
+            </h3>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-muted-foreground">
+                  Onboarding progress
+                </span>
+                <span className="text-[11px] font-medium text-muted-foreground">
+                  {completedSteps}/{totalSteps}
+                </span>
+              </div>
+              <Progress value={progress} className="h-1.5" />
             </div>
-            <Progress value={progress} className="h-1.5" />
           </div>
         </Link>
-      </div>
     </div>
   )
 }

@@ -149,6 +149,56 @@ function extractTextFromReactNode(node: React.ReactNode): string {
 }
 
 /**
+ * Replace Vercel triangle with Appwrite icon
+ * Returns processed text segments with triangles replaced by Appwrite icons
+ */
+function replaceVercelTriangle(text: string, currentColor: string | null, baseKey: number): React.ReactNode[] {
+  if (!text.includes('▲')) {
+    // No triangles, return text as-is in array
+    return [
+      currentColor ? (
+        <span key={baseKey} className={currentColor}>
+          {text}
+        </span>
+      ) : (
+        text
+      ),
+    ]
+  }
+
+  const parts: React.ReactNode[] = []
+  const segments = text.split('▲')
+  let keyCounter = baseKey
+
+  for (let i = 0; i < segments.length; i++) {
+    if (segments[i]) {
+      parts.push(
+        currentColor ? (
+          <span key={keyCounter++} className={currentColor}>
+            {segments[i]}
+          </span>
+        ) : (
+          segments[i]
+        ),
+      )
+    }
+    // Add Appwrite icon between segments (except after last segment)
+    if (i < segments.length - 1) {
+      parts.push(
+        <img
+          key={keyCounter++}
+          src="/icons/appwrite.svg"
+          alt="Appwrite"
+          className="inline-block h-[1em] w-[1em] align-middle"
+        />,
+      )
+    }
+  }
+
+  return parts
+}
+
+/**
  * Parse ANSI codes without highlighting
  */
 function parseAnsiLogsWithoutHighlight(text: string): React.ReactNode[] {
@@ -158,21 +208,16 @@ function parseAnsiLogsWithoutHighlight(text: string): React.ReactNode[] {
   let lastIndex = 0
   let currentColor: string | null = null
   let match
+  let keyCounter = 0
 
   while ((match = ansiRegex.exec(text)) !== null) {
     // Add text before the ANSI code
     if (match.index > lastIndex) {
       const textBefore = text.substring(lastIndex, match.index)
       if (textBefore) {
-        parts.push(
-          currentColor ? (
-            <span key={`text-${lastIndex}`} className={currentColor}>
-              {textBefore}
-            </span>
-          ) : (
-            textBefore
-          ),
-        )
+        const processedText = replaceVercelTriangle(textBefore, currentColor, keyCounter)
+        parts.push(...processedText)
+        keyCounter += processedText.length
       }
     }
 
@@ -197,15 +242,8 @@ function parseAnsiLogsWithoutHighlight(text: string): React.ReactNode[] {
   if (lastIndex < text.length) {
     const remainingText = text.substring(lastIndex)
     if (remainingText) {
-      parts.push(
-        currentColor ? (
-          <span key={`text-${lastIndex}`} className={currentColor}>
-            {remainingText}
-          </span>
-        ) : (
-          remainingText
-        ),
-      )
+      const processedText = replaceVercelTriangle(remainingText, currentColor, keyCounter)
+      parts.push(...processedText)
     }
   }
 
@@ -234,15 +272,9 @@ function highlightText(
       if (lastIndex < text.length) {
         const remaining = text.substring(lastIndex)
         if (remaining) {
-          parts.push(
-            color ? (
-              <span key={keyCounter++} className={color}>
-                {remaining}
-              </span>
-            ) : (
-              remaining
-            ),
-          )
+          const processedText = replaceVercelTriangle(remaining, color, keyCounter)
+          parts.push(...processedText)
+          keyCounter += processedText.length
         }
       }
       break
@@ -252,28 +284,24 @@ function highlightText(
     if (searchIndex > lastIndex) {
       const beforeMatch = text.substring(lastIndex, searchIndex)
       if (beforeMatch) {
-        parts.push(
-          color ? (
-            <span key={keyCounter++} className={color}>
-              {beforeMatch}
-            </span>
-          ) : (
-            beforeMatch
-          ),
-        )
+        const processedText = replaceVercelTriangle(beforeMatch, color, keyCounter)
+        parts.push(...processedText)
+        keyCounter += processedText.length
       }
     }
 
     // Add highlighted match
     const matchText = text.substring(searchIndex, searchIndex + searchTerm.length)
+    const processedMatch = replaceVercelTriangle(matchText, color, keyCounter)
     parts.push(
       <mark
         key={keyCounter++}
         className="bg-yellow-200 dark:bg-yellow-900/50 text-foreground"
       >
-        {color ? <span className={color}>{matchText}</span> : matchText}
+        {processedMatch}
       </mark>,
     )
+    keyCounter += processedMatch.length
 
     lastIndex = searchIndex + searchTerm.length
   }
@@ -1493,13 +1521,14 @@ export function DeploymentDetailView({
       constrainFooterWidth={false}
       showBackButton={true}
       backButtonLabel="Deployments"
+      contentPadding={false}
       onClose={() => {
         navigate({
           to: listRoute as any,
           params: { projectId, [parentResourceParam]: resourceId } as any,
         })
       }}
-      contentClassName="flex flex-col h-full min-h-0 overflow-hidden -mx-6 -my-6"
+      contentClassName="flex flex-col h-full min-h-0 overflow-hidden -mx-6"
       footer={
         <div className="hidden sm:flex flex-row items-center justify-between gap-2 w-full">
           {/* Left side - Delete button */}

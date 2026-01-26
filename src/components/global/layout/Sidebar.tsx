@@ -401,9 +401,6 @@ export function ConsoleSidebar({
           />
         </button>
 
-        {/* Onboarding Card - Fixed to top */}
-        <OnboardingCard projectId={projectId} collapsed={collapsed} />
-
         {/* Main Navigation */}
         <nav
           ref={navRef}
@@ -412,6 +409,9 @@ export function ConsoleSidebar({
           role="navigation"
           aria-label="Main navigation"
         >
+          {/* Onboarding Card */}
+          <OnboardingCard projectId={projectId} collapsed={collapsed} />
+
           {/* Overview */}
           <div className="space-y-0.5">{renderNavItem(overviewItem)}</div>
 
