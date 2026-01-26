@@ -23,6 +23,10 @@ class Install extends Action
     private const int HEALTH_CHECK_ATTEMPTS = 10;
     private const int HEALTH_CHECK_DELAY_SECONDS = 3;
 
+    private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
+    private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
+    private const string PATTERN_SESSION_COOKIE = '/a_session_console=([^;]+)/';
+
     protected string $hostPath = '';
     protected ?bool $isLocalInstall = null;
     protected ?array $installerConfig = null;
@@ -666,7 +670,7 @@ class Install extends Action
             $headers = $response->getHeaders();
             $setCookie = $headers['set-cookie'] ?? $headers['Set-Cookie'] ?? null;
 
-            if (!$setCookie || !preg_match('/a_session_console=([^;]+)/', $setCookie, $matches)) {
+            if (!$setCookie || !preg_match(self::PATTERN_SESSION_COOKIE, $setCookie, $matches)) {
                 throw new \Exception('Session created but no cookie found');
             }
 
@@ -750,7 +754,7 @@ class Install extends Action
                 if ($value === null || $value === '') {
                     continue;
                 }
-                if (!preg_match('/^[A-Z0-9_]+$/', $key)) {
+                if (!preg_match(self::PATTERN_ENV_VAR_NAME, $key)) {
                     throw new \Exception("Invalid environment variable name: $key");
                 }
                 $env .= $key . '=' . \escapeshellarg((string) $value) . ' ';
@@ -877,7 +881,7 @@ class Install extends Action
     protected function generatePasswordValue(string $varName, Password $password): string
     {
         $value = $password->generate();
-        if (!\preg_match('/^_APP_DB_.*_PASS$/', $varName)) {
+        if (!\preg_match(self::PATTERN_DB_PASSWORD_VAR, $varName)) {
             return $value;
         }
 

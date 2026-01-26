@@ -30,6 +30,7 @@ class Server
 
     private const string DEFAULT_IMAGE = 'appwrite-dev';
     public const string DEFAULT_CONTAINER = 'appwrite-installer';
+    private const string PATTERN_SERVER_LOG_FILTER = '/]\s+\S+:\d+\s+(Accepted|Closing)/';
     private const string DEV_SERVER_START_PATTERN = '/PHP\s+\d+\.\d+\.\d+\s+Development Server .* started/';
 
     private State $state;
@@ -170,7 +171,7 @@ class Server
                 if ($stream === $pipes[2] && preg_match(self::DEV_SERVER_START_PATTERN, $line)) {
                     continue;
                 }
-                if (preg_match('/]\s+\S+:\d+\s+(Accepted|Closing)/', $line)) {
+                if (preg_match(self::PATTERN_SERVER_LOG_FILTER, $line)) {
                     continue;
                 }
 

@@ -6,6 +6,12 @@ use Appwrite\Platform\Installer\Server;
 
 class State
 {
+    private const string PATTERN_DIGITS_ONLY = '/^\d+$/';
+    private const string PATTERN_HAS_NON_WHITESPACE = '/\S/';
+    private const string PATTERN_LINE_BREAKS = '/\r\n|\n|\r/';
+    private const string PATTERN_INSTALL_ID_SANITIZE = '/[^a-zA-Z0-9_-]/';
+    private const string PATTERN_IPV6_WITH_PORT = '/^\[(.+)](?::(\d+))?$/';
+
     private array $paths;
     private bool $bootstrapped = false;
 
@@ -106,7 +112,7 @@ class State
             return '';
         }
 
-        $clean = preg_replace('/[^a-zA-Z0-9_-]/', '', $value);
+        $clean = preg_replace(self::PATTERN_INSTALL_ID_SANITIZE, '', $value);
         if (!is_string($clean)) {
             return '';
         }
@@ -126,7 +132,7 @@ class State
     public function isValidPort($value): bool
     {
         $string = (string) $value;
-        if ($string === '' || !preg_match('/^\d+$/', $string)) {
+        if ($string === '' || !preg_match(self::PATTERN_DIGITS_ONLY, $string)) {
             return false;
         }
         $port = (int) $string;
@@ -140,7 +146,7 @@ class State
 
     public function isValidPassword(string $value): bool
     {
-        return strlen($value) >= 8 && preg_match('/\S/', $value) === 1;
+        return strlen($value) >= 8 && preg_match(self::PATTERN_HAS_NON_WHITESPACE, $value) === 1;
     }
 
     public function isValidSecretKey(string $value): bool
@@ -164,7 +170,7 @@ class State
         $port = null;
 
         if (str_starts_with($value, '[')) {
-            if (!preg_match('/^\[(.+)\](?::(\d+))?$/', $value, $matches)) {
+            if (!preg_match(self::PATTERN_IPV6_WITH_PORT, $value, $matches)) {
                 return false;
             }
             $host = $matches[1] ?? '';
@@ -304,7 +310,7 @@ class State
     private function parseEnvFile(string $contents): array
     {
         $vars = [];
-        foreach ((array) preg_split('/\r\n|\n|\r/', $contents) as $line) {
+        foreach ((array) preg_split(self::PATTERN_LINE_BREAKS, $contents) as $line) {
             $line = trim($line);
             if ($line === '' || $line[0] === '#') {
                 continue;
