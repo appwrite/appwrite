@@ -64,8 +64,8 @@ class Upgrade extends Install
         parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, true);
     }
 
-    protected function startWebServer(string $defaultHTTPPort, string $defaultHTTPSPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
+    protected function startWebServer(string $defaultHttpPort, string $defaultHttpsPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
     {
-        parent::startWebServer($defaultHTTPPort, $defaultHTTPSPort, $organization, $image, $noStart, $vars, true, $this->lockedDatabase);
+        parent::startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars, true, $this->lockedDatabase);
     }
 }

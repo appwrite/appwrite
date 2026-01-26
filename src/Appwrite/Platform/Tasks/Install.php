@@ -48,9 +48,9 @@ class Install extends Action
 
     public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, bool $isUpgrade = false): void
     {
+        $defaultHttpPort = '80';
+        $defaultHttpsPort = '443';
         $config = Config::getParam('variables');
-        $defaultHTTPPort = '80';
-        $defaultHTTPSPort = '443';
         /** @var array<string, array<string, string>> $vars array where key is variable name and value is variable */
         $vars = [];
 
@@ -90,8 +90,8 @@ class Install extends Action
                 $ports = $compose->getService('traefik')->getPorts();
             } catch (\Throwable $th) {
                 $ports = [
-                    $defaultHTTPPort => $defaultHTTPPort,
-                    $defaultHTTPSPort => $defaultHTTPSPort
+                    $defaultHttpPort => $defaultHttpPort,
+                    $defaultHttpsPort => $defaultHttpsPort
                 ];
                 Console::warning('Traefik not found. Falling back to default ports.');
             }
@@ -138,12 +138,12 @@ class Install extends Action
                 }
 
                 foreach ($ports as $key => $value) {
-                    if ($value === $defaultHTTPPort) {
-                        $defaultHTTPPort = $key;
+                    if ($value === $defaultHttpPort) {
+                        $defaultHttpPort = $key;
                     }
 
-                    if ($value === $defaultHTTPSPort) {
-                        $defaultHTTPSPort = $key;
+                    if ($value === $defaultHttpsPort) {
+                        $defaultHttpsPort = $key;
                     }
                 }
             }
@@ -155,7 +155,7 @@ class Install extends Action
             Console::info('Open your browser at: http://localhost:' . InstallerServer::INSTALLER_WEB_PORT);
             Console::info('Press Ctrl+C to cancel installation');
 
-            $this->startWebServer($defaultHTTPPort, $defaultHTTPSPort, $organization, $image, $noStart, $vars);
+            $this->startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars);
             return;
         }
 
@@ -185,13 +185,13 @@ class Install extends Action
         }
 
         if (empty($httpPort)) {
-            $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHTTPPort . ')');
-            $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
+            $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHttpPort . ')');
+            $httpPort = ($httpPort) ?: $defaultHttpPort;
         }
 
         if (empty($httpsPort)) {
-            $httpsPort = Console::confirm('Choose your server HTTPS port: (default: ' . $defaultHTTPSPort . ')');
-            $httpsPort = ($httpsPort) ? $httpsPort : $defaultHTTPSPort;
+            $httpsPort = Console::confirm('Choose your server HTTPS port: (default: ' . $defaultHttpsPort . ')');
+            $httpsPort = ($httpsPort) ?: $defaultHttpsPort;
         }
 
         $userInput = [];
@@ -246,7 +246,7 @@ class Install extends Action
     }
 
 
-    protected function startWebServer(string $defaultHTTPPort, string $defaultHTTPSPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
+    protected function startWebServer(string $defaultHttpPort, string $defaultHttpsPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
     {
         $host = InstallerServer::INSTALLER_WEB_HOST;
         $port = InstallerServer::INSTALLER_WEB_PORT;
@@ -254,8 +254,8 @@ class Install extends Action
         @unlink(InstallerServer::INSTALLER_COMPLETE_FILE);
 
         $this->setInstallerConfig([
-            'defaultHttpPort' => $defaultHTTPPort,
-            'defaultHttpsPort' => $defaultHTTPSPort,
+            'defaultHttpPort' => $defaultHttpPort,
+            'defaultHttpsPort' => $defaultHttpsPort,
             'organization' => $organization,
             'image' => $image,
             'noStart' => $noStart,
