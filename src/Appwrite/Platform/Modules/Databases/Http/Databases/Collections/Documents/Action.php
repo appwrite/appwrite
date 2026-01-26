@@ -261,7 +261,9 @@ abstract class Action extends DatabasesAction
             $relationId = $relation->getAttribute('$id');
         } elseif (\is_string($relation)) {
             $relationId = $relation;
-        } elseif (!(\is_array($relation) && \array_values($relation) !== $relation)) {
+        } elseif (\is_array($relation) && \array_values($relation) !== $relation) {
+            $relationId = $relation['$id'] ?? null;
+        } else {
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship value must be an object or document ID string, not ' . \gettype($relation));
         }
 

@@ -211,10 +211,19 @@ class Upsert extends Action
                 );
 
                 foreach ($relations as &$relation) {
+                    // Generate unique ID for new relation without $id
+                    if (
+                        \is_array($relation)
+                        && \array_values($relation) !== $relation
+                        && !isset($relation['$id'])
+                    ) {
+                        $relation['$id'] = ID::unique();
+                    }
+
                     $this->validateRelationship($relation);
 
+                    // If the relation is an array it can be either update or create a child document.
                     if (\is_array($relation) && \array_values($relation) !== $relation) {
-                        $relation['$id'] = ID::unique();
                         $relation = new Document($relation);
                     }
 

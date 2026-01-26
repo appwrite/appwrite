@@ -7680,7 +7680,7 @@ trait DatabasesBase
         ]);
 
         // Create one-to-many relationship
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/columns/relationship', array_merge([
+        $relationship = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/columns/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -7690,8 +7690,22 @@ trait DatabasesBase
             'twoWay' => false,
             'key' => 'children',
         ]);
+        $this->assertEquals(202, $relationship['headers']['status-code']);
 
-        sleep(1);
+        // Wait for relationship column to be available
+        $maxAttempts = 10;
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $columns = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/columns', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            $columnKeys = array_column($columns['body']['columns'], 'key');
+            if (in_array('children', $columnKeys)) {
+                break;
+            }
+            usleep(200000);
+        }
 
         // ID too long (>36 chars) should fail
         $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
