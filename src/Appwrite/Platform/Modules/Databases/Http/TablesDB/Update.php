@@ -47,7 +47,7 @@ class Update extends DatabaseUpdate
                 contentType: ContentType::JSON
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.')
+            ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.', true)
             ->param('enabled', true, new Boolean(), 'Is database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')
