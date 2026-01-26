@@ -8,15 +8,12 @@ $defaultHttpPort = $defaultHttpPort ?? '80';
 $defaultHttpsPort = $defaultHttpsPort ?? '443';
 $defaultAppDomain = $vars['_APP_DOMAIN']['default'] ?? 'localhost';
 $defaultAppDomain = ($defaultAppDomain === 'traefik') ? 'localhost' : $defaultAppDomain;
-$defaultEmailCertificates = $vars['_APP_EMAIL_CERTIFICATES']['default'] ?? '';
+$defaultEmailCertificates = $defaultEmailCertificates ?? '';
 $defaultSecretKey = $vars['_APP_OPENSSL_KEY_V1']['default'] ?? '';
 $defaultAssistantOpenAIKey = $vars['_APP_ASSISTANT_OPENAI_API_KEY']['default'] ?? '';
 $defaultDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? 'mongodb';
 $lockedDatabase = $isUpgrade && empty($lockedDatabase) ? $defaultDatabase : $lockedDatabase;
 $isLocalInstall = $isLocalInstall ?? false;
-if ($installMode === 'mock' && $defaultEmailCertificates === '') {
-    $defaultEmailCertificates = 'walterobrien@example.com';
-}
 
 $step = isset($_GET['step']) ? (int) $_GET['step'] : 1;
 $step = max(1, min(5, $step));

@@ -558,6 +558,11 @@ class HttpHandler
         $isMock = $this->config->isMock();
         $isLocalInstall = $this->config->isLocal();
 
+        $defaultEmailCertificates = $vars['_APP_EMAIL_CERTIFICATES']['default'] ?? '';
+        if ($isMock && empty($defaultEmailCertificates)) {
+            $defaultEmailCertificates = 'walterobrien@example.com';
+        }
+
         include $this->paths['views'] . '/installer.phtml';
         return true;
     }
