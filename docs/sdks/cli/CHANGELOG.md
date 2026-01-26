@@ -1,5 +1,13 @@
 # Change Log
 
+## 13.1.0
+
+- Mark `appwrite generate` command as stable
+- Improve permissions param to be a typesafe callback
+- Fix relationship handling in generated code
+- Fix `appwrite client` properly hanlding `--key` parameter
+- Fix `init site` not working on Windows
+
 ## 13.1.0-rc.3
 
 - Allow generation of server side CRUD operations on databases and tables
