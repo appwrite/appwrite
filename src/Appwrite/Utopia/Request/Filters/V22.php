@@ -42,7 +42,6 @@ class V22 extends Filter
         $queries = [];
         $selects = [];
 
-        // Collect all selects
         foreach ($parsed as $query) {
             if ($query->getMethod() === 'select') {
                 foreach ($query->getValues() as $val) {
@@ -53,7 +52,6 @@ class V22 extends Filter
             }
         }
 
-        // Expand selects with internal attributes once per object level
         if (!empty($selects)) {
             $queries = array_merge($queries, $this->expandSelects($selects));
         }
@@ -77,17 +75,14 @@ class V22 extends Filter
         foreach ($selects as $select) {
             $expanded[] = Query::select($select);
 
-            // Skip internal attribute expansion if wildcard *
             if ($select === '*') {
                 continue;
             }
 
-            // Determine prefix for this level
             $parts = explode('.', $select);
             $prefix = implode('.', array_slice($parts, 0, -1)); // empty string for top level
 
             if (!isset($addedInternalForLevel[$prefix])) {
-                // Add internal attributes once per object level
                 foreach ($this->internalAttributes as $attr) {
                     $expanded[] = Query::select($prefix ? "$prefix.$attr" : $attr);
                 }
