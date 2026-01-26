@@ -206,7 +206,7 @@ export function ManualUploadView() {
 
       // Navigate to deploying screen
       navigate({
-        to: '/projects/$projectId/sites/create-site/deploying',
+        to: '/projects/$projectId/sites/create/deploying',
         params: { projectId },
         search: { siteId: site.$id, deploymentId: deployment.$id },
       })
@@ -242,7 +242,7 @@ export function ManualUploadView() {
         </h3>
         <div className="space-y-2">
           <Link
-            to="/projects/$projectId/sites/create-site/repositories"
+            to="/projects/$projectId/sites/create/repositories"
             params={{ projectId: projectId! }}
             className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -250,7 +250,7 @@ export function ManualUploadView() {
             Import from Git
           </Link>
           <Link
-            to="/projects/$projectId/sites/create-site/templates"
+            to="/projects/$projectId/sites/create/templates"
             params={{ projectId: projectId! }}
             className="flex items-center gap-2 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
           >

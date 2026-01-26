@@ -238,7 +238,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
 
       // Navigate to deploying screen
       navigate({
-        to: '/projects/$projectId/sites/create-site/deploying',
+        to: '/projects/$projectId/sites/create/deploying',
         params: { projectId },
         search: { siteId: site.$id, deploymentId: deployment.$id },
       })
@@ -275,7 +275,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       <div className="relative h-[120px] overflow-hidden border-b border-border/50">
         {screenshotUrl ? (
           <div className="absolute left-6 -right-4 top-4 transform -rotate-3">
-            <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-border">
+            <div className="overflow-hidden rounded-lg ring-1 ring-border">
               <FadeImage
                 src={screenshotUrl}
                 alt={`${template.name} preview`}
@@ -284,7 +284,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             </div>
           </div>
         ) : (
-          <div className="absolute left-6 -right-4 top-4 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 shadow-lg ring-1 ring-border">
+          <div className="absolute left-6 -right-4 top-4 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 ring-1 ring-border">
             <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" />
           </div>
         )}
@@ -420,7 +420,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             asChild
           >
             <Link
-              to="/projects/$projectId/sites/create-site/templates"
+              to="/projects/$projectId/sites/create/templates"
               params={{ projectId: projectId! }}
             >
               Browse templates

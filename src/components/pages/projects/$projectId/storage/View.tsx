@@ -232,7 +232,7 @@ export function StorageView() {
         className={cn(
           'h-7 w-7 p-0',
           viewMode === 'list'
-            ? 'bg-background shadow-sm'
+            ? 'bg-background'
             : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('list')}
@@ -245,7 +245,7 @@ export function StorageView() {
         className={cn(
           'h-7 w-7 p-0',
           viewMode === 'grid'
-            ? 'bg-background shadow-sm'
+            ? 'bg-background'
             : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('grid')}
@@ -582,7 +582,7 @@ export function StorageView() {
         {/* Bulk Delete Action Bar */}
         {selectedBuckets.size > 0 && (
           <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-            <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+            <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
               <Badge variant="secondary" className="h-6 px-2.5">
                 {selectedBuckets.size} bucket
                 {selectedBuckets.size > 1 ? 's' : ''} selected

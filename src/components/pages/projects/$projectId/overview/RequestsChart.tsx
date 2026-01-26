@@ -89,7 +89,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
     const errorPercent = 100 - successPercent
 
     return (
-      <div className="rounded-lg border border-border bg-popover px-3 py-2.5 shadow-xl">
+      <div className="rounded-lg border border-border bg-popover px-3 py-2.5">
         <p className="mb-2 text-[12px] font-medium text-foreground">
           {data.date}
         </p>

@@ -422,7 +422,7 @@ export function ExecutionDetailsDrawer({
                           className={cn(
                             'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
                             requestTab === 'parameters'
-                              ? 'bg-background text-foreground shadow-sm'
+                              ? 'bg-background text-foreground'
                               : 'text-muted-foreground hover:text-foreground',
                           )}
                         >
@@ -435,7 +435,7 @@ export function ExecutionDetailsDrawer({
                           className={cn(
                             'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
                             requestTab === 'headers'
-                              ? 'bg-background text-foreground shadow-sm'
+                              ? 'bg-background text-foreground'
                               : 'text-muted-foreground hover:text-foreground',
                           )}
                         >
@@ -561,7 +561,7 @@ export function ExecutionDetailsDrawer({
                           className={cn(
                             'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
                             responseTab === 'logs'
-                              ? 'bg-background text-foreground shadow-sm'
+                              ? 'bg-background text-foreground'
                               : 'text-muted-foreground hover:text-foreground',
                           )}
                         >
@@ -573,7 +573,7 @@ export function ExecutionDetailsDrawer({
                           className={cn(
                             'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
                             responseTab === 'errors'
-                              ? 'bg-background text-foreground shadow-sm'
+                              ? 'bg-background text-foreground'
                               : 'text-muted-foreground hover:text-foreground',
                           )}
                         >
@@ -585,7 +585,7 @@ export function ExecutionDetailsDrawer({
                           className={cn(
                             'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
                             responseTab === 'headers'
-                              ? 'bg-background text-foreground shadow-sm'
+                              ? 'bg-background text-foreground'
                               : 'text-muted-foreground hover:text-foreground',
                           )}
                         >
@@ -601,7 +601,7 @@ export function ExecutionDetailsDrawer({
                           className={cn(
                             'flex flex-1 items-center justify-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
                             responseTab === 'body'
-                              ? 'bg-background text-foreground shadow-sm'
+                              ? 'bg-background text-foreground'
                               : 'text-muted-foreground hover:text-foreground',
                           )}
                         >

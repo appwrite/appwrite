@@ -1508,7 +1508,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         {/* Placeholder table node - positioned lower */}
         <div className="absolute left-1/2 top-[45%] -translate-x-1/2 -translate-y-1/2 z-10">
           <div
-            className="rounded-lg border border-dashed border-border/40 bg-card/20 shadow-sm opacity-40"
+            className="rounded-lg border border-dashed border-border/40 bg-card/20 opacity-40"
             style={{ width: `${NODE_WIDTH}px` }}
           >
             {/* Header */}
@@ -1540,7 +1540,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         {/* Message overlay - positioned higher with better contrast */}
         <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
           <div className="text-center max-w-lg px-6">
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-card backdrop-blur-sm ring-2 ring-border shadow-sm">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-card backdrop-blur-sm ring-2 ring-border">
               <Table2 className="h-6 w-6 text-foreground" />
             </div>
             <h3 className="mb-2 text-base font-semibold text-foreground">
@@ -1824,7 +1824,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                   >
                     <div
                       className={cn(
-                        'rounded-lg border bg-card shadow-sm transition-all cursor-pointer select-none overflow-hidden',
+                        'rounded-lg border bg-card transition-all cursor-pointer select-none overflow-hidden',
                         selectedTable === node.id && 'ring-2 ring-ring',
                         !node.enabled && 'opacity-60',
                       )}
@@ -2028,7 +2028,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
       {/* Minimap */}
       {showMinimap && nodes.length > 0 && minimapBounds && (
-        <div className="absolute bottom-4 right-4 z-10 w-64 h-44 rounded-lg border border-border bg-card/95 backdrop-blur-sm shadow-lg overflow-hidden select-none">
+        <div className="absolute bottom-4 right-4 z-10 w-64 h-44 rounded-lg border border-border bg-card/95 backdrop-blur-sm overflow-hidden select-none">
           <div className="absolute top-0 left-0 right-0 h-8 bg-muted/50 border-b border-border flex items-center justify-between px-3">
             <span className="text-[12px] font-medium text-foreground flex items-center gap-2 select-none">
               <MapIcon className="h-4 w-4" />

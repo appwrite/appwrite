@@ -198,7 +198,7 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
                   if (!active || !payload || !payload.length) return null
                   const data = payload[0].payload
                   return (
-                    <div className="rounded-md border border-border bg-popover px-3 py-2 shadow-lg">
+                    <div className="rounded-md border border-border bg-popover px-3 py-2">
                       <p className="text-[11px] text-muted-foreground mb-1">
                         {data.fullDate}
                       </p>

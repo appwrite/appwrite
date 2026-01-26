@@ -127,7 +127,7 @@ export function SignIn({
                 <>
                   <div className="relative">
                     {lastLoginMethod === 'github' && (
-                      <span className="absolute -top-2 left-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border shadow-sm z-10">
+                      <span className="absolute -top-2 left-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
                         Last used
                       </span>
                     )}
@@ -215,7 +215,7 @@ export function SignIn({
 
               <div className="relative">
                 {lastLoginMethod === 'email' && (
-                  <span className="absolute -top-2 left-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border shadow-sm z-10">
+                  <span className="absolute -top-2 left-3 bg-foreground text-background text-[10px] font-medium px-1.5 py-0.5 rounded border border-border z-10">
                     Last used
                   </span>
                 )}

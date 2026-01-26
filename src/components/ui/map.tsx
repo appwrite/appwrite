@@ -330,7 +330,7 @@ export function MapMarker({
 
 function DefaultMarker() {
   return (
-    <div className="h-3 w-3 rounded-full border-2 border-white bg-blue-500 shadow-lg" />
+    <div className="h-3 w-3 rounded-full border-2 border-white bg-blue-500" />
   )
 }
 
@@ -453,13 +453,13 @@ export function MapControls({
         <>
           <button
             onClick={() => map.zoomIn()}
-            className="flex h-8 w-8 items-center justify-center rounded border border-border bg-background shadow-sm hover:bg-accent"
+            className="flex h-8 w-8 items-center justify-center rounded border border-border bg-background hover:bg-accent"
           >
             <span className="text-sm">+</span>
           </button>
           <button
             onClick={() => map.zoomOut()}
-            className="flex h-8 w-8 items-center justify-center rounded border border-border bg-background shadow-sm hover:bg-accent"
+            className="flex h-8 w-8 items-center justify-center rounded border border-border bg-background hover:bg-accent"
           >
             <span className="text-sm">−</span>
           </button>

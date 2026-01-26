@@ -2,6 +2,7 @@ import { ReactNode } from 'react'
 import { ConsoleHeader } from './Header'
 import { ConsoleSidebar } from './Sidebar'
 import { ConsoleFooter } from './Footer'
+import { ConsoleBanner } from './ConsoleBanner'
 import { PaymentAlert } from '@/components/pages/projects/$projectId/shared/PaymentAlert'
 import { cn } from '@/lib/utils'
 
@@ -151,6 +152,7 @@ export function ConsoleLayout({
               {children}
             </div>
           </div>
+          <ConsoleBanner />
           {showFooter && <ConsoleFooter />}
         </main>
       </div>

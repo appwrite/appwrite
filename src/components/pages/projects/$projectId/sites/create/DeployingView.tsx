@@ -97,7 +97,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
       // Wait a bit for screenshots to be generated
       const timer = setTimeout(() => {
         navigate({
-          to: '/projects/$projectId/sites/create-site/finish',
+          to: '/projects/$projectId/sites/create/finish',
           params: { projectId: projectId! },
           search: { siteId: actualSiteId, deploymentId: actualDeploymentId },
         })

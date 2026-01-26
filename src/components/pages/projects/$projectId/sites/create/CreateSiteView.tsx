@@ -200,7 +200,7 @@ export function CreateSiteView() {
     if (typeof window === 'undefined' || !projectId) return '#'
     const origin = window.location.origin
     // Include current installation ID in redirect so we can restore selection
-    let redirectUrl = `${origin}/projects/${projectId}/sites/create-site`
+    let redirectUrl = `${origin}/projects/${projectId}/sites/create`
     if (selectedInstallationId) {
       redirectUrl += `?installation=${selectedInstallationId}`
     }
@@ -350,7 +350,7 @@ export function CreateSiteView() {
     })
 
     navigate({
-      to: '/projects/$projectId/sites/create-site/repositories/$repository',
+      to: '/projects/$projectId/sites/create/repositories/$repository',
       params: {
         projectId: projectId!,
         repository: encodeURIComponent(`${repo.organization}/${repo.name}`),
@@ -367,7 +367,7 @@ export function CreateSiteView() {
     })
 
     navigate({
-      to: '/projects/$projectId/sites/create-site/templates/$template',
+      to: '/projects/$projectId/sites/create/templates/$template',
       params: {
         projectId: projectId!,
         template: encodeURIComponent(template.key),
@@ -691,7 +691,7 @@ export function CreateSiteView() {
                   <button
                     key={template.key}
                     onClick={() => handleSelectTemplate(template)}
-                    className="group h-[180px] text-left rounded-2xl border border-border bg-card overflow-hidden transition-all cursor-pointer hover:border-border/80 hover:shadow-md flex flex-col"
+                    className="group h-[180px] text-left rounded-2xl border border-border bg-card overflow-hidden transition-all cursor-pointer hover:border-border/80 flex flex-col"
                   >
                     <div className="px-4 pt-4 pb-2 h-[80px]">
                       <h3 className="text-[14px] font-semibold text-foreground leading-tight line-clamp-1 group-hover:text-primary transition-colors">
@@ -706,7 +706,7 @@ export function CreateSiteView() {
                     <div className="relative flex-1 overflow-hidden">
                       {screenshotUrl ? (
                         <div className="absolute left-8 -right-4 top-4 transform -rotate-3 transition-transform group-hover:-rotate-2">
-                          <div className="overflow-hidden rounded-lg shadow-lg ring-1 ring-border">
+                          <div className="overflow-hidden rounded-lg ring-1 ring-border">
                             <FadeImage
                               src={screenshotUrl}
                               alt={template.name}
@@ -715,7 +715,7 @@ export function CreateSiteView() {
                           </div>
                         </div>
                       ) : (
-                        <div className="absolute left-8 -right-4 top-4 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 shadow-lg ring-1 ring-border">
+                        <div className="absolute left-8 -right-4 top-4 aspect-video transform -rotate-3 flex items-center justify-center rounded-lg bg-muted/50 ring-1 ring-border">
                           <LayoutTemplate className="h-8 w-8 text-muted-foreground/30" />
                         </div>
                       )}
@@ -754,7 +754,7 @@ export function CreateSiteView() {
         <p className="text-[12px] text-muted-foreground">
           Want to deploy without connecting a repository or using a template?{' '}
           <Link
-            to="/projects/$projectId/sites/create-site/manual"
+            to="/projects/$projectId/sites/create/manual"
             params={{ projectId: projectId! }}
             className="text-foreground hover:underline"
           >

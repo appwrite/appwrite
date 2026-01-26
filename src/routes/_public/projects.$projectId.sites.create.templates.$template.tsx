@@ -5,11 +5,11 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router'
-import { TemplateConfigView } from '@/components/pages/projects/$projectId/sites/create-site/TemplateConfigView'
+import { TemplateConfigView } from '@/components/pages/projects/$projectId/sites/create/TemplateConfigView'
 import { siteTemplateQueryOptions } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/sites/create-site/templates/$template',
+  '/_public/projects/$projectId/sites/create/templates/$template',
 )({
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return

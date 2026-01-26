@@ -988,7 +988,7 @@ export function Browser({ databaseId }: BrowserProps) {
                   {isSelected && (
                     <div
                       data-action-bar
-                      className="absolute flex items-center gap-1 bg-card border border-border rounded-md shadow-lg p-1 z-50"
+                      className="absolute flex items-center gap-1 bg-card border border-border rounded-md p-1 z-50"
                       style={{
                         left: `${resource.x}px`,
                         top: `${resource.y - 40}px`,
@@ -1046,10 +1046,10 @@ export function Browser({ databaseId }: BrowserProps) {
                   <div
                     data-resource
                     className={cn(
-                      'absolute border rounded-lg bg-card shadow-lg p-3 flex items-center gap-3 transition-all cursor-pointer group',
+                      'absolute border rounded-lg bg-card p-3 flex items-center gap-3 transition-all cursor-pointer group',
                       isSelected
                         ? 'border-blue-500 outline outline-2 outline-blue-500 outline-offset-2'
-                        : 'border-border hover:border-primary/50 hover:shadow-xl',
+                        : 'border-border hover:border-primary/50',
                     )}
                     style={{
                       left: `${resource.x}px`,
@@ -1119,7 +1119,7 @@ export function Browser({ databaseId }: BrowserProps) {
                   {isSelected && (
                     <div
                       data-action-bar
-                      className="absolute flex items-center gap-1 bg-card border border-border rounded-md shadow-lg p-1 z-50"
+                      className="absolute flex items-center gap-1 bg-card border border-border rounded-md p-1 z-50"
                       style={{
                         left: `${frame.x}px`,
                         top: `${frame.y - 40}px`,
@@ -1161,7 +1161,7 @@ export function Browser({ databaseId }: BrowserProps) {
                   <div
                     data-frame
                     className={cn(
-                      'absolute border rounded-lg overflow-hidden bg-card shadow-lg group',
+                      'absolute border rounded-lg overflow-hidden bg-card group',
                       isSelected
                         ? 'border-blue-500 outline outline-2 outline-blue-500 outline-offset-2'
                         : 'border-border',

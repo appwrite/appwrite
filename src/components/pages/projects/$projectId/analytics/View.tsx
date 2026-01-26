@@ -300,7 +300,7 @@ export function AnalyticsView() {
         className={cn(
           'h-7 w-7 p-0',
           viewMode === 'list'
-            ? 'bg-background shadow-sm'
+            ? 'bg-background'
             : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('list')}
@@ -313,7 +313,7 @@ export function AnalyticsView() {
         className={cn(
           'h-7 w-7 p-0',
           viewMode === 'grid'
-            ? 'bg-background shadow-sm'
+            ? 'bg-background'
             : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('grid')}

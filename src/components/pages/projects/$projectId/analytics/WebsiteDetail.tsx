@@ -499,7 +499,7 @@ const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload
     return (
-      <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-xl">
+      <div className="rounded-lg border border-border bg-popover px-3 py-2">
         <p className="text-[13px] font-medium text-foreground">
           {data.date} {formatNumber(data.visitors)}
         </p>
@@ -712,7 +712,7 @@ function MapContent({ data }: { data: LocationData[] }) {
           >
             <MarkerContent>
               <div
-                className="relative flex cursor-pointer items-center justify-center rounded-full border-2 border-white shadow-lg transition-transform hover:scale-110"
+                className="relative flex cursor-pointer items-center justify-center rounded-full border-2 border-white transition-transform hover:scale-110"
                 style={{
                   width: `${size}px`,
                   height: `${size}px`,
@@ -721,7 +721,7 @@ function MapContent({ data }: { data: LocationData[] }) {
               />
             </MarkerContent>
             <MarkerPopup closeButton={false}>
-              <div className="rounded-lg border border-border bg-popover px-3 py-2 shadow-lg">
+              <div className="rounded-lg border border-border bg-popover px-3 py-2">
                 <div className="flex items-center gap-2">
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded border border-border/50 bg-background">
                     <img
@@ -746,14 +746,14 @@ function MapContent({ data }: { data: LocationData[] }) {
       })}
 
       {/* Legend */}
-      <div className="absolute bottom-8 left-4 rounded-lg border border-border bg-background/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+      <div className="absolute bottom-8 left-4 rounded-lg border border-border bg-background/95 px-3 py-2 backdrop-blur-sm">
         <div className="mb-2 text-[11px] font-semibold text-foreground">
           Visitors
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <div
-              className="rounded-full border-2 border-white shadow-sm"
+              className="rounded-full border-2 border-white"
               style={{
                 width: `${minSize}px`,
                 height: `${minSize}px`,
@@ -767,7 +767,7 @@ function MapContent({ data }: { data: LocationData[] }) {
           <div className="h-px w-4 bg-border" />
           <div className="flex items-center gap-1.5">
             <div
-              className="rounded-full border-2 border-white shadow-sm"
+              className="rounded-full border-2 border-white"
               style={{
                 width: `${maxSize}px`,
                 height: `${maxSize}px`,

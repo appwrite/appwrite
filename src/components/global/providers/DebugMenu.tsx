@@ -381,7 +381,7 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#6B46C1] text-white shadow-lg transition-all hover:bg-[#5B21B6] hover:scale-105 active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#6B46C1] text-white transition-all hover:bg-[#5B21B6] hover:scale-105 active:scale-95"
             aria-label="Debug menu"
           >
             <Bug className="h-5 w-5" />

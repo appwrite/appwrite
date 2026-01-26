@@ -5,10 +5,10 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router'
-import { CreateSiteView } from '@/components/pages/projects/$projectId/sites/create-site/CreateSiteView'
+import { CreateSiteView } from '@/components/pages/projects/$projectId/sites/create/CreateSiteView'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/sites/create-site/',
+  '/_public/projects/$projectId/sites/create/',
 )({
   component: CreateSitePage,
 })

@@ -1560,7 +1560,7 @@ function PushPhonePreview({
 
           {/* Notification Card - Positioned lower left, overlapping lock screen */}
           <div className="absolute bottom-[120px] left-4 right-4 z-30">
-            <div className="rounded-[16px] bg-[#1a1a1a] dark:bg-[#2a2a2a] border border-white/10 p-4 shadow-[0_8px_24px_rgba(0,0,0,0.4)] backdrop-blur-sm">
+            <div className="rounded-[16px] bg-[#1a1a1a] dark:bg-[#2a2a2a] border border-white/10 p-4 backdrop-blur-sm">
               {/* Header */}
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-2">

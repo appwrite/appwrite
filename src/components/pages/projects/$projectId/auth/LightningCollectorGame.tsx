@@ -303,7 +303,7 @@ export function LightningCollectorGame() {
 
             {/* Player */}
             <div
-              className="absolute rounded-md bg-blue-500 shadow-lg shadow-blue-500/30 transition-transform"
+              className="absolute rounded-md bg-blue-500 transition-transform"
               style={{
                 width: PLAYER_SIZE,
                 height: PLAYER_SIZE,

@@ -106,7 +106,7 @@ interface CustomTooltipProps {
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-lg border border-border bg-popover px-3 py-2.5 shadow-xl">
+      <div className="rounded-lg border border-border bg-popover px-3 py-2.5">
         <p className="mb-2 text-[12px] font-medium text-foreground">{label}</p>
         <div className="space-y-1.5">
           {payload.map((entry, index) => (

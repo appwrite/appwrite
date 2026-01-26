@@ -15,10 +15,10 @@ import {
   fetchProject,
 } from '@/lib/react-query/hooks'
 import { useQuery } from '@tanstack/react-query'
-import { WizardProvider, useWizard } from '@/components/pages/projects/$projectId/sites/create-site/WizardContext'
+import { WizardProvider, useWizard } from '@/components/pages/projects/$projectId/sites/create/WizardContext'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/sites/create-site',
+  '/_public/projects/$projectId/sites/create',
 )({
   pendingComponent: () => (
     <div className="flex h-full items-center justify-center">

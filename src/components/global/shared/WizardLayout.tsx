@@ -122,10 +122,25 @@ export function WizardLayout({
 
   /**
    * Handle ESC key to close wizard
+   * Only closes wizard if no Popover/Command is open
    */
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        // Check if the event target is within an open Popover or Command component
+        const target = event.target as HTMLElement
+        const isInPopover = target.closest('[data-slot="popover-content"]')
+        const isInCommand = target.closest('[data-slot="command"]')
+        
+        // Also check if any Popover is currently open (Radix UI sets data-state="open")
+        const hasOpenPopover = document.querySelector('[data-slot="popover-content"][data-state="open"]')
+        
+        // If ESC is pressed within a Popover/Command or if a Popover is open,
+        // let it handle the event (it will close the Popover, not the wizard)
+        if (isInPopover || isInCommand || hasOpenPopover) {
+          return
+        }
+        
         event.preventDefault()
         handleClose()
       }
@@ -139,16 +154,16 @@ export function WizardLayout({
     : 'flex h-full flex-col'
 
   const headerClasses = fullscreen
-    ? 'shrink-0 border-b border-border/30 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40'
-    : 'border-b border-border/30 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40'
+    ? 'shrink-0 border-b border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 h-14 min-h-14'
+    : 'border-b border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 h-14 min-h-14'
 
   const contentWrapperClasses = fullscreen
     ? 'flex-1 min-h-0 overflow-y-auto'
     : 'mx-auto w-full max-w-7xl flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6'
 
   const footerClasses = fullscreen
-    ? 'shrink-0 border-t border-border/30 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40'
-    : 'border-t border-border/30 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 px-4 py-4 sm:px-6'
+    ? 'shrink-0 border-t border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80'
+    : 'border-t border-border/30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 px-4 py-4 sm:px-6'
 
   return (
     <div className={containerClasses}>
@@ -156,43 +171,44 @@ export function WizardLayout({
       <div className={headerClasses}>
         <div
           className={cn(
-            'mx-auto w-full',
+            'mx-auto w-full h-full',
             constrainWidth && maxWidth,
           )}
         >
           {/* Original header content with padding */}
           <div
             className={cn(
-              fullscreen ? 'px-6 py-6' : 'px-4 py-4 sm:px-6',
+              'h-full flex items-center',
+              fullscreen ? 'px-6' : 'px-4 @[1000px]:px-6',
             )}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 {showBackButton && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleBack}
-                    className={fullscreen ? 'h-8 w-8 p-0' : undefined}
+                    className="h-8 w-8 p-0 shrink-0"
                     aria-label={backButtonLabel}
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 )}
-                <div>
+                <div className="min-w-0">
                   <h1
                     className={cn(
-                      'font-semibold text-foreground',
-                      fullscreen ? 'text-lg' : 'text-xl',
+                      'font-semibold text-foreground truncate',
+                      'text-[15px]',
                       typeof title !== 'string' && 'flex items-center gap-2',
                     )}
                   >
                     {title}
                   </h1>
                   {description && (
-                    <div className="mt-1">
+                    <div className="mt-0.5">
                       {typeof description === 'string' ? (
-                        <p className="text-[13px] text-muted-foreground">
+                        <p className="text-[12px] text-muted-foreground truncate">
                           {description}
                         </p>
                       ) : (
@@ -202,7 +218,7 @@ export function WizardLayout({
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 {headerActions && (
                   <>
                     {headerActions}
@@ -213,7 +229,7 @@ export function WizardLayout({
                   variant="ghost"
                   size="sm"
                   onClick={handleClose}
-                  className={fullscreen ? 'h-8 w-8 p-0' : undefined}
+                  className="h-8 w-8 p-0"
                   aria-label="Close wizard"
                 >
                   <X className="h-4 w-4" />

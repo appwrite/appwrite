@@ -6,7 +6,7 @@
 
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { FinishView } from '@/components/pages/projects/$projectId/sites/create-site/FinishView'
+import { FinishView } from '@/components/pages/projects/$projectId/sites/create/FinishView'
 
 const searchSchema = z.object({
   siteId: z.string().optional(),
@@ -14,7 +14,7 @@ const searchSchema = z.object({
 })
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/sites/create-site/finish',
+  '/_public/projects/$projectId/sites/create/finish',
 )({
   validateSearch: searchSchema,
   component: FinishPage,

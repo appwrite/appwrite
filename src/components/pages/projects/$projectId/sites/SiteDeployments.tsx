@@ -655,7 +655,7 @@ export function SiteDeploymentsView() {
                             {/* Framework Icon - Bottom Left */}
                             {site && (
                               <div className="absolute bottom-2 left-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm shadow-lg">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
                                   <FrameworkIcon
                                     framework={
                                       (site as any).buildFramework ||
@@ -669,7 +669,7 @@ export function SiteDeploymentsView() {
                             )}
                             {/* Theme Toggle Overlay */}
                             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="flex items-center gap-1 rounded-lg border border-border bg-background/95 backdrop-blur-sm p-1 shadow-lg">
+                            <div className="flex items-center gap-1 rounded-lg border border-border bg-background/95 backdrop-blur-sm p-1">
                               <button
                                 onClick={() => {
                                   setScreenshotTheme('light')
@@ -717,7 +717,7 @@ export function SiteDeploymentsView() {
                         {/* Framework Icon - Bottom Left */}
                         {site && (
                           <div className="absolute bottom-2 left-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm shadow-lg">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
                               <FrameworkIcon
                                 framework={
                                   (site as any).buildFramework ||
@@ -1497,7 +1497,7 @@ export function SiteDeploymentsView() {
       {/* Bulk Delete Action Bar */}
       {selectedDeployments.size > 0 && (
         <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-          <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+          <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
               {selectedDeployments.size} deployment
               {selectedDeployments.size > 1 ? 's' : ''} selected

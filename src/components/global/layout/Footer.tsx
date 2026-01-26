@@ -34,11 +34,11 @@ export function ConsoleFooter() {
 
   return (
     <footer className="@container flex h-[54px] shrink-0 items-center border-t border-border px-3">
-      <div className="mx-auto w-full max-w-7xl flex flex-col gap-3 @[640px]:flex-row @[640px]:items-center @[640px]:justify-between">
+      <div className="mx-auto w-full max-w-7xl flex items-center justify-between gap-2 overflow-hidden">
         {/* Left section: Logo, Resource Links, and Social Icons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-shrink">
           {/* Logo */}
-          <div className="flex items-center px-2.5 py-1.5">
+          <div className="flex items-center px-2.5 py-1.5 flex-shrink-0">
             <img
               src="/logo-theme.svg"
               alt="Appwrite"
@@ -47,32 +47,32 @@ export function ConsoleFooter() {
           </div>
 
           {/* Separator */}
-          <div className="h-4 w-px bg-border" />
+          <div className="h-4 w-px bg-border flex-shrink-0 hidden sm:block" />
 
           {/* Resource Links */}
-          <nav className="flex items-center">
+          <nav className="flex items-center flex-shrink-0">
             {resourceLinks.map((link, index) => (
               <div key={link.label} className="flex items-center">
                 <a
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  className="rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground whitespace-nowrap"
                 >
                   {link.label}
                 </a>
                 {index < resourceLinks.length - 1 && (
-                  <span className="text-border">·</span>
+                  <span className="text-border hidden sm:inline">·</span>
                 )}
               </div>
             ))}
           </nav>
 
           {/* Separator */}
-          <div className="mx-1 h-4 w-px bg-border" />
+          <div className="mx-1 h-4 w-px bg-border flex-shrink-0 hidden md:block" />
 
           {/* Social Icons */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-shrink-0 hidden md:flex">
             {socialLinks.map((social) => (
               <a
                 key={social.label}
@@ -93,16 +93,16 @@ export function ConsoleFooter() {
         </div>
 
         {/* Right section: Legal Links and Copyright */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Legal Links */}
-          <nav className="flex items-center">
+          <nav className="flex items-center hidden sm:flex">
             {legalLinks.map((link, index) => (
               <div key={link.label} className="flex items-center">
                 <a
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  className="rounded-md px-2.5 py-1.5 text-[13px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground whitespace-nowrap"
                 >
                   {link.label}
                 </a>
@@ -114,10 +114,10 @@ export function ConsoleFooter() {
           </nav>
 
           {/* Separator */}
-          <div className="h-4 w-px bg-border" />
+          <div className="h-4 w-px bg-border flex-shrink-0 hidden sm:block" />
 
           {/* Copyright */}
-          <span className="px-2.5 py-1.5 text-[13px] text-muted-foreground">
+          <span className="px-2.5 py-1.5 text-[13px] text-muted-foreground whitespace-nowrap">
             © {currentYear} Appwrite
           </span>
         </div>

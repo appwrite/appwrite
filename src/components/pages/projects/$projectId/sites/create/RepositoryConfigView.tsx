@@ -225,7 +225,7 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
 
       // Navigate to deploying screen
       navigate({
-        to: '/projects/$projectId/sites/create-site/deploying',
+        to: '/projects/$projectId/sites/create/deploying',
         params: { projectId },
         search: { siteId: site.$id, deploymentId: deployment.$id },
       })
@@ -409,7 +409,7 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
             className="h-8 text-[12px]"
           >
             <Link
-              to="/projects/$projectId/sites/create-site/repositories"
+              to="/projects/$projectId/sites/create/repositories"
               params={{ projectId: projectId! }}
             >
               Change

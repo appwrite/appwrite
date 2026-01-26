@@ -551,7 +551,7 @@ export function AuthView() {
         className={cn(
           'h-7 w-7 p-0',
           viewMode === 'list'
-            ? 'bg-background shadow-sm'
+            ? 'bg-background'
             : 'hover:bg-transparent',
         )}
         onClick={() => onViewModeChange('list')}
@@ -564,7 +564,7 @@ export function AuthView() {
         className={cn(
           'h-7 w-7 p-0',
           viewMode === 'grid'
-            ? 'bg-background shadow-sm'
+            ? 'bg-background'
             : 'hover:bg-transparent',
         )}
         onClick={() => onViewModeChange('grid')}
@@ -1052,7 +1052,7 @@ export function AuthView() {
             {/* Bulk Delete Action Bar */}
             {selectedUsers.size > 0 && (
               <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-                <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+                <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                   <Badge variant="secondary" className="h-6 px-2.5">
                     {selectedUsers.size} user{selectedUsers.size > 1 ? 's' : ''}{' '}
                     selected
@@ -1313,7 +1313,7 @@ export function AuthView() {
             {/* Bulk Delete Teams Action Bar */}
             {selectedTeams.size > 0 && (
               <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-                <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+                <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
                   <Badge variant="secondary" className="h-6 px-2.5">
                     {selectedTeams.size} team{selectedTeams.size > 1 ? 's' : ''}{' '}
                     selected

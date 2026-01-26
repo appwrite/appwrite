@@ -7,7 +7,7 @@
 
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { QuickDeployView } from '@/components/pages/projects/$projectId/sites/create-site/QuickDeployView'
+import { QuickDeployView } from '@/components/pages/projects/$projectId/sites/create/QuickDeployView'
 
 const searchSchema = z.object({
   repo: z.string().optional(),
@@ -22,7 +22,7 @@ const searchSchema = z.object({
 })
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/sites/create-site/deploy',
+  '/_public/projects/$projectId/sites/create/deploy',
 )({
   validateSearch: searchSchema,
   component: QuickDeployPage,

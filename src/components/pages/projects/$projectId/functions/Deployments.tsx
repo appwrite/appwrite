@@ -1470,7 +1470,7 @@ export function FunctionDeployments() {
       {/* Bulk Delete Action Bar */}
       {selectedDeployments.size > 0 && (
         <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
-          <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+          <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
               {selectedDeployments.size} deployment
               {selectedDeployments.size > 1 ? 's' : ''} selected

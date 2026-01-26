@@ -484,7 +484,7 @@ export function CronScheduleEditor({
             className={cn(
               'flex items-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
               mode === 'preset'
-                ? 'bg-background text-foreground shadow-sm'
+                ? 'bg-background text-foreground'
                 : 'text-muted-foreground hover:text-foreground',
               disabled && 'opacity-50 cursor-not-allowed',
             )}
@@ -499,7 +499,7 @@ export function CronScheduleEditor({
             className={cn(
               'flex items-center gap-1.5 rounded px-2.5 py-1 text-[12px] font-medium transition-all cursor-pointer',
               mode === 'advanced'
-                ? 'bg-background text-foreground shadow-sm'
+                ? 'bg-background text-foreground'
                 : 'text-muted-foreground hover:text-foreground',
               disabled && 'opacity-50 cursor-not-allowed',
             )}

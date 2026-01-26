@@ -205,7 +205,7 @@ export function QuickDeployView({
 
       // Navigate to deploying screen
       navigate({
-        to: '/projects/$projectId/sites/create-site/deploying',
+        to: '/projects/$projectId/sites/create/deploying',
         params: { projectId },
         search: { siteId: site.$id, deploymentId: deployment.$id },
       })
@@ -289,7 +289,7 @@ export function QuickDeployView({
           </p>
           <Button asChild>
             <Link
-              to="/projects/$projectId/sites/create-site/repositories"
+              to="/projects/$projectId/sites/create/repositories"
               params={{ projectId: projectId! }}
             >
               Import from Git

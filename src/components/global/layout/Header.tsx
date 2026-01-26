@@ -116,17 +116,17 @@ export function ConsoleHeader({
     <div className="@container w-full">
       <header
         className={cn(
-          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-2 border-b border-border bg-background px-4 @[1000px]:px-6',
+          'flex h-14 min-h-14 flex-wrap items-center justify-between gap-1 sm:gap-2 border-b border-border bg-background px-3 sm:px-4 @[1000px]:px-6',
           className,
         )}
       >
         {/* Left: Menu + Logo + Project Selector */}
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          {/* Mobile menu button - only show when in project context and container is narrow */}
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+          {/* Mobile menu button - only show when in project context and sidebar is hidden */}
           {!isOrgOverview && (
             <button
               onClick={onMenuClick}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -171,7 +171,7 @@ export function ConsoleHeader({
               </div>
 
               {/* Create Button */}
-              <div className="hidden @[700px]:block">
+              <div className="hidden @[700px]:block shrink-0">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
@@ -323,15 +323,15 @@ export function ConsoleHeader({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2 min-w-0">
           {/* Search - hidden on small containers */}
           <button
             onClick={openCommandCenter}
-            className="hidden h-8 items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex"
+            className="hidden h-8 items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
           >
-            <Search className="h-3.5 w-3.5" />
+            <Search className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden @[850px]:inline">Search...</span>
-            <kbd className="ml-2 hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground @[850px]:inline">
+            <kbd className="ml-2 hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground @[850px]:inline shrink-0">
               ⌘K
             </kbd>
           </button>
@@ -339,18 +339,18 @@ export function ConsoleHeader({
           {/* Mobile search icon */}
           <button
             onClick={openCommandCenter}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
           >
             <Search className="h-4 w-4" />
           </button>
 
           {/* Feedback - hidden on small containers */}
-          <div className="hidden @[700px]:flex">
+          <div className="hidden @[800px]:flex shrink-0">
             <FeedbackPopover />
           </div>
 
           {/* Support - hidden on small containers */}
-          <div className="hidden @[700px]:flex">
+          <div className="hidden @[900px]:flex shrink-0">
             <SupportPopover
               orgId={
                 project?.teamId ||
@@ -364,7 +364,7 @@ export function ConsoleHeader({
             <TooltipTrigger asChild>
               <button
                 onClick={toggleChat}
-                className="hidden h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:flex"
+                className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
               >
                 <MessageSquare className="h-4 w-4" />
               </button>
@@ -376,12 +376,12 @@ export function ConsoleHeader({
 
           {/* Divider before Upgrade Button - hidden on small containers */}
           {orgId && (
-            <div className="mx-2 hidden h-5 w-px bg-border @[700px]:block" />
+            <div className="mx-1 sm:mx-2 hidden h-5 w-px shrink-0 bg-border @[850px]:block" />
           )}
 
           {/* Upgrade Button - hidden on small containers */}
           {orgId && (
-            <div className="hidden @[700px]:flex">
+            <div className="hidden @[850px]:flex shrink-0">
               <div className="upgrade-button-wrapper">
                 <Button
                   asChild
@@ -400,19 +400,19 @@ export function ConsoleHeader({
           )}
 
           {/* Divider - hidden on small containers */}
-          <div className="mx-2 hidden h-5 w-px bg-border @[700px]:block" />
+          <div className="mx-1 sm:mx-2 hidden h-5 w-px shrink-0 bg-border @[700px]:block" />
 
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent">
-                <InitialsAvatar name={displayName} size="sm" />
-                <div className="hidden text-left @[800px]:block">
-                  <p className="text-[13px] font-medium text-foreground">
+              <button className="flex shrink-0 items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent min-w-0">
+                <InitialsAvatar name={displayName} size="sm" className="shrink-0" />
+                <div className="hidden text-left @[800px]:block min-w-0">
+                  <p className="text-[13px] font-medium text-foreground truncate">
                     {displayName}
                   </p>
                 </div>
-                <ChevronDown className="hidden h-3.5 w-3.5 text-muted-foreground @[800px]:block" />
+                <ChevronDown className="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground @[800px]:block" />
               </button>
             </DropdownMenuTrigger>
 

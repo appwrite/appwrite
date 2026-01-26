@@ -34,6 +34,7 @@ const databases = await projectSdk.tablesDB.list() // Returns Models.DatabaseLis
 - **Global components**: `components/global/` (layout, auth, shared, providers)
 - **Page components**: `components/pages/` organized by route
 - **Naming**: Main views = `View.tsx`, dialogs = `CreateResource.tsx` (no "Dialog" suffix), detail views in `$resourceId/View.tsx`
+- **No namespace repetition**: Never repeat a namespace in the name itself for paths, variable names, or any names. For example, use `/sites/create` not `/sites/create-site`, since we're already in the `sites` namespace.
 
 **Import patterns:**
 

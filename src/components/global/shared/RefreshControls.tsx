@@ -86,7 +86,7 @@ export function RefreshControls({
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-md border border-input bg-background shadow-sm',
+        'inline-flex items-center rounded-md border border-input bg-background',
         className,
       )}
     >

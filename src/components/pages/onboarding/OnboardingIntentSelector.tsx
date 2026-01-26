@@ -65,7 +65,7 @@ export function OnboardingIntentSelector() {
               onClick={() => setSelectedIntent(path.id)}
               className={cn(
                 'group relative flex flex-col items-start rounded-xl border border-border p-5 text-left transition-all',
-                'hover:border-muted-foreground/50 hover:shadow-md',
+                'hover:border-muted-foreground/50',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               )}
             >

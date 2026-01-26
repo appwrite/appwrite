@@ -32,6 +32,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { OnboardingCard } from './OnboardingCard'
 
 interface NavItem {
   id: string
@@ -203,7 +204,7 @@ const getNavItems = (projectId: string) => {
     path: `/projects/${projectId}/settings`,
   }
 
-  return { overviewItem, imagineItem, navCategories, settingsItem }
+  return { overviewItem, navCategories, settingsItem }
 }
 
 interface ConsoleSidebarProps {
@@ -224,8 +225,7 @@ export function ConsoleSidebar({
   const [collapsed, setCollapsed] = useState(false)
   const navRef = useRef<HTMLElement>(null)
 
-  const { overviewItem, imagineItem, navCategories, settingsItem } =
-    getNavItems(projectId)
+  const { overviewItem, navCategories, settingsItem } = getNavItems(projectId)
 
   // Handle keyboard navigation within sidebar
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -390,7 +390,7 @@ export function ConsoleSidebar({
         {/* Collapse Toggle - positioned on the border */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring shadow-sm"
+          className="absolute right-0 top-1/2 z-10 flex h-6 w-6 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-md border border-border bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <ChevronLeft
@@ -400,6 +400,9 @@ export function ConsoleSidebar({
             )}
           />
         </button>
+
+        {/* Onboarding Card - Fixed to top */}
+        <OnboardingCard projectId={projectId} collapsed={collapsed} />
 
         {/* Main Navigation */}
         <nav
@@ -414,9 +417,6 @@ export function ConsoleSidebar({
 
           {/* Connect category */}
           {renderCategory(navCategories[0])}
-
-          {/* Imagine */}
-          <div className="space-y-0.5">{renderNavItem(imagineItem)}</div>
 
           {/* Remaining Categories (Build, Deploy, Observe, Protect) */}
           {navCategories.slice(1).map((category) => renderCategory(category))}
@@ -469,14 +469,14 @@ export function ConsoleSidebar({
           role="navigation"
           aria-label="Mobile navigation"
         >
+          {/* Onboarding Card */}
+          <OnboardingCard projectId={projectId} collapsed={false} />
+
           {/* Overview */}
           <div className="space-y-0.5">{renderNavItem(overviewItem, true)}</div>
 
           {/* Connect category */}
           {renderCategory(navCategories[0], true)}
-
-          {/* Imagine */}
-          <div className="space-y-0.5">{renderNavItem(imagineItem, true)}</div>
 
           {/* Remaining Categories (Build, Deploy, Observe, Protect) */}
           {navCategories

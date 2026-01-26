@@ -6,10 +6,10 @@
  */
 
 import { createFileRoute } from '@tanstack/react-router'
-import { RepositoryConfigView } from '@/components/pages/projects/$projectId/sites/create-site/RepositoryConfigView'
+import { RepositoryConfigView } from '@/components/pages/projects/$projectId/sites/create/RepositoryConfigView'
 
 export const Route = createFileRoute(
-  '/_public/projects/$projectId/sites/create-site/repositories/$repository',
+  '/_public/projects/$projectId/sites/create/repositories/$repository',
 )({
   component: RepositoryConfigPage,
 })

@@ -137,7 +137,7 @@ export function ExplorePath() {
               transition={{ duration: 0.3, delay: index * 0.05 }}
               className={cn(
                 'group relative flex flex-col rounded-xl border border-border p-5 transition-all',
-                'hover:border-muted-foreground/50 hover:shadow-md',
+                'hover:border-muted-foreground/50',
               )}
             >
               {/* Gradient background */}

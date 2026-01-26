@@ -146,7 +146,7 @@ export function OnboardingProjectCreate() {
                     className={cn(
                       'flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-all',
                       sdkCategory === cat.id
-                        ? 'bg-background text-foreground shadow-sm'
+                        ? 'bg-background text-foreground'
                         : 'text-muted-foreground hover:text-foreground',
                     )}
                   >

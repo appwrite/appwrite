@@ -849,7 +849,7 @@ function ComponentPreview({ component }: { component: ComponentInfo }) {
       </Pagination>
     ),
     command: (
-      <Command className="rounded-lg border shadow-md">
+      <Command className="rounded-lg border">
         <CommandInput placeholder="Type a command or search..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>

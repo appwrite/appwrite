@@ -1088,7 +1088,7 @@ export function BucketSettings() {
                 <div className="relative max-w-md">
                   <div
                     className={cn(
-                      'flex flex-wrap items-center gap-1.5 min-h-[36px] rounded-md border bg-transparent px-3 py-1.5 text-sm shadow-xs transition-[color,box-shadow] outline-none',
+                      'flex flex-wrap items-center gap-1.5 min-h-[36px] rounded-md border bg-transparent px-3 py-1.5 text-sm transition-[color,box-shadow] outline-none',
                       'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
                       updateAllowedExtensionsMutation.isPending ||
                         allowedFileExtensions.length >= 100
