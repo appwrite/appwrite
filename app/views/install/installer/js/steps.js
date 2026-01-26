@@ -446,10 +446,11 @@
                     valid = false;
                 }
 
-                if (!password || !password.value.trim()) {
+                const passwordValue = password?.value ?? '';
+                if (!password || !/\S/.test(passwordValue)) {
                     setFieldError?.(password, 'Please enter a password');
                     valid = false;
-                } else if (!isValidPassword?.(password.value.trim())) {
+                } else if (!isValidPassword?.(passwordValue)) {
                     setFieldError?.(password, 'Password must be at least 8 characters');
                     valid = false;
                 }

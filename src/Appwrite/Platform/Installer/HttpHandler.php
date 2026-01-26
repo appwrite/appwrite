@@ -298,7 +298,7 @@ class HttpHandler
         $input['emailCertificates'] = $emailCertificates;
 
         $opensslKey = trim((string) ($input['opensslKey'] ?? ''));
-        if ($opensslKey === '' || strlen($opensslKey) > 64) {
+        if (!$this->state->isValidSecretKey($opensslKey)) {
             $this->respondBadRequest('Secret API key must be 1-64 characters', $wantsStream);
         }
         $input['opensslKey'] = $opensslKey;
@@ -308,7 +308,7 @@ class HttpHandler
 
         if (!$this->config->isUpgrade()) {
             $accountName = trim((string) ($input['accountName'] ?? ''));
-            if ($accountName === '') {
+            if (!$this->state->isValidAccountName($accountName)) {
                 $this->respondBadRequest('Please enter a name', $wantsStream, Server::STEP_ACCOUNT_SETUP);
             }
 
@@ -318,7 +318,7 @@ class HttpHandler
             }
 
             $accountPassword = (string) ($input['accountPassword'] ?? '');
-            if (!preg_match('/\\S/', $accountPassword) || !$this->state->isValidPassword($accountPassword)) {
+            if (!$this->state->isValidPassword($accountPassword)) {
                 $this->respondBadRequest('Password must be at least 8 characters', $wantsStream, Server::STEP_ACCOUNT_SETUP);
             }
 

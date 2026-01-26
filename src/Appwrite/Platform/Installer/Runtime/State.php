@@ -143,6 +143,16 @@ class State
         return strlen($value) >= 8 && preg_match('/\S/', $value) === 1;
     }
 
+    public function isValidSecretKey(string $value): bool
+    {
+        return $value !== '' && strlen($value) <= 64;
+    }
+
+    public function isValidAccountName(string $value): bool
+    {
+        return trim($value) !== '';
+    }
+
     public function isValidAppDomainInput(string $value): bool
     {
         $value = trim($value);
