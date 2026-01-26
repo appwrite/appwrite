@@ -41,16 +41,16 @@ final class Config
 
     public function apply(array $values): void
     {
-        if (array_key_exists('defaultHttpPort', $values) && $values['defaultHttpPort'] !== null && $values['defaultHttpPort'] !== '') {
+        if ($this->hasValidStringValue($values, 'defaultHttpPort')) {
             $this->setDefaultHttpPort((string) $values['defaultHttpPort']);
         }
-        if (array_key_exists('defaultHttpsPort', $values) && $values['defaultHttpsPort'] !== null && $values['defaultHttpsPort'] !== '') {
+        if ($this->hasValidStringValue($values, 'defaultHttpsPort')) {
             $this->setDefaultHttpsPort((string) $values['defaultHttpsPort']);
         }
-        if (array_key_exists('organization', $values) && $values['organization'] !== null && $values['organization'] !== '') {
+        if ($this->hasValidStringValue($values, 'organization')) {
             $this->setOrganization((string) $values['organization']);
         }
-        if (array_key_exists('image', $values) && $values['image'] !== null && $values['image'] !== '') {
+        if ($this->hasValidStringValue($values, 'image')) {
             $this->setImage((string) $values['image']);
         }
         if (array_key_exists('noStart', $values) && $values['noStart'] !== null) {
@@ -69,13 +69,17 @@ final class Config
             $hostPath = $values['hostPath'];
             $this->setHostPath($hostPath !== null && $hostPath !== '' ? (string) $hostPath : null);
         }
-        if (array_key_exists('lockedDatabase', $values) && $values['lockedDatabase'] !== null && $values['lockedDatabase'] !== '') {
-            $locked = $values['lockedDatabase'];
-            $this->setLockedDatabase($locked !== null && $locked !== '' ? (string) $locked : null);
+        if ($this->hasValidStringValue($values, 'lockedDatabase')) {
+            $this->setLockedDatabase((string) $values['lockedDatabase']);
         }
         if (array_key_exists('vars', $values) && is_array($values['vars'])) {
             $this->setVars($values['vars']);
         }
+    }
+
+    private function hasValidStringValue(array $values, string $key): bool
+    {
+        return array_key_exists($key, $values) && $values[$key] !== null && $values[$key] !== '';
     }
 
     private function containsKnownKeys(array $values): bool

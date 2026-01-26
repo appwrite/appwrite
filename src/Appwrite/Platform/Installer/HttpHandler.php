@@ -152,7 +152,7 @@ class HttpHandler
         }
 
         $data = $this->state->readProgressFile($installId);
-        if (is_array($data) && isset($data['payload']) && is_array($data['payload'])) {
+        if ($this->hasPayload($data)) {
             unset($data['payload']['opensslKey'], $data['payload']['assistantOpenAIKey']);
         }
         echo json_encode(['success' => true, 'progress' => $data]);
@@ -413,7 +413,7 @@ class HttpHandler
                 '_APP_ASSISTANT_OPENAI_API_KEY' => $input['assistantOpenAIKey'] ?? '',
             ];
 
-            if (is_array($existing) && isset($existing['payload']) && is_array($existing['payload'])) {
+            if ($this->hasPayload($existing)) {
                 $stored = $existing['payload'];
                 $fieldsToCompare = [
                     'httpPort',
@@ -634,6 +634,11 @@ class HttpHandler
             $details['output'] = $previous->getMessage();
         }
         return $details;
+    }
+
+    private function hasPayload(mixed $data): bool
+    {
+        return is_array($data) && isset($data['payload']) && is_array($data['payload']);
     }
 
     private function handleInstallationError(\Throwable $e, string $installId, bool $wantsStream): void
