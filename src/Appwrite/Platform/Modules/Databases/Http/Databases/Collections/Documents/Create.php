@@ -309,13 +309,24 @@ class Create extends Action
                 );
 
                 foreach ($relations as &$relation) {
-                    if (
-                        \is_array($relation)
-                        && \array_values($relation) !== $relation
-                        && !isset($relation['$id'])
-                    ) {
+                    $relationId = null;
+
+                    if ($relation instanceof Document) {
+                        $relationId = $relation->getAttribute('$id');
+                    } elseif (\is_string($relation)) {
+                        $relationId = $relation;
+                    } elseif (\is_array($relation) && \array_values($relation) !== $relation) {
                         $relation['$id'] = ID::unique();
                         $relation = new Document($relation);
+                    } else {
+                        throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship value must be an object or document ID string, not ' . \gettype($relation));
+                    }
+
+                    if ($relationId !== null) {
+                        $validator = new CustomId();
+                        if (!$validator->isValid($relationId)) {
+                            throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+                        }
                     }
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
