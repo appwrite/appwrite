@@ -222,8 +222,8 @@ export function RequestsChart({
                   x2="0"
                   y2="1"
                 >
-                  <stop offset="0%" stopColor="#f02e65" stopOpacity={0.2} />
-                  <stop offset="100%" stopColor="#f02e65" stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--chart-brand)" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="var(--chart-brand)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis
@@ -259,13 +259,13 @@ export function RequestsChart({
               <Area
                 type="monotone"
                 dataKey="total"
-                stroke="#f02e65"
+                stroke="var(--chart-brand)"
                 strokeWidth={2}
                 fill="url(#successGradient)"
                 dot={false}
                 activeDot={{
                   r: 4,
-                  fill: '#f02e65',
+                  fill: 'var(--chart-brand)',
                   stroke: '#fff',
                   strokeWidth: 2,
                 }}

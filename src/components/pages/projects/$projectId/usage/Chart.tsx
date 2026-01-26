@@ -23,8 +23,7 @@ export function UsageChart({ className }: UsageChartProps) {
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-1.5">
             <div
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: '#f02e65' }}
+              className="h-1.5 w-1.5 rounded-full bg-chart-brand"
             />
             <span className="text-[11px] text-muted-foreground">Requests</span>
           </div>
@@ -50,8 +49,8 @@ export function UsageChart({ className }: UsageChartProps) {
                   x2="0"
                   y2="1"
                 >
-                  <stop offset="0%" stopColor="#f02e65" stopOpacity={0.15} />
-                  <stop offset="100%" stopColor="#f02e65" stopOpacity={0} />
+                  <stop offset="0%" stopColor="var(--chart-brand)" stopOpacity={0.15} />
+                  <stop offset="100%" stopColor="var(--chart-brand)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient
                   id="bandwidthGradient"
@@ -115,7 +114,7 @@ export function UsageChart({ className }: UsageChartProps) {
               <Area
                 type="monotone"
                 dataKey="requests"
-                stroke="#f02e65"
+                stroke="var(--chart-brand)"
                 strokeWidth={1.5}
                 fill="url(#requestsGradient)"
                 name="Requests"

@@ -52,7 +52,7 @@ export function UsageMetricChart({ metric, className }: UsageMetricChartProps) {
       case 'warning':
         return '#f59e0b' // amber-500
       default:
-        return '#f02e65' // brand color
+        return 'var(--chart-brand)'
     }
   }, [usageStatus])
 
