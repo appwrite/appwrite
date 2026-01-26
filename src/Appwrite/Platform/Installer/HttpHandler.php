@@ -535,35 +535,7 @@ class HttpHandler
             }
             $this->state->updateGlobalLock($installId, Server::STATUS_COMPLETED);
         } catch (\Throwable $e) {
-            http_response_code(500);
-            if ($installId !== '') {
-                $details = ['trace' => $e->getTraceAsString()];
-                $previous = $e->getPrevious();
-                if ($previous instanceof \Throwable && $previous->getMessage() !== '') {
-                    $details['output'] = $previous->getMessage();
-                }
-                $this->state->writeProgressFile($installId, [
-                    'step' => Server::STATUS_ERROR,
-                    'status' => Server::STATUS_ERROR,
-                    'message' => $e->getMessage(),
-                    'details' => $details,
-                    'updatedAt' => time(),
-                ]);
-            }
-            if ($installId !== '') {
-                $this->state->updateGlobalLock($installId, Server::STATUS_ERROR);
-            }
-            @unlink(Server::INSTALLER_CONFIG_FILE);
-            if ($wantsStream) {
-                $details = ['trace' => $e->getTraceAsString()];
-                $previous = $e->getPrevious();
-                if ($previous instanceof \Throwable && $previous->getMessage() !== '') {
-                    $details['output'] = $previous->getMessage();
-                }
-                $this->sendSseEvent(Server::STATUS_ERROR, ['message' => $e->getMessage(), 'details' => $details]);
-            } else {
-                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-            }
+            $this->handleInstallationError($e, $installId, $wantsStream);
         }
 
         return true;
@@ -639,5 +611,42 @@ class HttpHandler
             echo json_encode(['success' => false, 'message' => $message]);
         }
         exit;
+    }
+
+    private function buildErrorDetails(\Throwable $e): array
+    {
+        $details = ['trace' => $e->getTraceAsString()];
+        $previous = $e->getPrevious();
+        if ($previous instanceof \Throwable && $previous->getMessage() !== '') {
+            $details['output'] = $previous->getMessage();
+        }
+        return $details;
+    }
+
+    private function handleInstallationError(\Throwable $e, string $installId, bool $wantsStream): void
+    {
+        http_response_code(500);
+
+        if ($installId !== '') {
+            $this->state->writeProgressFile($installId, [
+                'step' => Server::STATUS_ERROR,
+                'status' => Server::STATUS_ERROR,
+                'message' => $e->getMessage(),
+                'details' => $this->buildErrorDetails($e),
+                'updatedAt' => time(),
+            ]);
+            $this->state->updateGlobalLock($installId, Server::STATUS_ERROR);
+        }
+
+        @unlink(Server::INSTALLER_CONFIG_FILE);
+
+        if ($wantsStream) {
+            $this->sendSseEvent(Server::STATUS_ERROR, [
+                'message' => $e->getMessage(),
+                'details' => $this->buildErrorDetails($e)
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 }
