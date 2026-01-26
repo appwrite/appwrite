@@ -100,7 +100,7 @@ jobs:
       - name: Install Playwright
         run: |
           bun install --no-progress
-          bunx playwright install --with-deps chromium
+          bunx playwright install --with-deps chromium firefox webkit
 
       - name: Run installer tests (install)
         run: bun run test:installer
