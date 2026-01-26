@@ -106,7 +106,11 @@ class HttpHandler
                 'eot' => 'application/vnd.ms-fontobject',
             ];
 
-            $contentType = $mimeTypes[$extension] ?? 'application/octet-stream';
+            if (!isset($mimeTypes[$extension])) {
+                return false;
+            }
+
+            $contentType = $mimeTypes[$extension];
             header('Content-Type: ' . $contentType);
             header('Content-Length: ' . filesize($filePath));
             readfile($filePath);
@@ -301,6 +305,27 @@ class HttpHandler
 
         $assistantOpenAIKey = trim((string) ($input['assistantOpenAIKey'] ?? ''));
         $input['assistantOpenAIKey'] = $assistantOpenAIKey;
+
+        if (!$this->config->isUpgrade()) {
+            $accountName = trim((string) ($input['accountName'] ?? ''));
+            if ($accountName === '') {
+                $this->respondBadRequest('Please enter a name', $wantsStream, Server::STEP_ACCOUNT_SETUP);
+            }
+
+            $accountEmail = trim((string) ($input['accountEmail'] ?? ''));
+            if ($accountEmail === '' || !$this->state->isValidEmailAddress($accountEmail)) {
+                $this->respondBadRequest('Please enter a valid email address', $wantsStream, Server::STEP_ACCOUNT_SETUP);
+            }
+
+            $accountPassword = (string) ($input['accountPassword'] ?? '');
+            if (!preg_match('/\\S/', $accountPassword) || !$this->state->isValidPassword($accountPassword)) {
+                $this->respondBadRequest('Password must be at least 8 characters', $wantsStream, Server::STEP_ACCOUNT_SETUP);
+            }
+
+            $input['accountName'] = $accountName;
+            $input['accountEmail'] = $accountEmail;
+            $input['accountPassword'] = $accountPassword;
+        }
 
         $lockedDatabase = $this->config->getLockedDatabase();
         if (!$lockedDatabase) {
@@ -605,10 +630,10 @@ class HttpHandler
         @flush();
     }
 
-    private function respondBadRequest(string $message, bool $wantsStream): void
+    private function respondBadRequest(string $message, bool $wantsStream, string $step = Server::STEP_CONFIG_FILES): void
     {
         if ($wantsStream) {
-            $this->sendSseEvent(Server::STATUS_ERROR, ['message' => $message, 'step' => Server::STEP_CONFIG_FILES]);
+            $this->sendSseEvent(Server::STATUS_ERROR, ['message' => $message, 'step' => $step]);
         } else {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => $message]);

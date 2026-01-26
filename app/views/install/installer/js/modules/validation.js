@@ -13,7 +13,7 @@
 
     const isValidPassword = (value) => {
         if (!value) return false;
-        return value.trim().length >= 8;
+        return value.length >= 8 && /\S/.test(value);
     };
 
     const isValidIPv4 = (host) => {

@@ -41,6 +41,7 @@ class Server
 
         $this->state = new State($this->paths);
 
+        /* launches the install/upgrade entrypoint in Docker. */
         if (PHP_SAPI === 'cli') {
             $this->runCli();
             return;
@@ -220,7 +221,7 @@ class Server
         $tempDir = sys_get_temp_dir();
         @unlink(self::INSTALLER_LOCK_FILE);
         @unlink(self::INSTALLER_CONFIG_FILE);
-        foreach (glob($tempDir . '/appwrite-install-*.json') ?: [] as $file) {
+        foreach ((array) glob($tempDir . '/appwrite-install-*.json') as $file) {
             @unlink($file);
         }
     }
@@ -303,7 +304,7 @@ class Server
         $args[] = '--entrypoint=' . $entrypoint;
         $args[] = $image;
 
-        $escaped = array_map('escapeshellarg', $args);
+        $escaped = array_map(escapeshellarg(...), $args);
         $command = implode(' ', $escaped);
         passthru($command, $status);
         exit($status);

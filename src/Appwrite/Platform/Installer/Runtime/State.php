@@ -138,6 +138,11 @@ class State
         return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
     }
 
+    public function isValidPassword(string $value): bool
+    {
+        return strlen($value) >= 8 && preg_match('/\S/', $value) === 1;
+    }
+
     public function isValidAppDomainInput(string $value): bool
     {
         $value = trim($value);
@@ -289,7 +294,7 @@ class State
     private function parseEnvFile(string $contents): array
     {
         $vars = [];
-        foreach (preg_split('/\r\n|\n|\r/', $contents) ?: [] as $line) {
+        foreach ((array) preg_split('/\r\n|\n|\r/', $contents) as $line) {
             $line = trim($line);
             if ($line === '' || $line[0] === '#') {
                 continue;
