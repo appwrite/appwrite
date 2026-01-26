@@ -228,9 +228,8 @@ class Server
 
     private function dockerImageExists(string $image): bool
     {
-        $name = escapeshellarg($image);
         $result = 1;
-        exec("docker image inspect $name >/dev/null 2>&1", $output, $result);
+        exec("docker image inspect " . escapeshellarg($image) . " >/dev/null 2>&1", $output, $result);
         return $result === 0;
     }
 
@@ -304,8 +303,7 @@ class Server
         $args[] = '--entrypoint=' . $entrypoint;
         $args[] = $image;
 
-        $escaped = array_map(escapeshellarg(...), $args);
-        $command = implode(' ', $escaped);
+        $command = implode(' ', array_map(escapeshellarg(...), $args));
         passthru($command, $status);
         exit($status);
     }

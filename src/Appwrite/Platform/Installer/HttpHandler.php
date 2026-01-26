@@ -222,8 +222,7 @@ class HttpHandler
         if (function_exists('posix_getpid')) {
             $pid = posix_getpid();
             if ($pid) {
-                $delay = 5;
-                $command = 'sh -c ' . escapeshellarg("sleep {$delay}; kill {$pid} >/dev/null 2>&1");
+                $command = 'sh -c ' . escapeshellarg("sleep 5; kill $pid >/dev/null 2>&1");
                 @exec($command . ' >/dev/null 2>&1 &');
             }
         }

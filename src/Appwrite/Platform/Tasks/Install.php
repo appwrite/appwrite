@@ -782,8 +782,7 @@ class Install extends Action
         $command[] = '-d';
         $command[] = '--remove-orphans';
         $command[] = '--renew-anon-volumes';
-        $escaped = array_map(escapeshellarg(...), $command);
-        $commandLine = $env . implode(' ', $escaped) . ' 2>&1';
+        $commandLine = $env . implode(' ', array_map(escapeshellarg(...), $command)) . ' 2>&1';
         \exec($commandLine, $output, $exit);
 
         if ($exit !== 0) {
