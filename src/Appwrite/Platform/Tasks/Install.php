@@ -305,9 +305,11 @@ class Install extends Action
 
         // Start with all defaults
         foreach ($vars as $var) {
+            $filter = $var['filter'] ?? null;
             $default = $var['default'] ?? null;
             $hasDefault = $default !== null && $default !== '';
-            if (!empty($var['filter']) && $var['filter'] === 'token') {
+
+            if ($filter === 'token') {
                 if ($hasDefault) {
                     $input[$var['name']] = $default;
                 } elseif ($shouldGenerateSecrets) {
@@ -315,11 +317,11 @@ class Install extends Action
                 } else {
                     $input[$var['name']] = '';
                 }
-            } elseif (!empty($var['filter']) && $var['filter'] === 'password') {
-                /*;#+@:/?& broke DSNs locally */
+            } elseif ($filter === 'password') {
                 if ($hasDefault) {
                     $input[$var['name']] = $default;
                 } elseif ($shouldGenerateSecrets) {
+                    /*;#+@:/?& broke DSNs locally */
                     $input[$var['name']] = $this->generatePasswordValue($var['name'], $password);
                 } else {
                     $input[$var['name']] = '';
