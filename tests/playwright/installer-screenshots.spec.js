@@ -1,15 +1,12 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
+const isUpgradeRun = process.env.TEST_MODE === 'upgrade';
+
 const setMockSettings = async (page, settings) => {
   await page.addInitScript((value) => {
     sessionStorage.setItem('appwrite-installer-mock-settings', JSON.stringify(value));
   }, settings);
-};
-
-const isUpgradeMode = async (page) => {
-  const value = await page.locator('body').getAttribute('data-upgrade');
-  return value === 'true';
 };
 
 const openAdvancedSettings = async (page) => {
@@ -19,16 +16,13 @@ const openAdvancedSettings = async (page) => {
   }
 };
 
-test.describe('Appwrite Web Installer - Screenshots', () => {
+test.describe('@install Appwrite Web Installer - Screenshots', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test('capture screenshots of wizard steps', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForSelector('#hostname', { state: 'visible', timeout: 10000 });
     await page.waitForTimeout(300);
-
-    if (await isUpgradeMode(page)) {
-      test.skip(true, 'Install flow screenshots are not available in upgrade mode.');
-    }
 
     await expect(page.locator('h1')).toContainText('Setup your app');
     await page.screenshot({ path: 'tests/playwright/screenshots/step-1-setup.png', fullPage: true });
@@ -71,9 +65,6 @@ test.describe('Appwrite Web Installer - Screenshots', () => {
   test('capture validation states', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    if (await isUpgradeMode(page)) {
-      test.skip(true, 'Install validation screenshots are not available in upgrade mode.');
-    }
     await page.waitForSelector('#hostname', { state: 'visible', timeout: 10000 });
 
     await page.locator('#hostname').fill('');
@@ -91,9 +82,6 @@ test.describe('Appwrite Web Installer - Screenshots', () => {
   test('capture account validation states', async ({ page }) => {
     await page.goto('/?step=3');
     await page.waitForLoadState('networkidle');
-    if (await isUpgradeMode(page)) {
-      test.skip(true, 'Account step is not available in upgrade mode.');
-    }
     await page.waitForSelector('#account-name', { state: 'visible', timeout: 10000 });
 
     await page.locator('#account-name').fill('');
@@ -111,36 +99,31 @@ test.describe('Appwrite Web Installer - Screenshots', () => {
     await page.goto('/?step=4');
     await page.waitForLoadState('networkidle');
 
-    const upgrade = await isUpgradeMode(page);
-    const actionLabel = upgrade ? 'Update' : 'Install';
-    const screenshotName = upgrade ? 'upgrade-error' : 'install-error';
-
-    await page.waitForSelector(`button:has-text("${actionLabel}")`, { state: 'visible', timeout: 10000 });
-    await page.locator(`button:has-text("${actionLabel}")`).click();
+    await page.waitForSelector('button:has-text("Install")', { state: 'visible', timeout: 10000 });
+    await page.locator('button:has-text("Install")').click();
     await page.waitForSelector('.install-row[data-status="error"]', { timeout: 15000 });
-    await page.screenshot({ path: `tests/playwright/screenshots/${screenshotName}.png`, fullPage: true });
+    await page.screenshot({ path: 'tests/playwright/screenshots/install-error.png', fullPage: true });
   });
 
   test('capture toast state (mock)', async ({ page }) => {
     await setMockSettings(page, { toast: true });
     await page.goto('/?step=4');
     await page.waitForLoadState('networkidle');
-    const upgrade = await isUpgradeMode(page);
-    const actionLabel = upgrade ? 'Update' : 'Install';
-    const screenshotName = upgrade ? 'toast-session-expired-upgrade' : 'toast-session-expired';
-    await page.waitForSelector(`button:has-text("${actionLabel}")`, { state: 'visible', timeout: 10000 });
-    await page.locator(`button:has-text("${actionLabel}")`).click();
+    await page.waitForSelector('button:has-text("Install")', { state: 'visible', timeout: 10000 });
+    await page.locator('button:has-text("Install")').click();
     await page.waitForSelector('.installer-toast', { state: 'visible', timeout: 10000 });
     await page.waitForSelector('.installer-toast:not(.is-entering)', { state: 'visible', timeout: 10000 });
     await page.waitForTimeout(450);
-    await page.screenshot({ path: `tests/playwright/screenshots/${screenshotName}.png`, fullPage: true });
+    await page.screenshot({ path: 'tests/playwright/screenshots/toast-session-expired.png', fullPage: true });
   });
+});
 
+test.describe('@upgrade Appwrite Web Installer - Screenshots', () => {
+  test.skip(!isUpgradeRun, 'Install mode');
   test('capture upgrade flow screenshots (mock upgrade)', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    const isUpgrade = await page.locator('body').getAttribute('data-upgrade');
-    test.skip(isUpgrade !== 'true', 'Upgrade mode not enabled.');
+    await expect(page.locator('body')).toHaveAttribute('data-upgrade', 'true');
 
     await expect(page.locator('h1')).toContainText(/Update your app/i);
     await page.screenshot({ path: 'tests/playwright/screenshots/upgrade-step-1-setup.png', fullPage: true });

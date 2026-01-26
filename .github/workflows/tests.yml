@@ -99,20 +99,20 @@ jobs:
 
       - name: Install Playwright
         run: |
-          npm install --no-fund --no-audit
-          npx playwright install --with-deps chromium
+          bun install --no-progress
+          bunx playwright install --with-deps chromium
 
       - name: Run installer tests (install)
-        run: TEST_MODE=install npx playwright test tests/playwright/installer.spec.js --project=chromium
+        run: bun run test:installer
 
       - name: Run installer tests (upgrade)
-        run: TEST_MODE=upgrade npx playwright test tests/playwright/installer.spec.js --project=chromium
+        run: bun run test:installer:upgrade
 
       - name: Run installer screenshots (install)
-        run: TEST_MODE=install npx playwright test tests/playwright/installer-screenshots.spec.js --project=chromium
+        run: bun run test:screenshots
 
       - name: Run installer screenshots (upgrade)
-        run: TEST_MODE=upgrade npx playwright test tests/playwright/installer-screenshots.spec.js --project=chromium
+        run: bun run test:screenshots:upgrade
 
       - name: Upload installer screenshots
         if: always()

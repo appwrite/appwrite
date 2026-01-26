@@ -1,6 +1,8 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
+const isUpgradeRun = process.env.TEST_MODE === 'upgrade';
+
 const openAdvancedSettings = async (page) => {
   const toggle = page.locator('.accordion-toggle');
   const expanded = await toggle.getAttribute('aria-expanded');
@@ -28,7 +30,8 @@ const fillValidSetup = async (page, overrides = {}) => {
   }
 };
 
-test.describe('Appwrite Web Installer - Page Load', () => {
+test.describe('@install Appwrite Web Installer - Page Load', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
   });
@@ -49,7 +52,8 @@ test.describe('Appwrite Web Installer - Page Load', () => {
   });
 });
 
-test.describe('Appwrite Web Installer - Step 1: Setup', () => {
+test.describe('@install Appwrite Web Installer - Step 1: Setup', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
   });
@@ -186,7 +190,8 @@ test.describe('Appwrite Web Installer - Step 1: Setup', () => {
   });
 });
 
-test.describe('Appwrite Web Installer - Step 2: Secret Key', () => {
+test.describe('@install Appwrite Web Installer - Step 2: Secret Key', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test.beforeEach(async ({ page }) => {
     await page.goto('/?step=2');
     await page.waitForLoadState('networkidle');
@@ -288,7 +293,8 @@ test.describe('Appwrite Web Installer - Step 2: Secret Key', () => {
   });
 });
 
-test.describe('Appwrite Web Installer - Step 3: Account Creation', () => {
+test.describe('@install Appwrite Web Installer - Step 3: Account Creation', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test.beforeEach(async ({ page }) => {
     await page.goto('/?step=3');
     await page.waitForLoadState('networkidle');
@@ -385,7 +391,8 @@ test.describe('Appwrite Web Installer - Step 3: Account Creation', () => {
   });
 });
 
-test.describe('Appwrite Web Installer - Step 4: Review', () => {
+test.describe('@install Appwrite Web Installer - Step 4: Review', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test.beforeEach(async ({ page }) => {
     await page.goto('/?step=4');
     await page.waitForLoadState('networkidle');
@@ -479,7 +486,8 @@ test.describe('Appwrite Web Installer - Step 4: Review', () => {
   });
 });
 
-test.describe('Appwrite Web Installer - Step 5: Install', () => {
+test.describe('@install Appwrite Web Installer - Step 5: Install', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test.beforeEach(async ({ page }) => {
     await page.goto('/?step=5');
     await page.waitForLoadState('networkidle');
@@ -496,12 +504,12 @@ test.describe('Appwrite Web Installer - Step 5: Install', () => {
   });
 });
 
-test.describe('Appwrite Web Installer - Upgrade Flow', () => {
+test.describe('@upgrade Appwrite Web Installer - Upgrade Flow', () => {
+  test.skip(!isUpgradeRun, 'Install mode');
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    const isUpgrade = await page.locator('body').getAttribute('data-upgrade');
-    test.skip(isUpgrade !== 'true', 'Upgrade mode not enabled.');
+    await expect(page.locator('body')).toHaveAttribute('data-upgrade', 'true');
   });
 
   test('shows upgrade heading and locked database', async ({ page }) => {
@@ -527,7 +535,8 @@ test.describe('Appwrite Web Installer - Upgrade Flow', () => {
   });
 });
 
-test.describe('Appwrite Web Installer - Toasts', () => {
+test.describe('@install Appwrite Web Installer - Toasts', () => {
+  test.skip(isUpgradeRun, 'Upgrade mode');
   test('shows session expired toast when mock toast flag is set', async ({ page }) => {
     await page.addInitScript(() => {
       sessionStorage.setItem('appwrite-installer-mock-settings', JSON.stringify({ toast: true }));
