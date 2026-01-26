@@ -12,6 +12,7 @@ use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\GraphQL;
 use Appwrite\SDK\Language\Kotlin;
+use Appwrite\SDK\Language\Markdown;
 use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\PHP;
 use Appwrite\SDK\Language\Python;
@@ -31,6 +32,27 @@ use Utopia\Validator\WhiteList;
 
 class SDKs extends Action
 {
+    protected array $supportedSDKS = [
+        'web',
+        'cli',
+        'php',
+        'nodejs',
+        'deno',
+        'python',
+        'ruby',
+        'flutter',
+        'react-native',
+        'dart',
+        'go',
+        'swift',
+        'apple',
+        'dotnet',
+        'android',
+        'graphql',
+        'rest',
+        'markdown',
+    ];
+
     public static function getName(): string
     {
         return 'sdks';
@@ -61,6 +83,9 @@ class SDKs extends Action
         if (!$sdks) {
             $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
+            if ($selectedSDK !== '*' && !\in_array($selectedSDK, $this->supportedSDKS)) {
+                throw new \Exception('Unknown SDK "' . $selectedSDK . '" given. Options are: ' . implode(', ', $this->supportedSDKS));
+            }
         } else {
             $sdks = explode(',', $sdks);
         }
@@ -251,6 +276,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'rest':
                         $config = new REST();
+                        break;
+                    case 'markdown':
+                        $config = new Markdown();
+                        $config->setNPMPackage('@appwrite.io/docs');
                         break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
