@@ -1079,8 +1079,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   role="tab"
                   aria-selected={activeTab === tab.id}
                   className={cn(
-                    'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
-                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                    'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     activeTab === tab.id
                       ? 'text-foreground'
                       : 'text-muted-foreground hover:text-foreground/80',

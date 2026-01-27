@@ -180,8 +180,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 role="tab"
                 aria-selected={isActive}
                 className={cn(
-                  'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                  'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                   isActive
                     ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground/80',
@@ -198,13 +198,13 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               role="tab"
               aria-selected={isActive}
               onClick={() => onTabChange?.(tab.id)}
-              className={cn(
-                'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
-                'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                isActive
-                  ? 'text-foreground'
-                  : 'text-muted-foreground hover:text-foreground/80',
-              )}
+                className={cn(
+                  'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                  isActive
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground/80',
+                )}
             >
               {tabContent}
             </button>
@@ -284,13 +284,13 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         replace
                         role="tab"
                         aria-selected={isActive}
-                        className={cn(
-                          'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
-                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                          isActive
-                            ? 'text-foreground'
-                            : 'text-muted-foreground hover:text-foreground/80',
-                        )}
+                className={cn(
+                  'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                  isActive
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground/80',
+                )}
                       >
                         {tabContent}
                       </Link>
@@ -303,13 +303,13 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       role="tab"
                       aria-selected={isActive}
                       onClick={() => onTabChange?.(tab.id)}
-                      className={cn(
-                        'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors',
-                        'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
-                        isActive
-                          ? 'text-foreground'
-                          : 'text-muted-foreground hover:text-foreground/80',
-                      )}
+                className={cn(
+                  'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                  isActive
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground/80',
+                )}
                     >
                       {tabContent}
                     </button>

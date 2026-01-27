@@ -504,8 +504,8 @@ export function DashboardOverview({ projectId }: DashboardOverviewProps) {
                         aria-selected={isActive}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                          'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left transition-colors first:pl-0',
-                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
+                          'relative flex min-w-[150px] flex-col gap-0.5 px-4 py-3 text-left transition-colors first:pl-0 rounded-sm',
+                          'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                           isActive
                             ? 'text-foreground'
                             : 'text-muted-foreground hover:text-foreground/80',
