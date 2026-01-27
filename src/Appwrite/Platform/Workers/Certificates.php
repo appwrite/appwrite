@@ -76,6 +76,7 @@ class Certificates extends Action
      * @param CertificatesAdapter $certificates
      * @param array $plan
      * @param ValidatorAuthorization $authorization
+     * @param array $nameservers
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
@@ -93,6 +94,7 @@ class Certificates extends Action
         CertificatesAdapter $certificates,
         array $plan,
         ValidatorAuthorization $authorization,
+        array $nameservers,
     ): void {
         $payload = $message->getPayload() ?? [];
 
