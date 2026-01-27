@@ -103,6 +103,19 @@ class Rule extends Model
                 'example' => APP_DATABASE_ATTRIBUTE_DATETIME,
                 'array' => false,
             ])
+            ->addRule('actions', [
+                'type' => self::TYPE_ARRAY,
+                'description' => 'Additional actions required from the user when rule status is "action_required"',
+                'default' => [],
+                'example' => [
+                    [
+                        'challengeType' => 'managed-dns',
+                        'recordType' => 'CNAME',
+                        'recordName' => '_acme-challenge',
+                        'recordValue' => 'test.fastly-validations.com',
+                    ],
+                ],
+            ])
         ;
     }
 
