@@ -1620,7 +1620,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
           Back to {database.name}
         </button>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {activeTab === 'rows' && (
             <RowsSpreadsheet
               table={selectedTable}

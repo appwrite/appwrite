@@ -226,6 +226,7 @@ export function ExecutionDetailsDrawer({
       title=""
       maxWidth="sm:max-w-[700px]"
       contentClassName="overflow-hidden"
+      disableAutoFocus={true}
       headerActions={
         <>
           <Button

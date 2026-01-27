@@ -132,7 +132,8 @@ export function LogsListView({
 
   const handleDrawerClose = (open: boolean) => {
     if (!open) {
-      onExecutionDeselect()
+      // Navigate to remove executionId from URL
+      // The parent component's useEffect will sync and clear selectedExecutionId
       navigate({
         to: location.pathname,
         search: (prev) => ({
@@ -141,6 +142,8 @@ export function LogsListView({
         }),
         replace: true,
       })
+      // Also clear selection immediately to prevent any race conditions
+      onExecutionDeselect()
     }
   }
 

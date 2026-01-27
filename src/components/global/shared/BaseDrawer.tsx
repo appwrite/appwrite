@@ -19,6 +19,7 @@ export interface BaseDrawerProps {
   contentClassName?: string
   maxWidth?: string
   side?: 'right' | 'left' | 'top' | 'bottom'
+  disableAutoFocus?: boolean
 }
 
 export function BaseDrawer({
@@ -30,8 +31,35 @@ export function BaseDrawer({
   contentClassName,
   maxWidth = 'sm:max-w-lg',
   side = 'right',
+  disableAutoFocus = false,
 }: BaseDrawerProps) {
   const contentRef = React.useRef<HTMLDivElement>(null)
+
+  // Blur the drawer container when it opens and auto-focus is disabled
+  React.useEffect(() => {
+    if (disableAutoFocus && open) {
+      // Use requestAnimationFrame to ensure this runs after Radix's focus management
+      const rafId = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          // Find the SheetContent element by its data attribute
+          const sheetContent = document.querySelector(
+            '[data-slot="sheet-content"]',
+          ) as HTMLElement | null
+          if (sheetContent) {
+            // Remove tabindex if it was set by Radix
+            sheetContent.removeAttribute('tabindex')
+            // Blur the SheetContent container itself
+            sheetContent.blur()
+          }
+          // Also blur any focused element inside
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur()
+          }
+        })
+      })
+      return () => cancelAnimationFrame(rafId)
+    }
+  }, [disableAutoFocus, open])
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -43,23 +71,39 @@ export function BaseDrawer({
         )}
         side={side}
         showCloseButton={false}
-        onOpenAutoFocus={(e) => {
-          // Prevent auto-focus on header buttons by focusing the content area instead
-          e.preventDefault()
-          // Find first focusable element in content area (not header)
-          const contentArea = contentRef.current
-          if (contentArea) {
-            const focusableSelector =
-              'button:not([tabindex="-1"]), [href]:not([tabindex="-1"]), input:not([tabindex="-1"]), select:not([tabindex="-1"]), textarea:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])'
-            const firstFocusable = contentArea.querySelector(
-              focusableSelector,
-            ) as HTMLElement
-            if (firstFocusable) {
-              // Use setTimeout to ensure it happens after Radix's focus trap
-              setTimeout(() => firstFocusable.focus(), 0)
-            }
-          }
-        }}
+        tabIndex={disableAutoFocus ? -1 : undefined}
+        onOpenAutoFocus={
+          disableAutoFocus
+            ? (e) => {
+                // Completely prevent any focus manipulation
+                e.preventDefault()
+              }
+            : (e) => {
+                // Prevent auto-focus on header buttons by focusing the content area instead
+                e.preventDefault()
+                // Find first focusable element in content area (not header)
+                const contentArea = contentRef.current
+                if (contentArea) {
+                  const focusableSelector =
+                    'button:not([tabindex="-1"]), [href]:not([tabindex="-1"]), input:not([tabindex="-1"]), select:not([tabindex="-1"]), textarea:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])'
+                  const firstFocusable = contentArea.querySelector(
+                    focusableSelector,
+                  ) as HTMLElement
+                  if (firstFocusable) {
+                    // Use setTimeout to ensure it happens after Radix's focus trap
+                    setTimeout(() => firstFocusable.focus(), 0)
+                  }
+                }
+              }
+        }
+        onCloseAutoFocus={
+          disableAutoFocus
+            ? (e) => {
+                // Prevent focus restoration when closing
+                e.preventDefault()
+              }
+            : undefined
+        }
       >
         <SheetHeader className="!p-0 !gap-0 shrink-0">
           <div className="flex items-center justify-between gap-4 w-full px-6 pt-4 pb-2">

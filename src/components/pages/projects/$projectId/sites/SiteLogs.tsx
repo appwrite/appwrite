@@ -118,8 +118,8 @@ export function SiteLogsView() {
     if (urlExecutionId && urlExecutionId !== selectedExecutionId) {
       setSelectedExecutionId(urlExecutionId)
     } else if (!urlExecutionId && selectedExecutionId) {
-      // Only clear if URL doesn't have executionId (user closed drawer)
-      // Don't clear if we're just initializing
+      // Clear selection when URL doesn't have executionId (user closed drawer)
+      setSelectedExecutionId(null)
     }
   }, [urlExecutionId, selectedExecutionId])
 
