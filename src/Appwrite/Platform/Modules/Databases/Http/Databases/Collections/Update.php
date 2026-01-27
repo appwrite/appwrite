@@ -64,7 +64,7 @@ class Update extends Action
             ))
             ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
             ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID.', false, ['dbForProject'])
-            ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.')
+            ->param('name', null, new Text(128), 'Collection name. Max length: 128 chars.', true)
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE)), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documentSecurity', false, new Boolean(true), 'Enables configuring permissions for individual documents. A user needs one of document or collection level permissions to access a document. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('enabled', true, new Boolean(), 'Is collection enabled? When set to \'disabled\', users cannot access the collection but Server SDKs with and API key can still read and write to the collection. No data is lost when this is toggled.', true)
@@ -76,7 +76,7 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, ?string $name, ?array $permissions, bool $documentSecurity, bool $enabled, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
         $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         if ($database->isEmpty()) {
@@ -87,6 +87,12 @@ class Update extends Action
         if ($collection->isEmpty()) {
             throw new Exception($this->getNotFoundException(), params: [$collectionId]);
         }
+
+        if ($name) {
+            $collection = $collection->setAttribute('name', $name);
+        }
+
+        $searchName = $name ?? $collection->getAttribute('name');
 
         $permissions ??= $collection->getPermissions();
 
@@ -99,11 +105,10 @@ class Update extends Action
             'database_' . $database->getSequence(),
             $collectionId,
             $collection
-                ->setAttribute('name', $name)
                 ->setAttribute('$permissions', $permissions)
                 ->setAttribute('documentSecurity', $documentSecurity)
                 ->setAttribute('enabled', $enabled)
-                ->setAttribute('search', \implode(' ', [$collectionId, $name]))
+                ->setAttribute('search', \implode(' ', [$collectionId, $searchName]))
         );
 
         $dbForDatabases = $getDatabasesDB($database);

@@ -116,6 +116,7 @@ services:
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
       - _APP_LOCALE
+      - _APP_COMPRESSION_ENABLED
       - _APP_COMPRESSION_MIN_SIZE_BYTES
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
@@ -685,10 +686,13 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
-      - openruntimes-executor
+      redis:
+        condition: service_started
+      ${_APP_DB_HOST:-mongodb}
+      - postgresql:
+        condition: service_started
+      openruntimes-executor:
+        condition: service_healthy
       - ollama
     environment:
       - _APP_ENV
@@ -1199,6 +1203,12 @@ services:
       - OPR_EXECUTOR_STORAGE_WASABI_SECRET=$_APP_STORAGE_WASABI_SECRET
       - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"Authorization: Bearer $$OPR_EXECUTOR_SECRET\" http://localhost/v1/health >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
 
   mariadb:
     image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
