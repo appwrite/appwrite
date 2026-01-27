@@ -251,7 +251,8 @@ abstract class Action extends DatabasesAction
     }
 
     /**
-     * Validate a relationship value and its document ID.
+     * Validate relationship values.
+     * Handles Document objects, ID strings, and associative arrays.
      */
     protected function validateRelationship(mixed $relation): void
     {
@@ -263,8 +264,6 @@ abstract class Action extends DatabasesAction
             $relationId = $relation;
         } elseif (\is_array($relation) && \array_values($relation) !== $relation) {
             $relationId = $relation['$id'] ?? null;
-        } else {
-            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship value must be an object or document ID string, not ' . \gettype($relation));
         }
 
         if ($relationId !== null) {
