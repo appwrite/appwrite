@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "970c5cdbbd34f2be34b466ece05edbdf",
+    "content-hash": "d5e68884c3150a35c167ffe817a77098",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4796,16 +4796,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "1.0.1",
+            "version": "dev-update-swoole-lock",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "f60ce897b73797c4f4504390ffc582736401a583"
+                "reference": "12e3774a645737fdbcd397f4a8aaba7220ba2c90"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/f60ce897b73797c4f4504390ffc582736401a583",
-                "reference": "f60ce897b73797c4f4504390ffc582736401a583",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/12e3774a645737fdbcd397f4a8aaba7220ba2c90",
+                "reference": "12e3774a645737fdbcd397f4a8aaba7220ba2c90",
                 "shasum": ""
             },
             "require": {
@@ -4816,7 +4816,7 @@
                 "laravel/pint": "1.*",
                 "phpstan/phpstan": "1.*",
                 "phpunit/phpunit": "11.*",
-                "swoole/ide-helper": "5.1.2"
+                "swoole/ide-helper": "^6.0"
             },
             "type": "library",
             "autoload": {
@@ -4843,9 +4843,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/1.0.1"
+                "source": "https://github.com/utopia-php/pools/tree/update-swoole-lock"
             },
-            "time": "2026-01-27T10:15:22+00:00"
+            "time": "2026-01-27T13:39:21+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -5121,20 +5121,20 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "1.0.0",
+            "version": "dev-feat-v6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "95a937acb393dbf95cccba239d55886e2848ab0b"
+                "reference": "3c7990310bb5f682c4f9172f6673708fe1ee0a77"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/95a937acb393dbf95cccba239d55886e2848ab0b",
-                "reference": "95a937acb393dbf95cccba239d55886e2848ab0b",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/3c7990310bb5f682c4f9172f6673708fe1ee0a77",
+                "reference": "3c7990310bb5f682c4f9172f6673708fe1ee0a77",
                 "shasum": ""
             },
             "require": {
-                "ext-swoole": "*",
+                "ext-swoole": "6.*",
                 "php": ">=8.0",
                 "utopia-php/framework": "0.33.37"
             },
@@ -5142,7 +5142,7 @@
                 "laravel/pint": "1.2.*",
                 "phpstan/phpstan": "^1.10",
                 "phpunit/phpunit": "^9.3",
-                "swoole/ide-helper": "5.0.2"
+                "swoole/ide-helper": "6.0.2"
             },
             "type": "library",
             "autoload": {
@@ -5166,9 +5166,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/1.0.0"
+                "source": "https://github.com/utopia-php/swoole/tree/feat-v6"
             },
-            "time": "2026-01-14T14:00:11+00:00"
+            "time": "2026-01-27T12:50:47+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -8008,16 +8008,16 @@
         },
         {
             "name": "swoole/ide-helper",
-            "version": "5.1.2",
+            "version": "6.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swoole/ide-helper.git",
-                "reference": "33ec7af9111b76d06a70dd31191cc74793551112"
+                "reference": "6f12243dce071714c5febe059578d909698f9a52"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/33ec7af9111b76d06a70dd31191cc74793551112",
-                "reference": "33ec7af9111b76d06a70dd31191cc74793551112",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/6f12243dce071714c5febe059578d909698f9a52",
+                "reference": "6f12243dce071714c5febe059578d909698f9a52",
                 "shasum": ""
             },
             "type": "library",
@@ -8034,9 +8034,9 @@
             "description": "IDE help files for Swoole.",
             "support": {
                 "issues": "https://github.com/swoole/ide-helper/issues",
-                "source": "https://github.com/swoole/ide-helper/tree/5.1.2"
+                "source": "https://github.com/swoole/ide-helper/tree/6.0.2"
             },
-            "time": "2024-02-01T22:28:11+00:00"
+            "time": "2025-03-23T07:31:41+00:00"
         },
         {
             "name": "symfony/console",
@@ -9050,9 +9050,25 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/pools",
+            "version": "dev-update-swoole-lock",
+            "alias": "1.0.3",
+            "alias_normalized": "1.0.3.0"
+        },
+        {
+            "package": "utopia-php/swoole",
+            "version": "dev-feat-v6",
+            "alias": "1.0.2",
+            "alias_normalized": "1.0.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/pools": 20,
+        "utopia-php/swoole": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

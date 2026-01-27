@@ -286,6 +286,7 @@ $register->set('pools', function () {
                 },
                 default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
+            echo "Swoole Version: " . SWOOLE_VERSION . PHP_EOL;
 
             $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
 
