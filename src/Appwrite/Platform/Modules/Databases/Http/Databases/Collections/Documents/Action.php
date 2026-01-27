@@ -259,7 +259,7 @@ abstract class Action extends DatabasesAction
         $relationId = null;
 
         if ($relation instanceof Document) {
-            $relationId = $relation->getAttribute('$id');
+            $relationId = $relation->getId();
         } elseif (\is_string($relation)) {
             $relationId = $relation;
         } elseif (\is_array($relation) && \array_values($relation) !== $relation) {
