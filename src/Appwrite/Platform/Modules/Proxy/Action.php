@@ -86,7 +86,7 @@ class Action extends PlatformAction
      * @param Log|null $log Log instance to add timings to
      * @return void
      */
-    protected function verifyRule(Document $rule, ?Log $log = null): void
+    protected function verifyRule(Document $rule, ?Log $log = null, string $verificationType = RULE_VERIFICATION_TYPE_DNS): void
     {
         $dnsValidatorClass = $this->dnsValidatorClass;
         $dnsEnv = System::getEnv('_APP_DNS', '8.8.8.8');
@@ -101,6 +101,25 @@ class Action extends PlatformAction
 
         if (!$domain->isKnown() || $domain->isTest()) {
             throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed as domain ' . $domain->get() . ' does not resolve to a known public apex domain.');
+        }
+
+        // Verify managed-dns challenge
+        if ($verificationType === RULE_VERIFICATION_TYPE_MANAGED_DNS) {
+            $managedDnsAction = current(array_filter($rule->getAttribute('actions', []), fn ($action) => $action['challengeType'] === RULE_VERIFICATION_TYPE_MANAGED_DNS));
+
+            if (!$managedDnsAction) {
+                throw new Exception(Exception::RULE_VERIFICATION_FAILED, 'DNS verification failed as no managed-dns challenge is available in the rule.');
+            }
+
+            $validationStart = \microtime(true);
+            $validator = new $dnsValidatorClass($managedDnsAction['recordValue'], Record::typeNameToCode($managedDnsAction['recordType']), $dnsServers);
+            if (!$validator->isValid($domain->get())) {
+                if (!\is_null($log)) {
+                    $log->addExtra('dnsTimingCaa', \strval(\microtime(true) - $validationStart));
+                    $log->addTag('dnsDomain', $domain->get());
+                }
+                throw new Exception(Exception::RULE_VERIFICATION_FAILED, $validator->getDescription());
+            }
         }
 
         // Ensure CAA won't block certificate issuance

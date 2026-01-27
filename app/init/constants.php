@@ -215,6 +215,10 @@ const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
 const DELETE_TYPE_CSV_EXPORTS = 'csv_exports';
 const DELETE_TYPE_MAINTENANCE = 'maintenance';
 
+// Rule verification types
+const RULE_VERIFICATION_TYPE_DNS = 'dns'; // Basic verification of DNS records
+const RULE_VERIFICATION_TYPE_MANAGED_DNS = 'managed_dns'; // ACME-DNS challenge verification
+
 // Rule statuses
 const RULE_STATUS_CREATED = 'created'; // This is also the status when domain DNS verification fails.
 const RULE_STATUS_CERTIFICATE_GENERATING = 'verifying';

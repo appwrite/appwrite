@@ -16,6 +16,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\UID;
 use Utopia\Logger\Log;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\WhiteList;
 
 class Update extends Action
 {
@@ -55,6 +56,7 @@ class Update extends Action
                 ]
             ))
             ->param('ruleId', '', new UID(), 'Rule ID.')
+            ->param('type', '', new WhiteList([RULE_VERIFICATION_TYPE_DNS, RULE_VERIFICATION_TYPE_MANAGED_DNS]), 'Type of verification to perform.')
             ->inject('response')
             ->inject('queueForCertificates')
             ->inject('queueForEvents')
@@ -66,6 +68,7 @@ class Update extends Action
 
     public function action(
         string $ruleId,
+        string $type,
         Response $response,
         Certificate $queueForCertificates,
         Event $queueForEvents,
@@ -87,20 +90,42 @@ class Update extends Action
         }
 
         try {
-            $this->verifyRule($rule, $log);
-            // Reset logs and status for the rule
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'logs' => '',
-                'status' => RULE_STATUS_CERTIFICATE_GENERATING,
-            ]));
+            $this->verifyRule($rule, $log, $type);
 
-            $certificateId = $rule->getAttribute('certificateId', '');
-            // Reset logs for the associated certificate.
-            if (!empty($certificateId)) {
-                $certificate = $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
-                    'logs' => '',
+            if ($type === RULE_VERIFICATION_TYPE_MANAGED_DNS) {
+                // Set status to "generating" - This will ensure background sync will pick it up 
+                $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    'status' => RULE_STATUS_CERTIFICATE_GENERATING,
                 ]));
+            } else {
+                // Reset logs and status for the rule
+                $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                    'logs' => '',
+                    'status' => RULE_STATUS_CERTIFICATE_GENERATING,
+                ]));
+    
+                $certificateId = $rule->getAttribute('certificateId', '');
+                // Reset logs for the associated certificate.
+                if (!empty($certificateId)) {
+                    $certificate = $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
+                        'logs' => '',
+                    ]));
+                }
+
+                // Issue a TLS certificate when DNS verification is successful
+                $queueForCertificates
+                    ->setDomain(new Document([
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                    ]))
+                    ->trigger();
+
+                if (!empty($certificate)) {
+                    $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
+                }
             }
+            
+            $response->dynamic($rule, Response::MODEL_PROXY_RULE);
         } catch (Exception $err) {
             $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 '$updatedAt' => DateTime::now(),
@@ -108,18 +133,5 @@ class Update extends Action
             throw $err;
         }
 
-        // Issue a TLS certificate when DNS verification is successful
-        $queueForCertificates
-            ->setDomain(new Document([
-                'domain' => $rule->getAttribute('domain'),
-                'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-            ]))
-            ->trigger();
-
-        if (!empty($certificate)) {
-            $rule->setAttribute('renewAt', $certificate->getAttribute('renewDate', ''));
-        }
-
-        $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     }
 }
