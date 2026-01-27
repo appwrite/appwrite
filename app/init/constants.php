@@ -218,6 +218,7 @@ const DELETE_TYPE_MAINTENANCE = 'maintenance';
 // Rule statuses
 const RULE_STATUS_CREATED = 'created'; // This is also the status when domain DNS verification fails.
 const RULE_STATUS_CERTIFICATE_GENERATING = 'verifying';
+const RULE_STATUS_ACTION_REQUIRED = 'action_required';
 const RULE_STATUS_CERTIFICATE_GENERATION_FAILED = 'unverified';
 const RULE_STATUS_VERIFIED = 'verified';
 
