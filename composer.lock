@@ -4088,7 +4088,6 @@
         {
             "name": "utopia-php/database",
             "version": "4.6.2",
-            "version": "4.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
@@ -4721,7 +4720,6 @@
                 "appwrite/appwrite": "19.*",
                 "ext-curl": "*",
                 "ext-openssl": "*",
-                "halaxa/json-machine": "^1.2",
                 "halaxa/json-machine": "^1.2",
                 "php": ">=8.1",
                 "utopia-php/console": "0.0.*",
@@ -5692,7 +5690,6 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.19",
             "version": "1.8.21",
             "source": {
                 "type": "git",
