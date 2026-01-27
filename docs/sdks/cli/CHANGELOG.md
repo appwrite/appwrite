@@ -1,5 +1,34 @@
 # Change Log
 
+## 13.1.0
+
+- Mark `appwrite generate` command as stable
+- Improve permissions param to be a typesafe callback
+- Fix relationship handling in generated code
+- Fix `appwrite client` properly hanlding `--key` parameter
+- Fix `init site` not working on Windows
+
+## 13.1.0-rc.3
+
+- Allow generation of server side CRUD operations on databases and tables
+- Fix npm distribution failing due to missing template files in bundle
+
+## 13.1.0-rc.2
+
+- Update generated `databases` services to automatically initialize a client instance
+- Update generator to use handlebars templates
+
+## 13.1.0-rc.1
+
+- Feat: `appwrite generate` command to create a fully typesafe SDK for your Appwrite project
+- Chore: improve creation of columns during table creation by passing them directly instead of creating them one by one
+- Improved config validation by adding extra rules in zod schema
+
+## 13.0.1
+
+- Fix `project init` command leading to Cannot convert to BigInt error
+- Fix filter out unwanted attributes being pulled in the config file
+
 ## 13.0.0
 
 - Mark release as stable
