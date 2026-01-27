@@ -94,7 +94,7 @@ class Certificates extends Action
         CertificatesAdapter $certificates,
         array $plan,
         ValidatorAuthorization $authorization,
-        ?array $nameservers,
+        array $nameservers = [],
     ): void {
         $payload = $message->getPayload() ?? [];
 
