@@ -1379,6 +1379,17 @@ $platformCollections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('actions'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 65535,
+                'signed' => true,
+                'required' => false,
+                'default' => new \stdClass(),
+                'array' => false,
+                'filters' => ['json'],
+            ],
         ],
         'indexes' => [
             [
