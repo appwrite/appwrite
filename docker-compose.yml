@@ -688,18 +688,14 @@ services:
     depends_on:
       redis:
         condition: service_started
-
       ${_APP_DB_HOST:-mongodb}:
         condition: service_started
-
       postgresql:
         condition: service_started
-
       openruntimes-executor:
         condition: service_healthy
-
-  ollama:
-    condition: service_started
+      ollama:
+        condition: service_started
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
