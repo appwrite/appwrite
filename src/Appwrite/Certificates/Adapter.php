@@ -10,7 +10,7 @@ interface Adapter
 
     public function isInstantGeneration(string $domain, ?string $domainType): bool;
 
-    public function getCertificateStatus(string $domain, ?string $domainType): string;
+    public function getCertificateStatus(string $domain, ?string $domainType): array;
 
     public function isRenewRequired(string $domain, ?string $domainType, Log $log): bool;
 

@@ -90,7 +90,7 @@ class LetsEncrypt implements Adapter
         return true;
     }
 
-    public function getCertificateStatus(string $domain, ?string $domainType): string
+    public function getCertificateStatus(string $domain, ?string $domainType): array
     {
         throw new CertificateStatusException('Certificate status retrieval is not supported for LetsEncrypt.');
     }
