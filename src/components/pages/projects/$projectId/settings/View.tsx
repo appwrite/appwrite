@@ -103,7 +103,7 @@ export function ProjectSettingsView() {
   }, [activeTab])
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="Settings"
         tabs={tabs}

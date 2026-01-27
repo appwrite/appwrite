@@ -334,7 +334,7 @@ export function BucketDetailView() {
   )
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title={
           <div className="flex items-center gap-2">
@@ -398,14 +398,7 @@ export function BucketDetailView() {
         }
       />
 
-      <div
-        className={cn(
-          'mx-auto w-full max-w-7xl flex-1',
-          activeTab === 'settings' || activeTab === 'security'
-            ? 'overflow-y-auto'
-            : 'overflow-hidden',
-        )}
-      >
+      <div className="mx-auto w-full max-w-7xl flex-1">
         {activeTab === 'files' && (
           <div className="px-4 pb-4 sm:px-6">
             <>

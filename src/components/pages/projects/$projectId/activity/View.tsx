@@ -394,7 +394,7 @@ export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
   const hasActiveFilters = actionFilter || resourceTypeFilter
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="Activity"
         searchPlaceholder="Search activities..."

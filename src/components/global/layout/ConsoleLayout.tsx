@@ -32,9 +32,6 @@ interface ConsoleLayoutProps {
   /** Whether the main content should have overflow-hidden (for views that manage their own scrolling) */
   fixedLayout?: boolean
 
-  /** Whether this is a detail route (affects content wrapper styling) */
-  isDetailRoute?: boolean
-
   /** Custom container class name */
   containerClassName?: string
 }
@@ -83,7 +80,6 @@ export function ConsoleLayout({
   header,
   showFooter = true,
   fixedLayout = false,
-  isDetailRoute = false,
   containerClassName,
 }: ConsoleLayoutProps) {
   const hasSidebar = !!sidebar
@@ -137,15 +133,16 @@ export function ConsoleLayout({
             fixedLayout ? 'overflow-hidden' : 'overflow-y-auto',
           )}
         >
-          {/* Content wrapper: on detail routes it grows with content so footer flows at bottom; otherwise flex-1 fills viewport */}
           <div
             className={cn(
-              isDetailRoute ? 'flex-none min-w-0' : 'flex-1 min-h-0',
+              'flex-1',
+              fixedLayout && 'min-h-0',
             )}
           >
             <div
               className={cn(
-                isDetailRoute ? 'min-w-0' : 'h-full min-h-0',
+                'h-full',
+                fixedLayout && 'min-h-0',
               )}
             >
               {children}

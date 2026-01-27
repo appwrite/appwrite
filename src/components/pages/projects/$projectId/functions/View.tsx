@@ -211,7 +211,7 @@ export function FunctionsView() {
 
   if (error) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex flex-col">
         <ServiceHeader
           title="Functions"
           tabs={tabs}
@@ -242,7 +242,7 @@ export function FunctionsView() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="Functions"
         tabs={tabs}

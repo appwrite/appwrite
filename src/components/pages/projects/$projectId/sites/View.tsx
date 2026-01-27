@@ -233,7 +233,7 @@ export function SitesView() {
   )
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="Sites"
         searchPlaceholder="Search sites..."

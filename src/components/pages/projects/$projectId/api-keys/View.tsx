@@ -162,7 +162,7 @@ export function ApiKeysView() {
   }, [updateDrawerOpen, selectedKeyId, projectId])
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="API Keys"
         searchPlaceholder="Search API keys..."

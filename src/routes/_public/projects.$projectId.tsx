@@ -82,15 +82,6 @@ function ProjectLayout() {
     isDatabaseVisualizerView ||
     activeSection === 'usage'
 
-  // Check if we're on a detail route (user detail, team detail, etc.)
-  const isDetailRoute = pathParts.some(
-    (part, idx) =>
-      (part === 'users' || part === 'teams') &&
-      idx > 0 &&
-      pathParts[idx - 1] === 'auth' &&
-      idx + 1 < pathParts.length,
-  )
-
   // Check if we're on the function executions tab
   // Pattern: /projects/:projectId/functions/:functionId/executions
   const isFunctionExecutionsTab =
@@ -179,7 +170,6 @@ function ProjectLayout() {
           header={{ projectId }}
           showFooter={!hideFooter}
           fixedLayout={isFixedLayoutView}
-          isDetailRoute={isDetailRoute}
         >
           <Outlet />
         </ConsoleLayout>

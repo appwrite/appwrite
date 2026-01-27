@@ -407,7 +407,7 @@ export function DatabasesListView() {
   )
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="Databases"
         searchPlaceholder="Search databases..."
@@ -1620,14 +1620,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
           Back to {database.name}
         </button>
 
-        <div
-          className={cn(
-            'flex-1',
-            activeTab === 'settings' || activeTab === 'security'
-              ? 'overflow-y-auto'
-              : 'overflow-hidden',
-          )}
-        >
+        <div className="flex-1 min-h-0">
           {activeTab === 'rows' && (
             <RowsSpreadsheet
               table={selectedTable}
@@ -2346,7 +2339,7 @@ export function DatabaseOverview({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col min-h-0">
       <ServiceHeader
         title={
           <div className="flex items-center gap-2">
@@ -2512,7 +2505,7 @@ export function DatabaseOverview({
         }
       />
 
-      <div className="flex-1">
+      <div className="flex-1 min-h-0 flex flex-col">
         {activeTab === 'tables' && (
           <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
             {tablesLoading ? (
@@ -2771,7 +2764,9 @@ export function DatabaseOverview({
         {activeTab === 'backups' && <BackupsView databaseId={databaseId} />}
 
         {activeTab === 'visualizer' && (
-          <SchemaVisualizer databaseId={databaseId} />
+          <div className="flex-1 min-h-0">
+            <SchemaVisualizer databaseId={databaseId} />
+          </div>
         )}
 
         {activeTab === 'insights' && (
@@ -4776,7 +4771,7 @@ function RowsSpreadsheet({
     }
 
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex flex-col">
         <div className="flex flex-1 items-start justify-center pt-32">
           <div className="flex flex-col items-center justify-center gap-6">
             <Table2 className="h-12 w-12 text-muted-foreground/50" />
@@ -4937,7 +4932,7 @@ function RowsSpreadsheet({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col min-h-0">
       {/* Scrollable table area */}
       <div className="min-h-0 flex-1 overflow-auto overscroll-contain touch-pan-y">
         <table className="w-full border-collapse">

@@ -61,7 +61,7 @@ export function FirewallView() {
     : undefined
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="Firewall"
         tabs={tabs}

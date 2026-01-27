@@ -59,7 +59,7 @@ export function RealtimeView() {
   const isFullWidthTab = activeTab === 'messages' || activeTab === 'channels'
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="Realtime"
         tabs={tabs}

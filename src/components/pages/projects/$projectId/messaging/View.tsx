@@ -402,7 +402,7 @@ export function MessagingView() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="Messaging"
         tabs={tabs}

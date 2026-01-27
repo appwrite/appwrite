@@ -172,7 +172,7 @@ function FunctionLayoutContent() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex flex-col">
         <ServiceHeader title="Loading..." fullWidthBorder />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="rounded-lg border border-border bg-card py-12 text-center">
@@ -187,7 +187,7 @@ function FunctionLayoutContent() {
 
   if (!func) {
     return (
-      <div className="flex h-full flex-col">
+      <div className="flex flex-col">
         <ServiceHeader title="Function not found" fullWidthBorder />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="rounded-lg border border-border bg-card py-12 text-center">
@@ -281,7 +281,7 @@ function FunctionLayoutContent() {
     ) : undefined
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title={
           <div className="flex items-center gap-2">

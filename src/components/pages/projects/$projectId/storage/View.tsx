@@ -256,7 +256,7 @@ export function StorageView() {
   )
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex flex-col">
       <ServiceHeader
         title="Storage"
         searchPlaceholder="Search buckets..."
