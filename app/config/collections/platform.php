@@ -1386,7 +1386,7 @@ $platformCollections = [
                 'size' => 65535,
                 'signed' => true,
                 'required' => false,
-                'default' => new \stdClass(),
+                'default' => '',
                 'array' => false,
                 'filters' => ['json'],
             ],
