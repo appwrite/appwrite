@@ -174,6 +174,7 @@ export function SentryContextProvider({
 /**
  * Helper function to capture an exception with full context.
  * Use this for manual error capturing with rich context data.
+ * @returns The Sentry event ID (trace ID) if available, otherwise undefined
  */
 export function captureExceptionWithContext(
   error: Error,
@@ -188,7 +189,7 @@ export function captureExceptionWithContext(
     componentStack?: string
     [key: string]: any
   },
-) {
+): string | undefined {
   Sentry.captureException(error, {
     extra: {
       ...additionalContext,
@@ -211,4 +212,7 @@ export function captureExceptionWithContext(
       ...(additionalContext?.siteId && { site_id: additionalContext.siteId }),
     },
   })
+
+  // Get the event ID after capturing (Sentry.lastEventId() gets the last captured event)
+  return Sentry.lastEventId()
 }

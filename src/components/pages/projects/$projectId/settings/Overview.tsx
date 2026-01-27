@@ -305,12 +305,13 @@ export function ProjectSettingsOverview({
     return `https://${normalizedRegion}.cloud.appwrite.io/v1`
   }, [project?.region])
 
-  // Get API keys page URL
-  const apiKeysUrl = useMemo(() => {
-    if (!project) return ''
-    const region = project.region || 'us'
-    return `/projects/${region}-${projectId}/overview/api-keys#integrations`
-  }, [project, projectId])
+  // Navigate to API keys page
+  const handleViewApiKeys = () => {
+    navigate({
+      to: '/projects/$projectId/api-keys',
+      params: { projectId },
+    })
+  }
 
   // Mutation to update project name
   const updateNameMutation = useMutation({
@@ -682,7 +683,7 @@ export function ProjectSettingsOverview({
             variant="secondary"
             size="sm"
             className="h-9 text-[13px]"
-            onClick={() => navigate({ to: apiKeysUrl })}
+            onClick={handleViewApiKeys}
           >
             View API keys
           </Button>

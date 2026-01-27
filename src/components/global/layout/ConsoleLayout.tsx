@@ -137,16 +137,15 @@ export function ConsoleLayout({
             fixedLayout ? 'overflow-hidden' : 'overflow-y-auto',
           )}
         >
+          {/* Content wrapper: on detail routes it grows with content so footer flows at bottom; otherwise flex-1 fills viewport */}
           <div
             className={cn(
-              'flex-1',
-              (fixedLayout || isDetailRoute) && 'min-h-0',
+              isDetailRoute ? 'flex-none min-w-0' : 'flex-1 min-h-0',
             )}
           >
             <div
               className={cn(
-                'h-full',
-                (fixedLayout || isDetailRoute) && 'min-h-0',
+                isDetailRoute ? 'min-w-0' : 'h-full min-h-0',
               )}
             >
               {children}

@@ -174,7 +174,7 @@ export function ConsoleHeader({
               <div className="hidden @[700px]:block shrink-0">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                    <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer">
                       <Plus className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>

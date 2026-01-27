@@ -120,7 +120,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       rightContent ||
       showRefresh ||
       showImport ||
-      showExport
+      showExport ||
+      beforeCreateButtons
 
     // Show tabs if we have tabs and either:
     // 1. activeTab + onTabChange (button-based tabs), OR

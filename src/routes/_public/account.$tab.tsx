@@ -2,9 +2,11 @@ import { AccountView } from '@/components/pages/account/View'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
-  fetchAccountSessions,
-  fetchPaymentMethods,
-  fetchBillingAddresses,
+  accountSessionsQueryOptions,
+  accountIdentitiesQueryOptions,
+  mfaFactorsQueryOptions,
+  paymentMethodsQueryOptions,
+  billingAddressesQueryOptions,
   fetchCountries,
   fetchLocale,
 } from '@/lib/react-query/hooks'
@@ -15,6 +17,11 @@ import { sdk } from '@/lib/appwrite/sdk'
 const VALID_TABS = ['overview', 'sessions', 'payments'] as const
 
 export const Route = createFileRoute('/_public/account/$tab')({
+  pendingComponent: () => (
+    <div className="flex h-full items-center justify-center">
+      <div className="text-muted-foreground">Loading account...</div>
+    </div>
+  ),
   loader: async ({ params, context }) => {
     // Redirect invalid tabs to overview
     if (params.tab && !VALID_TABS.includes(params.tab as any)) {
@@ -34,27 +41,22 @@ export const Route = createFileRoute('/_public/account/$tab')({
     const { queryClient } = context
 
     // Fetch critical data before rendering to prevent layout shifts
-    if (tab === 'sessions') {
+    // Use ensureQueryData to use cache if available, fetch if stale/missing
+    if (tab === 'overview') {
+      // Fetch identities and MFA factors for overview tab - blocks navigation until ready
+      await Promise.all([
+        queryClient.ensureQueryData(accountIdentitiesQueryOptions()),
+        queryClient.ensureQueryData(mfaFactorsQueryOptions()),
+      ])
+    } else if (tab === 'sessions') {
       // Fetch sessions - blocks navigation until ready
-      await queryClient.fetchQuery({
-        queryKey: ['sessions', 'account'],
-        queryFn: fetchAccountSessions,
-        staleTime: 30 * 1000, // 30 seconds
-      })
+      await queryClient.ensureQueryData(accountSessionsQueryOptions())
     } else if (tab === 'payments') {
       // Fetch payment data - blocks navigation until ready
       await Promise.all([
-        queryClient.fetchQuery({
-          queryKey: ['payment-methods', 'account'],
-          queryFn: fetchPaymentMethods,
-          staleTime: 30 * 1000,
-        }),
-        queryClient.fetchQuery({
-          queryKey: ['billing-addresses', 'account'],
-          queryFn: fetchBillingAddresses,
-          staleTime: 30 * 1000,
-        }),
-        // Prefetch supporting data (optional)
+        queryClient.ensureQueryData(paymentMethodsQueryOptions()),
+        queryClient.ensureQueryData(billingAddressesQueryOptions()),
+        // Prefetch supporting data (optional, doesn't block)
         queryClient.prefetchQuery({
           queryKey: ['countries', 'console'],
           queryFn: fetchCountries,

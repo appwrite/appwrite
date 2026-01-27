@@ -4,7 +4,12 @@
  * Handles auth limits, sessions, passwords, OAuth providers, and MFA.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  queryOptions,
+} from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { Dependencies } from './dependencies'
 import { DEFAULT_STALE_TIME } from './constants'
@@ -418,14 +423,27 @@ export async function fetchMFAFactors() {
 }
 
 /**
- * Hook to fetch MFA factors
+ * Query options for fetching MFA factors
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
  */
-export function useMFAFactors() {
-  return useQuery({
+export function mfaFactorsQueryOptions() {
+  return queryOptions({
     queryKey: ['factors', 'account'],
     queryFn: fetchMFAFactors,
     staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
   })
+}
+
+/**
+ * Hook to fetch MFA factors
+ */
+export function useMFAFactors() {
+  return useQuery(mfaFactorsQueryOptions())
 }
 
 /**
@@ -442,17 +460,6 @@ export async function fetchAccountIdentities() {
 }
 
 /**
- * Hook to fetch account identities
- */
-export function useAccountIdentities() {
-  return useQuery({
-    queryKey: ['identities', 'account'],
-    queryFn: fetchAccountIdentities,
-    staleTime: DEFAULT_STALE_TIME,
-  })
-}
-
-/**
  * Query function to fetch account sessions
  *
  * This is extracted so it can be reused in both hooks and route loaders.
@@ -465,15 +472,60 @@ export async function fetchAccountSessions() {
   }
 }
 
+// ============================================================================
+// QUERY OPTIONS
+// ============================================================================
+
+/**
+ * Query options for fetching account identities
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function accountIdentitiesQueryOptions() {
+  return queryOptions({
+    queryKey: ['identities', 'account'],
+    queryFn: fetchAccountIdentities,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+/**
+ * Query options for fetching account sessions
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function accountSessionsQueryOptions() {
+  return queryOptions({
+    queryKey: ['sessions', 'account'],
+    queryFn: fetchAccountSessions,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false, // Don't retry on error
+    refetchOnMount: false, // Data is prefetched in route loader, no need to refetch on mount
+    refetchOnWindowFocus: false, // Prevent refetch when switching tabs/windows
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  })
+}
+
+// ============================================================================
+// HOOKS
+// ============================================================================
+
+/**
+ * Hook to fetch account identities
+ */
+export function useAccountIdentities() {
+  return useQuery(accountIdentitiesQueryOptions())
+}
+
 /**
  * Hook to fetch account sessions
  */
 export function useAccountSessions() {
-  return useQuery({
-    queryKey: ['sessions', 'account'],
-    queryFn: fetchAccountSessions,
-    staleTime: DEFAULT_STALE_TIME,
-  })
+  return useQuery(accountSessionsQueryOptions())
 }
 
 // ============================================================================

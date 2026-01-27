@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from 'next-themes'
-import { ExternalLink, X } from 'lucide-react'
+import { ArrowRightCircle, X } from 'lucide-react'
 
 const BANNER_HIDE_KEY = 'console-banner-hidden'
 const BANNER_HIDE_DURATION = 7 * 24 * 60 * 60 * 1000 // 1 week in milliseconds
@@ -79,7 +79,7 @@ export function ConsoleBanner() {
             your ideas into functional products. Vibe coding powered by{' '}
             <span className="font-medium text-foreground">Appwrite Cloud</span>
           </span>
-          <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-50" />
+          <ArrowRightCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-50" />
         </a>
         <div className="flex items-center px-2.5 py-1.5">
           <button

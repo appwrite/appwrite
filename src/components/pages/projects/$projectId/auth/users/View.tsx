@@ -26,6 +26,9 @@ import {
   AlertCircle,
   Info,
   Ghost,
+  Globe,
+  Tablet,
+  Monitor,
 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 import { AuthenticatorType, MessagingProviderType } from '@appwrite.io/console'
@@ -77,7 +80,6 @@ import {
 } from '@/components/ui/tooltip'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
-import { ConsoleFooter } from '@/components/global/layout/Footer'
 import {
   useUser,
   useUserMemberships,
@@ -110,8 +112,14 @@ import { sdk } from '@/lib/appwrite/sdk'
 
 const DEFAULT_PAGE_SIZE = 25
 
-// Browser Icon Component
-function BrowserIcon({ clientCode }: { clientCode: string }) {
+// Browser Icon Component with Device Badge
+function BrowserIcon({
+  clientCode,
+  deviceName,
+}: {
+  clientCode?: string
+  deviceName?: string
+}) {
   const [iconUrl, setIconUrl] = useState<string | null>(null)
   const [error, setError] = useState(false)
 
@@ -123,10 +131,11 @@ function BrowserIcon({ clientCode }: { clientCode: string }) {
 
     const loadIcon = async () => {
       try {
+        // Use higher resolution to avoid pixelation
         const url = sdk.forConsole.avatars.getBrowser({
           code: clientCode as Browser,
-          width: 32,
-          height: 32,
+          width: 64,
+          height: 64,
         })
         setIconUrl(url)
       } catch (err) {
@@ -137,22 +146,52 @@ function BrowserIcon({ clientCode }: { clientCode: string }) {
     loadIcon()
   }, [clientCode])
 
+  // Get device icon based on deviceName
+  const getDeviceIcon = () => {
+    const device = deviceName?.toLowerCase()
+    switch (device) {
+      case 'smartphone':
+        return Smartphone
+      case 'tablet':
+        return Tablet
+      case 'desktop':
+      default:
+        return Monitor
+    }
+  }
+
+  const DeviceIcon = getDeviceIcon()
+
   if (error || !iconUrl) {
     return (
-      <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted">
-        <Activity className="h-4 w-4 text-muted-foreground" />
+      <div className="relative">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
+          <Activity className="h-4 w-4 text-muted-foreground" />
+        </div>
+        {deviceName && (
+          <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
+            <DeviceIcon className="h-2.5 w-2.5 text-muted-foreground" />
+          </div>
+        )}
       </div>
     )
   }
 
   return (
-    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted overflow-hidden">
-      <img
-        src={iconUrl}
-        alt={clientCode}
-        className="h-8 w-8 object-cover"
-        onError={() => setError(true)}
-      />
+    <div className="relative">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50 overflow-hidden">
+        <img
+          src={iconUrl}
+          alt={clientCode}
+          className="h-9 w-9 object-contain p-1"
+          onError={() => setError(true)}
+        />
+      </div>
+      {deviceName && (
+        <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
+          <DeviceIcon className="h-2.5 w-2.5 text-muted-foreground" />
+        </div>
+      )}
     </div>
   )
 }
@@ -173,6 +212,17 @@ export function UserDetailView() {
     isError,
   } = useUser(projectId ?? '', userId ?? '')
   const { data: mfaFactors } = useUserMFAFactors(projectId ?? '', userId ?? '')
+  
+  // Fetch sessions for the CTA button in ServiceHeader
+  const { data: sessionsData, isLoading: sessionsLoading } = useUserSessions(
+    projectId,
+    userId,
+  )
+  const sessions = sessionsData?.sessions || []
+  
+  // State for delete all sessions dialog - must be called before any early returns
+  const [deleteAllSessionsDialogOpen, setDeleteAllSessionsDialogOpen] = useState(false)
+  const deleteAllSessions = useDeleteAllUserSessions(projectId ?? '', userId ?? '')
 
   // Derive active tab from pathname
   const activeTab = useMemo(() => {
@@ -314,9 +364,21 @@ export function UserDetailView() {
 
   const userName = user.name || '-'
   const displayName = user.name || user.email || user.phone || 'Anonymous'
+  
+  const handleDeleteAllSessions = () => {
+    deleteAllSessions.mutate(undefined, {
+      onSuccess: () => {
+        toast.success('All sessions have been deleted')
+        setDeleteAllSessionsDialogOpen(false)
+      },
+      onError: (error: Error) => {
+        toast.error(error.message || 'Failed to delete all sessions')
+      },
+    })
+  }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-y-auto">
+    <div className="flex flex-col">
       <ServiceHeader
         title={
           <div className="flex items-center gap-2">
@@ -336,6 +398,20 @@ export function UserDetailView() {
         activeTab={activeTab}
         showFilters={false}
         fullWidthBorder
+        beforeCreateButtons={
+          activeTab === 'sessions' && !sessionsLoading && sessions.length > 0 ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={() => setDeleteAllSessionsDialogOpen(true)}
+              disabled={deleteAllSessions.isPending}
+            >
+              <LogOut className="mr-1.5 h-3.5 w-3.5" />
+              Delete all sessions
+            </Button>
+          ) : undefined
+        }
         contentAfterBorder={
           activeTab === 'targets' ? (
             <div className="border-b border-border bg-blue-500/5">
@@ -398,8 +474,42 @@ export function UserDetailView() {
             </div>
           )}
         </div>
-        <ConsoleFooter />
       </div>
+
+      {/* Delete All Sessions Confirmation Dialog */}
+      {activeTab === 'sessions' && (
+        <Dialog
+          open={deleteAllSessionsDialogOpen}
+          onOpenChange={setDeleteAllSessionsDialogOpen}
+        >
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 text-left">
+              <DialogTitle>Delete all sessions</DialogTitle>
+              <DialogDescription className="text-[13px] mt-2">
+                Are you sure you want to delete{' '}
+                <strong>all of {displayName}'s sessions</strong>? This action
+                cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteAllSessionsDialogOpen(false)}
+                disabled={deleteAllSessions.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteAllSessions}
+                disabled={deleteAllSessions.isPending}
+              >
+                Delete all sessions
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }
@@ -2682,12 +2792,10 @@ function SessionsTab({
 }) {
   const { data, isLoading } = useUserSessions(projectId, userId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false)
   const [sessionToDelete, setSessionToDelete] = useState<Models.Session | null>(
     null,
   )
   const deleteSession = useDeleteUserSession(projectId, userId)
-  const deleteAllSessions = useDeleteAllUserSessions(projectId, userId)
 
   const sessions = data?.sessions || []
   const total = data?.total || 0
@@ -2712,130 +2820,277 @@ function SessionsTab({
     }
   }
 
-  const handleDeleteAll = () => {
-    deleteAllSessions.mutate(undefined, {
-      onSuccess: () => {
-        toast.success('All sessions have been deleted')
-        setDeleteAllDialogOpen(false)
-      },
-      onError: (error: Error) => {
-        toast.error(error.message || 'Failed to delete all sessions')
-      },
-    })
+
+  const formatDeviceInfo = (session: Models.Session) => {
+    const parts: string[] = []
+
+    // Primary line: Client name and version
+    if (session.clientName) {
+      const clientInfo = session.clientVersion
+        ? `${session.clientName} ${session.clientVersion}`
+        : session.clientName
+      parts.push(clientInfo)
+    }
+
+    // Secondary line: OS info
+    const osInfo = session.osName
+      ? session.osVersion
+        ? `${session.osName} ${session.osVersion}`
+        : session.osName
+      : null
+
+    // Device model info (if available)
+    const deviceInfo =
+      session.deviceBrand && session.deviceModel
+        ? `${session.deviceBrand} ${session.deviceModel}`
+        : session.deviceModel || session.deviceBrand || null
+
+    return {
+      primary: parts.length > 0 ? parts.join(' ') : 'Unknown device',
+      secondary: osInfo || deviceInfo || null,
+    }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    )
+  const getProviderName = (provider?: string) => {
+    if (!provider) return 'Unknown'
+    const nameMap: Record<string, string> = {
+      email: 'Email',
+      phone: 'Phone',
+      github: 'GitHub',
+      google: 'Google',
+      apple: 'Apple',
+      facebook: 'Facebook',
+      twitter: 'Twitter',
+      microsoft: 'Microsoft',
+      linkedin: 'LinkedIn',
+      discord: 'Discord',
+      twitch: 'Twitch',
+      spotify: 'Spotify',
+    }
+    return nameMap[provider.toLowerCase()] || provider
   }
 
-  if (sessions.length === 0) {
-    return (
-      <div className="rounded-lg border border-border bg-card py-12">
-        <EmptyState
-          icon={Activity}
-          title="No sessions available"
-          description="No active sessions for this user."
-          isEmpty={true}
-          iconSize="md"
-        />
-        <div className="mt-4 text-center">
-          <a
-            href="https://appwrite.io/docs/users"
-            className="text-[13px] text-primary hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn more about sessions
-          </a>
-        </div>
-      </div>
-    )
+  const getProviderIcon = (provider?: string) => {
+    if (!provider) return null
+    const iconMap: Record<string, string> = {
+      email: 'mail.svg',
+      phone: 'phone.svg',
+      github: 'github.svg',
+      google: 'google.svg',
+      apple: 'apple.svg',
+      facebook: 'facebook.svg',
+    }
+    return iconMap[provider.toLowerCase()] || null
+  }
+
+  const getCountryFlagUrl = (countryCode?: string) => {
+    if (!countryCode) return null
+    return `https://cloud.appwrite.io/v1/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
+  }
+
+  const formatIP = (ip?: string) => {
+    if (!ip) return null
+    // Trim IPv6 addresses if they're too long (show first 20 chars)
+    if (ip.includes(':')) {
+      return ip.length > 20 ? `${ip.substring(0, 20)}...` : ip
+    }
+    return ip
   }
 
   return (
     <>
-      <div className="mb-4 flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 text-[13px]"
-          onClick={() => setDeleteAllDialogOpen(true)}
-        >
-          <LogOut className="mr-1.5 h-3.5 w-3.5" />
-          Sign out all sessions
-        </Button>
-      </div>
-
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-border">
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Client
-              </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Location
-              </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
-                IP
-              </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sessions.map((session) => (
-              <TableRow key={session.$id}>
-                <TableCell className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <BrowserIcon clientCode={session.clientCode} />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium text-foreground">
-                          {session.clientName} {session.clientVersion}
-                        </span>
-                        {session.current && (
-                          <Badge variant="secondary" className="text-[11px]">
-                            current session
-                          </Badge>
-                        )}
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[320px]">
+                    Device & Auth
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                    Location
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
+                    IP Address
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[160px]">
+                    Created
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                    Expires
+                  </TableHead>
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="px-6 py-12">
+                      <div className="text-center">
+                        <p className="text-[13px] text-muted-foreground">
+                          Loading sessions...
+                        </p>
                       </div>
-                      <p className="text-[12px] text-muted-foreground">
-                        {session.osName} {session.osVersion}
-                      </p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-[13px]">
-                  {session.countryCode && session.countryCode !== '--'
-                    ? session.countryName || session.countryCode
-                    : 'Unknown'}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-[13px] font-mono">
-                  {session.ip}
-                </TableCell>
-                <TableCell className="px-4 py-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => handleDelete(session)}
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                    </TableCell>
+                  </TableRow>
+                ) : sessions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="px-6 py-12">
+                      <div className="text-center">
+                        <p className="text-[14px] font-medium text-foreground mb-1">
+                          No active sessions
+                        </p>
+                        <p className="text-[13px] text-muted-foreground">
+                          This user doesn't have any active sessions at the
+                          moment.
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  sessions.map((session) => {
+                    const deviceInfo = formatDeviceInfo(session)
+                    const isCurrent = session.current || false
+                    const flagUrl = getCountryFlagUrl(session.countryCode)
+                    const providerIcon = getProviderIcon(session.provider)
+                    const hasMFA = session.factors && session.factors.length > 0
+
+                    return (
+                      <TableRow key={session.$id} className="group">
+                        <TableCell className="px-4 py-3.5">
+                          <div className="flex items-start gap-3">
+                            <BrowserIcon
+                              clientCode={session.clientCode}
+                              deviceName={session.deviceName}
+                            />
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[13px] font-semibold text-foreground">
+                                  {deviceInfo.primary}
+                                </span>
+                                {isCurrent && (
+                                  <Badge
+                                    variant="success"
+                                    className="text-[10px] font-medium px-1.5 py-0 h-4"
+                                  >
+                                    Current
+                                  </Badge>
+                                )}
+                                {hasMFA && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="flex items-center justify-center h-4 w-4 rounded bg-muted/50">
+                                        <Shield className="h-2.5 w-2.5 text-muted-foreground" />
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="text-xs">
+                                        MFA: {session.factors?.join(', ')}
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 flex-wrap">
+                                {deviceInfo.secondary && (
+                                  <span className="text-[12px] text-muted-foreground">
+                                    {deviceInfo.secondary}
+                                  </span>
+                                )}
+                                {session.provider && (
+                                  <div className="flex items-center gap-1.5">
+                                    {providerIcon ? (
+                                      <img
+                                        src={`/icons/${providerIcon}`}
+                                        alt={session.provider}
+                                        className="h-3 w-3 opacity-60"
+                                        onError={(e) => {
+                                          e.currentTarget.style.display = 'none'
+                                        }}
+                                      />
+                                    ) : (
+                                      <Key className="h-3 w-3 text-muted-foreground/60" />
+                                    )}
+                                    <span className="text-[11px] text-muted-foreground/80 font-medium">
+                                      {getProviderName(session.provider)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3.5">
+                          <div className="flex items-center gap-2">
+                            {flagUrl ? (
+                              <img
+                                src={flagUrl}
+                                alt={session.countryName || ''}
+                                className="h-4 w-4 rounded-sm border border-border/30 shadow-sm"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none'
+                                }}
+                              />
+                            ) : (
+                              <Globe className="h-4 w-4 text-muted-foreground/60" />
+                            )}
+                            <span className="text-[13px] font-medium text-foreground">
+                              {session.countryName && session.countryCode && session.countryCode !== '--'
+                                ? session.countryName
+                                : 'Unknown'}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-3.5">
+                          {session.ip ? (
+                            <code className="text-[12px] text-muted-foreground font-mono bg-muted/30 px-1.5 py-0.5 rounded">
+                              {formatIP(session.ip)}
+                            </code>
+                          ) : (
+                            <span className="text-[12px] text-muted-foreground/50">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-4 py-3.5">
+                          <DateTooltip
+                            date={session.$createdAt}
+                            className="text-[12px] font-medium text-foreground"
+                          />
+                        </TableCell>
+                        <TableCell className="px-4 py-3.5">
+                          <DateTooltip
+                            date={session.expire}
+                            className="text-[12px] font-medium text-foreground"
+                          />
+                        </TableCell>
+                        <TableCell className="px-4 py-3.5 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleDelete(session)}
+                            disabled={deleteSession.isPending}
+                            title="Revoke session"
+                          >
+                            <LogOut className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                )}
+              </TableBody>
+            </Table>
       </div>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* Delete Session Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open)
+          if (!open) {
+            setSessionToDelete(null)
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete session</DialogTitle>
@@ -2846,19 +3101,14 @@ function SessionsTab({
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
-              type="button"
               variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
               onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteSession.isPending}
             >
               Cancel
             </Button>
             <Button
-              type="button"
               variant="destructive"
-              size="sm"
-              className="h-9 text-[13px]"
               onClick={confirmDelete}
               disabled={deleteSession.isPending}
             >
@@ -2868,39 +3118,6 @@ function SessionsTab({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>Delete all sessions</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete{' '}
-              <strong>all of {displayName}'s sessions</strong>? This action
-              cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setDeleteAllDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={handleDeleteAll}
-              disabled={deleteAllSessions.isPending}
-            >
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }

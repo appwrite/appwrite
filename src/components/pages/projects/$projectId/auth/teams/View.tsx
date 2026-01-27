@@ -8,7 +8,6 @@ import { TeamMembers } from './Members'
 import { useTeam } from '@/lib/react-query/hooks'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Button } from '@/components/ui/button'
-import { ConsoleFooter } from '@/components/global/layout/Footer'
 
 export function TeamDetailView() {
   const { projectId, teamId } = useParams({
@@ -137,7 +136,7 @@ export function TeamDetailView() {
   const teamName = team.name || '-'
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-y-auto">
+    <div className="flex flex-col">
       <ServiceHeader
         title={
           <div className="flex items-center gap-2">
@@ -172,7 +171,6 @@ export function TeamDetailView() {
             </div>
           )}
         </div>
-        <ConsoleFooter />
       </div>
     </div>
   )

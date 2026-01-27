@@ -105,15 +105,14 @@ function ProjectLayout() {
     pathParts.length >= 6 &&
     pathParts[5] === 'logs'
 
-  // Hide footer for usage view, database spreadsheet view, visualizer, detail routes, function executions tab, and site logs tab
+  // Hide footer for usage view, database spreadsheet view, visualizer, function executions tab, and site logs tab
   const hideFooter =
     isDatabaseSpreadsheetView ||
     isDatabaseVisualizerView ||
     activeSection === 'usage' ||
     isFunctionExecutionsTab ||
     isSiteLogsTab ||
-    activeSection === 'activity' ||
-    isDetailRoute
+    activeSection === 'activity'
 
   // Close sidebar on route change
   useEffect(() => {
