@@ -69,13 +69,11 @@ class XList extends Action
         $queries = Query::parseQueries($queries);
         $queries[] = Query::equal('resourceType', [TOKENS_RESOURCE_TYPE_FILES]);
         $queries[] = Query::equal('resourceInternalId', [$bucket->getSequence() . ':' . $file->getSequence()]);
-        // Get cursor document if there was a cursor query
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
+
+        if ($cursor !== false) {
             $tokenId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('resourceTokens', $tokenId);
 
