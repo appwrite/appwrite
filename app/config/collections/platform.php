@@ -632,17 +632,19 @@ $platformCollections = [
         '$id' => ID::custom('keys'),
         'name' => 'keys',
         'attributes' => [
+            // Delete eventuelly, when removing dual-write too
             [
                 '$id' => ID::custom('projectInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
                 'signed' => true,
-                'required' => true,
+                'required' => false,
                 'default' => null,
                 'array' => false,
                 'filters' => [],
             ],
+            // Delete eventuelly, when removing dual-write too
             [
                 '$id' => ID::custom('projectId'),
                 'type' => Database::VAR_STRING,
@@ -655,7 +657,7 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'resourceType',
+                '$id' => ID::custom('resourceType'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -666,7 +668,7 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'resourceId',
+                '$id' => ID::custom('resourceId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -677,7 +679,7 @@ $platformCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'resourceInternalId',
+                '$id' => ID::custom('resourceInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -756,21 +758,14 @@ $platformCollections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_project'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['projectInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => '_key_resource',
+                '$id' => ID::custom('_key_resource'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['resourceType', 'resourceInternalId'],
-                'lengths' => [Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC],
+                'lengths' => [],
+                'orders' => [],
             ],
             [
-                '$id' => '_key_accessedAt',
+                '$id' => ID::custom('_key_accessedAt'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['accessedAt'],
                 'lengths' => [],
