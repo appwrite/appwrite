@@ -1358,8 +1358,15 @@ export function FunctionDeployments() {
                                 {!isActive && (
                                   <>
                                     <DropdownMenuItem
+                                      disabled={deployment.status !== 'ready'}
+                                      title={
+                                        deployment.status !== 'ready'
+                                          ? 'Build must be ready before activating'
+                                          : undefined
+                                      }
                                       onClick={async (e) => {
                                         e.stopPropagation()
+                                        if (deployment.status !== 'ready') return
                                         try {
                                           const projectSdk = sdk.forProject(projectId!)
                                           await projectSdk.functions.updateFunctionDeployment({

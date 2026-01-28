@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
 import { SiteDeploymentsView } from '@/components/pages/projects/$projectId/sites/SiteDeployments'
 import {
   siteQueryOptions,
@@ -10,10 +11,15 @@ import { fetchVcsInstallations } from '@/lib/react-query/hooks/vcs'
 import { Query } from '@appwrite.io/console'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 
+const searchSchema = z.object({
+  page: z.coerce.number().int().min(1).optional().catch(undefined),
+})
+
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/deployments/',
 )({
-  loader: async ({ params, context }) => {
+  validateSearch: searchSchema,
+  loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return
@@ -21,6 +27,12 @@ export const Route = createFileRoute(
 
     const { projectId, siteId } = params
     const { queryClient } = context
+
+    // Parse page from URL search params
+    const urlParams = new URLSearchParams(location.search)
+    const pageParam = urlParams.get('page')
+    const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
+    const pageIndex = page - 1
 
     // Fetch site first - blocks navigation until ready
     const site = await queryClient.ensureQueryData(
@@ -36,27 +48,33 @@ export const Route = createFileRoute(
 
     // Fetch critical data before rendering to prevent layout shifts
     await Promise.all([
-      // Fetch first page of deployments - blocks navigation until ready
+      // Fetch deployments for the requested page - blocks navigation until ready
       queryClient.ensureQueryData(
-        siteDeploymentsQueryOptions(projectId, siteId, 0, DEFAULT_PAGE_SIZE, [
-          Query.select([
-            'buildSize',
-            'sourceSize',
-            'totalSize',
-            'buildDuration',
-            'status',
-            'type',
-            'resourceId',
-            'providerRepositoryUrl',
-            'providerRepositoryOwner',
-            'providerRepositoryName',
-            'providerBranchUrl',
-            'providerBranch',
-            'providerCommitMessage',
-            'providerCommitHash',
-            'providerCommitUrl',
-          ]),
-        ]),
+        siteDeploymentsQueryOptions(
+          projectId,
+          siteId,
+          pageIndex,
+          DEFAULT_PAGE_SIZE,
+          [
+            Query.select([
+              'buildSize',
+              'sourceSize',
+              'totalSize',
+              'buildDuration',
+              'status',
+              'type',
+              'resourceId',
+              'providerRepositoryUrl',
+              'providerRepositoryOwner',
+              'providerRepositoryName',
+              'providerBranchUrl',
+              'providerBranch',
+              'providerCommitMessage',
+              'providerCommitHash',
+              'providerCommitUrl',
+            ]),
+          ],
+        ),
       ),
       // Fetch active deployment if available
       site.deploymentId

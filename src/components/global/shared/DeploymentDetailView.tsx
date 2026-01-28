@@ -33,6 +33,7 @@ import {
   type IDEConfig,
 } from '@/lib/config/ide'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import { BuildLogsView } from '@/components/global/shared/BuildLogsView'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DeploymentInfo } from '@/components/global/shared/DeploymentInfo'
@@ -71,243 +72,6 @@ import {
   useDeploymentProxyRules,
   useFunctionDeploymentProxyRules,
 } from '@/lib/react-query/hooks'
-
-// ANSI color code mapping
-const ANSI_COLORS: Record<number, string> = {
-  30: 'text-gray-700 dark:text-gray-300', // Black
-  31: 'text-red-500', // Red
-  32: 'text-green-500', // Green
-  33: 'text-yellow-500', // Yellow
-  34: 'text-blue-500', // Blue
-  35: 'text-purple-500', // Magenta
-  36: 'text-cyan-500', // Cyan
-  37: 'text-gray-200 dark:text-gray-400', // White
-  90: 'text-gray-500 dark:text-gray-500', // Bright Black (Gray)
-  91: 'text-red-400', // Bright Red
-  92: 'text-green-400', // Bright Green
-  93: 'text-yellow-400', // Bright Yellow
-  94: 'text-blue-400', // Bright Blue
-  95: 'text-purple-400', // Bright Magenta
-  96: 'text-cyan-400', // Bright Cyan
-  97: 'text-gray-100 dark:text-gray-300', // Bright White
-}
-
-/**
- * Parse ANSI escape codes and convert to React elements with colors
- * Optionally highlights search terms
- */
-function parseAnsiLogs(
-  text: string,
-  searchTerm?: string,
-): React.ReactNode[] {
-  if (!searchTerm || !searchTerm.trim()) {
-    // No search term, just parse ANSI codes
-    return parseAnsiLogsWithoutHighlight(text)
-  }
-
-  // First, parse ANSI codes to get colored segments
-  const coloredSegments = parseAnsiLogsWithoutHighlight(text)
-  
-  // Then highlight search terms in each segment
-  const highlightedParts: React.ReactNode[] = []
-  let keyCounter = 0
-
-  coloredSegments.forEach((segment) => {
-    if (typeof segment === 'string') {
-      // Plain string segment - highlight it
-      highlightedParts.push(...highlightText(segment, null, searchTerm, keyCounter))
-      keyCounter += 1000
-    } else if (React.isValidElement(segment) && segment.type === 'span') {
-      // Colored span - extract text and color, then highlight
-      const textContent = extractTextFromReactNode(segment)
-      const className = (segment.props as any)?.className || null
-      highlightedParts.push(...highlightText(textContent, className, searchTerm, keyCounter))
-      keyCounter += 1000
-    } else {
-      // Other React element - keep as-is
-      highlightedParts.push(segment)
-    }
-  })
-
-  return highlightedParts.length > 0 ? highlightedParts : [text]
-}
-
-/**
- * Helper to extract text content from React node
- */
-function extractTextFromReactNode(node: React.ReactNode): string {
-  if (typeof node === 'string') return node
-  if (typeof node === 'number') return String(node)
-  if (React.isValidElement(node)) {
-    const children = (node.props as any)?.children
-    if (typeof children === 'string') return children
-    if (Array.isArray(children)) {
-      return children.map(extractTextFromReactNode).join('')
-    }
-  }
-  return ''
-}
-
-/**
- * Replace Vercel triangle with Appwrite icon
- * Returns processed text segments with triangles replaced by Appwrite icons
- */
-function replaceVercelTriangle(text: string, currentColor: string | null, baseKey: number): React.ReactNode[] {
-  if (!text.includes('▲')) {
-    // No triangles, return text as-is in array
-    return [
-      currentColor ? (
-        <span key={baseKey} className={currentColor}>
-          {text}
-        </span>
-      ) : (
-        text
-      ),
-    ]
-  }
-
-  const parts: React.ReactNode[] = []
-  const segments = text.split('▲')
-  let keyCounter = baseKey
-
-  for (let i = 0; i < segments.length; i++) {
-    if (segments[i]) {
-      parts.push(
-        currentColor ? (
-          <span key={keyCounter++} className={currentColor}>
-            {segments[i]}
-          </span>
-        ) : (
-          segments[i]
-        ),
-      )
-    }
-    // Add Appwrite icon between segments (except after last segment)
-    if (i < segments.length - 1) {
-      parts.push(
-        <img
-          key={keyCounter++}
-          src="/icons/appwrite.svg"
-          alt="Appwrite"
-          className="inline-block h-[1em] w-[1em] align-middle"
-        />,
-      )
-    }
-  }
-
-  return parts
-}
-
-/**
- * Parse ANSI codes without highlighting
- */
-function parseAnsiLogsWithoutHighlight(text: string): React.ReactNode[] {
-  // ANSI escape sequence pattern: \x1b[ or \u001b[ followed by numbers and 'm'
-  const ansiRegex = /\x1b\[(\d+(?:;\d+)*)?m/g
-  const parts: React.ReactNode[] = []
-  let lastIndex = 0
-  let currentColor: string | null = null
-  let match
-  let keyCounter = 0
-
-  while ((match = ansiRegex.exec(text)) !== null) {
-    // Add text before the ANSI code
-    if (match.index > lastIndex) {
-      const textBefore = text.substring(lastIndex, match.index)
-      if (textBefore) {
-        const processedText = replaceVercelTriangle(textBefore, currentColor, keyCounter)
-        parts.push(...processedText)
-        keyCounter += processedText.length
-      }
-    }
-
-    // Parse the ANSI code
-    const code = match[1]
-    if (!code || code === '0') {
-      // Reset
-      currentColor = null
-    } else {
-      // Get the first color code (ANSI codes can have multiple semicolon-separated codes)
-      const codes = code.split(';').map(Number)
-      const colorCode = codes.find((c) => ANSI_COLORS[c])
-      if (colorCode) {
-        currentColor = ANSI_COLORS[colorCode]
-      }
-    }
-
-    lastIndex = match.index + match[0].length
-  }
-
-  // Add remaining text
-  if (lastIndex < text.length) {
-    const remainingText = text.substring(lastIndex)
-    if (remainingText) {
-      const processedText = replaceVercelTriangle(remainingText, currentColor, keyCounter)
-      parts.push(...processedText)
-    }
-  }
-
-  return parts.length > 0 ? parts : [text]
-}
-
-/**
- * Highlight search term in text while preserving color
- */
-function highlightText(
-  text: string,
-  color: string | null,
-  searchTerm: string,
-  baseKey: number,
-): React.ReactNode[] {
-  const searchLower = searchTerm.toLowerCase()
-  const lowerText = text.toLowerCase()
-  const parts: React.ReactNode[] = []
-  let lastIndex = 0
-  let keyCounter = baseKey
-
-  while (true) {
-    const searchIndex = lowerText.indexOf(searchLower, lastIndex)
-    if (searchIndex === -1) {
-      // No more matches, add remaining text
-      if (lastIndex < text.length) {
-        const remaining = text.substring(lastIndex)
-        if (remaining) {
-          const processedText = replaceVercelTriangle(remaining, color, keyCounter)
-          parts.push(...processedText)
-          keyCounter += processedText.length
-        }
-      }
-      break
-    }
-
-    // Add text before match
-    if (searchIndex > lastIndex) {
-      const beforeMatch = text.substring(lastIndex, searchIndex)
-      if (beforeMatch) {
-        const processedText = replaceVercelTriangle(beforeMatch, color, keyCounter)
-        parts.push(...processedText)
-        keyCounter += processedText.length
-      }
-    }
-
-    // Add highlighted match
-    const matchText = text.substring(searchIndex, searchIndex + searchTerm.length)
-    const processedMatch = replaceVercelTriangle(matchText, color, keyCounter)
-    parts.push(
-      <mark
-        key={keyCounter++}
-        className="bg-yellow-200 dark:bg-yellow-900/50 text-foreground"
-      >
-        {processedMatch}
-      </mark>,
-    )
-    keyCounter += processedMatch.length
-
-    lastIndex = searchIndex + searchTerm.length
-  }
-
-  return parts.length > 0 ? parts : [text]
-}
 
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
@@ -1005,109 +769,37 @@ export function DeploymentDetailView({
     }
   }
 
-  // Parse and filter logs with line numbers - MUST be called before any conditional returns
-  const parsedLogs = useMemo(() => {
-    if (!buildLogs) return null
-
-    const searchTerm = logsSearch.trim()
-    const allLines = buildLogs.split('\n')
-
-    // When filtering, track which original line numbers match
-    let linesToDisplay: Array<{ line: string; originalLineNumber: number }>
-    
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase()
-      linesToDisplay = allLines
-        .map((line, index) => ({ line, originalLineNumber: index + 1 }))
-        .filter(({ line }) => line.toLowerCase().includes(searchLower))
-    } else {
-      linesToDisplay = allLines.map((line, index) => ({
-        line,
-        originalLineNumber: index + 1,
-      }))
-    }
-
-    // Calculate max line number width for alignment (using ch units for monospace)
-    const maxLineNumber = allLines.length
-    const lineNumberDigits = maxLineNumber.toString().length
-    // Add extra space: digits + 2ch for padding + 1ch buffer
-    const lineNumberWidth = `${lineNumberDigits + 3}ch`
-
-    return linesToDisplay.map(({ line, originalLineNumber }, displayIndex) => {
-      const parsedLine = parseAnsiLogs(line, searchTerm || undefined)
-      const isSelected = selectedLine === originalLineNumber
-      
-      const handleLineNumberClick = async (e: React.MouseEvent) => {
-        e.preventDefault()
-        
-        // Toggle selection: if already selected, unselect it
-        if (isSelected) {
-          navigate({
-            to: location.pathname,
-            search: (prev: any) => {
-              const newSearch = { ...(prev || {}) }
-              delete newSearch.line
-              return Object.keys(newSearch).length === 0 ? {} : newSearch
-            },
-            replace: true,
-          })
-        } else {
-          // Update URL with line query param
-          navigate({
-            to: location.pathname,
-            search: (prev: any) => ({
-              ...(prev || {}),
-              line: originalLineNumber,
-            }),
-            replace: true,
-          })
-
-          // Also copy to clipboard
-          const lineRef = `Line ${originalLineNumber}`
-          try {
-            await navigator.clipboard.writeText(lineRef)
-            toast.success(`Copied "${lineRef}" to clipboard`)
-          } catch (error) {
-            // Ignore clipboard errors, URL update is the main action
-          }
+  // Line click: toggle URL line param and copy "Line N" to clipboard
+  const handleLineClick = useCallback(
+    async (lineNumber: number) => {
+      const isSelected = selectedLine === lineNumber
+      if (isSelected) {
+        navigate({
+          to: location.pathname,
+          search: (prev: any) => {
+            const newSearch = { ...(prev || {}) }
+            delete newSearch.line
+            return Object.keys(newSearch).length === 0 ? {} : newSearch
+          },
+          replace: true,
+        })
+      } else {
+        navigate({
+          to: location.pathname,
+          search: (prev: any) => ({ ...(prev || {}), line: lineNumber }),
+          replace: true,
+        })
+        const lineRef = `Line ${lineNumber}`
+        try {
+          await navigator.clipboard.writeText(lineRef)
+          toast.success(`Copied "${lineRef}" to clipboard`)
+        } catch (error) {
+          // Ignore clipboard errors
         }
       }
-
-      return (
-        <div
-          key={`${originalLineNumber}-${displayIndex}`}
-          ref={(el) => {
-            if (el) {
-              lineRefs.current.set(originalLineNumber, el)
-            } else {
-              lineRefs.current.delete(originalLineNumber)
-            }
-          }}
-          onClick={handleLineNumberClick}
-          className={`flex items-start gap-3 group transition-colors pl-4 sm:pl-6 pr-4 sm:pr-6 cursor-pointer ${
-            isSelected
-              ? 'bg-yellow-100/50 dark:bg-yellow-900/20'
-              : 'hover:bg-muted/30'
-          }`}
-          title={`Click to highlight and copy "Line ${originalLineNumber}"`}
-        >
-          <span
-            className={`text-[11px] sm:text-[12px] font-mono select-none shrink-0 text-right tabular-nums pr-2 mr-3 transition-colors ${
-              isSelected
-                ? 'text-yellow-600 dark:text-yellow-400 font-semibold'
-                : 'text-muted-foreground'
-            }`}
-            style={{ width: lineNumberWidth, minWidth: lineNumberWidth }}
-          >
-            {originalLineNumber}
-          </span>
-          <span className="flex-1 min-w-0">
-            {parsedLine}
-          </span>
-        </div>
-      )
-    })
-  }, [buildLogs, logsSearch, selectedLine, location.pathname, location.search, navigate])
+    },
+    [selectedLine, navigate, location.pathname],
+  )
 
   // Extract route params for navigation
   const routeParams = useMemo(() => {
@@ -1609,7 +1301,11 @@ export function DeploymentDetailView({
                           toast.info('Activate deployment functionality coming soon')
                         }
                       }}
-                      disabled={isActiveDeployment || activateMutation.isPending}
+                      disabled={
+                        isActiveDeployment ||
+                        activateMutation.isPending ||
+                        deployment?.status !== 'ready'
+                      }
                       className="h-9 text-[13px]"
                     >
                       {activateMutation.isPending ? (
@@ -1626,9 +1322,13 @@ export function DeploymentDetailView({
                     </Button>
                   </span>
                 </TooltipTrigger>
-                {isActiveDeployment && (
+                {(isActiveDeployment || deployment?.status !== 'ready') && (
                   <TooltipContent sideOffset={4} className="z-[200]">
-                    <p>This deployment is already active.</p>
+                    <p>
+                      {isActiveDeployment
+                        ? 'This deployment is already active.'
+                        : 'Build must be ready before activating.'}
+                    </p>
                   </TooltipContent>
                 )}
               </TooltipPrimitive.Root>
@@ -1679,43 +1379,14 @@ export function DeploymentDetailView({
     >
       <div ref={logsContainerRef} className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {/* Build Logs */}
-        {buildLogs ? (
-          <div className="py-4 min-w-0 relative">
-            {/* Edge-to-edge border for line numbers */}
-            {(() => {
-              const allLines = buildLogs.split('\n')
-              const maxLineNumber = allLines.length
-              const lineNumberDigits = maxLineNumber.toString().length
-              const lineNumberWidth = `${lineNumberDigits + 3}ch`
-              // Position border at: padding-left + line number width
-              return (
-                <>
-                  {/* Mobile: 1rem padding */}
-                  <div 
-                    className="absolute top-0 bottom-0 border-r border-border/50 pointer-events-none sm:hidden"
-                    style={{ 
-                      left: `calc(1rem + ${lineNumberWidth})`,
-                    }}
-                  />
-                  {/* Desktop: 1.5rem padding */}
-                  <div 
-                    className="absolute top-0 bottom-0 border-r border-border/50 pointer-events-none hidden sm:block"
-                    style={{ 
-                      left: `calc(1.5rem + ${lineNumberWidth})`,
-                    }}
-                  />
-                </>
-              )
-            })()}
-            <div className="text-[11px] sm:text-[12px] font-mono text-foreground break-all overflow-x-auto max-w-full min-w-0 relative">
-              {parsedLogs}
-            </div>
-          </div>
-        ) : (
-          <div className="px-4 sm:px-6 py-4 text-[12px] sm:text-[13px] text-muted-foreground">
-            No build logs available.
-          </div>
-        )}
+        <BuildLogsView
+          buildLogs={buildLogs}
+          searchTerm={logsSearch}
+          selectedLine={selectedLine}
+          onLineClick={handleLineClick}
+          lineRefs={lineRefs}
+          emptyMessage="No build logs available."
+        />
         
         {/* Scroll Control Buttons - Fixed position in viewport */}
         {buildLogs && (

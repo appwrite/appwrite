@@ -35,6 +35,7 @@ import {
 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import type { Models } from '@appwrite.io/console'
 import {
   useSiteTemplate,
   useCreateSite,
@@ -176,10 +177,19 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
     setIsDeploying(true)
 
     try {
-      // Get framework defaults
-      const defaults = getFrameworkDefaults(framework)
+      // Use template framework when available (buildRuntime, adapter, fallbackFile required by API)
+      const defaults = templateFramework
+        ? {
+            installCommand: templateFramework.installCommand,
+            buildCommand: templateFramework.buildCommand,
+            outputDirectory: templateFramework.outputDirectory,
+            buildRuntime: templateFramework.buildRuntime,
+            adapter: templateFramework.adapter,
+            fallbackFile: templateFramework.fallbackFile,
+          }
+        : { ...getFrameworkDefaults(framework), buildRuntime: undefined, adapter: undefined, fallbackFile: undefined }
 
-      // 1. Create the site
+      // 1. Create the site (buildRuntime required by API; default when not from template)
       const site = await createSiteMutation.mutateAsync({
         siteId: siteId || undefined,
         name: siteName,
@@ -187,8 +197,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         installCommand: defaults.installCommand,
         buildCommand: defaults.buildCommand,
         outputDirectory: defaults.outputDirectory,
-        adapter: template.adapter,
-        fallbackFile: template.fallbackFile,
+        buildRuntime: defaults.buildRuntime ?? 'node-22',
+        adapter: defaults.adapter ?? '',
+        fallbackFile: defaults.fallbackFile ?? '',
       })
 
       // 2. Create domain rule
@@ -216,12 +227,12 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         )
       }
 
-      // 4. Create template deployment
+      // 4. Create template deployment (rootDirectory from selected template framework)
       const deployment = await createDeploymentMutation.mutateAsync({
         siteId: site.$id,
         repository: template.providerRepositoryId || template.key,
         owner: template.providerOwner || 'appwrite',
-        rootDirectory: template.providerRootDirectory,
+        rootDirectory: templateFramework?.providerRootDirectory ?? './',
         type: 'tag',
         reference: template.providerVersion || 'main',
         activate: true,
@@ -251,6 +262,15 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   const frameworkInfo = useMemo(() => {
     return frameworks.find((f) => f.key === framework)
   }, [frameworks, framework])
+
+  // Selected framework from template (has buildRuntime, adapter, fallbackFile required by API)
+  const templateFramework = useMemo((): Models.TemplateFramework | null => {
+    if (!template?.frameworks?.length || !framework) return null
+    const match = template.frameworks.find(
+      (f) => getFrameworkString(f) === framework,
+    )
+    return (match ?? template.frameworks[0]) as Models.TemplateFramework
+  }, [template, framework])
 
   const sidebarContent = template ? (
     <div className="rounded-xl border border-border bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm overflow-hidden">

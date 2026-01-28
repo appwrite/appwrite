@@ -11,7 +11,7 @@ import {
   queryOptions,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query } from '@appwrite.io/console'
+import { Query, ID } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
@@ -1179,7 +1179,8 @@ export interface CreateSiteVariableParams {
 }
 
 /**
- * Hook to create a new site
+ * Hook to create a new site.
+ * When siteId is omitted or empty, generates one via ID.unique() (API requires siteId).
  */
 export function useCreateSite(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
@@ -1190,7 +1191,14 @@ export function useCreateSite(projectId: string | null | undefined) {
         throw new Error('Project ID is required')
       }
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.sites.create(params as any)
+      const siteId =
+        params.siteId && params.siteId.trim() !== ''
+          ? params.siteId.trim()
+          : ID.unique()
+      return await projectSdk.sites.create({
+        ...params,
+        siteId,
+      } as any)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

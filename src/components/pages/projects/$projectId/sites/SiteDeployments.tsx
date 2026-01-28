@@ -196,10 +196,16 @@ export function SiteDeploymentsView() {
   const navigate = useNavigate()
   const location = useLocation()
   
-  // Parse page from URL search params directly (safer than Route.useSearch during navigation)
+  // Parse page from URL: use validated search object when available (TanStack Router),
+  // otherwise fall back to URL search string
   const urlPage = useMemo(() => {
+    const search = location.search
+    if (search && typeof search === 'object' && 'page' in search) {
+      const p = (search as { page?: number }).page
+      if (typeof p === 'number' && p >= 1) return p
+    }
     const searchParams = new URLSearchParams(
-      typeof location.search === 'string' ? location.search : '',
+      typeof search === 'string' ? search : '',
     )
     const pageParam = searchParams.get('page')
     return pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
@@ -1385,8 +1391,15 @@ export function SiteDeploymentsView() {
                                 {!isActive && (
                                   <>
                                     <DropdownMenuItem
+                                      disabled={deploymentData.status !== 'ready'}
+                                      title={
+                                        deploymentData.status !== 'ready'
+                                          ? 'Build must be ready before activating'
+                                          : undefined
+                                      }
                                       onClick={async (e) => {
                                         e.stopPropagation()
+                                        if (deploymentData.status !== 'ready') return
                                         try {
                                           const projectSdk = sdk.forProject(projectId!)
                                           await projectSdk.sites.updateSiteDeployment({
