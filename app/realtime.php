@@ -481,25 +481,33 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     }
                 }
 
-                $receivers = $realtime->getSubscribers($event);
+                $receivers = $realtime->getSubscribers($event); // [connectionId => matchedQueryKeys[]]
 
                 if (App::isDevelopment() && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
+                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode(array_keys($receivers)));
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
                 }
 
-                $server->send(
-                    $receivers,
-                    json_encode([
-                        'type' => 'event',
-                        'data' => $event['data']
-                    ])
-                );
+                $totalMessages = 0;
 
-                if (($num = count($receivers)) > 0) {
-                    $register->get('telemetry.messageSentCounter')->add($num);
-                    $stats->incr($event['project'], 'messages', $num);
+                foreach ($receivers as $connectionId => $matchedQueryKeys) {
+                    $data = $event['data'];
+                    $data['queryKeys'] = $matchedQueryKeys;
+
+                    $server->send(
+                        [$connectionId],
+                        json_encode([
+                            'type' => 'event',
+                            'data' => $data
+                        ])
+                    );
+                    $totalMessages++;
+                }
+
+                if ($totalMessages > 0) {
+                    $register->get('telemetry.messageSentCounter')->add($totalMessages);
+                    $stats->incr($event['project'], 'messages', $totalMessages);
                 }
             });
         } catch (Throwable $th) {

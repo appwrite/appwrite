@@ -1544,4 +1544,332 @@ class RealtimeCustomClientQueryTest extends Scope
             str_contains($response['data']['message'], 'endsWith')
         );
     }
+
+    public function testQueryKeys()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Query Keys Test DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Query Keys Collection',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        // Attributes used by queries
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'category',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        $queryStatusActive = Query::equal('status', ['active'])->toString();
+        $queryStatusPending = Query::equal('status', ['pending'])->toString();
+        $queryComplex = Query::and([
+            Query::equal('status', ['active']),
+            Query::equal('category', ['gold']),
+        ])->toString();
+
+        // Subscribe with no queries -> should receive all events, queryKeys = ['']
+        $clientAll = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        // Subscribe with query1 (status == active)
+        $clientQ1 = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            $queryStatusActive,
+        ]);
+
+        // Subscribe with query2 (status == pending)
+        $clientQ2 = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            $queryStatusPending,
+        ]);
+
+        // Subscribe with complex query (status == active AND category == gold)
+        $clientComplex = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            $queryComplex,
+        ]);
+
+        // All clients should be connected
+        foreach ([$clientAll, $clientQ1, $clientQ2, $clientComplex] as $client) {
+            $response = json_decode($client->receive(), true);
+            $this->assertEquals('connected', $response['type']);
+        }
+
+        // 1) Create active/gold document -> should match Q1 and complex, and be seen by all
+        $docActiveGoldId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $docActiveGoldId,
+            'data' => [
+                'status' => 'active',
+                'category' => 'gold',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        // clientAll: should receive event, queryKeys = ['']
+        $eventAll = json_decode($clientAll->receive(), true);
+        $this->assertEquals('event', $eventAll['type']);
+        $this->assertEquals($docActiveGoldId, $eventAll['data']['payload']['$id']);
+        $this->assertArrayHasKey('queryKeys', $eventAll['data']);
+        $this->assertIsArray($eventAll['data']['queryKeys']);
+        $this->assertEquals([''], $eventAll['data']['queryKeys']);
+
+        // clientQ1: should receive event, queryKeys contains queryStatusActive
+        $eventQ1 = json_decode($clientQ1->receive(), true);
+        $this->assertEquals('event', $eventQ1['type']);
+        $this->assertEquals($docActiveGoldId, $eventQ1['data']['payload']['$id']);
+        $this->assertContains($queryStatusActive, $eventQ1['data']['queryKeys']);
+
+        // clientQ2: should NOT receive event (status is active, not pending)
+        try {
+            $clientQ2->receive();
+            $this->fail('Expected TimeoutException - event should be filtered for clientQ2 (active document)');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // clientComplex: should receive event, queryKeys contains queryComplex
+        $eventComplex = json_decode($clientComplex->receive(), true);
+        $this->assertEquals('event', $eventComplex['type']);
+        $this->assertEquals($docActiveGoldId, $eventComplex['data']['payload']['$id']);
+        $this->assertContains($queryComplex, $eventComplex['data']['queryKeys']);
+
+        // 2) Create pending/silver document -> should match Q2 only, and be seen by all
+        $docPendingSilverId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $docPendingSilverId,
+            'data' => [
+                'status' => 'pending',
+                'category' => 'silver',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        // clientAll: should receive event, queryKeys = ['']
+        $eventAll2 = json_decode($clientAll->receive(), true);
+        $this->assertEquals('event', $eventAll2['type']);
+        $this->assertEquals($docPendingSilverId, $eventAll2['data']['payload']['$id']);
+        $this->assertArrayHasKey('queryKeys', $eventAll2['data']);
+        $this->assertIsArray($eventAll2['data']['queryKeys']);
+        $this->assertEquals([''], $eventAll2['data']['queryKeys']);
+
+        // clientQ1: should NOT receive event (status is pending)
+        try {
+            $clientQ1->receive();
+            $this->fail('Expected TimeoutException - event should be filtered for clientQ1 (pending document)');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // clientQ2: should receive event, queryKeys contains queryStatusPending
+        $eventQ2 = json_decode($clientQ2->receive(), true);
+        $this->assertEquals('event', $eventQ2['type']);
+        $this->assertEquals($docPendingSilverId, $eventQ2['data']['payload']['$id']);
+        $this->assertContains($queryStatusPending, $eventQ2['data']['queryKeys']);
+
+        // clientComplex: should NOT receive event (status is pending, category silver)
+        try {
+            $clientComplex->receive();
+            $this->fail('Expected TimeoutException - event should be filtered for complex subscription (pending document)');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $clientAll->close();
+        $clientQ1->close();
+        $clientQ2->close();
+        $clientComplex->close();
+    }
+
+    /**
+     * Ensure two separate subscriptions with different query keys
+     * only see their own matching events and expose the correct
+     * queryKey in queryKeys.
+     */
+    public function testMultipleSubscriptionsDifferentQueryKeys()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Multiple Query Keys Test DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Multiple Query Keys Collection',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        // Attribute used by queries
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        $queryStatusActive = Query::equal('status', ['active'])->toString();
+        $queryStatusPending = Query::equal('status', ['pending'])->toString();
+
+        // Two subscriptions on the same channel with different query keys
+        $clientQ1 = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            $queryStatusActive,
+        ]);
+
+        $clientQ2 = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            $queryStatusPending,
+        ]);
+
+        // Both should connect
+        $response = json_decode($clientQ1->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $response = json_decode($clientQ2->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        // 1) active document -> only queryStatusActive subscription should see it
+        $docActiveId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $docActiveId,
+            'data' => [
+                'status' => 'active',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $eventQ1 = json_decode($clientQ1->receive(), true);
+        $this->assertEquals('event', $eventQ1['type']);
+        $this->assertEquals($docActiveId, $eventQ1['data']['payload']['$id']);
+        $this->assertArrayHasKey('queryKeys', $eventQ1['data']);
+        $this->assertContains($queryStatusActive, $eventQ1['data']['queryKeys']);
+
+        try {
+            $clientQ2->receive();
+            $this->fail('Expected TimeoutException - clientQ2 should not receive active document');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // 2) pending document -> only queryStatusPending subscription should see it
+        $docPendingId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $docPendingId,
+            'data' => [
+                'status' => 'pending',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $eventQ2 = json_decode($clientQ2->receive(), true);
+        $this->assertEquals('event', $eventQ2['type']);
+        $this->assertEquals($docPendingId, $eventQ2['data']['payload']['$id']);
+        $this->assertArrayHasKey('queryKeys', $eventQ2['data']);
+        $this->assertContains($queryStatusPending, $eventQ2['data']['queryKeys']);
+
+        try {
+            $clientQ1->receive();
+            $this->fail('Expected TimeoutException - clientQ1 should not receive pending document');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $clientQ1->close();
+        $clientQ2->close();
+    }
 }

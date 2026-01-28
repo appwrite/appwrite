@@ -29,13 +29,19 @@ class Realtime extends MessagingAdapter
      *
      * [PROJECT_ID] ->
      *      [ROLE_X] ->
-     *          [CHANNEL_NAME_X] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Y] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
+     *          [CHANNEL_NAME_X] ->
+     *              [CONNECTION_ID] -> [QUERY_KEY] => true
+     *          [CHANNEL_NAME_Y] ->
+     *              [CONNECTION_ID] -> [QUERY_KEY] => true
+     *          [CHANNEL_NAME_Z] ->
+     *              [CONNECTION_ID] -> [QUERY_KEY] => true
      *      [ROLE_Y] ->
-     *          [CHANNEL_NAME_X] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Y] -> [CONNECTION_ID]
-     *          [CHANNEL_NAME_Z] -> [CONNECTION_ID]
+     *          [CHANNEL_NAME_X] ->
+     *              [CONNECTION_ID] -> [QUERY_KEY] => true
+     *          [CHANNEL_NAME_Y] ->
+     *              [CONNECTION_ID] -> [QUERY_KEY] => true
+     *          [CHANNEL_NAME_Z] ->
+     *              [CONNECTION_ID] -> [QUERY_KEY] => true
      */
     public array $subscriptions = [];
 
@@ -63,21 +69,34 @@ class Realtime extends MessagingAdapter
             $this->subscriptions[$projectId] = [];
         }
 
+        $queryKeys = [];
+        if (empty($queries)) {
+            $queryKeys[] = '';
+        } else {
+            foreach ($queries as $query) {
+                /** @var Query $query */
+                $queryKeys[] = $query->toString();
+            }
+        }
+
         foreach ($roles as $role) {
             if (!isset($this->subscriptions[$projectId][$role])) { // Add user first connection
                 $this->subscriptions[$projectId][$role] = [];
             }
 
             foreach ($channels as $channel => $list) {
-                $this->subscriptions[$projectId][$role][$channel][$identifier] = true;
+                if (!isset($this->subscriptions[$projectId][$role][$channel][$identifier])) {
+                    $this->subscriptions[$projectId][$role][$channel][$identifier] = [];
+                }
+                foreach ($queryKeys as $queryKey) {
+                    $this->subscriptions[$projectId][$role][$channel][$identifier][$queryKey] = true;
+                }
             }
         }
-
         $this->connections[$identifier] = [
             'projectId' => $projectId,
             'roles' => $roles,
-            'channels' => $channels,
-            'queries' => $queries
+            'channels' => $channels
         ];
     }
 
@@ -91,10 +110,11 @@ class Realtime extends MessagingAdapter
     {
         $projectId = $this->connections[$connection]['projectId'] ?? '';
         $roles = $this->connections[$connection]['roles'] ?? [];
+        $channels = $this->connections[$connection]['channels'] ?? [];
 
         foreach ($roles as $role) {
-            foreach ($this->subscriptions[$projectId][$role] as $channel => $list) {
-                unset($this->subscriptions[$projectId][$role][$channel][$connection]); // Remove connection
+            foreach ($channels as $channel => $list) {
+                unset($this->subscriptions[$projectId][$role][$channel][$connection]); // dropping connection will drop the queries as well
 
                 if (empty($this->subscriptions[$projectId][$role][$channel])) {
                     unset($this->subscriptions[$projectId][$role][$channel]);  // Remove channel when no connections
@@ -130,7 +150,8 @@ class Realtime extends MessagingAdapter
 
         return array_key_exists($projectId, $this->subscriptions)
             && array_key_exists($role, $this->subscriptions[$projectId])
-            && array_key_exists($channel, $this->subscriptions[$projectId][$role]);
+            && array_key_exists($channel, $this->subscriptions[$projectId][$role])
+            && !empty($this->subscriptions[$projectId][$role][$channel]);
     }
 
     /**
@@ -207,18 +228,21 @@ class Realtime extends MessagingAdapter
                         /**
                          * Saving all connections that are allowed to receive this event.
                          */
-                        foreach (array_keys($this->subscriptions[$event['project']][$role][$channel]) as $id) {
-                            /**
-                             * To prevent duplicates, we save the connections as array keys.
-                             */
-                            $queries = $this->connections[$id]['queries'] ?? [];
-                            $payload = $event['data']['payload'] ?? [];
-                            if (
-                                empty($queries) ||
-                                !empty(RuntimeQuery::filter($queries, $payload))
-                            ) {
-                                $receivers[$id] = 0;
+                        $payload = $event['data']['payload'] ?? [];
+                        foreach ($this->subscriptions[$event['project']][$role][$channel] as $id => $queryMap) {
+                            $matchedQueryKeys = [];
+                            // for representing a all query subscribed channel
+                            if (isset($queryMap[''])) {
+                                $matchedQueryKeys[] = '';
+                            } else {
+                                foreach (array_keys($queryMap) as $queryKey) {
+                                    $parsed = Query::parseQueries([$queryKey]);
+                                    if (!empty(RuntimeQuery::filter($parsed, $payload))) {
+                                        $matchedQueryKeys[] = $queryKey;
+                                    }
+                                }
                             }
+                            $receivers[$id] = $matchedQueryKeys;
                         }
                         break;
                     }
@@ -226,7 +250,7 @@ class Realtime extends MessagingAdapter
             }
         }
 
-        return array_keys($receivers);
+        return $receivers;
     }
 
     /**
