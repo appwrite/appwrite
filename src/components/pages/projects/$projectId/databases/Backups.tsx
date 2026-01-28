@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ID } from '@appwrite.io/console'
@@ -86,6 +86,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false)
   const [deletePolicyDialogOpen, setDeletePolicyDialogOpen] = useState(false)
   const [deleteBackupDialogOpen, setDeleteBackupDialogOpen] = useState(false)
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [selectedPolicy, setSelectedPolicy] =
     useState<Models.BackupPolicy | null>(null)
   const [selectedBackup, setSelectedBackup] =
@@ -264,6 +265,38 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
     },
   })
 
+  const bulkDeleteArchivesMutation = useMutation({
+    mutationFn: async (archiveIds: string[]) => {
+      const projectSdk = sdk.forProject(projectId)
+      // Delete all archives in parallel
+      await Promise.all(
+        archiveIds.map((archiveId) =>
+          projectSdk.backups.deleteArchive({ archiveId }),
+        ),
+      )
+    },
+    onSuccess: () => {
+      toast.success(
+        `Successfully deleted ${selectedBackups.size} backup${selectedBackups.size > 1 ? 's' : ''}`,
+      )
+      // Invalidate archives query for this specific database (all pages)
+      queryClient.invalidateQueries({
+        queryKey: [
+          'backup-archives',
+          'project',
+          projectId,
+          'database',
+          databaseId,
+        ],
+      })
+      setSelectedBackups(new Set())
+      setBulkDeleteDialogOpen(false)
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete backups')
+    },
+  })
+
   const createRestorationMutation = useMutation({
     mutationFn: async (params: {
       archiveId: string
@@ -375,6 +408,33 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
         (archive.policyId as string | null | undefined) === policyId &&
         archive.status === 'completed',
     )
+  }
+
+  // Clear selection when page changes
+  useEffect(() => {
+    setSelectedBackups(new Set())
+    setBulkDeleteDialogOpen(false)
+  }, [backupsPage, backupsPageSize])
+
+  const handleBulkDelete = () => {
+    if (selectedBackups.size === 0) return
+    setBulkDeleteDialogOpen(true)
+  }
+
+  const confirmBulkDelete = () => {
+    if (selectedBackups.size === 0) return
+    bulkDeleteArchivesMutation.mutate(Array.from(selectedBackups))
+  }
+
+  const handlePageChange = (page: number) => {
+    setBackupsPage(page)
+    setSelectedBackups(new Set()) // Clear selection on page change
+  }
+
+  const handlePageSizeChange = (size: number) => {
+    setBackupsPageSize(size)
+    setBackupsPage(1)
+    setSelectedBackups(new Set()) // Clear selection on page size change
   }
 
   if (isBackupsDisabled) {
@@ -641,7 +701,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent border-b border-border">
-                        <TableHead className="w-[50px] px-4">
+                        <TableHead className="w-[50px] px-4 py-3">
                           <Checkbox
                             checked={
                               archives.length > 0 &&
@@ -696,7 +756,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                             key={archive.$id}
                             className="hover:bg-muted/50"
                           >
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <Checkbox
                                 checked={selectedBackups.has(archive.$id)}
                                 onCheckedChange={(checked) => {
@@ -711,25 +771,25 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                 onClick={(e) => e.stopPropagation()}
                               />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <CopyableId
                                 id={archive.$id}
                                 size="sm"
                                 maxWidth={180}
                               />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <DateTooltip
                                 date={archive.$createdAt}
                                 className="text-[12px] font-medium text-muted-foreground"
                               />
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <code className="text-[12px] font-mono text-muted-foreground">
                                 {formatSize(archive.size)}
                               </code>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               <Badge
                                 variant={status.badgeVariant}
                                 className="gap-1.5 text-[11px] font-medium"
@@ -738,7 +798,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                                 {status.label}
                               </Badge>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="px-4 py-3">
                               {policy ? (
                                 <span className="text-[12px] text-foreground">
                                   {policy.name || 'Unnamed Policy'}
@@ -813,11 +873,8 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
                       totalItems={archivesTotal}
                       pageSize={backupsPageSize}
                       pageSizeOptions={[10, 25, 50, 100]}
-                      onPageChange={setBackupsPage}
-                      onPageSizeChange={(size) => {
-                        setBackupsPageSize(size)
-                        setBackupsPage(1)
-                      }}
+                      onPageChange={handlePageChange}
+                      onPageSizeChange={handlePageSizeChange}
                       showTotal={true}
                       itemLabel="backups"
                     />
@@ -828,6 +885,76 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
           </div>
         </div>
       </div>
+
+      {/* Bulk Delete Action Bar */}
+      {selectedBackups.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2">
+          <div className="mx-auto flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
+            <Badge variant="secondary" className="h-6 px-2.5">
+              {selectedBackups.size} backup
+              {selectedBackups.size > 1 ? 's' : ''} selected
+            </Badge>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedBackups(new Set())}
+                className="h-8 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                disabled={bulkDeleteArchivesMutation.isPending}
+                className="h-8 gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md p-0">
+          <DialogHeader className="px-6 pt-6 text-left">
+            <DialogTitle>Delete backups</DialogTitle>
+            <DialogDescription className="text-[13px] mt-2">
+              Are you sure you want to delete{' '}
+              <strong>
+                {selectedBackups.size} backup
+                {selectedBackups.size > 1 ? 's' : ''}
+              </strong>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={() => setBulkDeleteDialogOpen(false)}
+              disabled={bulkDeleteArchivesMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={confirmBulkDelete}
+              disabled={bulkDeleteArchivesMutation.isPending}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Policy Dialog */}
       <CreatePolicyDialog

@@ -3545,7 +3545,7 @@ function RowEditDrawer({
             </button>
           </div>
 
-          <div ref={scrollContainerRef} className="flex-1">
+          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0">
             {activeTab === 'overview' && !isCreateMode && (
               <div className="px-6 py-6">
                 <div className="space-y-5">
@@ -4331,10 +4331,11 @@ function RowsSpreadsheet({
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Clear selection when navigating between pages/routes
+  // Clear selection and reset page when navigating between pages/routes or switching tables
   useEffect(() => {
     setSelectedRows(new Set())
     setDeleteDialogOpen(false)
+    setCurrentPage(1) // Reset to first page when switching tables
   }, [location.pathname, projectId, databaseId, tableId])
 
   // Convert 1-indexed page to 0-indexed for API
