@@ -265,13 +265,16 @@ abstract class Action extends DatabasesAction
         } elseif (\is_array($relation) && !\array_is_list($relation)) {
             $relationId = $relation['$id'] ?? null;
         } else {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Relationship value must be an object, document ID string, or associative array');
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship value must be an object, document ID string, or associative array');
         }
 
         if ($relationId !== null) {
+            if (!\is_string($relationId)) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship $id must be a string');
+            }
             $validator = new CustomId();
             if (!$validator->isValid($relationId)) {
-                throw new Exception(Exception::GENERAL_BAD_REQUEST, $validator->getDescription());
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $validator->getDescription());
             }
         }
     }
