@@ -2,18 +2,18 @@
 
 namespace Appwrite\Platform\Modules\Tokens\Http\Tokens\Buckets\Files;
 
-use Appwrite\Extend\Exception as ExtendException;
+use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\FileTokens;
 use Appwrite\Utopia\Response;
-use Exception;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -74,11 +74,16 @@ class XList extends Action
         $cursor = \reset($cursor);
 
         if ($cursor !== false) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
             $tokenId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('resourceTokens', $tokenId);
 
             if ($cursorDocument->isEmpty()) {
-                throw new Exception(ExtendException::GENERAL_CURSOR_NOT_FOUND, "File token '{$tokenId}' for the 'cursor' value not found.");
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "File token '{$tokenId}' for the 'cursor' value not found.");
             }
 
             $cursor->setValue($cursorDocument);
