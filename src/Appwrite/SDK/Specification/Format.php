@@ -349,6 +349,7 @@ abstract class Format
                 }
                 break;
             case 'documentsDB':
+            case 'vectorDB':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
@@ -618,6 +619,7 @@ abstract class Format
                 break;
             case 'databases':
             case 'documentsDB':
+            case 'vectorDB':
                 switch ($method) {
                     case 'getUsage':
                     case 'listUsage':
