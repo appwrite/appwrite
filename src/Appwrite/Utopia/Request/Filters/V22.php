@@ -26,9 +26,7 @@ class V22 extends Filter
             return $content;
         }
 
-        $content = $this->convertSelectQueries($content);
-
-        return $content;
+        return $this->convertSelectQueries($content);
     }
 
     private function convertSelectQueries(array $content): array
