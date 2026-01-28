@@ -244,11 +244,14 @@ App::init()
             }
 
             $scopes = []; // Reset scope if admin
-            foreach ($adminRoles as $role) {
-                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
-            }
 
-            $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            foreach ($adminRoles as $role) {
+                if (str_starts_with($role, 'project-')) {
+                    $role = substr($role, strrpos($role, '-') + 1);
+                }
+                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+                $authorization->addRole($role);
+            }
         }
 
         $scopes = \array_unique($scopes);

@@ -39,7 +39,7 @@ class User extends Document
     {
         $roles = [];
 
-        if (!$this->isPrivileged($authorization->getRoles()) && !$this->isApp($authorization->getRoles())) {
+        if (!$this->isApp($authorization->getRoles())) {
             if ($this->getId()) {
                 $roles[] = Role::user($this->getId())->toString();
                 $roles[] = Role::users()->toString();
@@ -71,6 +71,11 @@ class User extends Document
                 if (isset($node['roles'])) {
                     foreach ($node['roles'] as $nodeRole) { // Set all team roles
                         $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
+
+                        if (str_starts_with($nodeRole, 'project-')) {
+                            $projectBaseRole = substr($nodeRole, 0, strrpos($nodeRole, '-'));
+                            $roles[] = Role::team($node['teamId'], $projectBaseRole)->toString();
+                        }
                     }
                 }
             }
