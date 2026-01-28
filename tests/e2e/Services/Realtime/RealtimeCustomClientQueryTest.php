@@ -1608,7 +1608,7 @@ class RealtimeCustomClientQueryTest extends Scope
             Query::equal('category', ['gold']),
         ])->toString();
 
-        // Subscribe with no queries -> should receive all events, queryKeys = ['']
+        // Subscribe with no queries -> should receive all events, queryKeys = []
         $clientAll = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
@@ -1660,13 +1660,13 @@ class RealtimeCustomClientQueryTest extends Scope
             ],
         ]);
 
-        // clientAll: should receive event, queryKeys = ['']
+        // clientAll: should receive event, queryKeys = []
         $eventAll = json_decode($clientAll->receive(), true);
         $this->assertEquals('event', $eventAll['type']);
         $this->assertEquals($docActiveGoldId, $eventAll['data']['payload']['$id']);
         $this->assertArrayHasKey('queryKeys', $eventAll['data']);
         $this->assertIsArray($eventAll['data']['queryKeys']);
-        $this->assertEquals([''], $eventAll['data']['queryKeys']);
+        $this->assertCount(0, $eventAll['data']['queryKeys']);
 
         // clientQ1: should receive event, queryKeys contains queryStatusActive
         $eventQ1 = json_decode($clientQ1->receive(), true);
@@ -1704,13 +1704,13 @@ class RealtimeCustomClientQueryTest extends Scope
             ],
         ]);
 
-        // clientAll: should receive event, queryKeys = ['']
+        // clientAll: should receive event, queryKeys = []
         $eventAll2 = json_decode($clientAll->receive(), true);
         $this->assertEquals('event', $eventAll2['type']);
         $this->assertEquals($docPendingSilverId, $eventAll2['data']['payload']['$id']);
         $this->assertArrayHasKey('queryKeys', $eventAll2['data']);
         $this->assertIsArray($eventAll2['data']['queryKeys']);
-        $this->assertEquals([''], $eventAll2['data']['queryKeys']);
+        $this->assertCount(0, $eventAll2['data']['queryKeys']);
 
         // clientQ1: should NOT receive event (status is pending)
         try {

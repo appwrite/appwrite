@@ -231,18 +231,19 @@ class Realtime extends MessagingAdapter
                         $payload = $event['data']['payload'] ?? [];
                         foreach ($this->subscriptions[$event['project']][$role][$channel] as $id => $queryMap) {
                             $matchedQueryKeys = [];
-                            // for representing a all query subscribed channel
                             if (isset($queryMap[''])) {
-                                $matchedQueryKeys[] = '';
-                            } else {
-                                foreach (array_keys($queryMap) as $queryKey) {
-                                    $parsed = Query::parseQueries([$queryKey]);
-                                    if (!empty(RuntimeQuery::filter($parsed, $payload))) {
-                                        $matchedQueryKeys[] = $queryKey;
-                                    }
+                                $receivers[$id] = $matchedQueryKeys;
+                                continue;
+                            }
+                            foreach (array_keys($queryMap) as $queryKey) {
+                                $parsed = Query::parseQueries([$queryKey]);
+                                if (!empty(RuntimeQuery::filter($parsed, $payload))) {
+                                    $matchedQueryKeys[] = $queryKey;
                                 }
                             }
-                            $receivers[$id] = $matchedQueryKeys;
+                            if (!empty($matchedQueryKeys)) {
+                                $receivers[$id] = $matchedQueryKeys;
+                            }
                         }
                         break;
                     }
