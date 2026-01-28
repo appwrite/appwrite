@@ -3903,12 +3903,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "50389442b749e1ca77c3423f6288cccc3e1d9178"
+                "reference": "6b2b6840b3df503c2feb3770cc36a3dd63660850"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/50389442b749e1ca77c3423f6288cccc3e1d9178",
-                "reference": "50389442b749e1ca77c3423f6288cccc3e1d9178",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/6b2b6840b3df503c2feb3770cc36a3dd63660850",
+                "reference": "6b2b6840b3df503c2feb3770cc36a3dd63660850",
                 "shasum": ""
             },
             "require": {
@@ -3953,7 +3953,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/joins8"
             },
-            "time": "2026-01-27T14:24:34+00:00"
+            "time": "2026-01-28T06:47:42+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4520,12 +4520,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "805bdb87e3ea8c85c58fc16dc7b56a497da161cf"
+                "reference": "bfafb186e7cc5e339008f567ba74224fa53872db"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/805bdb87e3ea8c85c58fc16dc7b56a497da161cf",
-                "reference": "805bdb87e3ea8c85c58fc16dc7b56a497da161cf",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/bfafb186e7cc5e339008f567ba74224fa53872db",
+                "reference": "bfafb186e7cc5e339008f567ba74224fa53872db",
                 "shasum": ""
             },
             "require": {
@@ -4534,7 +4534,7 @@
                 "ext-openssl": "*",
                 "php": ">=8.1",
                 "utopia-php/console": "0.0.*",
-                "utopia-php/database": "dev-joins8 as 4.5.2",
+                "utopia-php/database": "dev-joins8 as 4.6.2",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/storage": "0.18.*"
             },
@@ -4567,7 +4567,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/joins"
             },
-            "time": "2026-01-18T13:47:36+00:00"
+            "time": "2026-01-28T06:48:14+00:00"
         },
         {
             "name": "utopia-php/mongo",
