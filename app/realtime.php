@@ -29,6 +29,7 @@ use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
@@ -66,6 +67,7 @@ if (!function_exists('getConsoleDB')) {
         $adapter = new DatabasePool($pools->get('console'));
         $database = new Database($adapter, getCache());
         $database
+            ->setDatabase(APP_DATABASE)
             ->setNamespace('_console')
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', '_console');
@@ -122,6 +124,7 @@ if (!function_exists('getProjectDB')) {
         }
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 
@@ -471,9 +474,10 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         $roles = $user->getRoles($database->getAuthorization());
                         $channels = $realtime->connections[$connection]['channels'];
+                        $queries = $realtime->connections[$connection]['queries'] ?? [];
 
                         $realtime->unsubscribe($connection);
-                        $realtime->subscribe($projectId, $connection, $roles, $channels);
+                        $realtime->subscribe($projectId, $connection, $roles, $channels, $queries);
                     }
                 }
 
@@ -576,6 +580,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $roles = $user->getRoles($authorization);
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
+        try {
+            $queries = Realtime::convertQueries($request->getQuery('queries', []));
+        } catch (QueryException $e) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
+        }
 
         /**
          * Channels Check
@@ -584,7 +593,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing channels');
         }
 
-        $realtime->subscribe($project->getId(), $connection, $roles, $channels);
+        $realtime->subscribe($project->getId(), $connection, $roles, $channels, $queries);
 
         $realtime->connections[$connection]['authorization'] = $authorization;
 
@@ -594,6 +603,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             'type' => 'connected',
             'data' => [
                 'channels' => array_keys($channels),
+                'queries' => $queries,
                 'user' => $user
             ]
         ]));
@@ -728,7 +738,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 // Preserve authorization before subscribe overwrites the connection array
                 $authorization = $realtime->connections[$connection]['authorization'] ?? null;
 
-                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
+                $queries = $realtime->connections[$connection]['queries'];
+                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels, $queries);
 
                 // Restore authorization after subscribe
                 if ($authorization !== null) {

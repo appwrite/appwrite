@@ -66,7 +66,7 @@ class Specs extends Action
      *
      * @return array<string>
      */
-    protected function getPlatforms(): array
+    public static function getPlatforms(): array
     {
         return [
             APP_SDK_PLATFORM_CLIENT,
@@ -199,6 +199,12 @@ class Specs extends Action
                     'description' => '',
                     'in' => 'header',
                 ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with',
+                    'in' => 'header',
+                ],
             ],
         ];
     }
@@ -239,7 +245,7 @@ class Specs extends Action
         App::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
         App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
-        $platforms = $this->getPlatforms();
+        $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
         $keys = $this->getKeys();
 

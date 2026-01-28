@@ -78,6 +78,7 @@ CLI::setResource('dbForPlatform', function ($pools, $cache, $authorization) {
             $dbForPlatform = new Database($adapter, $cache);
 
             $dbForPlatform
+                ->setDatabase(APP_DATABASE)
                 ->setAuthorization($authorization)
                 ->setNamespace('_console')
                 ->setMetadata('host', \gethostname())
@@ -168,6 +169,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
         }
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
@@ -189,6 +191,7 @@ CLI::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizatio
         $database = new Database($adapter, $cache);
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
@@ -264,6 +267,14 @@ CLI::setResource('logError', function (Registry $register) {
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('detailedTrace', $error->getTrace());
+
+            if ($error->getPrevious() !== null) {
+                if ($error->getPrevious()->getMessage() != $error->getMessage()) {
+                    $log->addExtra('previousMessage', $error->getPrevious()->getMessage());
+                }
+                $log->addExtra('previousFile', $error->getPrevious()->getFile());
+                $log->addExtra('previousLine', $error->getPrevious()->getLine());
+            }
 
             $log->setAction($action);
 

@@ -44,7 +44,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4321;
-const APP_VERSION_STABLE = '1.8.0';
+const APP_VERSION_STABLE = '1.8.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -161,6 +161,9 @@ const ACTIVITY_TYPE_GUEST = 'guest';
 const MFA_RECENT_DURATION = 1800; // 30 mins
 
 
+// Database name
+const APP_DATABASE = 'appwrite';
+
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
@@ -178,8 +181,10 @@ const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
 
 // Deletion Types
-const DELETE_TYPE_DATABASES = 'databases';
 
+const ENABLE_EXECUTIONS_LIMIT_ON_ROUTE = false;
+
+const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
 const DELETE_TYPE_COLLECTIONS = 'collections';
 const DELETE_TYPE_TRANSACTION = 'transaction';
@@ -191,6 +196,7 @@ const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
 const DELETE_TYPE_TEAM_PROJECTS = 'teams_projects';
 const DELETE_TYPE_EXECUTIONS = 'executions';
+const DELETE_TYPE_EXECUTIONS_LIMIT = 'executionsLimit';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
 const DELETE_TYPE_USAGE = 'usage';

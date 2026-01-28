@@ -4,7 +4,7 @@ use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Key;
 use Appwrite\Databases\TransactionState;
-use Appwrite\Event\Audit;
+use Appwrite\Event\Audit as AuditEvent;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
@@ -15,10 +15,12 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsResources;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
@@ -30,6 +32,8 @@ use Appwrite\Utopia\Response;
 use Executor\Executor;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
 use Utopia\App;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Argon2;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code;
@@ -127,6 +131,9 @@ App::setResource('queueForMails', function (Publisher $publisher) {
 App::setResource('queueForBuilds', function (Publisher $publisher) {
     return new Build($publisher);
 }, ['publisher']);
+App::setResource('queueForScreenshots', function (Publisher $publisher) {
+    return new Screenshot($publisher);
+}, ['publisher']);
 App::setResource('queueForDatabase', function (Publisher $publisher) {
     return new EventDatabase($publisher);
 }, ['publisher']);
@@ -146,11 +153,14 @@ App::setResource('queueForStatsUsage', function (Publisher $publisher) {
     return new StatsUsage($publisher);
 }, ['publisher']);
 App::setResource('queueForAudits', function (Publisher $publisher) {
-    return new Audit($publisher);
+    return new AuditEvent($publisher);
 }, ['publisher']);
 App::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
+App::setResource('eventProcessor', function () {
+    return new EventProcessor();
+}, []);
 App::setResource('queueForCertificates', function (Publisher $publisher) {
     return new Certificate($publisher);
 }, ['publisher']);
@@ -275,6 +285,7 @@ App::setResource('cors', fn (array $allowedHostnames) => new Cors(
         'X-Appwrite-ID',
         'X-Appwrite-Timestamp',
         'X-Appwrite-Session',
+        'X-Appwrite-Platform', // for `$platform` injection and SDK generator
         // SDK generator
         'X-SDK-Version',
         'X-SDK-Name',
@@ -510,7 +521,7 @@ App::setResource('authorization', function () {
     return new Authorization();
 }, []);
 
-App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project, Authorization $authorization) {
+App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform, Cache $cache, Document $project, Response $response, Publisher $publisher, Publisher $publisherFunctions, Publisher $publisherWebhooks, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime, StatsUsage $queueForStatsUsage, Authorization $authorization) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForPlatform;
     }
@@ -526,6 +537,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
     $database = new Database($adapter, $cache);
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
@@ -547,8 +559,209 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForPlatform
             ->setNamespace('_' . $project->getSequence());
     }
 
+    /**
+     * This isolated event handling for `users.*.create` which is based on a `Database::EVENT_DOCUMENT_CREATE` listener may look odd, but it is **intentional**.
+     *
+     * Accounts can be created in many ways beyond `createAccount`
+     * (anonymous, OAuth, phone, etc.), and those flows are probably not covered in event tests; so we handle this here.
+     */
+    $eventDatabaseListener = function (Document $project, Document $document, Response $response, Event $queueForEvents, Func $queueForFunctions, Webhook $queueForWebhooks, Realtime $queueForRealtime) {
+        // Only trigger events for user creation with the database listener.
+        if ($document->getCollection() !== 'users') {
+            return;
+        }
+
+        $queueForEvents
+            ->setEvent('users.[userId].create')
+            ->setParam('userId', $document->getId())
+            ->setPayload($response->output($document, Response::MODEL_USER));
+
+        // Trigger functions, webhooks, and realtime events
+        $queueForFunctions
+            ->from($queueForEvents)
+            ->trigger();
+
+
+        /** Trigger webhooks events only if a project has them enabled */
+        if (!empty($project->getAttribute('webhooks'))) {
+            $queueForWebhooks
+                ->from($queueForEvents)
+                ->trigger();
+        }
+
+        /** Trigger realtime events only for non console events */
+        if ($queueForEvents->getProject()->getId() !== 'console') {
+            $queueForRealtime
+                ->from($queueForEvents)
+                ->trigger();
+        }
+    };
+
+    /**
+     * Purge function events cache when functions are created, updated or deleted.
+     */
+    $functionsEventsCacheListener = function (string $event, Document $document, Document $project, Database $dbForProject) {
+
+
+        if ($document->getCollection() !== 'functions') {
+            return;
+        }
+
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return;
+        }
+
+        $hostname = $dbForProject->getAdapter()->getHostname();
+        $cacheKey = \sprintf(
+            '%s-cache-%s:%s:%s:project:%s:functions:events',
+            $dbForProject->getCacheName(),
+            $hostname ?? '',
+            $dbForProject->getNamespace(),
+            $dbForProject->getTenant(),
+            $project->getId()
+        );
+
+        $dbForProject->getCache()->purge($cacheKey);
+    };
+
+    $usageDatabaseListener = function (string $event, Document $document, StatsUsage $queueForStatsUsage) {
+        $value = 1;
+
+        switch ($event) {
+            case Database::EVENT_DOCUMENT_DELETE:
+                $value = -1;
+                break;
+            case Database::EVENT_DOCUMENTS_DELETE:
+                $value = -1 * $document->getAttribute('modified', 0);
+                break;
+            case Database::EVENT_DOCUMENTS_CREATE:
+                $value = $document->getAttribute('modified', 0);
+                break;
+            case Database::EVENT_DOCUMENTS_UPSERT:
+                $value = $document->getAttribute('created', 0);
+                break;
+        }
+
+        switch (true) {
+            case $document->getCollection() === 'teams':
+                $queueForStatsUsage->addMetric(METRIC_TEAMS, $value); // per project
+                break;
+            case $document->getCollection() === 'users':
+                $queueForStatsUsage->addMetric(METRIC_USERS, $value); // per project
+                if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                    $queueForStatsUsage->addReduce($document);
+                }
+                break;
+            case $document->getCollection() === 'sessions': // sessions
+                $queueForStatsUsage->addMetric(METRIC_SESSIONS, $value); //per project
+                break;
+            case $document->getCollection() === 'databases': // databases
+                $queueForStatsUsage->addMetric(METRIC_DATABASES, $value); // per project
+
+                if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                    $queueForStatsUsage->addReduce($document);
+                }
+                break;
+            case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
+                $parts = explode('_', $document->getCollection());
+                $databaseInternalId = $parts[1] ?? 0;
+                $queueForStatsUsage
+                    ->addMetric(METRIC_COLLECTIONS, $value) // per project
+                    ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value);
+
+                if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                    $queueForStatsUsage->addReduce($document);
+                }
+                break;
+            case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): //documents
+                $parts = explode('_', $document->getCollection());
+                $databaseInternalId   = $parts[1] ?? 0;
+                $collectionInternalId = $parts[3] ?? 0;
+                $queueForStatsUsage
+                    ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                    ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
+                    ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+                break;
+            case $document->getCollection() === 'buckets': //buckets
+                $queueForStatsUsage
+                    ->addMetric(METRIC_BUCKETS, $value); // per project
+                if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                    $queueForStatsUsage
+                        ->addReduce($document);
+                }
+                break;
+            case str_starts_with($document->getCollection(), 'bucket_'): // files
+                $parts = explode('_', $document->getCollection());
+                $bucketInternalId  = $parts[1];
+                $queueForStatsUsage
+                    ->addMetric(METRIC_FILES, $value) // per project
+                    ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value) // per project
+                    ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES), $value) // per bucket
+                    ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value); // per bucket
+                break;
+            case $document->getCollection() === 'functions':
+                $queueForStatsUsage
+                    ->addMetric(METRIC_FUNCTIONS, $value); // per project
+
+                if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                    $queueForStatsUsage
+                        ->addReduce($document);
+                }
+                break;
+            case $document->getCollection() === 'sites':
+                $queueForStatsUsage
+                    ->addMetric(METRIC_SITES, $value); // per project
+
+                if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                    $queueForStatsUsage
+                        ->addReduce($document);
+                }
+                break;
+            case $document->getCollection() === 'deployments':
+                $queueForStatsUsage
+                    ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
+                    ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
+                    ->addMetric(str_replace(['{resourceType}'], [$document->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_DEPLOYMENTS), $value) // per function
+                    ->addMetric(str_replace(['{resourceType}'], [$document->getAttribute('resourceType')], METRIC_RESOURCE_TYPE_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value)
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS), $value) // per function
+                    ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_RESOURCE_TYPE_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
+                break;
+            default:
+                break;
+        }
+    };
+
+    // Clone the queues, to prevent events triggered by the database listener
+    // from overwriting the events that are supposed to be triggered in the shutdown hook.
+    $queueForEventsClone = new Event($publisher);
+    $queueForFunctions = new Func($publisherFunctions);
+    $queueForWebhooks = new Webhook($publisherWebhooks);
+    $queueForRealtime = new Realtime();
+
+
+    $database
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_CREATE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_DELETE, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENTS_UPSERT, 'calculate-usage', fn ($event, $document) => $usageDatabaseListener($event, $document, $queueForStatsUsage))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'create-trigger-events', fn ($event, $document) => $eventDatabaseListener(
+                $project,
+                $document,
+                $response,
+                $queueForEventsClone->from($queueForEvents),
+                $queueForFunctions->from($queueForEvents),
+                $queueForWebhooks->from($queueForEvents),
+                $queueForRealtime->from($queueForEvents)
+            ))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
+            ->on(Database::EVENT_DOCUMENT_UPDATE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'purge-function-events-cache', fn ($event, $document) => $functionsEventsCacheListener($event, $document, $project, $database))
+    ;
+
+
     return $database;
-}, ['pools', 'dbForPlatform', 'cache', 'project', 'authorization']);
+}, ['pools', 'dbForPlatform', 'cache', 'project', 'response', 'publisher', 'publisherFunctions', 'publisherWebhooks', 'queueForEvents', 'queueForFunctions', 'queueForWebhooks', 'queueForRealtime', 'queueForStatsUsage', 'authorization']);
 
 App::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authorization $authorization) {
 
@@ -556,6 +769,7 @@ App::setResource('dbForPlatform', function (Group $pools, Cache $cache, Authoriz
     $database = new Database($adapter, $cache);
 
     $database
+        ->setDatabase(APP_DATABASE)
         ->setAuthorization($authorization)
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
@@ -585,6 +799,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForPlatform
 
         $configure = (function (Database $database) use ($project, $dsn, $authorization) {
             $database
+                ->setDatabase(APP_DATABASE)
                 ->setAuthorization($authorization)
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
@@ -636,6 +851,7 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizatio
         $database = new Database($adapter, $cache);
 
         $database
+            ->setDatabase(APP_DATABASE)
             ->setAuthorization($authorization)
             ->setSharedTables(true)
             ->setNamespace('logsV1')
@@ -650,6 +866,11 @@ App::setResource('getLogsDB', function (Group $pools, Cache $cache, Authorizatio
         return $database;
     };
 }, ['pools', 'cache', 'authorization']);
+
+App::setResource('audit', function ($dbForProject) {
+    $adapter = new AdapterDatabase($dbForProject);
+    return new Audit($adapter);
+}, ['dbForProject']);
 
 App::setResource('telemetry', fn () => new NoTelemetry());
 
@@ -1140,3 +1361,11 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request, A
 App::setResource('transactionState', function (Database $dbForProject, Authorization $authorization) {
     return new TransactionState($dbForProject, $authorization);
 }, ['dbForProject', 'authorization']);
+
+App::setResource('executionsRetentionCount', function (Document $project, array $plan) {
+    if ($project->getId() === 'console' || empty($plan)) {
+        return 0;
+    }
+
+    return (int) ($plan['executionsRetentionCount'] ?? 100);
+}, ['project', 'plan']);

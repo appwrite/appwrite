@@ -9,6 +9,7 @@ use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Adapters\TimeLimit\Database as AbuseDatabase;
+use Utopia\Audit\Adapter\SQL;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -28,6 +29,8 @@ use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
 use Utopia\System\System;
+
+use function Swoole\Coroutine\batch;
 
 class Deletes extends Action
 {
@@ -58,8 +61,10 @@ class Deletes extends Action
             ->inject('certificates')
             ->inject('executor')
             ->inject('executionRetention')
+            ->inject('executionsRetentionCount')
             ->inject('auditRetention')
             ->inject('log')
+            ->inject('getAudit')
             ->callback($this->action(...));
     }
 
@@ -81,8 +86,10 @@ class Deletes extends Action
         CertificatesAdapter $certificates,
         Executor $executor,
         string $executionRetention,
+        int $executionsRetentionCount,
         string $auditRetention,
-        Log $log
+        Log $log,
+        callable $getAudit,
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -141,9 +148,22 @@ class Deletes extends Action
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
                 break;
+            case DELETE_TYPE_EXECUTIONS_LIMIT:
+                $resourceInternalId = $payload['resource'] ?? null;
+                $resourceType = $payload['resourceType'] ?? null;
+                if ($resourceInternalId) {
+                    $this->deleteExecutionsByLimit(
+                        $project,
+                        $getProjectDB,
+                        $executionsRetentionCount,
+                        $resourceInternalId,
+                        $resourceType
+                    );
+                }
+                break;
             case DELETE_TYPE_AUDIT:
                 if (!$project->isEmpty()) {
-                    $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
+                    $this->deleteAuditLogs($project, $getAudit, $auditRetention);
                 }
                 break;
             case DELETE_TYPE_REALTIME:
@@ -181,8 +201,8 @@ class Deletes extends Action
                 break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
-                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
-                $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
+                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention, $executionsRetentionCount);
+                $this->deleteAuditLogs($project, $getAudit, $auditRetention);
                 $this->deleteUsageStats($project, $getProjectDB, $getLogsDB, $hourlyUsageRetentionDatetime);
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 $this->deleteExpiredTransactions($project, $getProjectDB);
@@ -196,16 +216,15 @@ class Deletes extends Action
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
      * @param string $datetime
-     * @param Document|null $document
      * @return void
      * @throws Conflict
      * @throws Restricted
      * @throws Structure
-     * @throws DatabaseException
+     * @throws DatabaseException|Exception
      */
     private function deleteSchedules(Database $dbForPlatform, callable $getProjectDB, string $datetime): void
     {
-        // Temporarly accepting both 'fra' and 'default'
+        // Temporarily accepting both 'fra' and 'default'
         // When all migrated, only use _APP_REGION with 'default' as default value
         $regions = [System::getEnv('_APP_REGION', 'default')];
         if (!in_array('default', $regions)) {
@@ -510,124 +529,136 @@ class Deletes extends Action
             $dsn = new DSN('mysql://' . $document->getAttribute('database', 'console'));
         }
 
-        $dbForProject = $getProjectDB($document);
-
-        $projectCollectionIds = [
-            ...\array_keys(Config::getParam('collections', [])['projects']),
-            Audit::COLLECTION,
-            AbuseDatabase::COLLECTION,
-        ];
-
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-
-        $projectTables = !\in_array($dsn->getHost(), $sharedTables);
-        $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
-        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-
         /**
          * @var $dbForProject Database
          */
-        $dbForProject->foreach(Database::METADATA, function (Document $collection) use ($dbForProject, $projectTables, $projectCollectionIds) {
-            try {
-                if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
-                    $dbForProject->deleteCollection($collection->getId());
-                } else {
-                    $this->deleteByGroup(
-                        $collection->getId(),
-                        [
-                            Query::orderAsc()
-                        ],
-                        database: $dbForProject
-                    );
+        $dbForProject = $getProjectDB($document);
+
+        try {
+            /**
+             * Disable validation because of Cursor validation on $id underscores
+             */
+            $dbForProject->disableValidation();
+
+
+            $projectCollectionIds = [
+                ...\array_keys(Config::getParam('collections', [])['projects']),
+                SQL::COLLECTION,
+                AbuseDatabase::COLLECTION,
+            ];
+
+            $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
+            $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
+
+            $projectTables = !\in_array($dsn->getHost(), $sharedTables);
+            $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
+            $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
+
+            $dbForProject->foreach(Database::METADATA, function (Document $collection) use ($dbForProject, $projectTables, $projectCollectionIds) {
+                try {
+                    if ($projectTables || !\in_array($collection->getId(), $projectCollectionIds)) {
+                        $dbForProject->deleteCollection($collection->getId());
+                    } else {
+                        $this->deleteByGroup(
+                            $collection->getId(),
+                            [
+                                Query::orderAsc()
+                            ],
+                            database: $dbForProject
+                        );
+                    }
+                } catch (Throwable $e) {
+                    Console::error('Error deleting ' . $collection->getId() . ' ' . $e->getMessage());
                 }
-            } catch (Throwable $e) {
-                Console::error('Error deleting ' . $collection->getId() . ' ' . $e->getMessage());
+            });
+
+            // Delete Platforms
+            $this->deleteByGroup('platforms', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+
+            // Delete project and function rules
+            $this->deleteByGroup('rules', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
+                $this->deleteRule($dbForPlatform, $document, $certificates);
+            });
+
+            // Delete Keys
+            $this->deleteByGroup('keys', [
+                Query::equal('resourceType', ['projects']),
+                Query::equal('resourceInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+
+            // Delete Webhooks
+            $this->deleteByGroup('webhooks', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+
+            // Delete VCS Installations
+            $this->deleteByGroup('installations', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+
+            // Delete VCS Repositories
+            $this->deleteByGroup('repositories', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+
+            // Delete VCS comments
+            $this->deleteByGroup('vcsComments', [
+                Query::equal('projectInternalId', [$projectInternalId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+
+            // Delete Schedules
+            $this->deleteByGroup('schedules', [
+                Query::equal('projectId', [$projectId]),
+                Query::orderAsc()
+            ], $dbForPlatform);
+
+            // Delete metadata table
+            if ($projectTables) {
+                $dbForProject->deleteCollection(Database::METADATA);
+            } elseif ($sharedTablesV1) {
+                $this->deleteByGroup(
+                    Database::METADATA,
+                    [
+                        Query::orderAsc()
+                    ],
+                    $dbForProject
+                );
+            } elseif ($sharedTablesV2) {
+                $queries = \array_map(
+                    fn ($id) => Query::notEqual('$id', $id),
+                    $projectCollectionIds
+                );
+
+                $queries[] = Query::orderAsc();
+
+                $this->deleteByGroup(
+                    Database::METADATA,
+                    $queries,
+                    $dbForProject
+                );
             }
-        });
 
-        // Delete Platforms
-        $this->deleteByGroup('platforms', [
-            Query::equal('projectInternalId', [$projectInternalId]),
-            Query::orderAsc()
-        ], $dbForPlatform);
+            // Delete all storage directories
+            $deviceForFiles->delete($deviceForFiles->getRoot(), true);
+            $deviceForSites->delete($deviceForSites->getRoot(), true);
+            $deviceForFunctions->delete($deviceForFunctions->getRoot(), true);
+            $deviceForBuilds->delete($deviceForBuilds->getRoot(), true);
+            $deviceForCache->delete($deviceForCache->getRoot(), true);
 
-        // Delete project and function rules
-        $this->deleteByGroup('rules', [
-            Query::equal('projectInternalId', [$projectInternalId]),
-            Query::orderAsc()
-        ], $dbForPlatform, function (Document $document) use ($dbForPlatform, $certificates) {
-            $this->deleteRule($dbForPlatform, $document, $certificates);
-        });
-
-        // Delete Keys
-        $this->deleteByGroup('keys', [
-            Query::equal('projectInternalId', [$projectInternalId]),
-            Query::orderAsc()
-        ], $dbForPlatform);
-
-        // Delete Webhooks
-        $this->deleteByGroup('webhooks', [
-            Query::equal('projectInternalId', [$projectInternalId]),
-            Query::orderAsc()
-        ], $dbForPlatform);
-
-        // Delete VCS Installations
-        $this->deleteByGroup('installations', [
-            Query::equal('projectInternalId', [$projectInternalId]),
-            Query::orderAsc()
-        ], $dbForPlatform);
-
-        // Delete VCS Repositories
-        $this->deleteByGroup('repositories', [
-            Query::equal('projectInternalId', [$projectInternalId]),
-            Query::orderAsc()
-        ], $dbForPlatform);
-
-        // Delete VCS comments
-        $this->deleteByGroup('vcsComments', [
-            Query::equal('projectInternalId', [$projectInternalId]),
-            Query::orderAsc()
-        ], $dbForPlatform);
-
-        // Delete Schedules
-        $this->deleteByGroup('schedules', [
-            Query::equal('projectId', [$projectId]),
-            Query::orderAsc()
-        ], $dbForPlatform);
-
-        // Delete metadata table
-        if ($projectTables) {
-            $dbForProject->deleteCollection(Database::METADATA);
-        } elseif ($sharedTablesV1) {
-            $this->deleteByGroup(
-                Database::METADATA,
-                [
-                    Query::orderAsc()
-                ],
-                $dbForProject
-            );
-        } elseif ($sharedTablesV2) {
-            $queries = \array_map(
-                fn ($id) => Query::notEqual('$id', $id),
-                $projectCollectionIds
-            );
-
-            $queries[] = Query::orderAsc();
-
-            $this->deleteByGroup(
-                Database::METADATA,
-                $queries,
-                $dbForProject
-            );
+        } finally {
+            $dbForProject->enableValidation();
         }
-
-        // Delete all storage directories
-        $deviceForFiles->delete($deviceForFiles->getRoot(), true);
-        $deviceForSites->delete($deviceForSites->getRoot(), true);
-        $deviceForFunctions->delete($deviceForFunctions->getRoot(), true);
-        $deviceForBuilds->delete($deviceForBuilds->getRoot(), true);
-        $deviceForCache->delete($deviceForCache->getRoot(), true);
     }
 
     /**
@@ -679,14 +710,16 @@ class Deletes extends Action
     }
 
     /**
-     * @param database $dbForPlatform
+     * @param Document $project
      * @param callable $getProjectDB
      * @param string $datetime
+     * @param int|null $executionsRetentionCount
      * @return void
-     * @throws Exception
+     * @throws Exception|DatabaseException
      */
-    private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime): void
+    private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime, ?int $executionsRetentionCount = 0): void
     {
+        /** @var Database $dbForProject */
         $dbForProject = $getProjectDB($project);
 
         // Delete Executions
@@ -696,10 +729,85 @@ class Deletes extends Action
             Query::orderDesc('$createdAt'),
             Query::orderDesc(),
         ], $dbForProject);
+
+        /* delete based on custom retention, if any */
+        $this->deleteExecutionsByLimit($project, $getProjectDB, $executionsRetentionCount);
     }
 
     /**
-     * @param Database $dbForPlatform
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @param int|null $executionsRetentionCount
+     * @param string|null $resourceInternalId
+     * @param string|null $resourceType
+     * @return void
+     * @throws DatabaseException
+     */
+    protected function deleteExecutionsByLimit(
+        Document $project,
+        callable $getProjectDB,
+        ?int $executionsRetentionCount = 0,
+        ?string $resourceInternalId = null,
+        ?string $resourceType = null
+    ): void {
+        if ($executionsRetentionCount <= 0) {
+            return;
+        }
+
+        /** @var Database $dbForProject */
+        $dbForProject = $getProjectDB($project);
+
+        /* delete log for a given $resourceInternalId  */
+        $delete = function (Database $dbForProject, string $resourceInternalId, string $resourceType) use ($executionsRetentionCount) {
+            // get the execution at position `N+1`
+            $execution = $dbForProject->findOne('executions', [
+                Query::select(['$createdAt']),
+                Query::equal('resourceInternalId', [$resourceInternalId]),
+                Query::equal('resourceType', [$resourceType]),
+                Query::orderDesc('$createdAt'),
+                Query::offset($executionsRetentionCount),
+            ]);
+
+            if (!$execution->isEmpty()) {
+                // delete everything older
+                $cutoffTime = $execution->getAttribute('$createdAt');
+
+                $this->deleteByGroup('executions', [
+                    Query::select([...$this->selects, '$createdAt']),
+                    Query::equal('resourceInternalId', [$resourceInternalId]),
+                    Query::equal('resourceType', [$resourceType]),
+                    Query::lessThan('$createdAt', $cutoffTime),
+                    Query::orderDesc('$createdAt'),
+                    Query::orderDesc(),
+                ], $dbForProject);
+            }
+        };
+
+        if (!empty($resourceInternalId)) {
+            // fast path, no need to list anything!
+            $delete($dbForProject, $resourceInternalId, $resourceType);
+        } else {
+            $processResource = function (string $type) use ($dbForProject, $delete, $resourceType) {
+                $this->listByGroup(
+                    collection: $type,
+                    queries: [Query::select(['$id', '$sequence'])],
+                    database: $dbForProject,
+                    callback: function (Document $resource) use ($dbForProject, $delete, $type) {
+                        $delete($dbForProject, $resource->getSequence(), $type);
+                    }
+                );
+            };
+
+            /* perform processing in parallel */
+            batch([
+                fn () => $processResource(RESOURCE_TYPE_SITES),
+                fn () => $processResource(RESOURCE_TYPE_FUNCTIONS),
+            ]);
+        }
+    }
+
+    /**
+     * @param Document $project
      * @param callable $getProjectDB
      * @return void
      * @throws Exception|Throwable
@@ -771,26 +879,22 @@ class Deletes extends Action
     }
 
     /**
-     * @param Database $dbForPlatform
-     * @param callable $getProjectDB
+     * @param Document $project
+     * @param callable $getAudit
      * @param string $auditRetention
      * @return void
      * @throws Exception
      */
-    private function deleteAuditLogs(Document $project, callable $getProjectDB, string $auditRetention): void
+    private function deleteAuditLogs(Document $project, callable $getAudit, string $auditRetention): void
     {
         $projectId = $project->getId();
-        $dbForProject = $getProjectDB($project);
+        /** @var Audit $audit */
+        $audit = $getAudit($project);
 
         try {
-            $this->deleteByGroup(Audit::COLLECTION, [
-                Query::select([...$this->selects, 'time']),
-                Query::lessThan('time', $auditRetention),
-                Query::orderDesc('time'),
-                Query::orderAsc(),
-            ], $dbForProject);
-        } catch (DatabaseException $e) {
-            Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $e->getMessage());
+            $audit->cleanup(new \DateTime($auditRetention));
+        } catch (Throwable $th) {
+            Console::error('Failed to delete audit logs for project ' . $projectId . ': ' . $th->getMessage());
         }
     }
 

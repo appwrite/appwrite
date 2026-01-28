@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documen
 use Appwrite\Event\Event;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
+use Appwrite\Functions\EventProcessor;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
@@ -134,9 +135,10 @@ class Create extends Action
             ->inject('queueForWebhooks')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('eventProcessor')
             ->callback($this->action(...));
     }
-    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization): void
+    public function action(string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, Document $user, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
     {
         $data = \is_string($data)
             ? \json_decode($data, true)
@@ -229,7 +231,7 @@ class Create extends Action
             // Add permissions for current the user if none were provided.
             if (\is_null($permissions)) {
                 $permissions = [];
-                if (!empty($user->getId())) {
+                if (!empty($user->getId()) && !$isPrivilegedUser) {
                     foreach ($allowedPermissions as $permission) {
                         $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
                     }
@@ -501,7 +503,9 @@ class Create extends Action
                 $queueForEvents,
                 $queueForRealtime,
                 $queueForFunctions,
-                $queueForWebhooks
+                $queueForWebhooks,
+                $dbForProject,
+                $eventProcessor
             );
             return;
         }

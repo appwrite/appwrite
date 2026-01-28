@@ -199,7 +199,13 @@ class Create extends Action
             $dbForProject->getAdapter()->getSupportForVectors(),
             $dbForProject->getAdapter()->getSupportForAttributes(),
             $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForProject->getAdapter()->getSupportForIdenticalIndexes()
+            $dbForProject->getAdapter()->getSupportForIdenticalIndexes(),
+            $dbForProject->getAdapter()->getSupportForObjectIndexes(),
+            $dbForProject->getAdapter()->getSupportForTrigramIndex(),
+            $dbForProject->getAdapter()->getSupportForSpatialAttributes(),
+            $dbForProject->getAdapter()->getSupportForIndex(),
+            $dbForProject->getAdapter()->getSupportForUniqueIndex(),
+            $dbForProject->getAdapter()->getSupportForFulltextIndex(),
         );
 
         if (!$validator->isValid($index)) {
