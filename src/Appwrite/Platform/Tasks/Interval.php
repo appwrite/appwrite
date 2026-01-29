@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Certificate;
 use DateTime;
+use Swoole\Coroutine\Channel;
+use Swoole\Process;
 use Swoole\Timer;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -35,19 +37,40 @@ class Interval extends Action
         Console::title('Interval V1');
         Console::success(APP_NAME . ' interval process v1 has started');
 
-        $this->runTasks($dbForPlatform, $getProjectDB, $queueForCertificates);
+        $timers = $this->runTasks($dbForPlatform, $getProjectDB, $queueForCertificates);
+
+        $chan = new Channel(1);
+        Process::signal(SIGTERM, function () use ($chan) {
+            $chan->push(true);
+        });
+        $chan->pop(); // Block the main process from exiting
+
+        // Graceful shutdown when SIGTERM is received
+        foreach ($timers as $timer) {
+            Timer::clear($timer);
+        }
     }
 
-    public function runTasks(Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates): void
+    public function runTasks(Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates): array
     {
+        $timers = [];
         $tasks = $this->getTasks();
         foreach ($tasks as $task) {
-            Timer::tick($task['interval'] * 1000, function () use ($task, $dbForPlatform, $getProjectDB, $queueForCertificates) {
+            $timers[] = Timer::tick($task['interval'], function () use ($task, $dbForPlatform, $getProjectDB, $queueForCertificates) {
+                $taskName = $task['name'];
                 $time = DatabaseDateTime::now();
-                Console::info("[{$time}] Running task {$task['name']}");
-                $task['callback']($dbForPlatform, $getProjectDB, $queueForCertificates);
+                Console::info("[{$time}] Running task '{$taskName}'");
+                try {
+                    $task['callback']($dbForPlatform, $getProjectDB, $queueForCertificates);
+                    $time = DatabaseDateTime::now();
+                    Console::info("[{$time} Completed task '{$taskName}'");
+                } catch (\Exception $e) {
+                    $time = DatabaseDateTime::now();
+                    Console::error("[{$time}] Task '{$taskName}' ended with a failure: " . $e->getMessage());
+                }
             });
         }
+        return $timers;
     }
 
     protected function getTasks(): array
@@ -87,11 +110,11 @@ class Interval extends Action
         ]);
 
         if (\count($rules) === 0) {
-            Console::info("[{$time}] No rules for domain verification.");
+            Console::log("[{$time}] No rules for domain verification.");
             return; // No rules to verify
         }
 
-        Console::info("[{$time}] Found " . \count($rules) . " rules for domain verification, scheduling jobs.");
+        Console::log("[{$time}] Found " . \count($rules) . " rules for domain verification, scheduling jobs.");
 
         foreach ($rules as $rule) {
             $queueForCertificates
@@ -109,8 +132,6 @@ class Interval extends Action
         $time = DatabaseDateTime::now();
         $staleThreshold = DatabaseDateTime::addSeconds(new DateTime(), -1200); // 20 minutes ago
 
-        Console::info("[{$time}] Starting cleanup of stale executions");
-
         $dbForPlatform->foreach(
             'projects',
             function (Document $project) use ($getProjectDB, $time, $staleThreshold) {
@@ -127,7 +148,7 @@ class Interval extends Action
                         return;
                     }
 
-                    Console::info("[{$time}] Found " . \count($staleExecutions) . " stale executions in project {$project->getId()}");
+                    Console::log("[{$time}] Found " . \count($staleExecutions) . " stale executions in project {$project->getId()}");
 
                     foreach ($staleExecutions as $execution) {
                         $execution->setAttribute('status', 'failed');
@@ -143,7 +164,5 @@ class Interval extends Action
                 Query::limit(100),
             ]
         );
-
-        Console::info("[{$time}] Completed cleanup of stale executions");
     }
 }
