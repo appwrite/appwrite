@@ -1383,6 +1383,30 @@ class RealtimeCustomClientQueryTest extends Scope
         $this->assertEquals($targetDocId, $event['data']['payload']['$id']);
         $this->assertEquals('active', $event['data']['payload']['status']);
 
+        // Create document matching NEITHER query - should not receive event
+        // keeping it here as below are the documents created with status=>active
+        // so it will also receive it but the querykey can be used to distinction
+        $anotherDocId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $anotherDocId,
+            'data' => [
+                'status' => 'inactive'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        try {
+            $client->receive();
+            $this->fail('Expected TimeoutException - event should be filtered (neither query matches)');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
         // Create document with matching ID but wrong status - should NOT receive event (only one query matches)
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1404,7 +1428,7 @@ class RealtimeCustomClientQueryTest extends Scope
             $this->assertTrue(true);
         }
 
-        // Create document with matching status but wrong ID - should NOT receive event (only one query matches)
+        // Create document with matching status but wrong ID - should receive event but the queryKeys should be only status matching as the model is subscription based similar to channels(only one query matches)
         $otherDocId = ID::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1419,14 +1443,9 @@ class RealtimeCustomClientQueryTest extends Scope
             ],
         ]);
 
-        try {
-            $client->receive();
-            $this->fail('Expected TimeoutException - event should be filtered (status matches but ID does not)');
-        } catch (TimeoutException $e) {
-            $this->assertTrue(true);
-        }
-
-        // Create document matching NEITHER query - should NOT receive event
+        // Create document matching NEITHER query
+        // above document created with status=>active
+        // so it will also receive it but the querykey can be used to distinction
         $anotherDocId = ID::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1441,12 +1460,11 @@ class RealtimeCustomClientQueryTest extends Scope
             ],
         ]);
 
-        try {
-            $client->receive();
-            $this->fail('Expected TimeoutException - event should be filtered (neither query matches)');
-        } catch (TimeoutException $e) {
-            $this->assertTrue(true);
-        }
+        $data = json_decode($client->receive(), true);
+        $this->assertIsArray($data['data']['queryKeys']);
+        $this->assertEquals(1, count($data['data']['queryKeys']));
+        $this->assertNotContains(Query::equal('status', ['inactive'])->toString(), $data['data']['queryKeys']);
+        $this->assertContains(Query::equal('status', ['active'])->toString(), $data['data']['queryKeys']);
 
         $client->close();
     }

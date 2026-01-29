@@ -486,6 +486,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 if (App::isDevelopment() && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
                     Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode(array_keys($receivers)));
+                    Console::log("[Debug][Worker {$workerId}] QueryKeys: " . array_values($receivers));
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
                 }
 
