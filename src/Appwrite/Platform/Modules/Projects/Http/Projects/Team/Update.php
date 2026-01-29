@@ -82,7 +82,7 @@ class Update extends Action
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($installations as $installation) {
-            $installation->getAttribute('$permissions', $permissions);
+            $installation->setAttribute('$permissions', $permissions);
             $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
         }
 
@@ -90,7 +90,7 @@ class Update extends Action
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($repositories as $repository) {
-            $repository->getAttribute('$permissions', $permissions);
+            $repository->setAttribute('$permissions', $permissions);
             $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository);
         }
 
@@ -98,7 +98,7 @@ class Update extends Action
             Query::equal('projectInternalId', [$project->getSequence()]),
         ]);
         foreach ($vcsComments as $vcsComment) {
-            $vcsComment->getAttribute('$permissions', $permissions);
+            $vcsComment->setAttribute('$permissions', $permissions);
             $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), $vcsComment);
         }
 
