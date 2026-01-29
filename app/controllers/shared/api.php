@@ -272,7 +272,10 @@ App::init()
                 $authorization->addRole($role);
             }
 
-            // For projects resources, ensure admin user has access to the retrieved project(s).
+            /**
+             * For listing, updating and deleting projects, we use platform DB.
+             * Enabling authorization restricts admin user has access to the ones they have access to.
+             */
             if ($project->getId() === 'console' && str_starts_with($route->getPath(), '/v1/projects')) {
                 $authorization->setDefaultStatus(true);
             } else {
@@ -288,7 +291,11 @@ App::init()
             $authorization->addRole($authRole);
         }
 
-        // Ensure admin user has access to the non-console project.
+        /**
+         * We disable authorization checks above to ensure other endpoints (list teams, members, etc.) will continue working.
+         * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
+         * whether the admin user has necessary permission on the project (sites, functions don't have permissions associated to them).
+         */
         if ($project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
             $action = match ($route->getMethod()) {
                 Request::METHOD_GET => Database::PERMISSION_READ,
