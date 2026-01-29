@@ -332,8 +332,13 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
 
-        //$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        // $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
+
+        /**
+         * Old logic
+         * $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+         * $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
+         */
+
         $endpoint = System::getEnv('_APP_MIGRATION_ENDPOINT');
 
         try {
