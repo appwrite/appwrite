@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Certificate;
 use DateTime;
+use Swoole\Timer;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -34,19 +35,15 @@ class Interval extends Action
         Console::title('Interval V1');
         Console::success(APP_NAME . ' interval process v1 has started');
 
-        $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '60'); // 1 minute
+        $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '120'); // 2 minutes
         $intervalCleanupStaleExecutions = (int) System::getEnv('_APP_INTERVAL_CLEANUP_STALE_EXECUTIONS', '300'); // 5 minutes
 
-        \go(function () use ($dbForPlatform, $queueForCertificates, $intervalDomainVerification) {
-            Console::loop(function () use ($dbForPlatform, $queueForCertificates) {
-                $this->verifyDomain($dbForPlatform, $queueForCertificates);
-            }, $intervalDomainVerification);
+        Timer::tick($intervalDomainVerification * 1000, function () use ($dbForPlatform, $queueForCertificates) {
+            $this->verifyDomain($dbForPlatform, $queueForCertificates);
         });
 
-        \go(function () use ($dbForPlatform, $getProjectDB, $intervalCleanupStaleExecutions) {
-            Console::loop(function () use ($dbForPlatform, $getProjectDB) {
-                $this->cleanupStaleExecutions($dbForPlatform, $getProjectDB);
-            }, $intervalCleanupStaleExecutions);
+        Timer::tick($intervalCleanupStaleExecutions * 1000, function () use ($dbForPlatform, $getProjectDB) {
+            $this->cleanupStaleExecutions($dbForPlatform, $getProjectDB);
         });
     }
 
@@ -60,7 +57,7 @@ class Interval extends Action
             Query::equal('status', [RULE_STATUS_CREATED]), // Created but not verified yet
             Query::orderAsc('$updatedAt'), // Pick the ones waiting for another attempt for longest
             Query::equal('region', [System::getEnv('_APP_REGION', 'default')]), // Only current region
-            Query::limit(30), // Reasonable pagination limit, processable within a minute
+            Query::limit(100), // Reasonable pagination limit
         ]);
 
         if (\count($rules) === 0) {
