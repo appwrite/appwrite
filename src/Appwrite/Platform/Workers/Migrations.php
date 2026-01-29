@@ -26,7 +26,6 @@ use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
-use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
@@ -160,19 +159,19 @@ class Migrations extends Action
     /**
      * @throws Exception
      */
-    protected function processSource(Document $migration, array $platform): Source
+    protected function processSource(Document $migration): Source
     {
         $source = $migration->getAttribute('source');
         $destination = $migration->getAttribute('destination');
         $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
-        $dataSource = Appwrite::SOURCE_API;
+        $dataSource = SourceAppwrite::SOURCE_API;
         $database = null;
         $queries = [];
 
-        if ($source === Appwrite::getName() && $destination === DestinationCSV::getName()) {
-            $dataSource = Appwrite::SOURCE_DATABASE;
+        if ($source === SourceAppwrite::getName() && $destination === DestinationCSV::getName()) {
+            $dataSource = SourceAppwrite::SOURCE_DATABASE;
             $database = $this->dbForProject;
             $queries = Query::parseQueries($migrationOptions['queries']);
         }
@@ -225,17 +224,15 @@ class Migrations extends Action
     /**
      * @throws Exception
      */
-    protected function processDestination(Document $migration, string $apiKey, array $platform): Destination
+    protected function processDestination(Document $migration, string $apiKey, string $endpoint): Destination
     {
         $destination = $migration->getAttribute('destination');
         $options = $migration->getAttribute('options', []);
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $this->project->getId(),
-                $protocol . '://' . $platform['apiHostname'] . '/v1',
+                $endpoint,
                 $apiKey,
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
@@ -335,22 +332,24 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
 
-        try {
-            if (
-                $migration->getAttribute('source') === SourceAppwrite::getName() &&
-                empty($migration->getAttribute('credentials', []))
-            ) {
-                $credentials = $migration->getAttribute('credentials', []);
-                $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
-                $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
+        //$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        // $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
+        $endpoint = System::getEnv('_APP_MIGRATION_ENDPOINT');
 
-                /**
-                 * endpoint set
-                 */
-                if (empty($credentials['endpoint'])) {
-                    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-                    $credentials['endpoint'] = $protocol . '://' . $platform['apiHostname'] . '/v1';
+        try {
+            if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
+                $credentials = $migration->getAttribute('credentials', []);
+
+                if (empty($credentials)) {
+                    $credentials['projectId'] = $project->getId();
+                    $credentials['apiKey'] = $tempAPIKey;
+                    $credentials['endpoint'] = $endpoint;
                 }
+
+                if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
+                    $credentials['endpoint'] = $endpoint;
+                }
+
                 $migration->setAttribute('credentials', $credentials);
             }
 
@@ -358,8 +357,8 @@ class Migrations extends Action
             $migration->setAttribute('status', 'processing');
             $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-            $source = $this->processSource($migration, $platform);
-            $destination = $this->processDestination($migration, $tempAPIKey, $platform);
+            $source = $this->processSource($migration);
+            $destination = $this->processDestination($migration, $tempAPIKey, $endpoint);
 
             $transfer = new Transfer(
                 $source,
