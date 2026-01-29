@@ -199,7 +199,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'template-for-documentation',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => []
     ],
     [
@@ -220,7 +220,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -243,7 +243,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -266,7 +266,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -289,7 +289,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -308,7 +308,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -327,7 +327,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -346,7 +346,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -368,7 +368,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -389,7 +389,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -410,7 +410,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -431,7 +431,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -452,7 +452,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -474,7 +474,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -494,7 +494,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-flutter',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.2.*',
         'variables' => [
             [
                 'name' => 'APPWRITE_PUBLIC_ENDPOINT',
@@ -538,7 +538,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-js',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'VITE_APPWRITE_ENDPOINT',
@@ -584,7 +584,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-angular',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'APPWRITE_ENDPOINT',
@@ -629,7 +629,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-astro',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'PUBLIC_APPWRITE_ENDPOINT',
@@ -673,7 +673,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-analog',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'VITE_APPWRITE_ENDPOINT',
@@ -717,7 +717,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-remix',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'VITE_APPWRITE_ENDPOINT',
@@ -761,7 +761,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-svelte',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'PUBLIC_APPWRITE_ENDPOINT',
@@ -805,7 +805,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-react',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'VITE_APPWRITE_ENDPOINT',
@@ -849,7 +849,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-vue',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'VITE_APPWRITE_ENDPOINT',
@@ -893,7 +893,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-react-native',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'EXPO_PUBLIC_APPWRITE_ENDPOINT',
@@ -937,7 +937,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-nextjs',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'NEXT_PUBLIC_APPWRITE_ENDPOINT',
@@ -981,7 +981,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-tanstack-start',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'VITE_APPWRITE_ENDPOINT',
@@ -1025,7 +1025,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'starter-for-nuxt',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'NUXT_PUBLIC_APPWRITE_ENDPOINT',
@@ -1071,7 +1071,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'template-for-event',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'NEXT_PUBLIC_APPWRITE_FUNCTION_API_ENDPOINT',
@@ -1107,7 +1107,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'template-for-portfolio',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => []
     ],
     [
@@ -1126,7 +1126,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'template-for-store',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => [
             [
                 'name' => 'STRIPE_SECRET_KEY',
@@ -1170,7 +1170,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'template-for-blog',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.1.*',
         'variables' => []
     ],
     [
@@ -1189,7 +1189,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
@@ -1208,7 +1208,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
@@ -1227,7 +1227,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
@@ -1246,7 +1246,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
@@ -1265,7 +1265,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
@@ -1285,7 +1285,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
@@ -1304,7 +1304,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
@@ -1323,7 +1323,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
 
@@ -1344,7 +1344,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
 
@@ -1364,7 +1364,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
@@ -1383,7 +1383,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
@@ -1402,7 +1402,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.5.*',
         'variables' => [],
     ],
     [
@@ -1421,7 +1421,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => [],
     ],
     [
@@ -1440,7 +1440,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.3.*',
         'variables' => []
     ],
     [
@@ -1459,7 +1459,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.7.*',
+        'providerVersion' => '0.6.*',
         'variables' => [
             [
                 'name' => 'ELEVENLABS_API_KEY',
