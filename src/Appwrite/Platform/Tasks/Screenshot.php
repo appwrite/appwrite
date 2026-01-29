@@ -26,7 +26,7 @@ class Screenshot extends Action
         $this
             ->desc('Create Site template screenshot')
             ->param('templateId', '', new Text(128), 'Template ID.')
-            ->param('variables', '', new Text(16384), 'JSON of env variables to use when setting up the site.')
+            ->param('variables', '', new Text(16384), 'JSON of env variables to use when setting up the site.', true)
             ->callback($this->action(...));
     }
 
@@ -190,7 +190,7 @@ class Screenshot extends Action
             'cookie' => $cookieConsole
         ], [
             'name' => 'Screenshot API key',
-            'scopes' => \array_keys(Config::getParam('scopes', []))
+            'scopes' => \array_keys(Config::getParam('projectScopes', []))
         ]);
 
         if ($response['headers']['status-code'] !== 201) {

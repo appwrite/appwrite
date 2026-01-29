@@ -185,7 +185,7 @@ Response::setModel(new BaseList('Deployments List', Response::MODEL_DEPLOYMENT_L
 Response::setModel(new BaseList('Executions List', Response::MODEL_EXECUTION_LIST, 'executions', Response::MODEL_EXECUTION));
 Response::setModel(new BaseList('Projects List', Response::MODEL_PROJECT_LIST, 'projects', Response::MODEL_PROJECT, true, false));
 Response::setModel(new BaseList('Webhooks List', Response::MODEL_WEBHOOK_LIST, 'webhooks', Response::MODEL_WEBHOOK, true, false));
-Response::setModel(new BaseList('API Keys List', Response::MODEL_KEY_LIST, 'keys', Response::MODEL_KEY, true, false));
+Response::setModel(new BaseList('API Keys List', Response::MODEL_KEY_LIST, 'keys', Response::MODEL_KEY, true, true));
 Response::setModel(new BaseList('Dev Keys List', Response::MODEL_DEV_KEY_LIST, 'devKeys', Response::MODEL_DEV_KEY, true, false));
 Response::setModel(new BaseList('Auth Providers List', Response::MODEL_AUTH_PROVIDER_LIST, 'platforms', Response::MODEL_AUTH_PROVIDER, true, false));
 Response::setModel(new BaseList('Platforms List', Response::MODEL_PLATFORM_LIST, 'platforms', Response::MODEL_PLATFORM, true, false));

@@ -343,6 +343,7 @@ App::setResource('user', function (string $mode, Document $project, Document $co
      * 5. Regardless of the results from steps 1-4, attempts to fetch the JWT token.
      * 6. If the JWT user has a valid session ID, updates the user variable with the user from `projectDB`,
      *    overwriting the previous value.
+     * 7. If account API key is passed, use user of the account API key as long as user ID header matches too
      */
 
     $authorization->setDefaultStatus(true);
@@ -419,12 +420,17 @@ App::setResource('user', function (string $mode, Document $project, Document $co
     // }
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
+        if (!$user->isEmpty()) {
+            throw new Exception(Exception::USER_JWT_AND_COOKIE_SET);
+        }
+
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 3600, 0);
         try {
             $payload = $jwt->decode($authJWT);
         } catch (JWTException $error) {
             throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
         }
+
         $jwtUserId = $payload['userId'] ?? '';
         if (!empty($jwtUserId)) {
             if ($mode === APP_MODE_ADMIN) {
@@ -440,6 +446,34 @@ App::setResource('user', function (string $mode, Document $project, Document $co
             }
         }
     }
+
+    // Account based on account API key
+    $accountKey = $request->getHeader('x-appwrite-key', '');
+    $accountKeyUserId = $request->getHeader('x-appwrite-user', '');
+    if (!empty($accountKeyUserId) && !empty($accountKey)) {
+        if (!$user->isEmpty()) {
+            throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
+        }
+
+        $accountKeyUser = $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->getDocument('users', $accountKeyUserId));
+        if (!$accountKeyUser->isEmpty()) {
+            $key = $accountKeyUser->find(
+                key: 'secret',
+                find: $accountKey,
+                subject: 'keys'
+            );
+
+            if (!empty($key)) {
+                $expire = $key->getAttribute('expire');
+                if (!empty($expire) && $expire < DatabaseDateTime::formatTz(DatabaseDateTime::now())) {
+                    throw new Exception(Exception::ACCOUNT_KEY_EXPIRED);
+                }
+
+                $user = $accountKeyUser;
+            }
+        }
+    }
+
     $dbForProject->setMetadata('user', $user->getId());
     $dbForPlatform->setMetadata('user', $user->getId());
 
@@ -1227,7 +1261,7 @@ App::setResource('team', function (Document $project, Database $dbForPlatform, A
         $teamInternalId = $project->getAttribute('teamInternalId', '');
     } else {
         $route = $utopia->match($request);
-        $path = $route->getPath();
+        $path = !empty($route) ? $route->getPath() : $request->getURI();
         if (str_starts_with($path, '/v1/projects/:projectId')) {
             $uri = $request->getURI();
             $pid = explode('/', $uri)[3];
@@ -1282,15 +1316,39 @@ App::setResource('previewHostname', function (Request $request, ?Key $apiKey) {
     return '';
 }, ['request', 'apiKey']);
 
-App::setResource('apiKey', function (Request $request, Document $project): ?Key {
+App::setResource('apiKey', function (Request $request, Document $project, Document $team, Document $user): ?Key {
     $key = $request->getHeader('x-appwrite-key');
 
     if (empty($key)) {
         return null;
     }
 
-    return Key::decode($project, $key);
-}, ['request', 'project']);
+    $key = Key::decode($project, $team, $user, $key);
+
+    $userHeader = $request->getHeader('x-appwrite-user');
+    $organizationHeader = $request->getHeader('x-appwrite-organization');
+    $projectHeader = $request->getHeader('x-appwrite-project');
+
+    if (!empty($key->getProjectId())) {
+        if (empty($projectHeader) || $projectHeader !== $key->getProjectId()) {
+            throw new Exception(Exception::PROJECT_ID_MISSING);
+        }
+    }
+
+    if (!empty($key->getUserId())) {
+        if (empty($userHeader) || $userHeader !== $key->getUserId()) {
+            throw new Exception(Exception::USER_ID_MISSING);
+        }
+    }
+
+    if (!empty($key->getTeamId())) {
+        if (empty($organizationHeader) || $organizationHeader !== $key->getTeamId()) {
+            throw new Exception(Exception::ORGANIZATION_ID_MISSING);
+        }
+    }
+
+    return $key;
+}, ['request', 'project', 'team', 'user']);
 
 App::setResource('executor', fn () => new Executor());
 

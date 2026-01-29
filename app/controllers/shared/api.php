@@ -157,10 +157,6 @@ App::init()
 
         // Step 5: API Key Authentication
         if (!empty($apiKey)) {
-            // Verify no user session exists simultaneously
-            if (!$user->isEmpty()) {
-                throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
-            }
             // Check if key is expired
             if ($apiKey->isExpired()) {
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
@@ -189,23 +185,38 @@ App::init()
             }
 
             // For standard keys, update last accessed time
-            if ($apiKey->getType() === API_KEY_STANDARD) {
-                $dbKey = $project->find(
-                    key: 'secret',
-                    find: $request->getHeader('x-appwrite-key', ''),
-                    subject: 'keys'
-                );
+            if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
+                $dbKey = null;
+                if (!empty($apiKey->getProjectId())) {
+                    $dbKey = $project->find(
+                        key: 'secret',
+                        find: $request->getHeader('x-appwrite-key', ''),
+                        subject: 'keys'
+                    );
+                } elseif (!empty($apiKey->getUserId())) {
+                    $dbKey = $user->find(
+                        key: 'secret',
+                        find: $request->getHeader('x-appwrite-key', ''),
+                        subject: 'keys'
+                    );
+                } elseif (!empty($apiKey->getTeamId())) {
+                    $dbKey = $team->find(
+                        key: 'secret',
+                        find: $request->getHeader('x-appwrite-key', ''),
+                        subject: 'keys'
+                    );
+                }
 
                 if (!$dbKey) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
+                $updates = new Document();
+
                 $accessedAt = $dbKey->getAttribute('accessedAt', 0);
 
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-                    $dbKey->setAttribute('accessedAt', DateTime::now());
-                    $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
-                    $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                    $updates->setAttribute('accessedAt', DateTime::now());
                 }
 
                 $sdkValidator = new WhiteList($servers, true);
@@ -216,12 +227,21 @@ App::init()
 
                     if (!in_array($sdk, $sdks)) {
                         $sdks[] = $sdk;
-                        $dbKey->setAttribute('sdks', $sdks);
 
-                        /** Update access time as well */
-                        $dbKey->setAttribute('accessedAt', Datetime::now());
-                        $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
-                        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                        $updates->setAttribute('sdks', $sdks);
+                        $updates->setAttribute('accessedAt', Datetime::now());
+                    }
+                }
+
+                if (!$updates->isEmpty()) {
+                    $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
+
+                    if (!empty($apiKey->getProjectId())) {
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+                    } elseif (!empty($apiKey->getUserId())) {
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
+                    } elseif (!empty($apiKey->getTeamId())) {
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
                     }
                 }
 
