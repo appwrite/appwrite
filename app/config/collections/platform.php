@@ -632,30 +632,6 @@ $platformCollections = [
         '$id' => ID::custom('keys'),
         'name' => 'keys',
         'attributes' => [
-            // Delete eventuelly, when removing dual-write too
-            [
-                '$id' => ID::custom('projectInternalId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            // Delete eventuelly, when removing dual-write too
-            [
-                '$id' => ID::custom('projectId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => 0,
-                'array' => false,
-                'filters' => [],
-            ],
             [
                 '$id' => ID::custom('resourceType'),
                 'type' => Database::VAR_STRING,

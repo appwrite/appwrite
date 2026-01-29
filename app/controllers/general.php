@@ -1228,7 +1228,7 @@ App::error()
         }
 
         switch ($class) {
-            case 'Utopia\Exception':
+            case Utopia\Exception::class:
                 $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
                 switch ($code) {
                     case 400:
@@ -1239,10 +1239,10 @@ App::error()
                         break;
                 }
                 break;
-            case 'Utopia\Database\Exception\Authorization':
+            case Utopia\Database\Exception\Authorization::class:
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
                 break;
-            case 'Utopia\Database\Exception\Timeout':
+            case Utopia\Database\Exception\Timeout::class:
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
         }
