@@ -319,6 +319,9 @@ class Create extends Action
                         $relation['$id'] = ID::unique();
                         $relation = new Document($relation);
                     }
+
+                    $this->validateRelationship($relation);
+
                     if ($relation instanceof Document) {
                         $relation = $this->removeReadonlyAttributes($relation, $isAPIKey || $isPrivilegedUser);
 
