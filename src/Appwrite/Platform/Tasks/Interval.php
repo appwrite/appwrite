@@ -35,16 +35,42 @@ class Interval extends Action
         Console::title('Interval V1');
         Console::success(APP_NAME . ' interval process v1 has started');
 
+        $this->runTasks($dbForPlatform, $getProjectDB, $queueForCertificates);
+    }
+
+    public function runTasks(Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates): void
+    {
+        $tasks = $this->getTasks();
+        foreach ($tasks as $task) {
+            Timer::tick($task['interval'] * 1000, function () use ($task, $dbForPlatform, $getProjectDB, $queueForCertificates) {
+                $time = DatabaseDateTime::now();
+                Console::info("[{$time}] Running task {$task['name']}");
+                $task['callback']($dbForPlatform, $getProjectDB, $queueForCertificates);
+            });
+        }
+    }
+
+    protected function getTasks(): array
+    {
         $intervalDomainVerification = (int) System::getEnv('_APP_INTERVAL_DOMAIN_VERIFICATION', '120'); // 2 minutes
         $intervalCleanupStaleExecutions = (int) System::getEnv('_APP_INTERVAL_CLEANUP_STALE_EXECUTIONS', '300'); // 5 minutes
 
-        Timer::tick($intervalDomainVerification * 1000, function () use ($dbForPlatform, $queueForCertificates) {
-            $this->verifyDomain($dbForPlatform, $queueForCertificates);
-        });
-
-        Timer::tick($intervalCleanupStaleExecutions * 1000, function () use ($dbForPlatform, $getProjectDB) {
-            $this->cleanupStaleExecutions($dbForPlatform, $getProjectDB);
-        });
+        return [
+            [
+                'name' => 'domain-verification',
+                "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates) {
+                    $this->verifyDomain($dbForPlatform, $queueForCertificates);
+                },
+                'interval' => $intervalDomainVerification * 1000,
+            ],
+            [
+                'name' => 'cleanup-stale-executions',
+                'callback' => function (Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates) {
+                    $this->cleanupStaleExecutions($dbForPlatform, $getProjectDB);
+                },
+                'interval' => $intervalCleanupStaleExecutions * 1000,
+            ]
+        ];
     }
 
     private function verifyDomain(Database $dbForPlatform, Certificate $queueForCertificates): void
