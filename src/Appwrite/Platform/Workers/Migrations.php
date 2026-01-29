@@ -337,21 +337,21 @@ class Migrations extends Action
         $endpoint = System::getEnv('_APP_MIGRATION_ENDPOINT');
 
         try {
-            if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
-                $credentials = $migration->getAttribute('credentials', []);
+            $credentials = $migration->getAttribute('credentials', []);
 
+            if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
                 if (empty($credentials)) {
                     $credentials['projectId'] = $project->getId();
                     $credentials['apiKey'] = $tempAPIKey;
                     $credentials['endpoint'] = $endpoint;
                 }
-
-                if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
-                    $credentials['endpoint'] = $endpoint;
-                }
-
-                $migration->setAttribute('credentials', $credentials);
             }
+
+            if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
+                $credentials['endpoint'] = $endpoint;
+            }
+
+            $migration->setAttribute('credentials', $credentials);
 
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
