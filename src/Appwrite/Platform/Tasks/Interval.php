@@ -63,7 +63,7 @@ class Interval extends Action
                 try {
                     $task['callback']($dbForPlatform, $getProjectDB, $queueForCertificates);
                     $time = DatabaseDateTime::now();
-                    Console::info("[{$time} Completed task '{$taskName}'");
+                    Console::info("[{$time}] Completed task '{$taskName}'");
                 } catch (\Exception $e) {
                     $time = DatabaseDateTime::now();
                     Console::error("[{$time}] Task '{$taskName}' ended with a failure: " . $e->getMessage());
