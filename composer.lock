@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "33da844fdf5648d1d1a027dfb6ae42bc",
+    "content-hash": "2aca1c8eeaa9fa338e389e3527cb6bd6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3719,16 +3719,16 @@
         },
         {
             "name": "utopia-php/cache",
-            "version": "0.13.2",
+            "version": "0.13.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cache.git",
-                "reference": "5768498c9f451482f0bf3eede4d6452ddcd4a0f6"
+                "reference": "355707ab2c0090435059216165db86976b68a126"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cache/zipball/5768498c9f451482f0bf3eede4d6452ddcd4a0f6",
-                "reference": "5768498c9f451482f0bf3eede4d6452ddcd4a0f6",
+                "url": "https://api.github.com/repos/utopia-php/cache/zipball/355707ab2c0090435059216165db86976b68a126",
+                "reference": "355707ab2c0090435059216165db86976b68a126",
                 "shasum": ""
             },
             "require": {
@@ -3736,7 +3736,7 @@
                 "ext-memcached": "*",
                 "ext-redis": "*",
                 "php": ">=8.0",
-                "utopia-php/pools": "0.8.*",
+                "utopia-php/pools": "1.*",
                 "utopia-php/telemetry": "*"
             },
             "require-dev": {
@@ -3765,9 +3765,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cache/issues",
-                "source": "https://github.com/utopia-php/cache/tree/0.13.2"
+                "source": "https://github.com/utopia-php/cache/tree/0.13.3"
             },
-            "time": "2025-12-17T08:55:43+00:00"
+            "time": "2026-01-16T07:54:34+00:00"
         },
         {
             "name": "utopia-php/cli",
@@ -3981,7 +3981,7 @@
                 "utopia-php/cache": "0.13.*",
                 "utopia-php/framework": "0.33.*",
                 "utopia-php/mongo": "0.11.*",
-                "utopia-php/pools": "0.8.*"
+                "utopia-php/pools": "1.*"
             },
             "require-dev": {
                 "fakerphp/faker": "1.23.*",
@@ -4796,16 +4796,16 @@
         },
         {
             "name": "utopia-php/pools",
-            "version": "0.8.3",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/pools.git",
-                "reference": "ad7d6ba946376e81c603204285ce9a674b6502b8"
+                "reference": "b7d8dd00306cdd8bf3ff6f1dc90caeaf27dabeb1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/pools/zipball/ad7d6ba946376e81c603204285ce9a674b6502b8",
-                "reference": "ad7d6ba946376e81c603204285ce9a674b6502b8",
+                "url": "https://api.github.com/repos/utopia-php/pools/zipball/b7d8dd00306cdd8bf3ff6f1dc90caeaf27dabeb1",
+                "reference": "b7d8dd00306cdd8bf3ff6f1dc90caeaf27dabeb1",
                 "shasum": ""
             },
             "require": {
@@ -4815,7 +4815,8 @@
             "require-dev": {
                 "laravel/pint": "1.*",
                 "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "11.*"
+                "phpunit/phpunit": "11.*",
+                "swoole/ide-helper": "6.*"
             },
             "type": "library",
             "autoload": {
@@ -4842,9 +4843,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/pools/issues",
-                "source": "https://github.com/utopia-php/pools/tree/0.8.3"
+                "source": "https://github.com/utopia-php/pools/tree/1.0.2"
             },
-            "time": "2025-12-17T09:35:18+00:00"
+            "time": "2026-01-28T13:12:36+00:00"
         },
         {
             "name": "utopia-php/preloader",
@@ -4901,16 +4902,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.15.0",
+            "version": "0.15.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "6abb268ba7ec00dea4e5201b007776ea1bce9242"
+                "reference": "e551606385990ec7901d222017c4cfc2749a518c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/6abb268ba7ec00dea4e5201b007776ea1bce9242",
-                "reference": "6abb268ba7ec00dea4e5201b007776ea1bce9242",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/e551606385990ec7901d222017c4cfc2749a518c",
+                "reference": "e551606385990ec7901d222017c4cfc2749a518c",
                 "shasum": ""
             },
             "require": {
@@ -4919,7 +4920,7 @@
                 "utopia-php/console": "0.0.*",
                 "utopia-php/fetch": "0.5.*",
                 "utopia-php/framework": "0.33.*",
-                "utopia-php/pools": "0.8.*",
+                "utopia-php/pools": "1.*",
                 "utopia-php/telemetry": "*"
             },
             "require-dev": {
@@ -4961,9 +4962,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.15.0"
+                "source": "https://github.com/utopia-php/queue/tree/0.15.1"
             },
-            "time": "2026-01-06T12:41:51+00:00"
+            "time": "2026-01-16T07:54:54+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -8007,16 +8008,16 @@
         },
         {
             "name": "swoole/ide-helper",
-            "version": "5.1.2",
+            "version": "6.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swoole/ide-helper.git",
-                "reference": "33ec7af9111b76d06a70dd31191cc74793551112"
+                "reference": "6f12243dce071714c5febe059578d909698f9a52"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/33ec7af9111b76d06a70dd31191cc74793551112",
-                "reference": "33ec7af9111b76d06a70dd31191cc74793551112",
+                "url": "https://api.github.com/repos/swoole/ide-helper/zipball/6f12243dce071714c5febe059578d909698f9a52",
+                "reference": "6f12243dce071714c5febe059578d909698f9a52",
                 "shasum": ""
             },
             "type": "library",
@@ -8033,9 +8034,9 @@
             "description": "IDE help files for Swoole.",
             "support": {
                 "issues": "https://github.com/swoole/ide-helper/issues",
-                "source": "https://github.com/swoole/ide-helper/tree/5.1.2"
+                "source": "https://github.com/swoole/ide-helper/tree/6.0.2"
             },
-            "time": "2024-02-01T22:28:11+00:00"
+            "time": "2025-03-23T07:31:41+00:00"
         },
         {
             "name": "symfony/console",
@@ -9063,7 +9064,7 @@
         "ext-yaml": "*",
         "ext-dom": "*",
         "ext-redis": "*",
-        "ext-swoole": "*",
+        "ext-swoole": "6.*",
         "ext-pdo": "*",
         "ext-openssl": "*",
         "ext-zlib": "*",
@@ -9075,5 +9076,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
