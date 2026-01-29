@@ -191,7 +191,7 @@ App::post('/v1/mock/api-key-unprefixed')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $scopes = array_keys(Config::getParam('scopes'));
+        $scopes = array_keys(Config::getParam('projectScopes'));
 
         $key = new Document([
             '$id' => ID::unique(),
@@ -200,9 +200,6 @@ App::post('/v1/mock/api-key-unprefixed')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            // TODO: @hmacr Remove `projectInternalId` and `projectId` column writes before deleting the column.
-            'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
             'resourceInternalId' => $project->getSequence(),
             'resourceId' => $project->getId(),
             'resourceType' => 'projects',
