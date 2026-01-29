@@ -2409,7 +2409,8 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertArrayHasKey('set-cookie', $response['headers']);
         $this->assertStringContainsString('a_jwt_console=', $response['headers']['set-cookie']);
-        $this->assertStringContainsString('httponly', $response['headers']['set-cookie']);
+        // due to swoole update; no more httponly
+        $this->assertStringContainsString('HttpOnly', $response['headers']['set-cookie']);
         $this->assertStringContainsString('domain=' . $domain, $response['headers']['set-cookie']);
         $this->assertStringContainsString('path=/', $response['headers']['set-cookie']);
         $this->assertNotEmpty($response['cookies']['a_jwt_console']);
