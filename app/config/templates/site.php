@@ -238,7 +238,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -261,7 +261,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -284,7 +284,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -307,7 +307,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -326,7 +326,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -345,7 +345,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -364,7 +364,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -386,7 +386,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -407,7 +407,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -428,7 +428,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -449,7 +449,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -470,7 +470,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -492,7 +492,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -1207,7 +1207,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1226,7 +1226,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1245,7 +1245,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1264,7 +1264,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1283,7 +1283,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1303,7 +1303,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1322,7 +1322,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1341,7 +1341,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
 
@@ -1362,7 +1362,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
 
@@ -1382,7 +1382,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1401,7 +1401,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1420,7 +1420,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.5.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1439,7 +1439,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => [],
     ],
     [
@@ -1458,7 +1458,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.3.*',
+        'providerVersion' => '0.7.*',
         'variables' => []
     ],
     [
@@ -1477,7 +1477,7 @@ return [
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates-for-sites',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '0.6.*',
+        'providerVersion' => '0.7.*',
         'variables' => [
             [
                 'name' => 'ELEVENLABS_API_KEY',

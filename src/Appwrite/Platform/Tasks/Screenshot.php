@@ -26,7 +26,7 @@ class Screenshot extends Action
         $this
             ->desc('Create Site template screenshot')
             ->param('templateId', '', new Text(128), 'Template ID.')
-            ->param('variables', '', new Text(16384), 'JSON of env variables to use when setting up the site.')
+            ->param('variables', '', new Text(16384), 'JSON of env variables to use when setting up the site.', true)
             ->callback($this->action(...));
     }
 
