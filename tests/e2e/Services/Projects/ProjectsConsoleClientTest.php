@@ -5594,4 +5594,289 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
     }
+
+    public function testProjectSpecificPermissionsForListProjects(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId, false);
+
+        $teamOwnerEmail = 'team-' . ID::unique() . '-owner@localhost.test';
+        $teamOwnerName = 'Team - owner';
+        $teamDeveloperAndProjectAOwnerEmail = 'teamdeveloperandprojecta-' . ID::unique() . '-owner@localhost.test';
+        $teamDeveloperAndProjectAOwnerName = 'Team Developer and Project A - owner';
+        $projectAOwnerEmail = 'projecta-' . ID::unique() . '-owner@localhost.test';
+        $projectAOwnerName = 'Project A - owner';
+        $projectBOwnerEmail = 'projectb-' . ID::unique() . '-owner@localhost.test';
+        $projectBOwnerName = 'Project B - owner';
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $teamOwnerEmail,
+            'name' => $teamOwnerName,
+            'roles' => ["owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $teamDeveloperAndProjectAOwnerEmail,
+            'name' => $teamDeveloperAndProjectAOwnerName,
+            'roles' => ["developer", "project-$projectIdA-owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $projectAOwnerEmail,
+            'name' => $projectAOwnerName,
+            'roles' => ["project-$projectIdA-owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $projectBOwnerEmail,
+            'name' => $projectBOwnerName,
+            'roles' => ["project-$projectIdB-owner"],
+        ]);
+
+        $testCases = [
+            ['userEmail' => $teamOwnerEmail, 'accessibleProjectIds' => [$projectIdA, $projectIdB]],
+            ['userEmail' => $teamDeveloperAndProjectAOwnerEmail, 'accessibleProjectIds' => [$projectIdA, $projectIdB]],
+            ['userEmail' => $projectAOwnerEmail, 'accessibleProjectIds' => [$projectIdA]],
+            ['userEmail' => $projectBOwnerEmail, 'accessibleProjectIds' => [$projectIdB]],
+        ];
+
+        foreach ($testCases as $testCase) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => $testCase['userEmail'],
+                'password' => 'password',
+            ]);
+            $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+            $response = $this->client->call(Client::METHOD_GET, '/projects', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertNotEmpty($response['body']);
+            $this->assertCount(\count($testCase['accessibleProjectIds']), $response['body']['projects']);
+
+            $returnedProjectIds = \array_column($response['body']['projects'], '$id');
+            foreach ($testCase['accessibleProjectIds'] as $projectId) {
+                $this->assertContains($projectId, $returnedProjectIds);
+            }
+        }
+    }
+
+    public function testProjectSpecificPermissionsForUpdateProjects(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId, false);
+
+        $teamOwnerEmail = 'team-' . ID::unique() . '-owner@localhost.test';
+        $teamOwnerName = 'Team - owner';
+        $teamDeveloperAndProjectAOwnerEmail = 'teamdeveloperandprojecta-' . ID::unique() . '-owner@localhost.test';
+        $teamDeveloperAndProjectAOwnerName = 'Team Developer and Project A - owner';
+        $projectAOwnerEmail = 'projecta-' . ID::unique() . '-owner@localhost.test';
+        $projectAOwnerName = 'Project A - owner';
+        $projectBOwnerEmail = 'projectb-' . ID::unique() . '-owner@localhost.test';
+        $projectBOwnerName = 'Project B - owner';
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $teamOwnerEmail,
+            'name' => $teamOwnerName,
+            'roles' => ["owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $teamDeveloperAndProjectAOwnerEmail,
+            'name' => $teamDeveloperAndProjectAOwnerName,
+            'roles' => ["developer", "project-$projectIdA-owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $projectAOwnerEmail,
+            'name' => $projectAOwnerName,
+            'roles' => ["project-$projectIdA-owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $projectBOwnerEmail,
+            'name' => $projectBOwnerName,
+            'roles' => ["project-$projectIdB-owner"],
+        ]);
+
+        $testCases = [
+            ['userEmail' => $teamOwnerEmail, 'accessibleProjectIds' => [$projectIdA, $projectIdB], 'inaccessibleProjectIds' => []],
+            ['userEmail' => $teamDeveloperAndProjectAOwnerEmail, 'accessibleProjectIds' => [$projectIdA, $projectIdB], 'inaccessibleProjectIds' => []],
+            ['userEmail' => $projectAOwnerEmail, 'accessibleProjectIds' => [$projectIdA], 'inaccessibleProjectIds' => [$projectIdB]],
+            ['userEmail' => $projectBOwnerEmail, 'accessibleProjectIds' => [$projectIdB], 'inaccessibleProjectIds' => [$projectIdA]],
+        ];
+
+        foreach ($testCases as $testCase) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => $testCase['userEmail'],
+                'password' => 'password',
+            ]);
+            $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+            foreach ($testCase['accessibleProjectIds'] as $projectId) {
+                $newProjectName = 'Updated Project Name ' . ID::unique();
+                // Success: User should be able to update the project they have access to.
+                $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'name' => $newProjectName,
+                ]);
+                $this->assertEquals(200, $response['headers']['status-code']);
+                $this->assertNotEmpty($response['body']);
+                $this->assertEquals($newProjectName, $response['body']['name']);
+            }
+
+            foreach ($testCase['inaccessibleProjectIds'] as $projectId) {
+                $newProjectName = 'Updated Project Name ' . ID::unique();
+                // Failure: User should not be able to update the project they do not have access to.
+                $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'name' => $newProjectName,
+                ]);
+
+                $this->assertEquals(404, $response['headers']['status-code'], \var_export($testCase, true));
+            }
+        }
+    }
+
+    public function testProjectSpecificPermissionsForDeleteProjects(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId, false);
+        $projectIdC = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test C',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId, false);
+        $projectIdD = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test D',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId, false);
+        $projectIdE = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test E',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId, false);
+
+        $teamOwnerEmail = 'team-' . ID::unique() . '-owner@localhost.test';
+        $teamOwnerName = 'Team - owner';
+        $teamDeveloperAndProjectCOwnerEmail = 'teamdeveloperandprojectc-' . ID::unique() . '-owner@localhost.test';
+        $teamDeveloperAndProjectCOwnerName = 'Team Developer and Project C - owner';
+        $projectDOwnerEmail = 'projectd-' . ID::unique() . '-owner@localhost.test';
+        $projectDOwnerName = 'Project D - owner';
+        $projectEOwnerEmail = 'projecte-' . ID::unique() . '-owner@localhost.test';
+        $projectEOwnerName = 'Project E - owner';
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $teamOwnerEmail,
+            'name' => $teamOwnerName,
+            'roles' => ["owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $teamDeveloperAndProjectCOwnerEmail,
+            'name' => $teamDeveloperAndProjectCOwnerName,
+            'roles' => ["developer", "project-$projectIdC-owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $projectDOwnerEmail,
+            'name' => $projectDOwnerName,
+            'roles' => ["project-$projectIdD-owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $projectEOwnerEmail,
+            'name' => $projectEOwnerName,
+            'roles' => ["project-$projectIdE-owner"],
+        ]);
+
+        $testCases = [
+            ['userEmail' => $teamOwnerEmail, 'accessibleProjectIds' => [$projectIdA], 'inaccessibleProjectIds' => []],
+            ['userEmail' => $teamDeveloperAndProjectCOwnerEmail, 'accessibleProjectIds' => [$projectIdB, $projectIdC], 'inaccessibleProjectIds' => []],
+            ['userEmail' => $projectDOwnerEmail, 'accessibleProjectIds' => [$projectIdD], 'inaccessibleProjectIds' => [$projectIdE]],
+            ['userEmail' => $projectEOwnerEmail, 'accessibleProjectIds' => [$projectIdE], 'inaccessibleProjectIds' => []],
+        ];
+
+        foreach ($testCases as $testCase) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => $testCase['userEmail'],
+                'password' => 'password',
+            ]);
+            $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+            foreach ($testCase['accessibleProjectIds'] as $projectId) {
+                // Success: User should be able to delete the project they have access to.
+                $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ]);
+                $this->assertEquals(204, $response['headers']['status-code']);
+            }
+
+            foreach ($testCase['inaccessibleProjectIds'] as $projectId) {
+                // Failure: User should not be able to delete the project they do not have access to.
+                $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ]);
+
+                $this->assertEquals(404, $response['headers']['status-code']);
+            }
+        }
+    }
 }

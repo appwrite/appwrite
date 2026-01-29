@@ -265,10 +265,20 @@ App::init()
 
             $scopes = []; // Reset scope if admin
             foreach ($adminRoles as $role) {
+                if (str_starts_with($role, 'project-')) {
+                    $role = substr($role, strrpos($role, '-') + 1);
+                }
                 $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+                $authorization->addRole($role);
             }
 
-            $authorization->setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            // For projects resources, ensure admin user has access to the retrieved project(s).
+            if ($project->getId() === 'console' && str_starts_with($route->getPath(), '/v1/projects')) {
+                $authorization->setDefaultStatus(true);
+            } else {
+                // Otherwise, disable authorization checks.
+                $authorization->setDefaultStatus(false);
+            }
         }
 
         $scopes = \array_unique($scopes);
@@ -276,6 +286,23 @@ App::init()
         $authorization->addRole($role);
         foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);
+        }
+
+        // Ensure admin user has access to the non-console project.
+        if ($project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
+            $action = match ($route->getMethod()) {
+                Request::METHOD_GET => Database::PERMISSION_READ,
+                Request::METHOD_DELETE => Database::PERMISSION_DELETE,
+                default => Database::PERMISSION_UPDATE,
+            };
+            $input = new Input($action, $project->getPermissionsByType($action));
+
+            $initialStatus = $authorization->getStatus();
+            $authorization->enable();
+            if (!$authorization->isValid($input)) {
+                throw new Exception(Exception::PROJECT_NOT_FOUND);
+            }
+            $authorization->setStatus($initialStatus);
         }
 
         // Step 6: Update project and user last activity
