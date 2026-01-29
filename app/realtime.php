@@ -746,8 +746,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 // Preserve authorization before subscribe overwrites the connection array
                 $authorization = $realtime->connections[$connection]['authorization'] ?? null;
 
-                $queries = $realtime->connections[$connection]['queries'];
-                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels, $queries);
+                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 
                 // Restore authorization after subscribe
                 if ($authorization !== null) {

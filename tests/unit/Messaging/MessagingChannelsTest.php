@@ -194,11 +194,12 @@ class MessagingChannelsTest extends TestCase
              */
             $this->assertCount($this->connectionsTotal / count($this->allChannels), $receivers, $channel);
 
-            foreach ($receivers as $receiver) {
+            foreach ($receivers as $receiverId => $queryKeys) {
                 /**
                  * Making sure the right clients receive the event.
                  */
-                $this->assertStringEndsWith($index, $receiver);
+                $this->assertStringEndsWith($index, $receiverId);
+                $this->assertIsArray($queryKeys);
             }
         }
     }
@@ -230,11 +231,12 @@ class MessagingChannelsTest extends TestCase
                  */
                 $this->assertCount($this->connectionsPerChannel, $receivers, $channel);
 
-                foreach ($receivers as $receiver) {
+                foreach ($receivers as $receiverId => $queryKeys) {
                     /**
                      * Making sure the right clients receive the event.
                      */
-                    $this->assertStringEndsWith($index, $receiver);
+                    $this->assertStringEndsWith($index, $receiverId);
+                    $this->assertIsArray($queryKeys);
                 }
             }
         }
@@ -257,7 +259,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getSubscribers($event);
+            $receivers = array_keys($this->realtime->getSubscribers($event));
 
             /**
              * Every Client subscribed to a Channel should receive this event.
@@ -292,7 +294,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getSubscribers($event);
+            $receivers = array_keys($this->realtime->getSubscribers($event));
 
             /**
              * Every Team Member should receive this event.
@@ -325,7 +327,7 @@ class MessagingChannelsTest extends TestCase
                 ]
             ];
 
-            $receivers = $this->realtime->getSubscribers($event);
+            $receivers = array_keys($this->realtime->getSubscribers($event));
 
             /**
              * Only 1 Team Member of a role should have access to a specific channel.
