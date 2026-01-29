@@ -1,10 +1,10 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\String;
+namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Varchar;
 
-use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Update as StringUpdate;
+use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\Varchar\Update as VarcharUpdate;
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\Deprecated;
+use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -17,24 +17,24 @@ use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 
-class Update extends StringUpdate
+class Update extends VarcharUpdate
 {
     public static function getName(): string
     {
-        return 'updateStringColumn';
+        return 'updateVarcharColumn';
     }
 
     protected function getResponseModel(): string|array
     {
-        return UtopiaResponse::MODEL_COLUMN_STRING;
+        return UtopiaResponse::MODEL_COLUMN_VARCHAR;
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(self::HTTP_REQUEST_METHOD_PATCH)
-            ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/string/:key')
-            ->desc('Update string column')
+            ->setHttpPath('/v1/tablesdb/:databaseId/tables/:tableId/columns/varchar/:key')
+            ->desc('Update varchar column')
             ->groups(['api', 'database', 'schema'])
             ->label('scope', ['tables.write', 'collections.write'])
             ->label('resourceType', RESOURCE_TYPE_DATABASES)
@@ -45,7 +45,7 @@ class Update extends StringUpdate
                 namespace: $this->getSDKNamespace(),
                 group: $this->getSDKGroup(),
                 name: self::getName(),
-                description: '/docs/references/tablesdb/update-string-column.md',
+                description: '/docs/references/tablesdb/update-varchar-column.md',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -53,17 +53,14 @@ class Update extends StringUpdate
                         model: $this->getResponseModel(),
                     )
                 ],
-                deprecated: new Deprecated(
-                    since: '1.8.0',
-                    replaceWith: 'tablesDB.updateTextColumn',
-                )
+                contentType: ContentType::JSON,
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/references/cloud/server-dart/tablesDB#createTable).')
             ->param('key', '', new Key(), 'Column Key.')
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for column when not provided. Cannot be set when column is required.')
-            ->param('size', null, new Nullable(new Range(1, APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH, Validator::TYPE_INTEGER)), 'Maximum size of the string column.', true)
+            ->param('size', null, new Nullable(new Range(1, 16381, Validator::TYPE_INTEGER)), 'Maximum size of the varchar column.', true)
             ->param('newKey', null, new Nullable(new Key()), 'New Column Key.', true)
             ->inject('response')
             ->inject('dbForProject')
