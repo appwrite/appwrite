@@ -9064,7 +9064,7 @@
         "ext-yaml": "*",
         "ext-dom": "*",
         "ext-redis": "*",
-        "ext-swoole": "*",
+        "ext-swoole": "6.*",
         "ext-pdo": "*",
         "ext-openssl": "*",
         "ext-zlib": "*",
