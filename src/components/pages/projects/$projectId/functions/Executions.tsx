@@ -81,7 +81,10 @@ export function FunctionExecutions() {
   } = useFunctionExecutions(projectId, functionId, requestedPage, pageSize)
 
   // Fetch data for the displayed page (this is what we show)
-  const { executions: displayedExecutions } = useFunctionExecutions(
+  const {
+    executions: displayedExecutions,
+    total: displayedTotal,
+  } = useFunctionExecutions(
     projectId,
     functionId,
     displayedPage,
@@ -172,7 +175,7 @@ export function FunctionExecutions() {
   return (
     <LogsListView
       executions={executions}
-      total={total}
+      total={displayedTotal ?? total}
       isLoading={funcLoading || executionsLoading}
       currentPage={displayedPage + 1}
       pageSize={pageSize}

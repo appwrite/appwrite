@@ -107,7 +107,8 @@ export function BucketDetailView() {
   const queryClient = useQueryClient()
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [uploadFileDialogOpen, setUploadFileDialogOpen] = useState(false)
   const [selectedFiles, setSelectedFiles] = useState<Set<string>>(new Set())
@@ -116,26 +117,52 @@ export function BucketDetailView() {
   // Background upload queue
   const { queueUpload } = useUploadQueue(projectId, bucketId)
 
-  // Convert 1-indexed page to 0-indexed for API
-  const pageIndexed = currentPage - 1
-
   // Fetch bucket data
   const { data: bucket, isLoading: bucketLoading } = useBucket(
     projectId,
     bucketId,
   )
 
-  // Fetch files
-  const { data: filesData, isLoading: filesLoading } = useBucketFiles(
+  // Fetch data for the requested page (triggers load when user changes page)
+  const {
+    data: requestedFilesData,
+    isLoading: filesLoading,
+    isFetching: filesFetching,
+  } = useBucketFiles(
     projectId,
     bucketId,
-    pageIndexed,
+    requestedPage - 1,
     pageSize,
     searchValue,
   )
 
-  const files = filesData?.files || []
-  const filesTotal = filesData?.total || 0
+  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  const {
+    data: displayedFilesData,
+    isLoading: displayedFilesLoading,
+  } = useBucketFiles(
+    projectId,
+    bucketId,
+    displayedPage - 1,
+    pageSize,
+    searchValue,
+  )
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !filesFetching &&
+      requestedPage !== displayedPage &&
+      !filesLoading
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [filesFetching, filesLoading, requestedPage, displayedPage])
+
+  const files = (displayedFilesData?.files || []) as Models.File[]
+  const filesTotal = displayedFilesData?.total ?? requestedFilesData?.total ?? 0
+  const showFilesLoading =
+    displayedFilesLoading && (displayedFilesData?.files?.length ?? 0) === 0
 
   const tabs: Tab[] = useMemo(
     () => [
@@ -221,7 +248,8 @@ export function BucketDetailView() {
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedFiles(new Set()) // Clear selection on search change
   }
 
@@ -239,9 +267,9 @@ export function BucketDetailView() {
         ),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch files
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch files list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: Dependencies.FILES,
       })
       toast.success(
@@ -285,13 +313,14 @@ export function BucketDetailView() {
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    setRequestedPage(page)
     setSelectedFiles(new Set()) // Clear selection on page change
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedFiles(new Set()) // Clear selection on page size change
   }
 
@@ -402,7 +431,7 @@ export function BucketDetailView() {
         {activeTab === 'files' && (
           <div className="px-4 pb-4 sm:px-6">
             <>
-              {filesLoading ? (
+              {showFilesLoading ? (
                 <div className="rounded-lg border border-border bg-card py-12 text-center">
                   <p className="text-[13px] text-muted-foreground">
                     Loading files...
@@ -662,7 +691,7 @@ export function BucketDetailView() {
                       </Table>
                     </div>
                     <Pagination
-                      currentPage={currentPage}
+                      currentPage={displayedPage}
                       totalItems={filesTotal}
                       pageSize={pageSize}
                       pageSizeOptions={[10, 25, 50, 100]}
@@ -830,7 +859,7 @@ export function BucketDetailView() {
                   )}
                   {files.length > 0 && (
                     <Pagination
-                      currentPage={currentPage}
+                      currentPage={displayedPage}
                       totalItems={filesTotal}
                       pageSize={pageSize}
                       pageSizeOptions={[10, 25, 50, 100]}

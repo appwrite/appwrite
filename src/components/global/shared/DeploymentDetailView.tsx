@@ -558,11 +558,12 @@ export function DeploymentDetailView({
       }
       return await onDelete(deploymentId)
     },
-    onSuccess: () => {
-      invalidateQueries.forEach((queryKey) => {
+    onSuccess: async () => {
+      // Refetch lists so the UI updates (lists use refetchOnMount: false)
+      for (const queryKey of invalidateQueries) {
         const normalizedKey: readonly unknown[] = Array.isArray(queryKey) ? queryKey : [queryKey]
-        queryClient.invalidateQueries({ queryKey: normalizedKey })
-      })
+        await queryClient.refetchQueries({ queryKey: normalizedKey })
+      }
       toast.success('Deployment deleted successfully')
       setDeleteDialogOpen(false)
       // Navigate back to list

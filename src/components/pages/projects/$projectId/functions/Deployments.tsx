@@ -260,7 +260,10 @@ export function FunctionDeployments() {
   } = useFunctionDeployments(projectId, functionId, requestedPage, pageSize)
 
   // Fetch data for the displayed page (this is what we show)
-  const { deployments: displayedDeployments } = useFunctionDeployments(
+  const {
+    deployments: displayedDeployments,
+    total: displayedTotal,
+  } = useFunctionDeployments(
     projectId,
     functionId,
     displayedPage,
@@ -522,11 +525,12 @@ export function FunctionDeployments() {
         'Cannot delete the active deployment. Please activate another deployment first.',
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch deployments list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['deployments', 'project', projectId, functionId],
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
       toast.success('Deployment deleted successfully')
@@ -560,12 +564,12 @@ export function FunctionDeployments() {
         ),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch deployments
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch deployments list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: Dependencies.DEPLOYMENTS,
       })
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['function', 'project', projectId, functionId],
       })
       toast.success(
@@ -1421,10 +1425,10 @@ export function FunctionDeployments() {
                                           functionId!,
                                           deployment.$id,
                                         )
-                                        queryClient.invalidateQueries({
+                                        await queryClient.refetchQueries({
                                           queryKey: ['deployments', 'project', projectId, functionId],
                                         })
-                                        queryClient.invalidateQueries({
+                                        await queryClient.refetchQueries({
                                           queryKey: ['function', 'project', projectId, functionId],
                                         })
                                         toast.success('Deployment deleted successfully')
@@ -1453,7 +1457,7 @@ export function FunctionDeployments() {
               </div>
               <Pagination
                 currentPage={displayedPage + 1}
-                totalItems={total}
+                totalItems={displayedTotal ?? total}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}

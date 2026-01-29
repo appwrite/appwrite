@@ -74,7 +74,8 @@ export function DomainsView() {
   const queryClient = useQueryClient()
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [selectedDomains, setSelectedDomains] = useState<Set<string>>(new Set())
@@ -84,15 +85,43 @@ export function DomainsView() {
     null,
   )
 
-  // Convert 1-indexed page to 0-indexed for API
-  const pageIndexed = currentPage - 1
-
-  // Fetch domains
+  // Fetch data for the requested page (triggers load when user changes page)
   const {
-    domains: apiDomains,
     total: domainsTotal,
     isLoading: domainsLoading,
-  } = useOrganizationDomains(orgId, pageIndexed, pageSize, searchValue)
+    isFetching: domainsFetching,
+  } = useOrganizationDomains(
+    orgId,
+    requestedPage - 1,
+    pageSize,
+    searchValue,
+  )
+
+  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  const {
+    domains: apiDomains,
+    total: displayedTotal,
+    isLoading: displayedLoading,
+  } = useOrganizationDomains(
+    orgId,
+    displayedPage - 1,
+    pageSize,
+    searchValue,
+  )
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !domainsFetching &&
+      requestedPage !== displayedPage &&
+      !domainsLoading
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [domainsFetching, domainsLoading, requestedPage, displayedPage])
+
+  const showLoading = displayedLoading && apiDomains.length === 0
+  const paginationTotal = displayedTotal ?? domainsTotal
 
   // Paginated data
   const paginatedDomains = apiDomains
@@ -106,7 +135,8 @@ export function DomainsView() {
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedDomains(new Set())
   }
 
@@ -123,8 +153,9 @@ export function DomainsView() {
         domainIds.map((domainId) => deleteDomainMutation.mutateAsync(domainId)),
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch domains list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['domains', 'organization', orgId],
       })
       toast.success(
@@ -167,13 +198,14 @@ export function DomainsView() {
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    setRequestedPage(page)
     setSelectedDomains(new Set())
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedDomains(new Set())
   }
 
@@ -308,7 +340,7 @@ export function DomainsView() {
 
       <div className="flex-1">
         {viewMode === 'list' ? (
-          domainsLoading ? (
+          showLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">
               <p className="text-[13px] text-muted-foreground">
                 Loading domains...
@@ -467,8 +499,8 @@ export function DomainsView() {
                 </Table>
               </div>
               <Pagination
-                currentPage={currentPage}
-                totalItems={domainsTotal}
+                currentPage={displayedPage}
+                totalItems={paginationTotal}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
@@ -488,7 +520,7 @@ export function DomainsView() {
           )
         ) : (
           <>
-            {domainsLoading ? (
+            {showLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <p className="text-[13px] text-muted-foreground">
                   Loading domains...
@@ -541,17 +573,14 @@ export function DomainsView() {
                     )
                   })}
                 </div>
-                {!domainsLoading && paginatedDomains.length > 0 && (
+                {!showLoading && paginatedDomains.length > 0 && (
                   <Pagination
-                    currentPage={currentPage}
-                    totalItems={domainsTotal}
+                    currentPage={displayedPage}
+                    totalItems={paginationTotal}
                     pageSize={pageSize}
                     pageSizeOptions={[10, 25, 50, 100]}
-                    onPageChange={setCurrentPage}
-                    onPageSizeChange={(size) => {
-                      setPageSize(size)
-                      setCurrentPage(1)
-                    }}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
                     itemLabel="domains"
                   />
                 )}

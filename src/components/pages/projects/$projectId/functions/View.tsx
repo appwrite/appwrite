@@ -84,7 +84,8 @@ export function FunctionsView() {
   }, [location.pathname])
 
   const [searchValue, setSearchValue] = useState<string>('')
-  const [currentPage, setCurrentPage] = useState(0)
+  const [requestedPage, setRequestedPage] = useState(0)
+  const [displayedPage, setDisplayedPage] = useState(0)
   const [pageSize, setPageSize] = useState(FUNCTIONS_PER_PAGE)
 
   // Get search from URL params
@@ -100,13 +101,43 @@ export function FunctionsView() {
     }
   }, [urlSearch])
 
-  // Fetch functions
-  const { functions, total, isLoading, error } = useProjectFunctions(
+  // Fetch data for the requested page (triggers load when user changes page)
+  const {
+    total,
+    isLoading: functionsLoading,
+    isFetching: functionsFetching,
+    error,
+  } = useProjectFunctions(
     projectId,
-    currentPage,
+    requestedPage,
     pageSize,
     searchValue || undefined,
   )
+
+  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  const {
+    functions,
+    total: displayedTotal,
+    isLoading: displayedLoading,
+  } = useProjectFunctions(
+    projectId,
+    displayedPage,
+    pageSize,
+    searchValue || undefined,
+  )
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !functionsFetching &&
+      requestedPage !== displayedPage &&
+      !functionsLoading
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [functionsFetching, functionsLoading, requestedPage, displayedPage])
+
+  const showLoading = displayedLoading && functions.length === 0
 
   // Get total count from the first page query (no search) - already fetched in route loader
   // This is used for limit checking and doesn't change when searching
@@ -161,7 +192,8 @@ export function FunctionsView() {
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setCurrentPage(0)
+    setRequestedPage(0)
+    setDisplayedPage(0)
     // Update URL
     navigate({
       to: location.pathname,
@@ -179,7 +211,7 @@ export function FunctionsView() {
   }
 
   const hasFunctions = total > 0
-  const noSearchResults = searchValue && total === 0 && !isLoading
+  const noSearchResults = searchValue && total === 0 && !functionsLoading
 
   // Update tabs with dynamic function count
   const tabs: Tab[] = useMemo(
@@ -281,7 +313,7 @@ export function FunctionsView() {
           <TemplatesView />
         ) : (
           <>
-            {isLoading && !hasFunctions ? (
+            {showLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <p className="text-sm text-muted-foreground">
                   Loading functions...
@@ -309,7 +341,8 @@ export function FunctionsView() {
                     variant="outline"
                     onClick={() => {
                       setSearchValue('')
-                      setCurrentPage(0)
+                      setRequestedPage(0)
+                      setDisplayedPage(0)
                       navigate({
                         to: location.pathname,
                         search: (prev) => ({
@@ -437,14 +470,15 @@ export function FunctionsView() {
                 </div>
 
                 <Pagination
-                  currentPage={currentPage + 1}
-                  totalItems={total}
+                  currentPage={displayedPage + 1}
+                  totalItems={displayedTotal ?? total}
                   pageSize={pageSize}
                   pageSizeOptions={[10, 25, 50, 100]}
-                  onPageChange={(page) => setCurrentPage(page - 1)}
+                  onPageChange={(page) => setRequestedPage(page - 1)}
                   onPageSizeChange={(size) => {
                     setPageSize(size)
-                    setCurrentPage(0)
+                    setRequestedPage(0)
+                    setDisplayedPage(0)
                   }}
                   itemLabel="functions"
                 />

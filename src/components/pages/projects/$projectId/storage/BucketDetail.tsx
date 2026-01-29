@@ -239,9 +239,9 @@ export function BucketDetailView() {
         ),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch files
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch files list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: Dependencies.FILES,
       })
       toast.success(

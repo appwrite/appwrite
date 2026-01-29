@@ -1093,8 +1093,9 @@ export function useDeleteFunction(projectId: string | null | undefined) {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.delete({ functionId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch functions list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: Dependencies.FUNCTIONS,
       })
     },

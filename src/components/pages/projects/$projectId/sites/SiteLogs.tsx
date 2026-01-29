@@ -51,7 +51,10 @@ export function SiteLogsView() {
   } = useSiteLogs(projectId, siteId, requestedPage, pageSize)
 
   // Fetch data for the displayed page (this is what we show)
-  const { logs: displayedLogs } = useSiteLogs(
+  const {
+    logs: displayedLogs,
+    total: displayedTotal,
+  } = useSiteLogs(
     projectId,
     siteId,
     displayedPage,
@@ -142,7 +145,7 @@ export function SiteLogsView() {
   return (
     <LogsListView
       executions={logs}
-      total={total}
+      total={displayedTotal ?? total}
       isLoading={siteLoading || logsLoading}
       currentPage={displayedPage + 1}
       pageSize={pageSize}

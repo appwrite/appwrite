@@ -135,9 +135,10 @@ export function FileView() {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.deleteFile({ bucketId, fileId })
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Refetch files list so the list view shows updated data (uses refetchOnMount: false)
+      await queryClient.refetchQueries({ queryKey: Dependencies.FILES })
       toast.success('File has been deleted')
-      queryClient.invalidateQueries({ queryKey: Dependencies.FILES })
       setDeleteDialogOpen(false)
       navigate({
         to: '/projects/$projectId/storage/$bucketId/',

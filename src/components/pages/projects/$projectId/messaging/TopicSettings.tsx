@@ -74,8 +74,9 @@ export function TopicSettingsView() {
       const projectSdk = sdk.forProject(projectId)
       await projectSdk.messaging.deleteTopic({ topicId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch topics list so the list view shows updated data (uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['topics', 'project', projectId],
       })
       toast.success('Topic deleted successfully')

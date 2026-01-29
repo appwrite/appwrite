@@ -295,9 +295,10 @@ export function BucketSettings() {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.storage.deleteBucket({ bucketId })
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Refetch buckets list so the list view shows updated data (uses refetchOnMount: false)
+      await queryClient.refetchQueries({ queryKey: Dependencies.BUCKETS })
       toast.success('Bucket has been deleted')
-      queryClient.invalidateQueries({ queryKey: Dependencies.BUCKETS })
       navigate({
         to: '/projects/$projectId/storage',
         params: { projectId: projectId! },

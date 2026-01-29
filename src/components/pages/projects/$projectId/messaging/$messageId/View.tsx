@@ -360,8 +360,9 @@ export function MessageDetailView() {
       const projectSdk = sdk.forProject(projectId)
       await projectSdk.messaging.delete({ messageId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch messages list so the list view shows updated data (uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['messages', 'project', projectId],
       })
       const statusMessage =

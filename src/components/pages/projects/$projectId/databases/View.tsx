@@ -226,7 +226,8 @@ export function DatabasesListView() {
   const queryClient = useQueryClient()
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [selectedDatabases, setSelectedDatabases] = useState<Set<string>>(
     new Set(),
@@ -235,15 +236,43 @@ export function DatabasesListView() {
   const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
     useState(false)
 
-  // Convert 1-indexed page to 0-indexed for API
-  const currentPageIndexed = currentPage - 1
-
-  // Fetch databases from the project SDK
+  // Fetch data for the requested page (triggers load when user changes page)
   const {
-    databases: apiDatabases,
     total: databasesTotal,
     isLoading: databasesLoading,
-  } = useProjectDatabases(projectId, currentPageIndexed, pageSize, searchValue)
+    isFetching: databasesFetching,
+  } = useProjectDatabases(
+    projectId,
+    requestedPage - 1,
+    pageSize,
+    searchValue,
+  )
+
+  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  const {
+    databases: apiDatabases,
+    total: displayedDatabasesTotal,
+    isLoading: displayedLoading,
+  } = useProjectDatabases(
+    projectId,
+    displayedPage - 1,
+    pageSize,
+    searchValue,
+  )
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !databasesFetching &&
+      requestedPage !== displayedPage &&
+      !databasesLoading
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [databasesFetching, databasesLoading, requestedPage, displayedPage])
+
+  // Only show full loading when we have no data to display (initial load)
+  const showLoading = displayedLoading && apiDatabases.length === 0
 
   // Get total count from the first page query (no search) - already fetched in route loader
   // This is used for limit checking and doesn't change when searching
@@ -280,7 +309,8 @@ export function DatabasesListView() {
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedDatabases(new Set()) // Clear selection on search change
   }
 
@@ -298,9 +328,9 @@ export function DatabasesListView() {
         ),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch databases
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch databases list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['databases', 'project', projectId],
       })
       toast.success(
@@ -365,13 +395,14 @@ export function DatabasesListView() {
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    setRequestedPage(page)
     setSelectedDatabases(new Set()) // Clear selection on page change
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedDatabases(new Set()) // Clear selection on page size change
   }
 
@@ -437,7 +468,7 @@ export function DatabasesListView() {
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        {databasesLoading ? (
+        {showLoading ? (
           <div className="rounded-lg border border-border bg-card py-12 text-center">
             <div className="text-muted-foreground">Loading databases...</div>
           </div>
@@ -635,8 +666,8 @@ export function DatabasesListView() {
                 </Table>
               </div>
               <Pagination
-                currentPage={currentPage}
-                totalItems={databasesTotal}
+                currentPage={displayedPage}
+                totalItems={displayedDatabasesTotal ?? databasesTotal}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
@@ -730,8 +761,8 @@ export function DatabasesListView() {
             </div>
             {paginatedDatabases.length > 0 && (
               <Pagination
-                currentPage={currentPage}
-                totalItems={databasesTotal}
+                currentPage={displayedPage}
+                totalItems={displayedDatabasesTotal ?? databasesTotal}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
@@ -1873,7 +1904,8 @@ export function DatabaseOverview({
   const queryClient = useQueryClient()
   const location = useLocation()
   const [searchValue, setSearchValue] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [databaseName, setDatabaseName] = useState('')
   const [enabled, setEnabled] = useState(false)
@@ -1883,9 +1915,6 @@ export function DatabaseOverview({
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
-
-  // Convert 1-indexed page to 0-indexed for API
-  const currentPageIndexed = currentPage - 1
 
   // Fetch database
   const {
@@ -1903,18 +1932,45 @@ export function DatabaseOverview({
     }
   }, [database])
 
-  // Fetch tables for the database with pagination
+  // Fetch data for the requested page (triggers load when user changes page)
   const {
-    tables: dbTables,
     total: tablesTotal,
     isLoading: tablesLoading,
+    isFetching: tablesFetching,
   } = useProjectTables(
     projectId,
     databaseId,
-    currentPageIndexed,
+    requestedPage - 1,
     pageSize,
     searchValue,
   )
+
+  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  const {
+    tables: dbTables,
+    total: displayedTablesTotal,
+    isLoading: displayedTablesLoading,
+  } = useProjectTables(
+    projectId,
+    databaseId,
+    displayedPage - 1,
+    pageSize,
+    searchValue,
+  )
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !tablesFetching &&
+      requestedPage !== displayedPage &&
+      !tablesLoading
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [tablesFetching, tablesLoading, requestedPage, displayedPage])
+
+  // Only show full loading when we have no data to display (initial load)
+  const showTablesLoading = displayedTablesLoading && dbTables.length === 0
 
   // Fetch database schema for export
   const { data: databaseSchema, isLoading: schemaLoading } = useQuery({
@@ -2137,9 +2193,9 @@ export function DatabaseOverview({
       const projectSdk = sdk.forProject(projectId)
       await (projectSdk.tablesDB as any).delete(databaseId)
     },
-    onSuccess: () => {
-      // Invalidate databases query to refetch the list
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch databases list so the list view shows updated data (uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['databases', 'project', projectId],
       })
       toast.success('Database deleted successfully')
@@ -2217,7 +2273,8 @@ export function DatabaseOverview({
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedTables(new Set()) // Clear selection on search change
   }
 
@@ -2305,13 +2362,14 @@ export function DatabaseOverview({
   }
 
   const handleTablesPageChange = (page: number) => {
-    setCurrentPage(page)
+    setRequestedPage(page)
     setSelectedTables(new Set()) // Clear selection on page change
   }
 
   const handleTablesPageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedTables(new Set()) // Clear selection on page size change
   }
 
@@ -2508,7 +2566,7 @@ export function DatabaseOverview({
       <div className="flex-1 min-h-0 flex flex-col">
         {activeTab === 'tables' && (
           <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
-            {tablesLoading ? (
+            {showTablesLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <div className="text-muted-foreground">Loading tables...</div>
               </div>
@@ -2662,8 +2720,8 @@ export function DatabaseOverview({
                   </Table>
                 </div>
                 <Pagination
-                  currentPage={currentPage}
-                  totalItems={tablesTotal}
+                  currentPage={displayedPage}
+                  totalItems={displayedTablesTotal ?? tablesTotal}
                   pageSize={pageSize}
                   pageSizeOptions={[10, 25, 50, 100]}
                   onPageChange={handleTablesPageChange}
@@ -3177,6 +3235,8 @@ export function DatabaseOverview({
 // Row type for the spreadsheet
 interface RowData {
   $id: string
+  /** Server-provided sequence (stable); fallback to computed rowNumber when absent */
+  $sequence?: number
   rowNumber: number
   data: Record<string, string | number | boolean>
   $createdAt?: string
@@ -3571,7 +3631,7 @@ function RowEditDrawer({
                         </Label>
                         <div className="mt-1">
                           <span className="text-[12px] text-foreground">
-                            {row.rowNumber}
+                            {row.$sequence ?? row.rowNumber}
                           </span>
                         </div>
                       </div>
@@ -4313,7 +4373,8 @@ function RowsSpreadsheet({
   const tableId = table.$id
 
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
-  const [currentPage, setCurrentPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
   const [selectedRowForEdit, setSelectedRowForEdit] = useState<RowData | null>(
@@ -4335,27 +4396,54 @@ function RowsSpreadsheet({
   useEffect(() => {
     setSelectedRows(new Set())
     setDeleteDialogOpen(false)
-    setCurrentPage(1) // Reset to first page when switching tables
+    setRequestedPage(1)
+    setDisplayedPage(1) // Reset to first page when switching tables
   }, [location.pathname, projectId, databaseId, tableId])
 
-  // Convert 1-indexed page to 0-indexed for API
-  const currentPageIndexed = currentPage - 1
-
-  // Fetch rows from the project SDK
+  // Fetch data for the requested page (triggers load when user changes page)
   const {
-    rows: apiRows,
     total: rowsTotal,
     isLoading: rowsLoading,
     refetch,
-    isFetching,
+    isFetching: rowsFetching,
   } = useProjectTableRows(
     projectId,
     databaseId,
     tableId,
-    currentPageIndexed,
+    requestedPage - 1,
     pageSize,
     '',
   )
+
+  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  const {
+    rows: apiRows,
+    total: displayedRowsTotal,
+    isLoading: displayedRowsLoading,
+  } = useProjectTableRows(
+    projectId,
+    databaseId,
+    tableId,
+    displayedPage - 1,
+    pageSize,
+    '',
+  )
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !rowsFetching &&
+      requestedPage !== displayedPage &&
+      !rowsLoading
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [rowsFetching, rowsLoading, requestedPage, displayedPage])
+
+  // Only show full loading when we have no data to display (initial load)
+  const showRowsLoading = displayedRowsLoading && apiRows.length === 0
+
+  const currentPageIndexed = displayedPage - 1
 
   // Notify parent of row count changes (only when count actually changes)
   const prevRowsTotalRef = useRef<number | null>(null)
@@ -4459,6 +4547,7 @@ function RowsSpreadsheet({
 
     return {
       $id: row.$id,
+      $sequence: row.$sequence,
       rowNumber: rowsTotal - (currentPageIndexed * pageSize + index),
       data,
       $createdAt: row.$createdAt,
@@ -4496,12 +4585,14 @@ function RowsSpreadsheet({
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    setRequestedPage(page)
     setSelectedRows(new Set()) // Clear selection on page change
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedRows(new Set()) // Clear selection on page size change
   }
 
@@ -4720,7 +4811,7 @@ function RowsSpreadsheet({
   // Only show loading if we don't have data yet (data is prefetched in route loader)
   // This prevents showing loading when switching tables since data is already cached
   if (
-    (rowsLoading && apiRows.length === 0) ||
+    showRowsLoading ||
     (columnsLoading && apiColumns.length === 0)
   ) {
     return (
@@ -5081,7 +5172,7 @@ function RowsSpreadsheet({
                 </td>
                 <td className={cn('px-3 py-1.5', bodyCellBorderClass)}>
                   <span className="text-[12px] text-muted-foreground">
-                    {row.rowNumber}
+                    {row.$sequence ?? row.rowNumber}
                   </span>
                 </td>
                 <td
@@ -5234,8 +5325,8 @@ function RowsSpreadsheet({
         <div className="@container flex items-center justify-between gap-4 px-4">
           <div className="flex-1 min-w-0">
             <Pagination
-              currentPage={currentPage}
-              totalItems={rowsTotal}
+              currentPage={displayedPage}
+              totalItems={displayedRowsTotal ?? rowsTotal}
               pageSize={pageSize}
               pageSizeOptions={[10, 25, 50, 100]}
               onPageChange={handlePageChange}

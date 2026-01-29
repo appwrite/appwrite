@@ -53,7 +53,8 @@ export function SitesView() {
   const { theme, resolvedTheme } = useTheme()
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(SITES_PER_PAGE)
   const [selectedSites, setSelectedSites] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -87,15 +88,43 @@ export function SitesView() {
     })
   }
 
-  // Convert 1-indexed page to 0-indexed for API
-  const pageIndexed = currentPage - 1
-
-  // Fetch sites from the project SDK
+  // Fetch data for the requested page (triggers load when user changes page)
   const {
-    sites: apiSites,
     total: sitesTotal,
     isLoading: sitesLoading,
-  } = useProjectSites(projectId, pageIndexed, pageSize, searchValue)
+    isFetching: sitesFetching,
+  } = useProjectSites(
+    projectId,
+    requestedPage - 1,
+    pageSize,
+    searchValue,
+  )
+
+  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  const {
+    sites: apiSites,
+    total: displayedTotal,
+    isLoading: displayedLoading,
+  } = useProjectSites(
+    projectId,
+    displayedPage - 1,
+    pageSize,
+    searchValue,
+  )
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !sitesFetching &&
+      requestedPage !== displayedPage &&
+      !sitesLoading
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [sitesFetching, sitesLoading, requestedPage, displayedPage])
+
+  // Only show full loading when we have no data to display (initial load)
+  const showLoading = displayedLoading && apiSites.length === 0
 
   // Get total count from the first page query (no search) - already fetched in route loader
   const { data: totalSitesData } = useQuery({
@@ -129,7 +158,8 @@ export function SitesView() {
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedSites(new Set())
   }
 
@@ -145,8 +175,9 @@ export function SitesView() {
         siteIds.map((siteId) => projectSdk.sites.delete({ siteId })),
       )
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch sites list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: Dependencies.SITES,
       })
       toast.success(
@@ -191,13 +222,14 @@ export function SitesView() {
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    setRequestedPage(page)
     setSelectedSites(new Set())
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedSites(new Set())
   }
 
@@ -265,7 +297,7 @@ export function SitesView() {
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {viewMode === 'list' ? (
-          sitesLoading ? (
+          showLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">
               <p className="text-[13px] text-muted-foreground">
                 Loading sites...
@@ -448,8 +480,8 @@ export function SitesView() {
                 </Table>
               </div>
               <Pagination
-                currentPage={currentPage}
-                totalItems={sitesTotal}
+                currentPage={displayedPage}
+                totalItems={displayedTotal ?? sitesTotal}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
@@ -469,7 +501,7 @@ export function SitesView() {
           )
         ) : (
           <>
-            {sitesLoading ? (
+            {showLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <p className="text-[13px] text-muted-foreground">
                   Loading sites...
@@ -562,17 +594,14 @@ export function SitesView() {
                 variant="card"
               />
             )}
-            {!sitesLoading && paginatedSites.length > 0 && (
+            {!showLoading && paginatedSites.length > 0 && (
               <Pagination
-                currentPage={currentPage}
-                totalItems={sitesTotal}
+                currentPage={displayedPage}
+                totalItems={displayedTotal ?? sitesTotal}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={(size) => {
-                  setPageSize(size)
-                  setCurrentPage(1)
-                }}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
                 itemLabel="sites"
               />
             )}

@@ -71,21 +71,50 @@ export function StorageView() {
   const queryClient = useQueryClient()
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [createBucketDialogOpen, setCreateBucketDialogOpen] = useState(false)
   const [selectedBuckets, setSelectedBuckets] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  // Convert 1-indexed page to 0-indexed for API
-  const pageIndexed = currentPage - 1
-
-  // Fetch buckets from the project SDK
+  // Fetch data for the requested page (triggers load when user changes page)
   const {
-    buckets: apiBuckets,
     total: bucketsTotal,
     isLoading: bucketsLoading,
-  } = useProjectBuckets(projectId, pageIndexed, pageSize, searchValue)
+    isFetching: bucketsFetching,
+  } = useProjectBuckets(
+    projectId,
+    requestedPage - 1,
+    pageSize,
+    searchValue,
+  )
+
+  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  const {
+    buckets: apiBuckets,
+    total: displayedTotal,
+    isLoading: displayedLoading,
+  } = useProjectBuckets(
+    projectId,
+    displayedPage - 1,
+    pageSize,
+    searchValue,
+  )
+
+  // Only show full loading when we have no data to display (initial load)
+  const showLoading = displayedLoading && apiBuckets.length === 0
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !bucketsFetching &&
+      requestedPage !== displayedPage &&
+      !bucketsLoading
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [bucketsFetching, bucketsLoading, requestedPage, displayedPage])
 
   // Get total count from the first page query (no search) - already fetched in route loader
   // This is used for limit checking and doesn't change when searching
@@ -124,7 +153,8 @@ export function StorageView() {
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedBuckets(new Set()) // Clear selection on search change
   }
 
@@ -142,9 +172,9 @@ export function StorageView() {
         ),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch buckets
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch buckets list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: Dependencies.BUCKETS,
       })
       toast.success(
@@ -189,13 +219,14 @@ export function StorageView() {
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    setRequestedPage(page)
     setSelectedBuckets(new Set()) // Clear selection on page change
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedBuckets(new Set()) // Clear selection on page size change
   }
 
@@ -286,7 +317,7 @@ export function StorageView() {
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {viewMode === 'list' ? (
-          bucketsLoading ? (
+          showLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">
               <p className="text-[13px] text-muted-foreground">
                 Loading buckets...
@@ -453,8 +484,8 @@ export function StorageView() {
                 </Table>
               </div>
               <Pagination
-                currentPage={currentPage}
-                totalItems={bucketsTotal}
+                currentPage={displayedPage}
+                totalItems={displayedTotal ?? bucketsTotal}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}
@@ -474,7 +505,7 @@ export function StorageView() {
           )
         ) : (
           <>
-            {bucketsLoading ? (
+            {showLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <p className="text-[13px] text-muted-foreground">
                   Loading buckets...
@@ -562,17 +593,14 @@ export function StorageView() {
                 variant="card"
               />
             )}
-            {!bucketsLoading && paginatedBuckets.length > 0 && (
+            {!showLoading && paginatedBuckets.length > 0 && (
               <Pagination
-                currentPage={currentPage}
-                totalItems={bucketsTotal}
+                currentPage={displayedPage}
+                totalItems={displayedTotal ?? bucketsTotal}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
-                onPageChange={setCurrentPage}
-                onPageSizeChange={(size) => {
-                  setPageSize(size)
-                  setCurrentPage(1)
-                }}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
                 itemLabel="buckets"
               />
             )}

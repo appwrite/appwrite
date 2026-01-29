@@ -267,7 +267,10 @@ export function SiteDeploymentsView() {
   ])
 
   // Fetch data for the displayed page (this is what we show)
-  const { deployments: displayedDeployments } = useSiteDeployments(
+  const {
+    deployments: displayedDeployments,
+    total: displayedTotal,
+  } = useSiteDeployments(
     projectId,
     siteId,
     displayedPage,
@@ -1486,7 +1489,7 @@ export function SiteDeploymentsView() {
               </div>
               <Pagination
                 currentPage={displayedPage + 1}
-                totalItems={total}
+                totalItems={displayedTotal ?? total}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}
                 onPageChange={handlePageChange}

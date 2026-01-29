@@ -705,7 +705,7 @@ export function useSiteDeployments(
   limit: number = DEFAULT_PAGE_SIZE,
   queries?: string[],
 ) {
-  const { data, isLoading, error, refetch } = useQuery(
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
     siteDeploymentsQueryOptions(projectId, siteId, page, limit, queries),
   )
 
@@ -713,6 +713,7 @@ export function useSiteDeployments(
     deployments: data?.deployments || [],
     total: data?.total || 0,
     isLoading,
+    isFetching,
     error,
     refetch,
   }
@@ -960,8 +961,9 @@ export function useDeleteSite(projectId: string | null | undefined) {
       const projectSdk = sdk.forProject(projectId)
       await projectSdk.sites.delete({ siteId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch sites list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: Dependencies.SITES,
       })
     },

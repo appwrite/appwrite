@@ -88,82 +88,129 @@ export function MessagingView() {
 
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  // Convert 1-indexed page to 0-indexed for API
-  const pageIndexed = currentPage - 1
-
-  // Fetch messages
+  // Fetch requested page (triggers load when user changes page) - active tab only
   const {
-    messages,
     total: messagesTotal,
     isLoading: messagesLoading,
+    isFetching: messagesFetching,
   } = useProjectMessages(
     activeTab === 'messages' ? projectId : null,
-    pageIndexed,
+    requestedPage - 1,
     pageSize,
     activeTab === 'messages' ? searchValue : undefined,
   )
-
-  // Fetch topics
   const {
-    topics,
     total: topicsTotal,
     isLoading: topicsLoading,
+    isFetching: topicsFetching,
   } = useProjectTopics(
     activeTab === 'topics' ? projectId : null,
-    pageIndexed,
+    requestedPage - 1,
     pageSize,
     activeTab === 'topics' ? searchValue : undefined,
   )
-
-  // Fetch providers
   const {
-    providers,
     total: providersTotal,
     isLoading: providersLoading,
+    isFetching: providersFetching,
   } = useProjectProviders(
     activeTab === 'providers' ? projectId : null,
-    pageIndexed,
+    requestedPage - 1,
     pageSize,
     activeTab === 'providers' ? searchValue : undefined,
   )
 
-  // Get current data based on active tab
+  // Fetch displayed page (what we show - stays until new page is ready) - active tab only
+  const { messages, total: displayedMessagesTotal } = useProjectMessages(
+    activeTab === 'messages' ? projectId : null,
+    displayedPage - 1,
+    pageSize,
+    activeTab === 'messages' ? searchValue : undefined,
+  )
+  const { topics, total: displayedTopicsTotal } = useProjectTopics(
+    activeTab === 'topics' ? projectId : null,
+    displayedPage - 1,
+    pageSize,
+    activeTab === 'topics' ? searchValue : undefined,
+  )
+  const { providers, total: displayedProvidersTotal } = useProjectProviders(
+    activeTab === 'providers' ? projectId : null,
+    displayedPage - 1,
+    pageSize,
+    activeTab === 'providers' ? searchValue : undefined,
+  )
+
+  const activeFetching =
+    activeTab === 'messages'
+      ? messagesFetching
+      : activeTab === 'topics'
+        ? topicsFetching
+        : providersFetching
+  const activeLoading =
+    activeTab === 'messages'
+      ? messagesLoading
+      : activeTab === 'topics'
+        ? topicsLoading
+        : providersLoading
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !activeFetching &&
+      requestedPage !== displayedPage &&
+      !activeLoading
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [activeFetching, activeLoading, requestedPage, displayedPage])
+
+  // Get current data based on active tab (use displayed data and displayed total for stable range)
   const currentData = useMemo(() => {
     if (activeTab === 'messages') {
       return {
         items: messages,
-        total: messagesTotal,
-        isLoading: messagesLoading,
+        total: displayedMessagesTotal ?? messagesTotal,
+        isLoading: messagesLoading && messages.length === 0,
       }
     }
     if (activeTab === 'topics') {
-      return { items: topics, total: topicsTotal, isLoading: topicsLoading }
+      return {
+        items: topics,
+        total: displayedTopicsTotal ?? topicsTotal,
+        isLoading: topicsLoading && topics.length === 0,
+      }
     }
     if (activeTab === 'providers') {
       return {
         items: providers,
-        total: providersTotal,
-        isLoading: providersLoading,
+        total: displayedProvidersTotal ?? providersTotal,
+        isLoading: providersLoading && providers.length === 0,
       }
     }
     return { items: [], total: 0, isLoading: false }
   }, [
     activeTab,
     messages,
+    displayedMessagesTotal,
     messagesTotal,
     messagesLoading,
     topics,
+    displayedTopicsTotal,
     topicsTotal,
     topicsLoading,
     providers,
+    displayedProvidersTotal,
     providersTotal,
     providersLoading,
   ])
+
+  const showLoading = currentData.isLoading
 
   // Get project to get teamId for organization plan
   const { project, isLoading: projectLoading } = useProject(projectId)
@@ -180,7 +227,8 @@ export function MessagingView() {
 
   const handleSearchChange = (value: string) => {
     setSearchValue(value)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedItems(new Set())
   }
 
@@ -215,8 +263,9 @@ export function MessagingView() {
         )
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: [
           activeTab === 'messages'
             ? 'messages'
@@ -267,13 +316,14 @@ export function MessagingView() {
   }
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
+    setRequestedPage(page)
     setSelectedItems(new Set())
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setPageSize(newPageSize)
-    setCurrentPage(1)
+    setRequestedPage(1)
+    setDisplayedPage(1)
     setSelectedItems(new Set())
   }
 
@@ -424,7 +474,7 @@ export function MessagingView() {
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         {viewMode === 'list' ? (
-          currentData.isLoading ? (
+          showLoading ? (
             <div className="rounded-lg border border-border bg-card py-12 text-center">
               <p className="text-[13px] text-muted-foreground">
                 Loading {activeTab}...
@@ -849,7 +899,7 @@ export function MessagingView() {
                 </Table>
               </div>
               <Pagination
-                currentPage={currentPage}
+                currentPage={displayedPage}
                 totalItems={currentData.total}
                 pageSize={pageSize}
                 pageSizeOptions={[10, 25, 50, 100]}

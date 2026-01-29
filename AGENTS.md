@@ -95,6 +95,28 @@ loader: async ({ params, context }) => {
 }
 ```
 
+**Delete mutations and list updates:**
+
+List queries use `refetchOnMount: false` (for prefetch). After a delete, **use `refetchQueries`** (not just `invalidateQueries`) so the list cache is updated and the UI reflects the change without a full reload.
+
+- **After delete**: Call `await queryClient.refetchQueries({ queryKey: [...] })` in the mutation's `onSuccess`.
+- **When navigating after delete**: Await refetch before navigating so the list view has fresh data when it mounts.
+- **Bulk delete**: Same pattern—refetch the list query so the current view or the next view shows the updated list.
+
+```typescript
+// Delete mutation (single or bulk)
+const deleteMutation = useMutation({
+  mutationFn: (id: string) => projectSdk.resource.delete({ id }),
+  onSuccess: async () => {
+    await queryClient.refetchQueries({
+      queryKey: ['resources', 'project', projectId],
+    })
+    toast.success('Deleted')
+    navigate({ to: '/projects/$projectId/resources', params: { projectId } })
+  },
+})
+```
+
 ### 4. Authentication
 
 Use `RequireAuth` component wrapper:
@@ -305,14 +327,23 @@ Standard structure for service pages (Storage, Functions, Databases, etc.):
 
 ```typescript
 const [searchValue, setSearchValue] = useState('')
-const [currentPage, setCurrentPage] = useState(1) // 1-indexed
 const [pageSize, setPageSize] = useState(25)
 const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
 const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
 
-// Convert for API
-const pageIndexed = currentPage - 1
+// Pagination: requested page (user intent) vs displayed page (what we show)
+const [requestedPage, setRequestedPage] = useState(1) // 1-indexed for UI
+const [displayedPage, setDisplayedPage] = useState(1)
 ```
+
+**Pagination (no-flash):** Keep the current page visible until the next page's data has loaded. Use two page values and two queries:
+
+- **requestedPage** – Page the user asked for (e.g. clicked "Next"); drives the fetch for the new page.
+- **displayedPage** – Page whose data is actually shown; only update when that page's fetch has finished (`!isFetching && requestedPage !== displayedPage`).
+
+Fetch the **requested** page (to get `isFetching` and trigger load) and the **displayed** page (to get the list and total to render). Use the **displayed** query's data and total for the list and for `<Pagination>` (e.g. `currentPage={displayedPage}`, `totalItems={displayedTotal ?? total}`). Only show full loading when there is no data to show (`displayedLoading && items.length === 0`). On page change, update only `requestedPage`; on search or page-size change, set both to 1.
+
+Reference: `src/components/pages/projects/$projectId/storage/View.tsx`, `SiteLogs.tsx`, `Deployments.tsx`.
 
 ---
 
@@ -715,6 +746,8 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Task                 | Pattern                                            |
 | -------------------- | -------------------------------------------------- |
 | Fetch data           | Extract query function, use in hook + route loader |
+| Pagination           | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads |
+| Delete resource      | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload |
 | Create resource      | Form resets and closes dialog on success           |
 | Update resource      | Use "Update" terminology, not "Edit"               |
 | Button during action | Keep text, use `disabled` state                    |

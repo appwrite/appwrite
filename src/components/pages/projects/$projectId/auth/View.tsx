@@ -131,7 +131,8 @@ export function AuthView() {
   const [deleteTeamDialogOpen, setDeleteTeamDialogOpen] = useState(false)
 
   // Pagination state for users (1-indexed for UI)
-  const [usersPage, setUsersPage] = useState(1)
+  const [usersRequestedPage, setUsersRequestedPage] = useState(1)
+  const [usersDisplayedPage, setUsersDisplayedPage] = useState(1)
   const [usersPageSize, setUsersPageSize] = useState(25)
 
   const queryClient = useQueryClient()
@@ -145,53 +146,83 @@ export function AuthView() {
   }, [location.pathname, projectId, usersSearchValue, teamsSearchValue])
 
   // Pagination state for teams
-  const [teamsPage, setTeamsPage] = useState(1)
+  const [teamsRequestedPage, setTeamsRequestedPage] = useState(1)
+  const [teamsDisplayedPage, setTeamsDisplayedPage] = useState(1)
   const [teamsPageSize, setTeamsPageSize] = useState(25)
 
-  // Convert 1-indexed page to 0-indexed for API
-  const usersPageIndexed = usersPage - 1
-
-  // Fetch users from the project SDK
+  // Fetch users for the requested page (triggers load when user changes page)
   const {
-    users: apiUsers,
     total: usersTotal,
     isLoading: usersLoading,
+    isFetching: usersFetching,
   } = useProjectUsers(
-    (() => {
-      // Log the values passed to useProjectUsers
-      // eslint-disable-next-line no-console
-      console.log(
-        '[AuthView] useProjectUsers:',
-        'projectId=',
-        projectId,
-        'usersPageIndexed=',
-        usersPageIndexed,
-        'usersPageSize=',
-        usersPageSize,
-        'usersSearchValue=',
-        usersSearchValue,
-      )
-      return projectId
-    })(),
-    usersPageIndexed,
+    projectId,
+    usersRequestedPage - 1,
     usersPageSize,
     usersSearchValue,
   )
 
-  // Pagination state for teams (1-indexed for UI)
-  const teamsPageIndexed = teamsPage - 1
-
-  // Fetch teams from the project SDK
+  // Fetch users for the displayed page (what we show - stays until new page is ready)
   const {
-    teams: apiTeams,
+    users: apiUsers,
+    total: displayedUsersTotal,
+    isLoading: usersDisplayedLoading,
+  } = useProjectUsers(
+    projectId,
+    usersDisplayedPage - 1,
+    usersPageSize,
+    usersSearchValue,
+  )
+
+  // Update displayed users page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !usersFetching &&
+      usersRequestedPage !== usersDisplayedPage &&
+      !usersLoading
+    ) {
+      setUsersDisplayedPage(usersRequestedPage)
+    }
+  }, [usersFetching, usersLoading, usersRequestedPage, usersDisplayedPage])
+
+  const showUsersLoading = usersDisplayedLoading && apiUsers.length === 0
+
+  // Fetch teams for the requested page (triggers load when user changes page)
+  const {
     total: teamsTotal,
     isLoading: teamsLoading,
+    isFetching: teamsFetching,
   } = useProjectTeams(
     projectId,
-    teamsPageIndexed,
+    teamsRequestedPage - 1,
     teamsPageSize,
     teamsSearchValue,
   )
+
+  // Fetch teams for the displayed page (what we show - stays until new page is ready)
+  const {
+    teams: apiTeams,
+    total: displayedTeamsTotal,
+    isLoading: teamsDisplayedLoading,
+  } = useProjectTeams(
+    projectId,
+    teamsDisplayedPage - 1,
+    teamsPageSize,
+    teamsSearchValue,
+  )
+
+  // Update displayed teams page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !teamsFetching &&
+      teamsRequestedPage !== teamsDisplayedPage &&
+      !teamsLoading
+    ) {
+      setTeamsDisplayedPage(teamsRequestedPage)
+    }
+  }, [teamsFetching, teamsLoading, teamsRequestedPage, teamsDisplayedPage])
+
+  const showTeamsLoading = teamsDisplayedLoading && apiTeams.length === 0
 
   // Mutation to create a user
   const createUserMutation = useCreateProjectUser(projectId)
@@ -232,7 +263,8 @@ export function AuthView() {
   // Reset page when search changes
   const handleUsersSearchChange = (value: string) => {
     setUsersSearchValue(value)
-    setUsersPage(1)
+    setUsersRequestedPage(1)
+    setUsersDisplayedPage(1)
     setSelectedUsers(new Set()) // Clear selection on search change
   }
 
@@ -247,9 +279,9 @@ export function AuthView() {
         userIds.map((userId) => deleteProjectUser(projectId, userId)),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch users
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch users list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['users', 'project', projectId],
       })
       toast.success(
@@ -292,13 +324,14 @@ export function AuthView() {
   }
 
   const handlePageChange = (page: number) => {
-    setUsersPage(page)
+    setUsersRequestedPage(page)
     setSelectedUsers(new Set()) // Clear selection on page change
   }
 
   const handlePageSizeChange = (newPageSize: number) => {
     setUsersPageSize(newPageSize)
-    setUsersPage(1)
+    setUsersRequestedPage(1)
+    setUsersDisplayedPage(1)
     setSelectedUsers(new Set()) // Clear selection on page size change
   }
 
@@ -344,7 +377,8 @@ export function AuthView() {
 
   const handleTeamsSearchChange = (value: string) => {
     setTeamsSearchValue(value)
-    setTeamsPage(1)
+    setTeamsRequestedPage(1)
+    setTeamsDisplayedPage(1)
     setSelectedTeams(new Set()) // Clear selection on search change
   }
 
@@ -359,9 +393,9 @@ export function AuthView() {
         teamIds.map((teamId) => deleteProjectTeam(projectId, teamId)),
       )
     },
-    onSuccess: () => {
-      // Invalidate and refetch teams
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch teams list so the UI updates (list uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['teams', 'project', projectId],
       })
       toast.success(
@@ -404,13 +438,14 @@ export function AuthView() {
   }
 
   const handleTeamsPageChange = (page: number) => {
-    setTeamsPage(page)
+    setTeamsRequestedPage(page)
     setSelectedTeams(new Set()) // Clear selection on page change
   }
 
   const handleTeamsPageSizeChange = (newPageSize: number) => {
     setTeamsPageSize(newPageSize)
-    setTeamsPage(1)
+    setTeamsRequestedPage(1)
+    setTeamsDisplayedPage(1)
     setSelectedTeams(new Set()) // Clear selection on page size change
   }
 
@@ -639,7 +674,7 @@ export function AuthView() {
         {activeTab === 'users' && (
           <>
             {isDebugModeOpen && <LightningCollectorGame />}
-            {usersLoading ? (
+            {showUsersLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <div className="text-muted-foreground">Loading users...</div>
               </div>
@@ -954,8 +989,8 @@ export function AuthView() {
                     </Table>
                   </div>
                   <Pagination
-                    currentPage={usersPage}
-                    totalItems={usersTotal}
+                    currentPage={usersDisplayedPage}
+                    totalItems={displayedUsersTotal ?? usersTotal}
                     pageSize={usersPageSize}
                     pageSizeOptions={[10, 25, 50, 100]}
                     onPageChange={handlePageChange}
@@ -1037,8 +1072,8 @@ export function AuthView() {
                 </div>
                 {paginatedUsers.length > 0 && (
                   <Pagination
-                    currentPage={usersPage}
-                    totalItems={usersTotal}
+                    currentPage={usersDisplayedPage}
+                    totalItems={displayedUsersTotal ?? usersTotal}
                     pageSize={usersPageSize}
                     pageSizeOptions={[10, 25, 50, 100]}
                     onPageChange={handlePageChange}
@@ -1115,7 +1150,7 @@ export function AuthView() {
 
         {activeTab === 'teams' && (
           <>
-            {teamsLoading ? (
+            {showTeamsLoading ? (
               <div className="rounded-lg border border-border bg-card py-12 text-center">
                 <div className="text-muted-foreground">Loading teams...</div>
               </div>
@@ -1228,8 +1263,8 @@ export function AuthView() {
                     </Table>
                   </div>
                   <Pagination
-                    currentPage={teamsPage}
-                    totalItems={teamsTotal}
+                    currentPage={teamsDisplayedPage}
+                    totalItems={displayedTeamsTotal ?? teamsTotal}
                     pageSize={teamsPageSize}
                     pageSizeOptions={[10, 25, 50, 100]}
                     onPageChange={handleTeamsPageChange}
@@ -1298,8 +1333,8 @@ export function AuthView() {
                 </div>
                 {paginatedTeams.length > 0 && (
                   <Pagination
-                    currentPage={teamsPage}
-                    totalItems={teamsTotal}
+                    currentPage={teamsDisplayedPage}
+                    totalItems={displayedTeamsTotal ?? teamsTotal}
                     pageSize={teamsPageSize}
                     pageSizeOptions={[10, 25, 50, 100]}
                     onPageChange={handleTeamsPageChange}

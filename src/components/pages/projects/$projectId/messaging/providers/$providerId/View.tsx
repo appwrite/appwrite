@@ -177,8 +177,9 @@ export function ProviderDetailView() {
       const projectSdk = sdk.forProject(projectId)
       await projectSdk.messaging.deleteProvider({ providerId })
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // Refetch providers list so the list view shows updated data (uses refetchOnMount: false)
+      await queryClient.refetchQueries({
         queryKey: ['providers', 'project', projectId],
       })
       toast.success('Provider deleted successfully')
