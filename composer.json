@@ -75,7 +75,7 @@
         "utopia-php/swoole": "1.*",
         "utopia-php/system": "0.9.*",
         "utopia-php/telemetry": "0.1.*",
-        "utopia-php/vcs": "0.13.*",
+        "utopia-php/vcs": "dev-ser-642 as 0.13.99",
         "utopia-php/websocket": "0.3.*",
         "matomo/device-detector": "6.4.*",
         "dragonmantank/cron-expression": "3.4.*",
