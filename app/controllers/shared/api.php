@@ -273,7 +273,7 @@ App::init()
             }
 
             /**
-             * For listing, updating and deleting projects, we use platform DB.
+             * For console projects resource, we use platform DB.
              * Enabling authorization restricts admin user to the projects they have access to.
              */
             if ($project->getId() === 'console' && str_starts_with($route->getPath(), '/v1/projects')) {
