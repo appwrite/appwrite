@@ -274,7 +274,7 @@ App::init()
 
             /**
              * For listing, updating and deleting projects, we use platform DB.
-             * Enabling authorization restricts admin user has access to the ones they have access to.
+             * Enabling authorization restricts admin user to the projects they have access to.
              */
             if ($project->getId() === 'console' && str_starts_with($route->getPath(), '/v1/projects')) {
                 $authorization->setDefaultStatus(true);
@@ -294,16 +294,10 @@ App::init()
         /**
          * We disable authorization checks above to ensure other endpoints (list teams, members, etc.) will continue working.
          * But, for actions on resources (sites, functions, etc.) in a non-console project, we explicitly check
-         * whether the admin user has necessary permission on the project (sites, functions don't have permissions associated to them).
+         * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
         if ($project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
-            $action = match ($route->getMethod()) {
-                Request::METHOD_GET => Database::PERMISSION_READ,
-                Request::METHOD_DELETE => Database::PERMISSION_DELETE,
-                default => Database::PERMISSION_UPDATE,
-            };
-            $input = new Input($action, $project->getPermissionsByType($action));
-
+            $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
             if (!$authorization->isValid($input)) {
@@ -326,10 +320,10 @@ App::init()
             if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCESS)) > $accessedAt) {
                 $user->setAttribute('accessedAt', DateTime::now());
 
-                if (APP_MODE_ADMIN !== $mode) {
+                if ($project->getId() !== 'console' && APP_MODE_ADMIN !== $mode) {
                     $dbForProject->updateDocument('users', $user->getId(), $user);
                 } else {
-                    $dbForPlatform->updateDocument('users', $user->getId(), $user);
+                    $authorization->skip(fn () => $dbForPlatform->updateDocument('users', $user->getId(), $user));
                 }
             }
         }

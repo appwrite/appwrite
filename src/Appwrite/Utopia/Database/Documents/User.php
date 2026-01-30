@@ -72,11 +72,6 @@ class User extends Document
                     foreach ($node['roles'] as $nodeRole) { // Set all team roles
                         $roles[] = Role::team($node['teamId'], $nodeRole)->toString();
                     }
-
-                    if (str_starts_with($nodeRole, 'project-')) {
-                        $projectBaseRole = substr($nodeRole, 0, strrpos($nodeRole, '-'));
-                        $roles[] = Role::team($node['teamId'], $projectBaseRole)->toString(); // Add base role for project-specific permission
-                    }
                 }
             }
         }
