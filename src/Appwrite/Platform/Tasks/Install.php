@@ -642,19 +642,23 @@ class Install extends Action
         $type = $isUpgrade ? 'upgrade' : 'install';
         $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
 
-        $name = $account['name'] ?? 'Admin';
-        $email = $account['email'] ?? 'admin@selfhosted.local';
-
-        $version = $version ?: APP_VERSION_STABLE;
-
         $payload = [
-            'type' => $type,
-            'name' => $name,
-            'email' => $email,
             'domain' => $domain,
-            'version' => $version,
             'database' => $database,
+            'type' => $type,
+            'version' => $version,
         ];
+
+        $name = $account['name'] ?? null;
+        $email = $account['email'] ?? null;
+
+        if (!empty($email)) {
+            $payload['email'] = $email;
+        }
+
+        if (!empty($name)) {
+            $payload['name'] = $name;
+        }
 
         try {
             $client = new Client();
