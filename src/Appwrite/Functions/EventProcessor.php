@@ -58,7 +58,7 @@ class EventProcessor
             foreach ($functions as $function) {
                 $functionEvents = $function->getAttribute('events', []);
                 if (!empty($functionEvents)) {
-                    $events = array_merge($events, $functionEvents);
+                    \array_push($events, ...$functionEvents);
                 }
             }
         }
@@ -93,7 +93,7 @@ class EventProcessor
 
             $webhookEvents = $webhook->getAttribute('events', []);
             if (!empty($webhookEvents)) {
-                $events = array_merge($events, $webhookEvents);
+                \array_push($events, ...$webhookEvents);
             }
         }
 
