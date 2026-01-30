@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\System\System;
 
@@ -553,7 +554,7 @@ class FunctionsCustomClientTest extends Scope
             'collectionId' => ID::unique(),
             'name' => 'Test Collection',
             'permissions' => [
-                Role::users()->toString(),
+                Permission::create(Role::users()),
             ],
             'documentSecurity' => false,
         ]);
