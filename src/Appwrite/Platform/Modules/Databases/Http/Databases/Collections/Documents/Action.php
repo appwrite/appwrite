@@ -6,6 +6,7 @@ use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Functions\EventProcessor;
 use Appwrite\Platform\Modules\Databases\Http\Databases\Action as DatabasesAction;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -248,6 +249,35 @@ abstract class Action extends DatabasesAction
             }
         }
         return $document;
+    }
+
+    /**
+     * Validate relationship values.
+     * Handles Document objects, ID strings, and associative arrays.
+     */
+    protected function validateRelationship(mixed $relation): void
+    {
+        $relationId = null;
+
+        if ($relation instanceof Document) {
+            $relationId = $relation->getId();
+        } elseif (\is_string($relation)) {
+            $relationId = $relation;
+        } elseif (\is_array($relation) && !\array_is_list($relation)) {
+            $relationId = $relation['$id'] ?? null;
+        } else {
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship value must be an object, document ID string, or associative array');
+        }
+
+        if ($relationId !== null) {
+            if (!\is_string($relationId)) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, 'Relationship $id must be a string');
+            }
+            $validator = new CustomId();
+            if (!$validator->isValid($relationId)) {
+                throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $validator->getDescription());
+            }
+        }
     }
 
     /**
