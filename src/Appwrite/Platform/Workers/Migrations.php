@@ -340,6 +340,9 @@ class Migrations extends Action
          */
 
         $endpoint = System::getEnv('_APP_MIGRATION_ENDPOINT');
+        if(empty($endpoint)){
+            throw new \Exception('empty _APP_MIGRATION_ENDPOINT');
+        }
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
