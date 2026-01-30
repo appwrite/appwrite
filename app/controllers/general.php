@@ -92,7 +92,19 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
             $appDomainFunctions = $appDomainFunctionsFallback;
         }
 
-        if ($host === $appDomainFunctions || $host === $appDomainSites) {
+        $denyList = [
+            $appDomainFunctions,
+            $appDomainSites,
+        ];
+        foreach (\explode(',', System::getEnv('_APP_DOMAIN_WILDCARDS', '')) as $wildcardDomain) {
+            if (empty($wildcardDomain)) {
+                continue;
+            }
+
+            $denyList[] = $wildcardDomain;
+        }
+
+        if (\in_array($host, $denyList)) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
         }
 

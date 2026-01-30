@@ -116,6 +116,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_WILDCARDS',
+                'description' => 'Comma-separated list of root-level domains to behave same as site domain - allow serving sites on edge.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN_TARGET',
                 'description' => 'Deprecated since 1.7.0. A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite \'_APP_DOMAIN\' variable. The default value is \'localhost\'.',
                 'introduction' => '',

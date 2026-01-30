@@ -20,6 +20,30 @@ class Action extends PlatformAction
     {
     }
 
+    protected function hasWildcardCertificate(string $domain): bool
+    {
+        $hasWildcard = false;
+
+        $wildcardDomains = [
+            System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+            System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+            System::getEnv('_APP_DOMAIN_SITES', ''),
+        ];
+
+        foreach (\explode(',', System::getEnv('_APP_DOMAIN_WILDCARDS', '')) as $wildcardDomain) {
+            $wildcardDomains[] = $wildcardDomain;
+        }
+
+        foreach ($wildcardDomains as $wildcardDomain) {
+            if (!empty($wildcardDomain) && str_ends_with($domain, $wildcardDomain)) {
+                $hasWildcard = true;
+                break;
+            }
+        }
+
+        return $hasWildcard;
+    }
+
     /**
      * Ensures domain is not in the deny list and is a valid domain
      *
@@ -43,6 +67,18 @@ class Action extends PlatformAction
             $domainLevel = \count(\explode('.', $functionsDomain));
             $restrictions[] = ValidatorDomain::createRestriction($functionsDomain, $domainLevel + 1);
         }
+
+        // Wildcard domains follow same pattern as site domain
+        foreach (\explode(',', System::getEnv('_APP_DOMAIN_WILDCARDS', '')) as $wildcardDomain) {
+            if (empty($wildcardDomain)) {
+                continue;
+            }
+
+            // Ensure site domains are exactly 1 subdomain, and dont start with reserved prefix
+            $domainLevel = \count(\explode('.', $wildcardDomain));
+            $restrictions[] = ValidatorDomain::createRestriction($wildcardDomain, $domainLevel + 1, ['commit-', 'branch-']);
+        }
+
         $validator = new ValidatorDomain($restrictions);
 
         if (!$validator->isValid($domain)) {
@@ -117,31 +153,45 @@ class Action extends PlatformAction
             }
         }
 
-        $targetCNAME = null;
+        $targetCNAMEs = [];
         $ruleType = $rule->getAttribute('type', '');
         $resourceType = $rule->getAttribute('deploymentResourceType', '');
 
         // Ensures different target based on rule's type, as configured by env variables
         if ($resourceType === 'function') {
             // For example: fra.appwrite.run
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_FUNCTIONS', ''));
+            $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_FUNCTIONS', ''));
         } elseif ($resourceType === 'site') {
             // For example: appwrite.network
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
+            $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
+
+            // For example: imagine.diy
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_WILDCARDS', '')) as $domain) {
+                if (empty($domain)) {
+                    continue;
+                }
+
+                $targetCNAMEs[] = new Domain($domain);
+            }
         } elseif ($ruleType === 'api') {
             // For example: fra.cloud.appwrite.io
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
+            $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
         } elseif ($ruleType === 'redirect') {
-            // Shouldn't be needed, because redirect should always have resourceTyp too, but just in case we default to sites
+            // Shouldn't be needed, because redirect should always have resourceType too, but just in case we default to sites
             // For example: appwrite.network
-            $targetCNAME = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
+            $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
         }
 
         $validators = [];
         $mainValidator = null; // Validator to use for error description
 
-        if (!is_null($targetCNAME)) {
-            $validator = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
+        if (\count($targetCNAMEs) > 0) {
+            $cnameValidators = [];
+            foreach ($targetCNAMEs as $targetCNAME) {
+                $cnameValidators[] = new $dnsValidatorClass($targetCNAME->get(), Record::TYPE_CNAME, $dnsServers);
+            }
+
+            $validator = new AnyOf($cnameValidators);
             $validators[] = $validator;
 
             if (\is_null($mainValidator)) {

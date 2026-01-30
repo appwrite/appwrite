@@ -82,9 +82,6 @@ class Create extends Action
     {
         $this->validateDomainRestrictions($domain, $platform);
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-
         $collection = match ($resourceType) {
             'site' => 'sites',
             'function' => 'functions'
@@ -99,10 +96,7 @@ class Create extends Action
         $status = RULE_STATUS_CREATED;
         $owner = '';
 
-        if (
-            ($functionsDomain != '' && \str_ends_with($domain, $functionsDomain)) ||
-            ($sitesDomain != '' && \str_ends_with($domain, $sitesDomain))
-        ) {
+        if ($this->hasWildcardCertificate($domain)) {
             $status = RULE_STATUS_VERIFIED;
             $owner = 'Appwrite';
         }

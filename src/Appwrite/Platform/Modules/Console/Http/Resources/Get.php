@@ -88,6 +88,18 @@ class Get extends Action
                 $domainLevel = \count(\explode('.', $functionsDomain));
                 $restrictions[] = DomainValidator::createRestriction($functionsDomain, $domainLevel + 1);
             }
+
+            // Wildcard domains follow same pattern as site domain
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_WILDCARDS', '')) as $wildcardDomain) {
+                if (empty($wildcardDomain)) {
+                    continue;
+                }
+
+                // Ensure site domains are exactly 1 subdomain, and dont start with reserved prefix
+                $domainLevel = \count(\explode('.', $wildcardDomain));
+                $restrictions[] = DomainValidator::createRestriction($wildcardDomain, $domainLevel + 1, ['commit-', 'branch-']);
+            }
+
             $validator = new DomainValidator($restrictions);
 
             if (!$validator->isValid($value)) {

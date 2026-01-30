@@ -591,9 +591,29 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 $sum = count($results);
                 foreach ($results as $document) {
                     $domain = $document->getAttribute('domain');
-                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS')) || str_ends_with($domain, System::getEnv('_APP_DOMAIN_SITES'))) {
+
+                    // Domains that never need to be in-memory cache
+                    $hardenedDomains = [
+                        System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+                        System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+                        System::getEnv('_APP_DOMAIN_SITES', ''),
+                    ];
+                    foreach (\explode(',', System::getEnv('_APP_DOMAIN_WILDCARDS', '')) as $wildcardDomain) {
+                        $hardenedDomains[] = $wildcardDomain;
+                    }
+
+                    $isHardened = false;
+                    foreach ($hardenedDomains as $hardenedDomain) {
+                        if (!empty($hardenedDomain) && str_ends_with($domain, $hardenedDomain)) {
+                            $isHardened = true;
+                            break;
+                        }
+                    }
+
+                    if ($isHardened) {
                         continue;
                     }
+
                     $domains->set(md5($domain), ['value' => 1]);
                 }
                 $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;

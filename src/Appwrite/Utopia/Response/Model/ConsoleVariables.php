@@ -82,6 +82,12 @@ class ConsoleVariables extends Model
                 'default' => '',
                 'example' => 'sites.localhost',
             ])
+            ->addRule('_APP_DOMAIN_WILDCARDS', [
+                'type' => self::TYPE_STRING,
+                'description' => 'A Comma-separated list of root-level domains to behave same as site domain - allow serving sites on edge',
+                'default' => '',
+                'example' => 'rebranded.localhost',
+            ])
             ->addRule('_APP_DOMAIN_FUNCTIONS', [
                 'type' => self::TYPE_STRING,
                 'description' => 'A domain to use for function URLs.',
