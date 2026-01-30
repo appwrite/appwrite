@@ -274,7 +274,7 @@ class Create extends Action
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('sites', $site->getId(), $site);
 
-                $sitesDomain = $platform['siteDomain'];
+                $sitesDomain = $platform['sitePreviewDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
 
                 // TODO: (@Meldiron) Remove after 1.7.x migration
@@ -344,7 +344,7 @@ class Create extends Action
                     ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
                 $dbForProject->updateDocument('sites', $site->getId(), $site);
 
-                $sitesDomain = $platform['siteDomain'];
+                $sitesDomain = $platform['sitePreviewDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
                 $authorization->skip(
