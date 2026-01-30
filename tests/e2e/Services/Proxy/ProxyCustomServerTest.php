@@ -293,10 +293,26 @@ class ProxyCustomServerTest extends Scope
 
         $ruleId = $this->setupSiteRule($domain, $siteId);
         $this->assertNotEmpty($ruleId);
+        $rule = $this->getRule($ruleId);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame('created', $rule['body']['status']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Contact page', $response['body']);
+        
+        // Wildcard domains automatically get verified status
+        $domains = [
+            \uniqid() . '.sites.localhost',
+            \uniqid() . '.rebranded.localhost',
+        ];
+        foreach ($domains as $domain) {
+            $wildcardRuleId = $this->setupSiteRule($domain, $siteId);
+            $this->assertNotEmpty($wildcardRuleId);
+            $rule = $this->getRule($wildcardRuleId);
+            $this->assertSame(200, $rule['headers']['status-code']);
+            $this->assertSame('verified', $rule['body']['status']);
+        }
 
         $rules = $this->listRules([
             'queries' => [
