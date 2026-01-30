@@ -5,9 +5,6 @@ import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import devtoolsJson from 'vite-plugin-devtools-json'
-import { nitroV2Plugin } from '@tanstack/nitro-v2-vite-plugin'
-
-const forSites = process.env?.FOR_SITES === 'true'
 
 const config = defineConfig({
   plugins: [
@@ -50,12 +47,6 @@ const config = defineConfig({
         },
       },
     }),
-    // Enable Nitro plugin to generate .output directory for deployment
-    // This is required for Appwrite deployment which expects .output/
-    nitroV2Plugin({
-      compatibilityDate: '2025-10-08',
-      preset: 'node',
-    }),
     devtoolsJson(),
     viteReact(),
     // Sentry plugin for source maps upload and error tracking
@@ -75,9 +66,7 @@ const config = defineConfig({
     host: '::',
   },
   build: {
-    // TanStack Start outputs to dist/client, but vite preview reads from build.outDir
-    // Setting this ensures vite preview can find the built assets
-    outDir: 'dist/client',
+    outDir: 'dist',
   },
 })
 
