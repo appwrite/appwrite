@@ -510,4 +510,101 @@ class FunctionsCustomClientTest extends Scope
         $template = $this->getTemplate('invalid-template-id');
         $this->assertEquals(404, $template['headers']['status-code']);
     }
+
+    /**
+     * Test that event-triggered functions work when the triggering request
+     * comes from a client SDK (session auth) that doesn't have permission
+     * to read the functions collection.
+     */
+    public function testEventTriggerWithClientAuth()
+    {
+        $functionId = $this->setupFunction([
+            'functionId' => ID::unique(),
+            'name' => 'Test Client Event Trigger',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'databases.*.collections.*.documents.*.create',
+            ],
+            'timeout' => 15,
+        ]);
+
+        $this->setupDeployment($functionId, [
+            'code' => $this->packageFunction('event-handler'),
+            'activate' => true
+        ]);
+
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database',
+        ]);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'collectionId' => ID::unique(),
+            'name' => 'Test Collection',
+            'permissions' => [
+                Role::users()->toString(),
+            ],
+            'documentSecurity' => false,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'key' => 'name',
+            'size' => 255,
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $attribute['headers']['status-code']);
+
+        sleep(2);
+
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => ['name' => 'Test Document'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        $this->assertEventually(function () use ($functionId, $documentId) {
+            $executions = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $this->assertGreaterThan(0, count($executions['body']['executions']), 'Function should have been triggered by document creation');
+
+            $lastExecution = $executions['body']['executions'][0];
+            $this->assertEquals('completed', $lastExecution['status']);
+            $this->assertEquals(204, $lastExecution['responseStatusCode']);
+            $this->assertStringContainsString($documentId, $lastExecution['logs']);
+        }, 20000, 500);
+
+        $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->cleanupFunction($functionId);
+    }
 }

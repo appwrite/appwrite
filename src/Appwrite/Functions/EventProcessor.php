@@ -39,38 +39,34 @@ class EventProcessor
             return \json_decode($cachedFunctionEvents, true) ?? [];
         }
 
-        try {
-            $events = [];
-            $limit = 100;
-            $sum = 100;
-            $offset = 0;
+        $events = [];
+        $limit = 100;
+        $sum = 100;
+        $offset = 0;
 
-            while ($sum >= $limit) {
-                $functions = $dbForProject->find('functions', [
-                    Query::select(['$id', 'events']),
-                    Query::limit($limit),
-                    Query::offset($offset),
-                    Query::orderAsc('$sequence'),
-                ]);
+        while ($sum >= $limit) {
+            $functions = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('functions', [
+                Query::select(['$id', 'events']),
+                Query::limit($limit),
+                Query::offset($offset),
+                Query::orderAsc('$sequence'),
+            ]));
 
-                $sum = \count($functions);
-                $offset = $offset + $limit;
+            $sum = \count($functions);
+            $offset = $offset + $limit;
 
-                foreach ($functions as $function) {
-                    $functionEvents = $function->getAttribute('events', []);
-                    if (!empty($functionEvents)) {
-                        $events = array_merge($events, $functionEvents);
-                    }
+            foreach ($functions as $function) {
+                $functionEvents = $function->getAttribute('events', []);
+                if (!empty($functionEvents)) {
+                    $events = array_merge($events, $functionEvents);
                 }
             }
-
-            $uniqueEvents = \array_flip(\array_unique($events));
-            $dbForProject->getCache()->save($cacheKey, \json_encode($uniqueEvents));
-
-            return $uniqueEvents;
-        } catch (\Throwable $e) {
-            return [];
         }
+
+        $uniqueEvents = \array_flip(\array_unique($events));
+        $dbForProject->getCache()->save($cacheKey, \json_encode($uniqueEvents));
+
+        return $uniqueEvents;
     }
 
     /**
