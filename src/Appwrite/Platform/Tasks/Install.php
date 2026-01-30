@@ -20,12 +20,16 @@ class Install extends Action
     private const int INSTALL_STEP_DELAY_SECONDS = 2;
     private const int WEB_SERVER_CHECK_ATTEMPTS = 10;
     private const int WEB_SERVER_CHECK_DELAY_SECONDS = 1;
+
     private const int HEALTH_CHECK_ATTEMPTS = 10;
     private const int HEALTH_CHECK_DELAY_SECONDS = 3;
 
     private const string PATTERN_ENV_VAR_NAME = '/^[A-Z0-9_]+$/';
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
     private const string PATTERN_SESSION_COOKIE = '/a_session_console=([^;]+)/';
+
+    private const string TRAEFIK_URL = 'http://traefik:80';
+    private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
 
     protected string $hostPath = '';
     protected ?bool $isLocalInstall = null;
@@ -376,7 +380,7 @@ class Install extends Action
         return file_exists($this->path . '/' . $this->getEnvFileName());
     }
 
-    private function updateProgress(?callable $progress, string $step, string $status, array $messages, array $details = [], ?string $messageOverride = null): void
+    private function updateProgress(?callable $progress, string $step, string $status, array $messages = [], array $details = [], ?string $messageOverride = null): void
     {
         if (!$progress) {
             return;
@@ -532,6 +536,9 @@ class Install extends Action
                     $this->createInitialAdminAccount($account, $progress);
                 }
 
+                /* track installs for metrics */
+                $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
+
                 if ($isCLI) {
                     Console::success('Appwrite installed successfully');
                 }
@@ -610,15 +617,66 @@ class Install extends Action
         }
     }
 
+    private function trackSelfHostedInstall(array $input, bool $isUpgrade, string $version, array $account): void
+    {
+        if ($this->isLocalInstall()) {
+            return;
+        }
+
+        $appEnv = $input['_APP_ENV'] ?? 'development';
+        $domain = $input['_APP_DOMAIN'] ?? 'localhost';
+
+        /* local or test instance */
+        if ($appEnv !== 'production') {
+            return;
+        }
+
+        /* prod but local or test instance */
+        if ($domain === 'localhost'
+            || str_starts_with($domain, '127.')
+            || str_starts_with($domain, '0.0.0.0')
+        ) {
+            return;
+        }
+
+        $type = $isUpgrade ? 'upgrade' : 'install';
+        $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
+
+        $payload = [
+            'domain' => $domain,
+            'database' => $database,
+            'type' => $type,
+            'version' => $version,
+        ];
+
+        $name = $account['name'] ?? null;
+        $email = $account['email'] ?? null;
+
+        if (!empty($email)) {
+            $payload['email'] = $email;
+        }
+
+        if (!empty($name)) {
+            $payload['name'] = $name;
+        }
+
+        try {
+            $client = new Client();
+            $client
+                ->addHeader('Content-Type', 'application/json')
+                ->fetch(self::GROWTH_API_URL . '/installs', Client::METHOD_POST, $payload);
+        } catch (\Throwable) {
+            // tracking shouldn't block installation
+        }
+    }
+
     private function waitForApiReady(): void
     {
         $client = new Client();
-        $client->setTimeout(5);
-
         $pingHealth = function () use ($client): bool {
             try {
-                return $client->fetch("http://traefik:80/v1/health/version")->getStatusCode() === 200;
-            } catch (\Throwable $e) {
+                return $client->fetch(self::TRAEFIK_URL . '/v1/health/version')->getStatusCode() === 200;
+            } catch (\Throwable) {
                 return false;
             }
         };
@@ -652,7 +710,7 @@ class Install extends Action
             ->addHeader('Content-Type', 'application/json')
             ->addHeader('X-Appwrite-Project', 'console');
 
-        $url = "http://traefik:80$endpoint";
+        $url = self::TRAEFIK_URL . $endpoint;
         $response = $client->fetch($url, Client::METHOD_POST, $body);
 
         if ($response->getStatusCode() !== 201) {
