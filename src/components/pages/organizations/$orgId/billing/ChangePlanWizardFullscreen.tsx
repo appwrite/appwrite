@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate, useSearch } from '@tanstack/react-router'
-import { BillingPlan } from '@appwrite.io/console'
+import {
+  BillingPlanTier,
+  type BillingPlanTier as BillingPlanTierType,
+} from '@/lib/constants/billing-plan'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -99,7 +102,7 @@ export function ChangePlanWizardFullscreen() {
   const selfService = plan?.selfService !== false
 
   // State management
-  const [selectedPlan, setSelectedPlan] = useState<BillingPlan | null>(null)
+  const [selectedPlan, setSelectedPlan] = useState<BillingPlanTierType | null>(null)
   const [selectedCoupon, setSelectedCoupon] = useState<Models.Coupon | null>(
     null,
   )
@@ -127,9 +130,9 @@ export function ChangePlanWizardFullscreen() {
   const currentPlanTier = organization?.billingPlan || 'tier-0'
   const currentPlanEnum = useMemo(() => {
     try {
-      return currentPlanTier as BillingPlan
+      return currentPlanTier as BillingPlanTierType
     } catch {
-      return BillingPlan.Tier0
+      return BillingPlanTier.Tier0
     }
   }, [currentPlanTier])
 
@@ -180,15 +183,15 @@ export function ChangePlanWizardFullscreen() {
     const planParam = search?.plan as string
     if (
       planParam &&
-      Object.values(BillingPlan).includes(planParam as BillingPlan)
+      Object.values(BillingPlanTier).includes(planParam as BillingPlanTierType)
     ) {
-      setSelectedPlan(planParam as BillingPlan)
+      setSelectedPlan(planParam as BillingPlanTierType)
       setPlanInitialized(true)
     } else if (
       defaultPlan &&
-      Object.values(BillingPlan).includes(defaultPlan as BillingPlan)
+      Object.values(BillingPlanTier).includes(defaultPlan as BillingPlanTierType)
     ) {
-      setSelectedPlan(defaultPlan as BillingPlan)
+      setSelectedPlan(defaultPlan as BillingPlanTierType)
       setPlanInitialized(true)
     }
   }, [search?.plan, defaultPlan, planInitialized])
@@ -245,7 +248,7 @@ export function ChangePlanWizardFullscreen() {
   const shouldFetchEstimation =
     selectedPlan &&
     selectedPlan !== currentPlanEnum &&
-    selectedPlan !== BillingPlan.Tier0 &&
+    selectedPlan !== BillingPlanTier.Tier0 &&
     orgId
 
   // Validate coupon ID - must be a non-empty string that's a valid UID
@@ -318,7 +321,7 @@ export function ChangePlanWizardFullscreen() {
       }
 
       // For free plan: feedback required
-      if (selectedPlan === BillingPlan.Tier0 && !hasFreeOrgs) {
+      if (selectedPlan === BillingPlanTier.Tier0 && !hasFreeOrgs) {
         if (!feedbackDowngradeReason || !feedbackMessage.trim()) return true
       }
     }
@@ -404,7 +407,7 @@ export function ChangePlanWizardFullscreen() {
       }
 
       // Track feedback if downgrading to Free
-      if (selectedPlan === BillingPlan.Tier0 && !hasFreeOrgs) {
+      if (selectedPlan === BillingPlanTier.Tier0 && !hasFreeOrgs) {
         await createDowngradeFeedbackMutation.mutateAsync({
           organizationId: orgId,
           reason: feedbackDowngradeReason,
@@ -440,14 +443,14 @@ export function ChangePlanWizardFullscreen() {
   const showEstimatedTotal =
     selectedPlan &&
     selectedPlan !== currentPlanEnum &&
-    selectedPlan !== BillingPlan.Tier0 &&
+    selectedPlan !== BillingPlanTier.Tier0 &&
     currentPlanEnum !== 'custom' &&
     currentPlanEnum !== 'Custom'
 
   // Show plan comparison box conditions
   const showPlanComparison =
     !showEstimatedTotal ||
-    selectedPlan === BillingPlan.Tier0 ||
+    selectedPlan === BillingPlanTier.Tier0 ||
     selectedPlan === currentPlanEnum ||
     currentPlanEnum === 'custom' ||
     currentPlanEnum === 'Custom'
@@ -589,7 +592,7 @@ export function ChangePlanWizardFullscreen() {
           )}
 
           {/* Downgrade Alerts */}
-          {selectedPlan === BillingPlan.Tier1 && (
+          {selectedPlan === BillingPlanTier.Tier1 && (
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Monthly Charges for Extra Team Members</AlertTitle>
@@ -601,7 +604,7 @@ export function ChangePlanWizardFullscreen() {
             </Alert>
           )}
 
-          {selectedPlan === BillingPlan.Tier0 && (
+          {selectedPlan === BillingPlanTier.Tier0 && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Downgrading to Free Plan</AlertTitle>
@@ -624,7 +627,7 @@ export function ChangePlanWizardFullscreen() {
           )}
 
           {/* Feedback Form for Free Plan */}
-          {selectedPlan === BillingPlan.Tier0 && !hasFreeOrgs && (
+          {selectedPlan === BillingPlanTier.Tier0 && !hasFreeOrgs && (
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-2">
                 Why are you downgrading?

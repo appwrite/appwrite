@@ -190,7 +190,7 @@ function getVcsProvider(
 }
 
 
-export function SiteDeploymentsView() {
+export function View() {
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const navigate = useNavigate()

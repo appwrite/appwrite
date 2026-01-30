@@ -45,7 +45,7 @@ import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 const SITES_PER_PAGE = 25
 const SCREENSHOTS_BUCKET_ID = 'screenshots'
 
-export function SitesView() {
+export function View() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()

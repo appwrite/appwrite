@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { FunctionsView } from '@/components/pages/projects/$projectId/functions/View'
+import { View } from '@/components/pages/projects/$projectId/functions/View'
 import { fetchFunctionTemplates } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -55,5 +55,5 @@ export const Route = createFileRoute(
 
 function FunctionsTemplatesPage() {
   const { projectId } = Route.useParams()
-  return <FunctionsView key={`functions-${projectId}-templates`} />
+  return <View key={`functions-${projectId}-templates`} />
 }

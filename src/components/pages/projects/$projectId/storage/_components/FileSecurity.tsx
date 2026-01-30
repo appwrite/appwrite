@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
-import { PermissionsEditor } from '../auth/PermissionsEditor'
+import { PermissionsEditor } from '../../auth/PermissionsEditor'
 import {
   Dialog,
   DialogContent,

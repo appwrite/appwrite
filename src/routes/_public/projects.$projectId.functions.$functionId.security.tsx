@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { FunctionSecurity } from '@/components/pages/projects/$projectId/functions/Security'
+import { View } from '@/components/pages/projects/$projectId/functions/Security'
 import { projectFunctionQueryOptions } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -20,5 +20,5 @@ export const Route = createFileRoute(
       projectFunctionQueryOptions(projectId, functionId),
     )
   },
-  component: FunctionSecurity,
+  component: View,
 })

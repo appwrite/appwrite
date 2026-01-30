@@ -60,7 +60,7 @@ import type { Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { MessagingProviderIcon } from '@/components/global/shared/MessagingProviderIcon'
 
-export function MessagingView() {
+export function View() {
   const { projectId } = useParams({
     strict: false,
   })

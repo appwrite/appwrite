@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { MessagingView } from '@/components/pages/projects/$projectId/messaging/View'
+import { View } from '@/components/pages/projects/$projectId/messaging/View'
 import {
   topicsQueryOptions,
   fetchProject,
@@ -53,5 +53,5 @@ export const Route = createFileRoute(
 })
 
 function TopicsIndexPage() {
-  return <MessagingView />
+  return <View />
 }

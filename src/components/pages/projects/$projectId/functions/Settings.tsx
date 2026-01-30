@@ -42,7 +42,7 @@ const CONTACT_SALES_URL =
   import.meta.env.VITE_CONTACT_SALES_URL ||
   'https://appwrite.io/contact-us/enterprise'
 
-export function FunctionSettings() {
+export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ApiKeysView } from '@/components/pages/projects/$projectId/api-keys/View'
+import { View } from '@/components/pages/projects/$projectId/api-keys/View'
 import { fetchApiKeys, fetchProject } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/projects/$projectId/api-keys')({
@@ -32,5 +32,5 @@ export const Route = createFileRoute('/_public/projects/$projectId/api-keys')({
 })
 
 function ApiKeysPage() {
-  return <ApiKeysView />
+  return <View />
 }

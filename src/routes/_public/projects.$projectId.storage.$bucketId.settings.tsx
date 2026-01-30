@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { BucketDetailView } from '@/components/pages/projects/$projectId/storage/$bucketId/View'
+import { View } from '@/components/pages/projects/$projectId/storage/$bucketId/View'
 import { fetchBucket } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -28,5 +28,5 @@ export const Route = createFileRoute(
 })
 
 function BucketSettingsPage() {
-  return <BucketDetailView />
+  return <View />
 }

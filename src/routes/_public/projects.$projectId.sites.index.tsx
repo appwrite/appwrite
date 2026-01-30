@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { SitesView } from '@/components/pages/projects/$projectId/sites/View'
+import { View } from '@/components/pages/projects/$projectId/sites/View'
 import {
   sitesQueryOptions,
   fetchProject,
@@ -51,5 +51,5 @@ export const Route = createFileRoute('/_public/projects/$projectId/sites/')({
 
 function SitesIndexPage() {
   const { projectId } = Route.useParams()
-  return <SitesView key={`sites-${projectId}-index`} />
+  return <View key={`sites-${projectId}-index`} />
 }

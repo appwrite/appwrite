@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { TeamDetailView } from '@/components/pages/projects/$projectId/auth/teams/View'
+import { View } from '@/components/pages/projects/$projectId/auth/teams/View'
 import { fetchTeam } from '@/lib/react-query/hooks/users'
 
 export const Route = createFileRoute(
@@ -28,5 +28,5 @@ export const Route = createFileRoute(
 
 function TeamActivityPage() {
   const { projectId, teamId } = Route.useParams()
-  return <TeamDetailView key={`team-${projectId}-${teamId}`} />
+  return <View key={`team-${projectId}-${teamId}`} />
 }

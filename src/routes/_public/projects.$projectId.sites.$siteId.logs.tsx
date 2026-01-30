@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { SiteLogsView } from '@/components/pages/projects/$projectId/sites/SiteLogs'
+import { View } from '@/components/pages/projects/$projectId/sites/Logs'
 import {
   siteQueryOptions,
   siteLogsQueryOptions,
@@ -50,5 +50,5 @@ export const Route = createFileRoute(
 })
 
 function SiteLogsPage() {
-  return <SiteLogsView />
+  return <View />
 }

@@ -196,7 +196,7 @@ function BrowserIcon({
   )
 }
 
-export function UserDetailView() {
+export function View() {
   const { projectId, userId } = useParams({
     strict: false,
   })

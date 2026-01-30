@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
-import { FirewallView } from '@/components/pages/projects/$projectId/firewall/View'
+import { View } from '@/components/pages/projects/$projectId/firewall/View'
 
 export const Route = createFileRoute('/_public/projects/$projectId/firewall')({
   component: FirewallPage,
@@ -23,5 +23,5 @@ function FirewallPage() {
   }
 
   // Otherwise, show the firewall view
-  return <FirewallView />
+  return <View />
 }

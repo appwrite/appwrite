@@ -10,7 +10,7 @@ import { TimeoutCard } from './settings/TimeoutCard'
 import { LoggingCard } from './settings/LoggingCard'
 import { DangerZoneCard } from './settings/DangerZoneCard'
 
-export function SiteSettingsView() {
+export function View() {
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
 

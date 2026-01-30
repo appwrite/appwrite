@@ -11,7 +11,7 @@ import { DeploymentDetailView } from '@/components/global/shared/DeploymentDetai
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { toast } from 'sonner'
 
-export function FunctionDeploymentDetailView() {
+export function View() {
   const { projectId, functionId, deploymentId } = useParams({ strict: false })
 
   const { data: deployment, isLoading } = useFunctionDeployment(

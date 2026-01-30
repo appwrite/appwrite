@@ -266,7 +266,7 @@ function DeviceBreakdown({
   )
 }
 
-export function AnalyticsView() {
+export function View() {
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
   const navigate = useNavigate()

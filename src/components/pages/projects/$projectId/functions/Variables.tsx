@@ -1,7 +1,7 @@
 import { useParams } from '@tanstack/react-router'
 import { FunctionVariablesCard } from './VariablesCard'
 
-export function FunctionVariables() {
+export function View() {
   const { projectId, functionId } = useParams({ strict: false })
 
   return (

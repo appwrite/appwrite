@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { DashboardOverview } from '@/components/pages/projects/$projectId/overview/Overview'
+import { View } from '@/components/pages/projects/$projectId/overview/Overview'
 import { fetchProject } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/projects/$projectId/')({
@@ -28,5 +28,5 @@ export const Route = createFileRoute('/_public/projects/$projectId/')({
 
 function ProjectOverviewPage() {
   const { projectId } = Route.useParams()
-  return <DashboardOverview projectId={projectId} />
+  return <View projectId={projectId} />
 }

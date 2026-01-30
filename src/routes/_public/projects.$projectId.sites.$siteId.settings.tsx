@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { SiteSettingsView } from '@/components/pages/projects/$projectId/sites/SiteSettings'
+import { View } from '@/components/pages/projects/$projectId/sites/Settings'
 import {
   siteQueryOptions,
   siteVariablesQueryOptions,
@@ -56,5 +56,5 @@ export const Route = createFileRoute(
 })
 
 function SiteSettingsPage() {
-  return <SiteSettingsView />
+  return <View />
 }

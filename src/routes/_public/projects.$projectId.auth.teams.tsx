@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
-import { AuthView } from '@/components/pages/projects/$projectId/auth/View'
+import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { fetchProjectTeams } from '@/lib/react-query/hooks'
 
 const TEAMS_PER_PAGE = 25
@@ -48,5 +48,5 @@ function AuthTeamsPage() {
   }
 
   // Otherwise, show the teams list view
-  return <AuthView key={`auth-${projectId}-teams`} />
+  return <View key={`auth-${projectId}-teams`} />
 }

@@ -44,7 +44,7 @@ function getDomainStatusBadge(status: string) {
   return statusMap[status] || { label: status, variant: 'outline' }
 }
 
-export function FunctionDomains() {
+export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const search = useSearch({ strict: false }) as { search?: string }
   const [currentPage, setCurrentPage] = useState(0)

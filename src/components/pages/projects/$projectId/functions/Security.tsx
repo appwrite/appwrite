@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import { PermissionsEditor } from '@/components/pages/projects/$projectId/auth/PermissionsEditor'
 import { ScopeEditor } from '@/components/global/shared/ScopeEditor'
 
-export function FunctionSecurity() {
+export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
 

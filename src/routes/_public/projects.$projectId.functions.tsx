@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
-import { FunctionsView } from '@/components/pages/projects/$projectId/functions/View'
+import { View } from '@/components/pages/projects/$projectId/functions/View'
 
 export const Route = createFileRoute('/_public/projects/$projectId/functions')({
   component: FunctionsPage,
@@ -25,5 +25,5 @@ function FunctionsPage() {
   }
 
   // Otherwise, show the functions list view
-  return <FunctionsView />
+  return <View />
 }

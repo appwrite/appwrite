@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { FunctionExecutions } from '@/components/pages/projects/$projectId/functions/Executions'
+import { View } from '@/components/pages/projects/$projectId/functions/Executions'
 import {
   projectFunctionQueryOptions,
   functionExecutionsQueryOptions,
@@ -50,5 +50,5 @@ export const Route = createFileRoute(
       ),
     ])
   },
-  component: FunctionExecutions,
+  component: View,
 })

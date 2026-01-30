@@ -16,7 +16,7 @@ import { Upload, X, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
 
-interface UploadFileDialogProps {
+interface UploadFileProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUpload: (data: {
@@ -28,13 +28,13 @@ interface UploadFileDialogProps {
   isLoading?: boolean
 }
 
-export function UploadFileDialog({
+export function UploadFile({
   open,
   onOpenChange,
   onUpload,
   bucket,
   isLoading = false,
-}: UploadFileDialogProps) {
+}: UploadFileProps) {
   const [fileId, setFileId] = useState<string | undefined>(undefined)
   const [file, setFile] = useState<File | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})

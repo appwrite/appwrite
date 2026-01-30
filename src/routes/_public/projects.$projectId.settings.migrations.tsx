@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ProjectSettingsView } from '@/components/pages/projects/$projectId/settings/View'
+import { View } from '@/components/pages/projects/$projectId/settings/View'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/settings/migrations',
@@ -8,5 +8,5 @@ export const Route = createFileRoute(
 })
 
 function SettingsMigrationsPage() {
-  return <ProjectSettingsView />
+  return <View />
 }

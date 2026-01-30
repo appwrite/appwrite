@@ -216,7 +216,7 @@ function getVcsProvider(
 }
 
 
-export function FunctionDeployments() {
+export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const navigate = useNavigate()

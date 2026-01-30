@@ -58,11 +58,11 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { ID } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { CreateBucketDialog } from './CreateBucket'
+import { CreateBucket } from './_components/CreateBucket'
 import type { Models } from '@appwrite.io/console'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 
-export function StorageView() {
+export function View() {
   const { projectId } = useParams({
     strict: false,
   })
@@ -670,7 +670,7 @@ export function StorageView() {
         </Dialog>
       </div>
 
-      <CreateBucketDialog
+      <CreateBucket
         open={createBucketDialogOpen}
         onOpenChange={setCreateBucketDialogOpen}
         onCreate={(data) => createBucketMutation.mutate(data)}

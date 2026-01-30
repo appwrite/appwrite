@@ -89,35 +89,35 @@ export function SimplePagination({
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-1',
+        'flex items-center justify-center gap-0',
         className,
       )}
     >
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={handlePreviousPage}
-        disabled={!canGoPrevious || disabled}
-        aria-label="Go to previous page"
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-
-      <span className="flex items-center justify-center min-w-[2rem] h-8 px-2 text-[12px] font-medium text-muted-foreground tabular-nums">
-        {currentPage}
-      </span>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-8 w-8 p-0"
-        onClick={handleNextPage}
-        disabled={!canGoNext || disabled}
-        aria-label="Go to next page"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
+      <div className="inline-flex items-center rounded-md border border-border bg-muted/30 overflow-hidden">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-none border-0 border-r border-border hover:bg-muted/80"
+          onClick={handlePreviousPage}
+          disabled={!canGoPrevious || disabled}
+          aria-label="Go to previous page"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="flex items-center justify-center min-w-[2.25rem] h-8 px-2.5 text-[12px] font-medium text-muted-foreground tabular-nums border-r border-border">
+          {currentPage}
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-none border-0 hover:bg-muted/80"
+          onClick={handleNextPage}
+          disabled={!canGoNext || disabled}
+          aria-label="Go to next page"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   )
 }
@@ -237,12 +237,12 @@ export function Pagination({
   return (
     <div
       className={cn(
-        '@container flex items-center justify-between gap-2 py-2 text-[12px] text-muted-foreground w-full',
+        '@container flex items-center justify-between gap-2 min-h-8 py-3 text-[12px] text-muted-foreground w-full',
         className,
       )}
     >
       {/* Left side - Total count and page size selector */}
-      <div className="flex items-center gap-3 min-w-0 mt-2">
+      <div className="flex items-center gap-3 min-w-0">
         {showTotal && (
           <span className="hidden @[600px]:inline whitespace-nowrap">
             {totalItems === 0
@@ -252,12 +252,14 @@ export function Pagination({
         )}
 
         <div className="hidden items-center gap-2 @[800px]:flex">
-          <span className="text-muted-foreground whitespace-nowrap">Show</span>
+          <span className="text-muted-foreground whitespace-nowrap text-[12px]">
+            Show
+          </span>
           <Select
             value={pageSize.toString()}
             onValueChange={handlePageSizeChange}
           >
-            <SelectTrigger className="h-6 w-[70px] text-[12px]">
+            <SelectTrigger className="h-8 w-[72px] text-[12px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -268,65 +270,67 @@ export function Pagination({
               ))}
             </SelectContent>
           </Select>
-          <span className="text-muted-foreground whitespace-nowrap">
+          <span className="text-muted-foreground whitespace-nowrap text-[12px]">
             per page
           </span>
         </div>
       </div>
 
       {/* Right side - Page navigation */}
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="hidden h-7 w-7 p-0 @[500px]:inline-flex"
-          onClick={handleFirstPage}
-          disabled={!canGoPrevious}
-          aria-label="Go to first page"
-        >
-          <ChevronsLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0"
-          onClick={handlePreviousPage}
-          disabled={!canGoPrevious}
-          aria-label="Go to previous page"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-
-        <div className="hidden items-center gap-1.5 px-2 @[400px]:flex">
-          <span className="whitespace-nowrap">Page</span>
-          <div className="flex items-center gap-1 rounded border border-border bg-background px-2 py-0.5 font-medium text-foreground">
-            <span>{currentPage}</span>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="inline-flex items-center rounded-md border border-border bg-muted/30 overflow-hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden h-8 w-8 rounded-none border-0 border-r border-border @[500px]:inline-flex hover:bg-muted/80"
+            onClick={handleFirstPage}
+            disabled={!canGoPrevious}
+            aria-label="Go to first page"
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-none border-0 border-r border-border hover:bg-muted/80"
+            onClick={handlePreviousPage}
+            disabled={!canGoPrevious}
+            aria-label="Go to previous page"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="hidden items-center gap-1.5 h-8 px-3 border-r border-border @[400px]:flex">
+            <span className="text-muted-foreground whitespace-nowrap text-[12px]">
+              Page
+            </span>
+            <span className="font-medium text-foreground tabular-nums text-[12px]">
+              {currentPage}
+            </span>
+            <span className="text-muted-foreground whitespace-nowrap text-[12px]">
+              of {totalPages.toLocaleString()}
+            </span>
           </div>
-          <span className="whitespace-nowrap">
-            of {totalPages.toLocaleString()}
-          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-none border-0 border-r border-border hover:bg-muted/80"
+            onClick={handleNextPage}
+            disabled={!canGoNext}
+            aria-label="Go to next page"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden h-8 w-8 rounded-none border-0 @[500px]:inline-flex hover:bg-muted/80"
+            onClick={handleLastPage}
+            disabled={!canGoNext}
+            aria-label="Go to last page"
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
         </div>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0"
-          onClick={handleNextPage}
-          disabled={!canGoNext}
-          aria-label="Go to next page"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="hidden h-7 w-7 p-0 @[500px]:inline-flex"
-          onClick={handleLastPage}
-          disabled={!canGoNext}
-          aria-label="Go to last page"
-        >
-          <ChevronsRight className="h-4 w-4" />
-        </Button>
       </div>
     </div>
   )

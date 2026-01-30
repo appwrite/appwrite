@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { ServiceHeader, type Tab } from '../../../shared/ServiceHeader'
-import { FileSecurity } from '../../FileSecurity'
+import { FileSecurity } from '../../_components/FileSecurity'
 import {
   Dialog,
   DialogContent,
@@ -56,7 +56,7 @@ import { Link } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'
 import { ID } from '@appwrite.io/console'
 
-export function FileView() {
+export function View() {
   const { projectId, bucketId, fileId } = useParams({
     strict: false,
   })

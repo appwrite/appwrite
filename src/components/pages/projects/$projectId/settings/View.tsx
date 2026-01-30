@@ -7,7 +7,7 @@ import { Webhooks } from './Webhooks'
 import { Migrations } from './Migrations'
 import { SMTP } from './SMTP'
 
-export function ProjectSettingsView() {
+export function View() {
   const params = useParams({ strict: false })
   const location = useLocation()
   const projectId = params.projectId as string

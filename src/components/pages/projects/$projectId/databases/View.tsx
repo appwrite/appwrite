@@ -217,7 +217,7 @@ const bodyCellBorderClass =
 const lastCellBorderClass = 'border-b border-gray-200 dark:border-border'
 
 // Main databases list view - used at /projects/:projectId/databases
-export function DatabasesListView() {
+export function View() {
   const { projectId } = useParams({
     from: '/_public/projects/$projectId/databases/',
   })
@@ -1705,7 +1705,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
 
 // Legacy export for backwards compatibility
 export function DatabasesView() {
-  return <DatabasesListView />
+  return <View />
 }
 
 // Empty state when database has no tables

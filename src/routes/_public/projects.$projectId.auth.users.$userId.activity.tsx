@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { UserDetailView } from '@/components/pages/projects/$projectId/auth/users/View'
+import { View } from '@/components/pages/projects/$projectId/auth/users/View'
 import { fetchUser, fetchUserMFAFactors } from '@/lib/react-query/hooks/users'
 
 export const Route = createFileRoute(
@@ -35,5 +35,5 @@ export const Route = createFileRoute(
 })
 
 function UserActivityPage() {
-  return <UserDetailView />
+  return <View />
 }

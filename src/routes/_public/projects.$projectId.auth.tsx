@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
-import { AuthView } from '@/components/pages/projects/$projectId/auth/View'
+import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { usersQueryOptions } from '@/lib/react-query/hooks'
 
 const USERS_PER_PAGE = 25
@@ -51,5 +51,5 @@ function AuthPage() {
   }
 
   // Otherwise, show the main auth view
-  return <AuthView key={`auth-${projectId}-users`} />
+  return <View key={`auth-${projectId}-users`} />
 }

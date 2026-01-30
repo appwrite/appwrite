@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { SiteDeploymentDetailView } from '@/components/pages/projects/$projectId/sites/deployments/$deploymentId/View'
+import { View } from '@/components/pages/projects/$projectId/sites/deployments/$deploymentId/View'
 import {
   siteQueryOptions,
   siteDeploymentQueryOptions,
@@ -41,5 +41,5 @@ export const Route = createFileRoute(
 })
 
 function SiteDeploymentDetailPage() {
-  return <SiteDeploymentDetailView />
+  return <View />
 }

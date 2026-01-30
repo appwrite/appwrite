@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { SiteUsageView } from '@/components/pages/projects/$projectId/sites/SiteUsage'
+import { View } from '@/components/pages/projects/$projectId/sites/Usage'
 import {
   siteQueryOptions,
   siteUsageQueryOptions,
@@ -34,5 +34,5 @@ export const Route = createFileRoute(
 })
 
 function SiteUsagePage() {
-  return <SiteUsageView />
+  return <View />
 }

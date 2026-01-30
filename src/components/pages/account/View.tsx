@@ -29,11 +29,11 @@ const tabs: Tab[] = [
   },
 ]
 
-interface AccountViewProps {
+interface ViewProps {
   activeTab?: string
 }
 
-export function AccountView({ activeTab: tabProp }: AccountViewProps) {
+export function View({ activeTab: tabProp }: ViewProps) {
   const location = useLocation()
   const { account, signOut } = useAuth()
   const [commandCenterOpen, setCommandCenterOpen] = useState(false)

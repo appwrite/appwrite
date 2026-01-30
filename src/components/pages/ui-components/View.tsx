@@ -513,7 +513,7 @@ const CATEGORIES: { id: Category; label: string; icon: typeof Component }[] = [
   { id: 'data-display', label: 'Data Display', icon: Table },
 ]
 
-export function UIComponentsView() {
+export function View() {
   const [selectedCategory, setSelectedCategory] = useState<Category>('all')
 
   const filteredComponents = useMemo(() => {

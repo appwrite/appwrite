@@ -57,9 +57,9 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { ID } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { UploadFileDialog } from '../UploadFile'
-import { BucketSettings } from '../BucketSettings'
-import { BucketSecurity } from '../BucketSecurity'
+import { UploadFile } from '../_components/UploadFile'
+import { BucketSettings } from '../_components/BucketSettings'
+import { BucketSecurity } from '../_components/BucketSecurity'
 import { useUploadQueue } from '@/lib/upload-queue/use-upload-queue'
 import type { Models } from '@appwrite.io/console'
 
@@ -77,7 +77,7 @@ function getFileIconColor(type: string) {
   return 'bg-muted text-muted-foreground'
 }
 
-export function BucketDetailView() {
+export function View() {
   const { projectId, bucketId } = useParams({
     strict: false,
   })
@@ -944,7 +944,7 @@ export function BucketDetailView() {
         {activeTab === 'settings' && <BucketSettings />}
       </div>
 
-      <UploadFileDialog
+      <UploadFile
         open={uploadFileDialogOpen}
         onOpenChange={setUploadFileDialogOpen}
         onUpload={handleFileUpload}

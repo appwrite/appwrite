@@ -45,7 +45,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-export function TopicDetailView() {
+export function View() {
   const { projectId, topicId } = useParams({
     strict: false,
   })

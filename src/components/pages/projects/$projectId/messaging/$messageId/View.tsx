@@ -60,7 +60,7 @@ import { formatDateTime } from '@/lib/date-utils'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 
-export function MessageDetailView() {
+export function View() {
   const { projectId, messageId } = useParams({
     strict: false,
   })

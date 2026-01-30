@@ -1,4 +1,4 @@
-import { DomainDetailView } from '@/components/pages/organizations/$orgId/domains/$domainId/View'
+import { View } from '@/components/pages/organizations/$orgId/domains/$domainId/View'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   organizationsQueryOptions,
@@ -40,5 +40,5 @@ export const Route = createFileRoute(
 
 function DomainDetailPage() {
   const { orgId, domainId } = Route.useParams()
-  return <DomainDetailView key={`domain-${domainId}-index`} />
+  return <View key={`domain-${domainId}-index`} />
 }

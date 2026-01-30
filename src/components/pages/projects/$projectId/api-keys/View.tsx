@@ -23,7 +23,7 @@ import {
 import { Button } from '@/components/ui/button'
 import type { Models } from '@appwrite.io/console'
 
-export function ApiKeysView() {
+export function View() {
   const { projectId } = useParams({
     strict: false,
   })

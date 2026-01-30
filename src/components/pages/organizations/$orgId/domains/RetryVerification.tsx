@@ -19,7 +19,7 @@ import { Copy, Check, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 
-interface RetryVerificationDialogProps {
+interface RetryVerificationProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   domain: Models.Domain
@@ -29,13 +29,13 @@ interface RetryVerificationDialogProps {
 
 const NAMESERVERS = ['ns1.appwrite.io', 'ns2.appwrite.io']
 
-export function RetryVerificationDialog({
+export function RetryVerification({
   open,
   onOpenChange,
   domain,
   onRetry,
   isLoading = false,
-}: RetryVerificationDialogProps) {
+}: RetryVerificationProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
 
   const handleRetry = () => {

@@ -11,7 +11,8 @@ import {
   queryOptions,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { Query, ID, BillingPlan } from '@appwrite.io/console'
+import { Query, ID } from '@appwrite.io/console'
+import { BillingPlanTier, type BillingPlanTier as BillingPlanTierType } from '@/lib/constants/billing-plan'
 import type { Organization } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
@@ -22,25 +23,21 @@ import {
 } from './constants'
 
 /**
- * Convert a billing plan string to BillingPlan enum value
- * The enum values are strings, so we can use the string directly if it's valid
+ * Convert a billing plan string to BillingPlanTier value
+ * The values are strings like 'tier-0', 'tier-1', etc.
  */
-function getBillingPlanEnum(planString: string): BillingPlan {
+function getBillingPlanEnum(planString: string): BillingPlanTierType {
   if (!planString) {
     throw new Error('Billing plan is required')
   }
 
-  // The enum values are strings like 'tier-0', 'tier-1', etc.
-  // Check if the string matches any enum value
-  const enumValues = Object.values(BillingPlan) as string[]
+  const enumValues = Object.values(BillingPlanTier) as string[]
   const normalized = planString.trim()
 
   if (enumValues.includes(normalized)) {
-    return normalized as BillingPlan
+    return normalized as BillingPlanTierType
   }
 
-  // If not found, throw an error rather than defaulting
-  // This prevents accidentally changing plans or using invalid values
   throw new Error(
     `Invalid billing plan: ${planString}. Valid plans: ${enumValues.join(', ')}`,
   )
@@ -390,7 +387,7 @@ export async function fetchOrganizationProjects(organizationId: string) {
  * @returns Estimation data
  */
 export async function fetchEstimationCreateOrganization(
-  billingPlan: BillingPlan,
+  billingPlan: BillingPlanTierType,
   couponId: string | null,
   collaborators: string[],
 ) {
@@ -430,7 +427,7 @@ export async function fetchEstimationCreateOrganization(
  */
 export async function fetchEstimationUpdatePlan(
   organizationId: string,
-  billingPlan: BillingPlan,
+  billingPlan: BillingPlanTierType,
   couponId: string | null | undefined,
   collaborators: string[],
 ) {
@@ -506,7 +503,7 @@ export async function createOrganization(orgData: {
   return await sdk.forConsole.organizations.create({
     organizationId,
     name: orgData.name.trim(),
-    billingPlan: BillingPlan.Tier0, // Free tier by default
+    billingPlan: BillingPlanTier.Tier0, // Free tier by default
   })
 }
 
@@ -625,7 +622,7 @@ export async function updateOrganizationBillingAddress(params: {
  */
 export async function updateOrganizationPlan(params: {
   organizationId: string
-  billingPlan: BillingPlan
+  billingPlan: BillingPlanTierType
   paymentMethodId?: string
   billingAddressId?: string
   couponId?: string
@@ -1936,7 +1933,7 @@ export function useOrganizationProjects(
  * @returns Estimation data with loading state
  */
 export function useEstimationCreateOrganization(
-  billingPlan: BillingPlan | null | undefined,
+  billingPlan: BillingPlanTierType | null | undefined,
   couponId: string | null | undefined,
   collaborators: string[],
 ) {
@@ -1989,7 +1986,7 @@ export function useEstimationCreateOrganization(
  */
 export function useEstimationUpdatePlan(
   organizationId: string | null | undefined,
-  billingPlan: BillingPlan | null | undefined,
+  billingPlan: BillingPlanTierType | null | undefined,
   couponId: string | null | undefined,
   collaborators: string[],
 ) {

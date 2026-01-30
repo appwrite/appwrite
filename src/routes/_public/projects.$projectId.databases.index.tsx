@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { DatabasesListView } from '@/components/pages/projects/$projectId/databases/View'
+import { View } from '@/components/pages/projects/$projectId/databases/View'
 import {
   databasesQueryOptions,
   projectQueryOptions,
@@ -52,5 +52,5 @@ export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
 )
 
 function DatabasesIndexPage() {
-  return <DatabasesListView />
+  return <View />
 }

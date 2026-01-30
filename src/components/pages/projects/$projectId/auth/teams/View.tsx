@@ -9,7 +9,7 @@ import { useTeam } from '@/lib/react-query/hooks'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { Button } from '@/components/ui/button'
 
-export function TeamDetailView() {
+export function View() {
   const { projectId, teamId } = useParams({
     strict: false,
   })

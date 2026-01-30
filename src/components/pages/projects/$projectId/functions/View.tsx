@@ -56,7 +56,7 @@ function getRuntimePrefix(runtime: string): string {
   return runtime.split('-')[0] || 'unknown'
 }
 
-export function FunctionsView() {
+export function View() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()

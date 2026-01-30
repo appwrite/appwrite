@@ -57,7 +57,7 @@ import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { CreateDomainDialog } from './CreateDomain'
 import { DeleteDomainDialog } from './DeleteDomain'
-import { RetryVerificationDialog } from './RetryVerification'
+import { RetryVerification } from './RetryVerification'
 import type { Models } from '@appwrite.io/console'
 import {
   useCreateOrganizationDomain,
@@ -65,7 +65,7 @@ import {
   useRetryDomainVerification,
 } from '@/lib/react-query/hooks'
 
-export function DomainsView() {
+export function View() {
   const { orgId } = useParams({
     strict: false,
   })
@@ -673,7 +673,7 @@ export function DomainsView() {
 
       {/* Retry Verification Dialog */}
       {selectedDomain && (
-        <RetryVerificationDialog
+        <RetryVerification
           open={retryDialogOpen}
           onOpenChange={setRetryDialogOpen}
           domain={selectedDomain}

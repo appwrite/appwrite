@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { FunctionsView } from '@/components/pages/projects/$projectId/functions/View'
+import { View } from '@/components/pages/projects/$projectId/functions/View'
 import {
   functionsQueryOptions,
   fetchProject,
@@ -53,5 +53,5 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions/')(
 
 function FunctionsIndexPage() {
   const { projectId } = Route.useParams()
-  return <FunctionsView key={`functions-${projectId}-index`} />
+  return <View key={`functions-${projectId}-index`} />
 }

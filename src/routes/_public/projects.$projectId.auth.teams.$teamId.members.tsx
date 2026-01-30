@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { TeamDetailView } from '@/components/pages/projects/$projectId/auth/teams/View'
+import { View } from '@/components/pages/projects/$projectId/auth/teams/View'
 import { fetchTeam, fetchTeamMemberships } from '@/lib/react-query/hooks/users'
 
 const MEMBERSHIPS_PER_PAGE = 25
@@ -55,5 +55,5 @@ export const Route = createFileRoute(
 
 function TeamMembersPage() {
   const { projectId, teamId } = Route.useParams()
-  return <TeamDetailView key={`team-${projectId}-${teamId}`} />
+  return <View key={`team-${projectId}-${teamId}`} />
 }

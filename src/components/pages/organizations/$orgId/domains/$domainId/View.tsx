@@ -75,7 +75,7 @@ import { CreateRecordDialog } from './CreateRecord'
 import { UpdateRecordDialog } from './UpdateRecord'
 import { DeleteRecordDialog } from './DeleteRecord'
 import { ImportZoneDialog } from './ImportZone'
-import { RetryVerificationDialog } from '../RetryVerification'
+import { RetryVerification } from '../RetryVerification'
 import type { Models } from '@appwrite.io/console'
 import {
   useCreateDnsRecord,
@@ -90,7 +90,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 
-export function DomainDetailView() {
+export function View() {
   const { orgId, domainId } = useParams({
     strict: false,
   })
@@ -1415,7 +1415,7 @@ export function DomainDetailView() {
 
       {/* Retry Verification Dialog */}
       {domain && (
-        <RetryVerificationDialog
+        <RetryVerification
           open={retryDialogOpen}
           onOpenChange={setRetryDialogOpen}
           domain={domain}

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { ActivityView } from '@/components/pages/projects/$projectId/activity/View'
+import { View } from '@/components/pages/projects/$projectId/activity/View'
 
 export const Route = createFileRoute('/_public/projects/$projectId/activity')({
   component: ActivityPage,
@@ -8,5 +8,5 @@ export const Route = createFileRoute('/_public/projects/$projectId/activity')({
 function ActivityPage() {
   // In a real app, you'd get the plan from the organization context
   // For now, we'll use 'pro' as the default
-  return <ActivityView plan="pro" />
+  return <View plan="pro" />
 }

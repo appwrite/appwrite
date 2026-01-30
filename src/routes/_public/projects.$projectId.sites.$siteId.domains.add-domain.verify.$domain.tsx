@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { VerifyDomainView } from '@/components/pages/projects/$projectId/sites/VerifyDomain'
+import { View } from '@/components/pages/projects/$projectId/sites/VerifyDomain'
 import {
   siteQueryOptions,
   fetchProject,
@@ -64,5 +64,5 @@ export const Route = createFileRoute(
 })
 
 function VerifyDomainPage() {
-  return <VerifyDomainView />
+  return <View />
 }

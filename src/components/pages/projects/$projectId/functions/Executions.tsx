@@ -40,7 +40,7 @@ export function getStatusCodeBadge(statusCode: number) {
   return { variant: 'error' as const }
 }
 
-export function FunctionExecutions() {
+export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()

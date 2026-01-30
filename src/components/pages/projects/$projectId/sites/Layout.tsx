@@ -11,7 +11,7 @@ import {
 } from '@/components/global/shared/RefreshContext'
 import { toast } from 'sonner'
 
-export function SiteLayout() {
+export function Layout() {
   return (
     <RefreshProvider>
       <SiteLayoutContent />

@@ -17,7 +17,7 @@ import {
   useRefresh,
 } from '@/components/global/shared/RefreshContext'
 
-export function FunctionLayout() {
+export function Layout() {
   return (
     <RefreshProvider>
       <FunctionLayoutContent />

@@ -10,7 +10,7 @@ import { useRefreshOptional } from '@/components/global/shared/RefreshContext'
 
 const LOGS_PER_PAGE = 25
 
-export function SiteLogsView() {
+export function View() {
   const { projectId, siteId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()

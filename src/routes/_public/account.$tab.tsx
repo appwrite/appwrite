@@ -1,4 +1,4 @@
-import { AccountView } from '@/components/pages/account/View'
+import { View } from '@/components/pages/account/View'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
@@ -87,7 +87,7 @@ function AccountPage() {
   const { tab } = Route.useParams()
   return (
     <RequireAuth>
-      <AccountView activeTab={tab} />
+      <View activeTab={tab} />
     </RequireAuth>
   )
 }

@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
-import { FunctionLayout } from '@/components/pages/projects/$projectId/functions/FunctionLayout'
+import { Layout } from '@/components/pages/projects/$projectId/functions/Layout'
 import { projectFunctionQueryOptions } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -20,10 +20,10 @@ export const Route = createFileRoute(
       projectFunctionQueryOptions(projectId, functionId),
     )
   },
-  component: FunctionLayoutWrapper,
+  component: LayoutWrapper,
 })
 
-function FunctionLayoutWrapper() {
+function LayoutWrapper() {
   const matches = useMatches()
 
   // Check if we're on a deployment detail route (should not have function tabs)
@@ -42,6 +42,6 @@ function FunctionLayoutWrapper() {
     return <Outlet />
   }
 
-  // For other routes, render FunctionLayout which provides tabs
-  return <FunctionLayout />
+  // For other routes, render Layout which provides tabs
+  return <Layout />
 }

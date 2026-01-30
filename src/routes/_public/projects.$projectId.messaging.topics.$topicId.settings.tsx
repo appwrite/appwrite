@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { TopicSettingsView } from '@/components/pages/projects/$projectId/messaging/TopicSettings'
+import { View } from '@/components/pages/projects/$projectId/messaging/TopicSettings'
 import { fetchTopic } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -28,5 +28,5 @@ export const Route = createFileRoute(
 })
 
 function TopicSettingsPage() {
-  return <TopicSettingsView />
+  return <View />
 }

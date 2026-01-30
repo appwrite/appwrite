@@ -10,7 +10,7 @@ import { RealtimeMessages } from './Messages'
 import { RealtimeChannels } from './Channels'
 import { ComingSoonCurtain } from '@/components/ui/coming-soon-curtain'
 
-export function RealtimeView() {
+export function View() {
   const { projectId } = useParams({ strict: false })
   const location = useLocation()
 

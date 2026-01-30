@@ -326,11 +326,11 @@ const resourceTypeOptions = [
   { value: 'project', label: 'Project' },
 ]
 
-interface ActivityViewProps {
+interface ViewProps {
   plan?: PlanType
 }
 
-export function ActivityView({ plan = 'pro' }: ActivityViewProps) {
+export function View({ plan = 'pro' }: ViewProps) {
   const [searchValue, setSearchValue] = useState('')
   const [actionFilter, setActionFilter] = useState<string>('')
   const [resourceTypeFilter, setResourceTypeFilter] = useState<string>('')

@@ -1,4 +1,4 @@
-import { DomainsView } from '@/components/pages/organizations/$orgId/domains/View'
+import { View } from '@/components/pages/organizations/$orgId/domains/View'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   organizationsQueryOptions,
@@ -32,5 +32,5 @@ export const Route = createFileRoute('/_public/organizations/$orgId/domains/')({
 })
 
 function DomainsIndexPage() {
-  return <DomainsView />
+  return <View />
 }

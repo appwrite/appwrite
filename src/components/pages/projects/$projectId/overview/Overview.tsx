@@ -176,11 +176,11 @@ function getPlatformDisplayName(platform: string): string {
   )
 }
 
-interface DashboardOverviewProps {
+interface ViewProps {
   projectId: string
 }
 
-export function DashboardOverview({ projectId }: DashboardOverviewProps) {
+export function View({ projectId }: ViewProps) {
   const [activeTab, setActiveTab] = useState('bandwidth')
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false)

@@ -33,7 +33,10 @@ const databases = await projectSdk.tablesDB.list() // Returns Models.DatabaseLis
 - **Route-aligned structure**: Components match route paths
 - **Global components**: `components/global/` (layout, auth, shared, providers)
 - **Page components**: `components/pages/` organized by route
-- **Naming**: Main views = `View.tsx`, dialogs = `CreateResource.tsx` (no "Dialog" suffix), detail views in `$resourceId/View.tsx`
+- **Naming** (see below for full page naming conventions):
+  - **List and detail pages**: Always `View.tsx`; export the page component as `View`. Detail pages live in `$resourceId/View.tsx` (e.g. `storage/$bucketId/View.tsx`), not in separate `*Detail.tsx` files.
+  - **Dialogs**: `CreateResource.tsx` or `UploadResource.tsx` (no "Dialog" suffix); export the component with the same name as the file (e.g. `CreateBucket`, `UploadFile`).
+  - **Settings/tabs**: `Settings.tsx`, `Security.tsx`, or `ResourceSettings.tsx` (e.g. `BucketSettings.tsx`, `TopicSettings.tsx`); export as `View` or a descriptive name.
 - **No namespace repetition**: Never repeat a namespace in the name itself for paths, variable names, or any names. For example, use `/sites/create` not `/sites/create-site`, since we're already in the `sites` namespace.
 
 **Import patterns:**
@@ -42,8 +45,8 @@ const databases = await projectSdk.tablesDB.list() // Returns Models.DatabaseLis
 // Global
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 
-// Page components
-import { StorageView } from '@/components/pages/projects/$projectId/storage/View'
+// Page components (View.tsx always exports View)
+import { View } from '@/components/pages/projects/$projectId/storage/View'
 
 // Sibling components (same feature)
 import { BucketSettings } from '../BucketSettings'
@@ -623,6 +626,15 @@ src/components/
 │   │   ├── storage/View.tsx
 │   │   ├── storage/$bucketId/View.tsx
 │   │   ├── storage/files/$fileId/View.tsx
+│   │   ├── storage/_components/     # non-page UI (dialogs, cards)
+│   │   │   ├── CreateBucket.tsx
+│   │   │   ├── BucketSettings.tsx
+│   │   │   └── ...
+│   │   ├── sites/View.tsx           # list
+│   │   ├── sites/usage/View.tsx      # sub-route = nested folder
+│   │   ├── sites/Layout.tsx          # layout for $siteId (not a page)
+│   │   ├── sites/Deployments.tsx     # tab pages (export View)
+│   │   ├── sites/deployments/$deploymentId/View.tsx
 │   │   └── shared/    # Project-specific shared
 │   └── organizations/$orgId/
 │
@@ -631,17 +643,66 @@ src/components/
 
 ### Naming Conventions
 
-- **Main views**: `View.tsx` (e.g., `storage/View.tsx`)
-- **Detail views**: `$resourceId/View.tsx` (e.g., `storage/$bucketId/View.tsx`)
-- **Dialogs**: `CreateResource.tsx` (no "Dialog" suffix)
-- **Tabs**: `Settings.tsx`, `Security.tsx` (no "View" suffix)
-- **Other**: Descriptive names (`BucketSettings.tsx`, `FileSecurity.tsx`)
+Use these consistently so page and component names are predictable:
+
+- **List and detail pages**: File = `View.tsx`; export the page component as `View`. Use one `View.tsx` per route segment (e.g. `storage/View.tsx` for list, `storage/$bucketId/View.tsx` for bucket detail). Do not add separate `*Detail.tsx` files for detail pages.
+- **Detail routes**: Put the detail page in `$resourceId/View.tsx` (e.g. `storage/$bucketId/View.tsx`, `messaging/$messageId/View.tsx`), not in a sibling `*Detail.tsx`.
+- **Dialogs**: File = `CreateResource.tsx` or `UploadResource.tsx` (no "Dialog" in the filename); export the component with the same name as the file (e.g. `CreateBucket`, `UploadFile`).
+- **Settings / tabs**: File = `Settings.tsx`, `Security.tsx`, or `ResourceSettings.tsx` (e.g. `BucketSettings.tsx`, `TopicSettings.tsx`); export as `View` or a descriptive name.
+- **Other shared UI**: Descriptive names (`BucketSettings.tsx`, `FileSecurity.tsx`).
 
 ### Folder-Route Alignment
 
 - Route: `/projects/$projectId/storage` → `pages/projects/$projectId/storage/`
 - Route: `/projects/$projectId/storage/$bucketId` → `pages/projects/$projectId/storage/$bucketId/`
 - Route: `/projects/$projectId/storage/$bucketId/files/$fileId` → `pages/projects/$projectId/storage/files/$fileId/`
+
+### When to nest vs keep flat
+
+**Mirror the URL with folders.** Each **route segment** (path part) should usually get a folder, and the **page** for that segment is `View.tsx` inside it.
+
+- **Nest** when the route has another segment:  
+  `/sites/usage` → `sites/usage/View.tsx`  
+  `/sites/$siteId/deployments` → `sites/$siteId/deployments/View.tsx`  
+  So: list = `service/View.tsx`, sub-page = `service/segment/View.tsx`, detail = `service/$id/View.tsx` or `service/$id/segment/View.tsx`.
+
+- **Keep flat** only when a segment has a single page and no children (e.g. one-off wizards or modals). Then one file like `CreateSiteView.tsx` or `AddDomain.tsx` in the parent folder is fine.
+
+- **No namespace repetition:** We're already under `sites/`, so avoid repeating "Site" in file or component names. Use `Deployments.tsx` (or `deployments/View.tsx`), not `SiteDeployments.tsx`; use `usage/View.tsx`, not `SitesUsageView.tsx`.
+
+### When to use View.tsx vs a specific name
+
+- **Use `View.tsx`** for every **page** (a route that renders a full screen or tab content). The file is always `View.tsx`; the exported component is always `View`. So: list page = `View.tsx`, detail page = `$resourceId/View.tsx`, tab page = `segment/View.tsx` (e.g. `deployments/View.tsx`, `settings/View.tsx`).
+
+- **Use a specific name** only for **non-page** UI: layout wrappers (`Layout.tsx`), dialogs (`CreateBucket.tsx`), cards (`BucketSettings.tsx`), wizards (e.g. `CreateSiteView.tsx` for a multi-step flow). Those are not "the page for a segment"; they're shared components or flows, so a descriptive name is correct.
+
+**Summary:** If it's the main component for a route segment → put it in a folder that matches the segment and name the file `View.tsx` (export `View`). If it's a layout, dialog, or shared card → use a descriptive filename.
+
+### Non-page UI: `_components/` folder
+
+Keep **non-page UI** (dialogs, cards, drawers, editors, modals) in a dedicated subfolder so they’re easy to spot and don’t mix with route-aligned pages.
+
+- **Folder name:** `_components/` (underscore = “internal to this feature”, not a route segment).
+- **What goes in:** Dialogs (`CreateBucket.tsx`, `UploadFile.tsx`), settings/security cards (`BucketSettings.tsx`, `BucketSecurity.tsx`), drawers (`ApiKeyDrawer.tsx`), editors (`PermissionsEditor.tsx`, `CronScheduleEditor.tsx`), and any other UI that is **not** the main component for a route segment.
+- **What stays at top level:** Only route-aligned pages and layout: `View.tsx`, `Layout.tsx`, segment folders (`$bucketId/`, `usage/`, `deployments/`), and segment page files (`Deployments.tsx`, `Settings.tsx` that export `View`).
+
+**Example:**
+
+```
+storage/
+├── View.tsx                    # list page
+├── $bucketId/
+│   └── View.tsx                # bucket detail page
+├── files/$fileId/View.tsx      # file detail page
+└── _components/                # non-page UI for this feature
+    ├── CreateBucket.tsx
+    ├── UploadFile.tsx
+    ├── BucketSettings.tsx
+    ├── BucketSecurity.tsx
+    └── FileSecurity.tsx
+```
+
+**Import from pages:** `import { CreateBucket } from './_components/CreateBucket'` (or `from '../_components/...'` when inside a subfolder like `$bucketId/`).
 
 ---
 

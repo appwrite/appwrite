@@ -8,7 +8,7 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { PermissionsEditor } from '../auth/PermissionsEditor'
+import { PermissionsEditor } from '../../auth/PermissionsEditor'
 import { Loader2 } from 'lucide-react'
 import type { Models } from '@appwrite.io/console'
 

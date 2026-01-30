@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { FileView } from '@/components/pages/projects/$projectId/storage/files/$fileId/View'
+import { View } from '@/components/pages/projects/$projectId/storage/files/$fileId/View'
 import { fetchFile } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -28,5 +28,5 @@ export const Route = createFileRoute(
 })
 
 function FileSecurityPage() {
-  return <FileView />
+  return <View />
 }

@@ -13,19 +13,19 @@ import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { FolderPlus } from 'lucide-react'
 
-interface CreateBucketDialogProps {
+interface CreateBucketProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onCreate: (data: { bucketId?: string; name: string }) => void
   isLoading?: boolean
 }
 
-export function CreateBucketDialog({
+export function CreateBucket({
   open,
   onOpenChange,
   onCreate,
   isLoading = false,
-}: CreateBucketDialogProps) {
+}: CreateBucketProps) {
   const [bucketId, setBucketId] = useState<string | undefined>(undefined)
   const [name, setName] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})

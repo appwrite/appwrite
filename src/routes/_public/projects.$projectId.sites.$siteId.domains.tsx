@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { SiteDomainsView } from '@/components/pages/projects/$projectId/sites/SiteDomains'
+import { View } from '@/components/pages/projects/$projectId/sites/Domains'
 import {
   siteQueryOptions,
   siteDomainsQueryOptions,
@@ -54,5 +54,5 @@ export const Route = createFileRoute(
 })
 
 function SiteDomainsPage() {
-  return <SiteDomainsView />
+  return <View />
 }

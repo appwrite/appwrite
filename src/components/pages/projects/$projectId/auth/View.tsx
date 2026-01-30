@@ -68,7 +68,7 @@ import { AuthSettings } from './Settings'
 import { Templates } from './Templates'
 import { toast } from 'sonner'
 
-export function AuthView() {
+export function View() {
   const { projectId } = useParams({
     strict: false,
   })

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { AuthView } from '@/components/pages/projects/$projectId/auth/View'
+import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { usersQueryOptions } from '@/lib/react-query/hooks'
 
 const USERS_PER_PAGE = 25
@@ -28,5 +28,5 @@ export const Route = createFileRoute('/_public/projects/$projectId/auth/')({
 
 function AuthIndexPage() {
   const { projectId } = Route.useParams()
-  return <AuthView key={`auth-${projectId}-users-index`} />
+  return <View key={`auth-${projectId}-users-index`} />
 }

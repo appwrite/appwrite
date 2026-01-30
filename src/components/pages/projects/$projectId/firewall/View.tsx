@@ -5,7 +5,7 @@ import { RulesTab } from './Rules'
 import { AnalyticsTab } from './Analytics'
 import { LogsTab } from './Logs'
 
-export function FirewallView() {
+export function View() {
   const params = useParams({ strict: false })
   const location = useLocation()
   const projectId = params.projectId as string

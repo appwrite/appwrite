@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { FunctionDeploymentDetailView } from '@/components/pages/projects/$projectId/functions/deployments/$deploymentId/View'
+import { View } from '@/components/pages/projects/$projectId/functions/deployments/$deploymentId/View'
 import {
   projectFunctionQueryOptions,
   functionDeploymentQueryOptions,
@@ -51,5 +51,5 @@ export const Route = createFileRoute(
 })
 
 function DeploymentDetailPage() {
-  return <FunctionDeploymentDetailView />
+  return <View />
 }

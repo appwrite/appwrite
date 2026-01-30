@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { FunctionSettings } from '@/components/pages/projects/$projectId/functions/Settings'
+import { View } from '@/components/pages/projects/$projectId/functions/Settings'
 import {
   projectFunctionQueryOptions,
   functionVariablesQueryOptions,
@@ -36,5 +36,5 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),
     ])
   },
-  component: FunctionSettings,
+  component: View,
 })

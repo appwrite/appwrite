@@ -45,7 +45,7 @@ function getDomainStatusBadge(status: string) {
   return statusMap[status] || { label: status, variant: 'outline' }
 }
 
-export function SiteDomainsView() {
+export function View() {
   const { projectId, siteId } = useParams({ strict: false })
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(DOMAINS_PER_PAGE)

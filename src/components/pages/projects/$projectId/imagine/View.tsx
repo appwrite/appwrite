@@ -60,7 +60,7 @@ const communityProjects = [
   },
 ]
 
-export function ImagineView() {
+export function View() {
   const [prompt, setPrompt] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)

@@ -811,16 +811,16 @@ function WorldMapChart({ data }: { data: LocationData[] }) {
 }
 
 // Main Component
-interface WebsiteAnalyticsDetailProps {
+interface ViewProps {
   websiteId?: string
   websiteName?: string
   onBack?: () => void
 }
 
-export function WebsiteAnalyticsDetail({
+export function View({
   websiteName = 'Main Marketing Site',
   onBack,
-}: WebsiteAnalyticsDetailProps) {
+}: ViewProps) {
   const [activeTab, setActiveTab] = useState('analytics')
   const [activeMetric, setActiveMetric] = useState('unique')
   const [dateRange, setDateRange] = useState<DateRange | undefined>({

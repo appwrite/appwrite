@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
-import { AnalyticsView } from '@/components/pages/projects/$projectId/analytics/View'
+import { View } from '@/components/pages/projects/$projectId/analytics/View'
 
 export const Route = createFileRoute('/_public/projects/$projectId/analytics')({
   component: AnalyticsPage,
@@ -17,5 +17,5 @@ function AnalyticsPage() {
     return <Outlet />
   }
 
-  return <AnalyticsView />
+  return <View />
 }

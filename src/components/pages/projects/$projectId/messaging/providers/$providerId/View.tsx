@@ -34,7 +34,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 
-export function ProviderDetailView() {
+export function View() {
   const { projectId, providerId } = useParams({
     strict: false,
   })

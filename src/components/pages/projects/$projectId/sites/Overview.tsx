@@ -76,7 +76,7 @@ function formatDuration(seconds: number): string {
 }
 
 
-export function SiteOverviewView() {
+export function View() {
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const { data: site, isLoading: siteLoading } = useProjectSite(

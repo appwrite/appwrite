@@ -12,7 +12,7 @@ import { DeploymentDetailView } from '@/components/global/shared/DeploymentDetai
 import { toast } from 'sonner'
 
 
-export function SiteDeploymentDetailView() {
+export function View() {
   const { projectId, siteId, deploymentId } = useParams({ strict: false })
 
   const { data: deployment, isLoading } = useSiteDeployment(

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { AuthView } from '@/components/pages/projects/$projectId/auth/View'
+import { View } from '@/components/pages/projects/$projectId/auth/View'
 import { fetchEmailTemplate, fetchLocaleCodes } from '@/lib/react-query/hooks'
 import { EmailTemplateType, EmailTemplateLocale } from '@appwrite.io/console'
 
@@ -64,5 +64,5 @@ export const Route = createFileRoute(
 
 function AuthTemplatesPage() {
   const { projectId } = Route.useParams()
-  return <AuthView key={`auth-${projectId}-templates`} />
+  return <View key={`auth-${projectId}-templates`} />
 }

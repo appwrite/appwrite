@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
-import { FunctionDeployments } from '@/components/pages/projects/$projectId/functions/Deployments'
+import { View } from '@/components/pages/projects/$projectId/functions/Deployments'
 import {
   projectFunctionQueryOptions,
   functionDeploymentsQueryOptions,
@@ -80,5 +80,5 @@ export const Route = createFileRoute(
 
     await Promise.all(criticalPromises)
   },
-  component: FunctionDeployments,
+  component: View,
 })

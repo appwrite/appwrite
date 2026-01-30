@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { SitesUsageView } from '@/components/pages/projects/$projectId/sites/SitesUsageView'
+import { View } from '@/components/pages/projects/$projectId/sites/usage/View'
 import { fetchProject } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
@@ -33,5 +33,5 @@ export const Route = createFileRoute(
 
 function SitesUsagePage() {
   const { projectId } = Route.useParams()
-  return <SitesUsageView key={`sites-usage-${projectId}`} />
+  return <View key={`sites-usage-${projectId}`} />
 }

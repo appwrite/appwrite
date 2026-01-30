@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { FunctionDomains } from '@/components/pages/projects/$projectId/functions/Domains'
+import { View } from '@/components/pages/projects/$projectId/functions/Domains'
 import {
   projectFunctionQueryOptions,
   functionDomainsQueryOptions,
@@ -38,5 +38,5 @@ export const Route = createFileRoute(
       ),
     ])
   },
-  component: FunctionDomains,
+  component: View,
 })

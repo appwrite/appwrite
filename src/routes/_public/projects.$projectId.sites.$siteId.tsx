@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useMatches } from '@tanstack/react-router'
-import { SiteLayout } from '@/components/pages/projects/$projectId/sites/SiteLayout'
+import { Layout } from '@/components/pages/projects/$projectId/sites/Layout'
 import {
   siteQueryOptions,
   siteDeploymentsQueryOptions,
@@ -86,6 +86,6 @@ function SiteLayoutPage() {
     return <Outlet />
   }
 
-  // For other routes, render SiteLayout which provides tabs
-  return <SiteLayout />
+  // For other routes, render Layout which provides tabs
+  return <Layout />
 }

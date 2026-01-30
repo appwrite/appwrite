@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { StorageView } from '@/components/pages/projects/$projectId/storage/View'
+import { View } from '@/components/pages/projects/$projectId/storage/View'
 import {
   bucketsQueryOptions,
   fetchProject,
@@ -50,5 +50,5 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
 })
 
 function StorageIndexPage() {
-  return <StorageView />
+  return <View />
 }
