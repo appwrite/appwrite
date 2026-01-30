@@ -100,11 +100,16 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
         $risky = false;
         if (str_starts_with($request, 'POST') && str_contains($request, '/executions')) {
             $risky = true;
-        } elseif (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
-            $risky = true;
         } elseif ($domains->get(md5($domain), 'value') === 1) {
             // executions request coming from custom domain
             $risky = true;
+        } else {
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS')) as $riskyDomain) {
+                if (str_ends_with($domain, $riskyDomain)) {
+                    $risky = true;
+                    break;
+                }
+            }
         }
 
         if ($risky) {

@@ -300,7 +300,7 @@ class ProxyCustomServerTest extends Scope
         $response = $proxyClient->call(Client::METHOD_GET, '/contact');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Contact page', $response['body']);
-        
+
         // Wildcard domains automatically get verified status
         $domains = [
             \uniqid() . '.sites.localhost',
@@ -401,7 +401,8 @@ class ProxyCustomServerTest extends Scope
     public function testUpdateRule(): void
     {
         // Create function appwrite-network domain
-        $domain = \uniqid() . '-cname-api.' . System::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
+        $domain = \uniqid() . '-cname-api.' . $functionsDomain;
 
         $rule = $this->createAPIRule($domain);
         $this->assertEquals(201, $rule['headers']['status-code']);
