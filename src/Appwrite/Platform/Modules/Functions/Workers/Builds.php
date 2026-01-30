@@ -1037,7 +1037,7 @@ class Builds extends Action
                 // VCS branch
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
-                    $sitesDomain = $platform['sitePreviewDomain'];
+                    $sitesDomain = $platform['sitesDomain'];
                     $branchPrefix = substr($branchName, 0, 16);
                     if (strlen($branchName) > 16) {
                         $remainingChars = substr($branchName, 16);

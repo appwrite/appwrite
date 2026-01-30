@@ -1105,7 +1105,7 @@ App::init()
                // 5. Create new rule
                $owner = '';
 
-               // Mark owner as Appwrite if its appwirte-owned domain
+               // Mark owner as Appwrite if its appwrite-owned domain
                $appwriteDomains = [];
                $appwriteDomainEnvs = [
                    System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),

@@ -105,6 +105,9 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
             $risky = true;
         } else {
             foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS')) as $riskyDomain) {
+                if (empty($riskyDomain)) {
+                    continue;
+                }
                 if (str_ends_with($domain, $riskyDomain)) {
                     $risky = true;
                     break;

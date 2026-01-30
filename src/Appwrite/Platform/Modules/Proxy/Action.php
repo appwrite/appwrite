@@ -50,7 +50,7 @@ class Action extends PlatformAction
 
         $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         foreach (\explode(',', $functionsDomains) as $functionsDomain) {
-            if (empty($sitesDomain)) {
+            if (empty($functionsDomains)) {
                 continue;
             }
 
@@ -65,14 +65,6 @@ class Action extends PlatformAction
 
         if (!$validator->isValid($domain)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
-        }
-
-        if (!empty($sitesDomain)) {
-            $deniedDomains[] = $sitesDomain;
-        }
-
-        if (!empty($functionsDomain)) {
-            $deniedDomains[] = $functionsDomain;
         }
 
         $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
@@ -141,11 +133,17 @@ class Action extends PlatformAction
         if ($resourceType === 'function') {
             // For example: fra.appwrite.run
             foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) as $targetCNAME) {
+                if (empty($targetCNAME)) {
+                    continue;
+                }
                 $targetCNAMEs[] = new Domain($targetCNAME);
             }
         } elseif ($resourceType === 'site') {
             // For example: appwrite.network
             foreach (\explode(',', System::getEnv('_APP_DOMAIN_SITES', '')) as $targetCNAME) {
+                if (empty($targetCNAME)) {
+                    continue;
+                }
                 $targetCNAMEs[] = new Domain($targetCNAME);
             }
         } elseif ($ruleType === 'api') {

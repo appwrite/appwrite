@@ -92,7 +92,7 @@ class Get extends Action
 
             $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
             foreach (\explode(',', $functionsDomains) as $functionsDomain) {
-                if (empty($sitesDomain)) {
+                if (empty($functionsDomain)) {
                     continue;
                 }
 

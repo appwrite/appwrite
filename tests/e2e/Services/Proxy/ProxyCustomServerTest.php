@@ -312,6 +312,7 @@ class ProxyCustomServerTest extends Scope
             $rule = $this->getRule($wildcardRuleId);
             $this->assertSame(200, $rule['headers']['status-code']);
             $this->assertSame('verified', $rule['body']['status']);
+            $this->cleanupRule($wildcardRuleId);
         }
 
         $rules = $this->listRules([
