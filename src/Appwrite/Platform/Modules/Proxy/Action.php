@@ -152,7 +152,12 @@ class Action extends PlatformAction
         } elseif ($ruleType === 'redirect') {
             // Shouldn't be needed, because redirect should always have resourceTyp too, but just in case we default to sites
             // For example: appwrite.network
-            $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_SITES', ''));
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_SITES', '')) as $targetCNAME) {
+                if (empty($targetCNAME)) {
+                    continue;
+                }
+                $targetCNAMEs[] = new Domain($targetCNAME);
+            }
         }
 
         $validators = [];
