@@ -297,6 +297,8 @@ class Migrations extends Action
                 'files.write',
                 'functions.read',
                 'functions.write',
+                'sites.read',
+                'sites.write',
                 'tokens.read',
                 'tokens.write',
             ]
