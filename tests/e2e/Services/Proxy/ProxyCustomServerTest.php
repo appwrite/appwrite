@@ -112,7 +112,8 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->cleanupRule($rule['body']['$id']);
 
-        $domain =  \uniqid() . '-vcs.' . System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+        $domain =  \uniqid() . '-vcs.' . $sitesDomain;
 
         $rule = $this->createSiteRule('commit-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
@@ -393,7 +394,8 @@ class ProxyCustomServerTest extends Scope
         $this->cleanupRule($rule['body']['$id']);
 
         // Create site appwrite-network domain
-        $domain = \uniqid() . '-cname-api.' . System::getEnv('_APP_DOMAIN_SITES');
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+        $domain = \uniqid() . '-cname-api.' . $sitesDomain;
 
         $rule = $this->createAPIRule($domain);
         $this->assertEquals(201, $rule['headers']['status-code']);

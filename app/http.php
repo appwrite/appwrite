@@ -591,9 +591,33 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 $sum = count($results);
                 foreach ($results as $document) {
                     $domain = $document->getAttribute('domain');
-                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS')) || str_ends_with($domain, System::getEnv('_APP_DOMAIN_SITES'))) {
+
+                    $denyDomains = [];
+                    $denyEnvVars = [
+                        System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+                        System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+                        System::getEnv('_APP_DOMAIN_SITES', ''),
+                    ];
+                    foreach ($denyEnvVars as $denyEnvVar) {
+                        foreach (\explode(',', $denyEnvVar) as $denyDomain) {
+                            if (empty($denyDomain)) {
+                                continue;
+                            }
+                            $denyDomains[] = $denyDomain;
+                        }
+                    }
+
+                    $isDenyDomain = false;
+                    foreach ($denyDomains as $denyDomain) {
+                        if (str_ends_with($domain, $denyDomain)) {
+                            $isDenyDomain = true;
+                        }
+                    }
+
+                    if ($isDenyDomain) {
                         continue;
                     }
+
                     $domains->set(md5($domain), ['value' => 1]);
                 }
                 $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
