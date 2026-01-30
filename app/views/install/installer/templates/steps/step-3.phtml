@@ -49,7 +49,7 @@ $accountNameValue = htmlspecialchars($defaultAccountName, ENT_QUOTES, 'UTF-8');
                             id="account-password"
                             name="accountPassword"
                             class="input-action-input typography-text-m-400 text-neutral-primary"
-                            placeholder="Password must be at least 8 characters long"
+                            placeholder="Enter password"
                             autocomplete="new-password"
                     >
                     <div class="input-action-buttons">
@@ -62,6 +62,12 @@ $accountNameValue = htmlspecialchars($defaultAccountName, ENT_QUOTES, 'UTF-8');
                             </span>
                         </button>
                     </div>
+                </div>
+                <div class="field-helper typography-caption-400 text-neutral-secondary">
+                    <span class="field-helper-icon">
+                        <?php include __DIR__ . '/../../icons/info.svg'; ?>
+                    </span>
+                    <span class="field-helper-text">Password must be at least 8 characters long</span>
                 </div>
             </div>
         </div>

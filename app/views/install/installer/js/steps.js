@@ -434,12 +434,12 @@
                 const password = root?.querySelector('#account-password');
 
                 if (!name || !name.value.trim()) {
-                    setFieldError?.(name, 'Please enter a name');
+                    setFieldError?.(name, 'This field is required');
                     valid = false;
                 }
 
                 if (!email || !email.value.trim()) {
-                    setFieldError?.(email, 'Please enter an email address');
+                    setFieldError?.(email, 'This field is required');
                     valid = false;
                 } else if (!isValidEmail?.(email.value.trim())) {
                     setFieldError?.(email, 'Please enter a valid email address');
@@ -448,10 +448,10 @@
 
                 const passwordValue = password?.value ?? '';
                 if (!password || !/\S/.test(passwordValue)) {
-                    setFieldError?.(password, 'Please enter a password');
+                    setFieldError?.(password, 'This field is required');
                     valid = false;
                 } else if (!isValidPassword?.(passwordValue)) {
-                    setFieldError?.(password, 'Password must be at least 8 characters');
+                    setFieldError?.(password, 'Password must be at least 8 characters long');
                     valid = false;
                 }
 

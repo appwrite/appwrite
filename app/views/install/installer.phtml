@@ -208,7 +208,10 @@ $installerVersion = @filemtime(__DIR__ . '/installer/js/installer.js') ?: time()
     <?php } ?>
 
     <template id="field-error-template">
-        <div class="field-error typography-text-xs-400 text-error">
+        <div class="field-error typography-caption-400 text-error">
+            <span class="field-error-icon">
+                <?php include __DIR__ . '/installer/icons/exclamation-circle.svg'; ?>
+            </span>
             <span class="field-error-text"></span>
         </div>
     </template>

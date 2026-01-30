@@ -4,9 +4,14 @@
 
     const clearFieldErrors = (root) => {
         if (!root) return;
-        root.querySelectorAll('.field-error').forEach((node) => node.remove());
+        root.querySelectorAll('.field-error').forEach((node) => {
+            node.classList.remove('is-visible');
+        });
         root.querySelectorAll('.input-field.is-error, .input-action.is-error').forEach((node) => {
             node.classList.remove('is-error');
+        });
+        root.querySelectorAll('.field-helper').forEach((helper) => {
+            helper.style.display = '';
         });
     };
 
@@ -18,34 +23,38 @@
         let errorText = error?.querySelector('.field-error-text');
         const hasSameMessage = Boolean(errorText && errorText.textContent === message);
         const alreadyVisible = Boolean(error && error.classList.contains('is-visible'));
+
+        if (hasSameMessage && alreadyVisible) {
+            return;
+        }
+
         if (!error) {
             const template = document.getElementById('field-error-template');
             if (template && template.content) {
                 const fragment = template.content.cloneNode(true);
                 error = fragment.querySelector('.field-error');
                 group.appendChild(fragment);
-            } else {
-                error = document.createElement('div');
-                error.className = 'field-error typography-text-xs-400 text-error';
-                const text = document.createElement('span');
-                text.className = 'field-error-text';
-                error.appendChild(text);
-                group.appendChild(error);
             }
-            errorText = error.querySelector('.field-error-text');
+            errorText = error?.querySelector('.field-error-text');
         }
         if (errorText) {
             errorText.textContent = message;
         }
-        if (!hasSameMessage || !alreadyVisible) {
+
+        if (!alreadyVisible) {
             requestAnimationFrame(() => {
                 error.classList.add('is-visible');
             });
         }
+
         input.classList.add('is-error');
         const actionWrapper = input.closest('.input-action');
         if (actionWrapper) {
             actionWrapper.classList.add('is-error');
+        }
+        const helper = group.querySelector('.field-helper');
+        if (helper) {
+            helper.style.display = 'none';
         }
     };
 
@@ -56,14 +65,15 @@
             const error = group?.querySelector('.field-error');
             if (error) {
                 error.classList.remove('is-visible');
-                setTimeout(() => {
-                    error.remove();
-                }, TIMINGS?.errorClear ?? 0);
             }
             input.classList.remove('is-error');
             const actionWrapper = input.closest('.input-action');
             if (actionWrapper) {
                 actionWrapper.classList.remove('is-error');
+            }
+            const helper = group?.querySelector('.field-helper');
+            if (helper) {
+                helper.style.display = '';
             }
         };
         input.addEventListener('input', handler);

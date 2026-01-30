@@ -1222,23 +1222,47 @@ body {
     display: flex;
     align-items: flex-start;
     gap: var(--space-3);
-    margin-top: var(--space-2);
     color: var(--fgcolor-error);
     max-height: 0;
     opacity: 0;
     overflow: hidden;
-    padding-inline-start: var(--space-2);
+    /*padding-inline-start: var(--space-2);*/
     transition: max-height var(--duration-extended) var(--ease-standard),
         opacity var(--duration-extended) var(--ease-standard);
 }
 
-.field-error-text {
-    line-height: 1.4;
+.field-error-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+.field-error-icon svg {
+    width: 1rem;
+    height: 1rem;
 }
 
 .field-error.is-visible {
-    max-height: 64px;
     opacity: 1;
+    max-height: 64px;
+}
+
+.field-helper {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    color: var(--fgcolor-neutral-secondary);
+}
+
+.field-helper-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+.field-helper-icon svg {
+    width: 1rem;
+    height: 1rem;
 }
 
 .input-field {
