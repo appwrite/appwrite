@@ -11,95 +11,93 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { MessageSquarePlus, Send, Check } from 'lucide-react'
+import { toast } from 'sonner'
+import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
-  MessageSquarePlus,
-  ThumbsUp,
-  ThumbsDown,
-  Lightbulb,
-  Bug,
-  Send,
-  Check,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+  submitFeedback,
+  FEEDBACK_CUSTOM_FIELDS,
+} from '@/lib/feedback'
 
-type FeedbackType = 'general' | 'bug' | 'idea' | 'like' | 'dislike'
-
-interface FeedbackOption {
-  type: FeedbackType
-  icon: React.ReactNode
-  label: string
-  placeholder: string
+export interface FeedbackPopoverContext {
+  /** Where the form was opened (e.g. navbar, sidebar). Default "n/a". */
+  source?: string
+  /** Current organization ID when available */
+  orgId?: string
+  /** Current project ID when available */
+  projectId?: string
+  /** Organization billing plan ID when available (sent in custom field 56109) */
+  billingPlanId?: string
 }
 
-const feedbackOptions: FeedbackOption[] = [
-  {
-    type: 'like',
-    icon: <ThumbsUp className="h-4 w-4" />,
-    label: 'I like something',
-    placeholder: "What's working well for you?",
-  },
-  {
-    type: 'dislike',
-    icon: <ThumbsDown className="h-4 w-4" />,
-    label: "I don't like something",
-    placeholder: 'What could be improved?',
-  },
-  {
-    type: 'idea',
-    icon: <Lightbulb className="h-4 w-4" />,
-    label: 'I have an idea',
-    placeholder: 'Share your idea with us...',
-  },
-  {
-    type: 'bug',
-    icon: <Bug className="h-4 w-4" />,
-    label: 'I found a bug',
-    placeholder: 'Describe the issue you encountered...',
-  },
-]
-
-export function FeedbackPopover() {
+export function FeedbackPopover({
+  source = 'n/a',
+  orgId = '',
+  projectId = '',
+  billingPlanId,
+}: FeedbackPopoverContext = {}) {
+  const { account } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
-  const [selectedType, setSelectedType] = useState<FeedbackType | null>(null)
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  const selectedOption = feedbackOptions.find((o) => o.type === selectedType)
-
   const handleSubmit = async () => {
-    if (!selectedType || !message.trim()) return
+    if (!message.trim()) return
 
     setIsSubmitting(true)
 
-    // Simulate submission delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    try {
+      const firstname =
+        (account?.name || account?.email || 'Unknown').slice(0, 40) || 'Unknown'
 
-    // Here you would typically send the feedback to your backend
+      const customFields = [
+        { id: FEEDBACK_CUSTOM_FIELDS.PAGE_URL, value: window.location.href },
+        ...(billingPlanId
+          ? [{ id: FEEDBACK_CUSTOM_FIELDS.BILLING_PLAN, value: billingPlanId }]
+          : []),
+      ]
 
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+      const sent = await submitFeedback({
+        subject: 'feedback-general',
+        message: message.trim(),
+        email: account?.email,
+        firstname,
+        customFields,
+        metaFields: {
+          source,
+          orgId,
+          projectId,
+          userId: account?.$id ?? '',
+        },
+      })
 
-    // Reset after showing success
-    setTimeout(() => {
-      setIsOpen(false)
-      setSelectedType(null)
-      setMessage('')
-      setIsSubmitted(false)
-    }, 1500)
-  }
+      setIsSubmitting(false)
 
-  const handleBack = () => {
-    setSelectedType(null)
-    setMessage('')
+      if (!sent) {
+        toast.error(
+          'Feedback is not configured. Set VITE_GROWTH_ENDPOINT in .env to enable submission.',
+        )
+        return
+      }
+
+      setIsSubmitted(true)
+
+      setTimeout(() => {
+        setIsOpen(false)
+        setMessage('')
+        setIsSubmitted(false)
+      }, 1500)
+    } catch {
+      setIsSubmitting(false)
+      toast.error('Failed to submit feedback')
+    }
   }
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open)
     if (!open) {
-      // Reset state when closing
       setTimeout(() => {
-        setSelectedType(null)
         setMessage('')
         setIsSubmitted(false)
       }, 200)
@@ -127,7 +125,6 @@ export function FeedbackPopover() {
       </Tooltip>
       <PopoverContent align="end" className="w-80 p-0">
         {isSubmitted ? (
-          // Success state
           <div className="flex flex-col items-center justify-center gap-3 p-8">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
               <Check className="h-6 w-6 text-green-500" />
@@ -139,25 +136,16 @@ export function FeedbackPopover() {
               </p>
             </div>
           </div>
-        ) : selectedType ? (
-          // Feedback form
+        ) : (
           <div className="p-4">
-            <div className="mb-4 flex items-center gap-2">
-              <button
-                onClick={handleBack}
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                ← Back
-              </button>
-            </div>
-            <div className="mb-3 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-                {selectedOption?.icon}
-              </div>
-              <span className="font-medium">{selectedOption?.label}</span>
+            <div className="mb-3">
+              <h4 className="font-medium">Send feedback</h4>
+              <p className="text-sm text-muted-foreground">
+                Help us improve your experience
+              </p>
             </div>
             <Textarea
-              placeholder={selectedOption?.placeholder}
+              placeholder="Share your feedback..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               className="mb-3 min-h-[100px] resize-none"
@@ -178,44 +166,6 @@ export function FeedbackPopover() {
                 <Send className="h-3.5 w-3.5" />
                 Send Feedback
               </Button>
-            </div>
-          </div>
-        ) : (
-          // Feedback type selection
-          <div className="p-4">
-            <div className="mb-3">
-              <h4 className="font-medium">Send Feedback</h4>
-              <p className="text-sm text-muted-foreground">
-                Help us improve your experience
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {feedbackOptions.map((option) => (
-                <button
-                  key={option.type}
-                  onClick={() => setSelectedType(option.type)}
-                  className={cn(
-                    'flex flex-col items-center gap-2 rounded-lg border p-3 text-center transition-colors',
-                    'hover:border-primary/50 hover:bg-accent',
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'flex h-8 w-8 items-center justify-center rounded-md',
-                      option.type === 'like' &&
-                        'bg-green-500/10 text-green-500',
-                      option.type === 'dislike' &&
-                        'bg-orange-500/10 text-orange-500',
-                      option.type === 'idea' &&
-                        'bg-yellow-500/10 text-yellow-500',
-                      option.type === 'bug' && 'bg-red-500/10 text-red-500',
-                    )}
-                  >
-                    {option.icon}
-                  </div>
-                  <span className="text-xs font-medium">{option.label}</span>
-                </button>
-              ))}
             </div>
           </div>
         )}

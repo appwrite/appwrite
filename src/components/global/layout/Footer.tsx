@@ -1,9 +1,12 @@
+import { ShieldCheck } from 'lucide-react'
+
 /**
  * ConsoleFooter Component
  *
  * A professional footer component for the console layout displaying:
  * - Dynamic copyright year with Appwrite branding
  * - Navigation links (Docs, Status, Legal)
+ * - Trust/compliance badges (SOC 2)
  * - Social media icons
  *
  * Props: None
@@ -92,8 +95,22 @@ export function ConsoleFooter() {
           </div>
         </div>
 
-        {/* Right section: Legal Links and Copyright */}
+        {/* Right section: Trust badge, Legal Links, and Copyright */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Trust / Compliance badge */}
+          <a
+            href="https://appwrite.io/docs/advanced/security"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground hidden lg:flex"
+          >
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
+            <span className="whitespace-nowrap font-medium">SOC 2 Certified</span>
+          </a>
+
+          {/* Separator */}
+          <div className="h-4 w-px bg-border flex-shrink-0 hidden lg:block" />
+
           {/* Legal Links */}
           <nav className="flex items-center hidden sm:flex">
             {legalLinks.map((link, index) => (

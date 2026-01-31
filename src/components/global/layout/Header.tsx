@@ -346,7 +346,12 @@ export function ConsoleHeader({
 
           {/* Feedback - hidden on small containers */}
           <div className="hidden @[800px]:flex shrink-0">
-            <FeedbackPopover />
+            <FeedbackPopover
+              source="navbar"
+              orgId={orgId}
+              projectId={projectId ?? ''}
+              billingPlanId={organizationPlan?.$id}
+            />
           </div>
 
           {/* Support - hidden on small containers */}
