@@ -60,7 +60,7 @@ function PromoBannerComponent({
               {/* Card using native UI styles */}
               <div
                 className={cn(
-                  'overflow-hidden rounded-lg border border-border bg-card shadow-lg',
+                  'overflow-hidden rounded-lg border border-border bg-card',
                   !isExpanded && 'opacity-95',
                 )}
               >

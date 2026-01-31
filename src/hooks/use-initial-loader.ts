@@ -131,15 +131,20 @@ export function useInitialLoader() {
       maxTimeoutRef.current = null
     }
 
-    // Check if there are active requests
+    // Check if there are active requests (route loaders use ensureQueryData, so they show up here)
     const currentHasActiveRequests = isFetching > 0 || isMutating > 0
 
-    // Check loading state
-    // Router status can be: "idle" | "pending" | "loading"
+    // Show loader when router or React Query indicates loading.
     const isRouterLoading = router.state.status !== 'idle'
-    const isCurrentlyLoading = isRouterLoading || currentHasActiveRequests
+    const shouldShowLoadingState = isRouterLoading || currentHasActiveRequests
 
-    if (isCurrentlyLoading && !wasLoadingRef.current) {
+    // Hide loader when React Query is idle (don't wait for router).
+    // Route loaders use ensureQueryData, so when they finish isFetching goes to 0.
+    // The router can stay "pending" on some nested routes; hiding on RQ idle fixes that
+    // for all routes (support, change-plan, etc.) without path-specific checks.
+    const shouldHideLoader = !currentHasActiveRequests && wasLoadingRef.current
+
+    if (shouldShowLoadingState && !wasLoadingRef.current) {
       // Started loading
       setIsLoading(true)
       startTimeRef.current = Date.now()
@@ -154,8 +159,8 @@ export function useInitialLoader() {
         hasCompletedInitialLoadRef.current = true
         maxTimeoutRef.current = null
       }, 20000)
-    } else if (!isCurrentlyLoading && wasLoadingRef.current) {
-      // All requests completed - mark initial load as complete
+    } else if (shouldHideLoader) {
+      // React Query idle - hide loader (even if router still pending)
       const minLoadTime = 800 // Minimum display time to prevent flashing
       const elapsedTime = startTimeRef.current
         ? Date.now() - startTimeRef.current

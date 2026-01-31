@@ -40,7 +40,7 @@ export function UploadProgress({
       {activeUploads.map((upload) => (
         <div
           key={upload.id}
-          className="rounded-lg border border-border bg-background p-3 shadow-lg"
+          className="rounded-lg border border-border bg-background p-3"
         >
           <div className="flex items-start gap-3">
             <div className="flex-1 min-w-0">

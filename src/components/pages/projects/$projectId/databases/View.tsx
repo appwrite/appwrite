@@ -6475,7 +6475,7 @@ function ColumnsSpreadsheet({
       {/* Bulk Action Bar for Suggestions */}
       {suggestedColumns.length > 0 && (
         <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2">
-          <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+          <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
               <Sparkles className="h-3 w-3 mr-1.5" />
               {suggestedColumns.length} suggestion
@@ -7391,7 +7391,7 @@ function IndexesSpreadsheet({
       {/* Bulk Action Bar for Suggestions */}
       {suggestedIndexes.length > 0 && (
         <div className="absolute bottom-4 left-1/2 z-50 -translate-x-1/2">
-          <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3 shadow-lg">
+          <div className="flex min-w-[400px] items-center justify-between gap-3 rounded-lg border border-border bg-background px-6 py-3">
             <Badge variant="secondary" className="h-6 px-2.5">
               <Sparkles className="h-3 w-3 mr-1.5" />
               {suggestedIndexes.length} suggestion

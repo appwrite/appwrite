@@ -46,6 +46,7 @@ import { Route as PublicProjectsProjectIdAuthRouteImport } from './routes/_publi
 import { Route as PublicProjectsProjectIdApiKeysRouteImport } from './routes/_public/projects.$projectId.api-keys'
 import { Route as PublicProjectsProjectIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.analytics'
 import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_public/projects.$projectId.activity'
+import { Route as PublicOrganizationsOrgIdSupportRouteImport } from './routes/_public/organizations.$orgId.support'
 import { Route as PublicOrganizationsOrgIdSettingsRouteImport } from './routes/_public/organizations.$orgId.settings'
 import { Route as PublicOrganizationsOrgIdMembersRouteImport } from './routes/_public/organizations.$orgId.members'
 import { Route as PublicOrganizationsOrgIdDomainsRouteImport } from './routes/_public/organizations.$orgId.domains'
@@ -349,6 +350,12 @@ const PublicProjectsProjectIdActivityRoute =
     id: '/activity',
     path: '/activity',
     getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicOrganizationsOrgIdSupportRoute =
+  PublicOrganizationsOrgIdSupportRouteImport.update({
+    id: '/support',
+    path: '/support',
+    getParentRoute: () => PublicOrganizationsOrgIdRoute,
   } as any)
 const PublicOrganizationsOrgIdSettingsRoute =
   PublicOrganizationsOrgIdSettingsRouteImport.update({
@@ -1008,6 +1015,7 @@ export interface FileRoutesByFullPath {
   '/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRoute
+  '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
@@ -1142,6 +1150,7 @@ export interface FileRoutesByTo {
   '/organizations/$orgId/change-plan': typeof PublicOrganizationsOrgIdChangePlanRoute
   '/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRoute
+  '/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
@@ -1264,6 +1273,7 @@ export interface FileRoutesById {
   '/_public/organizations/$orgId/domains': typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   '/_public/organizations/$orgId/members': typeof PublicOrganizationsOrgIdMembersRoute
   '/_public/organizations/$orgId/settings': typeof PublicOrganizationsOrgIdSettingsRoute
+  '/_public/organizations/$orgId/support': typeof PublicOrganizationsOrgIdSupportRoute
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/_public/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
@@ -1403,6 +1413,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/domains'
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
+    | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
@@ -1537,6 +1548,7 @@ export interface FileRouteTypes {
     | '/organizations/$orgId/change-plan'
     | '/organizations/$orgId/members'
     | '/organizations/$orgId/settings'
+    | '/organizations/$orgId/support'
     | '/projects/$projectId/activity'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
@@ -1658,6 +1670,7 @@ export interface FileRouteTypes {
     | '/_public/organizations/$orgId/domains'
     | '/_public/organizations/$orgId/members'
     | '/_public/organizations/$orgId/settings'
+    | '/_public/organizations/$orgId/support'
     | '/_public/projects/$projectId/activity'
     | '/_public/projects/$projectId/analytics'
     | '/_public/projects/$projectId/api-keys'
@@ -2041,6 +2054,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/$projectId/activity'
       preLoaderRoute: typeof PublicProjectsProjectIdActivityRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/organizations/$orgId/support': {
+      id: '/_public/organizations/$orgId/support'
+      path: '/support'
+      fullPath: '/organizations/$orgId/support'
+      preLoaderRoute: typeof PublicOrganizationsOrgIdSupportRouteImport
+      parentRoute: typeof PublicOrganizationsOrgIdRoute
     }
     '/_public/organizations/$orgId/settings': {
       id: '/_public/organizations/$orgId/settings'
@@ -2838,6 +2858,7 @@ interface PublicOrganizationsOrgIdRouteChildren {
   PublicOrganizationsOrgIdDomainsRoute: typeof PublicOrganizationsOrgIdDomainsRouteWithChildren
   PublicOrganizationsOrgIdMembersRoute: typeof PublicOrganizationsOrgIdMembersRoute
   PublicOrganizationsOrgIdSettingsRoute: typeof PublicOrganizationsOrgIdSettingsRoute
+  PublicOrganizationsOrgIdSupportRoute: typeof PublicOrganizationsOrgIdSupportRoute
   PublicOrganizationsOrgIdIndexRoute: typeof PublicOrganizationsOrgIdIndexRoute
 }
 
@@ -2851,6 +2872,7 @@ const PublicOrganizationsOrgIdRouteChildren: PublicOrganizationsOrgIdRouteChildr
     PublicOrganizationsOrgIdMembersRoute: PublicOrganizationsOrgIdMembersRoute,
     PublicOrganizationsOrgIdSettingsRoute:
       PublicOrganizationsOrgIdSettingsRoute,
+    PublicOrganizationsOrgIdSupportRoute: PublicOrganizationsOrgIdSupportRoute,
     PublicOrganizationsOrgIdIndexRoute: PublicOrganizationsOrgIdIndexRoute,
   }
 

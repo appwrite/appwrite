@@ -250,7 +250,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   }, [deployment, elapsedSeconds])
 
   const sidebarContent = (site || deployment) ? (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden shadow-sm">
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       {/* Header: icon + site name + status */}
       <div className="px-5 py-4">
         <div className="flex items-start gap-3">

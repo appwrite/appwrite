@@ -71,10 +71,18 @@ function OrganizationLayout() {
       match.routeId.startsWith('/_public/organizations/$orgId/change-plan'),
   )
 
+  // Check if we're on the support route (fullscreen wizard)
+  const isSupportRoute = matches.some(
+    (match) =>
+      match.routeId.includes('/support') ||
+      match.routeId === '/_public/organizations/$orgId/support' ||
+      match.routeId.startsWith('/_public/organizations/$orgId/support'),
+  )
+
   return (
     <RequireAuth>
-      {isDomainDetailRoute || isChangePlanRoute ? (
-        // For domain detail routes and change-plan route, render outlet directly (they have their own layout)
+      {isDomainDetailRoute || isChangePlanRoute || isSupportRoute ? (
+        // For domain detail, change-plan, and support routes, render outlet directly (they have their own layout)
         <Outlet />
       ) : (
         // For other routes, render OrgOverview which provides header/tabs

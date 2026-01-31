@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useTheme } from 'next-themes'
 import {
   Popover,
@@ -18,52 +18,15 @@ import {
   MessageCircle,
   ExternalLink,
   Activity,
-  Clock,
   Mail,
+  Building2,
 } from 'lucide-react'
 import { useOrganizationPlan } from '@/lib/react-query/hooks'
+import { getSupportHoursInLocalTime } from '@/lib/support'
 
-function getSupportHoursInLocalTime() {
-  // Support hours: 17:00 - 01:00 CET (Central European Time)
-  // CET is UTC+1, CEST (summer) is UTC+2
-  const now = new Date()
-
-  // Create dates for today's support window in CET
-  const startCET = new Date()
-  const endCET = new Date()
-
-  // Determine if CET or CEST (rough approximation - last Sunday of March to last Sunday of October)
-  const month = now.getMonth()
-  const isCEST = month >= 2 && month <= 9 // March to October (simplified)
-  const cetOffset = isCEST ? 2 : 1 // UTC+2 for CEST, UTC+1 for CET
-
-  // Set start time (17:00 CET/CEST)
-  startCET.setUTCHours(17 - cetOffset, 0, 0, 0)
-
-  // Set end time (01:00 CET/CEST next day)
-  endCET.setUTCHours(25 - cetOffset, 0, 0, 0) // 25 = 01:00 next day
-
-  // Format times in user's local timezone
-  const timeFormatter = new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  })
-
-  const startLocal = timeFormatter.format(startCET)
-  const endLocal = timeFormatter.format(endCET)
-
-  // Check if currently within support hours
-  const nowTime = now.getTime()
-  const isOpen = nowTime >= startCET.getTime() && nowTime <= endCET.getTime()
-
-  return {
-    startLocal,
-    endLocal,
-    isOpen,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  }
-}
+const CONTACT_SALES_URL =
+  import.meta.env.VITE_CONTACT_SALES_URL ||
+  'https://appwrite.io/contact-us/enterprise'
 
 interface SupportPopoverProps {
   orgId?: string | null
@@ -143,45 +106,52 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
           </div>
 
           {hasPremiumSupport && (
-            <div className="mt-4 rounded-lg border border-border bg-muted/30 p-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-2.5">
-                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-foreground">
-                      Support availability
-                    </p>
-                    <div className="space-y-0.5 text-sm text-muted-foreground">
-                      <p className="font-medium text-foreground">
-                        Monday – Friday
-                      </p>
-                      <p>
-                        {supportHours.startLocal} – {supportHours.endLocal}{' '}
-                        (your time)
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            <div className="mt-4 rounded-lg border border-border bg-muted/20 p-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-[13px] font-semibold text-foreground tracking-tight">
+                  Support hours
+                </h3>
                 <span
-                  className={`inline-flex shrink-0 items-center rounded-full px-2 py-1 text-[10px] font-medium ${
+                  className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
                     supportHours.isOpen
                       ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                       : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                   }`}
                 >
+                  <span
+                    className={`h-1 w-1 rounded-full ${
+                      supportHours.isOpen ? 'bg-emerald-500' : 'bg-amber-500'
+                    }`}
+                  />
                   {supportHours.isOpen ? 'Online' : 'Offline'}
                 </span>
               </div>
+              <p className="text-[12px] text-muted-foreground tabular-nums whitespace-nowrap mt-2">
+                Mon–Fri {supportHours.startLocal} – {supportHours.endLocal}
+              </p>
+              <p className="text-[11px] text-muted-foreground/70 mt-1 font-mono tracking-tight">
+                {supportHours.timezone}
+              </p>
             </div>
           )}
 
           {hasPremiumSupport ? (
-            <Button className="mt-3 w-full" size="sm" asChild>
-              <a href="mailto:support@appwrite.io">
+            orgId ? (
+              <Button className="mt-3 w-full" size="sm" asChild>
+                <Link
+                  to="/organizations/$orgId/support"
+                  params={{ orgId }}
+                >
+                  <MessageCircle className="mr-1.5 h-4 w-4" />
+                  Contact Support
+                </Link>
+              </Button>
+            ) : (
+              <Button className="mt-3 w-full" size="sm" disabled>
                 <MessageCircle className="mr-1.5 h-4 w-4" />
                 Contact Support
-              </a>
-            </Button>
+              </Button>
+            )
           ) : (
             <>
               <p className="mt-3 text-xs text-muted-foreground">
@@ -201,13 +171,33 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
 
         <Separator />
 
-        {/* Community Section */}
+        {/* Enterprise & Community */}
         <div className="p-4">
           <h4 className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Community
+            More options
           </h4>
 
           <div className="space-y-2">
+            <a
+              href={CONTACT_SALES_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted"
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                <Building2 className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-foreground">
+                  Enterprise & 24/7 support
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Contact sales
+                </p>
+              </div>
+              <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            </a>
+
             <a
               href="https://appwrite.io/discord"
               target="_blank"

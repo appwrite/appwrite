@@ -11,7 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { MessageSquarePlus, Send, Check } from 'lucide-react'
+import { MessageSquarePlus, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import {
@@ -161,10 +161,8 @@ export function FeedbackPopover({
                 disabled={
                   !message.trim() || message.length > 500 || isSubmitting
                 }
-                className="gap-2"
               >
-                <Send className="h-3.5 w-3.5" />
-                Send Feedback
+                Submit
               </Button>
             </div>
           </div>

@@ -45,7 +45,7 @@ import { PlatformIcon } from '@/components/global/shared/Icon'
 import {
   useOrganizationMemberships,
   fetchOrganizations,
-  fetchActiveProjects,
+  activeProjectsQueryOptions,
   useOrganizationPlan,
   useResendMembershipInvite,
   useUpdateMembershipRole,
@@ -352,8 +352,11 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     setCommandCenterOpen(true)
   })
 
-  // Pagination state
-  const [activeProjectsPage, setActiveProjectsPage] = useState(0)
+  // Pagination state (1-indexed for projects, like storage view)
+  const [requestedPage, setRequestedPage] = useState(1)
+  const [displayedPage, setDisplayedPage] = useState(1)
+  // Alias for projects current page (used in pagination UI; matches activeMembershipsPage pattern)
+  const activeProjectsPage = displayedPage
   const [activeMembershipsPage, setActiveMembershipsPage] = useState(0)
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
 
@@ -406,7 +409,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       setOrgName(selectedOrg.name)
       setDeleteConfirmation('')
       // Reset pagination when org changes
-      setActiveProjectsPage(0)
+      setRequestedPage(1)
+      setDisplayedPage(1)
       setActiveMembershipsPage(0)
       setMembershipsSearchQuery('')
     }
@@ -544,40 +548,59 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // In Appwrite, organizations ARE teams, so we use the organization ID directly as the team ID
   const orgTeamId = orgId || null
 
-  // Use loader data for initial load (blocking, synchronous)
-  // For pagination/search, use useQuery which will use cached data from route loader
+  // Fetch data for the requested page (triggers load when user changes page)
   const {
-    data: activeProjectsData,
     isLoading: activeProjectsLoading,
     isFetching: activeProjectsFetching,
     error: activeProjectsError,
-  } = useQuery({
-    queryKey: ['projects', 'active', activeProjectsPage, searchQuery, orgId],
-    queryFn: () =>
-      fetchActiveProjects(
-        orgTeamId!,
-        activeProjectsPage,
-        PROJECTS_PER_PAGE,
-        searchQuery,
-      ),
-    staleTime: 30 * 1000, // 30 seconds
-    enabled: !!orgTeamId, // Always fetch when we have an org ID
-  })
+  } = useQuery(
+    activeProjectsQueryOptions(
+      orgTeamId,
+      requestedPage - 1,
+      PROJECTS_PER_PAGE,
+      searchQuery,
+    ),
+  )
+
+  // Fetch data for the displayed page (what we show - stays until new page is ready)
+  const {
+    data: activeProjectsData,
+    isLoading: displayedProjectsLoading,
+  } = useQuery(
+    activeProjectsQueryOptions(
+      orgTeamId,
+      displayedPage - 1,
+      PROJECTS_PER_PAGE,
+      searchQuery,
+    ),
+  )
+
+  // Only show full loading when we have no data to display (initial load)
+  const displayedProjects = activeProjectsData?.projects ?? []
+  const showProjectsLoading =
+    displayedProjectsLoading && displayedProjects.length === 0
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !activeProjectsFetching &&
+      requestedPage !== displayedPage &&
+      !activeProjectsLoading
+    ) {
+      setDisplayedPage(requestedPage)
+    }
+  }, [activeProjectsFetching, activeProjectsLoading, requestedPage, displayedPage])
 
   // Get total count from the first page query (no search) - already fetched in route loader
   // This is used for limit checking and doesn't change when searching
-  const { data: totalProjectsData } = useQuery({
-    queryKey: ['projects', 'active', 0, '', orgId],
-    queryFn: () => fetchActiveProjects(orgTeamId!, 0, PROJECTS_PER_PAGE, ''),
-    staleTime: 30 * 1000, // 30 seconds
-    enabled: !!orgTeamId, // Always fetch when we have an org ID
-  })
+  const { data: totalProjectsData } = useQuery(
+    activeProjectsQueryOptions(orgTeamId, 0, PROJECTS_PER_PAGE, ''),
+  )
 
-  // Fetch archived projects from Console SDK with server-side filtering
-  // Use orgId from URL params directly
   // Reset pagination when search query changes
   useEffect(() => {
-    setActiveProjectsPage(0)
+    setRequestedPage(1)
+    setDisplayedPage(1)
   }, [searchQuery])
 
   // Track when projects are actually rendered in the DOM (for controlling full-screen loader)
@@ -591,7 +614,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       !activeProjectsLoading &&
       !activeProjectsFetching &&
       activeProjectsData &&
-      activeProjectsPage === 0 &&
+      displayedPage === 1 &&
       !searchQuery.trim()
     ) {
       // Wait for projects to actually be in the DOM
@@ -630,7 +653,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     activeProjectsLoading,
     activeProjectsFetching,
     activeProjectsData,
-    activeProjectsPage,
+    displayedPage,
     searchQuery,
     orgId,
   ])
@@ -1387,9 +1410,18 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           })()}
                         </div>
 
-                        {/* Projects by Team */}
-                        <div className="space-y-8" ref={projectsContainerRef}>
-                          {filteredProjectsByTeam.map(({ team, projects }) => (
+                        {/* Loading placeholder - same layout as grid to prevent shift */}
+                        {showProjectsLoading ? (
+                          <div className="rounded-lg border border-border bg-card py-12 text-center">
+                            <p className="text-[13px] text-muted-foreground">
+                              Loading projects...
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Projects by Team */}
+                            <div className="space-y-8" ref={projectsContainerRef}>
+                              {filteredProjectsByTeam.map(({ team, projects }) => (
                             <div key={team.$id}>
                               {/* Project Cards Grid */}
                               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1431,39 +1463,41 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                           ))}
                         </div>
 
-                        {/* Empty State */}
-                        {filteredProjectsByTeam.length === 0 && (
-                          <EmptyState
-                            icon={Search}
-                            title="No projects found"
-                            description={
-                              searchQuery
-                                ? undefined
-                                : 'Create your first project to get started'
-                            }
-                            isEmpty={!searchQuery}
-                            hasFilters={!!searchQuery}
-                            variant="centered"
-                            iconSize="md"
-                          />
-                        )}
+                            {/* Empty State */}
+                            {filteredProjectsByTeam.length === 0 && (
+                              <EmptyState
+                                icon={Search}
+                                title="No projects found"
+                                description={
+                                  searchQuery
+                                    ? undefined
+                                    : 'Create your first project to get started'
+                                }
+                                isEmpty={!searchQuery}
+                                hasFilters={!!searchQuery}
+                                variant="centered"
+                                iconSize="md"
+                              />
+                            )}
 
-                        {/* Pagination for Active Projects */}
-                        {activeProjectsTotal > PROJECTS_PER_PAGE && (
-                          <Pagination
-                            currentPage={activeProjectsPage + 1}
-                            totalItems={activeProjectsTotal}
-                            pageSize={PROJECTS_PER_PAGE}
-                            onPageChange={(page: number) =>
-                              setActiveProjectsPage(page - 1)
-                            }
-                            onPageSizeChange={() => {}} // Page size is fixed
-                            itemLabel="projects"
-                          />
-                        )}
+                            {/* Pagination for Active Projects */}
+                            {activeProjectsTotal > PROJECTS_PER_PAGE && (
+                              <Pagination
+                                currentPage={activeProjectsPage}
+                                totalItems={activeProjectsTotal}
+                                pageSize={PROJECTS_PER_PAGE}
+                                onPageChange={(page: number) =>
+                                  setRequestedPage(page)
+                                }
+                                onPageSizeChange={() => {}} // Page size is fixed
+                                itemLabel="projects"
+                              />
+                            )}
 
-                        {/* Enterprise Success Manager - Only show if plan supports it */}
-                        {supportsSuccessTeam && <EnterpriseSuccessManager />}
+                            {/* Enterprise Success Manager - Only show if plan supports it */}
+                            {supportsSuccessTeam && <EnterpriseSuccessManager />}
+                          </>
+                        )}
                       </>
                     )}
                   </>
