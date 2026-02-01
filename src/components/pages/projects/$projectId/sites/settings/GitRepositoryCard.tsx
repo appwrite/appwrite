@@ -2,13 +2,11 @@
  * Git Repository Card Component
  *
  * Manages Git repository connection and configuration for the site.
- * Only shown if the site has a connected repository.
+ * Shows an empty state with "Connect repository" when no repo is connected.
  */
 
 import { useState, useEffect, useMemo } from 'react'
-import { useParams } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -19,13 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -35,15 +26,14 @@ import {
   buildSiteUpdateParams,
   useRepository,
   useVcsInstallations,
-  useRepositories,
-  useRepositoryBranches,
+  useProject,
 } from '@/lib/react-query/hooks'
-import { VCSDetectionType } from '@appwrite.io/console'
 import { GitBranch, Lock, ExternalLink, Loader2, X } from 'lucide-react'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { cn } from '@/lib/utils'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 
 // GitHub Icon Component
 function GitHubIcon({ className }: { className?: string }) {
@@ -87,9 +77,6 @@ export function GitRepositoryCard({
   const [selectedInstallationId, setSelectedInstallationId] =
     useState<string>('')
   const [selectedRepositoryId, setSelectedRepositoryId] = useState<string>('')
-  const [repositorySearch, setRepositorySearch] = useState('')
-  const [repositoryPage, setRepositoryPage] = useState(0)
-  const [debouncedSearch, setDebouncedSearch] = useState('')
 
   // Fetch repository details if connected
   const hasRepository = site?.installationId && site.providerRepositoryId
@@ -103,25 +90,20 @@ export function GitRepositoryCard({
   // Fetch installations for connect modal
   const { data: installationsData } = useVcsInstallations(projectId)
 
-  // Fetch repositories for selected installation
-  const { data: repositoriesData, isLoading: repositoriesLoading } =
-    useRepositories(
-      projectId,
-      selectedInstallationId || null,
-      VCSDetectionType.Framework,
-      repositoryPage,
-      5,
-      debouncedSearch || undefined,
-    )
+  const { project } = useProject(projectId ?? undefined)
 
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(repositorySearch)
-      setRepositoryPage(0)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [repositorySearch])
+  const getGitHubAuthUrl = useMemo(() => {
+    if (typeof window === 'undefined' || !projectId || !siteId) return '#'
+    const origin = window.location.origin
+    const redirectUrl = `${origin}/projects/${projectId}/sites/${siteId}/settings`
+    const successUrl = encodeURIComponent(redirectUrl)
+    const failureUrl = encodeURIComponent(redirectUrl)
+    const projectEndpoint =
+      !project?.region || project.region === 'unknown'
+        ? import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
+        : `https://${project.region.trim().toLowerCase().replace(/\s+/g, '')}.cloud.appwrite.io/v1`
+    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
+  }, [projectId, siteId, project?.region])
 
   // Initialize selected installation when installations load
   useEffect(() => {
@@ -210,8 +192,6 @@ export function GitRepositoryCard({
       toast.success('Repository connected successfully')
       setConnectDialogOpen(false)
       setSelectedRepositoryId('')
-      setRepositorySearch('')
-      setRepositoryPage(0)
       queryClient.invalidateQueries({
         queryKey: ['site', 'project', projectId, siteId],
       })
@@ -282,10 +262,6 @@ export function GitRepositoryCard({
     disconnectRepositoryMutation.mutate()
   }
 
-  const repositories = useMemo(() => {
-    return repositoriesData?.runtimeProviderRepositories || []
-  }, [repositoriesData])
-
   const hasChanges = useMemo(() => {
     return (
       selectedBranch !== site?.providerBranch ||
@@ -294,308 +270,248 @@ export function GitRepositoryCard({
     )
   }, [selectedBranch, selectedDir, silentMode, site])
 
-  // Only show if repository is connected
-  if (!hasRepository) {
-    return null
-  }
+  const installationId: string | undefined =
+    site?.installationId != null ? site.installationId : undefined
+  const providerRepositoryId: string | undefined =
+    site?.providerRepositoryId != null ? site.providerRepositoryId : undefined
 
   return (
-    <>
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Git Repository
-          </h3>
-          <p className="text-[13px] text-muted-foreground mt-2">
-            Manage Git repository connection and configuration
-          </p>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
+    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+      <div className="px-6 py-4">
+        <h3 className="text-[15px] font-semibold text-foreground">
+          Git Repository
+        </h3>
+        <p className="text-[13px] text-muted-foreground mt-2">
+          Connect your site to a Git repository for automatic deployments
+        </p>
+      </div>
+      <div className="border-t border-border" />
+      <div className="px-6 py-4">
+        {!hasRepository ? (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <EmptyState
+              icon={GitBranch}
+              title="No repository connected"
+              description="Connect a repository to enable automatic deployments"
+              isEmpty={true}
+              iconSize="md"
+            />
+            <Dialog
+              open={connectDialogOpen}
+              onOpenChange={(open) => {
+                setConnectDialogOpen(open)
+                if (open) setSelectedRepositoryId('')
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button size="sm" className="h-9 text-[13px] mt-4">
+                  Connect repository
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl p-0">
+                <DialogHeader className="px-6 pt-6 text-left">
+                  <DialogTitle>Connect repository</DialogTitle>
+                  <DialogDescription className="text-[13px] mt-2">
+                    Select a GitHub installation and repository to connect to
+                    this site. You can connect an existing repository or create a
+                    new site from a template.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="border-t border-border" />
+                <div className="px-6 pb-4 pt-4 max-h-[70vh] overflow-y-auto">
+                  <RepositoryPicker
+                    projectId={projectId}
+                    getGitHubAuthUrl={getGitHubAuthUrl}
+                    installations={installationsData?.installations ?? []}
+                    selectedInstallationId={selectedInstallationId}
+                    onInstallationChange={setSelectedInstallationId}
+                    selectedRepositoryId={selectedRepositoryId}
+                    onRepositorySelect={(repo) =>
+                      setSelectedRepositoryId(repo.id)
+                    }
+                    mode="connect"
+                    showCreateNewSiteLink
+                  />
+                </div>
+                <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-[13px]"
+                    onClick={() => setConnectDialogOpen(false)}
+                    disabled={connectRepositoryMutation.isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-9 text-[13px]"
+                    onClick={handleConnectRepository}
+                    disabled={
+                      !selectedInstallationId ||
+                      !selectedRepositoryId ||
+                      connectRepositoryMutation.isPending
+                    }
+                  >
+                    Connect
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        ) : (
           <div className="space-y-4">
-            {/* Repository Connection */}
-            <div>
-              <Label className="text-[13px]">Repository</Label>
-              <div className="mt-2 flex items-center gap-3 rounded-lg border border-border bg-background p-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+            {repositoryLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : repository ? (
+              <div className="flex items-center gap-3 rounded-md border border-border bg-background px-3 py-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted">
                   <GitHubIcon className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  {repositoryLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  ) : repository ? (
-                    <>
-                      <p className="text-[13px] font-medium text-foreground truncate">
-                        {repository.organization}/{repository.name}
-                      </p>
-                      {repository.private && (
-                        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                          <Lock className="h-3 w-3" />
-                          Private
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-[13px] text-muted-foreground">
-                      Loading repository...
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-[13px] font-medium text-foreground">
+                      {repository.organization}/{repository.name}
+                    </p>
+                    {repository.private && (
+                      <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    )}
+                  </div>
+                  {'pushedAt' in repository && repository.pushedAt && (
+                    <p className="text-[12px] text-muted-foreground">
+                      Last updated{' '}
+                      <DateTooltip date={repository.pushedAt} />
                     </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  {repository?.url && (
-                    <a
-                      href={repository.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-foreground"
+                  {(repository as { url?: string }).url && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      asChild
                     >
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
+                      <a
+                        href={(repository as { url?: string }).url!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-[12px]"
-                    onClick={() => setConnectDialogOpen(true)}
+                  <Dialog
+                    open={disconnectDialogOpen}
+                    onOpenChange={setDisconnectDialogOpen}
                   >
-                    Change
-                  </Button>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-[13px] text-foreground hover:text-foreground"
+                      >
+                        <X className="mr-1.5 h-4 w-4" />
+                        Disconnect
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md p-0">
+                      <DialogHeader className="px-6 pt-6 text-left">
+                        <DialogTitle>Disconnect repository</DialogTitle>
+                        <DialogDescription className="text-[13px] mt-2">
+                          Are you sure you want to disconnect{' '}
+                          <span className="font-medium text-foreground">
+                            {repository.organization}/{repository.name}
+                          </span>{' '}
+                          from this site? This will remove the Git integration
+                          but won't affect your deployments.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          onClick={() => setDisconnectDialogOpen(false)}
+                          disabled={disconnectRepositoryMutation.isPending}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                          onClick={handleDisconnectRepository}
+                          disabled={disconnectRepositoryMutation.isPending}
+                        >
+                          Disconnect
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
-            </div>
+            ) : null}
 
-            {/* Branch Selection */}
-            {hasRepository && (
+            <fieldset className="rounded-lg border border-border p-4 space-y-4">
+              <legend className="text-[13px] font-medium text-foreground px-2">
+                Branch Settings
+              </legend>
+
               <BranchSelector
-                projectId={projectId}
-                installationId={site.installationId}
-                providerRepositoryId={site.providerRepositoryId}
+                projectId={projectId ?? undefined}
+                installationId={installationId}
+                providerRepositoryId={providerRepositoryId}
                 value={selectedBranch}
                 onChange={setSelectedBranch}
-                label="Branch"
+                label="Production branch"
               />
-            )}
 
-            {/* Root Directory */}
-            {hasRepository && (
               <RootDirectoryPicker
-                projectId={projectId}
-                installationId={site.installationId}
-                providerRepositoryId={site.providerRepositoryId}
+                projectId={projectId ?? undefined}
+                installationId={installationId}
+                providerRepositoryId={providerRepositoryId}
                 branch={selectedBranch || 'main'}
                 value={selectedDir}
                 onChange={setSelectedDir}
-                label="Root Directory"
+                label="Root directory"
                 description="Choose the directory containing your site code"
               />
-            )}
 
-            {/* Silent Mode */}
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="silent-mode" className="text-[13px]">
-                  Silent Mode
-                </Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Disable automated comments on repository commits
-                </p>
-              </div>
-              <Switch
-                id="silent-mode"
-                checked={silentMode}
-                onCheckedChange={setSilentMode}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setDisconnectDialogOpen(true)}
-              disabled={disconnectRepositoryMutation.isPending}
-            >
-              Disconnect
-            </Button>
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              disabled={!hasChanges || updateSiteMutation.isPending}
-              onClick={handleSaveConfiguration}
-            >
-              Update
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Connect Repository Dialog */}
-      <Dialog open={connectDialogOpen} onOpenChange={setConnectDialogOpen}>
-        <DialogContent className="sm:max-w-2xl p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>Connect repository</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              Select a GitHub installation and repository to connect to this
-              site.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="border-t border-border" />
-          <div className="px-6 pb-4 pt-0 max-h-[60vh] overflow-y-auto">
-            <div className="space-y-4">
-              {/* Installation Selector */}
-              <div>
-                <Label htmlFor="installation" className="text-[13px]">
-                  Installation
-                </Label>
-                <Select
-                  value={selectedInstallationId}
-                  onValueChange={setSelectedInstallationId}
-                >
-                  <SelectTrigger
-                    id="installation"
-                    className="mt-2 h-9 text-[13px]"
-                  >
-                    <SelectValue placeholder="Select installation" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {installationsData?.installations?.map((inst) => (
-                      <SelectItem key={inst.$id} value={inst.$id}>
-                        {inst.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Repository Search */}
-              {selectedInstallationId && (
+              <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="repository-search" className="text-[13px]">
-                    Search repositories
+                  <Label htmlFor="silent-mode" className="text-[13px]">
+                    Silent mode
                   </Label>
-                  <Input
-                    id="repository-search"
-                    value={repositorySearch}
-                    onChange={(e) => setRepositorySearch(e.target.value)}
-                    placeholder="Search repositories..."
-                    className="mt-2 h-9 text-[13px]"
-                  />
+                  <p className="text-[12px] text-muted-foreground">
+                    Disable automated comments on repository commits
+                  </p>
                 </div>
-              )}
-
-              {/* Repository List */}
-              {selectedInstallationId && (
-                <div>
-                  <Label className="text-[13px]">Repository</Label>
-                  {repositoriesLoading ? (
-                    <div className="mt-2 flex items-center justify-center py-8">
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : repositories.length === 0 ? (
-                    <EmptyState
-                      title="No repositories found"
-                      description="Try a different search term or installation"
-                      className="mt-2"
-                    />
-                  ) : (
-                    <div className="mt-2 space-y-2 max-h-[300px] overflow-y-auto">
-                      {repositories.map((repo) => (
-                        <div
-                          key={repo.$id}
-                          className={cn(
-                            'flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors',
-                            selectedRepositoryId === repo.$id
-                              ? 'border-primary bg-primary/5'
-                              : 'border-border hover:bg-muted/30',
-                          )}
-                          onClick={() => setSelectedRepositoryId(repo.$id)}
-                        >
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                            <GitHubIcon className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-medium text-foreground truncate">
-                              {repo.organization}/{repo.name}
-                            </p>
-                            {repo.private && (
-                              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                                <Lock className="h-3 w-3" />
-                                Private
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                <Switch
+                  id="silent-mode"
+                  checked={silentMode}
+                  onCheckedChange={setSilentMode}
+                  disabled={updateSiteMutation.isPending}
+                />
+              </div>
+            </fieldset>
           </div>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setConnectDialogOpen(false)}
-              disabled={connectRepositoryMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={handleConnectRepository}
-              disabled={
-                !selectedInstallationId ||
-                !selectedRepositoryId ||
-                connectRepositoryMutation.isPending
-              }
-            >
-              Connect
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Disconnect Repository Dialog */}
-      <Dialog
-        open={disconnectDialogOpen}
-        onOpenChange={setDisconnectDialogOpen}
-      >
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>Disconnect repository</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to disconnect the repository from this site?
-              This will remove the Git integration but won't affect your
-              deployments.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setDisconnectDialogOpen(false)}
-              disabled={disconnectRepositoryMutation.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={handleDisconnectRepository}
-              disabled={disconnectRepositoryMutation.isPending}
-            >
-              Disconnect
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+        )}
+      </div>
+      {hasRepository && (
+        <div className="px-6 py-4 border-t border-border bg-muted/30">
+          <Button
+            size="sm"
+            className="h-9 text-[13px]"
+            disabled={!hasChanges || updateSiteMutation.isPending}
+            onClick={handleSaveConfiguration}
+          >
+            Update
+          </Button>
+        </div>
+      )}
+    </div>
   )
 }
