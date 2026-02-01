@@ -23,4 +23,5 @@ return [
     'privacyUrl' => APP_EMAIL_PRIVACY_URL,
     'websiteUrl' => 'https://' . APP_DOMAIN,
     'emailSenderName' => APP_EMAIL_PLATFORM_NAME,
+    'sitePreviewDomain' => System::getEnv('_APP_DOMAIN_SITES', ''),
 ];
