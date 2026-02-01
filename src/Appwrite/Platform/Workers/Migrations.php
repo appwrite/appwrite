@@ -333,10 +333,10 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
 
-//        $endpoint = System::getEnv('_APP_MIGRATION_ENDPOINT');
-//        if (empty($endpoint)) {
-//            throw new \Exception('_APP_MIGRATION_ENDPOINT env is empty');
-//        }
+        //        $endpoint = System::getEnv('_APP_MIGRATION_ENDPOINT');
+        //        if (empty($endpoint)) {
+        //            throw new \Exception('_APP_MIGRATION_ENDPOINT env is empty');
+        //        }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
