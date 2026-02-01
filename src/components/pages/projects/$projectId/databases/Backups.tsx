@@ -49,7 +49,7 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  Loader2,
+  CircleDashed,
   Lock,
 } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -355,12 +355,12 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       },
       uploading: {
         label: 'Processing',
-        icon: Loader2,
+        icon: CircleDashed,
         badgeVariant: 'processing',
       },
       downloading: {
         label: 'Processing',
-        icon: Loader2,
+        icon: CircleDashed,
         badgeVariant: 'processing',
       },
       failed: { label: 'Failed', icon: AlertCircle, badgeVariant: 'failed' },

@@ -68,28 +68,14 @@ export function View() {
   const location = useLocation()
   const queryClient = useQueryClient()
 
-  // Fetch message
+  // Fetch message (updated via realtime when backend emits message events)
   const {
     data: message,
     isLoading: messageLoading,
-    refetch: refetchMessage,
   } = useMessage(projectId, messageId)
 
   // Fetch project to get project name
   const { project } = useProject(projectId)
-
-  // Poll message status every 2 seconds if status is 'processing'
-  useEffect(() => {
-    if (!message || message.status !== 'processing') {
-      return
-    }
-
-    const interval = setInterval(() => {
-      refetchMessage()
-    }, 2000)
-
-    return () => clearInterval(interval)
-  }, [message?.status, refetchMessage])
 
   // Fetch message targets
   const { data: targetsData, isLoading: targetsLoading } = useMessageTargets(

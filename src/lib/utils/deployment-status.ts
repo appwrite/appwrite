@@ -7,7 +7,7 @@
 
 import {
   CheckCircle2,
-  Loader2,
+  CircleDashed,
   Clock,
   AlertCircle,
   type LucideIcon,
@@ -90,11 +90,11 @@ export function getDeploymentStatusBadge(
     }
   > = {
     ready: { label: 'Ready', badgeVariant: 'completed', icon: CheckCircle2 },
-    building: { label: 'Building', badgeVariant: 'processing', icon: Loader2 },
+    building: { label: 'Building', badgeVariant: 'processing', icon: CircleDashed },
     processing: {
       label: 'Processing',
       badgeVariant: 'processing',
-      icon: Loader2,
+      icon: CircleDashed,
     },
     waiting: { label: 'Waiting', badgeVariant: 'pending', icon: Clock },
     failed: { label: 'Failed', badgeVariant: 'failed', icon: AlertCircle },

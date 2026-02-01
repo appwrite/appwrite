@@ -21,6 +21,7 @@ import {
   Project as ProjectApi,
   Projects,
   Proxy,
+  Realtime,
   Storage,
   Teams,
   Users,
@@ -83,6 +84,12 @@ clientConsole.setEndpoint(endpoint).setProject('console')
 // Configure Project client (will be set per-project)
 clientProject.setEndpoint(endpoint).setMode('admin')
 
+// Realtime instances: one per client (console vs project).
+// For project subscriptions, call sdk.forProject(projectId) before subscribing
+// so the project client has the correct project ID.
+const realtimeConsole = new Realtime(clientConsole)
+const realtimeProject = new Realtime(clientProject)
+
 // Create Project SDK instance
 const sdkForProject = {
   client: clientProject,
@@ -133,6 +140,24 @@ export const sdk = {
     }
 
     return sdkForProject
+  },
+
+  /**
+   * Realtime for console-level subscriptions (sites, functions, deployments,
+   * executions, migrations, platform ping, rules). Uses project = 'console'.
+   */
+  getConsoleRealtime(): Realtime {
+    return realtimeConsole
+  },
+
+  /**
+   * Realtime for project-level subscriptions. Call sdk.forProject(projectId)
+   * before subscribing so the client has the correct project ID.
+   * Only one project subscription scope should be active at a time; close
+   * the subscription before switching to another project.
+   */
+  getProjectRealtime(): Realtime {
+    return realtimeProject
   },
 }
 

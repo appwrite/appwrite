@@ -22,16 +22,12 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
-import { Loader2, CheckCircle2, XCircle, Search, ArrowUp, ArrowDown, Copy, Download } from 'lucide-react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { CircleDashed, CheckCircle2, XCircle, Search, ArrowUp, ArrowDown, Copy, Download } from 'lucide-react'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
 import {
   useProjectSite,
   useSiteDeployment,
   useRepository,
-  siteQueryOptions,
-  siteDeploymentQueryOptions,
 } from '@/lib/react-query/hooks'
 import { useWizard } from './WizardContext'
 
@@ -66,7 +62,6 @@ interface DeployingViewProps {
 export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const { formData, frameworks } = useWizard()
   const logsContainerRef = useRef<HTMLDivElement>(null)
   const [logsSearch, setLogsSearch] = useState('')
@@ -80,8 +75,8 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   // Fetch site details
   const { data: site } = useProjectSite(projectId, actualSiteId)
 
-  // Fetch deployment details with polling
-  const { data: deployment, refetch: refetchDeployment } = useSiteDeployment(
+  // Fetch deployment details (updated via realtime in RealtimeProvider)
+  const { data: deployment } = useSiteDeployment(
     projectId,
     actualSiteId,
     actualDeploymentId,
@@ -97,17 +92,6 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   // Local state for status
   const [status, setStatus] = useState<string>('building')
   const buildLogs = deployment?.buildLogs ?? ''
-
-  // Poll for deployment status
-  useEffect(() => {
-    if (!actualDeploymentId) return
-
-    const interval = setInterval(() => {
-      refetchDeployment()
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [actualDeploymentId, refetchDeployment])
 
   // Update status from deployment
   useEffect(() => {
@@ -279,14 +263,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
               variant={statusBadge.badgeVariant}
               className="gap-1.5 text-[11px] font-medium shrink-0 h-6 px-2.5"
             >
-              {statusBadge.icon === Loader2 ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                (() => {
-                  const StatusIcon = statusBadge.icon
-                  return <StatusIcon className="h-3.5 w-3.5" />
-                })()
-              )}
+              {(() => {
+                const StatusIcon = statusBadge.icon
+                return <StatusIcon className="h-3.5 w-3.5" />
+              })()}
               {statusBadge.label}
             </Badge>
           )}
@@ -440,7 +420,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
               highlightLineOnHover
               emptyMessage={
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                  <CircleDashed className="h-3.5 w-3.5 shrink-0" />
                   Waiting for build logs...
                 </div>
               }

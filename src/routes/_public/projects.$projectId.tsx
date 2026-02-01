@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
+import { RealtimeProvider } from '@/components/global/providers/RealtimeProvider'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
   fetchProject,
@@ -158,22 +159,24 @@ function ProjectLayout() {
 
   return (
     <RequireAuth>
-      <KeyboardShortcutsProvider projectId={projectId}>
-        <ConsoleLayout
-          sidebar={{
-            projectId,
-            activeSection,
-            mobileOpen: sidebarOpen,
-            onMobileClose: () => setSidebarOpen(false),
-            onMenuClick: () => setSidebarOpen(true),
-          }}
-          header={{ projectId }}
-          showFooter={!hideFooter}
-          fixedLayout={isFixedLayoutView}
-        >
-          <Outlet />
-        </ConsoleLayout>
-      </KeyboardShortcutsProvider>
+      <RealtimeProvider projectId={projectId}>
+        <KeyboardShortcutsProvider projectId={projectId}>
+          <ConsoleLayout
+            sidebar={{
+              projectId,
+              activeSection,
+              mobileOpen: sidebarOpen,
+              onMobileClose: () => setSidebarOpen(false),
+              onMenuClick: () => setSidebarOpen(true),
+            }}
+            header={{ projectId }}
+            showFooter={!hideFooter}
+            fixedLayout={isFixedLayoutView}
+          >
+            <Outlet />
+          </ConsoleLayout>
+        </KeyboardShortcutsProvider>
+      </RealtimeProvider>
     </RequireAuth>
   )
 }

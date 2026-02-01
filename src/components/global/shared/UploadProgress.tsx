@@ -52,7 +52,7 @@ export function UploadProgress({
                 ) : upload.status === 'failed' ? (
                   <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
                 ) : (
-                  <Loader2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
                 )}
                 <p className="text-[13px] font-medium text-foreground truncate">
                   {upload.fileName}
