@@ -338,6 +338,9 @@ class Migrations extends Action
             throw new \Exception('_APP_MIGRATION_ENDPOINT env is empty');
         }
 
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
+
         try {
             $credentials = $migration->getAttribute('credentials', []);
 
@@ -359,8 +362,6 @@ class Migrations extends Action
             }
 
             $migration->setAttribute('credentials', $credentials);
-
-            var_dump($credentials);
 
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
