@@ -78,13 +78,18 @@ function SignUpPage() {
   }
 
   const signUpMutation = useMutation({
-    mutationFn: async (data: { email: string; password: string }) => {
+    mutationFn: async (data: {
+      email: string
+      password: string
+      name?: string
+    }) => {
       try {
         // Create account
         await sdk.forConsole.account.create({
           userId: ID.unique(),
           email: data.email,
           password: data.password,
+          name: data.name,
         })
 
         // Create session
@@ -130,14 +135,18 @@ function SignUpPage() {
         <p className="mt-6 text-center text-xs text-muted-foreground">
           By clicking continue, you agree to our{' '}
           <a
-            href="#"
+            href="https://appwrite.io/terms"
+            target="_blank"
+            rel="noopener noreferrer"
             className="underline underline-offset-4 hover:text-primary"
           >
             Terms of Service
           </a>{' '}
           and{' '}
           <a
-            href="#"
+            href="https://appwrite.io/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
             className="underline underline-offset-4 hover:text-primary"
           >
             Privacy Policy
