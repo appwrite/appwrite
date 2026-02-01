@@ -332,16 +332,9 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
 
-
-        /**
-         * Old logic
-         * $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-         * $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
-         */
-
         $endpoint = System::getEnv('_APP_MIGRATION_ENDPOINT');
-        if(empty($endpoint)){
-            throw new \Exception('empty _APP_MIGRATION_ENDPOINT');
+        if (empty($endpoint)) {
+            throw new \Exception('_APP_MIGRATION_ENDPOINT env is empty');
         }
 
         try {
@@ -353,6 +346,10 @@ class Migrations extends Action
                     $credentials['apiKey'] = $tempAPIKey;
                     $credentials['endpoint'] = $endpoint;
                 }
+            }
+
+            if ($migration->getAttribute('destination') === DestinationAppwrite::getName()) {
+
             }
 
             if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
@@ -581,7 +578,8 @@ class Migrations extends Action
         ]);
 
         // Generate download URL with JWT
-        $endpoint = System::getEnv('_APP_DOMAIN', '');
+
+        $endpoint = System::getEnv('_APP_DOMAIN', ''); // Can use System::getEnv('_APP_MIGRATION_ENDPOINT'); ?
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled' ? 'https' : 'http';
         $downloadUrl = "{$protocol}://{$endpoint}/v1/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
         $options['downloadUrl'] = $downloadUrl;
