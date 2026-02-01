@@ -14,7 +14,7 @@ import {
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
 import type { Project } from '@/lib/utils/mock-data'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, setProjectRegion } from '@/lib/appwrite/sdk'
 import {
   DEFAULT_STALE_TIME,
   LONG_STALE_TIME,
@@ -39,6 +39,9 @@ export async function fetchProject(projectId: string) {
     throw new Error('Project ID is required')
   }
   const response = await sdk.forConsole.projects.get(projectId)
+  if (response?.region) {
+    setProjectRegion(projectId, response.region)
+  }
   return response
 }
 
@@ -95,6 +98,25 @@ export async function fetchApiKeys(projectId: string) {
   }
   // Fetch API keys from the console SDK
   const response = await sdk.forConsole.projects.listKeys({ projectId })
+  return response
+}
+
+/**
+ * Query function to fetch platforms (apps) for a project
+ *
+ * This is extracted so it can be reused in both hooks and route loaders.
+ *
+ * @param projectId - The project ID
+ * @returns Platforms list response from the API
+ */
+export async function fetchPlatforms(projectId: string) {
+  if (!projectId) {
+    throw new Error('Project ID is required')
+  }
+  const response = await sdk.forConsole.projects.listPlatforms({
+    projectId,
+    total: true,
+  })
   return response
 }
 
@@ -576,6 +598,52 @@ export function useDeleteApiKey(projectId: string | null | undefined) {
       })
     },
   })
+}
+
+// ============================================================================
+// PLATFORMS (APPS)
+// ============================================================================
+
+/**
+ * Query options for fetching platforms (apps) for a project
+ *
+ * This can be used in both route loaders and hooks to ensure consistent query configuration.
+ */
+export function platformsQueryOptions(projectId: string | null | undefined) {
+  return queryOptions({
+    queryKey: ['platforms', projectId],
+    queryFn: () => fetchPlatforms(projectId!),
+    enabled: !!projectId,
+    staleTime: LONG_STALE_TIME,
+  })
+}
+
+/**
+ * Hook to fetch platforms (apps) for a project
+ *
+ * @param projectId - The project ID
+ * @returns Platforms list with loading state
+ */
+export function usePlatforms(projectId: string | null | undefined) {
+  const {
+    data: platformsData,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery(platformsQueryOptions(projectId))
+
+  const platforms = useMemo(() => {
+    if (!platformsData?.platforms) return []
+    return platformsData.platforms
+  }, [platformsData])
+
+  return {
+    platforms,
+    total: platformsData?.total ?? 0,
+    isLoading,
+    error,
+    refetch,
+  }
 }
 
 /**

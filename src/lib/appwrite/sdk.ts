@@ -33,8 +33,9 @@ import {
   Organizations,
 } from '@appwrite.io/console'
 
-// Get endpoint from environment variable
-function getApiEndpoint(_region?: string): string {
+// Get endpoint from environment variable. When region is provided (and not empty/unknown),
+// returns the region-specific endpoint (e.g. https://nyc.cloud.appwrite.io/v1).
+function getApiEndpoint(region?: string): string {
   const baseEndpoint =
     import.meta.env.VITE_APPWRITE_ENDPOINT ||
     (typeof window !== 'undefined'
@@ -45,9 +46,31 @@ function getApiEndpoint(_region?: string): string {
     throw new Error('VITE_APPWRITE_ENDPOINT is not configured')
   }
 
-  // For multi-region support, you can add region subdomain logic here
-  // Example: return `${protocol}//${regionSubdomain}${hostname}/v1`;
+  if (region && region.trim().toLowerCase() !== 'unknown') {
+    const normalizedRegion = region
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '')
+    if (normalizedRegion) {
+      return `https://${normalizedRegion}.cloud.appwrite.io/v1`
+    }
+  }
+
   return baseEndpoint
+}
+
+// Project region cache: when we fetch a project we register its region so forProject()
+// can use the correct region-specific endpoint without callers passing region everywhere.
+const projectRegions = new Map<string, string>()
+
+/**
+ * Register a project's region so SDK uses the correct region endpoint for that project.
+ * Called automatically when project is fetched; can be called explicitly if needed.
+ */
+export function setProjectRegion(projectId: string, region: string | undefined) {
+  if (region && region.trim().toLowerCase() !== 'unknown') {
+    projectRegions.set(projectId, region.trim().toLowerCase().replace(/\s+/g, ''))
+  }
 }
 
 // Create Console SDK instance
@@ -128,9 +151,11 @@ export const sdk = {
   },
 
   // Project SDK - for managing project-specific resources
-  // Call this method with the project ID to get a configured SDK instance
+  // Call this method with the project ID to get a configured SDK instance.
+  // Uses the project's region (from setProjectRegion when project was fetched) for the correct endpoint.
   forProject(projectId: string, region?: string) {
-    const projectEndpoint = region ? getApiEndpoint(region) : endpoint
+    const effectiveRegion = region ?? projectRegions.get(projectId)
+    const projectEndpoint = getApiEndpoint(effectiveRegion)
 
     if (projectEndpoint !== clientProject.config.endpoint) {
       clientProject.setEndpoint(projectEndpoint)
