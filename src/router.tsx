@@ -1,4 +1,4 @@
-import { createRouter, useLocation } from '@tanstack/react-router'
+import { createRouter } from '@tanstack/react-router'
 import * as Sentry from '@sentry/tanstackstart-react'
 import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 
@@ -6,29 +6,9 @@ import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import { routeTree } from './routeTree.gen'
 import { ErrorComponent } from './components/error/Component'
 
-// Component for default pending state - checks if we're on an auth route
-function DefaultPendingComponent() {
-  const location = useLocation()
-  
-  // Don't show pending component on auth routes - they load instantly
-  const isAuthRoute =
-    location.pathname === '/sign-in' ||
-    location.pathname === '/sign-up' ||
-    location.pathname === '/recovery' ||
-    location.pathname === '/mfa' ||
-    location.pathname === '/join' ||
-    location.pathname === '/sign-out'
-  
-  if (isAuthRoute) {
-    return null
-  }
-  
-  return (
-    <div className="flex h-full items-center justify-center">
-      <div className="text-muted-foreground">Loading data for you...</div>
-    </div>
-  )
-}
+// No default pending component: the root FullscreenLoader (Appwrite logo) is the
+// single loader. Showing a router pending UI here caused a dual-loader flash on
+// static build (text "Loading data for you" then logo).
 
 // Create a new router instance
 export const getRouter = () => {
@@ -38,7 +18,7 @@ export const getRouter = () => {
     routeTree,
     context: { ...rqContext },
     defaultPreload: 'intent',
-    defaultPendingComponent: DefaultPendingComponent,
+    defaultPendingComponent: () => null,
     defaultErrorComponent: ({ error, info, reset }) => (
       <ErrorComponent error={error} info={info} reset={reset} />
     ),
