@@ -38,9 +38,14 @@ export function FullscreenLoader({
   }, [isVisible])
 
   // Use resolvedTheme when available (handles system theme), otherwise fall back to theme
-  // Default to dark mode if theme is not yet resolved (matches defaultTheme="dark" in ThemeProvider)
-  const isDark = mounted ? (resolvedTheme ?? theme) === 'dark' : true // Default to dark during SSR/initial render
+  // Only pick logo once theme is resolved to avoid flash
+  const isDark = mounted ? (resolvedTheme ?? theme) === 'dark' : true
   const logoSrc = isDark ? '/appwrite-dark.svg' : '/appwrite-light.svg'
+
+  // Logo dimensions from SVG viewBox (132×24) – reserve space to prevent layout shift
+  const LOGO_WIDTH = 132
+  const LOGO_HEIGHT = 24
+  const CONTENT_MIN_WIDTH = LOGO_WIDTH + 6 + 32 // logo + gap-1.5 + " / 2.0" text
 
   useEffect(() => {
     if (isVisible) {
@@ -64,12 +69,27 @@ export function FullscreenLoader({
           transition={{ duration: 0.5, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] bg-background"
         >
-          {/* Loader content */}
+          {/* Loader content – fixed-size wrapper prevents layout shift when logo/text appear */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            {/* Appwrite logo centered */}
-            <div className="flex items-center gap-1.5" suppressHydrationWarning>
-              <img src={logoSrc} alt="Appwrite" className="h-6 w-auto" />
-              <span className="text-foreground/60 text-xs font-extralight tracking-tight">/ 2.0</span>
+            <div
+              className="flex items-center gap-1.5 min-h-6"
+              style={{ minWidth: CONTENT_MIN_WIDTH }}
+              suppressHydrationWarning
+            >
+              {mounted ? (
+                <>
+                  <img
+                    src={logoSrc}
+                    alt="Appwrite"
+                    width={LOGO_WIDTH}
+                    height={LOGO_HEIGHT}
+                    className="h-6 w-auto"
+                  />
+                  <span className="text-foreground/60 text-xs font-extralight tracking-tight">/ 2.0</span>
+                </>
+              ) : (
+                <span className="sr-only">Loading</span>
+              )}
             </div>
           </div>
           {/* Spinner at bottom, only shown after 3s */}
