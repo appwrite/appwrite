@@ -17,7 +17,7 @@
     "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@9b32107",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@95675c4",
     "@faker-js/faker": "^10.1.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",

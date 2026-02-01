@@ -184,32 +184,19 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
     return aggregation.additionalMembers
   }, [aggregation])
 
-  // Calculate additional projects cost
-  // Check both aggregation and plan for project limits
-  const additionalProjectsCost = useMemo(() => {
-    if (!plan || !aggregation) return 0
+  // Get projects resource from aggregation API (resourceId: "projects")
+  const projectsResource = useMemo(() => {
+    const resources = (aggregation as any)?.resources
+    if (!Array.isArray(resources)) return null
+    return resources.find((r: any) => r.resourceId === 'projects') ?? null
+  }, [aggregation])
 
-    // Get included projects from plan
-    const includedProjects =
-      plan.projects || plan.addons?.projects?.planIncluded || 0
-    const projects =
-      aggregation.breakdown ||
-      aggregation.projects ||
-      aggregation.projectBreakdown ||
-      []
-    const totalProjects = Array.isArray(projects) ? projects.length : 0
-
-    if (totalProjects <= includedProjects) return 0
-
-    const additionalCount = totalProjects - includedProjects
-    // Get additional project price from plan addons
-    const additionalProjectPrice =
-      plan.addons?.projects?.price || plan.additionalProjectPrice || 0
-
-    return additionalCount * additionalProjectPrice
-  }, [plan, aggregation])
-
+  // Additional projects count and cost from aggregation API when available
   const additionalProjectsCount = useMemo(() => {
+    if (projectsResource?.value !== undefined && projectsResource?.value !== null) {
+      return Number(projectsResource.value)
+    }
+    // Fallback: derive from breakdown count minus plan included
     if (!plan || !aggregation) return 0
     const includedProjects =
       plan.projects || plan.addons?.projects?.planIncluded || 0
@@ -220,7 +207,28 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       []
     const totalProjects = Array.isArray(projects) ? projects.length : 0
     return Math.max(0, totalProjects - includedProjects)
-  }, [plan, aggregation])
+  }, [plan, aggregation, projectsResource])
+
+  const additionalProjectsCost = useMemo(() => {
+    if (projectsResource?.amount !== undefined && projectsResource?.amount !== null) {
+      return Number(projectsResource.amount)
+    }
+    // Fallback: derive from count * plan addon price
+    if (!plan || !aggregation) return 0
+    const includedProjects =
+      plan.projects || plan.addons?.projects?.planIncluded || 0
+    const projects =
+      aggregation.breakdown ||
+      aggregation.projects ||
+      aggregation.projectBreakdown ||
+      []
+    const totalProjects = Array.isArray(projects) ? projects.length : 0
+    if (totalProjects <= includedProjects) return 0
+    const additionalCount = totalProjects - includedProjects
+    const additionalProjectPrice =
+      plan.addons?.projects?.price || plan.additionalProjectPrice || 0
+    return additionalCount * additionalProjectPrice
+  }, [plan, aggregation, projectsResource])
 
   // Toggle project expansion
   const toggleProject = (projectId: string) => {
