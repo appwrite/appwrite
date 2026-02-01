@@ -18,9 +18,9 @@ import { LONG_STALE_TIME } from './constants'
  * @returns Regions list response from the API
  */
 export async function fetchRegions() {
-  const response = await sdk.forConsole.console.regions()
+  const response = await sdk.forConsole.console.listRegions()
 
-  // Response is Models.ConsoleRegionList which should have a regions property
+  // Response is Models.ConsoleRegionList which has a regions property
   return {
     regions: response.regions || [],
   }
