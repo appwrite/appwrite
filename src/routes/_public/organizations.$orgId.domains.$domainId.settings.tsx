@@ -1,35 +1,41 @@
 import { View } from '@/components/pages/organizations/$orgId/domains/$domainId/View'
 import { createFileRoute } from '@tanstack/react-router'
-import { organizationsQueryOptions, fetchDomain } from '@/lib/react-query/hooks'
+import {
+  fetchDomain,
+  fetchOrganizations,
+} from '@/lib/react-query/hooks'
+
+const STALE_TIME = 30 * 1000
 
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/domains/$domainId/settings',
 )({
   loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
-    }
+    if (typeof window === 'undefined') return
 
-    const { orgId, domainId } = params
+    const { domainId } = params
     const { queryClient } = context
 
-    // Prefetch organizations if not already loaded
-    await queryClient.prefetchQuery(organizationsQueryOptions())
+    if (!domainId) return
 
-    // Fetch domain details - blocks navigation until ready
-    if (domainId) {
-      await queryClient.fetchQuery({
+    // Same pattern as bucket settings: fetchQuery with exact keys matching hooks. Blocks navigation until ready.
+    await Promise.all([
+      queryClient.fetchQuery({
         queryKey: ['domain', domainId],
         queryFn: () => fetchDomain(domainId),
-        staleTime: 30 * 1000, // 30 seconds
-      })
-    }
+        staleTime: STALE_TIME,
+      }),
+      queryClient.fetchQuery({
+        queryKey: ['organizations', 'console'],
+        queryFn: fetchOrganizations,
+        staleTime: STALE_TIME,
+      }),
+    ])
   },
   component: DomainDetailPage,
 })
 
 function DomainDetailPage() {
-  const { orgId, domainId } = Route.useParams()
+  const { domainId } = Route.useParams()
   return <View key={`domain-${domainId}-settings`} />
 }

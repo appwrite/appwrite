@@ -9,20 +9,14 @@ const DOMAINS_PER_PAGE = 25
 
 export const Route = createFileRoute('/_public/organizations/$orgId/domains/')({
   loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
-    }
+    if (typeof window === 'undefined') return
 
     const { orgId } = params
     const { queryClient } = context
 
-    // Prefetch organizations if not already loaded
-    await queryClient.prefetchQuery(organizationsQueryOptions())
-
-    // Fetch domains for the organization (initial page, no search)
+    // Same pattern as storage index: ensure all data before rendering. Blocks navigation.
+    await queryClient.ensureQueryData(organizationsQueryOptions())
     if (orgId) {
-      // Fetch first page of domains - blocks navigation until ready
       await queryClient.ensureQueryData(
         organizationDomainsQueryOptions(orgId, 0, DOMAINS_PER_PAGE, ''),
       )

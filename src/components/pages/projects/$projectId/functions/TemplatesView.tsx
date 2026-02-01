@@ -34,9 +34,12 @@ import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
 import {
   useFunctionTemplates,
   fetchFunctionTemplates,
+  useProject,
 } from '@/lib/react-query/hooks'
 import { useQuery } from '@tanstack/react-query'
 import type { Models } from '@appwrite.io/console'
+import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { resolveTemplateVariables } from '@/lib/template-placeholders'
 import { Separator } from '@/components/ui/separator'
 import {
   Accordion,
@@ -710,6 +713,7 @@ const mockTemplates: Template[] = [
 export function TemplatesView() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
+  const { project } = useProject(projectId)
 
   const [templateSearchValue, setTemplateSearchValue] = useState<string>('')
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
@@ -719,6 +723,27 @@ export function TemplatesView() {
   )
   const [templatesPage, setTemplatesPage] = useState(0) // 0-indexed like org view
   const [templatesPageSize, setTemplatesPageSize] = useState(12)
+
+  // Resolve template variable placeholders for display (apiEndpoint, projectId, projectName)
+  const resolvedTemplateVariables = useMemo(() => {
+    if (!selectedTemplate?.variables?.length) return []
+    const apiEndpoint = getApiEndpoint(project?.region)
+    const context = {
+      apiEndpoint,
+      projectId: projectId ?? '',
+      projectName: project?.name ?? '',
+    }
+    return resolveTemplateVariables(selectedTemplate.variables, context)
+  }, [selectedTemplate?.variables, project?.region, project?.name, projectId])
+
+  const requiredVariables = useMemo(
+    () => resolvedTemplateVariables.filter((v) => v.required),
+    [resolvedTemplateVariables],
+  )
+  const optionalVariables = useMemo(
+    () => resolvedTemplateVariables.filter((v) => !v.required),
+    [resolvedTemplateVariables],
+  )
 
   // Fetch all templates only when we need them for mapping (when filters are active)
   const needsAllTemplates =
@@ -1330,7 +1355,7 @@ export function TemplatesView() {
                               variant="secondary"
                               className="text-[10px] px-1.5 py-0"
                             >
-                              {selectedTemplate.variables.length}
+                              {requiredVariables.length}
                             </Badge>
                           </div>
                         </AccordionTrigger>
@@ -1339,10 +1364,83 @@ export function TemplatesView() {
                             Environment variables that need to be configured for
                             the function to work properly.
                           </p>
-                          {selectedTemplate.variables.length > 0 ? (
+                          {requiredVariables.length > 0 ? (
                             <div className="space-y-4">
-                              {selectedTemplate.variables.map(
-                                (variable, index) => (
+                              {requiredVariables.map((variable, index) => (
+                                <div key={variable.name}>
+                                  {index > 0 && (
+                                    <Separator className="my-4" />
+                                  )}
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <code className="text-[13px] font-mono font-semibold text-foreground">
+                                        {variable.name}
+                                      </code>
+                                      {variable.required && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[10px]"
+                                        >
+                                          Required
+                                        </Badge>
+                                      )}
+                                      {variable.secret && (
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-[10px] gap-1"
+                                        >
+                                          <Key className="h-2.5 w-2.5" />
+                                          Secret
+                                        </Badge>
+                                      )}
+                                      {variable.type && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[10px] font-mono"
+                                        >
+                                          {variable.type}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    {variable.description && (
+                                      <div
+                                        className="text-[12px] leading-relaxed text-muted-foreground [&_a]:text-primary [&_a]:underline [&_a]:font-semibold"
+                                        dangerouslySetInnerHTML={{
+                                          __html: variable.description,
+                                        }}
+                                      />
+                                    )}
+                                    {(variable.placeholder ||
+                                      variable.value) && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[11px] text-muted-foreground">
+                                          {variable.value
+                                            ? 'Default:'
+                                            : 'Placeholder:'}
+                                        </span>
+                                        <code className="text-[11px] font-mono text-foreground bg-muted px-2 py-1 rounded">
+                                          {variable.value ||
+                                            variable.placeholder}
+                                        </code>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-[12px] text-muted-foreground">
+                              No required variables for this template.
+                            </p>
+                          )}
+                          {optionalVariables.length > 0 && (
+                            <div className="mt-4 border-t border-border pt-4">
+                              <h4 className="text-[13px] font-medium text-muted-foreground mb-3">
+                                Optional variables (
+                                {optionalVariables.length})
+                              </h4>
+                              <div className="space-y-4 pt-0">
+                                {optionalVariables.map((variable, index) => (
                                   <div key={variable.name}>
                                     {index > 0 && (
                                       <Separator className="my-4" />
@@ -1352,14 +1450,6 @@ export function TemplatesView() {
                                         <code className="text-[13px] font-mono font-semibold text-foreground">
                                           {variable.name}
                                         </code>
-                                        {variable.required && (
-                                          <Badge
-                                            variant="outline"
-                                            className="text-[10px]"
-                                          >
-                                            Required
-                                          </Badge>
-                                        )}
                                         {variable.secret && (
                                           <Badge
                                             variant="secondary"
@@ -1402,13 +1492,9 @@ export function TemplatesView() {
                                       )}
                                     </div>
                                   </div>
-                                ),
-                              )}
+                                ))}
+                              </div>
                             </div>
-                          ) : (
-                            <p className="text-[12px] text-muted-foreground">
-                              No variables required for this template.
-                            </p>
                           )}
                         </AccordionContent>
                       </AccordionItem>

@@ -7,7 +7,5 @@ export const Route = createFileRoute(
 })
 
 function DomainDetailLayout() {
-  // This is a layout route that just renders the outlet
-  // The index route handles the detail view rendering
   return <Outlet />
 }

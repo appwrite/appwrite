@@ -607,6 +607,100 @@ export const Route = createFileRoute('/_public/projects/$projectId/storage/')({
 - Subsequent pages (only page 1)
 - Optional/conditional data
 
+### Detail page: no loading flash (initialData pattern)
+
+**Goal:** When navigating to a detail page (e.g. domain detail, bucket detail), the user must never see "Loading…", "Not found", or a loading placeholder. The current page stays visible until the new page is fully ready, then we transition with data already rendered.
+
+**Why cache-only isn’t enough:** Even with `fetchQuery` in the loader (same keys as hooks), the View can mount before the cache is visible to React Query, causing a brief "Not found" or "Loading…" flash. Passing **loader data as `initialData`** into the View guarantees the first paint has data.
+
+**Checklist for a new detail page:**
+
+1. **Parent layouts:** No loader on the detail layout (e.g. `$domainId`, `$bucketId`). Only the **leaf** route that renders the detail page has a loader. The **list** layout must not fetch the list when navigating to a detail route (or have no loader at all so only the list index fetches the list).
+2. **Detail route loader:**
+   - Use `queryClient.fetchQuery({ queryKey, queryFn, staleTime })` with **exact same keys** as the hooks (so cache is populated).
+   - **Return** the fetched data from the loader (e.g. `return { resource, listData }`).
+3. **Route component:** Call `Route.useLoaderData()` and pass it to the View as `initialData`.
+4. **View component:**
+   - Accept optional `initialData?: { resource; listData? }` (or whatever the page needs).
+   - Use `resource = dataFromHook ?? initialData?.resource` (and same for list data on first page) so the first paint uses loader data.
+   - Show "Not found" only when `!resource && !initialData?.resource && !loading` (never while loading or when initialData is present).
+   - For list/table content, use initialData for the first page when the hook hasn’t returned yet (e.g. `isFirstPage && initialData?.listData ? … : dataFromHook`), and only show "Loading…" when you truly have no data and are loading.
+
+**Reference implementation:**
+
+- **Route (loader returns data, component passes initialData):** `src/routes/_public/organizations.$orgId.domains.$domainId.index.tsx`
+- **View (initialData prop, no flash):** `src/components/pages/organizations/$orgId/domains/$domainId/View.tsx` (see `DomainDetailInitialData`, `initialData` prop, and use of `domainFromHook ?? initialData?.domain` and first-page records from `initialData.records`).
+
+**Route pattern (detail index):**
+
+```typescript
+// 1. Loader: fetchQuery (same keys as hooks) AND return data
+loader: async ({ params, context }) => {
+  if (typeof window === 'undefined') return undefined
+  const { resourceId } = params
+  const { queryClient } = context
+  if (!resourceId) return undefined
+
+  const [resource, listData] = await Promise.all([
+    queryClient.fetchQuery({
+      queryKey: ['resource', resourceId],
+      queryFn: () => fetchResource(resourceId),
+      staleTime: 30 * 1000,
+    }),
+    queryClient.fetchQuery({
+      queryKey: ['list', 'resource', resourceId, 0, PAGE_SIZE],
+      queryFn: () => fetchList(resourceId, 0, PAGE_SIZE),
+      staleTime: 30 * 1000,
+    }),
+  ])
+  return { resource, listData }
+},
+component: DetailPage,
+})
+
+function DetailPage() {
+  const { resourceId } = Route.useParams()
+  const loaderData = Route.useLoaderData()
+  return (
+    <View
+      key={`resource-${resourceId}`}
+      initialData={loaderData ? { resource: loaderData.resource, listData: loaderData.listData } : undefined}
+    />
+  )
+}
+```
+
+**View pattern (optional initialData, no flash):**
+
+```typescript
+type DetailInitialData = { resource: Resource; listData?: { items: Item[]; total: number } }
+type ViewProps = { initialData?: DetailInitialData }
+
+export function View({ initialData }: ViewProps = {}) {
+  const { data: resourceFromHook, isLoading: resourceLoading } = useResource(resourceId)
+  const resource = resourceFromHook ?? initialData?.resource
+
+  const { items: itemsFromHook, total: totalFromHook, isLoading: listLoading } = useList(resourceId, pageIndexed, pageSize)
+  const isFirstPage = currentPage === 1
+  const items = isFirstPage && initialData?.listData && !itemsFromHook?.length
+    ? initialData.listData.items
+    : itemsFromHook ?? []
+  const total = isFirstPage && initialData?.listData ? (totalFromHook ?? initialData.listData.total) : totalFromHook ?? 0
+
+  // Never show "Not found" while loading or when we have initialData
+  if (!resource && !initialData?.resource && !resourceLoading) {
+    return <NotFound />
+  }
+
+  // Only show "Loading list…" when we have no items and we're loading (not when initialData supplied first page)
+  if (listLoading && items.length === 0) {
+    return <LoadingList />
+  }
+
+  return ( /* full page with resource and items */ )
+}
+```
+
 ---
 
 ## File Structure Details
@@ -817,6 +911,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Icon spacing         | `mr-1.5` or `gap-1.5`                              |
 | Date display         | Always include DateTooltip                         |
 | Route prefetch       | All crucial data at route level                    |
+| Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash") |
 | Models types         | Always `Models.*` from `@appwrite.io/console`      |
 | Table header         | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head |
 | Table cells          | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed) |

@@ -93,7 +93,16 @@ import {
 } from '@/lib/react-query/hooks'
 import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 
-export function View() {
+export type DomainDetailInitialData = {
+  domain: Models.Domain
+  records: { dnsRecords: Models.DnsRecord[]; total: number }
+}
+
+type ViewProps = {
+  initialData?: DomainDetailInitialData
+}
+
+export function View({ initialData }: ViewProps = {}) {
   const { orgId, domainId } = useParams({
     strict: false,
   })
@@ -128,15 +137,33 @@ export function View() {
   // Convert 1-indexed page to 0-indexed for API
   const pageIndexed = currentPage - 1
 
-  // Fetch domain data
-  const { data: domain, isLoading: domainLoading } = useDomain(domainId)
+  // Fetch domain data (use initialData on first paint so no "Domain not found" / "Loading DNS records" flash)
+  const { data: domainFromHook, isLoading: domainLoading } = useDomain(domainId)
+  const domain = domainFromHook ?? initialData?.domain
 
-  // Fetch DNS records
+  // Fetch DNS records (use initialData for first page so no loading placeholder on first paint)
   const {
-    dnsRecords,
-    total: recordsTotal,
+    dnsRecords: recordsFromHook,
+    total: recordsTotalFromHook,
     isLoading: recordsLoading,
   } = useDomainRecords(domainId, pageIndexed, pageSize)
+  const isFirstPage = currentPage === 1
+  const rawRecords =
+    isFirstPage && initialData?.records && !recordsFromHook?.length
+      ? initialData.records.dnsRecords
+      : recordsFromHook ?? []
+  const dnsRecords = useMemo(() => {
+    if (!rawRecords.length) return []
+    return [...rawRecords].sort((a, b) => {
+      if (a.lock && !b.lock) return -1
+      if (!a.lock && b.lock) return 1
+      return new Date(a.$createdAt).getTime() - new Date(b.$createdAt).getTime()
+    })
+  }, [rawRecords])
+  const recordsTotal =
+    isFirstPage && initialData?.records
+      ? recordsTotalFromHook ?? initialData.records.total
+      : recordsTotalFromHook ?? 0
 
   // Get verification status
   const verificationStatus = useMemo(() => {
@@ -559,17 +586,8 @@ export function View() {
     return colors[type] || 'bg-muted text-muted-foreground border-border'
   }
 
-  if (domainLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <p className="text-[13px] text-muted-foreground">Loading domain...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!domain) {
+  // Domain not found only when we have no domain from hook and no initialData (never show while loading / first paint)
+  if (!domain && !initialData?.domain && !domainLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
@@ -909,7 +927,8 @@ export function View() {
                 </div>
               </div>
 
-              {recordsLoading ? (
+              {/* Only show loading when we have no data (loader prefetches first page) */}
+              {recordsLoading && dnsRecords.length === 0 ? (
                 <div className="rounded-lg border border-border bg-card py-12 text-center">
                   <p className="text-[13px] text-muted-foreground">
                     Loading DNS records...
@@ -1226,7 +1245,7 @@ export function View() {
                       >
                         <SelectValue
                           placeholder={
-                            organizationsLoading
+                            organizationsLoading && organizations.length === 0
                               ? 'Loading organizations...'
                               : 'Select destination'
                           }

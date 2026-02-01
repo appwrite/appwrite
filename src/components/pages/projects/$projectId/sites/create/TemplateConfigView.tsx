@@ -41,8 +41,11 @@ import {
   useCreateSite,
   useCreateSiteDomain,
   useCreateTemplateDeployment,
+  useProject,
   Dependencies,
 } from '@/lib/react-query/hooks'
+import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
 
@@ -99,11 +102,12 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
 
   const templateId = decodeURIComponent(templateParam)
 
-  // Fetch template details
+  // Fetch template details and project (for placeholder resolution)
   const { data: template, isLoading: templateLoading } = useSiteTemplate(
     projectId,
     templateId,
   )
+  const { project } = useProject(projectId)
 
   // Local form state
   const [siteName, setSiteName] = useState(formData.siteName || '')
@@ -133,11 +137,17 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       if (!framework && template.frameworks?.length) {
         setFramework(getFrameworkString(template.frameworks[0]))
       }
-      // Pre-fill template variables
+      // Pre-fill template variables and auto-replace placeholders
       if (template.variables?.length && variables.length === 0) {
+        const apiEndpoint = getApiEndpoint(project?.region)
+        const context = {
+          apiEndpoint,
+          projectId: projectId ?? '',
+          projectName: project?.name ?? '',
+        }
         const templateVars = template.variables.map((v) => ({
           key: v.name,
-          value: v.value || '',
+          value: resolveTemplatePlaceholder(v.value || '', context),
           secret: v.secret || false,
         }))
         setVariables(templateVars)
@@ -624,64 +634,105 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       </RadioGroup>
 
       {/* Template variables section */}
-      {template.variables && template.variables.length > 0 && (
-        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-          <div className="px-6 py-4">
-            <h3 className="text-[15px] font-semibold text-foreground">
-              Template variables
-            </h3>
-            <p className="text-[12px] text-muted-foreground mt-1">
-              Configure the required environment variables for this template
-            </p>
-          </div>
-          <div className="border-t border-border" />
-          <div className="px-6 py-4">
-            <div className="space-y-3">
-              {variables.map((variable, index) => {
-                const templateVar = template.variables?.find(
-                  (v) => v.name === variable.key,
-                )
-                return (
-                  <div key={variable.key} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-[13px] font-mono">
-                        {variable.key}
-                        {templateVar?.required && (
-                          <span className="text-destructive ml-1">*</span>
-                        )}
-                      </Label>
-                      {templateVar?.secret && (
-                        <span className="text-[10px] text-muted-foreground">
-                          Secret
-                        </span>
-                      )}
-                    </div>
-                    {templateVar?.description && (
-                      <p
-                        className="text-[11px] text-muted-foreground"
-                        dangerouslySetInnerHTML={{
-                          __html: templateVar.description,
-                        }}
-                      />
-                    )}
-                    <Input
-                      value={variable.value}
-                      onChange={(e) => {
-                        const newVars = [...variables]
-                        newVars[index] = { ...variable, value: e.target.value }
-                        setVariables(newVars)
-                      }}
-                      placeholder={templateVar?.placeholder || `Enter ${variable.key}`}
-                      type={templateVar?.secret ? 'password' : 'text'}
-                      className="h-9 text-[13px] font-mono"
-                    />
+      {template.variables && template.variables.length > 0 && (() => {
+        const requiredKeys = new Set(
+          template.variables.filter((v) => v.required).map((v) => v.name),
+        )
+        const optionalKeys = new Set(
+          template.variables.filter((v) => !v.required).map((v) => v.name),
+        )
+        const requiredVars = variables.filter((v) => requiredKeys.has(v.key))
+        const optionalVars = variables.filter((v) => optionalKeys.has(v.key))
+
+        const renderVariable = (
+          variable: { key: string; value: string; secret: boolean },
+          indexInFull: number,
+        ) => {
+          const templateVar = template.variables?.find(
+            (v) => v.name === variable.key,
+          )
+          return (
+            <div key={variable.key} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-[13px] font-mono">
+                  {variable.key}
+                  {templateVar?.required && (
+                    <span className="text-destructive ml-1">*</span>
+                  )}
+                </Label>
+                {templateVar?.secret && (
+                  <span className="text-[10px] text-muted-foreground">
+                    Secret
+                  </span>
+                )}
+              </div>
+              {templateVar?.description && (
+                <p
+                  className="text-[11px] text-muted-foreground"
+                  dangerouslySetInnerHTML={{
+                    __html: templateVar.description,
+                  }}
+                />
+              )}
+              <Input
+                value={variable.value}
+                onChange={(e) => {
+                  const newVars = [...variables]
+                  newVars[indexInFull] = {
+                    ...variable,
+                    value: e.target.value,
+                  }
+                  setVariables(newVars)
+                }}
+                placeholder={
+                  templateVar?.placeholder || `Enter ${variable.key}`
+                }
+                type={templateVar?.secret ? 'password' : 'text'}
+                className="h-9 text-[13px] font-mono"
+              />
+            </div>
+          )
+        }
+
+        return (
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Template variables
+              </h3>
+              <p className="text-[12px] text-muted-foreground mt-1">
+                Configure the environment variables for this template
+              </p>
+            </div>
+            <div className="border-t border-border" />
+            <div className="px-6 py-4">
+              <div className="space-y-3">
+                {requiredVars.map((variable) => {
+                  const indexInFull = variables.findIndex(
+                    (v) => v.key === variable.key,
+                  )
+                  return renderVariable(variable, indexInFull)
+                })}
+              </div>
+              {optionalVars.length > 0 && (
+                <div className="mt-4 border-t border-border pt-4">
+                  <h4 className="text-[13px] font-medium text-muted-foreground mb-3">
+                    Optional variables ({optionalVars.length})
+                  </h4>
+                  <div className="space-y-3">
+                    {optionalVars.map((variable) => {
+                      const indexInFull = variables.findIndex(
+                        (v) => v.key === variable.key,
+                      )
+                      return renderVariable(variable, indexInFull)
+                    })}
                   </div>
-                )
-              })}
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
     </WizardLayout>
   )

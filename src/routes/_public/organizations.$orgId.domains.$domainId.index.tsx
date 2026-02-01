@@ -1,44 +1,63 @@
 import { View } from '@/components/pages/organizations/$orgId/domains/$domainId/View'
 import { createFileRoute } from '@tanstack/react-router'
 import {
-  organizationsQueryOptions,
-  domainQueryOptions,
-  domainRecordsQueryOptions,
+  fetchDomain,
+  fetchDomainRecords,
+  fetchOrganizations,
 } from '@/lib/react-query/hooks'
 
 const RECORDS_PER_PAGE = 25
+const STALE_TIME = 30 * 1000
 
 export const Route = createFileRoute(
   '/_public/organizations/$orgId/domains/$domainId/',
 )({
   loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
-    }
+    if (typeof window === 'undefined') return undefined
 
-    const { orgId, domainId } = params
+    const { domainId } = params
     const { queryClient } = context
 
-    // Prefetch organizations if not already loaded
-    await queryClient.prefetchQuery(organizationsQueryOptions())
+    if (!domainId) return undefined
 
-    // Fetch domain details and DNS records - blocks navigation until ready
-    if (domainId) {
-      await Promise.all([
-        // Fetch domain details - blocks navigation until ready
-        queryClient.ensureQueryData(domainQueryOptions(domainId)),
-        // Fetch first page of DNS records - blocks navigation until ready
-        queryClient.ensureQueryData(
-          domainRecordsQueryOptions(domainId, 0, RECORDS_PER_PAGE),
-        ),
-      ])
-    }
+    // Fetch and populate cache (same keys as hooks). Return data so View can use it for first paint (no flash).
+    const [domain, organizations, records] = await Promise.all([
+      queryClient.fetchQuery({
+        queryKey: ['domain', domainId],
+        queryFn: () => fetchDomain(domainId),
+        staleTime: STALE_TIME,
+      }),
+      queryClient.fetchQuery({
+        queryKey: ['organizations', 'console'],
+        queryFn: fetchOrganizations,
+        staleTime: STALE_TIME,
+      }),
+      queryClient.fetchQuery({
+        queryKey: ['dns-records', 'domain', domainId, 0, RECORDS_PER_PAGE],
+        queryFn: () => fetchDomainRecords(domainId, 0, RECORDS_PER_PAGE),
+        staleTime: STALE_TIME,
+      }),
+    ])
+
+    return { domain, organizations, records }
   },
   component: DomainDetailPage,
 })
 
 function DomainDetailPage() {
-  const { orgId, domainId } = Route.useParams()
-  return <View key={`domain-${domainId}-index`} />
+  const { domainId } = Route.useParams()
+  const loaderData = Route.useLoaderData()
+  return (
+    <View
+      key={`domain-${domainId}-index`}
+      initialData={
+        loaderData
+          ? {
+              domain: loaderData.domain,
+              records: loaderData.records,
+            }
+          : undefined
+      }
+    />
+  )
 }

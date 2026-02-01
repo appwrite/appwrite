@@ -35,7 +35,7 @@ import {
 
 // Get endpoint from environment variable. When region is provided (and not empty/unknown),
 // returns the region-specific endpoint (e.g. https://nyc.cloud.appwrite.io/v1).
-function getApiEndpoint(region?: string): string {
+export function getApiEndpoint(region?: string): string {
   const baseEndpoint =
     import.meta.env.VITE_APPWRITE_ENDPOINT ||
     (typeof window !== 'undefined'
