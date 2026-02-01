@@ -343,8 +343,8 @@ class Migrations extends Action
 
             if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
                 if (empty($credentials)) {
-                    $credentials['projectId'] = $project->getId();
-                    $credentials['apiKey'] = $tempAPIKey;
+                    $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
+                    $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                     $credentials['endpoint'] = $endpoint;
                 }
             }
