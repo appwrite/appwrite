@@ -49,6 +49,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
   Dialog,
@@ -753,13 +756,14 @@ export function View() {
                 </div>
               )}
 
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex items-center gap-2">
+              <div className="mb-4 flex items-center gap-2 sm:gap-3">
+                {/* Desktop: individual buttons */}
+                <div className="hidden sm:flex sm:items-center sm:gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setImportZoneDialogOpen(true)}
-                    className="h-9 gap-2 text-[13px] cursor-pointer"
+                    className="h-9 gap-1.5 text-[13px] cursor-pointer"
                   >
                     <Upload className="h-4 w-4" />
                     Import zone file
@@ -768,7 +772,7 @@ export function View() {
                     variant="outline"
                     size="sm"
                     onClick={handleExportZone}
-                    className="h-9 gap-2 text-[13px] cursor-pointer"
+                    className="h-9 gap-1.5 text-[13px] cursor-pointer"
                   >
                     <Download className="h-4 w-4" />
                     Export
@@ -778,7 +782,7 @@ export function View() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-9 gap-2 text-[13px] cursor-pointer"
+                        className="h-9 gap-1.5 text-[13px] cursor-pointer"
                       >
                         <List className="h-4 w-4" />
                         Add preset
@@ -824,10 +828,79 @@ export function View() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
+                {/* Mobile: single line with More + Create Record */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 gap-1.5 text-[13px] cursor-pointer sm:hidden"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                      More
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    <DropdownMenuItem
+                      onClick={() => setImportZoneDialogOpen(true)}
+                    >
+                      <Upload className="h-4 w-4 mr-1.5" />
+                      Import zone file
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportZone}>
+                      <Download className="h-4 w-4 mr-1.5" />
+                      Export
+                    </DropdownMenuItem>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="text-[13px]">
+                        <List className="h-4 w-4 mr-1.5" />
+                        Add preset
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent className="w-52">
+                        <DropdownMenuItem
+                          onClick={() => handlePresetSelect('google-workspace')}
+                          disabled={createRecordMutation.isPending}
+                        >
+                          Google Workspace
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handlePresetSelect('outlook')}
+                          disabled={createRecordMutation.isPending}
+                        >
+                          Outlook
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handlePresetSelect('mailgun')}
+                          disabled={createRecordMutation.isPending}
+                        >
+                          Mailgun
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handlePresetSelect('zoho')}
+                          disabled={createRecordMutation.isPending}
+                        >
+                          Zoho
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handlePresetSelect('protonmail')}
+                          disabled={createRecordMutation.isPending}
+                        >
+                          ProtonMail
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handlePresetSelect('icloud')}
+                          disabled={createRecordMutation.isPending}
+                        >
+                          iCloud
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <div className="ml-auto">
                   <Button
                     onClick={() => setCreateRecordDialogOpen(true)}
-                    className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 cursor-pointer"
+                    className="h-9 gap-1.5 text-[13px] font-medium text-white hover:opacity-90 cursor-pointer"
                     style={{ backgroundColor: '#f02e65' }}
                   >
                     <Plus className="h-4 w-4" />
@@ -844,7 +917,7 @@ export function View() {
                 </div>
               ) : dnsRecords.length > 0 ? (
                 <>
-                  <div className="rounded-lg border border-border bg-card overflow-hidden">
+                  <div className="rounded-lg border border-border bg-card overflow-x-auto overflow-y-visible">
                     <Table>
                       <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-border">
