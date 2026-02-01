@@ -224,16 +224,17 @@ class Migrations extends Action
     /**
      * @throws Exception
      */
-    protected function processDestination(Document $migration, string $apiKey, string $endpoint): Destination
+    protected function processDestination(Document $migration): Destination
     {
         $destination = $migration->getAttribute('destination');
         $options = $migration->getAttribute('options', []);
+        $credentials = $migration->getAttribute('credentials');
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $this->project->getId(),
-                $endpoint,
-                $apiKey,
+                $credentials['destinationEndpoint'],
+                $credentials['destinationApiKey'],
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
@@ -349,7 +350,8 @@ class Migrations extends Action
             }
 
             if ($migration->getAttribute('destination') === DestinationAppwrite::getName()) {
-
+                $credentials['destinationApiKey'] = $tempAPIKey;
+                $credentials['destinationEndpoint'] = $endpoint;
             }
 
             if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
