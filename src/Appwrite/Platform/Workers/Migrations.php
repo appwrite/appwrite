@@ -338,6 +338,9 @@ class Migrations extends Action
             throw new \Exception('_APP_MIGRATION_ENDPOINT env is empty');
         }
 
+        /**
+         * Overwrite env
+         */
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
 
@@ -346,8 +349,10 @@ class Migrations extends Action
 
             if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
                 if (empty($credentials)) {
-                    $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
-                    $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
+                    //$credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
+                    //$credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
+                    $credentials['projectId'] = $project->getId();
+                    $credentials['apiKey'] = $tempAPIKey;
                     $credentials['endpoint'] = $endpoint;
                 }
             }
