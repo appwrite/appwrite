@@ -19,7 +19,7 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
+import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import {
   buildSiteUpdateParams,
   useSiteFrameworks,
@@ -123,16 +123,17 @@ export function RuntimeSettingsCard({
               <SelectValue placeholder="Select runtime" />
             </SelectTrigger>
             <SelectContent>
-              {availableRuntimes.map((runtime: any) => (
-                <SelectItem key={runtime.$id || runtime} value={runtime.$id || runtime}>
-                  <div className="flex items-center gap-2">
-                    {site?.framework && (
-                      <FrameworkIcon framework={site.framework} size="sm" />
-                    )}
-                    {runtime.name || runtime}
-                  </div>
-                </SelectItem>
-              ))}
+              {availableRuntimes.map((runtime: any) => {
+                const runtimeId = runtime.$id ?? runtime
+                return (
+                  <SelectItem key={runtimeId} value={runtimeId}>
+                    <div className="flex items-center gap-2">
+                      <RuntimeIcon runtime={String(runtimeId)} size="sm" />
+                      {runtime.name ?? runtime}
+                    </div>
+                  </SelectItem>
+                )
+              })}
             </SelectContent>
           </Select>
           <p className="text-[12px] text-muted-foreground">
