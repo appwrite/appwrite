@@ -59,29 +59,29 @@ export function ConsoleBanner() {
   }
 
   return (
-    <div className="sticky bottom-0 z-20 flex h-[54px] shrink-0 items-center border-t border-border bg-muted/50 backdrop-blur-sm px-3">
+    <div className="sticky bottom-0 z-20 flex min-h-[54px] shrink-0 items-center border-t border-border bg-muted/50 backdrop-blur-sm px-3 py-3 sm:py-0 sm:h-[54px]">
       <div className="mx-auto w-full max-w-7xl flex items-center">
         <a
           href="https://imagine.dev"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-1 h-full items-center gap-3 text-left transition-opacity hover:opacity-80"
+          className="flex flex-1 min-h-0 items-center gap-3 text-left transition-opacity hover:opacity-80 py-1 sm:py-0"
         >
-          <div className="flex items-center pl-2.5 py-1.5">
+          <div className="flex items-center pl-2.5 py-1.5 shrink-0">
             <img
               src={logoSrc}
               alt="Imagine"
               className="h-5 w-auto shrink-0"
             />
           </div>
-          <span className="text-[13px] text-muted-foreground">
+          <span className="text-[13px] text-muted-foreground min-w-0">
             <span className="font-medium text-foreground">Imagine.dev</span> &nbsp; Turn
             your ideas into functional products. Vibe coding powered by{' '}
             <span className="font-medium text-foreground">Appwrite Cloud</span>
           </span>
-          <ArrowRightCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-50" />
+          <ArrowRightCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-50 hidden sm:block" />
         </a>
-        <div className="flex items-center px-2.5 py-1.5">
+        <div className="flex items-center px-2.5 py-1.5 shrink-0">
           <button
             onClick={handleDismiss}
             className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
