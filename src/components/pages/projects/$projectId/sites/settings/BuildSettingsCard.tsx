@@ -39,6 +39,7 @@ import {
   isSpecificationAllowedInPlan,
 } from '@/lib/specifications'
 import {
+  buildSiteUpdateParams,
   useSiteFrameworks,
   useSiteSpecifications,
 } from '@/lib/react-query/hooks'
@@ -308,17 +309,13 @@ export function BuildSettingsCard({
     }
   }, [framework, frameworkDefaults])
 
-  // Update site mutation
+  // Update site mutation (use full site payload so other cards' values are preserved)
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {
       if (!projectId || !siteId || !site)
         throw new Error('Project ID, Site ID, and Site are required')
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.sites.update({
-        siteId,
-        name: site.name,
-        ...updates,
-      })
+      return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
       toast.success('Build settings updated successfully')

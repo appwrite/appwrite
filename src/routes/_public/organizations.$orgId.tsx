@@ -4,7 +4,10 @@ import { RequireAuth } from '@/components/global/auth/RequireAuth'
 import {
   organizationsQueryOptions,
   organizationPlanQueryOptions,
+  activeProjectsQueryOptions,
+  organizationMembershipsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
 import { z } from 'zod'
 
 const searchSchema = z.object({
@@ -22,28 +25,32 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     const { orgId } = params
     const { queryClient } = context
 
-    // Prefetch organizations list (non-critical, for dropdowns) - doesn't block
-    queryClient.prefetchQuery(organizationsQueryOptions()).catch(() => {
-      // Don't block on optional data
-    })
-
-    // Fetch organization plan with timeout to prevent hanging
+    // Fetch org plan + organizations + projects + memberships so overview has data before first render.
+    // Organizations list is required for selectedOrg so the projects list can render.
+    // When navigating from change-plan/support to the projects tab, only the index loader runs
+    // (parent does not re-run); the index route blocks until projects/memberships are loaded.
     if (orgId) {
       try {
-        // Add timeout to prevent infinite hanging (10 seconds)
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => {
-            reject(new Error('Organization plan fetch timeout'))
-          }, 10000)
+          setTimeout(() => reject(new Error('Organization data fetch timeout')), 10000)
         })
 
         await Promise.race([
-          queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
+          Promise.all([
+            queryClient.ensureQueryData(organizationPlanQueryOptions(orgId)),
+            queryClient.ensureQueryData(organizationsQueryOptions()),
+            queryClient.ensureQueryData(
+              activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+            ),
+            queryClient.ensureQueryData(
+              organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+            ),
+          ]),
           timeoutPromise,
         ])
       } catch (error) {
-        // Don't block navigation if plan fetch fails or times out - component will handle
-        console.warn('Failed to fetch organization plan in loader:', error)
+        // Don't block navigation if fetch fails or times out - component will handle
+        console.warn('Failed to fetch organization data in loader:', error)
       }
     }
   },

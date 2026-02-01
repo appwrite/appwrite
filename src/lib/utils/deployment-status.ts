@@ -117,3 +117,11 @@ export function getDeploymentStatusBadge(
     icon: statusInfo.icon,
   }
 }
+
+/**
+ * Check if a deployment is currently in progress (building or processing).
+ * Used to show live elapsed duration instead of final buildDuration.
+ */
+export function isDeploymentInProgress(status: string): boolean {
+  return status === 'building' || status === 'processing'
+}

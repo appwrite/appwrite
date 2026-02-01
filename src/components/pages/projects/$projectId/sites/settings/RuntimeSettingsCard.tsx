@@ -20,7 +20,10 @@ import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
-import { useSiteFrameworks } from '@/lib/react-query/hooks'
+import {
+  buildSiteUpdateParams,
+  useSiteFrameworks,
+} from '@/lib/react-query/hooks'
 
 interface RuntimeSettingsCardProps {
   projectId: string | null | undefined
@@ -64,17 +67,13 @@ export function RuntimeSettingsCard({
     }
   }, [site])
 
-  // Update site mutation
+  // Update site mutation (use full site payload so other cards' values are preserved)
   const updateSiteMutation = useMutation({
     mutationFn: async (updates: Partial<Models.Site>) => {
       if (!projectId || !siteId || !site)
         throw new Error('Project ID, Site ID, and Site are required')
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.sites.update({
-        siteId,
-        name: site.name,
-        ...updates,
-      })
+      return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
       toast.success('Runtime settings updated successfully')

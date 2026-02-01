@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
 
 interface NameCardProps {
   projectId: string | null | undefined
@@ -40,11 +41,7 @@ export function NameCard({
       if (!projectId || !siteId || !site)
         throw new Error('Project ID, Site ID, and Site are required')
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.sites.update({
-        siteId,
-        name: site.name,
-        ...updates,
-      })
+      return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
       toast.success('Site name updated successfully')

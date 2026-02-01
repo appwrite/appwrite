@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
+  isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
 import {
@@ -436,6 +437,19 @@ export function DeploymentDetailView({
   const lineRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const [isAtTop, setIsAtTop] = useState(true)
   const [isAtBottom, setIsAtBottom] = useState(false)
+
+  // Live elapsed seconds when deployment is processing/building (updates every second)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  useEffect(() => {
+    if (!deployment?.$createdAt || !isDeploymentInProgress(deployment.status)) return
+    const tick = () => {
+      const created = new Date(deployment.$createdAt).getTime()
+      setElapsedSeconds(Math.floor((Date.now() - created) / 1000))
+    }
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [deployment?.$createdAt, deployment?.status])
 
   // Get selected line from URL query params
   const selectedLine = useMemo(() => {
@@ -1096,18 +1110,27 @@ export function DeploymentDetailView({
                 </div>
 
                 {/* Build duration and Status - at end */}
-                {(deployment.buildDuration || statusBadge) && (
+                {(deployment.buildDuration != null ||
+                  isDeploymentInProgress(deployment.status) ||
+                  statusBadge) && (
                   <div className="flex items-center gap-2 sm:gap-3 ml-auto">
-                    {deployment.buildDuration != null &&
-                      deployment.buildDuration > 0 &&
-                      !isDeploymentTimeout(
-                        deployment.status,
-                        deployment.$createdAt,
-                      ) && (
+                    {(isDeploymentInProgress(deployment.status)
+                      ? !isDeploymentTimeout(
+                          deployment.status,
+                          deployment.$createdAt,
+                        )
+                      : deployment.buildDuration != null &&
+                        deployment.buildDuration > 0 &&
+                        !isDeploymentTimeout(
+                          deployment.status,
+                          deployment.$createdAt,
+                        )) && (
                         <div className="flex items-center gap-2">
                           <span className="text-[12px] sm:text-[13px] text-muted-foreground">Duration</span>
                           <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
-                            {formatDuration(deployment.buildDuration)}
+                            {isDeploymentInProgress(deployment.status)
+                              ? formatDuration(Math.max(0, elapsedSeconds))
+                              : formatDuration(deployment.buildDuration)}
                           </span>
                         </div>
                       )}

@@ -32,6 +32,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
+  buildSiteUpdateParams,
   useRepository,
   useVcsInstallations,
   useRepositories,
@@ -148,11 +149,7 @@ export function GitRepositoryCard({
       if (!projectId || !siteId || !site)
         throw new Error('Project ID, Site ID, and Site are required')
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.sites.update({
-        siteId,
-        name: site.name,
-        ...updates,
-      })
+      return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
       toast.success('Repository settings updated successfully')
@@ -201,13 +198,13 @@ export function GitRepositoryCard({
         throw new Error('Installation and Repository are required')
       }
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.sites.update({
-        siteId,
-        name: site.name,
-        installationId: selectedInstallationId,
-        providerRepositoryId: selectedRepositoryId,
-        providerBranch: 'main',
-      })
+      return await projectSdk.sites.update(
+        buildSiteUpdateParams(site, {
+          installationId: selectedInstallationId,
+          providerRepositoryId: selectedRepositoryId,
+          providerBranch: 'main',
+        }),
+      )
     },
     onSuccess: () => {
       toast.success('Repository connected successfully')
@@ -230,15 +227,15 @@ export function GitRepositoryCard({
       if (!projectId || !siteId || !site)
         throw new Error('Project ID, Site ID, and Site are required')
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.sites.update({
-        siteId,
-        name: site.name,
-        installationId: undefined,
-        providerRepositoryId: undefined,
-        providerBranch: undefined,
-        providerSilentMode: undefined,
-        providerRootDirectory: undefined,
-      })
+      return await projectSdk.sites.update(
+        buildSiteUpdateParams(site, {
+          installationId: undefined,
+          providerRepositoryId: undefined,
+          providerBranch: undefined,
+          providerSilentMode: undefined,
+          providerRootDirectory: undefined,
+        }),
+      )
     },
     onSuccess: () => {
       toast.success('Repository disconnected successfully')

@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
+  isDeploymentInProgress,
   isDeploymentTimeout,
 } from '@/lib/utils/deployment-status'
 import {
@@ -315,6 +316,21 @@ export function View() {
     functionId,
     func?.deploymentId || undefined,
   )
+
+  // Tick every second when any deployment is in progress (for live duration)
+  const [, setTick] = useState(0)
+  const hasInProgressDeployment = useMemo(
+    () =>
+      (deployments?.some((d) => isDeploymentInProgress(d.status)) ?? false) ||
+      (activeDeployment != null &&
+        isDeploymentInProgress(activeDeployment.status)),
+    [deployments, activeDeployment],
+  )
+  useEffect(() => {
+    if (!hasInProgressDeployment) return
+    const interval = setInterval(() => setTick((t) => t + 1), 1000)
+    return () => clearInterval(interval)
+  }, [hasInProgressDeployment])
 
   // Fetch domains for the function (filter by active deployment)
   // Fetch up to 20 to ensure we have 3 after filtering by active deployment
@@ -701,7 +717,8 @@ export function View() {
                   </div>
 
                   {/* Build duration */}
-                  {activeDeployment.buildDuration &&
+                  {(activeDeployment.buildDuration ||
+                    isDeploymentInProgress(activeDeployment.status)) &&
                     !isDeploymentTimeout(
                       activeDeployment.status,
                       activeDeployment.$createdAt,
@@ -711,7 +728,20 @@ export function View() {
                           Build duration
                         </div>
                         <div className="text-[13px] text-foreground">
-                          {formatDuration(activeDeployment.buildDuration)}
+                          {isDeploymentInProgress(activeDeployment.status)
+                            ? formatDuration(
+                                Math.max(
+                                  0,
+                                  Math.floor(
+                                    (Date.now() -
+                                      new Date(
+                                        activeDeployment.$createdAt,
+                                      ).getTime()) /
+                                      1000,
+                                  ),
+                                ),
+                              )
+                            : formatDuration(activeDeployment.buildDuration)}
                         </div>
                       </div>
                     )}
@@ -1331,13 +1361,30 @@ export function View() {
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <code className="text-[12px] font-mono text-muted-foreground">
-                              {deployment.buildDuration &&
+                              {isDeploymentInProgress(deployment.status) &&
                               !isDeploymentTimeout(
                                 deployment.status,
                                 deployment.$createdAt,
                               )
-                                ? formatDuration(deployment.buildDuration)
-                                : '—'}
+                                ? formatDuration(
+                                    Math.max(
+                                      0,
+                                      Math.floor(
+                                        (Date.now() -
+                                          new Date(
+                                            deployment.$createdAt,
+                                          ).getTime()) /
+                                          1000,
+                                      ),
+                                    ),
+                                  )
+                                : deployment.buildDuration &&
+                                    !isDeploymentTimeout(
+                                      deployment.status,
+                                      deployment.$createdAt,
+                                    )
+                                  ? formatDuration(deployment.buildDuration)
+                                  : '—'}
                             </code>
                           </TableCell>
                           <TableCell className="px-4 py-3">

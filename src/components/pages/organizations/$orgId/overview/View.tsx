@@ -44,7 +44,7 @@ import { Badge } from '@/components/ui/badge'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import {
   useOrganizationMemberships,
-  fetchOrganizations,
+  organizationsQueryOptions,
   activeProjectsQueryOptions,
   useOrganizationPlan,
   useResendMembershipInvite,
@@ -360,13 +360,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const [activeMembershipsPage, setActiveMembershipsPage] = useState(0)
   const [membershipsSearchQuery, setMembershipsSearchQuery] = useState('')
 
-  // Fetch organizations from Console SDK
+  // Fetch organizations from Console SDK (prefetched by route loader)
   const { data: organizationsData, isLoading: organizationsLoading } = useQuery(
-    {
-      queryKey: ['organizations', 'console'],
-      queryFn: fetchOrganizations,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
+    organizationsQueryOptions(),
   )
 
   // Get organizations list and map to our Organization type

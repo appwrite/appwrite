@@ -79,6 +79,44 @@ export async function fetchProjectSite(
   return await projectSdk.sites.get({ siteId })
 }
 
+// Object form of sites.update() params (SDK has overloads; avoid string | object union)
+type SiteUpdateParams = Extract<
+  Parameters<ReturnType<typeof sdk.forProject>['sites']['update']>[0],
+  object
+>
+
+/**
+ * Build full site update params from current site and partial updates.
+ * Use this for any sites.update() call so omitted fields are preserved
+ * (API treats omitted optional params as "clear").
+ */
+export function buildSiteUpdateParams(
+  site: Models.Site,
+  updates: Partial<Models.Site>,
+): SiteUpdateParams {
+  return {
+    siteId: site.$id,
+    name: site.name,
+    framework: site.framework,
+    enabled: site.enabled,
+    logging: site.logging,
+    timeout: site.timeout,
+    installCommand: site.installCommand,
+    buildCommand: site.buildCommand,
+    outputDirectory: site.outputDirectory,
+    buildRuntime: site.buildRuntime,
+    adapter: site.adapter,
+    fallbackFile: site.fallbackFile,
+    installationId: site.installationId,
+    providerRepositoryId: site.providerRepositoryId,
+    providerBranch: site.providerBranch,
+    providerSilentMode: site.providerSilentMode,
+    providerRootDirectory: site.providerRootDirectory,
+    specification: site.specification,
+    ...updates,
+  } as unknown as SiteUpdateParams
+}
+
 /**
  * Query function to fetch site deployments
  */

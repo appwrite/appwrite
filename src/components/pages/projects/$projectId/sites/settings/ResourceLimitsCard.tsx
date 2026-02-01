@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import { buildSiteUpdateParams } from '@/lib/react-query/hooks'
 import {
   hasUnavailableSpecifications,
   isSpecificationAllowedInPlan,
@@ -61,11 +62,7 @@ export function ResourceLimitsCard({
       if (!projectId || !siteId || !site)
         throw new Error('Project ID, Site ID, and Site are required')
       const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.sites.update({
-        siteId,
-        name: site.name,
-        ...updates,
-      })
+      return await projectSdk.sites.update(buildSiteUpdateParams(site, updates))
     },
     onSuccess: () => {
       toast.success('Resource limits updated successfully')

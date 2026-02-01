@@ -276,7 +276,12 @@ export async function fetchBillingAddress(billingAddressId: string) {
 export async function fetchBillingPlans() {
   try {
     // Use console service to fetch plans
-    const response = await sdk.forConsole.console.plans()
+    // Console service exposes getPlans() (not plans()) - SDK types may not include it in all builds
+    const response = await (
+      sdk.forConsole.console as unknown as {
+        getPlans(): Promise<{ plans: unknown[]; total: number }>
+      }
+    ).getPlans()
 
     // Transform array response to object format keyed by plan $id
     // Response format: { total: number, plans: BillingPlan[] }
