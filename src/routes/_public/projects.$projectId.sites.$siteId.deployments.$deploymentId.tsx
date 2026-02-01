@@ -19,10 +19,13 @@ export const Route = createFileRoute(
     const { projectId, siteId, deploymentId } = params
     const { queryClient } = context
 
+    // Fetch site first so we know the active deployment id
+    const site = await queryClient.ensureQueryData(
+      siteQueryOptions(projectId, siteId),
+    )
+
     // Fetch critical data before rendering to prevent layout shifts
     await Promise.all([
-      // Fetch site data - blocks navigation until ready
-      queryClient.ensureQueryData(siteQueryOptions(projectId, siteId)),
       // Fetch deployment data - blocks navigation until ready
       queryClient.ensureQueryData(
         siteDeploymentQueryOptions(projectId, siteId, deploymentId),
@@ -35,6 +38,12 @@ export const Route = createFileRoute(
       queryClient.ensureQueryData(
         deploymentProxyRulesQueryOptions(projectId, siteId, deploymentId),
       ),
+      // Fetch active deployment so it stays in sync when viewing deployment details
+      site?.deploymentId
+        ? queryClient.ensureQueryData(
+            siteDeploymentQueryOptions(projectId, siteId, site.deploymentId),
+          )
+        : Promise.resolve(),
     ])
   },
   component: SiteDeploymentDetailPage,

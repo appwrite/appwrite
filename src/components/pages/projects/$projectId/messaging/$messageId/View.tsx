@@ -784,9 +784,6 @@ export function View() {
                     disabled={!hasEmailChanges || updateEmailMutation.isPending}
                     onClick={handleUpdateMessage}
                   >
-                    {updateEmailMutation.isPending && (
-                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    )}
                     Update
                   </Button>
                 </div>
@@ -841,9 +838,6 @@ export function View() {
                     disabled={!hasSMSChanges || updateSMSMutation.isPending}
                     onClick={handleUpdateMessage}
                   >
-                    {updateSMSMutation.isPending && (
-                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    )}
                     Update
                   </Button>
                 </div>
@@ -1007,9 +1001,6 @@ export function View() {
                     disabled={!hasPushChanges || updatePushMutation.isPending}
                     onClick={handleUpdateMessage}
                   >
-                    {updatePushMutation.isPending && (
-                      <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    )}
                     Update
                   </Button>
                 </div>

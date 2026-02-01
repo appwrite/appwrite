@@ -64,6 +64,8 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   const navigate = useNavigate()
   const { formData, frameworks } = useWizard()
   const logsContainerRef = useRef<HTMLDivElement>(null)
+  /** Set on first scroll; until then we auto-scroll so initial load follows tail. */
+  const hasUserScrolledRef = useRef(false)
   const [logsSearch, setLogsSearch] = useState('')
   const [isAtTop, setIsAtTop] = useState(true)
   const [isAtBottom, setIsAtBottom] = useState(false)
@@ -100,17 +102,19 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     }
   }, [deployment])
 
-  // Auto-scroll logs when build output updates
+  // Auto-scroll when new logs arrive if user hasn't scrolled or is at bottom (same as scroll-to-bottom control)
   useEffect(() => {
-    if (logsContainerRef.current) {
-      logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight
-    }
-  }, [buildLogs])
+    const shouldFollow = !hasUserScrolledRef.current || isAtBottom
+    if (!shouldFollow || !logsContainerRef.current) return
+    const el = logsContainerRef.current
+    el.scrollTop = el.scrollHeight
+  }, [buildLogs, isAtBottom])
 
-  // Track scroll position for scroll-to-top/bottom buttons
+  // Track scroll position for scroll-to-top/bottom buttons (controls auto-scroll: follow when at bottom)
   const updateScrollPosition = useCallback(() => {
     const el = logsContainerRef.current
     if (!el) return
+    hasUserScrolledRef.current = true
     const { scrollTop, scrollHeight, clientHeight } = el
     const threshold = 10
     setIsAtTop(scrollTop <= threshold)

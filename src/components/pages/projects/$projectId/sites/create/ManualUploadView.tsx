@@ -23,7 +23,6 @@ import {
   Upload,
   File,
   X,
-  Loader2,
   GitBranch,
   LayoutTemplate,
   ArrowRight,
@@ -290,14 +289,7 @@ export function ManualUploadView() {
               createSiteMutation.isPending
             }
           >
-            {isDeploying ? (
-              <>
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                Deploying...
-              </>
-            ) : (
-              'Deploy'
-            )}
+            Deploy
           </Button>
         </>
       }

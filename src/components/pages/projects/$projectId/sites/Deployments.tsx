@@ -16,7 +16,6 @@ import {
   Shield,
   CheckCircle2,
   HelpCircle,
-  Loader2,
   AlertCircle,
   Download,
   Sun,
@@ -28,6 +27,7 @@ import {
   ChevronDown,
   Globe,
   ExternalLink,
+  ScrollText,
 } from 'lucide-react'
 import {
   getDeploymentStatusBadge,
@@ -337,13 +337,22 @@ export function View() {
     site?.deploymentId || undefined,
   )
 
+  // Prefer active deployment from the list when present so realtime list updates (e.g. status -> ready)
+  // are used immediately and we avoid a brief "still building" state after the deployment becomes ready
+  const activeDeploymentResolved = useMemo(() => {
+    if (!site?.deploymentId) return activeDeployment ?? undefined
+    const fromList = deployments.find((d) => d.$id === site.deploymentId)
+    return fromList ?? activeDeployment ?? undefined
+  }, [deployments, site?.deploymentId, activeDeployment])
+
   // Tick every second when any deployment is in progress (for live duration)
   const [, setTick] = useState(0)
   const hasInProgressDeployment = useMemo(
     () =>
       (deployments?.some((d) => isDeploymentInProgress(d.status)) ?? false) ||
-      (activeDeployment != null && isDeploymentInProgress(activeDeployment.status)),
-    [deployments, activeDeployment],
+      (activeDeploymentResolved != null &&
+        isDeploymentInProgress(activeDeploymentResolved.status)),
+    [deployments, activeDeploymentResolved],
   )
   useEffect(() => {
     if (!hasInProgressDeployment) return
@@ -354,7 +363,7 @@ export function View() {
   // Reset screenshot loaded state when active deployment or theme changes
   useEffect(() => {
     setScreenshotLoaded(false)
-  }, [activeDeployment?.$id, screenshotTheme])
+  }, [activeDeploymentResolved?.$id, screenshotTheme])
 
   // Fetch proxy rules for active deployment
   const { data: proxyRulesData } = useDeploymentProxyRules(
@@ -367,22 +376,24 @@ export function View() {
   const activeDomains = useMemo(() => {
     const filtered =
       proxyRulesData?.rules?.filter(
-        (rule) => rule.deploymentId === activeDeployment?.$id,
+        (rule) => rule.deploymentId === activeDeploymentResolved?.$id,
       ) || []
     return filtered
       .sort((a, b) => a.domain.length - b.domain.length)
       .slice(0, 3)
-  }, [proxyRulesData?.rules, activeDeployment?.$id])
+  }, [proxyRulesData?.rules, activeDeploymentResolved?.$id])
 
   // Check if there are more domains than displayed
   const totalActiveDomains =
     proxyRulesData?.rules?.filter(
-      (rule) => rule.deploymentId === activeDeployment?.$id,
+      (rule) => rule.deploymentId === activeDeploymentResolved?.$id,
     ).length || 0
   const hasMoreDomains = totalActiveDomains > activeDomains.length
 
-  // Get VCS provider info
-  const vcsProvider = activeDeployment ? getVcsProvider(activeDeployment) : null
+  // Get VCS provider info (use resolved for consistency)
+  const vcsProvider = activeDeploymentResolved
+    ? getVcsProvider(activeDeploymentResolved)
+    : null
 
   // Clear selection when navigating between pages
   useEffect(() => {
@@ -390,17 +401,25 @@ export function View() {
     setDeleteDialogOpen(false)
   }, [displayedPage])
 
+  // Building state from resolved deployment so we don't show "still building" after realtime says ready
   const isBuilding =
-    activeDeployment?.status === 'building' ||
-    activeDeployment?.status === 'processing'
+    activeDeploymentResolved?.status === 'building' ||
+    activeDeploymentResolved?.status === 'processing'
+
+  // For card content use full deployment from hook when same id (screenshots etc.), else resolved.
+  // When in card/dialogs we only render when activeDeploymentResolved exists, so this is always defined there.
+  const activeDeploymentForCard =
+    (activeDeployment?.$id === activeDeploymentResolved?.$id
+      ? activeDeployment
+      : activeDeploymentResolved) ?? activeDeploymentResolved
 
   const handleDownloadSource = () => {
-    if (!projectId || !siteId || !activeDeployment) return
+    if (!projectId || !siteId || !activeDeploymentResolved) return
     try {
       const projectSdk = sdk.forProject(projectId)
       const url = projectSdk.sites.getDeploymentDownload({
         siteId,
-        deploymentId: activeDeployment.$id,
+        deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Source,
       })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
@@ -412,12 +431,12 @@ export function View() {
   }
 
   const handleDownloadBuild = () => {
-    if (!projectId || !siteId || !activeDeployment) return
+    if (!projectId || !siteId || !activeDeploymentResolved) return
     try {
       const projectSdk = sdk.forProject(projectId)
       const url = projectSdk.sites.getDeploymentDownload({
         siteId,
-        deploymentId: activeDeployment.$id,
+        deploymentId: activeDeploymentResolved.$id,
         type: DeploymentDownloadType.Output,
       })
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
@@ -431,13 +450,13 @@ export function View() {
   // Redeploy mutation
   const redeployMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId || !siteId || !activeDeployment) {
+      if (!projectId || !siteId || !activeDeploymentResolved) {
         throw new Error('Project ID, Site ID, and Deployment ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.createDuplicateDeployment({
         siteId,
-        deploymentId: activeDeployment.$id,
+        deploymentId: activeDeploymentResolved.$id,
       })
     },
     onSuccess: () => {
@@ -458,13 +477,13 @@ export function View() {
   // Activate mutation (disabled for active deployment, but included for consistency)
   const activateMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId || !siteId || !activeDeployment) {
+      if (!projectId || !siteId || !activeDeploymentResolved) {
         throw new Error('Project ID, Site ID, and Deployment ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.updateSiteDeployment({
         siteId,
-        deploymentId: activeDeployment.$id,
+        deploymentId: activeDeploymentResolved.$id,
       })
     },
     onSuccess: () => {
@@ -485,7 +504,7 @@ export function View() {
   // Delete mutation for active deployment
   const deleteActiveMutation = useMutation({
     mutationFn: async () => {
-      if (!projectId || !siteId || !activeDeployment) {
+      if (!projectId || !siteId || !activeDeploymentResolved) {
         throw new Error('Project ID, Site ID, and Deployment ID are required')
       }
       throw new Error(
@@ -515,7 +534,7 @@ export function View() {
       }
 
       // Prevent deleting active deployment
-      const activeDeploymentId = activeDeployment?.$id
+      const activeDeploymentId = activeDeploymentResolved?.$id
       if (activeDeploymentId && deploymentIds.includes(activeDeploymentId)) {
         throw new Error(
           'Cannot delete the active deployment. Please activate another deployment first.',
@@ -568,7 +587,7 @@ export function View() {
   }
 
   const toggleAllDeployments = () => {
-    const activeDeploymentId = activeDeployment?.$id
+    const activeDeploymentId = activeDeploymentResolved?.$id
     const selectableDeployments = deployments.filter(
       (d) => d.$id !== activeDeploymentId,
     )
@@ -641,7 +660,9 @@ export function View() {
           )}
 
           {/* Active Deployment Card */}
-          {activeDeployment && activeDeployment.status === 'ready' && (
+          {activeDeploymentResolved && activeDeploymentResolved.status === 'ready' && (() => {
+            const cardDeployment = activeDeploymentForCard ?? activeDeploymentResolved
+            return (
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-[15px] font-semibold text-foreground">
@@ -651,22 +672,23 @@ export function View() {
               <div className="border-t border-border" />
               <div className="px-6 py-4">
                 <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Screenshot */}
-                  {(() => {
-                    const screenshotId = screenshotTheme === 'dark'
-                      ? (activeDeployment as any).screenshotDark
-                      : (activeDeployment as any).screenshotLight
-                    
-                    if (screenshotId) {
-                      const screenshotUrl = sdk.forConsole.storage.getFileDownload({
-                        bucketId: SCREENSHOTS_BUCKET_ID,
-                        fileId: screenshotId,
-                      })
-                      
-                      return (
-                        <div className="w-full lg:w-1/2 relative group">
-                          <div className="w-full aspect-video rounded-lg border border-border overflow-hidden bg-muted relative">
-                            <img
+                  {/* Screenshot - fixed aspect-video slot to prevent layout shift when deployment becomes active or image loads */}
+                  <div className="w-full lg:w-1/2 shrink-0 min-w-0">
+                    <div className="w-full aspect-video rounded-lg border border-border overflow-hidden bg-muted relative">
+                      {(() => {
+                        const screenshotId = screenshotTheme === 'dark'
+                          ? (cardDeployment as any).screenshotDark
+                          : (cardDeployment as any).screenshotLight
+
+                        if (screenshotId) {
+                          const screenshotUrl = sdk.forConsole.storage.getFileDownload({
+                            bucketId: SCREENSHOTS_BUCKET_ID,
+                            fileId: screenshotId,
+                          })
+
+                          return (
+                            <div className="absolute inset-0 group">
+                              <img
                               key={screenshotId}
                               src={screenshotUrl}
                               alt="Deployment screenshot"
@@ -726,36 +748,36 @@ export function View() {
                               </button>
                             </div>
                           </div>
-                          </div>
-                        </div>
-                      )
-                    }
-                    
-                    // Placeholder when screenshot is not available
-                    return (
-                      <div className="w-full lg:w-1/2 flex h-64 lg:h-80 items-center justify-center rounded-lg border border-border/50 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
-                        <p className="relative text-[12px] font-medium text-muted-foreground/60">
-                          Preview not available
-                        </p>
-                        {/* Framework Icon - Bottom Left */}
-                        {site && (
-                          <div className="absolute bottom-2 left-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
-                              <FrameworkIcon
-                                framework={
-                                  (site as any).buildFramework ||
-                                  (site as any).buildFrameworkId ||
-                                  (site as any).framework
-                                }
-                                size="sm"
-                              />
                             </div>
+                          )
+                        }
+
+                        // Placeholder when screenshot is not available yet - same slot, no layout shift
+                        return (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
+                            <p className="relative text-[12px] font-medium text-muted-foreground/60">
+                              Preview not available
+                            </p>
+                            {site && (
+                              <div className="absolute bottom-2 left-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
+                                  <FrameworkIcon
+                                    framework={
+                                      (site as any).buildFramework ||
+                                      (site as any).buildFrameworkId ||
+                                      (site as any).framework
+                                    }
+                                    size="sm"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    )
-                  })()}
+                        )
+                      })()}
+                    </div>
+                  </div>
                   
                   <div className="flex-1 lg:w-1/2">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -765,36 +787,36 @@ export function View() {
                       Deployed
                     </div>
                     <div className="text-[13px] text-foreground">
-                      <DateTooltip date={activeDeployment.$createdAt} />
+                      <DateTooltip date={cardDeployment.$createdAt} />
                     </div>
                   </div>
 
                   {/* Build duration */}
-                  {(activeDeployment.buildDuration ||
-                    isDeploymentInProgress(activeDeployment.status)) &&
+                  {(cardDeployment.buildDuration ||
+                    isDeploymentInProgress(cardDeployment.status)) &&
                     !isDeploymentTimeout(
-                      activeDeployment.status,
-                      activeDeployment.$createdAt,
+                      cardDeployment.status,
+                      cardDeployment.$createdAt,
                     ) && (
                       <div>
                         <div className="text-[12px] text-muted-foreground mb-1.5">
                           Build duration
                         </div>
                         <div className="text-[13px] text-foreground">
-                          {isDeploymentInProgress(activeDeployment.status)
+                          {isDeploymentInProgress(cardDeployment.status)
                             ? formatDuration(
                                 Math.max(
                                   0,
                                   Math.floor(
                                     (Date.now() -
                                       new Date(
-                                        activeDeployment.$createdAt,
+                                        cardDeployment.$createdAt,
                                       ).getTime()) /
                                       1000,
                                   ),
                                 ),
                               )
-                            : formatDuration(activeDeployment.buildDuration)}
+                            : formatDuration(cardDeployment.buildDuration)}
                         </div>
                       </div>
                     )}
@@ -806,16 +828,16 @@ export function View() {
                     </div>
                     <div className="text-[13px] text-foreground">
                       {formatSize(
-                        (activeDeployment.buildSize || 0) +
-                          (activeDeployment.sourceSize || 0),
+                        (cardDeployment.buildSize || 0) +
+                          (cardDeployment.sourceSize || 0),
                       )}
                     </div>
                   </div>
 
                   {/* Source */}
                   {vcsProvider &&
-                    activeDeployment.providerRepositoryOwner &&
-                    activeDeployment.providerRepositoryName && (
+                    cardDeployment.providerRepositoryOwner &&
+                    cardDeployment.providerRepositoryName && (
                       <div>
                         <div className="text-[12px] text-muted-foreground mb-1.5">
                           Source
@@ -823,8 +845,8 @@ export function View() {
                         <div className="flex items-center gap-1.5 text-[13px] text-foreground">
                           {vcsProvider.icon}
                           <span>
-                            {activeDeployment.providerRepositoryOwner}/
-                            {activeDeployment.providerRepositoryName}
+                            {cardDeployment.providerRepositoryOwner}/
+                            {cardDeployment.providerRepositoryName}
                           </span>
                         </div>
                       </div>
@@ -1012,18 +1034,19 @@ export function View() {
                   <RefreshCw className="mr-1.5 h-4 w-4" />
                   Redeploy
                 </Button>
-                <Link
-                  to="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
-                  params={{
-                    projectId: projectId!,
-                    siteId: siteId!,
-                    deploymentId: activeDeployment.$id,
-                  }}
-                >
-                  <Button size="sm" variant="outline" className="h-9 text-[13px]">
+                <Button asChild size="sm" variant="outline" className="h-9 text-[13px]">
+                  <Link
+                    to="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
+                    params={{
+                      projectId: projectId!,
+                      siteId: siteId!,
+                      deploymentId: activeDeploymentResolved.$id,
+                    }}
+                  >
+                    <ScrollText className="mr-1.5 h-4 w-4" />
                     Build logs
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
                 {activeDomains.length > 0 && (
                   <Popover>
                     <PopoverTrigger asChild>
@@ -1075,7 +1098,8 @@ export function View() {
                 )}
               </div>
             </div>
-          )}
+            )
+          })()}
 
           {/* Building State */}
           {isBuilding && (
@@ -1094,13 +1118,13 @@ export function View() {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    if (activeDeployment) {
+                    if (activeDeploymentResolved) {
                       navigate({
                         to: '/projects/$projectId/sites/$siteId/deployments/$deploymentId',
                         params: {
                           projectId: projectId!,
                           siteId: siteId!,
-                          deploymentId: activeDeployment.$id,
+                          deploymentId: activeDeploymentResolved.$id,
                         },
                       })
                     }
@@ -1113,7 +1137,7 @@ export function View() {
           )}
 
           {/* No Active Deployment */}
-          {!activeDeployment && !isBuilding && (
+          {!activeDeploymentResolved && !isBuilding && (
             <div className="flex h-full items-center justify-center py-16">
               <div className="text-center">
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-border">
@@ -1141,7 +1165,7 @@ export function View() {
                       <TableHead className="w-[40px] px-4 py-3">
                         <Checkbox
                           checked={(() => {
-                            const activeDeploymentId = activeDeployment?.$id
+                            const activeDeploymentId = activeDeploymentResolved?.$id
                             const selectableDeployments = deployments.filter(
                               (d) => d.$id !== activeDeploymentId,
                             )
@@ -1186,7 +1210,7 @@ export function View() {
                         deploymentData.status || 'unknown',
                         deploymentData.$createdAt,
                       )
-                      const isActive = deploymentData.$id === activeDeployment?.$id
+                      const isActive = deploymentData.$id === activeDeploymentResolved?.$id
                       return (
                         <TableRow
                           key={deploymentData.$id}
@@ -1432,7 +1456,6 @@ export function View() {
                                   size="sm"
                                   className="h-8 w-8 p-0"
                                   onClick={(e) => e.stopPropagation()}
-                                  disabled={isActive}
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                   <span className="sr-only">Open menu</span>
@@ -1440,61 +1463,59 @@ export function View() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="z-[200]">
                                 {!isActive && (
-                                  <>
-                                    <DropdownMenuItem
-                                      disabled={deploymentData.status !== 'ready'}
-                                      title={
-                                        deploymentData.status !== 'ready'
-                                          ? 'Build must be ready before activating'
-                                          : undefined
+                                  <DropdownMenuItem
+                                    disabled={deploymentData.status !== 'ready'}
+                                    title={
+                                      deploymentData.status !== 'ready'
+                                        ? 'Build must be ready before activating'
+                                        : undefined
+                                    }
+                                    onClick={async (e) => {
+                                      e.stopPropagation()
+                                      if (deploymentData.status !== 'ready') return
+                                      try {
+                                        const projectSdk = sdk.forProject(projectId!)
+                                        await projectSdk.sites.updateSiteDeployment({
+                                          siteId: siteId!,
+                                          deploymentId: deploymentData.$id,
+                                        })
+                                        queryClient.invalidateQueries({
+                                          queryKey: [...Dependencies.DEPLOYMENTS],
+                                        })
+                                        queryClient.invalidateQueries({
+                                          queryKey: ['site', 'project', projectId, siteId],
+                                        })
+                                        toast.success('Deployment activated successfully')
+                                      } catch (error) {
+                                        toast.error('Failed to activate deployment')
                                       }
-                                      onClick={async (e) => {
-                                        e.stopPropagation()
-                                        if (deploymentData.status !== 'ready') return
-                                        try {
-                                          const projectSdk = sdk.forProject(projectId!)
-                                          await projectSdk.sites.updateSiteDeployment({
-                                            siteId: siteId!,
-                                            deploymentId: deploymentData.$id,
-                                          })
-                                          queryClient.invalidateQueries({
-                                            queryKey: [...Dependencies.DEPLOYMENTS],
-                                          })
-                                          queryClient.invalidateQueries({
-                                            queryKey: ['site', 'project', projectId, siteId],
-                                          })
-                                          toast.success('Deployment activated successfully')
-                                        } catch (error) {
-                                          toast.error('Failed to activate deployment')
-                                        }
-                                      }}
-                                    >
-                                      <Play className="mr-2 h-4 w-4" />
-                                      Activate
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={async (e) => {
-                                        e.stopPropagation()
-                                        try {
-                                          const projectSdk = sdk.forProject(projectId!)
-                                          await projectSdk.sites.createDuplicateDeployment({
-                                            siteId: siteId!,
-                                            deploymentId: deploymentData.$id,
-                                          })
-                                          queryClient.invalidateQueries({
-                                            queryKey: [...Dependencies.DEPLOYMENTS],
-                                          })
-                                          toast.success('Deployment rebuild started')
-                                        } catch (error) {
-                                          toast.error('Failed to redeploy')
-                                        }
-                                      }}
-                                    >
-                                      <RefreshCw className="mr-2 h-4 w-4" />
-                                      Redeploy
-                                    </DropdownMenuItem>
-                                  </>
+                                    }}
+                                  >
+                                    <Play className="mr-2 h-4 w-4" />
+                                    Activate
+                                  </DropdownMenuItem>
                                 )}
+                                <DropdownMenuItem
+                                  onClick={async (e) => {
+                                    e.stopPropagation()
+                                    try {
+                                      const projectSdk = sdk.forProject(projectId!)
+                                      await projectSdk.sites.createDuplicateDeployment({
+                                        siteId: siteId!,
+                                        deploymentId: deploymentData.$id,
+                                      })
+                                      queryClient.invalidateQueries({
+                                        queryKey: [...Dependencies.DEPLOYMENTS],
+                                      })
+                                      toast.success('Deployment rebuild started')
+                                    } catch (error) {
+                                      toast.error('Failed to redeploy')
+                                    }
+                                  }}
+                                >
+                                  <RefreshCw className="mr-2 h-4 w-4" />
+                                  Redeploy
+                                </DropdownMenuItem>
                                 {!isActive && (
                                   <DropdownMenuItem
                                     onClick={async (e) => {
@@ -1636,7 +1657,7 @@ export function View() {
       </Dialog>
 
       {/* Delete Confirmation Dialog for Active Deployment */}
-      {activeDeployment && (
+      {activeDeploymentResolved && (
         <Dialog open={deleteActiveDialogOpen} onOpenChange={setDeleteActiveDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
@@ -1647,7 +1668,7 @@ export function View() {
               <DialogDescription className="text-[13px] mb-4">
                 Are you sure you want to delete this deployment? This action cannot be undone.
               </DialogDescription>
-              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+              <DeploymentInfo deployment={activeDeploymentForCard ?? activeDeploymentResolved!} showStatus={true} />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
@@ -1663,14 +1684,7 @@ export function View() {
                 disabled={deleteActiveMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {deleteActiveMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  'Delete'
-                )}
+                Delete
               </Button>
             </div>
           </DialogContent>
@@ -1678,7 +1692,7 @@ export function View() {
       )}
 
       {/* Redeploy Confirmation Dialog for Active Deployment */}
-      {activeDeployment && (
+      {activeDeploymentResolved && (
         <Dialog open={redeployDialogOpen} onOpenChange={setRedeployDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
@@ -1689,7 +1703,7 @@ export function View() {
               <DialogDescription className="text-[13px] mb-4">
                 This will create a new build for this deployment using the current site configuration. The original deployment's code will be preserved and used for the new build.
               </DialogDescription>
-              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+              <DeploymentInfo deployment={activeDeploymentForCard ?? activeDeploymentResolved!} showStatus={true} />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
@@ -1706,14 +1720,7 @@ export function View() {
                 disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {redeployMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Redeploying...
-                  </>
-                ) : (
-                  'Redeploy'
-                )}
+                Redeploy
               </Button>
             </div>
           </DialogContent>
@@ -1721,7 +1728,7 @@ export function View() {
       )}
 
       {/* Activate Confirmation Dialog for Active Deployment */}
-      {activeDeployment && (
+      {activeDeploymentResolved && (
         <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
@@ -1732,7 +1739,7 @@ export function View() {
               <DialogDescription className="text-[13px] mb-4">
                 This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.
               </DialogDescription>
-              <DeploymentInfo deployment={activeDeployment} showStatus={true} />
+              <DeploymentInfo deployment={activeDeploymentForCard ?? activeDeploymentResolved!} showStatus={true} />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
@@ -1749,14 +1756,7 @@ export function View() {
                 disabled={activateMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {activateMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Activating...
-                  </>
-                ) : (
-                  'Activate'
-                )}
+                Activate
               </Button>
             </div>
           </DialogContent>

@@ -241,14 +241,7 @@ function AcceptInviteContent() {
                       disabled={acceptMutation.isPending || !hasAllParams}
                       className="w-full"
                     >
-                      {acceptMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Accepting...
-                        </>
-                      ) : (
-                        'Accept invitation'
-                      )}
+                      Accept invitation
                     </Button>
                   </div>
                 </div>

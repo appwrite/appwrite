@@ -404,7 +404,7 @@ export function CreateProjectDialog({
               style={{ backgroundColor: '#f02e65' }}
               className="text-white hover:opacity-90"
             >
-              {createProjectMutation.isPending ? 'Creating...' : 'Create'}
+              Create
             </Button>
           </div>
         </form>

@@ -5,7 +5,6 @@ import {
   GitBranch,
   GitCommit,
   Search,
-  Loader2,
   Copy,
   Download,
   Trash2,
@@ -435,6 +434,8 @@ export function DeploymentDetailView({
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
   const logsContainerRef = useRef<HTMLDivElement>(null)
   const lineRefs = useRef<Map<number, HTMLDivElement>>(new Map())
+  /** Set on first scroll; until then we auto-scroll so initial load follows tail. */
+  const hasUserScrolledRef = useRef(false)
   const [isAtTop, setIsAtTop] = useState(true)
   const [isAtBottom, setIsAtBottom] = useState(false)
 
@@ -693,14 +694,15 @@ export function DeploymentDetailView({
     return null
   }, [])
 
-  // Update scroll position state
+  // Update scroll position state for scroll-to-top/bottom buttons (controls auto-scroll: follow when at bottom)
   const updateScrollPosition = useCallback(() => {
     const scrollContainer = getScrollContainer()
     if (!scrollContainer) return
-    
+
+    hasUserScrolledRef.current = true
     const { scrollTop, scrollHeight, clientHeight } = scrollContainer
     const threshold = 10 // Small threshold to account for rounding
-    
+
     setIsAtTop(scrollTop <= threshold)
     setIsAtBottom(scrollTop + clientHeight >= scrollHeight - threshold)
   }, [getScrollContainer])
@@ -724,6 +726,16 @@ export function DeploymentDetailView({
       window.removeEventListener('resize', updateScrollPosition)
     }
   }, [getScrollContainer, updateScrollPosition, buildLogs])
+
+  // Auto-scroll when new logs arrive if user hasn't scrolled or is at bottom (same as scroll-to-bottom control)
+  useEffect(() => {
+    const shouldFollow = !hasUserScrolledRef.current || isAtBottom
+    if (!shouldFollow || !buildLogs) return
+    const scrollContainer = getScrollContainer()
+    if (scrollContainer) {
+      scrollContainer.scrollTop = scrollContainer.scrollHeight
+    }
+  }, [buildLogs, isAtBottom, getScrollContainer])
 
   // Scroll to selected line when it changes
   useEffect(() => {
@@ -777,9 +789,9 @@ export function DeploymentDetailView({
   const handleScrollToBottom = () => {
     const scrollContainer = getScrollContainer()
     if (scrollContainer) {
-      scrollContainer.scrollTo({ 
-        top: scrollContainer.scrollHeight, 
-        behavior: 'smooth' 
+      scrollContainer.scrollTo({
+        top: scrollContainer.scrollHeight,
+        behavior: 'smooth',
       })
     }
   }
@@ -1100,7 +1112,7 @@ export function DeploymentDetailView({
                               : deployment.type === 'cli'
                                 ? 'CLI deployments are created using the Appwrite command line tool, useful for developer workflows and scripted automation.'
                                 : deployment.type === 'manual'
-                                  ? 'Manual deployments are created by uploading code directly through the Console or API, useful for quick testing.'
+                                  ? 'Manual deployments are created by uploading code through the Console or API, or by redeploying an existing deployment. Useful for quick testing and re-running builds.'
                                   : 'The deployment type indicates how this deployment was created.'}
                           </p>
                         </TooltipContent>
@@ -1332,17 +1344,8 @@ export function DeploymentDetailView({
                       }
                       className="h-9 text-[13px]"
                     >
-                      {activateMutation.isPending ? (
-                        <>
-                          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                          Activating...
-                        </>
-                      ) : (
-                        <>
-                          <Play className="mr-1.5 h-4 w-4" />
-                          Activate
-                        </>
-                      )}
+                      <Play className="mr-1.5 h-4 w-4" />
+                      Activate
                     </Button>
                   </span>
                 </TooltipTrigger>
@@ -1480,14 +1483,7 @@ export function DeploymentDetailView({
               disabled={deleteMutation.isPending}
               className="h-9 text-[13px]"
             >
-              {deleteMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                'Delete'
-              )}
+              Delete
             </Button>
           </div>
         </DialogContent>
@@ -1522,14 +1518,7 @@ export function DeploymentDetailView({
                 disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {redeployMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Redeploying...
-                  </>
-                ) : (
-                  'Redeploy'
-                )}
+                Redeploy
               </Button>
             </div>
           </DialogContent>
@@ -1565,14 +1554,7 @@ export function DeploymentDetailView({
                 disabled={activateMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {activateMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Activating...
-                  </>
-                ) : (
-                  'Activate'
-                )}
+                Activate
               </Button>
             </div>
           </DialogContent>

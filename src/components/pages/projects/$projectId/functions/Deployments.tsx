@@ -24,7 +24,6 @@ import {
   ChevronDown,
   Globe,
   ExternalLink,
-  Loader2,
   MoreHorizontal,
 } from 'lucide-react'
 import {
@@ -1777,14 +1776,7 @@ export function View() {
                 disabled={deleteActiveMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {deleteActiveMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  'Delete'
-                )}
+                Delete
               </Button>
             </div>
           </DialogContent>
@@ -1820,14 +1812,7 @@ export function View() {
                 disabled={redeployMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {redeployMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Redeploying...
-                  </>
-                ) : (
-                  'Redeploy'
-                )}
+                Redeploy
               </Button>
             </div>
           </DialogContent>
@@ -1863,14 +1848,7 @@ export function View() {
                 disabled={activateMutation.isPending}
                 className="h-9 text-[13px]"
               >
-                {activateMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                    Activating...
-                  </>
-                ) : (
-                  'Activate'
-                )}
+                Activate
               </Button>
             </div>
           </DialogContent>

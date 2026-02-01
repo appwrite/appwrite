@@ -374,14 +374,7 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
               createSiteMutation.isPending
             }
           >
-            {isDeploying ? (
-              <>
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
-                Deploying...
-              </>
-            ) : (
-              'Deploy'
-            )}
+            Deploy
           </Button>
         </>
       }
