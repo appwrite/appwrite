@@ -455,7 +455,6 @@ class Migrations extends Action
 
                     // TODO: Move to CSV hook
                     if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                        var_dump($migration);
                         $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
                     }
                 }
