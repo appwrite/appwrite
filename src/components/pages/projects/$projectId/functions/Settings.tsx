@@ -36,6 +36,10 @@ import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  hasUnavailableSpecifications,
+  isSpecificationAllowedInPlan,
+} from '@/lib/specifications'
 import { Trash2, Plus, X } from 'lucide-react'
 
 const CONTACT_SALES_URL =
@@ -497,7 +501,11 @@ export function View() {
                             (spec) => spec.slug && spec.slug.trim() !== '',
                           )
                           .map((spec) => (
-                            <SelectItem key={spec.slug} value={spec.slug}>
+                            <SelectItem
+                              key={spec.slug}
+                              value={spec.slug}
+                              disabled={!isSpecificationAllowedInPlan(spec)}
+                            >
                               {spec.cpus} CPU, {spec.memory}MB RAM
                             </SelectItem>
                           ))}
@@ -506,7 +514,7 @@ export function View() {
                     <p className="mt-1 text-[12px] text-muted-foreground">
                       Select the runtime specification for your function
                     </p>
-                    {specifications.some((spec) => spec.enabled === false) && (
+                    {hasUnavailableSpecifications(specifications) && (
                       <div className="mt-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
                         <p className="text-[12px] text-muted-foreground">
                           Need more resources?{' '}

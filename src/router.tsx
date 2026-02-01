@@ -54,11 +54,10 @@ export const getRouter = () => {
   // SSR is disabled - app runs as SPA (client-side only)
   // No need for SSR query integration
 
-  // Initialize Sentry on client side only
-  if (!router.isServer) {
+  // Initialize Sentry on client side only when VITE_SENTRY_DSN is set
+  if (!router.isServer && import.meta.env.VITE_SENTRY_DSN) {
     Sentry.init({
-      dsn: 'https://b74f51cf094e44b878a61395468fd771@o1063647.ingest.us.sentry.io/4510766869250048',
-
+      dsn: import.meta.env.VITE_SENTRY_DSN,
       // Disable PII collection - we don't want to collect IP addresses or other personal data
       sendDefaultPii: false,
     })

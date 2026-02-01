@@ -49,12 +49,16 @@ const config = defineConfig({
     }),
     devtoolsJson(),
     viteReact(),
-    // Sentry plugin for source maps upload and error tracking
-    sentryTanstackStart({
-      org: 'appwrite',
-      project: 'console-v4',
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-    }),
+    // Sentry plugin for source maps upload (only when Sentry is enabled via VITE_SENTRY_DSN)
+    ...(process.env.VITE_SENTRY_DSN && process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryTanstackStart({
+            org: 'appwrite',
+            project: 'console-v4',
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+          }),
+        ]
+      : []),
   ],
   server: {
     host: '::',

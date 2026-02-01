@@ -4,6 +4,8 @@ import { useLocation } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 
+const isSentryEnabled = () => !!import.meta.env.VITE_SENTRY_DSN
+
 /**
  * Extracts project ID from URL pathname
  * Expected format: /projects/:projectId/...
@@ -89,6 +91,7 @@ export function SentryContextProvider({
 
   // Set user context when authenticated (no PII - only IDs and status flags)
   useEffect(() => {
+    if (!isSentryEnabled()) return
     if (isAuthenticated && account) {
       // Only set user ID - no email or name to protect privacy
       Sentry.setUser({
@@ -114,6 +117,7 @@ export function SentryContextProvider({
 
   // Set navigation context based on current route
   useEffect(() => {
+    if (!isSentryEnabled()) return
     const projectId = extractProjectId(location.pathname)
     const orgId = extractOrgId(location.pathname)
     const service = extractCurrentService(location.pathname)
@@ -154,6 +158,7 @@ export function SentryContextProvider({
 
   // Set organization plan context
   useEffect(() => {
+    if (!isSentryEnabled()) return
     if (orgPlan) {
       Sentry.setContext('organization_plan', {
         planId: orgPlan.$id,
@@ -190,6 +195,7 @@ export function captureExceptionWithContext(
     [key: string]: any
   },
 ): string | undefined {
+  if (!isSentryEnabled()) return undefined
   Sentry.captureException(error, {
     extra: {
       ...additionalContext,

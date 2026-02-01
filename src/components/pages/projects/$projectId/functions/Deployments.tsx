@@ -87,6 +87,11 @@ import {
   Dependencies,
   deleteFunctionDeployment,
 } from '@/lib/react-query/hooks'
+import {
+  getFirstEnabledSpecification,
+  hasUnavailableSpecifications,
+  isSpecificationAllowedInPlan,
+} from '@/lib/specifications'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
 import { toast } from 'sonner'
@@ -371,17 +376,14 @@ export function View() {
       const currentSpec = func?.specification
       if (currentSpec) {
         const spec = specifications.find((s) => s.slug === currentSpec)
-        // If current spec exists and is enabled, use it; otherwise find first enabled spec
-        if (spec && spec.enabled !== false) {
+        if (spec && isSpecificationAllowedInPlan(spec)) {
           setSelectedSpecification(currentSpec)
         } else {
-          // Find first enabled specification
-          const firstEnabled = specifications.find((s) => s.enabled !== false)
+          const firstEnabled = getFirstEnabledSpecification(specifications)
           setSelectedSpecification(firstEnabled?.slug || '')
         }
       } else {
-        // No spec set, use first enabled specification
-        const firstEnabled = specifications.find((s) => s.enabled !== false)
+        const firstEnabled = getFirstEnabledSpecification(specifications)
         setSelectedSpecification(firstEnabled?.slug || '')
       }
     }
@@ -1529,11 +1531,8 @@ export function View() {
               <RadioGroup
                 value={selectedSpecification}
                 onValueChange={(value) => {
-                  // Prevent selecting disabled specs
                   const spec = specifications.find((s) => s.slug === value)
-                  if (spec && spec.enabled === false) {
-                    return
-                  }
+                  if (spec && !isSpecificationAllowedInPlan(spec)) return
                   setSelectedSpecification(value)
                 }}
                 className="space-y-2"
@@ -1541,7 +1540,7 @@ export function View() {
                 <div className="rounded-lg border border-border bg-card/50 overflow-hidden divide-y divide-border max-h-[320px] overflow-y-auto">
                   {specifications.map((spec) => {
                     const isSelected = selectedSpecification === spec.slug
-                    const isEnabled = spec.enabled !== false
+                    const isEnabled = isSpecificationAllowedInPlan(spec)
                     return (
                       <div
                         key={spec.slug}
@@ -1604,7 +1603,7 @@ export function View() {
                   })}
                 </div>
               </RadioGroup>
-              {specifications.some((spec) => spec.enabled === false) && (
+              {hasUnavailableSpecifications(specifications) && (
                 <div className="mt-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
                   <p className="text-[12px] text-muted-foreground">
                     Need more resources?{' '}

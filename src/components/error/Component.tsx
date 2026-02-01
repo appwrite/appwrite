@@ -1,7 +1,6 @@
 import { useLocation } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, RefreshCw, Home, Copy, Check } from 'lucide-react'
-import * as Sentry from '@sentry/tanstackstart-react'
 import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 import { formatError } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
@@ -108,7 +107,6 @@ export function ErrorComponent({
   const randomErrorId = useRef<string>(
     Math.random().toString(36).substring(2, 15),
   )
-  const [sentryEventId, setSentryEventId] = useState<string | undefined>()
   const location = useLocation()
   const navigate = useNavigate()
   
@@ -169,9 +167,9 @@ export function ErrorComponent({
   // Extract all available context from the current route
   const routeContext = extractRouteContext(location.pathname)
 
-  // Capture error in Sentry with full context
+  // Capture error in Sentry with full context (no-op when VITE_SENTRY_DSN is not set)
   useEffect(() => {
-    const eventId = captureExceptionWithContext(error, {
+    captureExceptionWithContext(error, {
       // Route-based context
       ...routeContext,
       // Error metadata
@@ -196,22 +194,6 @@ export function ErrorComponent({
       viewportWidth: typeof window !== 'undefined' ? window.innerWidth : undefined,
       viewportHeight: typeof window !== 'undefined' ? window.innerHeight : undefined,
     })
-    
-    // Set event ID immediately if available
-    if (eventId) {
-      setSentryEventId(eventId)
-    } else {
-      // If not immediately available, try again after a short delay
-      // This handles cases where Sentry's async processing hasn't set the event ID yet
-      const timeoutId = setTimeout(() => {
-        const delayedEventId = Sentry.lastEventId()
-        if (delayedEventId) {
-          setSentryEventId(delayedEventId)
-        }
-      }, 100)
-      
-      return () => clearTimeout(timeoutId)
-    }
   }, [error, info, location.href, location.pathname, isProjectNotFound, isProjectAccessDenied])
 
   // Every 2 seconds, notify parent that an error exists
@@ -233,17 +215,7 @@ export function ErrorComponent({
 
   // Copy error details
   const [copied, setCopied] = useState(false)
-  const [eventIdCopied, setEventIdCopied] = useState(false)
-  
-  const handleCopyEventId = async () => {
-    if (sentryEventId) {
-      await navigator.clipboard.writeText(sentryEventId)
-      setEventIdCopied(true)
-      toast.success('Event ID copied to clipboard')
-      setTimeout(() => setEventIdCopied(false), 2000)
-    }
-  }
-  
+
   const handleCopy = async () => {
     const errorDetails = {
       message: error.message || 'No error message',
@@ -252,7 +224,6 @@ export function ErrorComponent({
       componentStack: info?.componentStack,
       url: location.href,
       errorId: randomErrorId.current,
-      sentryEventId,
     }
 
     const errorText = [
@@ -263,7 +234,6 @@ export function ErrorComponent({
       errorDetails.cause && `\nCause: ${errorDetails.cause}`,
       `\nURL: ${errorDetails.url}`,
       `Error ID: ${errorDetails.errorId}`,
-      errorDetails.sentryEventId && `Event ID: ${errorDetails.sentryEventId}`,
     ]
       .filter(Boolean)
       .join('\n')
@@ -312,30 +282,6 @@ export function ErrorComponent({
               <Copy className="h-4 w-4" />
             )}
           </Button>
-          </div>
-        )}
-
-        {sentryEventId && (
-          <div className="mt-2 relative w-full max-w-md rounded-lg border bg-card px-4 py-3">
-            <div className="flex items-center gap-2 pr-8 min-w-0 w-full">
-              <span className="text-xs text-muted-foreground shrink-0">Event ID:</span>
-              <code className="text-xs font-mono text-foreground flex-1 min-w-0 overflow-hidden text-left" style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}>
-                {sentryEventId}
-              </code>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-2 right-2 h-7 w-7 p-0 shrink-0"
-              onClick={handleCopyEventId}
-              aria-label="Copy event ID"
-            >
-              {eventIdCopied ? (
-                <Check className="h-4 w-4 text-emerald-500" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-            </Button>
           </div>
         )}
 

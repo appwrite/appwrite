@@ -19,6 +19,10 @@ import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
+import {
+  hasUnavailableSpecifications,
+  isSpecificationAllowedInPlan,
+} from '@/lib/specifications'
 import { useSiteSpecifications } from '@/lib/react-query/hooks'
 
 interface ResourceLimitsCardProps {
@@ -88,9 +92,7 @@ export function ResourceLimitsCard({
     return null
   }
 
-  const hasUnavailableSpecs = specifications.some(
-    (spec) => spec.enabled === false,
-  )
+  const hasUnavailableSpecs = hasUnavailableSpecifications(specifications)
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -125,7 +127,7 @@ export function ResourceLimitsCard({
                   <SelectItem
                     key={spec.slug}
                     value={spec.slug}
-                    disabled={spec.enabled === false}
+                    disabled={!isSpecificationAllowedInPlan(spec)}
                   >
                     {spec.cpus} CPU, {spec.memory}MB RAM
                   </SelectItem>
