@@ -365,7 +365,7 @@ class Migrations extends Action
             $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
             $source = $this->processSource($migration);
-            $destination = $this->processDestination($migration, $tempAPIKey, $endpoint);
+            $destination = $this->processDestination($migration);
 
             $transfer = new Transfer(
                 $source,
