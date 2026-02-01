@@ -333,14 +333,11 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
 
-        $endpoint = System::getEnv('_APP_MIGRATION_ENDPOINT');
-        if (empty($endpoint)) {
-            throw new \Exception('_APP_MIGRATION_ENDPOINT env is empty');
-        }
+//        $endpoint = System::getEnv('_APP_MIGRATION_ENDPOINT');
+//        if (empty($endpoint)) {
+//            throw new \Exception('_APP_MIGRATION_ENDPOINT env is empty');
+//        }
 
-        /**
-         * Overwrite env
-         */
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
 
@@ -349,8 +346,6 @@ class Migrations extends Action
 
             if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
                 if (empty($credentials)) {
-                    //$credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
-                    //$credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                     $credentials['projectId'] = $project->getId();
                     $credentials['apiKey'] = $tempAPIKey;
                     $credentials['endpoint'] = $endpoint;
@@ -460,6 +455,7 @@ class Migrations extends Action
 
                     // TODO: Move to CSV hook
                     if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
+                        var_dump($migration);
                         $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
                     }
                 }
@@ -493,6 +489,7 @@ class Migrations extends Action
         array $platform,
         Authorization $authorization,
     ): void {
+        $credentials = $migration->getAttribute('credentials', []);
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
         $filename = $options['filename'] ?? 'export_' . \time();
@@ -589,9 +586,7 @@ class Migrations extends Action
 
         // Generate download URL with JWT
 
-        $endpoint = System::getEnv('_APP_DOMAIN', ''); // Can use System::getEnv('_APP_MIGRATION_ENDPOINT'); ?
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled' ? 'https' : 'http';
-        $downloadUrl = "{$protocol}://{$endpoint}/v1/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
+        $downloadUrl = "{$credentials['endpoint']}/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
         $options['downloadUrl'] = $downloadUrl;
         $migration->setAttribute('options', $options);
         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
