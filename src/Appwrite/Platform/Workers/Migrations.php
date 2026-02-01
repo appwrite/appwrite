@@ -360,6 +360,8 @@ class Migrations extends Action
 
             $migration->setAttribute('credentials', $credentials);
 
+            var_dump($credentials);
+
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
             $this->updateMigrationDocument($migration, $project, $queueForRealtime);
