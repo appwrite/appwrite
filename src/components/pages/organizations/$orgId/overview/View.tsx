@@ -441,6 +441,37 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     location.pathname,
   ])
 
+  // Check for create=project search param (e.g. from header plus button) and open Create Project dialog
+  useEffect(() => {
+    const shouldCreateProject =
+      typeof search === 'object' &&
+      'create' in search &&
+      (search as { create?: string }).create === 'project'
+    if (
+      shouldCreateProject &&
+      !organizationsLoading &&
+      !createProjectDialogOpen
+    ) {
+      setCreateProjectDialogOpen(true)
+      navigate({
+        to: location.pathname,
+        search: (prev: any) => {
+          if (!prev || typeof prev !== 'object') return {}
+          const newSearch = { ...prev }
+          delete newSearch.create
+          return Object.keys(newSearch).length === 0 ? {} : newSearch
+        },
+        replace: true,
+      })
+    }
+  }, [
+    search,
+    organizationsLoading,
+    createProjectDialogOpen,
+    navigate,
+    location.pathname,
+  ])
+
   // Handle missing organization: redirect to next org or open creation wizard
   useEffect(() => {
     // Only act if organizations have finished loading and we have an orgId in the URL

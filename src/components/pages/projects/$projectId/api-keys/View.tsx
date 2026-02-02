@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Key } from 'lucide-react'
 import { useParams } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -22,7 +23,24 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/global/shared/EmptyState'
+import { LanguageIcon } from '@/components/global/shared/LanguageIcon'
 import type { Models } from '@appwrite.io/console'
+
+const supportedLanguages = [
+  { id: 'node', name: 'Node.js' },
+  { id: 'python', name: 'Python' },
+  { id: 'php', name: 'PHP' },
+  { id: 'ruby', name: 'Ruby' },
+  { id: 'go', name: 'Go' },
+  { id: 'deno', name: 'Deno' },
+  { id: 'bun', name: 'Bun' },
+  { id: 'dart', name: 'Dart' },
+  { id: 'swift', name: 'Swift' },
+  { id: 'kotlin', name: 'Kotlin' },
+  { id: 'java', name: 'Java' },
+  { id: 'dotnet', name: '.NET' },
+] as const
 
 export type ApiKeysInitialData = {
   project?: Awaited<ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>>
@@ -188,15 +206,92 @@ export function View({ initialData }: ViewProps = {}) {
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        <ApiKeysList
-          apiKeys={filteredApiKeys}
-          isLoading={showLoading}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-          onCopy={handleCopy}
-          copiedField={copiedField}
-          showActions={true}
-        />
+        {showLoading ? (
+          <div className="rounded-xl border border-border bg-card/50">
+            <div className="divide-y divide-border">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between gap-3 p-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 shrink-0 animate-pulse rounded bg-muted" />
+                      <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+                      <div className="h-4 w-16 animate-pulse rounded-full bg-muted" />
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <div className="h-5 w-32 animate-pulse rounded bg-muted" />
+                      <div className="h-3.5 w-3.5 animate-pulse rounded bg-muted" />
+                      <div className="h-3.5 w-3.5 animate-pulse rounded bg-muted" />
+                      <div className="ml-auto h-3 w-24 animate-pulse rounded bg-muted" />
+                    </div>
+                  </div>
+                  <div className="h-6 w-6 shrink-0 animate-pulse rounded bg-muted" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : filteredApiKeys.length === 0 ? (
+          apiKeys.length === 0 ? (
+            <EmptyState icon={Key} variant="card" isEmpty={true}>
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <Key className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="mb-2 text-[15px] font-medium text-foreground">
+                  No API keys created
+                </h3>
+                <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
+                  Create an API key to authenticate your applications and access
+                  Appwrite services. API keys provide secure access to your
+                  project resources.
+                </p>
+                <div className="w-full">
+                  <div className="mb-4 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="font-medium text-foreground/80">
+                      Create API key for your language
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  <div className="flex w-full flex-wrap justify-center gap-2">
+                    {supportedLanguages.map(({ id, name }) => (
+                      <Button
+                        key={id}
+                        onClick={() => setCreateDrawerOpen(true)}
+                        variant="outline"
+                        size="lg"
+                      >
+                        <LanguageIcon language={id} size="sm" />
+                        <span>{name}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </EmptyState>
+          ) : (
+            <EmptyState
+              icon={Key}
+              variant="card"
+              isEmpty={false}
+              hasFilters={true}
+              title="No API keys match your search"
+              description="Try a different search term."
+            />
+          )
+        ) : (
+          <ApiKeysList
+            apiKeys={filteredApiKeys}
+            isLoading={false}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+            onCopy={handleCopy}
+            copiedField={copiedField}
+            showActions={true}
+          />
+        )}
       </div>
 
       {/* Create Drawer */}

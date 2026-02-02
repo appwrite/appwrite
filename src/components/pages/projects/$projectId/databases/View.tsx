@@ -176,6 +176,7 @@ import {
   useNavigate,
   useParams,
   useLocation,
+  useSearch,
 } from '@tanstack/react-router'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { PlanLimitWarning } from '../shared/PlanLimitWarning'
@@ -223,6 +224,7 @@ export function View() {
   })
   const navigate = useNavigate()
   const location = useLocation()
+  const search = useSearch({ strict: false }) as { create?: string }
   const queryClient = useQueryClient()
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
@@ -235,6 +237,23 @@ export function View() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
     useState(false)
+
+  // Open create database dialog when ?create=database (e.g. from header plus button)
+  useEffect(() => {
+    if (search?.create === 'database' && !createDatabaseDialogOpen) {
+      setCreateDatabaseDialogOpen(true)
+      navigate({
+        to: location.pathname,
+        search: (prev: Record<string, unknown>) => {
+          if (!prev || typeof prev !== 'object') return {}
+          const next = { ...prev }
+          delete next.create
+          return Object.keys(next).length === 0 ? {} : next
+        },
+        replace: true,
+      })
+    }
+  }, [search?.create, createDatabaseDialogOpen, navigate, location.pathname])
 
   // Fetch data for the requested page (triggers load when user changes page)
   const {

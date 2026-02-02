@@ -4,6 +4,7 @@ import {
   useLocation,
   Link,
   useNavigate,
+  useSearch,
 } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import {
@@ -74,6 +75,7 @@ export function View() {
   })
   const location = useLocation()
   const navigate = useNavigate()
+  const search = useSearch({ strict: false }) as { create?: string }
   const { isDebugModeOpen } = useDebugMode()
 
   // Check if we're on a user detail route - if so, don't render this component
@@ -129,6 +131,23 @@ export function View() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedTeams, setSelectedTeams] = useState<Set<string>>(new Set())
   const [deleteTeamDialogOpen, setDeleteTeamDialogOpen] = useState(false)
+
+  // Open create user drawer when ?create=user (e.g. from header plus button)
+  useEffect(() => {
+    if (search?.create === 'user' && !createUserDialogOpen) {
+      setCreateUserDialogOpen(true)
+      navigate({
+        to: location.pathname,
+        search: (prev: Record<string, unknown>) => {
+          if (!prev || typeof prev !== 'object') return {}
+          const next = { ...prev }
+          delete next.create
+          return Object.keys(next).length === 0 ? {} : next
+        },
+        replace: true,
+      })
+    }
+  }, [search?.create, createUserDialogOpen, navigate, location.pathname])
 
   // Pagination state for users (1-indexed for UI)
   const [usersRequestedPage, setUsersRequestedPage] = useState(1)

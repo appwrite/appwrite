@@ -52,6 +52,7 @@ import {
   useNavigate,
   useParams,
   useLocation,
+  useSearch,
 } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -68,6 +69,7 @@ export function View() {
   })
   const navigate = useNavigate()
   const location = useLocation()
+  const search = useSearch({ strict: false }) as { create?: string }
   const queryClient = useQueryClient()
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
@@ -77,6 +79,23 @@ export function View() {
   const [createBucketDialogOpen, setCreateBucketDialogOpen] = useState(false)
   const [selectedBuckets, setSelectedBuckets] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+
+  // Open create bucket dialog when ?create=bucket (e.g. from header plus button)
+  useEffect(() => {
+    if (search?.create === 'bucket' && !createBucketDialogOpen) {
+      setCreateBucketDialogOpen(true)
+      navigate({
+        to: location.pathname,
+        search: (prev: Record<string, unknown>) => {
+          if (!prev || typeof prev !== 'object') return {}
+          const next = { ...prev }
+          delete next.create
+          return Object.keys(next).length === 0 ? {} : next
+        },
+        replace: true,
+      })
+    }
+  }, [search?.create, createBucketDialogOpen, navigate, location.pathname])
 
   // Fetch data for the requested page (triggers load when user changes page)
   const {
