@@ -8,6 +8,15 @@ import { usePlatforms } from '@/lib/react-query/hooks'
 import { getPlatformDisplayName } from '@/lib/utils/platform'
 import type { Models } from '@appwrite.io/console'
 
+export type AppsInitialData = {
+  project?: Awaited<ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>>
+  platforms: Models.Platform[]
+}
+
+type ViewProps = {
+  initialData?: AppsInitialData
+}
+
 const supportedPlatforms = [
   { id: 'web', platform: 'web' },
   { id: 'react-native', platform: 'react-native' },
@@ -18,11 +27,15 @@ const supportedPlatforms = [
   { id: 'linux', platform: 'linux' },
 ] as const
 
-export function View() {
+export function View({ initialData }: ViewProps = {}) {
   const { projectId } = useParams({ strict: false })
   const [searchValue, setSearchValue] = useState('')
 
-  const { platforms, isLoading } = usePlatforms(projectId)
+  // Use initialData on first paint so no loading skeleton flash
+  const { platforms: platformsFromHook, isLoading } = usePlatforms(projectId)
+  const platforms =
+    platformsFromHook?.length ? platformsFromHook : (initialData?.platforms ?? [])
+  const showLoading = isLoading && platforms.length === 0 && !initialData
 
   const filteredPlatforms = useMemo(() => {
     if (!searchValue.trim()) return platforms
@@ -54,7 +67,7 @@ export function View() {
       />
 
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
-        {isLoading ? (
+        {showLoading ? (
           <div className="rounded-xl border border-border bg-card/50">
             <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (

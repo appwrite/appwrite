@@ -46,6 +46,7 @@ import {
 } from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
 import { useRepositories, useSiteTemplates, useProject } from '@/lib/react-query/hooks'
+import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 import type { Models } from '@appwrite.io/console'
@@ -183,14 +184,11 @@ export function CreateSiteView() {
   // Get project for region/endpoint
   const { project } = useProject(projectId)
 
-  // Get project endpoint for VCS authorization
-  const projectEndpoint = useMemo(() => {
-    if (!project?.region || project.region === 'unknown') {
-      return import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
-    }
-    const normalizedRegion = project.region.trim().toLowerCase().replace(/\s+/g, '')
-    return `https://${normalizedRegion}.cloud.appwrite.io/v1`
-  }, [project?.region])
+  // Get project endpoint for VCS authorization (centralized in SDK)
+  const projectEndpoint = useMemo(
+    () => getApiEndpoint(project?.region),
+    [project?.region],
+  )
 
   // Repository state
   const [selectedInstallationId, setSelectedInstallationId] = useState<string>('')

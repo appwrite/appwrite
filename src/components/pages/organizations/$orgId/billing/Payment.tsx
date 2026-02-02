@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import type { Stripe, StripeElements, PaymentElement } from '@stripe/stripe-js'
 import {
   getStripeInstance,
@@ -133,10 +134,14 @@ export function PaymentModal({
   const { theme } = useTheme()
   const appearance = getStripeAppearanceFromTheme(theme)
 
-  // Check if Stripe is available
-  const isCloud =
-    typeof window !== 'undefined' &&
-    window.location.hostname.includes('cloud.appwrite.io')
+  // Check if Stripe is available (uses centralized SDK endpoint)
+  const isCloud = (() => {
+    try {
+      return getBaseEndpoint().includes('cloud.appwrite.io')
+    } catch {
+      return false
+    }
+  })()
   const stripePublishableKey =
     typeof window !== 'undefined'
       ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||

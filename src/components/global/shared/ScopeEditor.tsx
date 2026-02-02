@@ -10,6 +10,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import {
   Users,
   Database,
@@ -382,10 +383,13 @@ const LEGACY_SCOPE_MAP: Record<string, string> = {
   'documents.write': 'rows.write',
 }
 
-// Helper to check if environment is cloud
+// Helper to check if environment is cloud (uses centralized SDK endpoint)
 function isCloudEnvironment(): boolean {
-  const endpoint = import.meta.env.VITE_APPWRITE_ENDPOINT || ''
-  return endpoint.includes('cloud.appwrite.io')
+  try {
+    return getBaseEndpoint().includes('cloud.appwrite.io')
+  } catch {
+    return false
+  }
 }
 
 // Helper to get all scope variants (newer + legacy)

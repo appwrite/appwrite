@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/sites/VerifyDomain'
 import {
   siteQueryOptions,
-  fetchProject,
+  projectQueryOptions,
 } from '@/lib/react-query/hooks'
 import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -23,15 +23,12 @@ export const Route = createFileRoute(
     const urlParams = new URLSearchParams(location.search)
     const ruleId = urlParams.get('ruleId')
 
-    // Fetch site first - blocks navigation until ready
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    const projectData = await queryClient.ensureQueryData(
+      projectQueryOptions(projectId),
+    )
+    // Fetch site - blocks navigation until ready
     await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
-
-    // Fetch project data (needed for header/sidebar) - blocks navigation
-    const projectData = await queryClient.ensureQueryData({
-      queryKey: ['project', projectId],
-      queryFn: () => fetchProject(projectId),
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    })
 
     // Fetch critical data before rendering to prevent layout shifts
     await Promise.all([

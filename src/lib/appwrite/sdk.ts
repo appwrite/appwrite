@@ -33,8 +33,12 @@ import {
   Organizations,
 } from '@appwrite.io/console'
 
-// Get endpoint from environment variable. When region is provided (and not empty/unknown),
-// returns the region-specific endpoint (e.g. https://nyc.cloud.appwrite.io/v1).
+/**
+ * Single source of truth for API endpoints.
+ * - No region: returns base endpoint (VITE_APPWRITE_ENDPOINT or current host).
+ * - With region: returns region-specific endpoint (e.g. https://nyc.cloud.appwrite.io/v1).
+ * Use this everywhere when constructing API URLs.
+ */
 export function getApiEndpoint(region?: string): string {
   const baseEndpoint =
     import.meta.env.VITE_APPWRITE_ENDPOINT ||
@@ -59,8 +63,13 @@ export function getApiEndpoint(region?: string): string {
   return baseEndpoint
 }
 
+/** Base endpoint (console / default). Use for console-level URLs. */
+export function getBaseEndpoint(): string {
+  return getApiEndpoint()
+}
+
 // Project region cache: when we fetch a project we register its region so forProject()
-// can use the correct region-specific endpoint without callers passing region everywhere.
+// and getProjectApiEndpoint use the correct regional endpoint.
 const projectRegions = new Map<string, string>()
 
 /**
@@ -71,6 +80,16 @@ export function setProjectRegion(projectId: string, region: string | undefined) 
   if (region && region.trim().toLowerCase() !== 'unknown') {
     projectRegions.set(projectId, region.trim().toLowerCase().replace(/\s+/g, ''))
   }
+}
+
+/**
+ * Endpoint for project-scoped API calls and URL construction.
+ * Uses cached region from setProjectRegion (populated when project is fetched).
+ * When region is not yet cached, returns base endpoint.
+ */
+export function getProjectApiEndpoint(projectId: string): string {
+  const region = projectRegions.get(projectId)
+  return getApiEndpoint(region)
 }
 
 // Create Console SDK instance
@@ -150,9 +169,9 @@ export const sdk = {
     return createConsoleSdk(regionClient)
   },
 
-  // Project SDK - for managing project-specific resources
-  // Call this method with the project ID to get a configured SDK instance.
-  // Uses the project's region (from setProjectRegion when project was fetched) for the correct endpoint.
+  // Project SDK - for managing project-specific resources.
+  // Endpoint is set from cached region (setProjectRegion when project is fetched) or explicit region param.
+  // Always fetch project first in loaders so region is cached before project-scoped calls.
   forProject(projectId: string, region?: string) {
     const effectiveRegion = region ?? projectRegions.get(projectId)
     const projectEndpoint = getApiEndpoint(effectiveRegion)

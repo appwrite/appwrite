@@ -44,7 +44,7 @@ import {
   useProject,
   Dependencies,
 } from '@/lib/react-query/hooks'
-import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'

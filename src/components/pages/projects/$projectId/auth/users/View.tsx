@@ -6,6 +6,7 @@ import {
   Link,
 } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -2885,7 +2886,7 @@ function SessionsTab({
 
   const getCountryFlagUrl = (countryCode?: string) => {
     if (!countryCode) return null
-    return `https://cloud.appwrite.io/v1/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
+    return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
   }
 
   const formatIP = (ip?: string) => {

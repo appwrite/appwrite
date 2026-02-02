@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import {
   useProject,
   useUpdateAuthMethod,
@@ -1387,19 +1387,11 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
     return { ...baseAuthMethods, ...optimisticAuthMethods }
   }, [baseAuthMethods, optimisticAuthMethods])
 
-  // Get project endpoint for redirect URI
-  const projectEndpoint = useMemo(() => {
-    if (!project?.region || project.region === 'unknown') {
-      return (
-        import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
-      )
-    }
-    const normalizedRegion = project.region
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '')
-    return `https://${normalizedRegion}.cloud.appwrite.io/v1`
-  }, [project?.region])
+  // Get project endpoint for redirect URI (centralized in SDK)
+  const projectEndpoint = useMemo(
+    () => getApiEndpoint(project?.region),
+    [project?.region],
+  )
 
   // Mutation for auth methods
   const updateAuthMethodMutation = useUpdateAuthMethod(projectId)

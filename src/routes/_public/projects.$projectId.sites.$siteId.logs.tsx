@@ -27,6 +27,9 @@ export const Route = createFileRoute(
     const { projectId, siteId } = params
     const { queryClient } = context
 
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+
     // Parse page from URL search params as fallback
     const urlParams = new URLSearchParams(location.search)
     const pageParam = urlParams.get('page')
@@ -34,13 +37,8 @@ export const Route = createFileRoute(
     const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
 
     // Fetch critical data before rendering to prevent layout shifts
-    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
-      // Fetch site - blocks navigation until ready
       queryClient.ensureQueryData(siteQueryOptions(projectId, siteId)),
-      // Fetch project data (needed for header/sidebar) - blocks navigation
-      queryClient.ensureQueryData(projectQueryOptions(projectId)),
-      // Fetch logs for the requested page - blocks navigation until ready
       queryClient.ensureQueryData(
         siteLogsQueryOptions(projectId, siteId, pageIndex, LOGS_PER_PAGE),
       ),

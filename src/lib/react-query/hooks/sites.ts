@@ -309,14 +309,15 @@ export async function fetchSiteDomains(
   }
 
   const projectSdk = sdk.forProject(projectId)
+  // Match query structure from legacy console: filters, then limit/offset, then orderDesc
   const defaultQueries = [
     Query.equal('type', ['deployment', 'redirect']),
     Query.equal('deploymentResourceType', 'site'),
     Query.equal('deploymentResourceId', siteId),
     Query.equal('trigger', 'manual'),
-    Query.orderDesc('$updatedAt'),
     Query.limit(limit),
     Query.offset(page * limit),
+    Query.orderDesc('$updatedAt'),
   ]
 
   const response = await projectSdk.proxy.listRules({

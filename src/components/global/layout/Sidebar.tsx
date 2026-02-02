@@ -67,10 +67,10 @@ const getNavItems = (projectId: string) => {
       label: 'Connect',
       items: [
         {
-          id: 'integrations',
+          id: 'apps',
           label: 'Apps',
           icon: Plug,
-          path: `/projects/${projectId}/integrations`,
+          path: `/projects/${projectId}/apps`,
         },
         {
           id: 'api-keys',

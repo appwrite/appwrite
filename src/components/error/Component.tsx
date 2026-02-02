@@ -286,14 +286,18 @@ export function ErrorComponent({
         )}
 
         <div className="flex flex-col sm:flex-row gap-3 mt-4 w-full">
-          <Button variant="outline" onClick={handleGoHome} className="flex-1">
+          <Button
+            variant="outline"
+            onClick={handleGoHome}
+            className="w-full shrink-0 sm:flex-1 min-h-9"
+          >
             <Home className="mr-1.5 h-4 w-4" />
             Go Home
           </Button>
           <Button
             onClick={handleRetry}
             size="sm"
-            className="h-9 gap-2 text-[13px] font-medium text-white hover:opacity-90 flex-1"
+            className="h-9 min-h-9 w-full shrink-0 gap-2 text-[13px] font-medium text-white hover:opacity-90 sm:flex-1"
             style={{ backgroundColor: '#f02e65' }}
           >
             <RefreshCw className="h-4 w-4" />

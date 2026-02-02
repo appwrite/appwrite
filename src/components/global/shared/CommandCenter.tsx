@@ -417,14 +417,14 @@ export function CommandCenter({
         },
       },
       {
-        id: 'nav-integrations',
+        id: 'nav-apps',
         label: 'Go to Apps',
-        description: 'Third-party integrations',
+        description: 'Apps and platforms',
         icon: Plug,
         type: 'navigation',
-        keywords: ['connect', 'third-party', 'oauth'],
+        keywords: ['connect', 'apps', 'platforms'],
         action: () => {
-          onNavigate?.('integrations')
+          onNavigate?.('apps')
           onOpenChange(false)
         },
       },

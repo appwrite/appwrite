@@ -1,15 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { View } from '@/components/pages/projects/$projectId/api-keys/View'
-import {
-  fetchApiKeys,
-  fetchProject,
-  mapApiKeysFromResponse,
-} from '@/lib/react-query/hooks'
+import { View } from '@/components/pages/projects/$projectId/apps/View'
+import { fetchProject, fetchPlatforms } from '@/lib/react-query/hooks'
 
 const STALE_TIME = 30 * 1000
 const PROJECT_STALE_TIME = 5 * 60 * 1000
 
-export const Route = createFileRoute('/_public/projects/$projectId/api-keys')({
+export const Route = createFileRoute(
+  '/_public/projects/$projectId/apps',
+)({
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
 
@@ -19,34 +17,34 @@ export const Route = createFileRoute('/_public/projects/$projectId/api-keys')({
     if (!projectId) return undefined
 
     // Fetch and populate cache (same keys as hooks). Return data for first paint (no flash).
-    const [project, apiKeysResponse] = await Promise.all([
+    const [project, platformsResponse] = await Promise.all([
       queryClient.fetchQuery({
         queryKey: ['project', projectId],
         queryFn: () => fetchProject(projectId),
         staleTime: PROJECT_STALE_TIME,
       }),
       queryClient.fetchQuery({
-        queryKey: ['apiKeys', projectId],
-        queryFn: () => fetchApiKeys(projectId),
+        queryKey: ['platforms', projectId],
+        queryFn: () => fetchPlatforms(projectId),
         staleTime: STALE_TIME,
       }),
     ])
 
     return {
       project,
-      apiKeys: mapApiKeysFromResponse(apiKeysResponse),
+      platforms: platformsResponse?.platforms ?? [],
     }
   },
-  component: ApiKeysPage,
+  component: AppsPage,
 })
 
-function ApiKeysPage() {
+function AppsPage() {
   const loaderData = Route.useLoaderData()
   return (
     <View
       initialData={
         loaderData
-          ? { project: loaderData.project, apiKeys: loaderData.apiKeys }
+          ? { project: loaderData.project, platforms: loaderData.platforms }
           : undefined
       }
     />

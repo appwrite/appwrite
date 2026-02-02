@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import {
+  projectQueryOptions,
   databaseQueryOptions,
   tablesQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -18,10 +19,13 @@ export const Route = createFileRoute(
     const { projectId, databaseId } = params
     const { queryClient } = context
 
+    if (!projectId || !databaseId) return
+
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+
     // Fetch critical data before rendering to prevent layout shifts
-    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
-    if (projectId && databaseId) {
-      await Promise.all([
+    await Promise.all([
         // Fetch database - blocks navigation until ready
         queryClient.ensureQueryData(
           databaseQueryOptions(projectId, databaseId),
@@ -31,7 +35,6 @@ export const Route = createFileRoute(
           tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE),
         ),
       ])
-    }
   },
   component: TablesLayout,
 })

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { useAccountSessions } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
@@ -281,7 +281,7 @@ export function AccountSessions() {
 
   const getCountryFlagUrl = (countryCode?: string) => {
     if (!countryCode) return null
-    return `https://cloud.appwrite.io/v1/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
+    return `${getBaseEndpoint()}/avatars/flags/${countryCode.toLowerCase()}?width=20&height=20&quality=100&project=console`
   }
 
   const formatIP = (ip?: string) => {

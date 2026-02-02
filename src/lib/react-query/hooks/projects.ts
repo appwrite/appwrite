@@ -101,6 +101,20 @@ export async function fetchApiKeys(projectId: string) {
   return response
 }
 
+/** Map raw API keys response to display format (for route initialData) */
+export function mapApiKeysFromResponse(apiKeysData: { keys?: any[] } | null) {
+  if (!apiKeysData?.keys) return []
+  return (apiKeysData.keys || []).map((key: any) => ({
+    id: key.$id || key.id || '',
+    name: key.name || 'Unnamed Key',
+    key: key.secret || '',
+    scopes: key.scopes || [],
+    createdAt: key.$createdAt || new Date().toISOString(),
+    lastUsed: key.accessedAt || null,
+    expire: key.expire || null,
+  }))
+}
+
 /**
  * Query function to fetch platforms (apps) for a project
  *

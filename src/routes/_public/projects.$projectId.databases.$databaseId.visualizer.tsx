@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { DatabaseOverview } from '@/components/pages/projects/$projectId/databases/View'
 import {
+  projectQueryOptions,
   databaseQueryOptions,
   allTablesForVisualizerQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -17,18 +18,18 @@ export const Route = createFileRoute(
     const { projectId, databaseId } = params
     const { queryClient } = context
 
-    // Fetch critical data before rendering to prevent layout shifts
-    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
-    if (projectId && databaseId) {
-      await Promise.all([
-        queryClient.ensureQueryData(
-          databaseQueryOptions(projectId, databaseId),
-        ),
-        queryClient.ensureQueryData(
-          allTablesForVisualizerQueryOptions(projectId, databaseId),
-        ),
-      ])
-    }
+    if (!projectId || !databaseId) return
+
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    await Promise.all([
+      queryClient.ensureQueryData(
+        databaseQueryOptions(projectId, databaseId),
+      ),
+      queryClient.ensureQueryData(
+        allTablesForVisualizerQueryOptions(projectId, databaseId),
+      ),
+    ])
   },
   component: VisualizerPage,
 })

@@ -1,6 +1,12 @@
 import { useState } from 'react'
-import { useParams, Link } from '@tanstack/react-router'
-import { MoreHorizontal } from 'lucide-react'
+import { useParams } from '@tanstack/react-router'
+import {
+  MoreHorizontal,
+  AlertCircle,
+  Loader2,
+  CheckCircle2,
+  Globe,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
@@ -21,28 +27,50 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import { useSiteDomains } from '@/lib/react-query/hooks'
+import {
+  getDomainStatusVariant,
+  getStatusColor,
+  type DomainStatus,
+} from '@/lib/utils/status-badge'
+import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 
 const DOMAINS_PER_PAGE = 25
 
-function getDomainStatusBadge(status: string) {
-  const statusMap: Record<
-    string,
-    {
-      label: string
-      variant: 'default' | 'secondary' | 'destructive' | 'outline'
-    }
-  > = {
-    verified: { label: 'Verified', variant: 'default' },
-    verifying: { label: 'Generating certificate', variant: 'secondary' },
-    created: { label: 'Verification failed', variant: 'destructive' },
-    unverified: {
-      label: 'Certificate generation failed',
-      variant: 'destructive',
-    },
+function getStatusBadge(status: string) {
+  const variant = getDomainStatusVariant(status as DomainStatus)
+
+  if (variant === null) {
+    return (
+      <Badge
+        variant="outline"
+        className={cn('gap-1.5 border', getStatusColor('verified'))}
+      >
+        <CheckCircle2 className="h-3 w-3" />
+        Verified
+      </Badge>
+    )
   }
-  return statusMap[status] || { label: status, variant: 'outline' }
+
+  const statusConfig: Record<
+    string,
+    { icon: typeof AlertCircle; label: string; spin?: boolean }
+  > = {
+    created: { icon: AlertCircle, label: 'Verification failed' },
+    verifying: { icon: Loader2, label: 'Generating certificate', spin: true },
+    unverified: { icon: AlertCircle, label: 'Certificate generation failed' },
+  }
+
+  const config = statusConfig[status] || { icon: AlertCircle, label: status }
+  const Icon = config.icon
+
+  return (
+    <Badge variant={variant} className="gap-1.5">
+      <Icon className={cn('h-3 w-3', config.spin && 'animate-spin')} />
+      {config.label}
+    </Badge>
+  )
 }
 
 export function View() {
@@ -53,16 +81,13 @@ export function View() {
 
   const searchValue = search?.search || ''
 
-  const { data: domainsData, isLoading: domainsLoading } = useSiteDomains(
+  const { rules, total, isLoading: domainsLoading } = useSiteDomains(
     projectId,
     siteId,
     currentPage,
     pageSize,
     searchValue,
   )
-
-  const rules = domainsData?.rules || []
-  const total = domainsData?.total || 0
 
   const handleRetry = (ruleId: string) => {
     // TODO: Implement retry verification
@@ -109,7 +134,7 @@ export function View() {
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Created
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]">
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -117,29 +142,18 @@ export function View() {
                 <TableBody>
                   {rules.map((rule) => {
                     const ruleData = rule as Models.ProxyRule
-                    const statusBadge = getDomainStatusBadge(ruleData.status)
 
                     return (
                       <TableRow key={ruleData.$id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <a
-                              href={`https://${ruleData.domain}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-mono text-[13px] text-foreground hover:underline"
-                            >
-                              {ruleData.domain}
-                            </a>
-                            {ruleData.status === 'verified' && (
-                              <Badge
-                                variant="default"
-                                className="h-5 text-[10px]"
-                              >
-                                Verified
-                              </Badge>
-                            )}
-                          </div>
+                        <TableCell className="px-4 py-3">
+                          <a
+                            href={`https://${ruleData.domain}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono text-[13px] text-foreground hover:underline"
+                          >
+                            {ruleData.domain}
+                          </a>
                         </TableCell>
                         <TableCell className="px-4 py-3 text-[13px] text-muted-foreground">
                           {ruleData.redirectUrl ? (
@@ -153,14 +167,12 @@ export function View() {
                           )}
                         </TableCell>
                         <TableCell className="px-4 py-3">
-                          <Badge variant={statusBadge.variant}>
-                            {statusBadge.label}
-                          </Badge>
+                          {getStatusBadge(ruleData.status)}
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <DateTooltip date={ruleData.$createdAt} />
                         </TableCell>
-                        <TableCell className="px-4 py-3">
+                        <TableCell className="px-4 py-3 text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -217,6 +229,7 @@ export function View() {
           </>
         ) : (
           <EmptyState
+            icon={Globe}
             title={searchValue ? undefined : 'No domains yet'}
             description={
               searchValue
@@ -225,7 +238,7 @@ export function View() {
             }
             isEmpty={!searchValue}
             hasFilters={!!searchValue}
-            variant="centered"
+            variant="card"
           />
         )}
       </div>

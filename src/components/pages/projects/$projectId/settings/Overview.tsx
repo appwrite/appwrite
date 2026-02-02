@@ -94,17 +94,7 @@ import {
   useDeleteProjectVariable,
 } from '@/lib/react-query/hooks'
 import { GitConfigurationCard } from './GitConfigurationCard'
-
-// Helper to get project endpoint (matches DashboardOverview logic)
-function getProjectEndpoint(region?: string): string {
-  if (!region || region === 'unknown') {
-    return (
-      import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
-    )
-  }
-  const normalizedRegion = region.trim().toLowerCase().replace(/\s+/g, '')
-  return `https://${normalizedRegion}.cloud.appwrite.io/v1`
-}
+import { getApiEndpoint } from '@/lib/appwrite/sdk'
 
 // Copyable Input Component
 interface CopyableInputProps {
@@ -291,19 +281,11 @@ export function ProjectSettingsOverview({
     }
   }, [search, navigate])
 
-  // Get project endpoint (matches DashboardOverview logic)
-  const projectEndpoint = useMemo(() => {
-    if (!project?.region || project.region === 'unknown') {
-      return (
-        import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
-      )
-    }
-    const normalizedRegion = project.region
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '')
-    return `https://${normalizedRegion}.cloud.appwrite.io/v1`
-  }, [project?.region])
+  // Get project endpoint (centralized in SDK)
+  const projectEndpoint = useMemo(
+    () => getApiEndpoint(project?.region),
+    [project?.region],
+  )
 
   // Navigate to API keys page
   const handleViewApiKeys = () => {

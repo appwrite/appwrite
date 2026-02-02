@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/functions/Settings'
 import {
+  projectQueryOptions,
   projectFunctionQueryOptions,
   functionVariablesQueryOptions,
   projectRuntimesQueryOptions,
@@ -19,10 +20,11 @@ export const Route = createFileRoute(
     const { projectId, functionId } = params
     const { queryClient } = context
 
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+
     // Fetch critical data before rendering to prevent layout shifts
-    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
-      // Fetch function - blocks navigation until ready
       queryClient.ensureQueryData(
         projectFunctionQueryOptions(projectId, functionId),
       ),

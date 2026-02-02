@@ -21,6 +21,7 @@ import {
   useDeleteApiKey,
   fetchApiKeys,
 } from '@/lib/react-query/hooks'
+import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -217,23 +218,11 @@ export function View({ projectId }: ViewProps) {
     })
   }, [currentProject?.platforms])
 
-  // Get endpoint from project region
-  const projectEndpoint = useMemo(() => {
-    if (!currentProject?.region || currentProject.region === 'unknown') {
-      // Fallback to default endpoint if region is not available
-      return (
-        import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
-      )
-    }
-
-    // Normalize the region value (trim, lowercase, remove spaces)
-    // The region from the server is expected to be correct
-    const normalizedRegion = currentProject.region
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '')
-    return `https://${normalizedRegion}.cloud.appwrite.io/v1`
-  }, [currentProject?.region])
+  // Get endpoint from project region (centralized in SDK)
+  const projectEndpoint = useMemo(
+    () => getApiEndpoint(currentProject?.region),
+    [currentProject?.region],
+  )
 
   // Extract hostname and path from endpoint URL
   const endpointDisplay = useMemo(() => {

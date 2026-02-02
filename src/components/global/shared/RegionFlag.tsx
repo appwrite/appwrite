@@ -1,5 +1,6 @@
 import { Globe } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 
 interface RegionFlagProps {
   region: string
@@ -45,7 +46,7 @@ export function RegionFlag({
     )
   }
 
-  const flagUrl = `https://cloud.appwrite.io/v1/avatars/flags/${countryCode}?width=${width}&height=${height}&quality=100&project=console`
+  const flagUrl = `${getBaseEndpoint()}/avatars/flags/${countryCode}?width=${width}&height=${height}&quality=100&project=console`
 
   return (
     <div

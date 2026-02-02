@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/functions/Executions'
 import {
+  projectQueryOptions,
   projectFunctionQueryOptions,
   functionExecutionsQueryOptions,
 } from '@/lib/react-query/hooks'
@@ -26,6 +27,9 @@ export const Route = createFileRoute(
     const { projectId, functionId } = params
     const { queryClient } = context
 
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+
     // Parse page from URL search params as fallback
     const urlParams = new URLSearchParams(location.search)
     const pageParam = urlParams.get('page')
@@ -33,9 +37,7 @@ export const Route = createFileRoute(
     const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
 
     // Fetch critical data before rendering to prevent layout shifts
-    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
-      // Fetch function - blocks navigation until ready
       queryClient.ensureQueryData(
         projectFunctionQueryOptions(projectId, functionId),
       ),

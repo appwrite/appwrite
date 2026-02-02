@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/dialog'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
@@ -98,10 +98,7 @@ export function GitRepositoryCard({
     const redirectUrl = `${origin}/projects/${projectId}/sites/${siteId}/settings`
     const successUrl = encodeURIComponent(redirectUrl)
     const failureUrl = encodeURIComponent(redirectUrl)
-    const projectEndpoint =
-      !project?.region || project.region === 'unknown'
-        ? import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
-        : `https://${project.region.trim().toLowerCase().replace(/\s+/g, '')}.cloud.appwrite.io/v1`
+    const projectEndpoint = getApiEndpoint(project?.region)
     return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
   }, [projectId, siteId, project?.region])
 

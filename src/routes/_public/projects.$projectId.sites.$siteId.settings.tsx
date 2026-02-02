@@ -22,12 +22,10 @@ export const Route = createFileRoute(
     const { projectId, siteId } = params
     const { queryClient } = context
 
-    // Fetch site first - blocks navigation until ready
-    await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
-
-    // Fetch project data (needed for header/sidebar) - blocks navigation
-    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    // Fetch site - blocks navigation until ready
+    await queryClient.ensureQueryData(siteQueryOptions(projectId, siteId))
 
     // Fetch critical data before rendering to prevent layout shifts
     // Uses ensureQueryData with queryOptions to prevent duplicate API calls

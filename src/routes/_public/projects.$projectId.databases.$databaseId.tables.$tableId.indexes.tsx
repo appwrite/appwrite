@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { TableView } from '@/components/pages/projects/$projectId/databases/View'
 import {
+  projectQueryOptions,
   tablesQueryOptions,
   databaseQueryOptions,
   tableColumnsQueryOptions,
@@ -26,8 +27,10 @@ export const Route = createFileRoute(
       return
     }
 
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+
     // Fetch critical data before rendering to prevent layout shifts
-    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
     await Promise.all([
       // Fetch tables list - blocks navigation until ready
       queryClient.ensureQueryData(

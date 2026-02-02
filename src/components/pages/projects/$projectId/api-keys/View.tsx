@@ -12,6 +12,7 @@ import {
   useDeleteApiKey,
   fetchApiKeys,
 } from '@/lib/react-query/hooks'
+import type { ApiKey } from '../shared/ApiKeysList'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   Dialog,
@@ -23,7 +24,16 @@ import {
 import { Button } from '@/components/ui/button'
 import type { Models } from '@appwrite.io/console'
 
-export function View() {
+export type ApiKeysInitialData = {
+  project?: Awaited<ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>>
+  apiKeys: ApiKey[]
+}
+
+type ViewProps = {
+  initialData?: ApiKeysInitialData
+}
+
+export function View({ initialData }: ViewProps = {}) {
   const { projectId } = useParams({
     strict: false,
   })
@@ -34,8 +44,11 @@ export function View() {
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
 
-  // Fetch API keys
-  const { apiKeys, isLoading } = useApiKeys(projectId)
+  // Fetch API keys (use initialData on first paint so no loading flash)
+  const { apiKeys: apiKeysFromHook, isLoading } = useApiKeys(projectId)
+  const apiKeys =
+    apiKeysFromHook?.length ? apiKeysFromHook : (initialData?.apiKeys ?? [])
+  const showLoading = isLoading && apiKeys.length === 0 && !initialData
 
   // Filter API keys based on search
   const filteredApiKeys = apiKeys.filter((key) =>
@@ -177,7 +190,7 @@ export function View() {
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
         <ApiKeysList
           apiKeys={filteredApiKeys}
-          isLoading={isLoading}
+          isLoading={showLoading}
           onUpdate={handleUpdate}
           onDelete={handleDelete}
           onCopy={handleCopy}

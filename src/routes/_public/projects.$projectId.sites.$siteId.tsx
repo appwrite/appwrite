@@ -21,46 +21,54 @@ export const Route = createFileRoute(
     const { projectId, siteId } = params
     const { queryClient } = context
 
-    // Fetch site first - blocks navigation until ready
-    const site = await queryClient.ensureQueryData(
-      siteQueryOptions(projectId, siteId),
-    )
+    try {
+      // Fetch project first so setProjectRegion runs and project-scoped calls use the
+      // correct regional endpoint (e.g. nyc.cloud.appwrite.io). Uses ensureQueryData
+      // so no duplicate call if parent loader already fetched.
+      await queryClient.ensureQueryData(projectQueryOptions(projectId))
 
-    // Fetch project data (needed for header/sidebar) - blocks navigation
-    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
-    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+      // Fetch site - blocks navigation until ready
+      const site = await queryClient.ensureQueryData(
+        siteQueryOptions(projectId, siteId),
+      )
 
-    // Fetch critical data before rendering to prevent layout shifts
-    await Promise.all([
-      // Fetch recent deployments (first 4)
-      queryClient.ensureQueryData(
-        siteDeploymentsQueryOptions(projectId, siteId, 0, 4, [
-          Query.select([
-            'status',
-            'type',
-            'resourceId',
-            'providerRepositoryUrl',
-            'providerRepositoryOwner',
-            'providerRepositoryName',
-            'providerBranchUrl',
-            'providerBranch',
-            'providerCommitMessage',
-            'providerCommitHash',
-            'providerCommitUrl',
+      // Fetch critical data before rendering to prevent layout shifts
+      await Promise.all([
+        // Fetch recent deployments (first 4)
+        queryClient.ensureQueryData(
+          siteDeploymentsQueryOptions(projectId, siteId, 0, 4, [
+            Query.select([
+              'status',
+              'type',
+              'resourceId',
+              'providerRepositoryUrl',
+              'providerRepositoryOwner',
+              'providerRepositoryName',
+              'providerBranchUrl',
+              'providerBranch',
+              'providerCommitMessage',
+              'providerCommitHash',
+              'providerCommitUrl',
+            ]),
           ]),
-        ]),
-      ),
-      // Fetch production-ready deployments (for active deployment info)
-      site.deploymentId
-        ? queryClient.ensureQueryData(
-            siteDeploymentQueryOptions(projectId, siteId, site.deploymentId),
-          )
-        : Promise.resolve(),
-      // Fetch first page of domains
-      queryClient.ensureQueryData(
-        siteDomainsQueryOptions(projectId, siteId, 0, 25, ''),
-      ),
-    ])
+        ),
+        // Fetch production-ready deployments (for active deployment info)
+        site.deploymentId
+          ? queryClient.ensureQueryData(
+              siteDeploymentQueryOptions(projectId, siteId, site.deploymentId),
+            )
+          : Promise.resolve(),
+        // Fetch first page of domains
+        queryClient.ensureQueryData(
+          siteDomainsQueryOptions(projectId, siteId, 0, 25, ''),
+        ),
+      ])
+    } catch (error) {
+      // Don't throw - let the component handle the error (e.g. on reload when
+      // session isn't ready yet or network fails). The View will show
+      // loading/error state via hooks and can retry.
+      console.warn('Failed to fetch site data in loader:', error)
+    }
   },
   component: SiteLayoutPage,
 })

@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
@@ -42,9 +43,13 @@ export function VerifyDomainContent({ rule }: VerifyDomainContentProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('cname')
   const vars = getConsoleVariables()
-  const isCloud =
-    typeof window !== 'undefined' &&
-    window.location.hostname.includes('cloud.appwrite.io')
+  const isCloud = useMemo(() => {
+    try {
+      return getBaseEndpoint().includes('cloud.appwrite.io')
+    } catch {
+      return false
+    }
+  }, [])
 
   const handleCopy = (text: string, field: string) => {
     navigator.clipboard.writeText(text)

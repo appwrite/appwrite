@@ -6,6 +6,7 @@ import {
   siteDeploymentsQueryOptions,
   deploymentProxyRulesQueryOptions,
 } from '@/lib/react-query/hooks/sites'
+import { projectQueryOptions } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/deployments/$deploymentId/',
@@ -19,7 +20,9 @@ export const Route = createFileRoute(
     const { projectId, siteId, deploymentId } = params
     const { queryClient } = context
 
-    // Fetch site first so we know the active deployment id
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    // Fetch site so we know the active deployment id
     const site = await queryClient.ensureQueryData(
       siteQueryOptions(projectId, siteId),
     )

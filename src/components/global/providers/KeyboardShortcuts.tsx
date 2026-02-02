@@ -121,7 +121,7 @@ export function KeyboardShortcutsProvider({
         navigateToSection('messaging')
       },
       'g i': () => {
-        navigateToSection('integrations')
+        navigateToSection('apps')
       },
       'g k': () => {
         navigateToSection('api-keys')

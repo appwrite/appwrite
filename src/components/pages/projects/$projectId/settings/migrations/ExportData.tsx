@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useCreateMigrationKey } from '@/lib/react-query/hooks'
+import { getProjectApiEndpoint } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 
 interface ExportDataDialogProps {
@@ -74,10 +75,8 @@ export function ExportDataDialog({
       // Create API key
       const keyResponse = await createKeyMutation.mutateAsync()
 
-      // Get current endpoint
-      const currentEndpoint =
-        import.meta.env.VITE_APPWRITE_ENDPOINT || 'https://cloud.appwrite.io/v1'
-      const endpoint = currentEndpoint.replace(/\/v1$/, '') + '/v1'
+      // Get current project endpoint (centralized in SDK)
+      const endpoint = getProjectApiEndpoint(projectId)
 
       // Generate migration data
       const migrationData = {

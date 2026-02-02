@@ -35,8 +35,12 @@ export const Route = createFileRoute(
       return
     }
 
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    const projectData = await queryClient.ensureQueryData(
+      projectQueryOptions(projectId),
+    )
+
     // Fetch tables list (needed for redirect logic) - blocks navigation
-    // Use ensureQueryData to ensure it's cached and blocks navigation
     const tablesPromise = queryClient.ensureQueryData(
       tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
     )
@@ -93,12 +97,6 @@ export const Route = createFileRoute(
           replace: true,
         })
       }
-      // Fetch project data (needed for header/sidebar) - blocks navigation
-      // Uses ensureQueryData with queryOptions to prevent duplicate API calls
-      const projectData = await queryClient.ensureQueryData(
-        projectQueryOptions(projectId),
-      )
-
       // Fetch critical data before rendering to prevent layout shifts
       // All of these must complete before navigation proceeds to prevent loading states
       // This ensures both tables list and rows are loaded before navigation, just like buckets/users/functions

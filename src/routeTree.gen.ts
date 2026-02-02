@@ -37,12 +37,12 @@ import { Route as PublicProjectsProjectIdSettingsRouteImport } from './routes/_p
 import { Route as PublicProjectsProjectIdReportsRouteImport } from './routes/_public/projects.$projectId.reports'
 import { Route as PublicProjectsProjectIdRealtimeRouteImport } from './routes/_public/projects.$projectId.realtime'
 import { Route as PublicProjectsProjectIdMessagingRouteImport } from './routes/_public/projects.$projectId.messaging'
-import { Route as PublicProjectsProjectIdIntegrationsRouteImport } from './routes/_public/projects.$projectId.integrations'
 import { Route as PublicProjectsProjectIdImagineRouteImport } from './routes/_public/projects.$projectId.imagine'
 import { Route as PublicProjectsProjectIdFunctionsRouteImport } from './routes/_public/projects.$projectId.functions'
 import { Route as PublicProjectsProjectIdFirewallRouteImport } from './routes/_public/projects.$projectId.firewall'
 import { Route as PublicProjectsProjectIdDatabasesRouteImport } from './routes/_public/projects.$projectId.databases'
 import { Route as PublicProjectsProjectIdAuthRouteImport } from './routes/_public/projects.$projectId.auth'
+import { Route as PublicProjectsProjectIdAppsRouteImport } from './routes/_public/projects.$projectId.apps'
 import { Route as PublicProjectsProjectIdApiKeysRouteImport } from './routes/_public/projects.$projectId.api-keys'
 import { Route as PublicProjectsProjectIdAnalyticsRouteImport } from './routes/_public/projects.$projectId.analytics'
 import { Route as PublicProjectsProjectIdActivityRouteImport } from './routes/_public/projects.$projectId.activity'
@@ -297,12 +297,6 @@ const PublicProjectsProjectIdMessagingRoute =
     path: '/messaging',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
-const PublicProjectsProjectIdIntegrationsRoute =
-  PublicProjectsProjectIdIntegrationsRouteImport.update({
-    id: '/integrations',
-    path: '/integrations',
-    getParentRoute: () => PublicProjectsProjectIdRoute,
-  } as any)
 const PublicProjectsProjectIdImagineRoute =
   PublicProjectsProjectIdImagineRouteImport.update({
     id: '/imagine',
@@ -331,6 +325,12 @@ const PublicProjectsProjectIdAuthRoute =
   PublicProjectsProjectIdAuthRouteImport.update({
     id: '/auth',
     path: '/auth',
+    getParentRoute: () => PublicProjectsProjectIdRoute,
+  } as any)
+const PublicProjectsProjectIdAppsRoute =
+  PublicProjectsProjectIdAppsRouteImport.update({
+    id: '/apps',
+    path: '/apps',
     getParentRoute: () => PublicProjectsProjectIdRoute,
   } as any)
 const PublicProjectsProjectIdApiKeysRoute =
@@ -1019,12 +1019,12 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
+  '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRoute
   '/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthRouteWithChildren
   '/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesRouteWithChildren
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
   '/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
-  '/projects/$projectId/integrations': typeof PublicProjectsProjectIdIntegrationsRoute
   '/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/projects/$projectId/reports': typeof PublicProjectsProjectIdReportsRoute
@@ -1154,9 +1154,9 @@ export interface FileRoutesByTo {
   '/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
+  '/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRoute
   '/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
   '/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
-  '/projects/$projectId/integrations': typeof PublicProjectsProjectIdIntegrationsRoute
   '/projects/$projectId/reports': typeof PublicProjectsProjectIdReportsRoute
   '/projects/$projectId/stores': typeof PublicProjectsProjectIdStoresRoute
   '/projects/$projectId/usage': typeof PublicProjectsProjectIdUsageRoute
@@ -1277,12 +1277,12 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/activity': typeof PublicProjectsProjectIdActivityRoute
   '/_public/projects/$projectId/analytics': typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   '/_public/projects/$projectId/api-keys': typeof PublicProjectsProjectIdApiKeysRoute
+  '/_public/projects/$projectId/apps': typeof PublicProjectsProjectIdAppsRoute
   '/_public/projects/$projectId/auth': typeof PublicProjectsProjectIdAuthRouteWithChildren
   '/_public/projects/$projectId/databases': typeof PublicProjectsProjectIdDatabasesRouteWithChildren
   '/_public/projects/$projectId/firewall': typeof PublicProjectsProjectIdFirewallRoute
   '/_public/projects/$projectId/functions': typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   '/_public/projects/$projectId/imagine': typeof PublicProjectsProjectIdImagineRoute
-  '/_public/projects/$projectId/integrations': typeof PublicProjectsProjectIdIntegrationsRoute
   '/_public/projects/$projectId/messaging': typeof PublicProjectsProjectIdMessagingRouteWithChildren
   '/_public/projects/$projectId/realtime': typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   '/_public/projects/$projectId/reports': typeof PublicProjectsProjectIdReportsRoute
@@ -1417,12 +1417,12 @@ export interface FileRouteTypes {
     | '/projects/$projectId/activity'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
+    | '/projects/$projectId/apps'
     | '/projects/$projectId/auth'
     | '/projects/$projectId/databases'
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/functions'
     | '/projects/$projectId/imagine'
-    | '/projects/$projectId/integrations'
     | '/projects/$projectId/messaging'
     | '/projects/$projectId/realtime'
     | '/projects/$projectId/reports'
@@ -1552,9 +1552,9 @@ export interface FileRouteTypes {
     | '/projects/$projectId/activity'
     | '/projects/$projectId/analytics'
     | '/projects/$projectId/api-keys'
+    | '/projects/$projectId/apps'
     | '/projects/$projectId/firewall'
     | '/projects/$projectId/imagine'
-    | '/projects/$projectId/integrations'
     | '/projects/$projectId/reports'
     | '/projects/$projectId/stores'
     | '/projects/$projectId/usage'
@@ -1674,12 +1674,12 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/activity'
     | '/_public/projects/$projectId/analytics'
     | '/_public/projects/$projectId/api-keys'
+    | '/_public/projects/$projectId/apps'
     | '/_public/projects/$projectId/auth'
     | '/_public/projects/$projectId/databases'
     | '/_public/projects/$projectId/firewall'
     | '/_public/projects/$projectId/functions'
     | '/_public/projects/$projectId/imagine'
-    | '/_public/projects/$projectId/integrations'
     | '/_public/projects/$projectId/messaging'
     | '/_public/projects/$projectId/realtime'
     | '/_public/projects/$projectId/reports'
@@ -1992,13 +1992,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdMessagingRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
-    '/_public/projects/$projectId/integrations': {
-      id: '/_public/projects/$projectId/integrations'
-      path: '/integrations'
-      fullPath: '/projects/$projectId/integrations'
-      preLoaderRoute: typeof PublicProjectsProjectIdIntegrationsRouteImport
-      parentRoute: typeof PublicProjectsProjectIdRoute
-    }
     '/_public/projects/$projectId/imagine': {
       id: '/_public/projects/$projectId/imagine'
       path: '/imagine'
@@ -2032,6 +2025,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/projects/$projectId/auth'
       preLoaderRoute: typeof PublicProjectsProjectIdAuthRouteImport
+      parentRoute: typeof PublicProjectsProjectIdRoute
+    }
+    '/_public/projects/$projectId/apps': {
+      id: '/_public/projects/$projectId/apps'
+      path: '/apps'
+      fullPath: '/projects/$projectId/apps'
+      preLoaderRoute: typeof PublicProjectsProjectIdAppsRouteImport
       parentRoute: typeof PublicProjectsProjectIdRoute
     }
     '/_public/projects/$projectId/api-keys': {
@@ -3461,12 +3461,12 @@ interface PublicProjectsProjectIdRouteChildren {
   PublicProjectsProjectIdActivityRoute: typeof PublicProjectsProjectIdActivityRoute
   PublicProjectsProjectIdAnalyticsRoute: typeof PublicProjectsProjectIdAnalyticsRouteWithChildren
   PublicProjectsProjectIdApiKeysRoute: typeof PublicProjectsProjectIdApiKeysRoute
+  PublicProjectsProjectIdAppsRoute: typeof PublicProjectsProjectIdAppsRoute
   PublicProjectsProjectIdAuthRoute: typeof PublicProjectsProjectIdAuthRouteWithChildren
   PublicProjectsProjectIdDatabasesRoute: typeof PublicProjectsProjectIdDatabasesRouteWithChildren
   PublicProjectsProjectIdFirewallRoute: typeof PublicProjectsProjectIdFirewallRoute
   PublicProjectsProjectIdFunctionsRoute: typeof PublicProjectsProjectIdFunctionsRouteWithChildren
   PublicProjectsProjectIdImagineRoute: typeof PublicProjectsProjectIdImagineRoute
-  PublicProjectsProjectIdIntegrationsRoute: typeof PublicProjectsProjectIdIntegrationsRoute
   PublicProjectsProjectIdMessagingRoute: typeof PublicProjectsProjectIdMessagingRouteWithChildren
   PublicProjectsProjectIdRealtimeRoute: typeof PublicProjectsProjectIdRealtimeRouteWithChildren
   PublicProjectsProjectIdReportsRoute: typeof PublicProjectsProjectIdReportsRoute
@@ -3487,6 +3487,7 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
     PublicProjectsProjectIdAnalyticsRoute:
       PublicProjectsProjectIdAnalyticsRouteWithChildren,
     PublicProjectsProjectIdApiKeysRoute: PublicProjectsProjectIdApiKeysRoute,
+    PublicProjectsProjectIdAppsRoute: PublicProjectsProjectIdAppsRoute,
     PublicProjectsProjectIdAuthRoute:
       PublicProjectsProjectIdAuthRouteWithChildren,
     PublicProjectsProjectIdDatabasesRoute:
@@ -3495,8 +3496,6 @@ const PublicProjectsProjectIdRouteChildren: PublicProjectsProjectIdRouteChildren
     PublicProjectsProjectIdFunctionsRoute:
       PublicProjectsProjectIdFunctionsRouteWithChildren,
     PublicProjectsProjectIdImagineRoute: PublicProjectsProjectIdImagineRoute,
-    PublicProjectsProjectIdIntegrationsRoute:
-      PublicProjectsProjectIdIntegrationsRoute,
     PublicProjectsProjectIdMessagingRoute:
       PublicProjectsProjectIdMessagingRouteWithChildren,
     PublicProjectsProjectIdRealtimeRoute:

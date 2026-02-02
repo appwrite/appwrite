@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { View } from '@/components/pages/projects/$projectId/functions/Deployments'
 import {
+  projectQueryOptions,
   projectFunctionQueryOptions,
   functionDeploymentsQueryOptions,
   functionDeploymentQueryOptions,
@@ -30,13 +31,16 @@ export const Route = createFileRoute(
     const { projectId, functionId } = params
     const { queryClient } = context
 
+    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+
     // Parse page from URL search params as fallback
     const urlParams = new URLSearchParams(location.search)
     const pageParam = urlParams.get('page')
     const page = pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1
     const pageIndex = page - 1 // Convert 1-indexed to 0-indexed
 
-    // Fetch function first to get deploymentId - blocks navigation until ready
+    // Fetch function to get deploymentId - blocks navigation until ready
     const func = await queryClient.ensureQueryData(
       projectFunctionQueryOptions(projectId, functionId),
     )
