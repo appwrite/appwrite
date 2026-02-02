@@ -368,12 +368,13 @@ trait SitesBase
 
     protected function setupSiteDomain(string $siteId, string $subdomain = ''): string
     {
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
         $subdomain = $subdomain ? $subdomain : ID::unique();
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'domain' => $subdomain . '.' . $sitesDomain,
             'siteId' => $siteId,
         ]);
 
