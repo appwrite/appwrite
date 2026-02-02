@@ -313,10 +313,14 @@ $register->set('pools', function () {
                             default => null
                         };
                     case 'cache':
-                        return match ($dsn->getScheme()) {
+                        $adapter = match ($dsn->getScheme()) {
                             'redis' => new RedisCache($resource()),
                             default => null
                         };
+
+                        $adapter->setMaxRetries(CACHE_RECONNECT_MAX_ATTEMPTS);
+                        $adapter->setRetryDelay(CACHE_RECONNECT_RETRY_DELAY);
+                        return $adapter;
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }
