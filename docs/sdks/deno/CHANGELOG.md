@@ -3,6 +3,8 @@
 ## 16.0.0
 
 * Add array-based enum parameters (e.g., `permissions: BrowserPermission[]`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `getQueueAudits` support to `Health` service.
 
 ## 15.1.0
 

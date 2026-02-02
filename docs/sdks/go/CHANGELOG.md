@@ -3,6 +3,8 @@
 ## v0.16.0
 
 * Added ability to create columns and indexes synchronously while creating a table
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `getQueueAudits` support to `Health` service.
 
 ## v0.15.0
 

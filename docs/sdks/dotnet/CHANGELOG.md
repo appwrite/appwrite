@@ -3,6 +3,8 @@
 ## 0.25.0
 
 * Add array-based enum parameters (e.g., `permissions: IReadOnlyList<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `getQueueAudits` support to `Health` service.
 
 ## 0.24.0
 
