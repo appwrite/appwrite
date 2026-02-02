@@ -46,7 +46,8 @@ class EventProcessor
 
         while ($sum >= $limit) {
             $functions = $dbForProject->getAuthorization()->skip(fn () => $dbForProject->find('functions', [
-                Query::select(['$id', 'events']),
+                Query::select('$id'),
+                Query::select('events'),
                 Query::limit($limit),
                 Query::offset($offset),
                 Query::orderAsc('$sequence'),
