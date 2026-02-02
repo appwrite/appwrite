@@ -23,6 +23,8 @@ use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
+use Utopia\Pools\Adapter\Stack as StackPool;
+use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
@@ -285,7 +287,9 @@ $register->set('pools', function () {
                 default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
-            $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
+            $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
+
+            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
