@@ -13,6 +13,7 @@ use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
+use Utopia\Span\Span;
 use Utopia\System\System;
 
 class Interval extends Action
@@ -58,15 +59,13 @@ class Interval extends Action
         foreach ($tasks as $task) {
             $timers[] = Timer::tick($task['interval'], function () use ($task, $dbForPlatform, $getProjectDB, $queueForCertificates) {
                 $taskName = $task['name'];
-                $time = DatabaseDateTime::now();
-                Console::info("[{$time}] Running task '{$taskName}'");
+                Span::init("interval.{$taskName}");
                 try {
                     $task['callback']($dbForPlatform, $getProjectDB, $queueForCertificates);
-                    $time = DatabaseDateTime::now();
-                    Console::info("[{$time}] Completed task '{$taskName}'");
                 } catch (\Exception $e) {
-                    $time = DatabaseDateTime::now();
-                    Console::error("[{$time}] Task '{$taskName}' ended with a failure: " . $e->getMessage());
+                    Span::error($e);
+                } finally {
+                    Span::current()->finish();
                 }
             });
         }
@@ -109,22 +108,35 @@ class Interval extends Action
             Query::limit(100), // Reasonable pagination limit
         ]);
 
-        if (\count($rules) === 0) {
-            Console::log("[{$time}] No rules for domain verification.");
+        $scanned = \count($rules);
+        Span::add("interval.domain-verification.scanned", $scanned);
+
+        if ($scanned === 0) {
+            Span::add("interval.domain-verification.processed", 0);
+            Span::add("interval.domain-verification.failed", 0);
             return; // No rules to verify
         }
 
-        Console::log("[{$time}] Found " . \count($rules) . " rules for domain verification, scheduling jobs.");
+        $processed = 0;
+        $failed = 0;
 
         foreach ($rules as $rule) {
-            $queueForCertificates
-                ->setDomain(new Document([
-                    'domain' => $rule->getAttribute('domain'),
-                    'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
-                ]))
-                ->setAction(Certificate::ACTION_DOMAIN_VERIFICATION)
-                ->trigger();
+            try {
+                $queueForCertificates
+                    ->setDomain(new Document([
+                        'domain' => $rule->getAttribute('domain'),
+                        'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
+                    ]))
+                    ->setAction(Certificate::ACTION_DOMAIN_VERIFICATION)
+                    ->trigger();
+                $processed++;
+            } catch (\Throwable $th) {
+                $failed++;
+            }
         }
+
+        Span::add("interval.domain-verification.processed", $processed);
+        Span::add("interval.domain-verification.failed", $failed);
     }
 
     private function cleanupStaleExecutions(Database $dbForPlatform, callable $getProjectDB): void
@@ -132,9 +144,13 @@ class Interval extends Action
         $time = DatabaseDateTime::now();
         $staleThreshold = DatabaseDateTime::addSeconds(new DateTime(), -1200); // 20 minutes ago
 
+        $scanned = 0;
+        $processed = 0;
+        $failed = 0;
+
         $dbForPlatform->foreach(
             'projects',
-            function (Document $project) use ($getProjectDB, $time, $staleThreshold) {
+            function (Document $project) use ($getProjectDB, $time, $staleThreshold, &$scanned, &$processed, &$failed) {
                 try {
                     $dbForProject = $getProjectDB($project);
 
@@ -144,19 +160,21 @@ class Interval extends Action
                         Query::limit(100),
                     ]);
 
+                    $scanned += \count($staleExecutions);
+
                     if (\count($staleExecutions) === 0) {
                         return;
                     }
-
-                    Console::log("[{$time}] Found " . \count($staleExecutions) . " stale executions in project {$project->getId()}");
 
                     foreach ($staleExecutions as $execution) {
                         $execution->setAttribute('status', 'failed');
                         $execution->setAttribute('errors', 'Execution timed out');
                         $dbForProject->updateDocument('executions', $execution->getId(), $execution);
                     }
+
+                    $processed++;
                 } catch (\Throwable $th) {
-                    Console::error("[{$time}] Failed to cleanup stale executions for project {$project->getId()}: " . $th->getMessage());
+                    $failed++;
                 }
             },
             [
@@ -164,5 +182,9 @@ class Interval extends Action
                 Query::limit(100),
             ]
         );
+
+        Span::add("interval.cleanup-stale-executions.scanned", $scanned);
+        Span::add("interval.cleanup-stale-executions.updated", $processed);
+        Span::add("interval.cleanup-stale-executions.failed", $failed);
     }
 }
