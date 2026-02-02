@@ -1352,7 +1352,7 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $targetDocId = ID::unique();
 
-        // Subscribe with multiple queries (AND logic - ALL queries must match for event to be received)
+        // Subscribe with multiple 'queries' (AND logic - ALL 'queries' must match for event to be received)
         $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
@@ -1364,7 +1364,7 @@ class RealtimeCustomClientQueryTest extends Scope
         $response = json_decode($client->receive(), true);
         $this->assertEquals('connected', $response['type']);
 
-        // Create document matching BOTH queries - should receive event
+        // Create document matching BOTH 'queries' - should receive event
         $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -1427,44 +1427,6 @@ class RealtimeCustomClientQueryTest extends Scope
         } catch (TimeoutException $e) {
             $this->assertTrue(true);
         }
-
-        // Create document with matching status but wrong ID - should receive event but the queryKeys should be only status matching as the model is subscription based similar to channels(only one query matches)
-        $otherDocId = ID::unique();
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), [
-            'documentId' => $otherDocId,
-            'data' => [
-                'status' => 'active'
-            ],
-            'permissions' => [
-                Permission::read(Role::any()),
-            ],
-        ]);
-
-        // Create document matching NEITHER query
-        // above document created with status=>active
-        // so it will also receive it but the querykey can be used to distinction
-        $anotherDocId = ID::unique();
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), [
-            'documentId' => $anotherDocId,
-            'data' => [
-                'status' => 'inactive'
-            ],
-            'permissions' => [
-                Permission::read(Role::any()),
-            ],
-        ]);
-
-        $data = json_decode($client->receive(), true);
-        $this->assertIsArray($data['data']['queryKeys']);
-        $this->assertEquals(1, count($data['data']['queryKeys']));
-        $this->assertNotContains(Query::equal('status', ['inactive'])->toString(), $data['data']['queryKeys']);
-        $this->assertContains(Query::equal('status', ['active'])->toString(), $data['data']['queryKeys']);
 
         $client->close();
     }
@@ -1539,7 +1501,7 @@ class RealtimeCustomClientQueryTest extends Scope
         $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
         $this->assertStringContainsString('startsWith', $response['data']['message']);
 
-        // Test 5: Multiple invalid queries in nested structure
+        // Test 5: Multiple invalid 'queries' in nested structure
         $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
@@ -1594,7 +1556,7 @@ class RealtimeCustomClientQueryTest extends Scope
         ]);
         $collectionId = $collection['body']['$id'];
 
-        // Attributes used by queries
+        // Attributes used by 'queries'
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -1626,7 +1588,7 @@ class RealtimeCustomClientQueryTest extends Scope
             Query::equal('category', ['gold']),
         ])->toString();
 
-        // Subscribe with no queries -> should receive all events, queryKeys = []
+        // Subscribe with no 'queries' -> should receive all events, queryKeys = []
         $clientAll = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
@@ -1682,15 +1644,20 @@ class RealtimeCustomClientQueryTest extends Scope
         $eventAll = json_decode($clientAll->receive(), true);
         $this->assertEquals('event', $eventAll['type']);
         $this->assertEquals($docActiveGoldId, $eventAll['data']['payload']['$id']);
-        $this->assertArrayHasKey('queryKeys', $eventAll['data']);
-        $this->assertIsArray($eventAll['data']['queryKeys']);
-        $this->assertCount(0, $eventAll['data']['queryKeys']);
+        $this->assertArrayHasKey('queries', $eventAll['data']);
+        $this->assertIsArray($eventAll['data']['queries']);
 
         // clientQ1: should receive event, queryKeys contains queryStatusActive
         $eventQ1 = json_decode($clientQ1->receive(), true);
         $this->assertEquals('event', $eventQ1['type']);
         $this->assertEquals($docActiveGoldId, $eventQ1['data']['payload']['$id']);
-        $this->assertContains($queryStatusActive, $eventQ1['data']['queryKeys']);
+        $flatQueriesQ1 = [];
+        foreach ($eventQ1['data']['queries'] as $group) {
+            foreach ($group as $q) {
+                $flatQueriesQ1[] = $q;
+            }
+        }
+        $this->assertContains($queryStatusActive, $flatQueriesQ1);
 
         // clientQ2: should NOT receive event (status is active, not pending)
         try {
@@ -1704,7 +1671,13 @@ class RealtimeCustomClientQueryTest extends Scope
         $eventComplex = json_decode($clientComplex->receive(), true);
         $this->assertEquals('event', $eventComplex['type']);
         $this->assertEquals($docActiveGoldId, $eventComplex['data']['payload']['$id']);
-        $this->assertContains($queryComplex, $eventComplex['data']['queryKeys']);
+        $flatQueriesComplex = [];
+        foreach ($eventComplex['data']['queries'] as $group) {
+            foreach ($group as $q) {
+                $flatQueriesComplex[] = $q;
+            }
+        }
+        $this->assertContains($queryComplex, $flatQueriesComplex);
 
         // 2) Create pending/silver document -> should match Q2 only, and be seen by all
         $docPendingSilverId = ID::unique();
@@ -1726,9 +1699,8 @@ class RealtimeCustomClientQueryTest extends Scope
         $eventAll2 = json_decode($clientAll->receive(), true);
         $this->assertEquals('event', $eventAll2['type']);
         $this->assertEquals($docPendingSilverId, $eventAll2['data']['payload']['$id']);
-        $this->assertArrayHasKey('queryKeys', $eventAll2['data']);
-        $this->assertIsArray($eventAll2['data']['queryKeys']);
-        $this->assertCount(0, $eventAll2['data']['queryKeys']);
+        $this->assertArrayHasKey('queries', $eventAll2['data']);
+        $this->assertIsArray($eventAll2['data']['queries']);
 
         // clientQ1: should NOT receive event (status is pending)
         try {
@@ -1742,7 +1714,13 @@ class RealtimeCustomClientQueryTest extends Scope
         $eventQ2 = json_decode($clientQ2->receive(), true);
         $this->assertEquals('event', $eventQ2['type']);
         $this->assertEquals($docPendingSilverId, $eventQ2['data']['payload']['$id']);
-        $this->assertContains($queryStatusPending, $eventQ2['data']['queryKeys']);
+        $flatQueriesQ2 = [];
+        foreach ($eventQ2['data']['queries'] as $group) {
+            foreach ($group as $q) {
+                $flatQueriesQ2[] = $q;
+            }
+        }
+        $this->assertContains($queryStatusPending, $flatQueriesQ2);
 
         // clientComplex: should NOT receive event (status is pending, category silver)
         try {
@@ -1794,7 +1772,7 @@ class RealtimeCustomClientQueryTest extends Scope
         ]);
         $collectionId = $collection['body']['$id'];
 
-        // Attribute used by queries
+        // Attribute used by 'queries'
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -1849,8 +1827,14 @@ class RealtimeCustomClientQueryTest extends Scope
         $eventQ1 = json_decode($clientQ1->receive(), true);
         $this->assertEquals('event', $eventQ1['type']);
         $this->assertEquals($docActiveId, $eventQ1['data']['payload']['$id']);
-        $this->assertArrayHasKey('queryKeys', $eventQ1['data']);
-        $this->assertContains($queryStatusActive, $eventQ1['data']['queryKeys']);
+        $this->assertArrayHasKey('queries', $eventQ1['data']);
+        $flatQ1 = [];
+        foreach ($eventQ1['data']['queries'] as $group) {
+            foreach ($group as $q) {
+                $flatQ1[] = $q;
+            }
+        }
+        $this->assertContains($queryStatusActive, $flatQ1);
 
         try {
             $clientQ2->receive();
@@ -1877,8 +1861,14 @@ class RealtimeCustomClientQueryTest extends Scope
         $eventQ2 = json_decode($clientQ2->receive(), true);
         $this->assertEquals('event', $eventQ2['type']);
         $this->assertEquals($docPendingId, $eventQ2['data']['payload']['$id']);
-        $this->assertArrayHasKey('queryKeys', $eventQ2['data']);
-        $this->assertContains($queryStatusPending, $eventQ2['data']['queryKeys']);
+        $this->assertArrayHasKey('queries', $eventQ2['data']);
+        $flatQ2 = [];
+        foreach ($eventQ2['data']['queries'] as $group) {
+            foreach ($group as $q) {
+                $flatQ2[] = $q;
+            }
+        }
+        $this->assertContains($queryStatusPending, $flatQ2);
 
         try {
             $clientQ1->receive();

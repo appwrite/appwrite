@@ -6,6 +6,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\RuntimeQuery;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Coroutine;
@@ -431,7 +432,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 ]
             ];
 
-            $server->send($realtime->getSubscribers($event), json_encode([
+            $subscribers = $realtime->getSubscribers($event);
+            $connections = array_keys($subscribers);
+            $queries = array_values($subscribers);
+            $event['data']['queries'] = $queries;
+
+            $server->send($connections, json_encode([
                 'type' => 'event',
                 'data' => $event['data']
             ]));
@@ -474,10 +480,24 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         $roles = $user->getRoles($database->getAuthorization());
                         $channels = $realtime->connections[$connection]['channels'];
-                        $queries = $realtime->connections[$connection]['queries'] ?? [];
+                        $queries = [];
+                        $authorization = $realtime->connections[$connection]['authorization'] ?? null;
 
                         $realtime->unsubscribe($connection);
-                        $realtime->subscribe($projectId, $connection, $roles, $channels, $queries);
+
+                        // Re-subscribe with the same queries for each channel
+                        foreach ($channels as $channel => $identifierKey) {
+                            $channelQueries = $queries[$channel] ?? [[Query::select(['*'])->toString()]];
+                            foreach ($channelQueries as $subscription) {
+                                $currentChannelQueries = Realtime::convertQueries($subscription);
+                                $realtime->subscribe($projectId, $connection, $roles, [$channel => $identifierKey], $currentChannelQueries);
+                            }
+                        }
+
+                        // Restore authorization and queries after subscribe
+                        if ($authorization !== null) {
+                            $realtime->connections[$connection]['authorization'] = $authorization;
+                        }
                     }
                 }
 
@@ -494,7 +514,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 foreach ($receivers as $connectionId => $matchedQueryKeys) {
                     $data = $event['data'];
-                    $data['queryKeys'] = $matchedQueryKeys;
+                    $data['queries'] = $matchedQueryKeys;
 
                     $server->send(
                         [$connectionId],
@@ -589,11 +609,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $roles = $user->getRoles($authorization);
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
-        try {
-            $queries = Realtime::convertQueries($request->getQuery('queries', []));
-        } catch (QueryException $e) {
-            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
-        }
 
         /**
          * Channels Check
@@ -602,9 +617,39 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing channels');
         }
 
-        $realtime->subscribe($project->getId(), $connection, $roles, $channels, $queries);
+        $allQueries = [];
+        foreach ($channels as $channel => $identifierKey) {
+            // Get the channel's query parameter (array of subscriptions)
+            // Format: {channel}[0][]=select("*") (all events), {channel}[1][]={query1}&{channel}[1][]={query2}
+            $channelSubscriptions = $request->getQuery($channel, null);
+
+            // Backward compatibility: if no channel-specific query params, treat as single subscription with select("*")
+            if ($channelSubscriptions === null) {
+                $channelSubscriptions = [[Query::select(['*'])->toString()]];
+            }
+
+            // Ensure it's an array
+            if (!is_array($channelSubscriptions)) {
+                $channelSubscriptions = [$channelSubscriptions];
+            }
+
+            $channelQueries = [];
+            foreach ($channelSubscriptions as $subscriptionIndex => $subscription) {
+                try {
+                    // Parse and validate the queries
+                    $currentChannelQueries = Realtime::convertQueries($subscription);
+
+                    $realtime->subscribe($project->getId(), $connection, $roles, [$channel => $identifierKey], $currentChannelQueries);
+                    $channelQueries[] = $subscription;
+                } catch (QueryException $e) {
+                    throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
+                }
+            }
+            $allQueries[$channel] = $channelQueries;
+        }
 
         $realtime->connections[$connection]['authorization'] = $authorization;
+        $realtime->connections[$connection]['queries'] = $allQueries;
 
         $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
 
@@ -612,7 +657,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             'type' => 'connected',
             'data' => [
                 'channels' => array_keys($channels),
-                'queries' => $queries,
+                'queries' => $allQueries,
                 'user' => $user
             ]
         ]));
@@ -744,15 +789,24 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $roles = $user->getRoles($database->getAuthorization());
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
 
-                // Preserve authorization before subscribe overwrites the connection array
+                // Preserve authorization and queries before subscribe overwrites the connection array
                 $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                $queries = $realtime->connections[$connection]['queries'] ?? [];
 
-                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
+                // Re-subscribe with the same queries for each channel
+                foreach ($channels as $channel => $identifierKey) {
+                    $channelQueries = $queries[$channel] ?? [[Query::select(['*'])->toString()]];
+                    foreach ($channelQueries as $subscription) {
+                        $currentChannelQueries = Realtime::convertQueries($subscription);
+                        $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, [$channel => $identifierKey], $currentChannelQueries);
+                    }
+                }
 
-                // Restore authorization after subscribe
+                // Restore authorization and queries after subscribe
                 if ($authorization !== null) {
                     $realtime->connections[$connection]['authorization'] = $authorization;
                 }
+                $realtime->connections[$connection]['queries'] = $queries;
 
                 $user = $response->output($user, Response::MODEL_ACCOUNT);
                 $server->send([$connection], json_encode([

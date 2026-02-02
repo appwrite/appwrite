@@ -11,7 +11,7 @@ trait RealtimeBase
         array $channels = [],
         array $headers = [],
         string $projectId = null,
-        array $queries = []
+        ?array $queries = null
     ): WebSocketClient {
         if (is_null($projectId)) {
             $projectId = $this->getProject()['$id'];
@@ -19,9 +19,30 @@ trait RealtimeBase
 
         $query = [
             "project" => $projectId,
-            "channels" => $channels,
-            "queries" => $queries
+            "channels" => $channels
         ];
+
+        /**
+         * Query param encoding rules:
+         * - $queries === null  -> only send channels (no per-channel query params) for backward compatibility.
+         * - $queries === []    -> explicit "select all" subscription: send Query::select(['*']) as a single group.
+         * - non-empty $queries -> treat as a single subscription group for the first channel:
+         *                        AND logic within the group; OR logic across multiple groups (if we ever add them).
+         *
+         * For now all E2E tests subscribe to a single channel, so we map queries to $channels[0].
+         */
+
+        if ($queries !== null && !empty($channels)) {
+            $channel = $channels[0];
+
+            if ($queries === []) {
+                // Explicit select("*") group
+                $query[$channel][0] = [\Utopia\Database\Query::select(['*'])->toString()];
+            } else {
+                // Single subscription group for this channel
+                $query[$channel][0] = $queries;
+            }
+        }
 
         return new WebSocketClient(
             "ws://appwrite.test/v1/realtime?" . http_build_query($query),
