@@ -7,6 +7,6 @@ Client client = Client()
 Account account = Account(client);
 
 User result = await account.updateMFAAuthenticator(
-    type: AuthenticatorType.totp,
+    type: enums.AuthenticatorType.totp,
     otp: '<OTP>',
 );

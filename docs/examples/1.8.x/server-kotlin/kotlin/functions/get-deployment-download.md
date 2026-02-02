@@ -13,5 +13,5 @@ val functions = Functions(client)
 val result = functions.getDeploymentDownload(
     functionId = "<FUNCTION_ID>",
     deploymentId = "<DEPLOYMENT_ID>",
-    type = "source" // optional
+    type = DeploymentDownloadType.SOURCE // optional
 )

@@ -22,7 +22,7 @@ Function result = await functions.Update(
     logging: false, // optional
     entrypoint: "<ENTRYPOINT>", // optional
     commands: "<COMMANDS>", // optional
-    scopes: new List<string>(), // optional
+    scopes: new List&lt;Scopes&gt; { Scopes.SessionsWrite }, // optional
     installationId: "<INSTALLATION_ID>", // optional
     providerRepositoryId: "<PROVIDER_REPOSITORY_ID>", // optional
     providerBranch: "<PROVIDER_BRANCH>", // optional

@@ -9,11 +9,15 @@ Client client = new Client()
 
 Account account = new Account(client);
 
-account.createJWT(new CoroutineCallback<>((result, error) -> {
-    if (error != null) {
-        error.printStackTrace();
-        return;
-    }
+account.createJWT(
+    0, // duration (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
 
-    System.out.println(result);
-}));
+        System.out.println(result);
+    })
+);
+

@@ -7,5 +7,5 @@ let client = Client()
 
 let health = Health(client)
 
-let healthStatus = try await health.getCache()
+let healthStatusList = try await health.getCache()
 

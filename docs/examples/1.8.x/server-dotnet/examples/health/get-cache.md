@@ -9,4 +9,4 @@ Client client = new Client()
 
 Health health = new Health(client);
 
-HealthStatus result = await health.GetCache();
+HealthStatusList result = await health.GetCache();

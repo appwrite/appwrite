@@ -9,7 +9,7 @@ Client client = new Client()
 
 TablesDB tablesDB = new TablesDB(client);
 
- result = await tablesDB.GetColumn(
+ColumnBoolean result = await tablesDB.GetColumn(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     key: ""

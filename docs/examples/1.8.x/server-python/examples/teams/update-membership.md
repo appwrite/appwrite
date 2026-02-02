@@ -1,5 +1,6 @@
 from appwrite.client import Client
 from appwrite.services.teams import Teams
+from appwrite.enums import Roles
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -11,5 +12,5 @@ teams = Teams(client)
 result = teams.update_membership(
     team_id = '<TEAM_ID>',
     membership_id = '<MEMBERSHIP_ID>',
-    roles = []
+    roles = [Roles.ADMIN]
 )

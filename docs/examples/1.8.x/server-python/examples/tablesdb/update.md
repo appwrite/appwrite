@@ -10,6 +10,6 @@ tables_db = TablesDB(client)
 
 result = tables_db.update(
     database_id = '<DATABASE_ID>',
-    name = '<NAME>',
+    name = '<NAME>', # optional
     enabled = False # optional
 )

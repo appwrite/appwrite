@@ -12,7 +12,7 @@ Uint8List bytes = await storage.getFilePreview(
     fileId: '<FILE_ID>',
     width: 0, // optional
     height: 0, // optional
-    gravity: ImageGravity.center, // optional
+    gravity: enums.ImageGravity.center, // optional
     quality: -1, // optional
     borderWidth: 0, // optional
     borderColor: '', // optional
@@ -20,7 +20,7 @@ Uint8List bytes = await storage.getFilePreview(
     opacity: 0, // optional
     rotation: -360, // optional
     background: '', // optional
-    output: ImageFormat.jpg, // optional
+    output: enums.ImageFormat.jpg, // optional
     token: '<TOKEN>', // optional
 )
 
@@ -34,7 +34,7 @@ FutureBuilder(
     fileId:'<FILE_ID>' ,
     width:0 , // optional
     height:0 , // optional
-    gravity: ImageGravity.center, // optional
+    gravity: enums.ImageGravity.center, // optional
     quality:-1 , // optional
     borderWidth:0 , // optional
     borderColor:'' , // optional
@@ -42,7 +42,7 @@ FutureBuilder(
     opacity:0 , // optional
     rotation:-360 , // optional
     background:'' , // optional
-    output: ImageFormat.jpg, // optional
+    output: enums.ImageFormat.jpg, // optional
     token:'<TOKEN>' , // optional
 ), // Works for both public file and private file, for private files you need to be logged in
     builder: (context, snapshot) {

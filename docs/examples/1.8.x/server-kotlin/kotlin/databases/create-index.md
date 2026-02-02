@@ -2,6 +2,7 @@ import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
 import io.appwrite.enums.IndexType
+import io.appwrite.enums.OrderBy
 
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -14,8 +15,8 @@ val response = databases.createIndex(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
     key = "",
-    type =  IndexType.KEY,
+    type = IndexType.KEY,
     attributes = listOf(),
-    orders = listOf(), // optional
+    orders = listOf(OrderBy.ASC), // optional
     lengths = listOf() // optional
 )

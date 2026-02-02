@@ -5854,7 +5854,7 @@
                 "x-appwrite": {
                     "method": "listTransactions",
                     "group": "transactions",
-                    "weight": 338,
+                    "weight": 346,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-transactions.md",
@@ -5923,7 +5923,7 @@
                 "x-appwrite": {
                     "method": "createTransaction",
                     "group": "transactions",
-                    "weight": 334,
+                    "weight": 342,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-transaction.md",
@@ -5996,7 +5996,7 @@
                 "x-appwrite": {
                     "method": "getTransaction",
                     "group": "transactions",
-                    "weight": 335,
+                    "weight": 343,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-transaction.md",
@@ -6062,7 +6062,7 @@
                 "x-appwrite": {
                     "method": "updateTransaction",
                     "group": "transactions",
-                    "weight": 336,
+                    "weight": 344,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/update-transaction.md",
@@ -6142,7 +6142,7 @@
                 "x-appwrite": {
                     "method": "deleteTransaction",
                     "group": "transactions",
-                    "weight": 337,
+                    "weight": 345,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-transaction.md",
@@ -6210,7 +6210,7 @@
                 "x-appwrite": {
                     "method": "createOperations",
                     "group": "transactions",
-                    "weight": 339,
+                    "weight": 347,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-operations.md",
@@ -9119,6 +9119,456 @@
                 }
             }
         },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/longtext": {
+            "post": {
+                "summary": "Create longtext attribute",
+                "operationId": "databasesCreateLongtextAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Create a longtext attribute.\n",
+                "responses": {
+                    "202": {
+                        "description": "AttributeLongtext",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/attributeLongtext"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createLongtextAttribute",
+                    "group": "attributes",
+                    "weight": 336,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/create-longtext-attribute.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-longtext-attribute.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Attribute Key.",
+                                        "x-example": null
+                                    },
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is attribute required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "array": {
+                                        "type": "boolean",
+                                        "description": "Is attribute an array?",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "required"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/longtext\/{key}": {
+            "patch": {
+                "summary": "Update longtext attribute",
+                "operationId": "databasesUpdateLongtextAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Update a longtext attribute. Changing the `default` value will not update already existing documents.\n",
+                "responses": {
+                    "200": {
+                        "description": "AttributeLongtext",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/attributeLongtext"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateLongtextAttribute",
+                    "group": "attributes",
+                    "weight": 337,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/update-longtext-attribute.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-longtext-attribute.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Attribute Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is attribute required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "newKey": {
+                                        "type": "string",
+                                        "description": "New Attribute Key.",
+                                        "x-example": null,
+                                        "x-nullable": true
+                                    }
+                                },
+                                "required": [
+                                    "required",
+                                    "default"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/mediumtext": {
+            "post": {
+                "summary": "Create mediumtext attribute",
+                "operationId": "databasesCreateMediumtextAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Create a mediumtext attribute.\n",
+                "responses": {
+                    "202": {
+                        "description": "AttributeMediumtext",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/attributeMediumtext"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createMediumtextAttribute",
+                    "group": "attributes",
+                    "weight": 334,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/create-mediumtext-attribute.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-mediumtext-attribute.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Attribute Key.",
+                                        "x-example": null
+                                    },
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is attribute required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "array": {
+                                        "type": "boolean",
+                                        "description": "Is attribute an array?",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "required"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/mediumtext\/{key}": {
+            "patch": {
+                "summary": "Update mediumtext attribute",
+                "operationId": "databasesUpdateMediumtextAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Update a mediumtext attribute. Changing the `default` value will not update already existing documents.\n",
+                "responses": {
+                    "200": {
+                        "description": "AttributeMediumtext",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/attributeMediumtext"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateMediumtextAttribute",
+                    "group": "attributes",
+                    "weight": 335,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/update-mediumtext-attribute.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-mediumtext-attribute.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Attribute Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is attribute required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "newKey": {
+                                        "type": "string",
+                                        "description": "New Attribute Key.",
+                                        "x-example": null,
+                                        "x-nullable": true
+                                    }
+                                },
+                                "required": [
+                                    "required",
+                                    "default"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/point": {
             "post": {
                 "summary": "Create point attribute",
@@ -9993,6 +10443,231 @@
                 }
             }
         },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/text": {
+            "post": {
+                "summary": "Create text attribute",
+                "operationId": "databasesCreateTextAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Create a text attribute.\n",
+                "responses": {
+                    "202": {
+                        "description": "AttributeText",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/attributeText"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createTextAttribute",
+                    "group": "attributes",
+                    "weight": 332,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/create-text-attribute.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-text-attribute.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Attribute Key.",
+                                        "x-example": null
+                                    },
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is attribute required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "array": {
+                                        "type": "boolean",
+                                        "description": "Is attribute an array?",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "required"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/text\/{key}": {
+            "patch": {
+                "summary": "Update text attribute",
+                "operationId": "databasesUpdateTextAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Update a text attribute. Changing the `default` value will not update already existing documents.\n",
+                "responses": {
+                    "200": {
+                        "description": "AttributeText",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/attributeText"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateTextAttribute",
+                    "group": "attributes",
+                    "weight": 333,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/update-text-attribute.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-text-attribute.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Attribute Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is attribute required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "newKey": {
+                                        "type": "string",
+                                        "description": "New Attribute Key.",
+                                        "x-example": null,
+                                        "x-nullable": true
+                                    }
+                                },
+                                "required": [
+                                    "required",
+                                    "default"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/url": {
             "post": {
                 "summary": "Create URL attribute",
@@ -10209,6 +10884,245 @@
                                         "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
                                         "x-example": "https:\/\/example.com",
                                         "format": "url",
+                                        "x-nullable": true
+                                    },
+                                    "newKey": {
+                                        "type": "string",
+                                        "description": "New Attribute Key.",
+                                        "x-example": null,
+                                        "x-nullable": true
+                                    }
+                                },
+                                "required": [
+                                    "required",
+                                    "default"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/varchar": {
+            "post": {
+                "summary": "Create varchar attribute",
+                "operationId": "databasesCreateVarcharAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Create a varchar attribute.\n",
+                "responses": {
+                    "202": {
+                        "description": "AttributeVarchar",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/attributeVarchar"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createVarcharAttribute",
+                    "group": "attributes",
+                    "weight": 330,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/create-varchar-attribute.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/create-varchar-attribute.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Attribute Key.",
+                                        "x-example": null
+                                    },
+                                    "size": {
+                                        "type": "integer",
+                                        "description": "Attribute size for varchar attributes, in number of characters. Maximum size is 16381.",
+                                        "x-example": 1,
+                                        "format": "int32"
+                                    },
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is attribute required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "array": {
+                                        "type": "boolean",
+                                        "description": "Is attribute an array?",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "size",
+                                    "required"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/databases\/{databaseId}\/collections\/{collectionId}\/attributes\/varchar\/{key}": {
+            "patch": {
+                "summary": "Update varchar attribute",
+                "operationId": "databasesUpdateVarcharAttribute",
+                "tags": [
+                    "databases"
+                ],
+                "description": "Update a varchar attribute. Changing the `default` value will not update already existing documents.\n",
+                "responses": {
+                    "200": {
+                        "description": "AttributeVarchar",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/attributeVarchar"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateVarcharAttribute",
+                    "group": "attributes",
+                    "weight": 331,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "databases\/update-varchar-attribute.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": "collections.write",
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/databases\/update-varchar-attribute.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "collectionId",
+                        "description": "Collection ID. You can create a new collection using the Database service [server integration](https:\/\/appwrite.io\/docs\/server\/databases#databasesCreateCollection).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<COLLECTION_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Attribute Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is attribute required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "size": {
+                                        "type": "integer",
+                                        "description": "Maximum size of the varchar attribute.",
+                                        "x-example": 1,
+                                        "format": "int32",
                                         "x-nullable": true
                                     },
                                     "newKey": {
@@ -11978,7 +12892,7 @@
                 "x-appwrite": {
                     "method": "listIndexes",
                     "group": "indexes",
-                    "weight": 333,
+                    "weight": 341,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/list-indexes.md",
@@ -12078,7 +12992,7 @@
                 "x-appwrite": {
                     "method": "createIndex",
                     "group": "indexes",
-                    "weight": 330,
+                    "weight": 338,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/create-index.md",
@@ -12220,7 +13134,7 @@
                 "x-appwrite": {
                     "method": "getIndex",
                     "group": "indexes",
-                    "weight": 331,
+                    "weight": 339,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/get-index.md",
@@ -12298,7 +13212,7 @@
                 "x-appwrite": {
                     "method": "deleteIndex",
                     "group": "indexes",
-                    "weight": 332,
+                    "weight": 340,
                     "cookies": false,
                     "type": "",
                     "demo": "databases\/delete-index.md",
@@ -12385,7 +13299,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "functions",
-                    "weight": 415,
+                    "weight": 431,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list.md",
@@ -12471,7 +13385,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "functions",
-                    "weight": 412,
+                    "weight": 428,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create.md",
@@ -12768,7 +13682,7 @@
                 "x-appwrite": {
                     "method": "listRuntimes",
                     "group": "runtimes",
-                    "weight": 417,
+                    "weight": 433,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-runtimes.md",
@@ -12819,7 +13733,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "runtimes",
-                    "weight": 418,
+                    "weight": 434,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-specifications.md",
@@ -12870,7 +13784,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "functions",
-                    "weight": 413,
+                    "weight": 429,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get.md",
@@ -12931,7 +13845,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "functions",
-                    "weight": 414,
+                    "weight": 430,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update.md",
@@ -13225,7 +14139,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "functions",
-                    "weight": 416,
+                    "weight": 432,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete.md",
@@ -13288,7 +14202,7 @@
                 "x-appwrite": {
                     "method": "updateFunctionDeployment",
                     "group": "functions",
-                    "weight": 421,
+                    "weight": 437,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-function-deployment.md",
@@ -13370,7 +14284,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 422,
+                    "weight": 438,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-deployments.md",
@@ -13466,7 +14380,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 419,
+                    "weight": 435,
                     "cookies": false,
                     "type": "upload",
                     "demo": "functions\/create-deployment.md",
@@ -13567,7 +14481,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 427,
+                    "weight": 443,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-duplicate-deployment.md",
@@ -13654,7 +14568,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 424,
+                    "weight": 440,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-template-deployment.md",
@@ -13772,7 +14686,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 425,
+                    "weight": 441,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-vcs-deployment.md",
@@ -13871,7 +14785,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 420,
+                    "weight": 436,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-deployment.md",
@@ -13935,7 +14849,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 423,
+                    "weight": 439,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-deployment.md",
@@ -14001,7 +14915,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 426,
+                    "weight": 442,
                     "cookies": false,
                     "type": "location",
                     "demo": "functions\/get-deployment-download.md",
@@ -14093,7 +15007,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 428,
+                    "weight": 444,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-deployment-status.md",
@@ -14166,7 +15080,7 @@
                 "x-appwrite": {
                     "method": "listExecutions",
                     "group": "executions",
-                    "weight": 431,
+                    "weight": 447,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-executions.md",
@@ -14255,7 +15169,7 @@
                 "x-appwrite": {
                     "method": "createExecution",
                     "group": "executions",
-                    "weight": 429,
+                    "weight": 445,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-execution.md",
@@ -14375,7 +15289,7 @@
                 "x-appwrite": {
                     "method": "getExecution",
                     "group": "executions",
-                    "weight": 430,
+                    "weight": 446,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-execution.md",
@@ -14443,7 +15357,7 @@
                 "x-appwrite": {
                     "method": "deleteExecution",
                     "group": "executions",
-                    "weight": 432,
+                    "weight": 448,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-execution.md",
@@ -14516,7 +15430,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 437,
+                    "weight": 453,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/list-variables.md",
@@ -14577,7 +15491,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 435,
+                    "weight": 451,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/create-variable.md",
@@ -14670,7 +15584,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 436,
+                    "weight": 452,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/get-variable.md",
@@ -14741,7 +15655,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 438,
+                    "weight": 454,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/update-variable.md",
@@ -14836,7 +15750,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 439,
+                    "weight": 455,
                     "cookies": false,
                     "type": "",
                     "demo": "functions\/delete-variable.md",
@@ -15021,7 +15935,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "health",
-                    "weight": 442,
+                    "weight": 458,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get.md",
@@ -15073,7 +15987,7 @@
                 "x-appwrite": {
                     "method": "getAntivirus",
                     "group": "health",
-                    "weight": 451,
+                    "weight": 467,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-antivirus.md",
@@ -15125,7 +16039,7 @@
                 "x-appwrite": {
                     "method": "getCache",
                     "group": "health",
-                    "weight": 445,
+                    "weight": 461,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-cache.md",
@@ -15177,7 +16091,7 @@
                 "x-appwrite": {
                     "method": "getCertificate",
                     "group": "health",
-                    "weight": 448,
+                    "weight": 464,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-certificate.md",
@@ -15240,7 +16154,7 @@
                 "x-appwrite": {
                     "method": "getDB",
                     "group": "health",
-                    "weight": 444,
+                    "weight": 460,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-db.md",
@@ -15292,7 +16206,7 @@
                 "x-appwrite": {
                     "method": "getPubSub",
                     "group": "health",
-                    "weight": 446,
+                    "weight": 462,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-pub-sub.md",
@@ -15344,7 +16258,7 @@
                 "x-appwrite": {
                     "method": "getQueueAudits",
                     "group": "queue",
-                    "weight": 452,
+                    "weight": 468,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-audits.md",
@@ -15409,7 +16323,7 @@
                 "x-appwrite": {
                     "method": "getQueueBuilds",
                     "group": "queue",
-                    "weight": 456,
+                    "weight": 472,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-builds.md",
@@ -15474,7 +16388,7 @@
                 "x-appwrite": {
                     "method": "getQueueCertificates",
                     "group": "queue",
-                    "weight": 455,
+                    "weight": 471,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-certificates.md",
@@ -15539,7 +16453,7 @@
                 "x-appwrite": {
                     "method": "getQueueDatabases",
                     "group": "queue",
-                    "weight": 457,
+                    "weight": 473,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-databases.md",
@@ -15615,7 +16529,7 @@
                 "x-appwrite": {
                     "method": "getQueueDeletes",
                     "group": "queue",
-                    "weight": 458,
+                    "weight": 474,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-deletes.md",
@@ -15680,7 +16594,7 @@
                 "x-appwrite": {
                     "method": "getFailedJobs",
                     "group": "queue",
-                    "weight": 465,
+                    "weight": 481,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-failed-jobs.md",
@@ -15772,7 +16686,7 @@
                 "x-appwrite": {
                     "method": "getQueueFunctions",
                     "group": "queue",
-                    "weight": 462,
+                    "weight": 478,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-functions.md",
@@ -15837,7 +16751,7 @@
                 "x-appwrite": {
                     "method": "getQueueLogs",
                     "group": "queue",
-                    "weight": 454,
+                    "weight": 470,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-logs.md",
@@ -15902,7 +16816,7 @@
                 "x-appwrite": {
                     "method": "getQueueMails",
                     "group": "queue",
-                    "weight": 459,
+                    "weight": 475,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-mails.md",
@@ -15967,7 +16881,7 @@
                 "x-appwrite": {
                     "method": "getQueueMessaging",
                     "group": "queue",
-                    "weight": 460,
+                    "weight": 476,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-messaging.md",
@@ -16032,7 +16946,7 @@
                 "x-appwrite": {
                     "method": "getQueueMigrations",
                     "group": "queue",
-                    "weight": 461,
+                    "weight": 477,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-migrations.md",
@@ -16097,7 +17011,7 @@
                 "x-appwrite": {
                     "method": "getQueueStatsResources",
                     "group": "queue",
-                    "weight": 463,
+                    "weight": 479,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-stats-resources.md",
@@ -16162,7 +17076,7 @@
                 "x-appwrite": {
                     "method": "getQueueUsage",
                     "group": "queue",
-                    "weight": 464,
+                    "weight": 480,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-usage.md",
@@ -16227,7 +17141,7 @@
                 "x-appwrite": {
                     "method": "getQueueWebhooks",
                     "group": "queue",
-                    "weight": 453,
+                    "weight": 469,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-queue-webhooks.md",
@@ -16292,7 +17206,7 @@
                 "x-appwrite": {
                     "method": "getStorage",
                     "group": "storage",
-                    "weight": 450,
+                    "weight": 466,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-storage.md",
@@ -16344,7 +17258,7 @@
                 "x-appwrite": {
                     "method": "getStorageLocal",
                     "group": "storage",
-                    "weight": 449,
+                    "weight": 465,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-storage-local.md",
@@ -16396,7 +17310,7 @@
                 "x-appwrite": {
                     "method": "getTime",
                     "group": "health",
-                    "weight": 447,
+                    "weight": 463,
                     "cookies": false,
                     "type": "",
                     "demo": "health\/get-time.md",
@@ -22359,7 +23273,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "sites",
-                    "weight": 469,
+                    "weight": 485,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list.md",
@@ -22445,7 +23359,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "sites",
-                    "weight": 467,
+                    "weight": 483,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create.md",
@@ -22700,7 +23614,7 @@
                 "x-appwrite": {
                     "method": "listFrameworks",
                     "group": "frameworks",
-                    "weight": 472,
+                    "weight": 488,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-frameworks.md",
@@ -22751,7 +23665,7 @@
                 "x-appwrite": {
                     "method": "listSpecifications",
                     "group": "frameworks",
-                    "weight": 495,
+                    "weight": 511,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-specifications.md",
@@ -22802,7 +23716,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "sites",
-                    "weight": 468,
+                    "weight": 484,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get.md",
@@ -22863,7 +23777,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "sites",
-                    "weight": 470,
+                    "weight": 486,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update.md",
@@ -23114,7 +24028,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "sites",
-                    "weight": 471,
+                    "weight": 487,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete.md",
@@ -23177,7 +24091,7 @@
                 "x-appwrite": {
                     "method": "updateSiteDeployment",
                     "group": "sites",
-                    "weight": 478,
+                    "weight": 494,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-site-deployment.md",
@@ -23259,7 +24173,7 @@
                 "x-appwrite": {
                     "method": "listDeployments",
                     "group": "deployments",
-                    "weight": 477,
+                    "weight": 493,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-deployments.md",
@@ -23355,7 +24269,7 @@
                 "x-appwrite": {
                     "method": "createDeployment",
                     "group": "deployments",
-                    "weight": 473,
+                    "weight": 489,
                     "cookies": false,
                     "type": "upload",
                     "demo": "sites\/create-deployment.md",
@@ -23462,7 +24376,7 @@
                 "x-appwrite": {
                     "method": "createDuplicateDeployment",
                     "group": "deployments",
-                    "weight": 481,
+                    "weight": 497,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-duplicate-deployment.md",
@@ -23544,7 +24458,7 @@
                 "x-appwrite": {
                     "method": "createTemplateDeployment",
                     "group": "deployments",
-                    "weight": 474,
+                    "weight": 490,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-template-deployment.md",
@@ -23662,7 +24576,7 @@
                 "x-appwrite": {
                     "method": "createVcsDeployment",
                     "group": "deployments",
-                    "weight": 475,
+                    "weight": 491,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-vcs-deployment.md",
@@ -23762,7 +24676,7 @@
                 "x-appwrite": {
                     "method": "getDeployment",
                     "group": "deployments",
-                    "weight": 476,
+                    "weight": 492,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-deployment.md",
@@ -23826,7 +24740,7 @@
                 "x-appwrite": {
                     "method": "deleteDeployment",
                     "group": "deployments",
-                    "weight": 479,
+                    "weight": 495,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-deployment.md",
@@ -23892,7 +24806,7 @@
                 "x-appwrite": {
                     "method": "getDeploymentDownload",
                     "group": "deployments",
-                    "weight": 480,
+                    "weight": 496,
                     "cookies": false,
                     "type": "location",
                     "demo": "sites\/get-deployment-download.md",
@@ -23984,7 +24898,7 @@
                 "x-appwrite": {
                     "method": "updateDeploymentStatus",
                     "group": "deployments",
-                    "weight": 482,
+                    "weight": 498,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-deployment-status.md",
@@ -24057,7 +24971,7 @@
                 "x-appwrite": {
                     "method": "listLogs",
                     "group": "logs",
-                    "weight": 484,
+                    "weight": 500,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-logs.md",
@@ -24144,7 +25058,7 @@
                 "x-appwrite": {
                     "method": "getLog",
                     "group": "logs",
-                    "weight": 483,
+                    "weight": 499,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-log.md",
@@ -24208,7 +25122,7 @@
                 "x-appwrite": {
                     "method": "deleteLog",
                     "group": "logs",
-                    "weight": 485,
+                    "weight": 501,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-log.md",
@@ -24281,7 +25195,7 @@
                 "x-appwrite": {
                     "method": "listVariables",
                     "group": "variables",
-                    "weight": 488,
+                    "weight": 504,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/list-variables.md",
@@ -24342,7 +25256,7 @@
                 "x-appwrite": {
                     "method": "createVariable",
                     "group": "variables",
-                    "weight": 486,
+                    "weight": 502,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/create-variable.md",
@@ -24435,7 +25349,7 @@
                 "x-appwrite": {
                     "method": "getVariable",
                     "group": "variables",
-                    "weight": 487,
+                    "weight": 503,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/get-variable.md",
@@ -24506,7 +25420,7 @@
                 "x-appwrite": {
                     "method": "updateVariable",
                     "group": "variables",
-                    "weight": 489,
+                    "weight": 505,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/update-variable.md",
@@ -24601,7 +25515,7 @@
                 "x-appwrite": {
                     "method": "deleteVariable",
                     "group": "variables",
-                    "weight": 490,
+                    "weight": 506,
                     "cookies": false,
                     "type": "",
                     "demo": "sites\/delete-variable.md",
@@ -24674,7 +25588,7 @@
                 "x-appwrite": {
                     "method": "listBuckets",
                     "group": "buckets",
-                    "weight": 522,
+                    "weight": 538,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-buckets.md",
@@ -24761,7 +25675,7 @@
                 "x-appwrite": {
                     "method": "createBucket",
                     "group": "buckets",
-                    "weight": 520,
+                    "weight": 536,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/create-bucket.md",
@@ -24898,7 +25812,7 @@
                 "x-appwrite": {
                     "method": "getBucket",
                     "group": "buckets",
-                    "weight": 521,
+                    "weight": 537,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-bucket.md",
@@ -24960,7 +25874,7 @@
                 "x-appwrite": {
                     "method": "updateBucket",
                     "group": "buckets",
-                    "weight": 523,
+                    "weight": 539,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-bucket.md",
@@ -25094,7 +26008,7 @@
                 "x-appwrite": {
                     "method": "deleteBucket",
                     "group": "buckets",
-                    "weight": 524,
+                    "weight": 540,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-bucket.md",
@@ -25158,7 +26072,7 @@
                 "x-appwrite": {
                     "method": "listFiles",
                     "group": "files",
-                    "weight": 527,
+                    "weight": 543,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/list-files.md",
@@ -25259,7 +26173,7 @@
                 "x-appwrite": {
                     "method": "createFile",
                     "group": "files",
-                    "weight": 525,
+                    "weight": 541,
                     "cookies": false,
                     "type": "upload",
                     "demo": "storage\/create-file.md",
@@ -25363,7 +26277,7 @@
                 "x-appwrite": {
                     "method": "getFile",
                     "group": "files",
-                    "weight": 526,
+                    "weight": 542,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/get-file.md",
@@ -25439,7 +26353,7 @@
                 "x-appwrite": {
                     "method": "updateFile",
                     "group": "files",
-                    "weight": 528,
+                    "weight": 544,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/update-file.md",
@@ -25533,7 +26447,7 @@
                 "x-appwrite": {
                     "method": "deleteFile",
                     "group": "files",
-                    "weight": 529,
+                    "weight": 545,
                     "cookies": false,
                     "type": "",
                     "demo": "storage\/delete-file.md",
@@ -25604,7 +26518,7 @@
                 "x-appwrite": {
                     "method": "getFileDownload",
                     "group": "files",
-                    "weight": 531,
+                    "weight": 547,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-download.md",
@@ -25686,7 +26600,7 @@
                 "x-appwrite": {
                     "method": "getFilePreview",
                     "group": "files",
-                    "weight": 530,
+                    "weight": 546,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-preview.md",
@@ -25918,7 +26832,7 @@
                 "x-appwrite": {
                     "method": "getFileView",
                     "group": "files",
-                    "weight": 532,
+                    "weight": 548,
                     "cookies": false,
                     "type": "location",
                     "demo": "storage\/get-file-view.md",
@@ -26007,7 +26921,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "tablesdb",
-                    "weight": 344,
+                    "weight": 352,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list.md",
@@ -26094,7 +27008,7 @@
                 "x-appwrite": {
                     "method": "create",
                     "group": "tablesdb",
-                    "weight": 340,
+                    "weight": 348,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create.md",
@@ -26176,7 +27090,7 @@
                 "x-appwrite": {
                     "method": "listTransactions",
                     "group": "transactions",
-                    "weight": 403,
+                    "weight": 419,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-transactions.md",
@@ -26248,7 +27162,7 @@
                 "x-appwrite": {
                     "method": "createTransaction",
                     "group": "transactions",
-                    "weight": 399,
+                    "weight": 415,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-transaction.md",
@@ -26324,7 +27238,7 @@
                 "x-appwrite": {
                     "method": "getTransaction",
                     "group": "transactions",
-                    "weight": 400,
+                    "weight": 416,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-transaction.md",
@@ -26393,7 +27307,7 @@
                 "x-appwrite": {
                     "method": "updateTransaction",
                     "group": "transactions",
-                    "weight": 401,
+                    "weight": 417,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-transaction.md",
@@ -26476,7 +27390,7 @@
                 "x-appwrite": {
                     "method": "deleteTransaction",
                     "group": "transactions",
-                    "weight": 402,
+                    "weight": 418,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-transaction.md",
@@ -26547,7 +27461,7 @@
                 "x-appwrite": {
                     "method": "createOperations",
                     "group": "transactions",
-                    "weight": 404,
+                    "weight": 420,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-operations.md",
@@ -26637,7 +27551,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tablesdb",
-                    "weight": 341,
+                    "weight": 349,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get.md",
@@ -26699,7 +27613,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tablesdb",
-                    "weight": 342,
+                    "weight": 350,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update.md",
@@ -26775,7 +27689,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tablesdb",
-                    "weight": 343,
+                    "weight": 351,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete.md",
@@ -26839,7 +27753,7 @@
                 "x-appwrite": {
                     "method": "listTables",
                     "group": "tables",
-                    "weight": 351,
+                    "weight": 359,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-tables.md",
@@ -26939,7 +27853,7 @@
                 "x-appwrite": {
                     "method": "createTable",
                     "group": "tables",
-                    "weight": 347,
+                    "weight": 355,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-table.md",
@@ -27066,7 +27980,7 @@
                 "x-appwrite": {
                     "method": "getTable",
                     "group": "tables",
-                    "weight": 348,
+                    "weight": 356,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-table.md",
@@ -27141,7 +28055,7 @@
                 "x-appwrite": {
                     "method": "updateTable",
                     "group": "tables",
-                    "weight": 349,
+                    "weight": 357,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-table.md",
@@ -27244,7 +28158,7 @@
                 "x-appwrite": {
                     "method": "deleteTable",
                     "group": "tables",
-                    "weight": 350,
+                    "weight": 358,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-table.md",
@@ -27321,7 +28235,7 @@
                 "x-appwrite": {
                     "method": "listColumns",
                     "group": "columns",
-                    "weight": 356,
+                    "weight": 364,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-columns.md",
@@ -27422,7 +28336,7 @@
                 "x-appwrite": {
                     "method": "createBooleanColumn",
                     "group": "columns",
-                    "weight": 357,
+                    "weight": 365,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-boolean-column.md",
@@ -27535,7 +28449,7 @@
                 "x-appwrite": {
                     "method": "updateBooleanColumn",
                     "group": "columns",
-                    "weight": 358,
+                    "weight": 366,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-boolean-column.md",
@@ -27653,7 +28567,7 @@
                 "x-appwrite": {
                     "method": "createDatetimeColumn",
                     "group": "columns",
-                    "weight": 359,
+                    "weight": 367,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-datetime-column.md",
@@ -27766,7 +28680,7 @@
                 "x-appwrite": {
                     "method": "updateDatetimeColumn",
                     "group": "columns",
-                    "weight": 360,
+                    "weight": 368,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-datetime-column.md",
@@ -27884,7 +28798,7 @@
                 "x-appwrite": {
                     "method": "createEmailColumn",
                     "group": "columns",
-                    "weight": 361,
+                    "weight": 369,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-email-column.md",
@@ -27998,7 +28912,7 @@
                 "x-appwrite": {
                     "method": "updateEmailColumn",
                     "group": "columns",
-                    "weight": 362,
+                    "weight": 370,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-email-column.md",
@@ -28117,7 +29031,7 @@
                 "x-appwrite": {
                     "method": "createEnumColumn",
                     "group": "columns",
-                    "weight": 363,
+                    "weight": 371,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-enum-column.md",
@@ -28239,7 +29153,7 @@
                 "x-appwrite": {
                     "method": "updateEnumColumn",
                     "group": "columns",
-                    "weight": 364,
+                    "weight": 372,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-enum-column.md",
@@ -28366,7 +29280,7 @@
                 "x-appwrite": {
                     "method": "createFloatColumn",
                     "group": "columns",
-                    "weight": 365,
+                    "weight": 373,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-float-column.md",
@@ -28494,7 +29408,7 @@
                 "x-appwrite": {
                     "method": "updateFloatColumn",
                     "group": "columns",
-                    "weight": 366,
+                    "weight": 374,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-float-column.md",
@@ -28627,7 +29541,7 @@
                 "x-appwrite": {
                     "method": "createIntegerColumn",
                     "group": "columns",
-                    "weight": 367,
+                    "weight": 375,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-integer-column.md",
@@ -28755,7 +29669,7 @@
                 "x-appwrite": {
                     "method": "updateIntegerColumn",
                     "group": "columns",
-                    "weight": 368,
+                    "weight": 376,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-integer-column.md",
@@ -28888,7 +29802,7 @@
                 "x-appwrite": {
                     "method": "createIpColumn",
                     "group": "columns",
-                    "weight": 369,
+                    "weight": 377,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-ip-column.md",
@@ -29001,7 +29915,7 @@
                 "x-appwrite": {
                     "method": "updateIpColumn",
                     "group": "columns",
-                    "weight": 370,
+                    "weight": 378,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-ip-column.md",
@@ -29119,7 +30033,7 @@
                 "x-appwrite": {
                     "method": "createLineColumn",
                     "group": "columns",
-                    "weight": 371,
+                    "weight": 379,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-line-column.md",
@@ -29234,7 +30148,7 @@
                 "x-appwrite": {
                     "method": "updateLineColumn",
                     "group": "columns",
-                    "weight": 372,
+                    "weight": 380,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-line-column.md",
@@ -29334,6 +30248,468 @@
                 }
             }
         },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/longtext": {
+            "post": {
+                "summary": "Create longtext column",
+                "operationId": "tablesDBCreateLongtextColumn",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Create a longtext column.\n",
+                "responses": {
+                    "202": {
+                        "description": "ColumnLongtext",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/columnLongtext"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createLongtextColumn",
+                    "group": "columns",
+                    "weight": 397,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/create-longtext-column.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-longtext-column.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TABLE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Column Key.",
+                                        "x-example": null
+                                    },
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is column required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "array": {
+                                        "type": "boolean",
+                                        "description": "Is column an array?",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "required"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/longtext\/{key}": {
+            "patch": {
+                "summary": "Update longtext column",
+                "operationId": "tablesDBUpdateLongtextColumn",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Update a longtext column. Changing the `default` value will not update already existing rows.\n",
+                "responses": {
+                    "200": {
+                        "description": "ColumnLongtext",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/columnLongtext"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateLongtextColumn",
+                    "group": "columns",
+                    "weight": 398,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/update-longtext-column.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-longtext-column.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TABLE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Column Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is column required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "newKey": {
+                                        "type": "string",
+                                        "description": "New Column Key.",
+                                        "x-example": null,
+                                        "x-nullable": true
+                                    }
+                                },
+                                "required": [
+                                    "required",
+                                    "default"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/mediumtext": {
+            "post": {
+                "summary": "Create mediumtext column",
+                "operationId": "tablesDBCreateMediumtextColumn",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Create a mediumtext column.\n",
+                "responses": {
+                    "202": {
+                        "description": "ColumnMediumtext",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/columnMediumtext"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createMediumtextColumn",
+                    "group": "columns",
+                    "weight": 395,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/create-mediumtext-column.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-mediumtext-column.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TABLE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Column Key.",
+                                        "x-example": null
+                                    },
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is column required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "array": {
+                                        "type": "boolean",
+                                        "description": "Is column an array?",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "required"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/mediumtext\/{key}": {
+            "patch": {
+                "summary": "Update mediumtext column",
+                "operationId": "tablesDBUpdateMediumtextColumn",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Update a mediumtext column. Changing the `default` value will not update already existing rows.\n",
+                "responses": {
+                    "200": {
+                        "description": "ColumnMediumtext",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/columnMediumtext"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateMediumtextColumn",
+                    "group": "columns",
+                    "weight": 396,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/update-mediumtext-column.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-mediumtext-column.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TABLE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Column Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is column required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "newKey": {
+                                        "type": "string",
+                                        "description": "New Column Key.",
+                                        "x-example": null,
+                                        "x-nullable": true
+                                    }
+                                },
+                                "required": [
+                                    "required",
+                                    "default"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/point": {
             "post": {
                 "summary": "Create point column",
@@ -29358,7 +30734,7 @@
                 "x-appwrite": {
                     "method": "createPointColumn",
                     "group": "columns",
-                    "weight": 373,
+                    "weight": 381,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-point-column.md",
@@ -29473,7 +30849,7 @@
                 "x-appwrite": {
                     "method": "updatePointColumn",
                     "group": "columns",
-                    "weight": 374,
+                    "weight": 382,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-point-column.md",
@@ -29597,7 +30973,7 @@
                 "x-appwrite": {
                     "method": "createPolygonColumn",
                     "group": "columns",
-                    "weight": 375,
+                    "weight": 383,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-polygon-column.md",
@@ -29712,7 +31088,7 @@
                 "x-appwrite": {
                     "method": "updatePolygonColumn",
                     "group": "columns",
-                    "weight": 376,
+                    "weight": 384,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-polygon-column.md",
@@ -29836,7 +31212,7 @@
                 "x-appwrite": {
                     "method": "createRelationshipColumn",
                     "group": "columns",
-                    "weight": 377,
+                    "weight": 385,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-relationship-column.md",
@@ -29971,11 +31347,11 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "createStringColumn",
                     "group": "columns",
-                    "weight": 379,
+                    "weight": 387,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-string-column.md",
@@ -29993,6 +31369,10 @@
                     "packaging": false,
                     "public": true,
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-string-column.md",
+                    "deprecated": {
+                        "since": "1.9.0",
+                        "replaceWith": "tablesDB.createTextColumn"
+                    },
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -30096,11 +31476,11 @@
                         }
                     }
                 },
-                "deprecated": false,
+                "deprecated": true,
                 "x-appwrite": {
                     "method": "updateStringColumn",
                     "group": "columns",
-                    "weight": 380,
+                    "weight": 388,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-string-column.md",
@@ -30118,6 +31498,10 @@
                     "packaging": false,
                     "public": true,
                     "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-string-column.md",
+                    "deprecated": {
+                        "since": "1.8.0",
+                        "replaceWith": "tablesDB.updateTextColumn"
+                    },
                     "auth": {
                         "Project": [],
                         "Key": []
@@ -30201,6 +31585,237 @@
                 }
             }
         },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/text": {
+            "post": {
+                "summary": "Create text column",
+                "operationId": "tablesDBCreateTextColumn",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Create a text column.\n",
+                "responses": {
+                    "202": {
+                        "description": "ColumnText",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/columnText"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createTextColumn",
+                    "group": "columns",
+                    "weight": 393,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/create-text-column.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-text-column.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TABLE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Column Key.",
+                                        "x-example": null
+                                    },
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is column required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "array": {
+                                        "type": "boolean",
+                                        "description": "Is column an array?",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "required"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/text\/{key}": {
+            "patch": {
+                "summary": "Update text column",
+                "operationId": "tablesDBUpdateTextColumn",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Update a text column. Changing the `default` value will not update already existing rows.\n",
+                "responses": {
+                    "200": {
+                        "description": "ColumnText",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/columnText"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateTextColumn",
+                    "group": "columns",
+                    "weight": 394,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/update-text-column.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-text-column.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TABLE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Column Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is column required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "newKey": {
+                                        "type": "string",
+                                        "description": "New Column Key.",
+                                        "x-example": null,
+                                        "x-nullable": true
+                                    }
+                                },
+                                "required": [
+                                    "required",
+                                    "default"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/url": {
             "post": {
                 "summary": "Create URL column",
@@ -30225,7 +31840,7 @@
                 "x-appwrite": {
                     "method": "createUrlColumn",
                     "group": "columns",
-                    "weight": 381,
+                    "weight": 389,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-url-column.md",
@@ -30339,7 +31954,7 @@
                 "x-appwrite": {
                     "method": "updateUrlColumn",
                     "group": "columns",
-                    "weight": 382,
+                    "weight": 390,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-url-column.md",
@@ -30434,6 +32049,251 @@
                 }
             }
         },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/varchar": {
+            "post": {
+                "summary": "Create varchar column",
+                "operationId": "tablesDBCreateVarcharColumn",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Create a varchar column.\n",
+                "responses": {
+                    "202": {
+                        "description": "ColumnVarchar",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/columnVarchar"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "createVarcharColumn",
+                    "group": "columns",
+                    "weight": 391,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/create-varchar-column.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/create-varchar-column.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TABLE_ID>"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "description": "Column Key.",
+                                        "x-example": null
+                                    },
+                                    "size": {
+                                        "type": "integer",
+                                        "description": "Column size for varchar columns, in number of characters. Maximum size is 16381.",
+                                        "x-example": 1,
+                                        "format": "int32"
+                                    },
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is column required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "array": {
+                                        "type": "boolean",
+                                        "description": "Is column an array?",
+                                        "x-example": false
+                                    }
+                                },
+                                "required": [
+                                    "key",
+                                    "size",
+                                    "required"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/varchar\/{key}": {
+            "patch": {
+                "summary": "Update varchar column",
+                "operationId": "tablesDBUpdateVarcharColumn",
+                "tags": [
+                    "tablesDB"
+                ],
+                "description": "Update a varchar column. Changing the `default` value will not update already existing rows.\n",
+                "responses": {
+                    "200": {
+                        "description": "ColumnVarchar",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "$ref": "#\/components\/schemas\/columnVarchar"
+                                }
+                            }
+                        }
+                    }
+                },
+                "deprecated": false,
+                "x-appwrite": {
+                    "method": "updateVarcharColumn",
+                    "group": "columns",
+                    "weight": 392,
+                    "cookies": false,
+                    "type": "",
+                    "demo": "tablesdb\/update-varchar-column.md",
+                    "rate-limit": 0,
+                    "rate-time": 3600,
+                    "rate-key": "url:{url},ip:{ip}",
+                    "scope": [
+                        "tables.write",
+                        "collections.write"
+                    ],
+                    "platforms": [
+                        "console",
+                        "server"
+                    ],
+                    "packaging": false,
+                    "public": true,
+                    "edit": "https:\/\/github.com\/appwrite\/appwrite\/edit\/master\/docs\/references\/tablesdb\/update-varchar-column.md",
+                    "auth": {
+                        "Project": [],
+                        "Key": []
+                    }
+                },
+                "security": [
+                    {
+                        "Project": [],
+                        "Key": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "databaseId",
+                        "description": "Database ID.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<DATABASE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "tableId",
+                        "description": "Table ID. You can create a new table using the Database service [server integration](https:\/\/appwrite.io\/docs\/references\/cloud\/server-dart\/tablesDB#createTable).",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "x-example": "<TABLE_ID>"
+                        },
+                        "in": "path"
+                    },
+                    {
+                        "name": "key",
+                        "description": "Column Key.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "in": "path"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "required": {
+                                        "type": "boolean",
+                                        "description": "Is column required?",
+                                        "x-example": false
+                                    },
+                                    "default": {
+                                        "type": "string",
+                                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                                        "x-example": "<DEFAULT>",
+                                        "x-nullable": true
+                                    },
+                                    "size": {
+                                        "type": "integer",
+                                        "description": "Maximum size of the varchar column.",
+                                        "x-example": 1,
+                                        "format": "int32",
+                                        "x-nullable": true
+                                    },
+                                    "newKey": {
+                                        "type": "string",
+                                        "description": "New Column Key.",
+                                        "x-example": null,
+                                        "x-nullable": true
+                                    }
+                                },
+                                "required": [
+                                    "required",
+                                    "default"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "\/tablesdb\/{databaseId}\/tables\/{tableId}\/columns\/{key}": {
             "get": {
                 "summary": "Get column",
@@ -30489,7 +32349,7 @@
                 "x-appwrite": {
                     "method": "getColumn",
                     "group": "columns",
-                    "weight": 354,
+                    "weight": 362,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-column.md",
@@ -30566,7 +32426,7 @@
                 "x-appwrite": {
                     "method": "deleteColumn",
                     "group": "columns",
-                    "weight": 355,
+                    "weight": 363,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-column.md",
@@ -30652,7 +32512,7 @@
                 "x-appwrite": {
                     "method": "updateRelationshipColumn",
                     "group": "columns",
-                    "weight": 378,
+                    "weight": 386,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-relationship-column.md",
@@ -30768,7 +32628,7 @@
                 "x-appwrite": {
                     "method": "listIndexes",
                     "group": "indexes",
-                    "weight": 386,
+                    "weight": 402,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-indexes.md",
@@ -30867,7 +32727,7 @@
                 "x-appwrite": {
                     "method": "createIndex",
                     "group": "indexes",
-                    "weight": 383,
+                    "weight": 399,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-index.md",
@@ -31008,7 +32868,7 @@
                 "x-appwrite": {
                     "method": "getIndex",
                     "group": "indexes",
-                    "weight": 384,
+                    "weight": 400,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-index.md",
@@ -31085,7 +32945,7 @@
                 "x-appwrite": {
                     "method": "deleteIndex",
                     "group": "indexes",
-                    "weight": 385,
+                    "weight": 401,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-index.md",
@@ -31171,7 +33031,7 @@
                 "x-appwrite": {
                     "method": "listRows",
                     "group": "rows",
-                    "weight": 395,
+                    "weight": 411,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/list-rows.md",
@@ -31284,7 +33144,7 @@
                 "x-appwrite": {
                     "method": "createRow",
                     "group": "rows",
-                    "weight": 387,
+                    "weight": 403,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/create-row.md",
@@ -31470,7 +33330,7 @@
                 "x-appwrite": {
                     "method": "upsertRows",
                     "group": "rows",
-                    "weight": 392,
+                    "weight": 408,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/upsert-rows.md",
@@ -31604,7 +33464,7 @@
                 "x-appwrite": {
                     "method": "updateRows",
                     "group": "rows",
-                    "weight": 390,
+                    "weight": 406,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-rows.md",
@@ -31709,7 +33569,7 @@
                 "x-appwrite": {
                     "method": "deleteRows",
                     "group": "rows",
-                    "weight": 394,
+                    "weight": 410,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-rows.md",
@@ -31811,7 +33671,7 @@
                 "x-appwrite": {
                     "method": "getRow",
                     "group": "rows",
-                    "weight": 388,
+                    "weight": 404,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/get-row.md",
@@ -31923,7 +33783,7 @@
                 "x-appwrite": {
                     "method": "upsertRow",
                     "group": "rows",
-                    "weight": 391,
+                    "weight": 407,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/upsert-row.md",
@@ -32076,7 +33936,7 @@
                 "x-appwrite": {
                     "method": "updateRow",
                     "group": "rows",
-                    "weight": 389,
+                    "weight": 405,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/update-row.md",
@@ -32189,7 +34049,7 @@
                 "x-appwrite": {
                     "method": "deleteRow",
                     "group": "rows",
-                    "weight": 393,
+                    "weight": 409,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/delete-row.md",
@@ -32297,7 +34157,7 @@
                 "x-appwrite": {
                     "method": "decrementRowColumn",
                     "group": "rows",
-                    "weight": 398,
+                    "weight": 414,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/decrement-row-column.md",
@@ -32427,7 +34287,7 @@
                 "x-appwrite": {
                     "method": "incrementRowColumn",
                     "group": "rows",
-                    "weight": 397,
+                    "weight": 413,
                     "cookies": false,
                     "type": "",
                     "demo": "tablesdb\/increment-row-column.md",
@@ -33677,7 +35537,7 @@
                 "x-appwrite": {
                     "method": "list",
                     "group": "files",
-                    "weight": 517,
+                    "weight": 533,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/list.md",
@@ -33772,7 +35632,7 @@
                 "x-appwrite": {
                     "method": "createFileToken",
                     "group": "files",
-                    "weight": 515,
+                    "weight": 531,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/create-file-token.md",
@@ -33862,7 +35722,7 @@
                 "x-appwrite": {
                     "method": "get",
                     "group": "tokens",
-                    "weight": 516,
+                    "weight": 532,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/get.md",
@@ -33923,7 +35783,7 @@
                 "x-appwrite": {
                     "method": "update",
                     "group": "tokens",
-                    "weight": 518,
+                    "weight": 534,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/update.md",
@@ -33994,7 +35854,7 @@
                 "x-appwrite": {
                     "method": "delete",
                     "group": "tokens",
-                    "weight": 519,
+                    "weight": 535,
                     "cookies": false,
                     "type": "",
                     "demo": "tokens\/delete.md",
@@ -40473,6 +42333,338 @@
                     ]
                 }
             },
+            "attributeVarchar": {
+                "description": "AttributeVarchar",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Attribute Key.",
+                        "x-example": "fullName"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Attribute type.",
+                        "x-example": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "AttributeStatus"
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "Error message. Displays error generated on failure of creating or deleting an attribute.",
+                        "x-example": "string"
+                    },
+                    "required": {
+                        "type": "boolean",
+                        "description": "Is attribute required?",
+                        "x-example": true
+                    },
+                    "array": {
+                        "type": "boolean",
+                        "description": "Is attribute an array?",
+                        "x-example": false,
+                        "nullable": true
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Attribute creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Attribute update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "description": "Attribute size.",
+                        "x-example": 128,
+                        "format": "int32"
+                    },
+                    "default": {
+                        "type": "string",
+                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                        "x-example": "default",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "key",
+                    "type",
+                    "status",
+                    "error",
+                    "required",
+                    "$createdAt",
+                    "$updatedAt",
+                    "size"
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "size": 128,
+                    "default": "default"
+                }
+            },
+            "attributeText": {
+                "description": "AttributeText",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Attribute Key.",
+                        "x-example": "fullName"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Attribute type.",
+                        "x-example": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "AttributeStatus"
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "Error message. Displays error generated on failure of creating or deleting an attribute.",
+                        "x-example": "string"
+                    },
+                    "required": {
+                        "type": "boolean",
+                        "description": "Is attribute required?",
+                        "x-example": true
+                    },
+                    "array": {
+                        "type": "boolean",
+                        "description": "Is attribute an array?",
+                        "x-example": false,
+                        "nullable": true
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Attribute creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Attribute update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "default": {
+                        "type": "string",
+                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                        "x-example": "default",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "key",
+                    "type",
+                    "status",
+                    "error",
+                    "required",
+                    "$createdAt",
+                    "$updatedAt"
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "default": "default"
+                }
+            },
+            "attributeMediumtext": {
+                "description": "AttributeMediumtext",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Attribute Key.",
+                        "x-example": "fullName"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Attribute type.",
+                        "x-example": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "AttributeStatus"
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "Error message. Displays error generated on failure of creating or deleting an attribute.",
+                        "x-example": "string"
+                    },
+                    "required": {
+                        "type": "boolean",
+                        "description": "Is attribute required?",
+                        "x-example": true
+                    },
+                    "array": {
+                        "type": "boolean",
+                        "description": "Is attribute an array?",
+                        "x-example": false,
+                        "nullable": true
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Attribute creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Attribute update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "default": {
+                        "type": "string",
+                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                        "x-example": "default",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "key",
+                    "type",
+                    "status",
+                    "error",
+                    "required",
+                    "$createdAt",
+                    "$updatedAt"
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "default": "default"
+                }
+            },
+            "attributeLongtext": {
+                "description": "AttributeLongtext",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Attribute Key.",
+                        "x-example": "fullName"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Attribute type.",
+                        "x-example": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Attribute status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "AttributeStatus"
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "Error message. Displays error generated on failure of creating or deleting an attribute.",
+                        "x-example": "string"
+                    },
+                    "required": {
+                        "type": "boolean",
+                        "description": "Is attribute required?",
+                        "x-example": true
+                    },
+                    "array": {
+                        "type": "boolean",
+                        "description": "Is attribute an array?",
+                        "x-example": false,
+                        "nullable": true
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Attribute creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Attribute update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "default": {
+                        "type": "string",
+                        "description": "Default value for attribute when not provided. Cannot be set when attribute is required.",
+                        "x-example": "default",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "key",
+                    "type",
+                    "status",
+                    "error",
+                    "required",
+                    "$createdAt",
+                    "$updatedAt"
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "default": "default"
+                }
+            },
             "table": {
                 "description": "Table",
                 "type": "object",
@@ -41920,6 +44112,338 @@
                             ]
                         ]
                     ]
+                }
+            },
+            "columnVarchar": {
+                "description": "ColumnVarchar",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Column Key.",
+                        "x-example": "fullName"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Column type.",
+                        "x-example": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "Error message. Displays error generated on failure of creating or deleting an column.",
+                        "x-example": "string"
+                    },
+                    "required": {
+                        "type": "boolean",
+                        "description": "Is column required?",
+                        "x-example": true
+                    },
+                    "array": {
+                        "type": "boolean",
+                        "description": "Is column an array?",
+                        "x-example": false,
+                        "nullable": true
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Column creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Column update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "description": "Column size.",
+                        "x-example": 128,
+                        "format": "int32"
+                    },
+                    "default": {
+                        "type": "string",
+                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                        "x-example": "default",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "key",
+                    "type",
+                    "status",
+                    "error",
+                    "required",
+                    "$createdAt",
+                    "$updatedAt",
+                    "size"
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "size": 128,
+                    "default": "default"
+                }
+            },
+            "columnText": {
+                "description": "ColumnText",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Column Key.",
+                        "x-example": "fullName"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Column type.",
+                        "x-example": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "Error message. Displays error generated on failure of creating or deleting an column.",
+                        "x-example": "string"
+                    },
+                    "required": {
+                        "type": "boolean",
+                        "description": "Is column required?",
+                        "x-example": true
+                    },
+                    "array": {
+                        "type": "boolean",
+                        "description": "Is column an array?",
+                        "x-example": false,
+                        "nullable": true
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Column creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Column update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "default": {
+                        "type": "string",
+                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                        "x-example": "default",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "key",
+                    "type",
+                    "status",
+                    "error",
+                    "required",
+                    "$createdAt",
+                    "$updatedAt"
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "default": "default"
+                }
+            },
+            "columnMediumtext": {
+                "description": "ColumnMediumtext",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Column Key.",
+                        "x-example": "fullName"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Column type.",
+                        "x-example": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "Error message. Displays error generated on failure of creating or deleting an column.",
+                        "x-example": "string"
+                    },
+                    "required": {
+                        "type": "boolean",
+                        "description": "Is column required?",
+                        "x-example": true
+                    },
+                    "array": {
+                        "type": "boolean",
+                        "description": "Is column an array?",
+                        "x-example": false,
+                        "nullable": true
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Column creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Column update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "default": {
+                        "type": "string",
+                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                        "x-example": "default",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "key",
+                    "type",
+                    "status",
+                    "error",
+                    "required",
+                    "$createdAt",
+                    "$updatedAt"
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "default": "default"
+                }
+            },
+            "columnLongtext": {
+                "description": "ColumnLongtext",
+                "type": "object",
+                "properties": {
+                    "key": {
+                        "type": "string",
+                        "description": "Column Key.",
+                        "x-example": "fullName"
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Column type.",
+                        "x-example": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "Column status. Possible values: `available`, `processing`, `deleting`, `stuck`, or `failed`",
+                        "x-example": "available",
+                        "enum": [
+                            "available",
+                            "processing",
+                            "deleting",
+                            "stuck",
+                            "failed"
+                        ],
+                        "x-enum-name": "ColumnStatus"
+                    },
+                    "error": {
+                        "type": "string",
+                        "description": "Error message. Displays error generated on failure of creating or deleting an column.",
+                        "x-example": "string"
+                    },
+                    "required": {
+                        "type": "boolean",
+                        "description": "Is column required?",
+                        "x-example": true
+                    },
+                    "array": {
+                        "type": "boolean",
+                        "description": "Is column an array?",
+                        "x-example": false,
+                        "nullable": true
+                    },
+                    "$createdAt": {
+                        "type": "string",
+                        "description": "Column creation date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "$updatedAt": {
+                        "type": "string",
+                        "description": "Column update date in ISO 8601 format.",
+                        "x-example": "2020-10-15T06:38:00.000+00:00"
+                    },
+                    "default": {
+                        "type": "string",
+                        "description": "Default value for column when not provided. Cannot be set when column is required.",
+                        "x-example": "default",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "key",
+                    "type",
+                    "status",
+                    "error",
+                    "required",
+                    "$createdAt",
+                    "$updatedAt"
+                ],
+                "example": {
+                    "key": "fullName",
+                    "type": "string",
+                    "status": "available",
+                    "error": "string",
+                    "required": true,
+                    "array": false,
+                    "$createdAt": "2020-10-15T06:38:00.000+00:00",
+                    "$updatedAt": "2020-10-15T06:38:00.000+00:00",
+                    "default": "default"
                 }
             },
             "index": {

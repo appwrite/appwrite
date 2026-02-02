@@ -8,7 +8,7 @@ const databases = new Databases(client);
 
 const result = await databases.update({
     databaseId: '<DATABASE_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // optional
     enabled: false // optional
 });
 

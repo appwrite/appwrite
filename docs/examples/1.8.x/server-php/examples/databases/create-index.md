@@ -3,6 +3,7 @@
 use Appwrite\Client;
 use Appwrite\Services\Databases;
 use Appwrite\Enums\IndexType;
+use Appwrite\Enums\OrderBy;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -17,6 +18,6 @@ $result = $databases->createIndex(
     key: '',
     type: IndexType::KEY(),
     attributes: [],
-    orders: [], // optional
+    orders: [OrderBy::ASC()], // optional
     lengths: [] // optional
 );

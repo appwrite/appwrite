@@ -9,5 +9,5 @@ Users users = Users(client);
 
 await users.deleteMFAAuthenticator(
     userId: '<USER_ID>',
-    type: AuthenticatorType.totp,
+    type: enums.AuthenticatorType.totp,
 );

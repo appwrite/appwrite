@@ -6,3 +6,6 @@ X-Appwrite-Project: <YOUR_PROJECT_ID>
 X-Appwrite-Session: 
 X-Appwrite-JWT: <YOUR_JWT>
 
+{
+  "duration": 0
+}

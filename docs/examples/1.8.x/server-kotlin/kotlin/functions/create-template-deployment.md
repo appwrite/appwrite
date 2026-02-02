@@ -15,7 +15,7 @@ val response = functions.createTemplateDeployment(
     repository = "<REPOSITORY>",
     owner = "<OWNER>",
     rootDirectory = "<ROOT_DIRECTORY>",
-    type =  TemplateReferenceType.COMMIT,
+    type = TemplateReferenceType.COMMIT,
     reference = "<REFERENCE>",
     activate = false // optional
 )
