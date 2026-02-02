@@ -32,16 +32,18 @@ class CacheTest extends HealthBase
         sleep(1);
 
         try {
-            $cache->load('test:reconnect', 5);
-            $this->fail('Redis connection should have failed');
-        } catch (\RedisException $e) {
+            try {
+                $cache->load('test:reconnect', 5);
+                $this->fail('Redis connection should have failed');
+            } catch (\RedisException $e) {
+            }
+        } finally {
+            $output = [];
+            $startCmd = 'docker ps -a --filter "name=appwrite-redis" --format "{{.Names}}" | xargs -r docker start';
+            exec($startCmd . ' 2>&1', $output, $exitCode);
+            $this->assertEquals(0, $exitCode, "Docker start failed: $startCmd\nOutput: " . implode("\n", $output));
+            sleep(3);
         }
-
-        $output = [];
-        $startCmd = 'docker ps -a --filter "name=appwrite-redis" --format "{{.Names}}" | xargs -r docker start';
-        exec($startCmd . ' 2>&1', $output, $exitCode);
-        $this->assertEquals(0, $exitCode, "Docker start failed: $startCmd\nOutput: " . implode("\n", $output));
-        sleep(3);
 
         $this->assertEquals('reconnect', $cache->save('test:reconnect', 'reconnect', 'test:reconnect'));
         $this->assertEquals('reconnect', $cache->load('test:reconnect', 5));
@@ -64,16 +66,18 @@ class CacheTest extends HealthBase
         sleep(1);
 
         try {
-            $cache->load('test:reconnect_persistent', 5);
-            $this->fail('Redis connection should have failed');
-        } catch (\RedisException $e) {
+            try {
+                $cache->load('test:reconnect_persistent', 5);
+                $this->fail('Redis connection should have failed');
+            } catch (\RedisException $e) {
+            }
+        } finally {
+            $output = [];
+            $startCmd = 'docker ps -a --filter "name=appwrite-redis" --format "{{.Names}}" | xargs -r docker start';
+            exec($startCmd . ' 2>&1', $output, $exitCode);
+            $this->assertEquals(0, $exitCode, "Docker start failed: $startCmd\nOutput: " . implode("\n", $output));
+            sleep(3);
         }
-
-        $output = [];
-        $startCmd = 'docker ps -a --filter "name=appwrite-redis" --format "{{.Names}}" | xargs -r docker start';
-        exec($startCmd . ' 2>&1', $output, $exitCode);
-        $this->assertEquals(0, $exitCode, "Docker start failed: $startCmd\nOutput: " . implode("\n", $output));
-        sleep(3);
 
         $this->assertEquals('reconnect_persistent', $cache->save('test:reconnect_persistent', 'reconnect_persistent', 'test:reconnect_persistent'));
         $this->assertEquals('reconnect_persistent', $cache->load('test:reconnect_persistent', 5));
