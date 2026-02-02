@@ -112,7 +112,8 @@ class ProxyCustomServerTest extends Scope
         $this->assertEquals(201, $rule['headers']['status-code']);
         $this->cleanupRule($rule['body']['$id']);
 
-        $domain =  \uniqid() . '-vcs.' . System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+        $domain =  \uniqid() . '-vcs.' . $sitesDomain;
 
         $rule = $this->createSiteRule('commit-' . $domain, $siteId);
         $this->assertEquals(400, $rule['headers']['status-code']);
@@ -292,10 +293,27 @@ class ProxyCustomServerTest extends Scope
 
         $ruleId = $this->setupSiteRule($domain, $siteId);
         $this->assertNotEmpty($ruleId);
+        $rule = $this->getRule($ruleId);
+        $this->assertSame(200, $rule['headers']['status-code']);
+        $this->assertSame('created', $rule['body']['status']);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/contact');
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('Contact page', $response['body']);
+
+        // Wildcard domains automatically get verified status
+        $domains = [
+            \uniqid() . '.sites.localhost',
+            \uniqid() . '.rebranded.localhost',
+        ];
+        foreach ($domains as $domain) {
+            $wildcardRuleId = $this->setupSiteRule($domain, $siteId);
+            $this->assertNotEmpty($wildcardRuleId);
+            $rule = $this->getRule($wildcardRuleId);
+            $this->assertSame(200, $rule['headers']['status-code']);
+            $this->assertSame('verified', $rule['body']['status']);
+            $this->cleanupRule($wildcardRuleId);
+        }
 
         $rules = $this->listRules([
             'queries' => [
@@ -384,7 +402,8 @@ class ProxyCustomServerTest extends Scope
     public function testUpdateRule(): void
     {
         // Create function appwrite-network domain
-        $domain = \uniqid() . '-cname-api.' . System::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
+        $domain = \uniqid() . '-cname-api.' . $functionsDomain;
 
         $rule = $this->createAPIRule($domain);
         $this->assertEquals(201, $rule['headers']['status-code']);
@@ -393,7 +412,8 @@ class ProxyCustomServerTest extends Scope
         $this->cleanupRule($rule['body']['$id']);
 
         // Create site appwrite-network domain
-        $domain = \uniqid() . '-cname-api.' . System::getEnv('_APP_DOMAIN_SITES');
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
+        $domain = \uniqid() . '-cname-api.' . $sitesDomain;
 
         $rule = $this->createAPIRule($domain);
         $this->assertEquals(201, $rule['headers']['status-code']);

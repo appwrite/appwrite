@@ -100,11 +100,19 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
         $risky = false;
         if (str_starts_with($request, 'POST') && str_contains($request, '/executions')) {
             $risky = true;
-        } elseif (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
-            $risky = true;
         } elseif ($domains->get(md5($domain), 'value') === 1) {
             // executions request coming from custom domain
             $risky = true;
+        } else {
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS')) as $riskyDomain) {
+                if (empty($riskyDomain)) {
+                    continue;
+                }
+                if (str_ends_with($domain, $riskyDomain)) {
+                    $risky = true;
+                    break;
+                }
+            }
         }
 
         if ($risky) {
@@ -591,9 +599,33 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 $sum = count($results);
                 foreach ($results as $document) {
                     $domain = $document->getAttribute('domain');
-                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS')) || str_ends_with($domain, System::getEnv('_APP_DOMAIN_SITES'))) {
+
+                    $denyDomains = [];
+                    $denyEnvVars = [
+                        System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+                        System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+                        System::getEnv('_APP_DOMAIN_SITES', ''),
+                    ];
+                    foreach ($denyEnvVars as $denyEnvVar) {
+                        foreach (\explode(',', $denyEnvVar) as $denyDomain) {
+                            if (empty($denyDomain)) {
+                                continue;
+                            }
+                            $denyDomains[] = $denyDomain;
+                        }
+                    }
+
+                    $isDenyDomain = false;
+                    foreach ($denyDomains as $denyDomain) {
+                        if (str_ends_with($domain, $denyDomain)) {
+                            $isDenyDomain = true;
+                        }
+                    }
+
+                    if ($isDenyDomain) {
                         continue;
                     }
+
                     $domains->set(md5($domain), ['value' => 1]);
                 }
                 $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;
