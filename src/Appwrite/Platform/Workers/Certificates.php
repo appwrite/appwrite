@@ -104,6 +104,7 @@ class Certificates extends Action
         $domain   = new Domain($document->getAttribute('domain', ''));
         $domainType = $document->getAttribute('domainType');
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
+        $skipRule = $payload['skipRule'] ?? false;
         $validationDomain = $payload['validationDomain'] ?? null;
         $action = $payload['action'] ?? Certificate::ACTION_GENERATION;
 
@@ -115,7 +116,7 @@ class Certificates extends Action
                 break;
 
             case Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $authorization, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $authorization, $skipRenewCheck, $skipRule, $plan, $validationDomain);
                 break;
 
             default:
@@ -210,6 +211,7 @@ class Certificates extends Action
      * @param CertificatesAdapter $certificates
      * @param ValidatorAuthorization $authorization
      * @param bool $skipRenewCheck
+     * @param bool $skipRule Skip rule lookup and updates (e.g., for _APP_DOMAIN)
      * @param array $plan
      * @param string|null $validationDomain
      * @return void
@@ -234,6 +236,7 @@ class Certificates extends Action
         CertificatesAdapter $certificates,
         ValidatorAuthorization $authorization,
         bool $skipRenewCheck = false,
+        bool $skipRule = false,
         array $plan = [],
         ?string $validationDomain = null
     ): void {
@@ -266,26 +269,37 @@ class Certificates extends Action
          * Note: Renewals are checked and scheduled from maintenance worker
          */
 
-        // Get rule document for domain
-        // TODO: (@Meldiron) Remove after 1.7.x migration
-        $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
-            : $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
-                Query::equal('domain', [$domain->get()]),
-                Query::limit(1),
-            ]));
+        $rule = new Document();
 
-        // Rule not found (or) not in the expected state
-        if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED])) {
-            Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as the associated rule is either empty or not in the expected state.');
-            return;
+        if (!$skipRule) {
+            // Get rule document for domain
+            // TODO: (@Meldiron) Remove after 1.7.x migration
+            $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
+                ? $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
+                : $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+                    Query::equal('domain', [$domain->get()]),
+                    Query::limit(1),
+                ]));
+
+            // Rule not found (or) not in the expected state
+            if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED])) {
+                Console::warning('Certificate generation for ' . $domain->get() . ' is skipped as the associated rule is either empty or not in the expected state.');
+                return;
+            }
         }
 
-        // Get associated certificate for the rule
-        $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId') ?? '');
+        // Get associated certificate for the rule (or by domain if skipRule is true)
+        if ($skipRule) {
+            $certificate = $dbForPlatform->findOne('certificates', [
+                Query::equal('domain', [$domain->get()]),
+                Query::limit(1),
+            ]);
+        } else {
+            $certificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId') ?? '');
+        }
 
-        // If we don't have certificate for the rule yet, let's create one.
-        if ($certificate->isEmpty()) {
+        // If we don't have certificate yet, let's create one.
+        if ($certificate === false || $certificate->isEmpty()) {
             $certificate = new Document();
             $certificate->setAttribute('domain', $domain->get());
         }
@@ -295,9 +309,11 @@ class Certificates extends Action
             $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mCertificate generation started. \033[0m\n");
 
             // Persist ASAP so that logs are reset in retry flow and user can see the latest logs on Console.
-            $certificate = $this->upsertCertificate($rule, $certificate, $dbForPlatform);
+            $certificate = $this->upsertCertificate($rule, $certificate, $dbForPlatform, $skipRule, $domain->get());
             // Ensure certificate is associated with the rule
-            $rule->setAttribute('certificateId', $certificate->getId());
+            if (!$skipRule) {
+                $rule->setAttribute('certificateId', $certificate->getId());
+            }
 
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
@@ -316,7 +332,9 @@ class Certificates extends Action
 
             // If certificate is generated instantly, we can mark the rule as 'verified'.
             if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
-                $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                if (!$skipRule) {
+                    $rule->setAttribute('status', RULE_STATUS_VERIFIED);
+                }
                 $certificate->setAttribute('logs', 'Certificate successfully generated.');
             }
 
@@ -341,7 +359,9 @@ class Certificates extends Action
             ]);
 
             // Mark rule as 'unverified'
-            $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
+            if (!$skipRule) {
+                $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATION_FAILED);
+            }
 
             // Send email to security email
             $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMails, $plan);
@@ -351,7 +371,12 @@ class Certificates extends Action
             // All actions result in new 'updated' date
             $certificate->setAttribute('updated', DateTime::now());
             // Save certificate document to database
-            $this->upsertCertificate($rule, $certificate, $dbForPlatform);
+            $this->upsertCertificate($rule, $certificate, $dbForPlatform, $skipRule, $domain->get());
+
+            // Skip rule update if skipRule is true (e.g., for _APP_DOMAIN)
+            if ($skipRule) {
+                return;
+            }
 
             // Ensure certificate is associated with the rule
             $rule->setAttribute('certificateId', $certificate->getId());
@@ -366,6 +391,8 @@ class Certificates extends Action
      * @param Document $rule Rule associated with the domain
      * @param Document $certificate Certificate document that we need to save
      * @param Database $dbForPlatform Database connection for console
+     * @param bool $skipRule Whether to skip rule and look up certificate by domain
+     * @param string $domain Domain name for certificate lookup when skipRule is true
      * @return Document
      * @throws \Utopia\Database\Exception
      * @throws Authorization
@@ -376,11 +403,21 @@ class Certificates extends Action
         Document $rule,
         Document $certificate,
         Database $dbForPlatform,
+        bool $skipRule = false,
+        string $domain = '',
     ): Document {
         // Decide whether update (or) insert is needed
-        $existingCertificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId') ?? '');
+        // When skipRule is true, look up certificate by domain name
+        if ($skipRule) {
+            $existingCertificate = $dbForPlatform->findOne('certificates', [
+                Query::equal('domain', [$domain]),
+                Query::limit(1),
+            ]);
+        } else {
+            $existingCertificate = $dbForPlatform->getDocument('certificates', $rule->getAttribute('certificateId') ?? '');
+        }
 
-        if ($existingCertificate->isEmpty()) {
+        if ($existingCertificate === false || $existingCertificate->isEmpty()) {
             $certificate->removeAttribute('$sequence');
             $certificate = $dbForPlatform->createDocument('certificates', $certificate);
         } else {
