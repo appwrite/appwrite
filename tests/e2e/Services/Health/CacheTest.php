@@ -5,9 +5,22 @@ namespace Tests\E2E\Services\Health;
 use Redis;
 use Utopia\Cache\Adapter\Redis as RedisAdapter;
 use Utopia\Cache\Cache;
+use Utopia\System\System;
 
 class CacheTest extends HealthBase
 {
+    private static string $redisHost;
+    private static int $redisPort;
+    private static string $redisContainer;
+
+    public static function setUpBeforeClass(): void
+    {
+        parent::setUpBeforeClass();
+        self::$redisHost = System::getEnv('_APP_REDIS_HOST', 'redis');
+        self::$redisPort = (int) System::getEnv('_APP_REDIS_PORT', '6379');
+        self::$redisContainer = System::getEnv('_APP_REDIS_CONTAINER', 'appwrite-redis');
+    }
+
     public function testCacheSuccess(): void
     {
         $response = $this->callGet('/health/cache');
@@ -21,7 +34,7 @@ class CacheTest extends HealthBase
     public function testCacheReconnect(): void
     {
         $redis = new Redis();
-        $redis->connect('redis', 6379);
+        $redis->connect(self::$redisHost, self::$redisPort);
         $cache = new Cache(
             (new RedisAdapter($redis))
                 ->setMaxRetries(CACHE_RECONNECT_MAX_RETRIES)
@@ -30,7 +43,8 @@ class CacheTest extends HealthBase
 
         $cache->save('test:reconnect', 'reconnect', 'test:reconnect');
 
-        $stopCmd = 'docker ps -a --filter "name=appwrite-redis" --format "{{.Names}}" | xargs -r docker stop';
+        $container = self::$redisContainer;
+        $stopCmd = "docker ps -a --filter \"name={$container}\" --format \"{{.Names}}\" | xargs -r docker stop";
         exec($stopCmd . ' 2>&1', $output, $exitCode);
         $this->assertEquals(0, $exitCode, "Docker stop failed: $stopCmd\nOutput: " . implode("\n", $output));
         sleep(1);
@@ -43,7 +57,7 @@ class CacheTest extends HealthBase
             }
         } finally {
             $output = [];
-            $startCmd = 'docker ps -a --filter "name=appwrite-redis" --format "{{.Names}}" | xargs -r docker start';
+            $startCmd = "docker ps -a --filter \"name={$container}\" --format \"{{.Names}}\" | xargs -r docker start";
             exec($startCmd . ' 2>&1', $output, $exitCode);
             $this->assertEquals(0, $exitCode, "Docker start failed: $startCmd\nOutput: " . implode("\n", $output));
         }
@@ -61,7 +75,7 @@ class CacheTest extends HealthBase
     public function testCacheReconnectPersistent(): void
     {
         $redis = new Redis();
-        $redis->pconnect('redis', 6379);
+        $redis->pconnect(self::$redisHost, self::$redisPort);
         $cache = new Cache(
             (new RedisAdapter($redis))
                 ->setMaxRetries(CACHE_RECONNECT_MAX_RETRIES)
@@ -70,7 +84,8 @@ class CacheTest extends HealthBase
 
         $cache->save('test:reconnect_persistent', 'reconnect_persistent', 'test:reconnect_persistent');
 
-        $stopCmd = 'docker ps -a --filter "name=appwrite-redis" --format "{{.Names}}" | xargs -r docker stop';
+        $container = self::$redisContainer;
+        $stopCmd = "docker ps -a --filter \"name={$container}\" --format \"{{.Names}}\" | xargs -r docker stop";
         exec($stopCmd . ' 2>&1', $output, $exitCode);
         $this->assertEquals(0, $exitCode, "Docker stop failed: $stopCmd\nOutput: " . implode("\n", $output));
         sleep(1);
@@ -83,7 +98,7 @@ class CacheTest extends HealthBase
             }
         } finally {
             $output = [];
-            $startCmd = 'docker ps -a --filter "name=appwrite-redis" --format "{{.Names}}" | xargs -r docker start';
+            $startCmd = "docker ps -a --filter \"name={$container}\" --format \"{{.Names}}\" | xargs -r docker start";
             exec($startCmd . ' 2>&1', $output, $exitCode);
             $this->assertEquals(0, $exitCode, "Docker start failed: $startCmd\nOutput: " . implode("\n", $output));
         }
