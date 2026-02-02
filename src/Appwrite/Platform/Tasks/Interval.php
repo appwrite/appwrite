@@ -141,7 +141,6 @@ class Interval extends Action
 
     private function cleanupStaleExecutions(Database $dbForPlatform, callable $getProjectDB): void
     {
-        $time = DatabaseDateTime::now();
         $staleThreshold = DatabaseDateTime::addSeconds(new DateTime(), -1200); // 20 minutes ago
 
         $scanned = 0;
@@ -150,7 +149,7 @@ class Interval extends Action
 
         $dbForPlatform->foreach(
             'projects',
-            function (Document $project) use ($getProjectDB, $time, $staleThreshold, &$scanned, &$processed, &$failed) {
+            function (Document $project) use ($getProjectDB, $staleThreshold, &$scanned, &$processed, &$failed) {
                 try {
                     $dbForProject = $getProjectDB($project);
 
