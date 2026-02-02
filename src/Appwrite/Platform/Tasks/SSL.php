@@ -23,15 +23,15 @@ class SSL extends Action
             ->desc('Validate server certificates')
             ->param('domain', System::getEnv('_APP_DOMAIN', ''), new Hostname(), 'Domain to generate certificate for. If empty, main domain will be used.', true)
             ->param('skip-check', true, new Boolean(true), 'If DNS and renew check should be skipped. Defaults to true, and when true, all jobs will result in certificate generation attempt.', true)
-            ->param('skip-rule', false, new Boolean(true), 'If rule lookup and updates should be skipped. Defaults to false. Set to true for domains without a rule in DB (e.g., _APP_DOMAIN).', true)
+            ->param('check-rule', true, new Boolean(true), 'If rule lookup and updates should be checked. Defaults to true. Set to false for domains without a rule in DB (e.g., _APP_DOMAIN).', true)
             ->inject('queueForCertificates')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, bool|string $skipCheck, bool|string $skipRule, Certificate $queueForCertificates): void
+    public function action(string $domain, bool|string $skipCheck, bool|string $checkRule, Certificate $queueForCertificates): void
     {
         $skipCheck = \strval($skipCheck) === 'true';
-        $skipRule = \strval($skipRule) === 'true';
+        $checkRule = \strval($checkRule) === 'true';
 
         Console::success('Scheduling a job to issue a TLS certificate for domain: ' . $domain);
 
@@ -40,7 +40,7 @@ class SSL extends Action
                 'domain' => $domain
             ]))
             ->setSkipRenewCheck($skipCheck)
-            ->setSkipRule($skipRule)
+            ->setCheckRule($checkRule)
             ->trigger();
     }
 }

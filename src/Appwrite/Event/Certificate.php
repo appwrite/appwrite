@@ -11,7 +11,7 @@ class Certificate extends Event
     public const string ACTION_DOMAIN_VERIFICATION = 'verification';
     public const string ACTION_GENERATION = 'generation';
     protected bool $skipRenewCheck = false;
-    protected bool $skipRule = false;
+    protected bool $checkRule = true;
     protected string $action = self::ACTION_GENERATION;
     protected ?Document $domain = null;
     protected ?string $validationDomain = null;
@@ -96,26 +96,26 @@ class Certificate extends Event
     }
 
     /**
-     * Set if rule lookup and updates should be skipped.
+     * Set if rule lookup and updates should be checked.
      *
-     * @param bool $skipRule
+     * @param bool $checkRule
      * @return self
      */
-    public function setSkipRule(bool $skipRule): self
+    public function setCheckRule(bool $checkRule): self
     {
-        $this->skipRule = $skipRule;
+        $this->checkRule = $checkRule;
 
         return $this;
     }
 
     /**
-     * Return if rule lookup and updates should be skipped.
+     * Return if rule lookup and updates should be checked.
      *
      * @return bool
      */
-    public function getSkipRule(): bool
+    public function getCheckRule(): bool
     {
-        return $this->skipRule;
+        return $this->checkRule;
     }
 
     /**
@@ -152,7 +152,7 @@ class Certificate extends Event
             'project' => $this->project,
             'domain' => $this->domain,
             'skipRenewCheck' => $this->skipRenewCheck,
-            'skipRule' => $this->skipRule,
+            'checkRule' => $this->checkRule,
             'validationDomain' => $this->validationDomain,
             'action' => $this->action
         ];

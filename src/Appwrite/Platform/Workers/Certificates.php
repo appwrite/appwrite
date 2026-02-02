@@ -104,7 +104,7 @@ class Certificates extends Action
         $domain   = new Domain($document->getAttribute('domain', ''));
         $domainType = $document->getAttribute('domainType');
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
-        $checkRule = !$payload['skipRule'] ?? true;
+        $checkRule = $payload['checkRule'] ?? true;
         $validationDomain = $payload['validationDomain'] ?? null;
         $action = $payload['action'] ?? Certificate::ACTION_GENERATION;
 
