@@ -1,8 +1,6 @@
 <?php
 $defaultAccountEmail = $defaultAccountEmail ?? '';
-$defaultAccountName = $defaultAccountName ?? '';
 $accountEmailValue = htmlspecialchars($defaultAccountEmail, ENT_QUOTES, 'UTF-8');
-$accountNameValue = htmlspecialchars($defaultAccountName, ENT_QUOTES, 'UTF-8');
 ?>
 <div class="step-layout" data-step="3">
     <div class="stack-xl">
@@ -15,18 +13,6 @@ $accountNameValue = htmlspecialchars($defaultAccountName, ENT_QUOTES, 'UTF-8');
         </div>
 
         <div class="stack-l">
-            <div class="input-group stack-xs">
-                <label for="account-name" class="label-text typography-text-m-500 text-neutral-secondary">Name</label>
-                <input
-                        type="text"
-                        id="account-name"
-                        name="accountName"
-                        class="input-field typography-text-m-400 text-neutral-primary"
-                        placeholder="John Doe"
-                        value="<?php echo $accountNameValue; ?>"
-                        autocomplete="name"
-                >
-            </div>
             <div class="input-group stack-xs">
                 <label for="account-email" class="label-text typography-text-m-500 text-neutral-secondary">Email</label>
                 <input

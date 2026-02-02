@@ -314,12 +314,8 @@ class HttpHandler
         $assistantOpenAIKey = trim((string) ($input['assistantOpenAIKey'] ?? ''));
         $input['assistantOpenAIKey'] = $assistantOpenAIKey;
 
+        $account = [];
         if (!$this->config->isUpgrade()) {
-            $accountName = trim((string) ($input['accountName'] ?? ''));
-            if (!$this->state->isValidAccountName($accountName)) {
-                $this->respondBadRequest('Please enter a name', $wantsStream, Server::STEP_ACCOUNT_SETUP);
-            }
-
             $accountEmail = trim((string) ($input['accountEmail'] ?? ''));
             if ($accountEmail === '' || !$this->state->isValidEmailAddress($accountEmail)) {
                 $this->respondBadRequest('Please enter a valid email address', $wantsStream, Server::STEP_ACCOUNT_SETUP);
@@ -330,9 +326,17 @@ class HttpHandler
                 $this->respondBadRequest('Password must be at least 8 characters', $wantsStream, Server::STEP_ACCOUNT_SETUP);
             }
 
-            $input['accountName'] = $accountName;
+            // Derive name from email
+            $accountName = $this->deriveNameFromEmail($accountEmail);
+
             $input['accountEmail'] = $accountEmail;
             $input['accountPassword'] = $accountPassword;
+
+            $account = [
+                'name' => $accountName,
+                'email' => $accountEmail,
+                'password' => $accountPassword,
+            ];
         }
 
         $lockedDatabase = $this->config->getLockedDatabase();
@@ -474,11 +478,6 @@ class HttpHandler
             $vars = $this->config->getVars();
             $shouldGenerateSecrets = !$installer->hasExistingConfig() && !$this->config->isUpgrade();
             $envVars = $installer->prepareEnvironmentVariables($payloadInput, $vars, $shouldGenerateSecrets);
-            $account = [
-                'name' => $input['accountName'] ?? '',
-                'email' => $input['accountEmail'] ?? '',
-                'password' => $input['accountPassword'] ?? '',
-            ];
 
             $this->state->writeProgressFile($installId, [
                 'payload' => [
@@ -487,8 +486,8 @@ class HttpHandler
                     'database' => $lockedDatabase ?? ($input['database'] ?? 'mongodb'),
                     'appDomain' => $input['appDomain'] ?? 'localhost',
                     'emailCertificates' => $input['emailCertificates'] ?? '',
-                    'opensslKeyHash' => $this->state->hashSensitiveValue((string) ($input['opensslKey'] ?? '')),
-                    'assistantOpenAIKeyHash' => $this->state->hashSensitiveValue((string) ($input['assistantOpenAIKey'] ?? '')),
+                    'opensslKeyHash' => $this->state->hashSensitiveValue($input['opensslKey'] ?? ''),
+                    'assistantOpenAIKeyHash' => $this->state->hashSensitiveValue($input['assistantOpenAIKey'] ?? ''),
                 ],
                 'step' => 'start',
                 'status' => Server::STATUS_IN_PROGRESS,
@@ -666,5 +665,24 @@ class HttpHandler
         } else {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Derives a name from an email address
+     * Examples:
+     *   admin@example.com -> Admin
+     *   admin.123@example.com -> Admin123
+     */
+    private function deriveNameFromEmail(string $email): string
+    {
+        // extract before @ symbol
+        $parts = explode('@', $email);
+        $username = $parts[0] ?? '';
+
+        // remove all non-alphanumeric characters
+        $cleaned = preg_replace('/[^a-zA-Z0-9]/', '', $username);
+
+        // capitalize
+        return ucfirst($cleaned);
     }
 }

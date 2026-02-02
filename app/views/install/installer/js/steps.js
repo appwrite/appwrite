@@ -262,15 +262,11 @@
     };
 
     const hydrateStep3State = (root) => {
-        State.setStateIfEmpty?.('accountName', root.querySelector('#account-name')?.value);
         State.setStateIfEmpty?.('accountEmail', root.querySelector('#account-email')?.value);
         State.setStateIfEmpty?.('accountPassword', root.querySelector('#account-password')?.value);
     };
 
     const applyStep3State = (root) => {
-        const name = root.querySelector('#account-name');
-        if (name && formState.accountName) name.value = formState.accountName;
-
         const email = root.querySelector('#account-email');
         if (email && formState.accountEmail) email.value = formState.accountEmail;
 
@@ -290,16 +286,13 @@
         hydrateStep3State(root);
         applyStep3State(root);
 
-        const name = root.querySelector('#account-name');
         const email = root.querySelector('#account-email');
         const password = root.querySelector('#account-password');
         const passwordToggle = root.querySelector('[data-password-toggle="account-password"]');
 
-        bindInputToState(name, 'accountName');
         bindInputToState(email, 'accountEmail');
         bindInputToState(password, 'accountPassword');
 
-        bindErrorClear?.(name);
         bindErrorClear?.(email);
         bindErrorClear?.(password);
 
@@ -429,14 +422,8 @@
             if (normalized === 3) {
                 clearFieldErrors?.(root);
                 let valid = true;
-                const name = root?.querySelector('#account-name');
                 const email = root?.querySelector('#account-email');
                 const password = root?.querySelector('#account-password');
-
-                if (!name || !name.value.trim()) {
-                    setFieldError?.(name, 'This field is required');
-                    valid = false;
-                }
 
                 if (!email || !email.value.trim()) {
                     setFieldError?.(email, 'This field is required');

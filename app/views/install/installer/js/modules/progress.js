@@ -330,7 +330,6 @@
         const normalizedHttpsPort = (formState?.httpsPort || '').trim() || '443';
         const normalizedEmail = (formState?.emailCertificates || '').trim();
         const normalizedAssistantKey = (formState?.assistantOpenAIKey || '').trim();
-        const normalizedAccountName = (formState?.accountName || '').trim();
         const normalizedAccountEmail = (formState?.accountEmail || '').trim();
         const normalizedAccountPassword = (formState?.accountPassword || '').trim();
 
@@ -343,7 +342,6 @@
             emailCertificates: normalizedEmail,
             opensslKey: (formState?.opensslKey || '').trim(),
             assistantOpenAIKey: normalizedAssistantKey,
-            accountName: normalizedAccountName,
             accountEmail: normalizedAccountEmail,
             accountPassword: normalizedAccountPassword
         };

@@ -17,7 +17,6 @@
         emailCertificates: null,
         opensslKey: null,
         assistantOpenAIKey: null,
-        accountName: null,
         accountEmail: null,
         accountPassword: null
     };
@@ -115,7 +114,6 @@
         setStateIfEmpty('emailCertificates', payload.emailCertificates);
         setStateIfEmpty('opensslKey', payload.opensslKey);
         setStateIfEmpty('assistantOpenAIKey', payload.assistantOpenAIKey);
-        setStateIfEmpty('accountName', payload.accountName);
         setStateIfEmpty('accountEmail', payload.accountEmail);
         setStateIfEmpty('accountPassword', payload.accountPassword);
     };
