@@ -345,11 +345,9 @@ class Migrations extends Action
             $credentials = $migration->getAttribute('credentials', []);
 
             if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
-                if (empty($credentials)) {
-                    $credentials['projectId'] = $project->getId();
-                    $credentials['apiKey'] = $tempAPIKey;
-                    $credentials['endpoint'] = $endpoint;
-                }
+                $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
+                $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
+                $credentials['endpoint'] = $credentials['endpoint'] ?? $endpoint;
             }
 
             if ($migration->getAttribute('destination') === DestinationAppwrite::getName()) {
