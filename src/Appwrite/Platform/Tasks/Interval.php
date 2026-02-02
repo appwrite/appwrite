@@ -79,14 +79,14 @@ class Interval extends Action
 
         return [
             [
-                'name' => 'domain-verification',
+                'name' => 'domainVerification',
                 "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates) {
                     $this->verifyDomain($dbForPlatform, $queueForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
             ],
             [
-                'name' => 'cleanup-stale-executions',
+                'name' => 'cleanupStaleExecutions',
                 'callback' => function (Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates) {
                     $this->cleanupStaleExecutions($dbForPlatform, $getProjectDB);
                 },
@@ -109,11 +109,11 @@ class Interval extends Action
         ]);
 
         $scanned = \count($rules);
-        Span::add("interval.domain-verification.scanned", $scanned);
+        Span::add("interval.domainVerification.scanned", $scanned);
 
         if ($scanned === 0) {
-            Span::add("interval.domain-verification.processed", 0);
-            Span::add("interval.domain-verification.failed", 0);
+            Span::add("interval.domainVerification.processed", 0);
+            Span::add("interval.domainVerification.failed", 0);
             return; // No rules to verify
         }
 
@@ -135,8 +135,8 @@ class Interval extends Action
             }
         }
 
-        Span::add("interval.domain-verification.processed", $processed);
-        Span::add("interval.domain-verification.failed", $failed);
+        Span::add("interval.domainVerification.processed", $processed);
+        Span::add("interval.domainVerification.failed", $failed);
     }
 
     private function cleanupStaleExecutions(Database $dbForPlatform, callable $getProjectDB): void
@@ -182,8 +182,8 @@ class Interval extends Action
             ]
         );
 
-        Span::add("interval.cleanup-stale-executions.scanned", $scanned);
-        Span::add("interval.cleanup-stale-executions.updated", $processed);
-        Span::add("interval.cleanup-stale-executions.failed", $failed);
+        Span::add("interval.cleanupStaleExecutions.scanned", $scanned);
+        Span::add("interval.cleanupStaleExecutions.processed", $processed);
+        Span::add("interval.cleanupStaleExecutions.failed", $failed);
     }
 }
