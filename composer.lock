@@ -4902,16 +4902,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.15.1",
+            "version": "0.15.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "e551606385990ec7901d222017c4cfc2749a518c"
+                "reference": "5051c08d9f50ff4aa78c0eb2f7ca74b328509c81"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/e551606385990ec7901d222017c4cfc2749a518c",
-                "reference": "e551606385990ec7901d222017c4cfc2749a518c",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/5051c08d9f50ff4aa78c0eb2f7ca74b328509c81",
+                "reference": "5051c08d9f50ff4aa78c0eb2f7ca74b328509c81",
                 "shasum": ""
             },
             "require": {
@@ -4962,9 +4962,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.15.1"
+                "source": "https://github.com/utopia-php/queue/tree/0.15.2"
             },
-            "time": "2026-01-16T07:54:54+00:00"
+            "time": "2026-02-02T11:56:51+00:00"
         },
         {
             "name": "utopia-php/registry",
