@@ -9,7 +9,7 @@ let databases = Databases(client)
 
 let database = try await databases.update(
     databaseId: "<DATABASE_ID>",
-    name: "<NAME>",
+    name: "<NAME>", // optional
     enabled: false // optional
 )
 

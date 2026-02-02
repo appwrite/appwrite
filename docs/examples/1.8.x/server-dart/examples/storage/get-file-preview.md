@@ -12,7 +12,7 @@ Uint8List result = await storage.getFilePreview(
     fileId: '<FILE_ID>',
     width: 0, // (optional)
     height: 0, // (optional)
-    gravity: ImageGravity.center, // (optional)
+    gravity: enums.ImageGravity.center, // (optional)
     quality: -1, // (optional)
     borderWidth: 0, // (optional)
     borderColor: '', // (optional)
@@ -20,6 +20,6 @@ Uint8List result = await storage.getFilePreview(
     opacity: 0, // (optional)
     rotation: -360, // (optional)
     background: '', // (optional)
-    output: ImageFormat.jpg, // (optional)
+    output: enums.ImageFormat.jpg, // (optional)
     token: '<TOKEN>', // (optional)
 );

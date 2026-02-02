@@ -8,11 +8,15 @@ Client client = new Client(context)
 
 Account account = new Account(client);
 
-account.createJWT(new CoroutineCallback<>((result, error) -> {
-    if (error != null) {
-        error.printStackTrace();
-        return;
-    }
+account.createJWT(
+    0, // duration (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
 
-    Log.d("Appwrite", result.toString());
-}));
+        Log.d("Appwrite", result.toString());
+    })
+);
+

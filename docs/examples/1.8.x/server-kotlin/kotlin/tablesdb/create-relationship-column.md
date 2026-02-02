@@ -15,9 +15,9 @@ val response = tablesDB.createRelationshipColumn(
     databaseId = "<DATABASE_ID>",
     tableId = "<TABLE_ID>",
     relatedTableId = "<RELATED_TABLE_ID>",
-    type =  RelationshipType.ONETOONE,
+    type = RelationshipType.ONETOONE,
     twoWay = false, // optional
     key = "", // optional
     twoWayKey = "", // optional
-    onDelete = "cascade" // optional
+    onDelete = RelationMutate.CASCADE // optional
 )

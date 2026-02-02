@@ -11,9 +11,9 @@ AttributeRelationship result = await databases.createRelationshipAttribute(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     relatedCollectionId: '<RELATED_COLLECTION_ID>',
-    type: RelationshipType.oneToOne,
+    type: enums.RelationshipType.oneToOne,
     twoWay: false, // (optional)
     key: '', // (optional)
     twoWayKey: '', // (optional)
-    onDelete: RelationMutate.cascade, // (optional)
+    onDelete: enums.RelationMutate.cascade, // (optional)
 );

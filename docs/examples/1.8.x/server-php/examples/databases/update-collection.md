@@ -15,7 +15,7 @@ $databases = new Databases($client);
 $result = $databases->updateCollection(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // optional
     permissions: [Permission::read(Role::any())], // optional
     documentSecurity: false, // optional
     enabled: false // optional

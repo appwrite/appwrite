@@ -10,7 +10,7 @@ Users users = Users(client);
 Target result = await users.createTarget(
     userId: '<USER_ID>',
     targetId: '<TARGET_ID>',
-    providerType: MessagingProviderType.email,
+    providerType: enums.MessagingProviderType.email,
     identifier: '<IDENTIFIER>',
     providerId: '<PROVIDER_ID>', // (optional)
     name: '<NAME>', // (optional)

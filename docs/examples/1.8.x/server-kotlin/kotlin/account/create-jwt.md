@@ -9,4 +9,6 @@ val client = Client()
 
 val account = Account(client)
 
-val response = account.createJWT()
+val response = account.createJWT(
+    duration = 0 // optional
+)

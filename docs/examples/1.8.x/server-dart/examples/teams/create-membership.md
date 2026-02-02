@@ -9,7 +9,7 @@ Teams teams = Teams(client);
 
 Membership result = await teams.createMembership(
     teamId: '<TEAM_ID>',
-    roles: [],
+    roles: [enums.Roles.admin],
     email: 'email@example.com', // (optional)
     userId: '<USER_ID>', // (optional)
     phone: '+12065550100', // (optional)

@@ -11,6 +11,6 @@ ColumnRelationship result = await tablesDB.updateRelationshipColumn(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     key: '',
-    onDelete: RelationMutate.cascade, // (optional)
+    onDelete: enums.RelationMutate.cascade, // (optional)
     newKey: '', // (optional)
 );

@@ -16,6 +16,6 @@ Index result = await databases.CreateIndex(
     key: "",
     type: IndexType.Key,
     attributes: new List<string>(),
-    orders: new List<string>(), // optional
+    orders: new List&lt;OrderBy&gt; { OrderBy.Asc }, // optional
     lengths: new List<long>() // optional
 );

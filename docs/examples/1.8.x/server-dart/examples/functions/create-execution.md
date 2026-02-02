@@ -12,7 +12,7 @@ Execution result = await functions.createExecution(
     body: '<BODY>', // (optional)
     xasync: false, // (optional)
     path: '<PATH>', // (optional)
-    method: ExecutionMethod.gET, // (optional)
+    method: enums.ExecutionMethod.gET, // (optional)
     headers: {}, // (optional)
     scheduledAt: '<SCHEDULED_AT>', // (optional)
 );

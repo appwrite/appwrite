@@ -26,5 +26,5 @@ Message result = await messaging.createPush(
     scheduledAt: '', // (optional)
     contentAvailable: false, // (optional)
     critical: false, // (optional)
-    priority: MessagePriority.normal, // (optional)
+    priority: enums.MessagePriority.normal, // (optional)
 );

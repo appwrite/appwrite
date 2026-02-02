@@ -1,4 +1,4 @@
-import { Client, Teams } from "appwrite";
+import { Client, Teams, Roles } from "appwrite";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -9,7 +9,7 @@ const teams = new Teams(client);
 const result = await teams.updateMembership({
     teamId: '<TEAM_ID>',
     membershipId: '<MEMBERSHIP_ID>',
-    roles: []
+    roles: [Roles.Admin]
 });
 
 console.log(result);

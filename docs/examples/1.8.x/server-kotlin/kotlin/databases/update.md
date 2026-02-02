@@ -11,6 +11,6 @@ val databases = Databases(client)
 
 val response = databases.update(
     databaseId = "<DATABASE_ID>",
-    name = "<NAME>",
+    name = "<NAME>", // optional
     enabled = false // optional
 )
