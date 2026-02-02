@@ -7,7 +7,7 @@ Client client = Client()
 
 TablesDB tablesDB = TablesDB(client);
 
- result = await tablesDB.getColumn(
+ColumnBoolean result = await tablesDB.getColumn(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     key: '',

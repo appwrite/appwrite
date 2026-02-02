@@ -29,5 +29,5 @@ val response = messaging.updatePush(
     scheduledAt = "", // optional
     contentAvailable = false, // optional
     critical = false, // optional
-    priority = "normal" // optional
+    priority = MessagePriority.NORMAL // optional
 )

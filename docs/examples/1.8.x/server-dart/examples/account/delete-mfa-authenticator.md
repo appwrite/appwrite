@@ -8,5 +8,5 @@ Client client = Client()
 Account account = Account(client);
 
 await account.deleteMFAAuthenticator(
-    type: AuthenticatorType.totp,
+    type: enums.AuthenticatorType.totp,
 );

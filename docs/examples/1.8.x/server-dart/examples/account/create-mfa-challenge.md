@@ -8,5 +8,5 @@ Client client = Client()
 Account account = Account(client);
 
 MfaChallenge result = await account.createMFAChallenge(
-    factor: AuthenticationFactor.email,
+    factor: enums.AuthenticationFactor.email,
 );

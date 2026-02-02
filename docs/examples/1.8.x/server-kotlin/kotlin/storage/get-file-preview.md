@@ -16,7 +16,7 @@ val result = storage.getFilePreview(
     fileId = "<FILE_ID>",
     width = 0, // optional
     height = 0, // optional
-    gravity = "center", // optional
+    gravity = ImageGravity.CENTER, // optional
     quality = -1, // optional
     borderWidth = 0, // optional
     borderColor = "", // optional
@@ -24,6 +24,6 @@ val result = storage.getFilePreview(
     opacity = 0, // optional
     rotation = -360, // optional
     background = "", // optional
-    output = "jpg", // optional
+    output = ImageFormat.JPG, // optional
     token = "<TOKEN>" // optional
 )

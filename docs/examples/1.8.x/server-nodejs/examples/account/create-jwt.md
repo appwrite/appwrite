@@ -7,4 +7,6 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const result = await account.createJWT();
+const result = await account.createJWT({
+    duration: 0 // optional
+});

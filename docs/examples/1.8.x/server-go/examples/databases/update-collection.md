@@ -17,7 +17,7 @@ service := databases.New(client)
 response, error := service.UpdateCollection(
     "<DATABASE_ID>",
     "<COLLECTION_ID>",
-    "<NAME>",
+    databases.WithUpdateCollectionName("<NAME>"),
     databases.WithUpdateCollectionPermissions(interface{}{"read("any")"}),
     databases.WithUpdateCollectionDocumentSecurity(false),
     databases.WithUpdateCollectionEnabled(false),

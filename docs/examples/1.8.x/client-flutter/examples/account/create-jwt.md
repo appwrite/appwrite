@@ -6,4 +6,6 @@ Client client = Client()
 
 Account account = Account(client);
 
-Jwt result = await account.createJWT();
+Jwt result = await account.createJWT(
+    duration: 0, // optional
+);

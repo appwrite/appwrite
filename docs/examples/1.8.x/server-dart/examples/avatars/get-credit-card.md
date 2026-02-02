@@ -8,7 +8,7 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 Uint8List result = await avatars.getCreditCard(
-    code: CreditCard.americanExpress,
+    code: enums.CreditCard.americanExpress,
     width: 0, // (optional)
     height: 0, // (optional)
     quality: -1, // (optional)

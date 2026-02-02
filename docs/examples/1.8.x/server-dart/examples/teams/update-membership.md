@@ -10,5 +10,5 @@ Teams teams = Teams(client);
 Membership result = await teams.updateMembership(
     teamId: '<TEAM_ID>',
     membershipId: '<MEMBERSHIP_ID>',
-    roles: [],
+    roles: [enums.Roles.admin],
 );

@@ -10,7 +10,7 @@ Functions functions = Functions(client);
 Func result = await functions.update(
     functionId: '<FUNCTION_ID>',
     name: '<NAME>',
-    runtime: Runtime.node145, // (optional)
+    runtime: enums.Runtime.node145, // (optional)
     execute: ["any"], // (optional)
     events: [], // (optional)
     schedule: '', // (optional)
@@ -19,7 +19,7 @@ Func result = await functions.update(
     logging: false, // (optional)
     entrypoint: '<ENTRYPOINT>', // (optional)
     commands: '<COMMANDS>', // (optional)
-    scopes: [], // (optional)
+    scopes: [enums.Scopes.sessionsWrite], // (optional)
     installationId: '<INSTALLATION_ID>', // (optional)
     providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // (optional)
     providerBranch: '<PROVIDER_BRANCH>', // (optional)

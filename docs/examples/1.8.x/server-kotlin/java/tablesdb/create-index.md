@@ -2,6 +2,7 @@ import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.TablesDB;
 import io.appwrite.enums.IndexType;
+import io.appwrite.enums.OrderBy;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -16,7 +17,7 @@ tablesDB.createIndex(
     "", // key
     IndexType.KEY, // type
     List.of(), // columns
-    List.of(), // orders (optional)
+    List.of(OrderBy.ASC), // orders (optional)
     List.of(), // lengths (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

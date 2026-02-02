@@ -11,7 +11,7 @@ Databases databases = new Databases(client);
 
 databases.update(
     "<DATABASE_ID>", // databaseId
-    "<NAME>", // name
+    "<NAME>", // name (optional)
     false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
