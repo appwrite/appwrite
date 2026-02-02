@@ -85,7 +85,15 @@ App::setResource('hooks', function ($register) {
 
 App::setResource('register', fn () => $register);
 App::setResource('locale', function () {
-    $locale = new Locale(System::getEnv('_APP_LOCALE', 'en'));
+   $code = System::getEnv('_APP_LOCALE', 'en');
+
+    try {
+        $request = App::getResource('request');
+        $code = (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', $code));
+    } catch (\Throwable $th) {
+    }
+
+    $locale = new Locale($code);
     $locale->setFallback(System::getEnv('_APP_LOCALE', 'en'));
     return $locale;
 });
