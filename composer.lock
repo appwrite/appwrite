@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "15766c9e6f5480b6e07d9f3b0f075397",
+    "content-hash": "e2308896fe86b2bd967390d250b95bae",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3517,16 +3517,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-chore-upgrade-database-5",
+            "version": "1.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "251856e88367fb139e914d7aba46467167fe176b"
+                "reference": "20bee84fd14dbe81d50ecabf1ffd81cceca06152"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/251856e88367fb139e914d7aba46467167fe176b",
-                "reference": "251856e88367fb139e914d7aba46467167fe176b",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/20bee84fd14dbe81d50ecabf1ffd81cceca06152",
+                "reference": "20bee84fd14dbe81d50ecabf1ffd81cceca06152",
                 "shasum": ""
             },
             "require": {
@@ -3563,9 +3563,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/chore-upgrade-database-5"
+                "source": "https://github.com/utopia-php/abuse/tree/1.2.2"
             },
-            "time": "2026-01-30T17:46:51+00:00"
+            "time": "2026-02-02T10:43:10+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -3615,16 +3615,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-chore-upgrade-database-5",
+            "version": "2.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "33ea392e6579b8ecfe96c1377116021af7c48af0"
+                "reference": "e3e2d6ad5c7f6377d9237df296a12eb7943892fd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/33ea392e6579b8ecfe96c1377116021af7c48af0",
-                "reference": "33ea392e6579b8ecfe96c1377116021af7c48af0",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/e3e2d6ad5c7f6377d9237df296a12eb7943892fd",
+                "reference": "e3e2d6ad5c7f6377d9237df296a12eb7943892fd",
                 "shasum": ""
             },
             "require": {
@@ -3658,9 +3658,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/chore-upgrade-database-5"
+                "source": "https://github.com/utopia-php/audit/tree/2.2.1"
             },
-            "time": "2026-01-30T14:09:28+00:00"
+            "time": "2026-02-02T10:39:25+00:00"
         },
         {
             "name": "utopia-php/auth",
@@ -4064,16 +4064,16 @@
         },
         {
             "name": "utopia-php/dns",
-            "version": "dev-chore-upgrade-domains-1",
+            "version": "1.5.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dns.git",
-                "reference": "301b8c5b1cf029ed2dc1437a0508d873ef5718f0"
+                "reference": "ee831a6f2ceb28babb042ea65539c26ea4530bf6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dns/zipball/301b8c5b1cf029ed2dc1437a0508d873ef5718f0",
-                "reference": "301b8c5b1cf029ed2dc1437a0508d873ef5718f0",
+                "url": "https://api.github.com/repos/utopia-php/dns/zipball/ee831a6f2ceb28babb042ea65539c26ea4530bf6",
+                "reference": "ee831a6f2ceb28babb042ea65539c26ea4530bf6",
                 "shasum": ""
             },
             "require": {
@@ -4115,9 +4115,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dns/issues",
-                "source": "https://github.com/utopia-php/dns/tree/chore-upgrade-domains-1"
+                "source": "https://github.com/utopia-php/dns/tree/1.5.4"
             },
-            "time": "2026-01-30T14:09:32+00:00"
+            "time": "2026-02-02T10:40:38+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4230,16 +4230,16 @@
         },
         {
             "name": "utopia-php/emails",
-            "version": "dev-chore-upgrade-domains-1",
+            "version": "0.6.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/emails.git",
-                "reference": "d7ae7a73e05ae1bc8c6686af90a8f4b354b1fdd5"
+                "reference": "354f7fe591e1fba7736afada558cb3b02ec03fea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/emails/zipball/d7ae7a73e05ae1bc8c6686af90a8f4b354b1fdd5",
-                "reference": "d7ae7a73e05ae1bc8c6686af90a8f4b354b1fdd5",
+                "url": "https://api.github.com/repos/utopia-php/emails/zipball/354f7fe591e1fba7736afada558cb3b02ec03fea",
+                "reference": "354f7fe591e1fba7736afada558cb3b02ec03fea",
                 "shasum": ""
             },
             "require": {
@@ -4284,9 +4284,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/emails/issues",
-                "source": "https://github.com/utopia-php/emails/tree/chore-upgrade-domains-1"
+                "source": "https://github.com/utopia-php/emails/tree/0.6.6"
             },
-            "time": "2026-01-30T14:09:30+00:00"
+            "time": "2026-02-02T10:41:22+00:00"
         },
         {
             "name": "utopia-php/fetch",
@@ -4578,16 +4578,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-chore-upgrade-database-5",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "afc4eca7d808c360bf2770937f7cc6cbdf9e4ac2"
+                "reference": "0d6e77748ca7d9302a88953751bd89d577610afd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/afc4eca7d808c360bf2770937f7cc6cbdf9e4ac2",
-                "reference": "afc4eca7d808c360bf2770937f7cc6cbdf9e4ac2",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0d6e77748ca7d9302a88953751bd89d577610afd",
+                "reference": "0d6e77748ca7d9302a88953751bd89d577610afd",
                 "shasum": ""
             },
             "require": {
@@ -4628,9 +4628,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/chore-upgrade-database-5"
+                "source": "https://github.com/utopia-php/migration/tree/1.5.0"
             },
-            "time": "2026-01-30T14:09:29+00:00"
+            "time": "2026-02-02T10:42:04+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -9052,13 +9052,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/abuse": 20,
-        "utopia-php/audit": 20,
-        "utopia-php/emails": 20,
-        "utopia-php/dns": 20,
-        "utopia-php/migration": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
