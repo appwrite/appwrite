@@ -5,6 +5,7 @@
 * Add array-based enum parameters (e.g., `permissions: IReadOnlyList<BrowserPermission>`).
 * Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
 * Add `getQueueAudits` support to `Health` service.
+* Add longtext/mediumtext/text/varchar attribute and column helpers to `Databases` and `TablesDB` services.
 
 ## 0.24.0
 

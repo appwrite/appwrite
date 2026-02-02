@@ -8,7 +8,7 @@ const sites = new Sites(client);
 
 const result = await sites.listTemplates({
     frameworks: [Frameworks.Analog], // optional
-    useCases: [UseCases.DevTools], // optional
+    useCases: [UseCases.Portfolio], // optional
     limit: 1, // optional
     offset: 0 // optional
 });
