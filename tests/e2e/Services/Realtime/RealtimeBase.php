@@ -30,22 +30,37 @@ trait RealtimeBase
          *                        AND logic within the group; OR logic across multiple groups (if we ever add them).
          *
          * For now all E2E tests subscribe to a single channel, so we map queries to $channels[0].
+         * 
+         * Slot-based format: channel[slot][]=query1&channel[slot][]=query2
+         * We need to manually build the query string to ensure the [] format is used.
          */
+
+        // Build base query string
+        $queryParams = [
+            "project" => $projectId,
+            "channels" => $channels
+        ];
+        $queryString = http_build_query($queryParams);
 
         if ($queries !== null && !empty($channels)) {
             $channel = $channels[0];
+            $slot = 0; // All tests use slot 0 for now
 
             if ($queries === []) {
-                // Explicit select("*") group
-                $query[$channel][0] = [\Utopia\Database\Query::select(['*'])->toString()];
+                // Explicit select("*") group - single query in slot 0
+                $queryValue = \Utopia\Database\Query::select(['*'])->toString();
+                $queryString .= "&" . urlencode($channel) . "[" . $slot . "][]=" . urlencode($queryValue);
             } else {
-                // Single subscription group for this channel
-                $query[$channel][0] = $queries;
+                // Single subscription group for this channel - multiple queries in slot 0
+                // Each query should be appended with [] format
+                foreach ($queries as $queryValue) {
+                    $queryString .= "&" . urlencode($channel) . "[" . $slot . "][]=" . urlencode($queryValue);
+                }
             }
         }
 
         return new WebSocketClient(
-            "ws://appwrite.test/v1/realtime?" . http_build_query($query),
+            "ws://appwrite.test/v1/realtime?" . $queryString,
             [
                 "headers" => $headers,
                 "timeout" => 30,

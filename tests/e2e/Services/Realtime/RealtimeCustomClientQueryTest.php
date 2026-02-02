@@ -86,7 +86,8 @@ class RealtimeCustomClientQueryTest extends Scope
 
         // Should timeout - no event should be received
         try {
-            $client->receive();
+            $data = $client->receive();
+            var_dump($data);
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
             $this->assertTrue(true);

@@ -30,15 +30,12 @@ class Realtime extends MessagingAdapter
      * [PROJECT_ID] ->
      *      [ROLE_X] ->
      *          [CHANNEL_NAME_X] ->
-     *              [CONNECTION_ID] -> [
-     *                  [query1, query2],  // Subscription group 0 - AND logic within group
-     *                  [query3],          // Subscription group 1
-     *                  [query4, query5],  // Subscription group 2 - OR logic across groups
-     *              ]
+     *              [CONNECTION_ID] ->
+     *                  [SUB_ID] -> [query1, query2, ...]  // Subscription with queries (AND logic)
      *
-     * Each subscription group is an array of query strings.
-     * Within a group: AND logic (all queries must match)
-     * Across groups: OR logic (any group matching = send event)
+     * Each subscription ID maps to an array of query strings.
+     * Within a subscription: AND logic (all queries must match)
+     * Across subscriptions: OR logic (any subscription matching = send event)
      */
     public array $subscriptions = [];
 
@@ -51,22 +48,23 @@ class Realtime extends MessagingAdapter
     }
 
     /**
-     * Adds a subscription group.
+     * Adds a subscription with a specific subscription ID.
      *
      * @param string $projectId
      * @param mixed $identifier Connection ID
+     * @param string $subscriptionId Unique subscription ID
      * @param array $roles User roles
-     * @param array $channels Channels to subscribe to
-     * @param array $queryGroup Array of Query objects for this subscription group (AND logic within group)
+     * @param array $channels Channels to subscribe to (array of channel names)
+     * @param array $queryGroup Array of Query objects for this subscription (AND logic within subscription)
      * @return void
      */
-    public function subscribe(string $projectId, mixed $identifier, array $roles, array $channels, array $queryGroup = []): void
+    public function subscribe(string $projectId, mixed $identifier, string $subscriptionId, array $roles, array $channels, array $queryGroup = []): void
     {
         if (!isset($this->subscriptions[$projectId])) { // Init Project
             $this->subscriptions[$projectId] = [];
         }
 
-        // Convert Query objects to strings for this subscription group
+        // Convert Query objects to strings for this subscription
         $queryStrings = [];
         if (empty($queryGroup)) {
             // No queries means "listen to all events" - use select("*")
@@ -79,35 +77,32 @@ class Realtime extends MessagingAdapter
         }
 
         foreach ($roles as $role) {
-            if (!isset($this->subscriptions[$projectId][$role])) { // Add user first connection
+            if (!isset($this->subscriptions[$projectId][$role])) {
                 $this->subscriptions[$projectId][$role] = [];
             }
 
-            foreach ($channels as $channel => $list) {
+            foreach ($channels as $channel) {
+                if (!isset($this->subscriptions[$projectId][$role][$channel])) {
+                    $this->subscriptions[$projectId][$role][$channel] = [];
+                }
                 if (!isset($this->subscriptions[$projectId][$role][$channel][$identifier])) {
                     $this->subscriptions[$projectId][$role][$channel][$identifier] = [];
                 }
-                // Add this query group as a new subscription group (array of query strings)
-                $this->subscriptions[$projectId][$role][$channel][$identifier][] = $queryStrings;
+                // Store subscription under subscription ID
+                $this->subscriptions[$projectId][$role][$channel][$identifier][$subscriptionId] = $queryStrings;
             }
         }
 
-        // Keep a complete view of channels for unsubscribe(), even if subscribe() is called repeatedly
-        if (!isset($this->connections[$identifier])) {
-            $this->connections[$identifier] = [
-                'projectId' => $projectId,
-                'roles' => $roles,
-                'channels' => $channels
-            ];
-        } else {
-            $this->connections[$identifier]['projectId'] = $projectId;
-            $this->connections[$identifier]['roles'] = $roles;
-            $this->connections[$identifier]['channels'] = \array_merge($this->connections[$identifier]['channels'], $channels);
-        }
+        // Update connection info
+        $this->connections[$identifier] = [
+            'projectId' => $projectId,
+            'roles' => $roles,
+            'channels' => $channels
+        ];
     }
 
     /**
-     * Removes Subscription.
+     * Removes all subscriptions for a connection.
      *
      * @param mixed $connection
      * @return void
@@ -119,8 +114,8 @@ class Realtime extends MessagingAdapter
         $channels = $this->connections[$connection]['channels'] ?? [];
 
         foreach ($roles as $role) {
-            foreach ($channels as $channel => $list) {
-                unset($this->subscriptions[$projectId][$role][$channel][$connection]); // dropping connection will drop the queries as well
+            foreach ($channels as $channel) {
+                unset($this->subscriptions[$projectId][$role][$channel][$connection]); // dropping connection will drop all subscriptions
 
                 if (empty($this->subscriptions[$projectId][$role][$channel])) {
                     unset($this->subscriptions[$projectId][$role][$channel]);  // Remove channel when no connections
@@ -234,49 +229,37 @@ class Realtime extends MessagingAdapter
                          * Saving all connections that are allowed to receive this event.
                          */
                         $payload = $event['data']['payload'] ?? [];
-                        foreach ($this->subscriptions[$event['project']][$role][$channel] as $id => $subscriptionGroups) {
-                            $matchedGroups = [];
+                        foreach ($this->subscriptions[$event['project']][$role][$channel] as $id => $subscriptions) {
+                            $matchedSubscriptions = [];
 
-                            // Process each subscription group (OR logic across groups)
-                            foreach ($subscriptionGroups as $queryGroup) {
-                                // Parse all queries in this group
+                            // Process each subscription (OR logic across subscriptions)
+                            foreach ($subscriptions as $subId => $queryStrings) {
+                                // Parse all queries in this subscription
                                 $parsedQueries = [];
-                                foreach ($queryGroup as $queryString) {
+                                foreach ($queryStrings as $queryString) {
                                     $parsed = Query::parseQueries([$queryString]);
                                     $parsedQueries = array_merge($parsedQueries, $parsed);
                                 }
 
-                                // Check if this group matches (AND logic within group)
-                                // RuntimeQuery::filter handles select("*") - returns payload if present
+                                // Check if this subscription matches (AND logic within subscription)
                                 if (!empty(RuntimeQuery::filter($parsedQueries, $payload))) {
-                                    // This group matched - add it to matched groups
-                                    $matchedGroups[] = $queryGroup;
+                                    // This subscription matched - add subscription ID to matched subscriptions
+                                    $matchedSubscriptions[$subId] = $queryStrings;
                                 }
                             }
 
-                            // Only add to receivers if at least one group matched
-                            if (!empty($matchedGroups)) {
+                            // Only add connection to receivers if at least one subscription matched
+                            if (!empty($matchedSubscriptions)) {
                                 if (!isset($receivers[$id])) {
                                     $receivers[$id] = [];
                                 }
-                                // Store matched groups (each group is an array of query strings)
-                                $receivers[$id] = array_merge($receivers[$id], $matchedGroups);
+                                $receivers[$id] = array_merge($receivers[$id], $matchedSubscriptions);
                             }
                         }
                         break;
                     }
                 }
             }
-        }
-
-        // De-duplicate groups per connection (same connection can match via multiple roles)
-        foreach ($receivers as $id => $groups) {
-            $unique = [];
-            foreach ($groups as $group) {
-                $key = \json_encode($group);
-                $unique[$key] = $group;
-            }
-            $receivers[$id] = \array_values($unique);
         }
 
         return $receivers;
@@ -308,6 +291,78 @@ class Realtime extends MessagingAdapter
         }
 
         return $channels;
+    }
+
+    /**
+     * Constructs subscriptions from query parameters.
+     * 
+     * Reconstructs subscription structure from query params where subscription indices can span multiple channels.
+     * Format: {channel}[subscriptionIndex][]=query1&{channel}[subscriptionIndex][]=query2
+     * 
+     * Example:
+     * - tests[0][]=select(*) → subscription 0: channels=["tests"]
+     * - tests[1][]=equal(...) & prod[1][]=equal(...) → subscription 1: channels=["tests", "prod"]
+     * 
+     * @param array $channelNames Array of channel names
+     * @param callable $getQueryParam Callable that takes a channel name and returns its query param value (null if not present)
+     * @return array Array indexed by subscription index: [index => ['channels' => string[], 'queries' => Query[]]]
+     * @throws QueryException
+     */
+    public static function constructSubscriptions(array $channelNames, callable $getQueryParam): array
+    {
+        $subscriptionsByIndex = [];
+
+        foreach ($channelNames as $channel) {
+            $channelSubscriptions = $getQueryParam($channel);
+
+            // Backward compatibility: if no channel-specific query params, treat as subscription 0 with select("*")
+            if ($channelSubscriptions === null) {
+                if (!isset($subscriptionsByIndex[0])) {
+                    $subscriptionsByIndex[0] = [
+                        'channels' => [],
+                        'queries' => []
+                    ];
+                }
+                $subscriptionsByIndex[0]['channels'][] = $channel;
+                if (empty($subscriptionsByIndex[0]['queries'])) {
+                    $subscriptionsByIndex[0]['queries'] = [Query::select(['*'])];
+                }
+                continue;
+            }
+
+            // Ensure it's an array
+            if (!is_array($channelSubscriptions)) {
+                $channelSubscriptions = [$channelSubscriptions];
+            }
+
+            // Process each subscription index for this channel
+            foreach ($channelSubscriptions as $subscriptionIndex => $subscription) {
+                if (!isset($subscriptionsByIndex[$subscriptionIndex])) {
+                    $subscriptionsByIndex[$subscriptionIndex] = [
+                        'channels' => [],
+                        'queries' => []
+                    ];
+                }
+
+                // Add this channel to the subscription
+                if (!in_array($channel, $subscriptionsByIndex[$subscriptionIndex]['channels'])) {
+                    $subscriptionsByIndex[$subscriptionIndex]['channels'][] = $channel;
+                }
+
+                // Set queries for this subscription (queries are the same across all channels in a subscription)
+                if (empty($subscriptionsByIndex[$subscriptionIndex]['queries'])) {
+                    // Ensure $subscription is an array (handle both array and string inputs)
+                    $queriesToParse = is_array($subscription) ? $subscription : [$subscription];
+                    
+                    // Parse and validate the queries
+                    $parsedQueries = self::convertQueries($queriesToParse);
+                    // Store Query objects
+                    $subscriptionsByIndex[$subscriptionIndex]['queries'] = $parsedQueries;
+                }
+            }
+        }
+
+        return $subscriptionsByIndex;
     }
 
     /**
