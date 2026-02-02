@@ -318,7 +318,7 @@ $register->set('pools', function () {
                             default => null
                         };
 
-                        $adapter->setMaxRetries(CACHE_RECONNECT_MAX_ATTEMPTS);
+                        $adapter->setMaxRetries(CACHE_RECONNECT_MAX_RETRIES);
                         $adapter->setRetryDelay(CACHE_RECONNECT_RETRY_DELAY);
                         return $adapter;
                     default:
