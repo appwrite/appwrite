@@ -8,5 +8,5 @@ Client client = Client()
 Account account = Account(client);
 
 MfaType result = await account.createMFAAuthenticator(
-    type: AuthenticatorType.totp,
+    type: enums.AuthenticatorType.totp,
 );

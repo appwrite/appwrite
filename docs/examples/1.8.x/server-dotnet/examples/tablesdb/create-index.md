@@ -16,6 +16,6 @@ ColumnIndex result = await tablesDB.CreateIndex(
     key: "",
     type: IndexType.Key,
     columns: new List<string>(),
-    orders: new List<string>(), // optional
+    orders: new List&lt;OrderBy&gt; { OrderBy.Asc }, // optional
     lengths: new List<long>() // optional
 );

@@ -25,5 +25,6 @@ mutation {
         encryption
         antivirus
         transformations
+        totalSize
     }
 }

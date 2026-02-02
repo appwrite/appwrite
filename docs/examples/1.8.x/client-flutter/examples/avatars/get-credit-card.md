@@ -8,7 +8,7 @@ Avatars avatars = Avatars(client);
 
 // Downloading file
 Uint8List bytes = await avatars.getCreditCard(
-    code: CreditCard.americanExpress,
+    code: enums.CreditCard.americanExpress,
     width: 0, // optional
     height: 0, // optional
     quality: -1, // optional
@@ -20,7 +20,7 @@ file.writeAsBytesSync(bytes);
 // Displaying image preview
 FutureBuilder(
     future: avatars.getCreditCard(
-    code: CreditCard.americanExpress,
+    code: enums.CreditCard.americanExpress,
     width:0 , // optional
     height:0 , // optional
     quality:-1 , // optional

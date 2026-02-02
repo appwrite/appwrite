@@ -9,7 +9,7 @@ Sites sites = Sites(client);
 
 Deployment result = await sites.createVcsDeployment(
     siteId: '<SITE_ID>',
-    type: VCSReferenceType.branch,
+    type: enums.VCSReferenceType.branch,
     reference: '<REFERENCE>',
     activate: false, // (optional)
 );

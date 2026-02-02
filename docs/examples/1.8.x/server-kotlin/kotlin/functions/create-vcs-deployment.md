@@ -12,7 +12,7 @@ val functions = Functions(client)
 
 val response = functions.createVcsDeployment(
     functionId = "<FUNCTION_ID>",
-    type =  VCSReferenceType.BRANCH,
+    type = VCSReferenceType.BRANCH,
     reference = "<REFERENCE>",
     activate = false // optional
 )

@@ -30,6 +30,9 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
+use Utopia\Span\Exporter;
+use Utopia\Span\Span;
+use Utopia\Span\Storage;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
@@ -325,4 +328,6 @@ $cli
 $cli->shutdown()->action(fn () => Timer::clearAll());
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+Span::setStorage(new Storage\Coroutine());
+Span::addExporter(new Exporter\Stdout());
 run($cli->run(...));

@@ -11,6 +11,6 @@ databases = Databases.new(client)
 
 result = databases.update(
     database_id: '<DATABASE_ID>',
-    name: '<NAME>',
+    name: '<NAME>', # optional
     enabled: false # optional
 )

@@ -2,6 +2,7 @@ import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Functions;
 import io.appwrite.enums.Runtime;
+import io.appwrite.enums.Scopes;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -22,7 +23,7 @@ functions.update(
     false, // logging (optional)
     "<ENTRYPOINT>", // entrypoint (optional)
     "<COMMANDS>", // commands (optional)
-    List.of(), // scopes (optional)
+    List.of(Scopes.SESSIONS_WRITE), // scopes (optional)
     "<INSTALLATION_ID>", // installationId (optional)
     "<PROVIDER_REPOSITORY_ID>", // providerRepositoryId (optional)
     "<PROVIDER_BRANCH>", // providerBranch (optional)

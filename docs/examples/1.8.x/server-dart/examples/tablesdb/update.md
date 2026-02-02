@@ -9,6 +9,6 @@ TablesDB tablesDB = TablesDB(client);
 
 Database result = await tablesDB.update(
     databaseId: '<DATABASE_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // (optional)
     enabled: false, // (optional)
 );

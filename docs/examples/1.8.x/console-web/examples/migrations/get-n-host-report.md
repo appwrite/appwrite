@@ -1,4 +1,4 @@
-import { Client, Migrations } from "@appwrite.io/console";
+import { Client, Migrations, Resources } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -7,7 +7,7 @@ const client = new Client()
 const migrations = new Migrations(client);
 
 const result = await migrations.getNHostReport({
-    resources: [],
+    resources: [Resources.User],
     subdomain: '<SUBDOMAIN>',
     region: '<REGION>',
     adminSecret: '<ADMIN_SECRET>',

@@ -14,7 +14,7 @@ TablesDB tablesDB = new TablesDB(client);
 tablesDB.updateTable(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
-    "<NAME>", // name
+    "<NAME>", // name (optional)
     List.of(Permission.read(Role.any())), // permissions (optional)
     false, // rowSecurity (optional)
     false, // enabled (optional)

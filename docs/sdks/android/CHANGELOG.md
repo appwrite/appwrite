@@ -1,5 +1,11 @@
 # Change Log
 
+## 12.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
 ## 11.4.0
 
 * Add `getScreenshot` method to `Avatars` service

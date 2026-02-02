@@ -11,6 +11,6 @@ Databases databases = new Databases(client);
 
 Database result = await databases.Update(
     databaseId: "<DATABASE_ID>",
-    name: "<NAME>",
+    name: "<NAME>", // optional
     enabled: false // optional
 );

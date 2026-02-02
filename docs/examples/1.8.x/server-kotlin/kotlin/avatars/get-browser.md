@@ -11,7 +11,7 @@ val client = Client()
 val avatars = Avatars(client)
 
 val result = avatars.getBrowser(
-    code =  Browser.AVANT_BROWSER,
+    code = Browser.AVANT_BROWSER,
     width = 0, // optional
     height = 0, // optional
     quality = -1 // optional

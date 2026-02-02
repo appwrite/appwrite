@@ -11,9 +11,9 @@ ColumnRelationship result = await tablesDB.createRelationshipColumn(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     relatedTableId: '<RELATED_TABLE_ID>',
-    type: RelationshipType.oneToOne,
+    type: enums.RelationshipType.oneToOne,
     twoWay: false, // (optional)
     key: '', // (optional)
     twoWayKey: '', // (optional)
-    onDelete: RelationMutate.cascade, // (optional)
+    onDelete: enums.RelationMutate.cascade, // (optional)
 );

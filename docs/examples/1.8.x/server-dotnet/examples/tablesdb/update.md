@@ -11,6 +11,6 @@ TablesDB tablesDB = new TablesDB(client);
 
 Database result = await tablesDB.Update(
     databaseId: "<DATABASE_ID>",
-    name: "<NAME>",
+    name: "<NAME>", // optional
     enabled: false // optional
 );

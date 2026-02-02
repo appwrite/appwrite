@@ -8,7 +8,7 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 Uint8List result = await avatars.getBrowser(
-    code: Browser.avantBrowser,
+    code: enums.Browser.avantBrowser,
     width: 0, // (optional)
     height: 0, // (optional)
     quality: -1, // (optional)

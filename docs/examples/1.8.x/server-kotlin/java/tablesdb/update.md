@@ -11,7 +11,7 @@ TablesDB tablesDB = new TablesDB(client);
 
 tablesDB.update(
     "<DATABASE_ID>", // databaseId
-    "<NAME>", // name
+    "<NAME>", // name (optional)
     false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
