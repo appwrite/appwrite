@@ -145,7 +145,7 @@ class Create extends Action
         $dbForProject->updateDocument('sites', $site->getId(), $site);
 
         // Preview deployments for sites
-        $sitesDomain = $platform['sitePreviewDomain'];
+        $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
