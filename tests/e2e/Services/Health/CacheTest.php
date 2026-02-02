@@ -22,7 +22,11 @@ class CacheTest extends HealthBase
     {
         $redis = new Redis();
         $redis->connect('redis', 6379);
-        $cache = new Cache((new RedisAdapter($redis))->setMaxRetries(CACHE_RECONNECT_MAX_ATTEMPTS)->setRetryDelay(CACHE_RECONNECT_RETRY_DELAY));
+        $cache = new Cache(
+            (new RedisAdapter($redis))
+                ->setMaxRetries(CACHE_RECONNECT_MAX_RETRIES)
+                ->setRetryDelay(CACHE_RECONNECT_RETRY_DELAY)
+        );
 
         $cache->save('test:reconnect', 'reconnect', 'test:reconnect');
 
@@ -42,11 +46,13 @@ class CacheTest extends HealthBase
             $startCmd = 'docker ps -a --filter "name=appwrite-redis" --format "{{.Names}}" | xargs -r docker start';
             exec($startCmd . ' 2>&1', $output, $exitCode);
             $this->assertEquals(0, $exitCode, "Docker start failed: $startCmd\nOutput: " . implode("\n", $output));
-            sleep(3);
         }
 
-        $this->assertEquals('reconnect', $cache->save('test:reconnect', 'reconnect', 'test:reconnect'));
-        $this->assertEquals('reconnect', $cache->load('test:reconnect', 5));
+        $this->assertEventually(function () use ($cache) {
+            $this->assertEquals('reconnect', $cache->save('test:reconnect', 'reconnect', 'test:reconnect'));
+            $this->assertEquals('reconnect', $cache->load('test:reconnect', 5));
+            return true;
+        }, 10000, 1000);
     }
 
     /**
@@ -56,7 +62,11 @@ class CacheTest extends HealthBase
     {
         $redis = new Redis();
         $redis->pconnect('redis', 6379);
-        $cache = new Cache((new RedisAdapter($redis))->setMaxRetries(CACHE_RECONNECT_MAX_ATTEMPTS)->setRetryDelay(CACHE_RECONNECT_RETRY_DELAY));
+        $cache = new Cache(
+            (new RedisAdapter($redis))
+                ->setMaxRetries(CACHE_RECONNECT_MAX_RETRIES)
+                ->setRetryDelay(CACHE_RECONNECT_RETRY_DELAY)
+        );
 
         $cache->save('test:reconnect_persistent', 'reconnect_persistent', 'test:reconnect_persistent');
 
@@ -76,10 +86,12 @@ class CacheTest extends HealthBase
             $startCmd = 'docker ps -a --filter "name=appwrite-redis" --format "{{.Names}}" | xargs -r docker start';
             exec($startCmd . ' 2>&1', $output, $exitCode);
             $this->assertEquals(0, $exitCode, "Docker start failed: $startCmd\nOutput: " . implode("\n", $output));
-            sleep(3);
         }
 
-        $this->assertEquals('reconnect_persistent', $cache->save('test:reconnect_persistent', 'reconnect_persistent', 'test:reconnect_persistent'));
-        $this->assertEquals('reconnect_persistent', $cache->load('test:reconnect_persistent', 5));
+        $this->assertEventually(function () use ($cache) {
+            $this->assertEquals('reconnect_persistent', $cache->save('test:reconnect_persistent', 'reconnect_persistent', 'test:reconnect_persistent'));
+            $this->assertEquals('reconnect_persistent', $cache->load('test:reconnect_persistent', 5));
+            return true;
+        }, 10000, 1000);
     }
 }
