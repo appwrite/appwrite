@@ -80,6 +80,7 @@ class Create extends Base
             ->inject('queueForBuilds')
             ->inject('gitHub')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -99,7 +100,8 @@ class Create extends Base
         Event $queueForEvents,
         Build $queueForBuilds,
         GitHub $github,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -133,6 +135,7 @@ class Create extends Base
                 github: $github,
                 activate: $activate,
                 authorization: $authorization,
+                platform: $platform
             );
 
             $queueForEvents
@@ -186,7 +189,7 @@ class Create extends Base
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('sites', $site->getId(), $site);
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = $platform['sitePreviewDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration

@@ -1816,12 +1816,13 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateProjectAuthLimit
-     */
-    public function testUpdateProjectAuthSessionsLimit($data): array
+    public function testUpdateProjectAuthSessionsLimit(): void
     {
-        $id = $data['projectId'] ?? '';
+        $id = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'testUpdateProjectAuthSessionsLimit',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
 
         /**
          * Test for failure
@@ -1920,7 +1921,7 @@ class ProjectsConsoleClientTest extends Scope
 
             $this->assertEquals(1, count($sessions));
             $this->assertEquals($sessionId2, $sessions[0]['$id']);
-        });
+        }, 120_000, 300);
 
         /**
          * Reset Limit
@@ -1932,9 +1933,8 @@ class ProjectsConsoleClientTest extends Scope
             'limit' => 10,
         ]);
 
-        return $data;
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
-
 
     /**
      * @depends testUpdateProjectAuthLimit

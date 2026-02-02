@@ -433,14 +433,21 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
+        // Sync delete
         $deletes = new Deletes();
         $deletes->deleteMemberships($getProjectDB, $team, $project);
 
+        // Async delete
         if ($project->getId() === 'console') {
             $queueForDeletes
                 ->setType(DELETE_TYPE_TEAM_PROJECTS)
-                ->setDocument($team);
+                ->setDocument($team)
+                ->trigger();
         }
+
+        $queueForDeletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($team);
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
@@ -772,7 +779,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setPreview($preview)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name', ''))
-                    ->setVariables($emailVariables)
+                    ->appendVariables($emailVariables)
                     ->trigger();
             } elseif (!empty($phone)) {
                 if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {

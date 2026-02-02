@@ -193,7 +193,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
         ->setPreview($preview)
         ->setBody($body)
         ->setBodyTemplate($bodyTemplate)
-        ->setVariables($emailVariables)
+        ->appendVariables($emailVariables)
         ->setRecipient($email);
 
     // since this is console project, set email sender name!
@@ -2299,7 +2299,7 @@ App::post('/v1/account/tokens/magic-url')
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($body)
-            ->setVariables($emailVariables)
+            ->appendVariables($emailVariables)
             ->setRecipient($email);
 
         if ($project->getId() === 'console') {
@@ -2600,7 +2600,7 @@ App::post('/v1/account/tokens/email')
             ->setPreview($preview)
             ->setBody($body)
             ->setBodyTemplate($bodyTemplate)
-            ->setVariables($emailVariables)
+            ->appendVariables($emailVariables)
             ->setRecipient($email);
 
         // since this is console project, set email sender name!
@@ -3676,7 +3676,7 @@ App::post('/v1/account/recovery')
             ->setRecipient($profile->getAttribute('email', ''))
             ->setName($profile->getAttribute('name', ''))
             ->setBody($body)
-            ->setVariables($emailVariables)
+            ->appendVariables($emailVariables)
             ->setSubject($subject)
             ->setPreview($preview);
 
@@ -4007,7 +4007,7 @@ App::post('/v1/account/verifications/email')
             ->setPreview($preview)
             ->setBody($body)
             ->setBodyTemplate($bodyTemplate)
-            ->setVariables($emailVariables)
+            ->appendVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
             ->setName($user->getAttribute('name') ?? '');
 
