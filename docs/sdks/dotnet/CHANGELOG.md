@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.25.0
+
+* Add array-based enum parameters (e.g., `permissions: IReadOnlyList<BrowserPermission>`).
+
 ## 0.24.0
 
 * Added ability to create columns and indexes synchronously while creating a table

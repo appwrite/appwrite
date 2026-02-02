@@ -1,5 +1,9 @@
 # Change Log
 
+## 16.0.0
+
+* Add array-based enum parameters (e.g., `permissions: BrowserPermission[]`).
+
 ## 15.1.0
 
 * Add `incrementDocumentAttribute` and `decrementDocumentAttribute` support to `Databases` service

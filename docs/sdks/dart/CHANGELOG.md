@@ -1,5 +1,9 @@
 # Change Log
 
+## 21.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+
 ## 20.1.1
 
 * Fix boolean parameter not handled correctly in Client requests

@@ -1,5 +1,9 @@
 # Change Log
 
+## 12.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+
 ## 11.4.0
 
 * Add `getScreenshot` method to `Avatars` service
