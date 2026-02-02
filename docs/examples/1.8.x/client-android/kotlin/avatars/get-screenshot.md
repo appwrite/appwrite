@@ -3,7 +3,8 @@ import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Avatars
 import io.appwrite.enums.Theme
 import io.appwrite.enums.Timezone
-import io.appwrite.enums.Output
+import io.appwrite.enums.BrowserPermission
+import io.appwrite.enums.ImageFormat
 
 val client = Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -29,10 +30,10 @@ val result = avatars.getScreenshot(
     longitude = -122.4194, // (optional)
     accuracy = 100, // (optional)
     touch = true, // (optional)
-    permissions = listOf("geolocation", "notifications"), // (optional)
+    permissions = BrowserPermission.GEOLOCATION, // (optional)
     sleep = 3, // (optional)
     width = 800, // (optional)
     height = 600, // (optional)
     quality = 85, // (optional)
-    output = output.JPG, // (optional)
+    output = ImageFormat.JPG, // (optional)
 )

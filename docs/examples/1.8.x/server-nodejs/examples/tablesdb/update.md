@@ -9,6 +9,6 @@ const tablesDB = new sdk.TablesDB(client);
 
 const result = await tablesDB.update({
     databaseId: '<DATABASE_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // optional
     enabled: false // optional
 });

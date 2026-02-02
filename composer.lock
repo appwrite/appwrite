@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2aca1c8eeaa9fa338e389e3527cb6bd6",
+    "content-hash": "3ffe6e9557a18c7f96b3cfc1faa55399",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -283,16 +283,16 @@
         },
         {
             "name": "brick/math",
-            "version": "0.14.1",
+            "version": "0.14.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "f05858549e5f9d7bb45875a75583240a38a281d0"
+                "reference": "6af96b11de3f7d99730c118c200418c48274edb4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/f05858549e5f9d7bb45875a75583240a38a281d0",
-                "reference": "f05858549e5f9d7bb45875a75583240a38a281d0",
+                "url": "https://api.github.com/repos/brick/math/zipball/6af96b11de3f7d99730c118c200418c48274edb4",
+                "reference": "6af96b11de3f7d99730c118c200418c48274edb4",
                 "shasum": ""
             },
             "require": {
@@ -331,7 +331,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.14.1"
+                "source": "https://github.com/brick/math/tree/0.14.3"
             },
             "funding": [
                 {
@@ -339,7 +339,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-11-24T14:40:29+00:00"
+            "time": "2026-02-01T15:18:05+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -756,16 +756,16 @@
         },
         {
             "name": "google/protobuf",
-            "version": "v4.33.4",
+            "version": "v4.33.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/protocolbuffers/protobuf-php.git",
-                "reference": "22d28025cda0d223a2e48c2e16c5284ecc9f5402"
+                "reference": "ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/22d28025cda0d223a2e48c2e16c5284ecc9f5402",
-                "reference": "22d28025cda0d223a2e48c2e16c5284ecc9f5402",
+                "url": "https://api.github.com/repos/protocolbuffers/protobuf-php/zipball/ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d",
+                "reference": "ebe8010a61b2ae0cff0d246fe1c4d44e9f7dfa6d",
                 "shasum": ""
             },
             "require": {
@@ -794,9 +794,9 @@
                 "proto"
             ],
             "support": {
-                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.4"
+                "source": "https://github.com/protocolbuffers/protobuf-php/tree/v4.33.5"
             },
-            "time": "2026-01-12T17:58:43+00:00"
+            "time": "2026-01-29T20:49:00+00:00"
         },
         {
             "name": "halaxa/json-machine",
@@ -3615,16 +3615,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "8e0540aa939968418ee3ad2b2c305992a771e142"
+                "reference": "1865d055d38b71f41e68561cf0c474b5bf6143e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/8e0540aa939968418ee3ad2b2c305992a771e142",
-                "reference": "8e0540aa939968418ee3ad2b2c305992a771e142",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/1865d055d38b71f41e68561cf0c474b5bf6143e5",
+                "reference": "1865d055d38b71f41e68561cf0c474b5bf6143e5",
                 "shasum": ""
             },
             "require": {
@@ -3658,9 +3658,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/2.1.0"
+                "source": "https://github.com/utopia-php/audit/tree/2.2.0"
             },
-            "time": "2026-01-22T12:40:48+00:00"
+            "time": "2026-02-02T09:49:02+00:00"
         },
         {
             "name": "utopia-php/auth",
@@ -3961,16 +3961,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "4.6.1",
+            "version": "4.6.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "8795a7f5bf8828955299ae44e5946f93a2b1bde5"
+                "reference": "4dfffd4d528f89b3b3fc09180d4c965ef9bdae30"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/8795a7f5bf8828955299ae44e5946f93a2b1bde5",
-                "reference": "8795a7f5bf8828955299ae44e5946f93a2b1bde5",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4dfffd4d528f89b3b3fc09180d4c965ef9bdae30",
+                "reference": "4dfffd4d528f89b3b3fc09180d4c965ef9bdae30",
                 "shasum": ""
             },
             "require": {
@@ -4013,9 +4013,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/4.6.1"
+                "source": "https://github.com/utopia-php/database/tree/4.6.4"
             },
-            "time": "2026-01-21T09:37:22+00:00"
+            "time": "2026-01-30T08:19:14+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -5546,16 +5546,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.21",
+            "version": "dev-fix/enum-example-from-x-example",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "1b47b2c794811c565f8b5e7eeaa19f749bcbeb6b"
+                "reference": "b1a44e2bb35fb74ad0f5b5bb6ad945d98cd15315"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/1b47b2c794811c565f8b5e7eeaa19f749bcbeb6b",
-                "reference": "1b47b2c794811c565f8b5e7eeaa19f749bcbeb6b",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b1a44e2bb35fb74ad0f5b5bb6ad945d98cd15315",
+                "reference": "b1a44e2bb35fb74ad0f5b5bb6ad945d98cd15315",
                 "shasum": ""
             },
             "require": {
@@ -5591,9 +5591,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.21"
+                "source": "https://github.com/appwrite/sdk-generator/tree/fix/enum-example-from-x-example"
             },
-            "time": "2026-01-26T04:42:33+00:00"
+            "time": "2026-02-02T11:47:45+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -9052,7 +9052,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -9076,5 +9078,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

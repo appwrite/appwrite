@@ -6,6 +6,8 @@ const client = new Client()
 
 const account = new Account(client);
 
-const result = await account.createJWT();
+const result = await account.createJWT({
+    duration: 0 // optional
+});
 
 console.log(result);

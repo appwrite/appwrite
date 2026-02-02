@@ -2,7 +2,8 @@ from appwrite.client import Client
 from appwrite.services.avatars import Avatars
 from appwrite.enums import Theme
 from appwrite.enums import Timezone
-from appwrite.enums import Output
+from appwrite.enums import BrowserPermission
+from appwrite.enums import ImageFormat
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -20,19 +21,19 @@ result = avatars.get_screenshot(
     viewport_width = 1920, # optional
     viewport_height = 1080, # optional
     scale = 2, # optional
-    theme = Theme.LIGHT, # optional
+    theme = Theme.DARK, # optional
     user_agent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15', # optional
     fullpage = True, # optional
     locale = 'en-US', # optional
-    timezone = Timezone.AFRICA_ABIDJAN, # optional
+    timezone = Timezone.AMERICA_NEW_YORK, # optional
     latitude = 37.7749, # optional
     longitude = -122.4194, # optional
     accuracy = 100, # optional
     touch = True, # optional
-    permissions = ["geolocation","notifications"], # optional
+    permissions = [BrowserPermission.GEOLOCATION, BrowserPermission.NOTIFICATIONS], # optional
     sleep = 3, # optional
     width = 800, # optional
     height = 600, # optional
     quality = 85, # optional
-    output = Output.JPG # optional
+    output = ImageFormat.JPEG # optional
 )

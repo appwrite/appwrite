@@ -16,5 +16,7 @@ mutation {
         sizeOriginal
         chunksTotal
         chunksUploaded
+        encryption
+        compression
     }
 }

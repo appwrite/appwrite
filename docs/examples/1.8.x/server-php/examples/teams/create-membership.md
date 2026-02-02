@@ -2,6 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Teams;
+use Appwrite\Enums\Roles;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -12,7 +13,7 @@ $teams = new Teams($client);
 
 $result = $teams->createMembership(
     teamId: '<TEAM_ID>',
-    roles: [],
+    roles: [Roles::ADMIN()],
     email: 'email@example.com', // optional
     userId: '<USER_ID>', // optional
     phone: '+12065550100', // optional

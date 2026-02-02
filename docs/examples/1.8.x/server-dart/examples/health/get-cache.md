@@ -7,4 +7,4 @@ Client client = Client()
 
 Health health = Health(client);
 
-HealthStatus result = await health.getCache();
+HealthStatusList result = await health.getCache();

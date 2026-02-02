@@ -12,7 +12,7 @@ Databases databases = Databases(client);
 Collection result = await databases.updateCollection(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // (optional)
     permissions: [Permission.read(Role.any())], // (optional)
     documentSecurity: false, // (optional)
     enabled: false, // (optional)

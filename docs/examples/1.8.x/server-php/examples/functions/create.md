@@ -3,6 +3,7 @@
 use Appwrite\Client;
 use Appwrite\Services\Functions;
 use Appwrite\Enums\Runtime;
+use Appwrite\Enums\Scopes;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -23,7 +24,7 @@ $result = $functions->create(
     logging: false, // optional
     entrypoint: '<ENTRYPOINT>', // optional
     commands: '<COMMANDS>', // optional
-    scopes: [], // optional
+    scopes: [Scopes::SESSIONSWRITE()], // optional
     installationId: '<INSTALLATION_ID>', // optional
     providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // optional
     providerBranch: '<PROVIDER_BRANCH>', // optional

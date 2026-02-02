@@ -8,4 +8,6 @@ client.set_session('') # The user session to authenticate with
 
 account = Account(client)
 
-result = account.create_jwt()
+result = account.create_jwt(
+    duration = 0 # optional
+)

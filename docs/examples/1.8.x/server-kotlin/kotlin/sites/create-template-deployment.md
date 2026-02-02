@@ -15,7 +15,7 @@ val response = sites.createTemplateDeployment(
     repository = "<REPOSITORY>",
     owner = "<OWNER>",
     rootDirectory = "<ROOT_DIRECTORY>",
-    type =  TemplateReferenceType.BRANCH,
+    type = TemplateReferenceType.BRANCH,
     reference = "<REFERENCE>",
     activate = false // optional
 )

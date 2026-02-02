@@ -1,5 +1,6 @@
 from appwrite.client import Client
 from appwrite.services.teams import Teams
+from appwrite.enums import Roles
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -10,7 +11,7 @@ teams = Teams(client)
 
 result = teams.create_membership(
     team_id = '<TEAM_ID>',
-    roles = [],
+    roles = [Roles.ADMIN],
     email = 'email@example.com', # optional
     user_id = '<USER_ID>', # optional
     phone = '+12065550100', # optional

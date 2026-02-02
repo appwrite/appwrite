@@ -14,6 +14,6 @@ val response = tablesDB.updateRelationshipColumn(
     databaseId = "<DATABASE_ID>",
     tableId = "<TABLE_ID>",
     key = "",
-    onDelete = "cascade", // optional
+    onDelete = RelationMutate.CASCADE, // optional
     newKey = "" // optional
 )
