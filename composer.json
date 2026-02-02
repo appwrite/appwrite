@@ -89,7 +89,7 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "dev-fix/enum-example-from-x-example",
+        "appwrite/sdk-generator": "*",
         "phpunit/phpunit": "9.*",
         "swoole/ide-helper": "6.*",
         "phpstan/phpstan": "1.8.*",

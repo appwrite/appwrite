@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3ffe6e9557a18c7f96b3cfc1faa55399",
+    "content-hash": "2aca1c8eeaa9fa338e389e3527cb6bd6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4902,16 +4902,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.15.1",
+            "version": "0.15.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "e551606385990ec7901d222017c4cfc2749a518c"
+                "reference": "5051c08d9f50ff4aa78c0eb2f7ca74b328509c81"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/e551606385990ec7901d222017c4cfc2749a518c",
-                "reference": "e551606385990ec7901d222017c4cfc2749a518c",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/5051c08d9f50ff4aa78c0eb2f7ca74b328509c81",
+                "reference": "5051c08d9f50ff4aa78c0eb2f7ca74b328509c81",
                 "shasum": ""
             },
             "require": {
@@ -4962,9 +4962,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.15.1"
+                "source": "https://github.com/utopia-php/queue/tree/0.15.2"
             },
-            "time": "2026-01-16T07:54:54+00:00"
+            "time": "2026-02-02T11:56:51+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5546,16 +5546,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "dev-fix/enum-example-from-x-example",
+            "version": "1.8.22",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b1a44e2bb35fb74ad0f5b5bb6ad945d98cd15315"
+                "reference": "2888fa2abd820dca24f3d967ba54d498999e3caf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b1a44e2bb35fb74ad0f5b5bb6ad945d98cd15315",
-                "reference": "b1a44e2bb35fb74ad0f5b5bb6ad945d98cd15315",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2888fa2abd820dca24f3d967ba54d498999e3caf",
+                "reference": "2888fa2abd820dca24f3d967ba54d498999e3caf",
                 "shasum": ""
             },
             "require": {
@@ -5591,9 +5591,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/fix/enum-example-from-x-example"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.22"
             },
-            "time": "2026-02-02T11:47:45+00:00"
+            "time": "2026-02-02T13:02:47+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -9052,9 +9052,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "appwrite/sdk-generator": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
