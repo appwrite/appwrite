@@ -65,7 +65,7 @@ class Interval extends Action
                 } catch (\Exception $e) {
                     Span::error($e);
                 } finally {
-                    Span::current()->finish();
+                    Span::current()?->finish();
                 }
             });
         }

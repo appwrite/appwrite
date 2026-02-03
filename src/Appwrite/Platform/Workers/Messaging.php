@@ -124,7 +124,7 @@ class Messaging extends Action
             Span::error($e);
             throw $e;
         } finally {
-            Span::current()->finish();
+            Span::current()?->finish();
         }
     }
 
