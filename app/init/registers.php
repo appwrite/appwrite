@@ -318,8 +318,11 @@ $register->set('pools', function () {
                             default => null
                         };
 
-                        $adapter->setMaxRetries(CACHE_RECONNECT_MAX_RETRIES);
-                        $adapter->setRetryDelay(CACHE_RECONNECT_RETRY_DELAY);
+                        if ($adapter !== null) {
+                            $adapter->setMaxRetries(CACHE_RECONNECT_MAX_RETRIES);
+                            $adapter->setRetryDelay(CACHE_RECONNECT_RETRY_DELAY);
+                        }
+
                         return $adapter;
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");

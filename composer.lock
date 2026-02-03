@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d94b1394c6a9681bd39e20c1f8e71d09",
+    "content-hash": "e2308896fe86b2bd967390d250b95bae",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3961,16 +3961,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-joins8",
+            "version": "5.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ff490a11574fc267b473168934711c2605343e61"
+                "reference": "221794bd7de027f9177cd325209e8162ca2520cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ff490a11574fc267b473168934711c2605343e61",
-                "reference": "ff490a11574fc267b473168934711c2605343e61",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/221794bd7de027f9177cd325209e8162ca2520cb",
+                "reference": "221794bd7de027f9177cd325209e8162ca2520cb",
                 "shasum": ""
             },
             "require": {
@@ -4013,9 +4013,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/joins8"
+                "source": "https://github.com/utopia-php/database/tree/5.0.0"
             },
-            "time": "2026-02-02T10:23:41+00:00"
+            "time": "2026-01-30T06:17:53+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4578,16 +4578,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "dev-joins",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "4030ff376192d369aa638871a9e2bb42f4dddf99"
+                "reference": "0d6e77748ca7d9302a88953751bd89d577610afd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/4030ff376192d369aa638871a9e2bb42f4dddf99",
-                "reference": "4030ff376192d369aa638871a9e2bb42f4dddf99",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0d6e77748ca7d9302a88953751bd89d577610afd",
+                "reference": "0d6e77748ca7d9302a88953751bd89d577610afd",
                 "shasum": ""
             },
             "require": {
@@ -4597,7 +4597,7 @@
                 "halaxa/json-machine": "^1.2",
                 "php": ">=8.1",
                 "utopia-php/console": "0.0.*",
-                "utopia-php/database": "dev-joins8 as 5.0.0",
+                "utopia-php/database": "5.*",
                 "utopia-php/dsn": "0.2.*",
                 "utopia-php/storage": "0.18.*"
             },
@@ -4628,9 +4628,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/joins"
+                "source": "https://github.com/utopia-php/migration/tree/1.5.0"
             },
-            "time": "2026-02-02T11:41:20+00:00"
+            "time": "2026-02-02T10:42:04+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -9050,25 +9050,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-joins8",
-            "alias": "5.0.0",
-            "alias_normalized": "5.0.0.0"
-        },
-        {
-            "package": "utopia-php/migration",
-            "version": "dev-joins",
-            "alias": "1.5.0",
-            "alias_normalized": "1.5.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20,
-        "utopia-php/migration": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
