@@ -30,7 +30,7 @@ trait RealtimeBase
          *                        AND logic within the group; OR logic across multiple groups (if we ever add them).
          *
          * For now all E2E tests subscribe to a single channel, so we map queries to $channels[0].
-         * 
+         *
          * Slot-based format: channel[slot][]=query1&channel[slot][]=query2
          * We need to manually build the query string to ensure the [] format is used.
          */

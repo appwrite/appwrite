@@ -6,7 +6,6 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use Appwrite\Utopia\Database\Documents\User;
-use Appwrite\Utopia\Database\RuntimeQuery;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Coroutine;
@@ -433,7 +432,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
             ];
 
             $subscribers = $realtime->getSubscribers($event); // [connectionId => [subId => queries]]
-            
+
             // For test events, send to all connections with their matched subscription queries
             foreach ($subscribers as $connectionId => $matchedSubscriptions) {
                 $data = $event['data'];
@@ -484,28 +483,45 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         $roles = $user->getRoles($database->getAuthorization());
                         $channels = $realtime->connections[$connection]['channels'] ?? [];
-                        $subscriptionMapping = $realtime->connections[$connection]['subscriptions'] ?? [];
                         $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                        $oldSubscriptionMapping = $realtime->connections[$connection]['subscriptions'] ?? [];
+
+                        // Get subscription metadata from subscriptions tree before unsubscribing
+                        $subscriptionMetadata = $realtime->getSubscriptionIds($connection);
 
                         $realtime->unsubscribe($connection);
 
-                        // Re-subscribe with the same subscription structure
-                        // Note: We can't fully reconstruct the original subscription indices from stored data,
-                        // so we'll create new subscriptions. In practice, permissions changes should preserve
-                        // the subscription structure, but this is a limitation of the current design.
-                        if (!empty($channels)) {
-                            // Create a single subscription with select("*") for all channels
-                            $subscriptionId = ID::unique();
-                            $realtime->subscribe(
-                                $projectId,
-                                $connection,
-                                $subscriptionId,
-                                $roles,
-                                $channels,
-                                [Query::select(['*'])]
-                            );
-                            $realtime->connections[$connection]['subscriptions'] = [0 => $subscriptionId];
+                        // Re-subscribe with the original subscription structure and queries
+                        $newSubscriptionMapping = [];
+                        if (!empty($subscriptionMetadata)) {
+                            // Restore each subscription with its original channels and queries
+                            foreach ($subscriptionMetadata as $oldSubId => $metadata) {
+                                $subscriptionId = ID::unique();
+
+                                // Parse query strings back to Query objects for subscribe
+                                $queries = Query::parseQueries($metadata['queries']);
+
+                                $realtime->subscribe(
+                                    $projectId,
+                                    $connection,
+                                    $subscriptionId,
+                                    $roles,
+                                    $metadata['channels'],
+                                    $queries
+                                );
+
+                                // Find the index of the old subscription ID in the mapping
+                                $oldIndex = array_search($oldSubId, $oldSubscriptionMapping);
+                                if ($oldIndex !== false) {
+                                    $newSubscriptionMapping[$oldIndex] = $subscriptionId;
+                                } else {
+                                    // If not found in mapping, use a new index
+                                    $newSubscriptionMapping[] = $subscriptionId;
+                                }
+                            }
                         }
+
+                        $realtime->connections[$connection]['subscriptions'] = $newSubscriptionMapping;
 
                         // Restore authorization after subscribe
                         if ($authorization !== null) {
@@ -633,11 +649,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         // Reconstruct subscriptions from query params using helper method
         $channelNames = array_keys($channels);
-        
+
         try {
             $subscriptionsByIndex = Realtime::constructSubscriptions(
                 $channelNames,
-                fn($channel) => $request->getQuery($channel, null)
+                fn ($channel) => $request->getQuery($channel, null)
             );
         } catch (QueryException $e) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());

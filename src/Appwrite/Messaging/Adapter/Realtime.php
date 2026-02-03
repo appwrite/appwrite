@@ -94,11 +94,75 @@ class Realtime extends MessagingAdapter
         }
 
         // Update connection info
-        $this->connections[$identifier] = [
-            'projectId' => $projectId,
-            'roles' => $roles,
-            'channels' => $channels
-        ];
+        if (!isset($this->connections[$identifier])) {
+            $this->connections[$identifier] = [
+                'projectId' => $projectId,
+                'roles' => $roles,
+                'channels' => $channels,
+                'subscriptions' => []
+            ];
+        } else {
+            // Update existing connection info
+            $this->connections[$identifier]['projectId'] = $projectId;
+            $this->connections[$identifier]['roles'] = $roles;
+            $this->connections[$identifier]['channels'] = $channels;
+            // Initialize subscriptions array if not exists
+            if (!isset($this->connections[$identifier]['subscriptions'])) {
+                $this->connections[$identifier]['subscriptions'] = [];
+            }
+        }
+
+        // Add subscription ID to connections array
+        if (!in_array($subscriptionId, $this->connections[$identifier]['subscriptions'], true)) {
+            $this->connections[$identifier]['subscriptions'][] = $subscriptionId;
+        }
+    }
+
+    /**
+     * Get subscription metadata for a connection.
+     * Retrieves subscription data including channels and queries directly from the subscriptions tree.
+     *
+     * @param mixed $connection Connection ID
+     * @return array Array of [subscriptionId => ['channels' => string[], 'queries' => string[]]]
+     */
+    public function getSubscriptionIds(mixed $connection): array
+    {
+        $projectId = $this->connections[$connection]['projectId'] ?? null;
+        $roles = $this->connections[$connection]['roles'] ?? [];
+        $channels = $this->connections[$connection]['channels'] ?? [];
+
+        if (!$projectId || empty($roles) || empty($channels)) {
+            return [];
+        }
+
+        $subscriptions = [];
+
+        // Extract subscription data from subscriptions tree
+        foreach ($roles as $role) {
+            if (!isset($this->subscriptions[$projectId][$role])) {
+                continue;
+            }
+
+            foreach ($channels as $channel) {
+                if (!isset($this->subscriptions[$projectId][$role][$channel][$connection])) {
+                    continue;
+                }
+
+                foreach ($this->subscriptions[$projectId][$role][$channel][$connection] as $subId => $queryStrings) {
+                    if (!isset($subscriptions[$subId])) {
+                        $subscriptions[$subId] = [
+                            'channels' => [],
+                            'queries' => $queryStrings
+                        ];
+                    }
+                    if (!in_array($channel, $subscriptions[$subId]['channels'])) {
+                        $subscriptions[$subId]['channels'][] = $channel;
+                    }
+                }
+            }
+        }
+
+        return $subscriptions;
     }
 
     /**
@@ -131,7 +195,14 @@ class Realtime extends MessagingAdapter
             unset($this->subscriptions[$projectId]);
         }
 
-        unset($this->connections[$connection]);
+        // Remove subscriptions array from connection before unsetting
+        if (isset($this->connections[$connection]['subscriptions'])) {
+            unset($this->connections[$connection]['subscriptions']);
+        }
+
+        if (isset($this->connections[$connection])) {
+            unset($this->connections[$connection]);
+        }
     }
 
     /**
@@ -230,9 +301,7 @@ class Realtime extends MessagingAdapter
                          */
                         $payload = $event['data']['payload'] ?? [];
                         foreach ($this->subscriptions[$event['project']][$role][$channel] as $id => $subscriptions) {
-                            if (!isset($receivers[$id])) {
-                                $receivers[$id] = [];
-                            }
+                            $matchedSubscriptions = [];
 
                             // Process each subscription (OR logic across subscriptions)
                             foreach ($subscriptions as $subId => $queryStrings) {
@@ -246,10 +315,16 @@ class Realtime extends MessagingAdapter
                                 // Check if this subscription matches (AND logic within subscription)
                                 if (!empty(RuntimeQuery::filter($parsedQueries, $payload))) {
                                     // This subscription matched - add subscription ID to matched subscriptions
-                                    if (!isset($receivers[$id][$subId])) {
-                                        $receivers[$id][$subId] = $queryStrings;
-                                    }
+                                    $matchedSubscriptions[$subId] = $queryStrings;
                                 }
+                            }
+
+                            // Only add connection to receivers if at least one subscription matched
+                            if (!empty($matchedSubscriptions)) {
+                                if (!isset($receivers[$id])) {
+                                    $receivers[$id] = [];
+                                }
+                                $receivers[$id] = array_merge($receivers[$id], $matchedSubscriptions);
                             }
                         }
                         break;
@@ -291,14 +366,14 @@ class Realtime extends MessagingAdapter
 
     /**
      * Constructs subscriptions from query parameters.
-     * 
+     *
      * Reconstructs subscription structure from query params where subscription indices can span multiple channels.
      * Format: {channel}[subscriptionIndex][]=query1&{channel}[subscriptionIndex][]=query2
-     * 
+     *
      * Example:
      * - tests[0][]=select(*) → subscription 0: channels=["tests"]
      * - tests[1][]=equal(...) & prod[1][]=equal(...) → subscription 1: channels=["tests", "prod"]
-     * 
+     *
      * @param array $channelNames Array of channel names
      * @param callable $getQueryParam Callable that takes a channel name and returns its query param value (null if not present)
      * @return array Array indexed by subscription index: [index => ['channels' => string[], 'queries' => Query[]]]
@@ -349,7 +424,7 @@ class Realtime extends MessagingAdapter
                 if (empty($subscriptionsByIndex[$subscriptionIndex]['queries'])) {
                     // Ensure $subscription is an array (handle both array and string inputs)
                     $queriesToParse = is_array($subscription) ? $subscription : [$subscription];
-                    
+
                     // Parse and validate the queries
                     $parsedQueries = self::convertQueries($queriesToParse);
                     // Store Query objects
