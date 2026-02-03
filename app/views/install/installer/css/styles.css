@@ -88,7 +88,7 @@
     --font-size-s: 14px;
     --font-size-m: 16px;
     --font-size-l: 20px;
-    --label-line-height: 19.6px;
+    --label-line-height: 140%;
 
     /* Motion */
     --duration-fast: 150ms;
@@ -102,7 +102,7 @@
     --ease-out: ease-out;
 
     /* Spacing */
-    --base-0: 0px;
+    --base-0: 0;
     --base-2: 2px;
     --base-4: 4px;
     --base-6: 6px;
@@ -159,6 +159,9 @@
     --step-min-height: auto;
     --divider-gap-top: var(--gap-xl);
 
+    /* Animation vars */
+    --spinner-rotation: 0deg;
+
     /* Legacy aliases */
     --bgColor-neutral-default: var(--bgcolor-neutral-default);
     --bgColor-neutral-primary: var(--bgcolor-neutral-primary);
@@ -214,9 +217,9 @@
     background: var(--bgcolor-neutral-primary);
     color: var(--fgcolor-neutral-secondary);
     box-shadow:
-        0px 56px 32px 0px rgba(0, 0, 0, 0.02),
-        0px 6px 14px 0px rgba(0, 0, 0, 0.04),
-        0px 24px 25px 0px rgba(0, 0, 0, 0.03);
+        0 56px 32px 0 rgba(0, 0, 0, 0.02),
+        0 6px 14px 0 rgba(0, 0, 0, 0.04),
+        0 24px 25px 0 rgba(0, 0, 0, 0.03);
     transform: scale(0.96);
     opacity: 0;
     transition:
@@ -422,8 +425,8 @@
     border: var(--border-width-s) solid var(--border-neutral);
     background: var(--bgcolor-neutral-primary);
     box-shadow:
-        0px 2px 12px 0px rgba(0, 0, 0, 0.02),
-        0px 6px 8px 0px rgba(0, 0, 0, 0.02);
+        0 2px 12px 0 rgba(0, 0, 0, 0.02),
+        0 6px 8px 0 rgba(0, 0, 0, 0.02);
     pointer-events: auto;
     opacity: 1;
     transform: translate3d(0, 0, 0);
@@ -545,9 +548,9 @@
 
 body {
     margin: 0;
-    font-family: var(--font-family-sansserif), var(--sans-fallbacks);
     color: var(--fgcolor-neutral-primary);
     background: var(--bgcolor-neutral-default);
+    font-family: var(--font-family-sansserif), var(--sans-fallbacks), sans-serif;
 }
 
 .installer-page {
@@ -601,8 +604,8 @@ body {
     position: absolute;
     left: 0;
     top: 0;
-    --blob-x: 0px;
-    --blob-y: 0px;
+    --blob-x: 0;
+    --blob-y: 0;
     transform: translate(var(--blob-x), var(--blob-y)) scale(1);
     transform-origin: center;
     animation: none;
@@ -840,7 +843,7 @@ body {
     opacity: 1;
     transform: translateY(0);
     transition: opacity 0.2s ease,
-        transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
     will-change: transform, opacity;
 }
 
@@ -851,8 +854,8 @@ body {
     height: 44px;
     padding: 0 var(--space-6);
     transition: height 0.3s cubic-bezier(0.32, 0.72, 0, 1),
-        opacity 0.2s ease,
-        transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    opacity 0.2s ease,
+    transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .install-row-label {
@@ -890,8 +893,8 @@ body {
     opacity: 0;
     pointer-events: none;
     transition: background-color var(--duration-short) var(--ease-standard),
-        color var(--duration-short) var(--ease-standard),
-        transform var(--duration-short) var(--ease-standard);
+    color var(--duration-short) var(--ease-standard),
+    transform var(--duration-short) var(--ease-standard);
 }
 
 .install-row-toggle svg {
@@ -909,7 +912,7 @@ body {
     padding: 0;
     border: none;
     transition: grid-template-rows var(--duration-medium) var(--ease-standard),
-        opacity var(--duration-medium) var(--ease-standard);
+    opacity var(--duration-medium) var(--ease-standard);
 }
 
 .install-row:first-child {
@@ -975,7 +978,7 @@ body {
 
 .install-icon-spinner svg {
     animation: none;
-    transform: rotate(var(--spinner-rotation, 0deg));
+    transform: rotate(var(--spinner-rotation));
 }
 
 .install-row[data-status='completed'] .install-icon-spinner {
@@ -1049,7 +1052,7 @@ body {
     background: var(--bgcolor-neutral-default);
     border: none;
     border-radius: 0;
-    font-family: var(--font-family-code), var(--mono-fallbacks);
+    font-family: var(--font-family-code), var(--mono-fallbacks), monospace;
     font-size: var(--font-size-xs);
     line-height: 140%;
     letter-spacing: 0;
@@ -1096,7 +1099,7 @@ body {
 }
 
 .typography-title-s {
-    font-family: var(--font-family-brand), var(--sans-fallbacks);
+    font-family: var(--font-family-brand), var(--sans-fallbacks), sans-serif;
     font-size: var(--font-size-l);
     font-weight: 400;
     line-height: 130%;
@@ -1110,7 +1113,7 @@ body {
 }
 
 .typography-text-m-400 {
-    font-family: var(--font-family-sansserif), var(--sans-fallbacks);
+    font-family: var(--font-family-brand), var(--sans-fallbacks), sans-serif;
     font-size: var(--font-size-s);
     font-weight: 400;
     line-height: 140%;
@@ -1118,7 +1121,7 @@ body {
 }
 
 .typography-text-m-500 {
-    font-family: var(--font-family-sansserif), var(--sans-fallbacks);
+    font-family: var(--font-family-brand), var(--sans-fallbacks), sans-serif;
     font-size: var(--font-size-s);
     font-weight: 500;
     line-height: 140%;
@@ -1126,7 +1129,7 @@ body {
 }
 
 .typography-text-xs-400 {
-    font-family: var(--font-family-sansserif), var(--sans-fallbacks);
+    font-family: var(--font-family-sansserif), var(--sans-fallbacks), sans-serif;
     font-size: var(--font-size-xs);
     font-weight: 400;
     line-height: 130%;
@@ -1134,7 +1137,7 @@ body {
 }
 
 .typography-text-xs-500 {
-    font-family: var(--font-family-sansserif), var(--sans-fallbacks);
+    font-family: var(--font-family-sansserif), var(--sans-fallbacks), sans-serif;
     font-size: var(--font-size-xs);
     font-weight: 500;
     line-height: 130%;
@@ -1142,7 +1145,7 @@ body {
 }
 
 .typography-caption-400 {
-    font-family: var(--font-family-sansserif), var(--sans-fallbacks);
+    font-family: var(--font-family-sansserif), var(--sans-fallbacks), sans-serif;
     font-size: var(--font-size-xs);
     font-weight: 400;
     line-height: 140%;
@@ -1150,7 +1153,7 @@ body {
 }
 
 .typography-caption-500 {
-    font-family: var(--font-family-sansserif), var(--sans-fallbacks);
+    font-family: var(--font-family-sansserif), var(--sans-fallbacks), sans-serif;
     font-size: var(--font-size-xs);
     font-weight: 500;
     line-height: 140%;
