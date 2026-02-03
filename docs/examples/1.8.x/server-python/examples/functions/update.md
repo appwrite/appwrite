@@ -1,6 +1,7 @@
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 from appwrite.enums import Runtime
+from appwrite.enums import Scopes
 
 client = Client()
 client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -21,7 +22,7 @@ result = functions.update(
     logging = False, # optional
     entrypoint = '<ENTRYPOINT>', # optional
     commands = '<COMMANDS>', # optional
-    scopes = [], # optional
+    scopes = [Scopes.SESSIONS_WRITE], # optional
     installation_id = '<INSTALLATION_ID>', # optional
     provider_repository_id = '<PROVIDER_REPOSITORY_ID>', # optional
     provider_branch = '<PROVIDER_BRANCH>', # optional

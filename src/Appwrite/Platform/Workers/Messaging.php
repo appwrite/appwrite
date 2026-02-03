@@ -129,6 +129,11 @@ class Messaging extends Action
         $userIds = $message->getAttribute('users', []);
         $providerType = $message->getAttribute('providerType');
 
+        Console::log(json_encode([
+            'project' => $project->getId(),
+            'type' => $providerType,
+        ]));
+
         /**
          * @var array<Document> $allTargets
          */
@@ -400,7 +405,10 @@ class Messaging extends Action
             throw new \Exception('Project not set in payload');
         }
 
-        Console::log('Processing project: ' . $project->getId());
+        Console::log(json_encode([
+            'project' => $project->getId(),
+            'type' => 'internal-sms'
+        ]));
         $denyList = System::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
         if (\in_array($project->getId(), $denyList)) {

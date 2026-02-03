@@ -10,5 +10,5 @@ Sites sites = Sites(client);
 Uint8List result = await sites.getDeploymentDownload(
     siteId: '<SITE_ID>',
     deploymentId: '<DEPLOYMENT_ID>',
-    type: DeploymentDownloadType.source, // (optional)
+    type: enums.DeploymentDownloadType.source, // (optional)
 );

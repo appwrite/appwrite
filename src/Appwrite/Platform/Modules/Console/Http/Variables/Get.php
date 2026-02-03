@@ -46,10 +46,11 @@ class Get extends Action
                 contentType: ContentType::JSON
             ))
             ->inject('response')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response)
+    public function action(Response $response, array $platform)
     {
         $validator = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
         $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();
@@ -82,8 +83,8 @@ class Get extends Action
             '_APP_VCS_ENABLED' => $isVcsEnabled,
             '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
             '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled,
-            '_APP_DOMAIN_SITES' => System::getEnv('_APP_DOMAIN_SITES'),
-            '_APP_DOMAIN_FUNCTIONS' => System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+            '_APP_DOMAIN_SITES' => $platform['sitesDomain'],
+            '_APP_DOMAIN_FUNCTIONS' => $platform['functionsDomain'],
             '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),
             '_APP_DOMAINS_NAMESERVERS' => System::getEnv('_APP_DOMAINS_NAMESERVERS'),
         ]);

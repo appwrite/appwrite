@@ -397,51 +397,51 @@ class Swagger2 extends Format
                     : '';
 
                 switch ($base) {
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Base':
+                    case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
                         $class = $base;
                         break;
                 }
 
-                if ($class === 'Utopia\Validator\AnyOf') {
+                if ($class === \Utopia\Validator\AnyOf::class) {
                     $validator = $param['validator']->getValidators()[0];
                     $class = \get_class($validator);
                 }
 
                 $array = false;
-                if ($class === 'Utopia\Validator\ArrayList') {
+                if ($class === \Utopia\Validator\ArrayList::class) {
                     $array = true;
                     $subclass = \get_class($validator->getValidator());
                     switch ($subclass) {
-                        case 'Appwrite\Utopia\Database\Validator\Operation':
-                        case 'Utopia\Validator\WhiteList':
+                        case \Appwrite\Utopia\Database\Validator\Operation::class:
+                        case \Utopia\Validator\WhiteList::class:
                             $class = $subclass;
                             break;
                     }
                 }
 
                 switch ($class) {
-                    case 'Utopia\Validator\Text':
-                    case 'Utopia\Database\Validator\UID':
+                    case \Utopia\Validator\Text::class:
+                    case \Utopia\Database\Validator\UID::class:
                         $node['type'] = $validator->getType();
                         $node['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
-                    case 'Utopia\Validator\Boolean':
+                    case \Utopia\Validator\Boolean::class:
                         $node['type'] = $validator->getType();
                         $node['x-example'] = ($param['example'] ?? '') ?: false;
                         break;
-                    case 'Appwrite\Utopia\Database\Validator\CustomId':
+                    case \Appwrite\Utopia\Database\Validator\CustomId::class:
                         if ($sdk->getType() === MethodType::UPLOAD) {
                             $node['x-upload-id'] = true;
                         }
                         $node['type'] = $validator->getType();
                         $node['x-example'] = ($param['example'] ?? '') ?: '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
-                    case 'Utopia\Database\Validator\DatetimeValidator':
+                    case \Utopia\Database\Validator\DatetimeValidator::class:
                         $node['type'] = $validator->getType();
                         $node['format'] = 'datetime';
                         $node['x-example'] = ($param['example'] ?? '') ?: Model::TYPE_DATETIME_EXAMPLE;
                         break;
-                    case 'Utopia\Database\Validator\Spatial':
+                    case \Utopia\Database\Validator\Spatial::class:
                         /** @var Spatial $validator */
                         $node['type'] = 'array';
                         $node['schema']['items'] = [
@@ -455,19 +455,19 @@ class Swagger2 extends Format
                             Database::VAR_POLYGON => '[[[1, 2], [3, 4], [5, 6], [1, 2]]]',
                         };
                         break;
-                    case 'Appwrite\Network\Validator\Email':
+                    case \Appwrite\Network\Validator\Email::class:
                         $node['type'] = $validator->getType();
                         $node['format'] = 'email';
                         $node['x-example'] = ($param['example'] ?? '') ?: 'email@example.com';
                         break;
-                    case 'Utopia\Validator\Host':
-                    case 'Utopia\Validator\URL':
-                    case 'Appwrite\Network\Validator\Redirect':
+                    case \Utopia\Validator\Host::class:
+                    case \Utopia\Validator\URL::class:
+                    case \Appwrite\Network\Validator\Redirect::class:
                         $node['type'] = $validator->getType();
                         $node['format'] = 'url';
                         $node['x-example'] = ($param['example'] ?? '') ?: 'https://example.com';
                         break;
-                    case 'Utopia\Validator\ArrayList':
+                    case \Utopia\Validator\ArrayList::class:
                         /** @var ArrayList $validator */
                         $node['type'] = 'array';
                         $node['collectionFormat'] = 'multi';
@@ -478,34 +478,34 @@ class Swagger2 extends Format
                             $node['x-example'] = $param['example'];
                         }
                         break;
-                    case 'Utopia\Validator\JSON':
-                    case 'Utopia\Validator\Mock':
-                    case 'Utopia\Validator\Assoc':
+                    case \Utopia\Validator\JSON::class:
+                    case \Utopia\Validator\Mock::class:
+                    case \Utopia\Validator\Assoc::class:
                         $node['type'] = 'object';
                         $node['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['x-example'] = ($param['example'] ?? '') ?: '{}';
                         break;
-                    case 'Utopia\Storage\Validator\File':
+                    case \Utopia\Storage\Validator\File::class:
                         $consumes = ['multipart/form-data'];
                         $node['type'] = 'file';
                         break;
-                    case 'Appwrite\Functions\Validator\Payload':
+                    case \Appwrite\Functions\Validator\Payload::class:
                         $consumes = ['multipart/form-data'];
                         $node['type'] = 'payload';
                         break;
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Base':
-                    case 'Utopia\Database\Validator\Queries':
-                    case 'Utopia\Database\Validator\Queries\Document':
-                    case 'Utopia\Database\Validator\Queries\Documents':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Columns':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Tables':
+                    case \Appwrite\Utopia\Database\Validator\Queries\Base::class:
+                    case \Utopia\Database\Validator\Queries::class:
+                    case \Utopia\Database\Validator\Queries\Document::class:
+                    case \Utopia\Database\Validator\Queries\Documents::class:
+                    case \Appwrite\Utopia\Database\Validator\Queries\Columns::class:
+                    case \Appwrite\Utopia\Database\Validator\Queries\Tables::class:
                         $node['type'] = 'array';
                         $node['collectionFormat'] = 'multi';
                         $node['items'] = [
                             'type' => 'string',
                         ];
                         break;
-                    case 'Utopia\Database\Validator\Permissions':
+                    case \Utopia\Database\Validator\Permissions::class:
                         $node['type'] = $validator->getType();
                         $node['collectionFormat'] = 'multi';
                         $node['items'] = [
@@ -513,7 +513,7 @@ class Swagger2 extends Format
                         ];
                         $node['x-example'] = ($param['example'] ?? '') ?: '["' . Permission::read(Role::any()) . '"]';
                         break;
-                    case 'Utopia\Database\Validator\Roles':
+                    case \Utopia\Database\Validator\Roles::class:
                         $node['type'] = $validator->getType();
                         $node['collectionFormat'] = 'multi';
                         $node['items'] = [
@@ -521,44 +521,44 @@ class Swagger2 extends Format
                         ];
                         $node['x-example'] = ($param['example'] ?? '') ?: '["' . Role::any()->toString() . '"]';
                         break;
-                    case 'Appwrite\Auth\Validator\Password':
+                    case \Appwrite\Auth\Validator\Password::class:
                         $node['type'] = $validator->getType();
                         $node['format'] = 'password';
                         $node['x-example'] = ($param['example'] ?? '') ?: 'password';
                         break;
-                    case 'Appwrite\Auth\Validator\Phone':
+                    case \Appwrite\Auth\Validator\Phone::class:
                         $node['type'] = $validator->getType();
                         $node['format'] = 'phone';
                         $node['x-example'] = ($param['example'] ?? '') ?: '+12065550100';
                         break;
-                    case 'Utopia\Validator\Range':
+                    case \Utopia\Validator\Range::class:
                         /** @var Range $validator */
                         $node['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
                         $node['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['x-example'] = ($param['example'] ?? '') ?: $validator->getMin();
                         break;
-                    case 'Utopia\Validator\Integer':
+                    case \Utopia\Validator\Integer::class:
                         $node['type'] = $validator->getType();
                         $node['format'] = $validator->getFormat();
                         if (!empty($param['example'])) {
                             $node['x-example'] = $param['example'];
                         }
                         break;
-                    case 'Utopia\Validator\Numeric':
-                    case 'Utopia\Validator\FloatValidator':
+                    case \Utopia\Validator\Numeric::class:
+                    case \Utopia\Validator\FloatValidator::class:
                         $node['type'] = 'number';
                         $node['format'] = 'float';
                         if (!empty($param['example'])) {
                             $node['x-example'] = $param['example'];
                         }
                         break;
-                    case 'Utopia\Validator\Length':
+                    case \Utopia\Validator\Length::class:
                         $node['type'] = $validator->getType();
                         if (!empty($param['example'])) {
                             $node['x-example'] = $param['example'];
                         }
                         break;
-                    case 'Utopia\Validator\WhiteList':
+                    case \Utopia\Validator\WhiteList::class:
                         if ($array) {
                             $validator = $validator->getValidator();
 
@@ -665,11 +665,11 @@ class Swagger2 extends Format
                             }
                         }
                         break;
-                    case 'Appwrite\Utopia\Database\Validator\CompoundUID':
+                    case \Appwrite\Utopia\Database\Validator\CompoundUID::class:
                         $node['type'] = $validator->getType();
                         $node['x-example'] = ($param['example'] ?? '') ?: '<ID1:ID2>';
                         break;
-                    case 'Appwrite\Utopia\Database\Validator\Operation':
+                    case \Appwrite\Utopia\Database\Validator\Operation::class:
                         if ($array) {
                             $validator = $validator->getValidator();
                         }

@@ -12,7 +12,7 @@ TablesDB tablesDB = new TablesDB(client);
 Table result = await tablesDB.UpdateTable(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
-    name: "<NAME>",
+    name: "<NAME>", // optional
     permissions: new List<string> { Permission.Read(Role.Any()) }, // optional
     rowSecurity: false, // optional
     enabled: false // optional

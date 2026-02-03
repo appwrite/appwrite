@@ -20,7 +20,7 @@ let function = try await functions.create(
     logging: false, // optional
     entrypoint: "<ENTRYPOINT>", // optional
     commands: "<COMMANDS>", // optional
-    scopes: [], // optional
+    scopes: [.sessionsWrite], // optional
     installationId: "<INSTALLATION_ID>", // optional
     providerRepositoryId: "<PROVIDER_REPOSITORY_ID>", // optional
     providerBranch: "<PROVIDER_BRANCH>", // optional
