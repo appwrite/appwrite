@@ -196,10 +196,9 @@ class Messaging extends Action
             $countryCodes = [];
             foreach ($allTargets as $target) {
                 $identifier = $target->getAttribute('identifier', '');
-                if (\str_starts_with($identifier, '+')) {
-                    if (\preg_match('/^\+(\d{1,3})/', $identifier, $matches)) {
-                        $countryCodes[$matches[1]] = ($countryCodes[$matches[1]] ?? 0) + 1;
-                    }
+                $countryCode = $this->extractCountryCode($identifier);
+                if ($countryCode !== null) {
+                    $countryCodes[$countryCode] = ($countryCodes[$countryCode] ?? 0) + 1;
                 }
             }
             if (!empty($countryCodes)) {
@@ -437,11 +436,9 @@ class Messaging extends Action
         // Extract country codes from phone numbers
         $countryCodes = [];
         foreach ($recipients as $recipient) {
-            if (\str_starts_with($recipient, '+')) {
-                // Extract country code (1-3 digits after +)
-                if (\preg_match('/^\+(\d{1,3})/', $recipient, $matches)) {
-                    $countryCodes[$matches[1]] = ($countryCodes[$matches[1]] ?? 0) + 1;
-                }
+            $countryCode = $this->extractCountryCode($recipient);
+            if ($countryCode !== null) {
+                $countryCodes[$countryCode] = ($countryCodes[$countryCode] ?? 0) + 1;
             }
         }
         if (!empty($countryCodes)) {
@@ -880,5 +877,35 @@ class Messaging extends Action
         ]);
 
         return $provider;
+    }
+
+    /**
+     * Extract country calling code from a phone number using known country codes.
+     */
+    private function extractCountryCode(string $phoneNumber): ?string
+    {
+        if (!\str_starts_with($phoneNumber, '+')) {
+            return null;
+        }
+
+        $number = \substr($phoneNumber, 1);
+
+        if (empty($number)) {
+            return null;
+        }
+
+        $phoneCodes = Config::getParam('locale-phones', []);
+        $codes = \array_unique(\array_values($phoneCodes));
+
+        // Sort by length descending to match longest codes first (e.g., 1868 before 1)
+        \usort($codes, fn ($a, $b) => \strlen($b) - \strlen($a));
+
+        foreach ($codes as $code) {
+            if (\str_starts_with($number, $code)) {
+                return $code;
+            }
+        }
+
+        return null;
     }
 }
