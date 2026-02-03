@@ -519,7 +519,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 if (App::isDevelopment() && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
                     Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode(array_keys($receivers)));
-                    Console::log("[Debug][Worker {$workerId}] Event Query: " . json_encode($receivers));
+                    Console::log("[Debug][Worker {$workerId}] Event Query: " . json_encode(array_values($receivers)));
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
                 }
 
@@ -633,6 +633,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
 
         // Reconstruct subscriptions from query params using helper method
         $channelNames = array_keys($channels);
+        
         try {
             $subscriptionsByIndex = Realtime::constructSubscriptions(
                 $channelNames,

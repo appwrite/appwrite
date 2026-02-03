@@ -230,7 +230,9 @@ class Realtime extends MessagingAdapter
                          */
                         $payload = $event['data']['payload'] ?? [];
                         foreach ($this->subscriptions[$event['project']][$role][$channel] as $id => $subscriptions) {
-                            $matchedSubscriptions = [];
+                            if (!isset($receivers[$id])) {
+                                $receivers[$id] = [];
+                            }
 
                             // Process each subscription (OR logic across subscriptions)
                             foreach ($subscriptions as $subId => $queryStrings) {
@@ -244,16 +246,10 @@ class Realtime extends MessagingAdapter
                                 // Check if this subscription matches (AND logic within subscription)
                                 if (!empty(RuntimeQuery::filter($parsedQueries, $payload))) {
                                     // This subscription matched - add subscription ID to matched subscriptions
-                                    $matchedSubscriptions[$subId] = $queryStrings;
+                                    if (!isset($receivers[$id][$subId])) {
+                                        $receivers[$id][$subId] = $queryStrings;
+                                    }
                                 }
-                            }
-
-                            // Only add connection to receivers if at least one subscription matched
-                            if (!empty($matchedSubscriptions)) {
-                                if (!isset($receivers[$id])) {
-                                    $receivers[$id] = [];
-                                }
-                                $receivers[$id] = array_merge($receivers[$id], $matchedSubscriptions);
                             }
                         }
                         break;

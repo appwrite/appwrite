@@ -1589,7 +1589,7 @@ class RealtimeCustomClientQueryTest extends Scope
             Query::equal('category', ['gold']),
         ])->toString();
 
-        // Subscribe with no 'queries' -> should receive all events, queryKeys = []
+        // Subscribe with no 'queries' -> should receive all events (has select("*") subscription)
         $clientAll = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
@@ -1641,24 +1641,23 @@ class RealtimeCustomClientQueryTest extends Scope
             ],
         ]);
 
-        // clientAll: should receive event, queryKeys = []
+        // clientAll: should receive event, subscriptions should not be empty (has select("*") subscription that matches)
         $eventAll = json_decode($clientAll->receive(), true);
         $this->assertEquals('event', $eventAll['type']);
         $this->assertEquals($docActiveGoldId, $eventAll['data']['payload']['$id']);
-        $this->assertArrayHasKey('queries', $eventAll['data']);
-        $this->assertIsArray($eventAll['data']['queries']);
+        $this->assertArrayHasKey('subscriptions', $eventAll['data']);
+        $this->assertIsArray($eventAll['data']['subscriptions']);
+        // clientAll has select("*") subscription that matches all events, so subscriptions should not be empty
+        $this->assertNotEmpty($eventAll['data']['subscriptions']);
 
-        // clientQ1: should receive event, queryKeys contains queryStatusActive
+        // clientQ1: should receive event, subscriptions should not be empty (query matched)
         $eventQ1 = json_decode($clientQ1->receive(), true);
         $this->assertEquals('event', $eventQ1['type']);
         $this->assertEquals($docActiveGoldId, $eventQ1['data']['payload']['$id']);
-        $flatQueriesQ1 = [];
-        foreach ($eventQ1['data']['queries'] as $group) {
-            foreach ($group as $q) {
-                $flatQueriesQ1[] = $q;
-            }
-        }
-        $this->assertContains($queryStatusActive, $flatQueriesQ1);
+        $this->assertArrayHasKey('subscriptions', $eventQ1['data']);
+        $this->assertIsArray($eventQ1['data']['subscriptions']);
+        // clientQ1 has a query that matches, so subscriptions should not be empty
+        $this->assertNotEmpty($eventQ1['data']['subscriptions']);
 
         // clientQ2: should NOT receive event (status is active, not pending)
         try {
@@ -1668,17 +1667,14 @@ class RealtimeCustomClientQueryTest extends Scope
             $this->assertTrue(true);
         }
 
-        // clientComplex: should receive event, queryKeys contains queryComplex
+        // clientComplex: should receive event, subscriptions should not be empty (query matched)
         $eventComplex = json_decode($clientComplex->receive(), true);
         $this->assertEquals('event', $eventComplex['type']);
         $this->assertEquals($docActiveGoldId, $eventComplex['data']['payload']['$id']);
-        $flatQueriesComplex = [];
-        foreach ($eventComplex['data']['queries'] as $group) {
-            foreach ($group as $q) {
-                $flatQueriesComplex[] = $q;
-            }
-        }
-        $this->assertContains($queryComplex, $flatQueriesComplex);
+        $this->assertArrayHasKey('subscriptions', $eventComplex['data']);
+        $this->assertIsArray($eventComplex['data']['subscriptions']);
+        // clientComplex has a query that matches, so subscriptions should not be empty
+        $this->assertNotEmpty($eventComplex['data']['subscriptions']);
 
         // 2) Create pending/silver document -> should match Q2 only, and be seen by all
         $docPendingSilverId = ID::unique();
@@ -1696,12 +1692,14 @@ class RealtimeCustomClientQueryTest extends Scope
             ],
         ]);
 
-        // clientAll: should receive event, queryKeys = []
+        // clientAll: should receive event, subscriptions should not be empty (has select("*") subscription that matches)
         $eventAll2 = json_decode($clientAll->receive(), true);
         $this->assertEquals('event', $eventAll2['type']);
         $this->assertEquals($docPendingSilverId, $eventAll2['data']['payload']['$id']);
-        $this->assertArrayHasKey('queries', $eventAll2['data']);
-        $this->assertIsArray($eventAll2['data']['queries']);
+        $this->assertArrayHasKey('subscriptions', $eventAll2['data']);
+        $this->assertIsArray($eventAll2['data']['subscriptions']);
+        // clientAll has select("*") subscription that matches all events, so subscriptions should not be empty
+        $this->assertNotEmpty($eventAll2['data']['subscriptions']);
 
         // clientQ1: should NOT receive event (status is pending)
         try {
@@ -1711,17 +1709,14 @@ class RealtimeCustomClientQueryTest extends Scope
             $this->assertTrue(true);
         }
 
-        // clientQ2: should receive event, queryKeys contains queryStatusPending
+        // clientQ2: should receive event, subscriptions should not be empty (query matched)
         $eventQ2 = json_decode($clientQ2->receive(), true);
         $this->assertEquals('event', $eventQ2['type']);
         $this->assertEquals($docPendingSilverId, $eventQ2['data']['payload']['$id']);
-        $flatQueriesQ2 = [];
-        foreach ($eventQ2['data']['queries'] as $group) {
-            foreach ($group as $q) {
-                $flatQueriesQ2[] = $q;
-            }
-        }
-        $this->assertContains($queryStatusPending, $flatQueriesQ2);
+        $this->assertArrayHasKey('subscriptions', $eventQ2['data']);
+        $this->assertIsArray($eventQ2['data']['subscriptions']);
+        // clientQ2 has a query that matches, so subscriptions should not be empty
+        $this->assertNotEmpty($eventQ2['data']['subscriptions']);
 
         // clientComplex: should NOT receive event (status is pending, category silver)
         try {
@@ -1828,14 +1823,10 @@ class RealtimeCustomClientQueryTest extends Scope
         $eventQ1 = json_decode($clientQ1->receive(), true);
         $this->assertEquals('event', $eventQ1['type']);
         $this->assertEquals($docActiveId, $eventQ1['data']['payload']['$id']);
-        $this->assertArrayHasKey('queries', $eventQ1['data']);
-        $flatQ1 = [];
-        foreach ($eventQ1['data']['queries'] as $group) {
-            foreach ($group as $q) {
-                $flatQ1[] = $q;
-            }
-        }
-        $this->assertContains($queryStatusActive, $flatQ1);
+        $this->assertArrayHasKey('subscriptions', $eventQ1['data']);
+        $this->assertIsArray($eventQ1['data']['subscriptions']);
+        // clientQ1 has a query that matches, so subscriptions should not be empty
+        $this->assertNotEmpty($eventQ1['data']['subscriptions']);
 
         try {
             $clientQ2->receive();
@@ -1862,14 +1853,10 @@ class RealtimeCustomClientQueryTest extends Scope
         $eventQ2 = json_decode($clientQ2->receive(), true);
         $this->assertEquals('event', $eventQ2['type']);
         $this->assertEquals($docPendingId, $eventQ2['data']['payload']['$id']);
-        $this->assertArrayHasKey('queries', $eventQ2['data']);
-        $flatQ2 = [];
-        foreach ($eventQ2['data']['queries'] as $group) {
-            foreach ($group as $q) {
-                $flatQ2[] = $q;
-            }
-        }
-        $this->assertContains($queryStatusPending, $flatQ2);
+        $this->assertArrayHasKey('subscriptions', $eventQ2['data']);
+        $this->assertIsArray($eventQ2['data']['subscriptions']);
+        // clientQ2 has a query that matches, so subscriptions should not be empty
+        $this->assertNotEmpty($eventQ2['data']['subscriptions']);
 
         try {
             $clientQ1->receive();
