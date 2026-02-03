@@ -2327,7 +2327,12 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
+        $templateKey = 'email.' . $type . '-' . $locale;
+        $template = $templates[$templateKey] ?? null;
+        if (is_null($template)) {
+            $templateLowerKey = 'email.' . strtolower($type) . '-' . $locale;
+            $template = $templates[$templateLowerKey] ?? null;
+        }
 
         $localeObj = new Locale($locale);
         $localeObj->setFallback(System::getEnv('_APP_LOCALE', 'en'));
@@ -2495,6 +2500,14 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $allowedTypes = Config::getParam('locale-templates')['email'] ?? [];
+        foreach ($allowedTypes as $allowedType) {
+            if (strcasecmp($allowedType, $type) === 0) {
+                $type = $allowedType;
+                break;
+            }
         }
 
         $templates = $project->getAttribute('templates', []);

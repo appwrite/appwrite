@@ -75,11 +75,97 @@ use Utopia\Validator\WhiteList;
 $oauthDefaultSuccess = '/console/auth/oauth2/success';
 $oauthDefaultFailure = '/console/auth/oauth2/failure';
 
+if (!function_exists('getCustomTemplate')) {
+    function getCustomTemplate(Document $project, string $type, Locale $locale, string $prefix = 'email'): array
+    {
+        $templates = $project->getAttribute('templates', []);
+        $templateKey = $prefix . '.' . $type . '-' . $locale->default;
+        if (!empty($templates[$templateKey])) {
+            return $templates[$templateKey];
+        }
+
+        $templateLowerKey = $prefix . '.' . strtolower($type) . '-' . $locale->default;
+        return $templates[$templateLowerKey] ?? [];
+    }
+}
+
+if (!function_exists('normalizeEmailLocaleKey')) {
+    function normalizeEmailLocaleKey(string $key): string
+    {
+        if (!str_starts_with($key, 'emails.')) {
+            return $key;
+        }
+
+        $parts = explode('.', $key);
+        if (count($parts) < 3) {
+            return $key;
+        }
+
+        $type = strtolower($parts[1]);
+        $typeMap = [
+            'magicsession' => 'magicSession',
+            'otpsession' => 'otpSession',
+            'mfachallenge' => 'mfaChallenge',
+            'sessionalert' => 'sessionAlert',
+        ];
+
+        if (isset($typeMap[$type])) {
+            $parts[1] = $typeMap[$type];
+
+            if (isset($parts[2]) && $type === 'magicsession') {
+                $fieldMap = [
+                    'body' => 'optionButton',
+                    'footer' => 'optionUrl',
+                ];
+                $field = strtolower($parts[2]);
+                if (isset($fieldMap[$field])) {
+                    $parts[2] = $fieldMap[$field];
+                }
+            }
+
+            return implode('.', $parts);
+        }
+
+        return $key;
+    }
+}
+
+if (!function_exists('translateEmailTemplate')) {
+    function translateEmailTemplate(string $content, Locale $locale): string
+    {
+        return preg_replace_callback('/\{\{\s*(emails\.[^}]+)\s*\}\}/i', function ($matches) use ($locale) {
+            $missing = '__missing_translation__';
+            $rawKey = trim($matches[1]);
+            $keyLower = strtolower($rawKey);
+
+            $candidates = [];
+            $candidates[] = normalizeEmailLocaleKey($rawKey);
+
+            if ($keyLower === 'emails.magicsession.body' || $keyLower === 'emails.magicsession.footer') {
+                $candidates[] = 'emails.magicSession.' . ($keyLower === 'emails.magicsession.body' ? 'optionButton' : 'optionUrl');
+            }
+
+            if ($keyLower === 'emails.magicsession.footer') {
+                $candidates[] = 'emails.magicSession.clientInfo';
+            }
+
+            foreach ($candidates as $key) {
+                $value = $locale->getText($key, $missing);
+                if ($value !== $missing) {
+                    return $value;
+                }
+            }
+
+            return $matches[0];
+        }, $content) ?? $content;
+    }
+}
+
 function sendSessionAlert(Locale $locale, Document $user, Document $project, array $platform, Document $session, Mail $queueForMails)
 {
     $subject = $locale->getText("emails.sessionAlert.subject");
     $preview = $locale->getText("emails.sessionAlert.preview");
-    $customTemplate = $project->getAttribute('templates', [])['email.sessionAlert-' . $locale->default] ?? [];
+    $customTemplate = getCustomTemplate($project, 'sessionAlert', $locale, 'email');
     $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
     $validator = new FileName();
@@ -101,6 +187,11 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
         ->setParam('{{signature}}', $locale->getText("emails.sessionAlert.signature"));
 
     $body = $message->render();
+
+    if (!empty($customTemplate)) {
+        $body = translateEmailTemplate($customTemplate['message'] ?? $body, $locale);
+        $subject = translateEmailTemplate($customTemplate['subject'] ?? $subject, $locale);
+    }
 
     $smtp = $project->getAttribute('smtp', []);
     $smtpEnabled = $smtp['enabled'] ?? false;
@@ -137,9 +228,6 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
             if (!empty($customTemplate['replyTo'])) {
                 $replyTo = $customTemplate['replyTo'];
             }
-
-            $body = $customTemplate['message'] ?? '';
-            $subject = $customTemplate['subject'] ?? $subject;
         }
 
         $queueForMails
@@ -2206,7 +2294,7 @@ App::post('/v1/account/tokens/magic-url')
 
         $subject = $locale->getText("emails.magicSession.subject");
         $preview = $locale->getText("emails.magicSession.preview");
-        $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
+        $customTemplate = getCustomTemplate($project, 'magicSession', $locale, 'email');
 
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $agentOs = $detector->getOS();
@@ -2230,6 +2318,11 @@ App::post('/v1/account/tokens/magic-url')
         }
 
         $body = $message->render();
+
+        if (!empty($customTemplate)) {
+            $body = translateEmailTemplate($customTemplate['message'] ?? $body, $locale);
+            $subject = translateEmailTemplate($customTemplate['subject'] ?? $subject, $locale);
+        }
 
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
@@ -2267,9 +2360,6 @@ App::post('/v1/account/tokens/magic-url')
                 if (!empty($customTemplate['replyTo'])) {
                     $replyTo = $customTemplate['replyTo'];
                 }
-
-                $body = $customTemplate['message'] ?? '';
-                $subject = $customTemplate['subject'] ?? $subject;
             }
 
             $queueForMails
@@ -2487,7 +2577,7 @@ App::post('/v1/account/tokens/email')
         $preview = $locale->getText("emails.otpSession.preview");
         $heading = $locale->getText("emails.otpSession.heading");
 
-        $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
+        $customTemplate = getCustomTemplate($project, 'otpSession', $locale, 'email');
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
         $validator = new FileName();
@@ -2517,6 +2607,11 @@ App::post('/v1/account/tokens/email')
         }
 
         $body = $message->render();
+
+        if (!empty($customTemplate)) {
+            $body = translateEmailTemplate($customTemplate['message'] ?? $body, $locale);
+            $subject = translateEmailTemplate($customTemplate['subject'] ?? $subject, $locale);
+        }
 
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
@@ -2553,9 +2648,6 @@ App::post('/v1/account/tokens/email')
                 if (!empty($customTemplate['replyTo'])) {
                     $replyTo = $customTemplate['replyTo'];
                 }
-
-                $body = $customTemplate['message'] ?? '';
-                $subject = $customTemplate['subject'] ?? $subject;
             }
 
             $queueForMails
@@ -2876,7 +2968,7 @@ App::post('/v1/account/tokens/phone')
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-            $customTemplate = $project->getAttribute('templates', [])['sms.login-' . $locale->default] ?? [];
+            $customTemplate = getCustomTemplate($project, 'login', $locale, 'sms');
             if (!empty($customTemplate)) {
                 $message = $customTemplate['message'] ?? $message;
             }
@@ -3606,7 +3698,7 @@ App::post('/v1/account/recovery')
         $body = $locale->getText("emails.recovery.body");
         $subject = $locale->getText("emails.recovery.subject");
         $preview = $locale->getText("emails.recovery.preview");
-        $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
+        $customTemplate = getCustomTemplate($project, 'recovery', $locale, 'email');
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
@@ -3617,6 +3709,11 @@ App::post('/v1/account/recovery')
             ->setParam('{{buttonText}}', $locale->getText("emails.recovery.buttonText"))
             ->setParam('{{signature}}', $locale->getText("emails.recovery.signature"));
         $body = $message->render();
+
+        if (!empty($customTemplate)) {
+            $body = translateEmailTemplate($customTemplate['message'] ?? $body, $locale);
+            $subject = translateEmailTemplate($customTemplate['subject'] ?? $subject, $locale);
+        }
 
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
@@ -3653,9 +3750,6 @@ App::post('/v1/account/recovery')
                 if (!empty($customTemplate['replyTo'])) {
                     $replyTo = $customTemplate['replyTo'];
                 }
-
-                $body = $customTemplate['message'] ?? '';
-                $subject = $customTemplate['subject'] ?? $subject;
             }
 
             $queueForMails
@@ -3913,7 +4007,7 @@ App::post('/v1/account/verifications/email')
         $subject = $locale->getText("emails.verification.subject");
         $heading = $locale->getText("emails.verification.heading");
 
-        $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
+        $customTemplate = getCustomTemplate($project, 'verification', $locale, 'email');
         $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
         $validator = new FileName();
@@ -3933,6 +4027,11 @@ App::post('/v1/account/verifications/email')
             ->setParam('{{signature}}', $locale->getText("emails.verification.signature"));
 
         $body = $message->render();
+
+        if (!empty($customTemplate)) {
+            $body = translateEmailTemplate($customTemplate['message'] ?? $body, $locale);
+            $subject = translateEmailTemplate($customTemplate['subject'] ?? $subject, $locale);
+        }
 
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
@@ -3969,9 +4068,6 @@ App::post('/v1/account/verifications/email')
                 if (!empty($customTemplate['replyTo'])) {
                     $replyTo = $customTemplate['replyTo'];
                 }
-
-                $body = $customTemplate['message'] ?? '';
-                $subject = $customTemplate['subject'] ?? $subject;
             }
 
             $queueForMails
@@ -4212,7 +4308,7 @@ App::post('/v1/account/verifications/phone')
         if ($sendSMS) {
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-            $customTemplate = $project->getAttribute('templates', [])['sms.verification-' . $locale->default] ?? [];
+            $customTemplate = getCustomTemplate($project, 'verification', $locale, 'sms');
             if (!empty($customTemplate)) {
                 $message = $customTemplate['message'] ?? $message;
             }
