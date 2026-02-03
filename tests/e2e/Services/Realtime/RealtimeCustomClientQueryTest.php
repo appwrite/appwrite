@@ -1234,6 +1234,183 @@ class RealtimeCustomClientQueryTest extends Scope
         $client->close();
     }
 
+    public function testCollectionScopedDocumentsChannelReceivesEvents()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Scoped Channel DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Scoped Channel Collection',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        // Subscribe only to the fully-qualified documents channel for this collection
+        $scopedChannel = 'databases.' . $databaseId . '.collections.' . $collectionId . '.documents';
+        $client = $this->getWebsocket([$scopedChannel], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains($scopedChannel, $response['data']['channels']);
+
+        // Create document in that collection - should receive event on the scoped channel
+        $documentId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $documentId,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $event = json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEquals($documentId, $event['data']['payload']['$id']);
+
+        $client->close();
+    }
+
+    public function testCollectionScopedDocumentsChannelWithQuery()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Scoped Channel Query DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Scoped Channel Query Collection',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        $targetDocumentId = ID::unique();
+
+        // Subscribe with query for specific document ID on the fully-qualified documents channel
+        $scopedChannel = 'databases.' . $databaseId . '.collections.' . $collectionId . '.documents';
+        $client = $this->getWebsocket([$scopedChannel], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            Query::equal('$id', [$targetDocumentId])->toString(),
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains($scopedChannel, $response['data']['channels']);
+
+        // Create document with matching ID - should receive event
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $targetDocumentId,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $event = json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEquals($targetDocumentId, $event['data']['payload']['$id']);
+
+        // Create document with different ID - should NOT receive event
+        $otherDocumentId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $otherDocumentId,
+            'data' => [
+                'status' => 'inactive'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        try {
+            $client->receive();
+            $this->fail('Expected TimeoutException - event should be filtered for scoped channel query');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $client->close();
+    }
+
     public function testFilesChannelWithQuery()
     {
         $user = $this->getUser();
@@ -2084,5 +2261,23 @@ class RealtimeCustomClientQueryTest extends Scope
         $this->assertContains($originalSubscriptionId, $event2['data']['subscriptions']);
 
         $client->close();
+    }
+
+    public function testConsole()
+    {
+        $this->client->call(Client::METHOD_POST, '/databases/' . '6981e806000e18b050be' . '/collections/' . 'kv' . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => '6981e7dc0003192f3424',
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'key' => 'key',
+                'value' => 'value'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+            ],
+        ]);
     }
 }
