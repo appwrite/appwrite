@@ -131,7 +131,7 @@ class User extends Document
         return false;
     }
 
-    public function tokenVerify(int $type = null, string $secret, Proof $proofForToken): false|Document
+    public function tokenVerify(?int $type, string $secret, Proof $proofForToken): false|Document
     {
         $tokens = $this->getAttribute('tokens', []);
         foreach ($tokens as $token) {
