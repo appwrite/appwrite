@@ -84,13 +84,6 @@ class Interval extends Action
                     $this->verifyDomain($dbForPlatform, $queueForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
-            ],
-            [
-                'name' => 'cleanupStaleExecutions',
-                'callback' => function (Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates) {
-                    $this->cleanupStaleExecutions($dbForPlatform, $getProjectDB);
-                },
-                'interval' => $intervalCleanupStaleExecutions * 1000,
             ]
         ];
     }

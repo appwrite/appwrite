@@ -392,9 +392,9 @@ class Exception extends \Exception
 
     public function __construct(
         string $type = Exception::GENERAL_UNKNOWN,
-        string $message = null,
-        int|string $code = null,
-        \Throwable $previous = null,
+        ?string $message = null,
+        int|string|null $code = null,
+        ?\Throwable $previous = null,
         ?string $view = null,
         array $params = []
     ) {

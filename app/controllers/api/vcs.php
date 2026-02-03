@@ -339,7 +339,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $projectId = $project->getId();
 
                 // Deployment preview
-                $sitesDomain = $platform['sitePreviewDomain'];
+                $sitesDomain = $platform['sitesDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
                 $previewRuleId = $ruleId;
