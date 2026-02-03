@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Messaging\Status as MessageStatus;
 use Swoole\Runtime;
-use Utopia\Span\Span;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -39,6 +38,7 @@ use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Priority;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
@@ -140,7 +140,11 @@ class Messaging extends Action
         $userIds = $message->getAttribute('users', []);
         $providerType = $message->getAttribute('providerType');
 
+        Span::add('messageId', $message->getId());
         Span::add('providerType', $providerType);
+        Span::add('topicsCount', \count($topicIds));
+        Span::add('usersCount', \count($userIds));
+        Span::add('targetsCount', \count($targetIds));
 
         /**
          * @var array<Document> $allTargets
@@ -185,12 +189,15 @@ class Messaging extends Action
             \array_push($allTargets, ...$targets);
         }
 
+        Span::add('recipientsTotal', \count($allTargets));
+
         if (empty($allTargets)) {
             $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
                 'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No valid recipients found.']
             ]));
 
+            Span::add('status', 'failed');
             Span::add('error', 'No valid recipients found.');
             return;
         }
@@ -206,9 +213,13 @@ class Messaging extends Action
                 'deliveryErrors' => ['No enabled provider found.']
             ]));
 
+            Span::add('status', 'failed');
             Span::add('error', 'No enabled provider found.');
             return;
         }
+
+        Span::add('provider', $default->getAttribute('provider'));
+        Span::add('providerName', $default->getAttribute('name'));
 
         /**
          * @var array<string, array<string, null>> $identifiers
@@ -351,9 +362,14 @@ class Messaging extends Action
 
         if (\count($message->getAttribute('deliveryErrors')) > 0) {
             $message->setAttribute('status', MessageStatus::FAILED);
+            Span::add('status', 'failed');
         } else {
             $message->setAttribute('status', MessageStatus::SENT);
+            Span::add('status', 'sent');
         }
+
+        Span::add('deliveredTotal', $deliveredTotal);
+        Span::add('errorsTotal', \count($deliveryErrors));
 
         $message->removeAttribute('to');
 
@@ -400,12 +416,29 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
+        Span::add('recipientsCount', \count($recipients));
+
+        // Extract country codes from phone numbers
+        $countryCodes = [];
+        foreach ($recipients as $recipient) {
+            if (\str_starts_with($recipient, '+')) {
+                // Extract country code (1-3 digits after +)
+                if (\preg_match('/^\+(\d{1,3})/', $recipient, $matches)) {
+                    $countryCodes[$matches[1]] = ($countryCodes[$matches[1]] ?? 0) + 1;
+                }
+            }
+        }
+        if (!empty($countryCodes)) {
+            Span::add('countryCodes', \json_encode($countryCodes));
+        }
+
         if ($this->adapter === null) {
             $this->adapter = $this->createInternalSMSAdapter();
         }
 
         if ($this->adapter === null) {
-            Span::add('warning', 'Skipped SMS processing. SMS adapter is not set.');
+            Span::add('status', 'skipped');
+            Span::add('warning', 'SMS adapter is not set.');
             return;
         }
 
@@ -416,11 +449,14 @@ class Messaging extends Action
         $denyList = System::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
         if (\in_array($project->getId(), $denyList)) {
-            Span::add('error', 'Project is in the deny list. Skipping...');
+            Span::add('status', 'denied');
+            Span::add('error', 'Project is in the deny list.');
             return;
         }
 
         $from = System::getEnv('_APP_SMS_FROM', '');
+        Span::add('from', $from);
+
         $sms = new SMS(
             $recipients,
             $message->getAttribute('data')['content'],
@@ -429,7 +465,10 @@ class Messaging extends Action
 
         try {
             $result = $this->adapter->send($sms);
+            Span::add('status', 'sent');
+            Span::add('deliveredTo', $result['deliveredTo'] ?? 0);
         } catch (\Throwable $th) {
+            Span::add('status', 'failed');
             throw new \Exception('Failed sending to targets with error: ' . $th->getMessage());
         }
     }
