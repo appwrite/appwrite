@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -12,3 +13,4 @@ let target = try await users.getTarget(
     targetId: "<TARGET_ID>"
 )
 
+```

@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -13,3 +14,4 @@ let result = try await users.deleteMFAAuthenticator(
     type: .totp
 )
 
+```

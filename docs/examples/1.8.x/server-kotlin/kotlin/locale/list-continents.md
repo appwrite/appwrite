@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Locale
@@ -10,3 +11,4 @@ val client = Client()
 val locale = Locale(client)
 
 val response = locale.listContinents()
+```

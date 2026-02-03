@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 from appwrite.input_file import InputFile
@@ -16,3 +17,4 @@ result = functions.create_deployment(
     entrypoint = '<ENTRYPOINT>', # optional
     commands = '<COMMANDS>' # optional
 )
+```

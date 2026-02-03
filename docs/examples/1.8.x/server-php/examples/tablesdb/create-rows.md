@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $tablesDB->createRows(
     tableId: '<TABLE_ID>',
     rows: [],
     transactionId: '<TRANSACTION_ID>' // optional
-);
+);```

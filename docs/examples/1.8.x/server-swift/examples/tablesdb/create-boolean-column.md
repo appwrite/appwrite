@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -16,3 +17,4 @@ let columnBoolean = try await tablesDB.createBooleanColumn(
     array: false // optional
 )
 
+```

@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -11,3 +12,4 @@ let variableList = try await sites.listVariables(
     siteId: "<SITE_ID>"
 )
 
+```

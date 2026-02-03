@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ Token result = await account.CreateEmailToken(
     userId: "<USER_ID>",
     email: "email@example.com",
     phrase: false // optional
-);
+);```

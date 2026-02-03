@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -17,3 +17,4 @@ service := users.New(client)
 response, error := service.CreateMFARecoveryCodes(
     "<USER_ID>",
 )
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ Provider result = await messaging.CreateFCMProvider(
     name: "<NAME>",
     serviceAccountJSON: [object], // optional
     enabled: false // optional
-);
+);```

@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 
@@ -9,3 +10,4 @@ client.set_key('<YOUR_API_KEY>') # Your secret API key
 functions = Functions(client)
 
 result = functions.list_specifications()
+```

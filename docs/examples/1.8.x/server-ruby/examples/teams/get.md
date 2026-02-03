@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ teams = Teams.new(client)
 result = teams.get(
     team_id: '<TEAM_ID>'
 )
+```

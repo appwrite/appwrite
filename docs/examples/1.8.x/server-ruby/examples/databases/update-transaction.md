@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = databases.update_transaction(
     commit: false, # optional
     rollback: false # optional
 )
+```

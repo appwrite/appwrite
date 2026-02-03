@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -9,3 +10,4 @@ let functions = Functions(client)
 
 let specificationList = try await functions.listSpecifications()
 
+```

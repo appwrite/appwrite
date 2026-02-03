@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -20,3 +21,4 @@ result = databases.create_relationship_attribute(
     two_way_key: '', # optional
     on_delete: RelationMutate::CASCADE # optional
 )
+```

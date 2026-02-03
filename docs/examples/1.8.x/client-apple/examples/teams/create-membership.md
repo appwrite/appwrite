@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -17,3 +18,4 @@ let membership = try await teams.createMembership(
     name: "<NAME>" // optional
 )
 
+```

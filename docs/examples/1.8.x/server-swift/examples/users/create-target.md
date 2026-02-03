@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -17,3 +18,4 @@ let target = try await users.createTarget(
     name: "<NAME>" // optional
 )
 
+```

@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -12,3 +13,4 @@ let mfaChallenge = try await account.createMFAChallenge(
     factor: .email
 )
 
+```

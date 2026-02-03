@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -15,3 +16,4 @@ result = databases.create_polygon_attribute(
     required = False,
     default = [[[1, 2], [3, 4], [5, 6], [1, 2]]] # optional
 )
+```

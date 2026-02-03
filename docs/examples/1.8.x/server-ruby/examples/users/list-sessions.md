@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = users.list_sessions(
     user_id: '<USER_ID>',
     total: false # optional
 )
+```

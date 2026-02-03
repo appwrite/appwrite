@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -10,3 +11,4 @@ let team = try await teams.get(
     teamId: "<TEAM_ID>"
 )
 
+```

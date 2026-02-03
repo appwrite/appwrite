@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -11,3 +12,4 @@ messaging = Messaging(client)
 result = messaging.get_message(
     message_id = '<MESSAGE_ID>'
 )
+```

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Sites
@@ -32,3 +33,4 @@ val response = sites.update(
     providerRootDirectory = "<PROVIDER_ROOT_DIRECTORY>", // optional
     specification = "" // optional
 )
+```

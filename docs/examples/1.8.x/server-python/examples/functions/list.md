@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 
@@ -13,3 +14,4 @@ result = functions.list(
     search = '<SEARCH>', # optional
     total = False # optional
 )
+```

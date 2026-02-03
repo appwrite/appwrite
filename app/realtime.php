@@ -431,10 +431,19 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 ]
             ];
 
-            $server->send($realtime->getSubscribers($event), json_encode([
-                'type' => 'event',
-                'data' => $event['data']
-            ]));
+            $subscribers = $realtime->getSubscribers($event); // [connectionId => [subId => queries]]
+
+            // For test events, send to all connections with their matched subscription queries
+            foreach ($subscribers as $connectionId => $matchedSubscriptions) {
+                $data = $event['data'];
+                // Send matched subscription IDs
+                $data['subscriptions'] = array_keys($matchedSubscriptions);
+
+                $server->send([$connectionId], json_encode([
+                    'type' => 'event',
+                    'data' => $data
+                ]));
+            }
         }
     });
 
@@ -473,33 +482,60 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $user = $database->getDocument('users', $userId);
 
                         $roles = $user->getRoles($database->getAuthorization());
-                        $channels = $realtime->connections[$connection]['channels'];
-                        $queries = $realtime->connections[$connection]['queries'] ?? [];
+                        $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+
+                        $subscriptionMetadata = $realtime->getSubscriptionMetadata($connection);
 
                         $realtime->unsubscribe($connection);
-                        $realtime->subscribe($projectId, $connection, $roles, $channels, $queries);
+
+                        foreach ($subscriptionMetadata as $subscriptionId => $metadata) {
+                            $queries = Query::parseQueries($metadata['queries'] ?? []);
+                            $realtime->subscribe(
+                                $projectId,
+                                $connection,
+                                $subscriptionId,
+                                $roles,
+                                $metadata['channels'] ?? [],
+                                $queries
+                            );
+                        }
+
+                        // Restore authorization after subscribe
+                        if ($authorization !== null) {
+                            $realtime->connections[$connection]['authorization'] = $authorization;
+                        }
                     }
                 }
 
-                $receivers = $realtime->getSubscribers($event);
+                $receivers = $realtime->getSubscribers($event); // [connectionId => [subId => queries]]
 
                 if (App::isDevelopment() && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode($receivers));
+                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode(array_keys($receivers)));
+                    Console::log("[Debug][Worker {$workerId}] Event Query: " . json_encode(array_values($receivers)));
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
                 }
 
-                $server->send(
-                    $receivers,
-                    json_encode([
-                        'type' => 'event',
-                        'data' => $event['data']
-                    ])
-                );
+                $totalMessages = 0;
 
-                if (($num = count($receivers)) > 0) {
-                    $register->get('telemetry.messageSentCounter')->add($num);
-                    $stats->incr($event['project'], 'messages', $num);
+                foreach ($receivers as $connectionId => $matchedSubscriptions) {
+                    $data = $event['data'];
+                    // Send matched subscription IDs
+                    $data['subscriptions'] = array_keys($matchedSubscriptions);
+
+                    $server->send(
+                        [$connectionId],
+                        json_encode([
+                            'type' => 'event',
+                            'data' => $data
+                        ])
+                    );
+                    $totalMessages++;
+                }
+
+                if ($totalMessages > 0) {
+                    $register->get('telemetry.messageSentCounter')->add($totalMessages);
+                    $stats->incr($event['project'], 'messages', $totalMessages);
                 }
             });
         } catch (Throwable $th) {
@@ -580,11 +616,6 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $roles = $user->getRoles($authorization);
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
-        try {
-            $queries = Realtime::convertQueries($request->getQuery('queries', []));
-        } catch (QueryException $e) {
-            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
-        }
 
         /**
          * Channels Check
@@ -593,7 +624,34 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing channels');
         }
 
-        $realtime->subscribe($project->getId(), $connection, $roles, $channels, $queries);
+        // Reconstruct subscriptions from query params using helper method
+        $channelNames = array_keys($channels);
+
+        try {
+            $subscriptionsByIndex = Realtime::constructSubscriptions(
+                $channelNames,
+                fn ($channel) => $request->getQuery($channel, null)
+            );
+        } catch (QueryException $e) {
+            throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $e->getMessage());
+        }
+
+        // Generate subscription IDs and subscribe
+        $subscriptionMapping = [];
+        foreach ($subscriptionsByIndex as $index => $subscription) {
+            $subscriptionId = ID::unique();
+
+            $realtime->subscribe(
+                $project->getId(),
+                $connection,
+                $subscriptionId,
+                $roles,
+                $subscription['channels'],
+                $subscription['queries'] // Query objects
+            );
+
+            $subscriptionMapping[$index] = $subscriptionId;
+        }
 
         $realtime->connections[$connection]['authorization'] = $authorization;
 
@@ -602,8 +660,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $server->send([$connection], json_encode([
             'type' => 'connected',
             'data' => [
-                'channels' => array_keys($channels),
-                'queries' => $queries,
+                'channels' => $channelNames,
+                'subscriptions' => $subscriptionMapping,
                 'user' => $user
             ]
         ]));
@@ -733,13 +791,30 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 }
 
                 $roles = $user->getRoles($database->getAuthorization());
-                $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
+                $channelNames = $realtime->connections[$connection]['channels'] ?? [];
+                $channels = Realtime::convertChannels(array_flip($channelNames), $user->getId());
 
-                // Preserve authorization before subscribe overwrites the connection array
                 $authorization = $realtime->connections[$connection]['authorization'] ?? null;
+                $projectId = $realtime->connections[$connection]['projectId'] ?? null;
 
-                $queries = $realtime->connections[$connection]['queries'];
-                $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels, $queries);
+                $subscriptionMetadata = $realtime->getSubscriptionMetadata($connection);
+
+                $realtime->unsubscribe($connection);
+
+                if (!empty($projectId)) {
+                    foreach ($subscriptionMetadata as $subscriptionId => $metadata) {
+                        $queries = Query::parseQueries($metadata['queries'] ?? []);
+
+                        $realtime->subscribe(
+                            $projectId,
+                            $connection,
+                            $subscriptionId,
+                            $roles,
+                            $metadata['channels'] ?? [],
+                            $queries
+                        );
+                    }
+                }
 
                 // Restore authorization after subscribe
                 if ($authorization !== null) {

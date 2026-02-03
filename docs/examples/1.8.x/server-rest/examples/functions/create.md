@@ -1,3 +1,4 @@
+```http
 POST /v1/functions HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -25,3 +26,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "providerRootDirectory": "<PROVIDER_ROOT_DIRECTORY>",
   "specification": ""
 }
+```

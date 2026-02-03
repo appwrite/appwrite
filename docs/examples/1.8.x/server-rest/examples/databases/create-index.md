@@ -1,3 +1,4 @@
+```http
 POST /v1/databases/{databaseId}/collections/{collectionId}/indexes HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -12,3 +13,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "orders": [],
   "lengths": []
 }
+```

@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ Uint8List result = await avatars.getImage(
     width: 0, // (optional)
     height: 0, // (optional)
 );
+```

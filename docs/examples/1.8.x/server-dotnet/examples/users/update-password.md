@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Users users = new Users(client);
 User result = await users.UpdatePassword(
     userId: "<USER_ID>",
     password: ""
-);
+);```

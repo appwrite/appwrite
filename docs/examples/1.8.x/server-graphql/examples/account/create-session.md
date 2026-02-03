@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreateSession(
         userId: "<USER_ID>",
@@ -34,3 +35,4 @@ mutation {
         mfaUpdatedAt
     }
 }
+```

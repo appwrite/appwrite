@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ LogList result = await messaging.ListProviderLogs(
     providerId: "<PROVIDER_ID>",
     queries: new List<string>(), // optional
     total: false // optional
-);
+);```

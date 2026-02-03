@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -18,3 +19,4 @@ result = databases.create_varchar_attribute(
     default: '<DEFAULT>', # optional
     array: false # optional
 )
+```

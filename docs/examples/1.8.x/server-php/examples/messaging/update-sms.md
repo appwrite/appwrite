@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -18,4 +19,4 @@ $result = $messaging->updateSMS(
     content: '<CONTENT>', // optional
     draft: false, // optional
     scheduledAt: '' // optional
-);
+);```

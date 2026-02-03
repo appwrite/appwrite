@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Sites
@@ -19,3 +20,4 @@ val response = sites.createTemplateDeployment(
     reference = "<REFERENCE>",
     activate = false // optional
 )
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ File result = await storage.UpdateFile(
     fileId: "<FILE_ID>",
     name: "<NAME>", // optional
     permissions: new List<string> { Permission.Read(Role.Any()) } // optional
-);
+);```

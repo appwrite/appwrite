@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -15,4 +16,4 @@ User result = await users.Create(
     phone: "+12065550100", // optional
     password: "", // optional
     name: "<NAME>" // optional
-);
+);```

@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -35,3 +35,4 @@ response, error := service.UpdatePush(
     messaging.WithUpdatePushCritical(false),
     messaging.WithUpdatePushPriority("normal"),
 )
+```

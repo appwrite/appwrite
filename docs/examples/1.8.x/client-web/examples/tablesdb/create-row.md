@@ -1,3 +1,4 @@
+```javascript
 import { Client, TablesDB, Permission, Role } from "appwrite";
 
 const client = new Client()
@@ -22,3 +23,4 @@ const result = await tablesDB.createRow({
 });
 
 console.log(result);
+```

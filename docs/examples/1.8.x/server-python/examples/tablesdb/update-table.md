@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 from appwrite.permission import Permission
@@ -18,3 +19,4 @@ result = tables_db.update_table(
     row_security = False, # optional
     enabled = False # optional
 )
+```

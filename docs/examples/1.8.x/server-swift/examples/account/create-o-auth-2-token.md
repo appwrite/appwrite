@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -15,3 +16,4 @@ let success = try await account.createOAuth2Token(
     scopes: [] // optional
 )
 
+```

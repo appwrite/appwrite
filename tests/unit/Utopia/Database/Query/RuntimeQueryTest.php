@@ -599,4 +599,96 @@ class RuntimeQueryTest extends TestCase
         $result = RuntimeQuery::filter([$query], $payload);
         $this->assertEquals($payload, $result);
     }
+
+    // TYPE_SELECT tests - select("*") means "listen to all events"
+    public function testSelectAllIsAllowed(): void
+    {
+        $query = Query::select(['*']);
+        $this->assertTrue(RuntimeQuery::isSelectAll($query));
+    }
+
+    public function testSelectSpecificFieldsNotAllowed(): void
+    {
+        $query = Query::select(['name', 'age']);
+        $this->assertFalse(RuntimeQuery::isSelectAll($query));
+    }
+
+    public function testSelectSingleFieldNotAllowed(): void
+    {
+        $query = Query::select(['name']);
+        $this->assertFalse(RuntimeQuery::isSelectAll($query));
+    }
+
+    public function testValidateSelectQueryWithWildcard(): void
+    {
+        $query = Query::select(['*']);
+        // Should not throw
+        RuntimeQuery::validateSelectQuery($query);
+        $this->assertTrue(true);
+    }
+
+    public function testValidateSelectQueryWithSpecificFields(): void
+    {
+        $query = Query::select(['name', 'age']);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries');
+        RuntimeQuery::validateSelectQuery($query);
+    }
+
+    public function testValidateSelectQueryWithSingleField(): void
+    {
+        $query = Query::select(['name']);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Only select("*") is allowed in Realtime queries');
+        RuntimeQuery::validateSelectQuery($query);
+    }
+
+    public function testSelectInAllowedQueries(): void
+    {
+        $this->assertContains(Query::TYPE_SELECT, RuntimeQuery::ALLOWED_QUERIES);
+    }
+
+    public function testIsSelectAllWithNonSelectQuery(): void
+    {
+        $query = Query::equal('name', ['John']);
+        $this->assertFalse(RuntimeQuery::isSelectAll($query));
+    }
+
+    public function testValidateSelectQueryWithNonSelectQuery(): void
+    {
+        $query = Query::equal('name', ['John']);
+        // Should not throw for non-select queries
+        RuntimeQuery::validateSelectQuery($query);
+        $this->assertTrue(true);
+    }
+
+    // Filter tests with select("*")
+    public function testFilterWithSelectAllReturnsPayload(): void
+    {
+        $query = Query::select(['*']);
+        $payload = ['name' => 'John', 'age' => 30];
+        $result = RuntimeQuery::filter([$query], $payload);
+        $this->assertEquals($payload, $result);
+    }
+
+    public function testFilterWithSelectAllAndOtherQueriesReturnsPayload(): void
+    {
+        // If select("*") is present, it should return payload regardless of other queries
+        $queries = [
+            Query::select(['*']),
+            Query::equal('name', ['Jane']), // This would normally fail
+        ];
+        $payload = ['name' => 'John', 'age' => 30];
+        $result = RuntimeQuery::filter($queries, $payload);
+        // select("*") takes precedence - returns payload
+        $this->assertEquals($payload, $result);
+    }
+
+    public function testFilterWithSelectAllOnEmptyPayload(): void
+    {
+        $query = Query::select(['*']);
+        $payload = [];
+        $result = RuntimeQuery::filter([$query], $payload);
+        $this->assertEquals($payload, $result);
+    }
 }

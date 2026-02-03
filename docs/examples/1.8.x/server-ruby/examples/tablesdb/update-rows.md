@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -22,3 +23,4 @@ result = tables_db.update_rows(
     queries: [], # optional
     transaction_id: '<TRANSACTION_ID>' # optional
 )
+```

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -23,3 +24,4 @@ val response = messaging.updateEmail(
     scheduledAt = "", // optional
     attachments = listOf() // optional
 )
+```

@@ -283,16 +283,16 @@
         },
         {
             "name": "brick/math",
-            "version": "0.14.3",
+            "version": "0.14.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "6af96b11de3f7d99730c118c200418c48274edb4"
+                "reference": "a8b53e6cc4d3a336543f042a4dfa0e3f2f2356a4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/6af96b11de3f7d99730c118c200418c48274edb4",
-                "reference": "6af96b11de3f7d99730c118c200418c48274edb4",
+                "url": "https://api.github.com/repos/brick/math/zipball/a8b53e6cc4d3a336543f042a4dfa0e3f2f2356a4",
+                "reference": "a8b53e6cc4d3a336543f042a4dfa0e3f2f2356a4",
                 "shasum": ""
             },
             "require": {
@@ -331,7 +331,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.14.3"
+                "source": "https://github.com/brick/math/tree/0.14.4"
             },
             "funding": [
                 {
@@ -339,7 +339,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-01T15:18:05+00:00"
+            "time": "2026-02-02T16:57:31+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -3961,16 +3961,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.0.0",
+            "version": "5.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "221794bd7de027f9177cd325209e8162ca2520cb"
+                "reference": "2783f07e74ddd86dda6e711d79212dd34158540d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/221794bd7de027f9177cd325209e8162ca2520cb",
-                "reference": "221794bd7de027f9177cd325209e8162ca2520cb",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/2783f07e74ddd86dda6e711d79212dd34158540d",
+                "reference": "2783f07e74ddd86dda6e711d79212dd34158540d",
                 "shasum": ""
             },
             "require": {
@@ -4013,9 +4013,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.0.0"
+                "source": "https://github.com/utopia-php/database/tree/5.0.1"
             },
-            "time": "2026-01-30T06:17:53+00:00"
+            "time": "2026-02-03T10:31:12+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -5546,16 +5546,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.22",
+            "version": "1.8.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "2888fa2abd820dca24f3d967ba54d498999e3caf"
+                "reference": "b80b8210b4940cfcfad970c8c07ccf1eee74c267"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2888fa2abd820dca24f3d967ba54d498999e3caf",
-                "reference": "2888fa2abd820dca24f3d967ba54d498999e3caf",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b80b8210b4940cfcfad970c8c07ccf1eee74c267",
+                "reference": "b80b8210b4940cfcfad970c8c07ccf1eee74c267",
                 "shasum": ""
             },
             "require": {
@@ -5591,9 +5591,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.22"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.23"
             },
-            "time": "2026-02-02T13:02:47+00:00"
+            "time": "2026-02-03T09:20:19+00:00"
         },
         {
             "name": "doctrine/annotations",
@@ -9052,7 +9052,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -9076,5 +9076,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

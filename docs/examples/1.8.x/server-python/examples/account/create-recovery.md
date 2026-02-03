@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.account import Account
 
@@ -12,3 +13,4 @@ result = account.create_recovery(
     email = 'email@example.com',
     url = 'https://example.com'
 )
+```

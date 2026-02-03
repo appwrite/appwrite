@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,3 +16,4 @@ result = messaging.create_fcm_provider(
     service_account_json: {}, # optional
     enabled: false # optional
 )
+```

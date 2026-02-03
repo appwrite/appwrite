@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -17,4 +18,4 @@ Target result = await users.CreateTarget(
     identifier: "<IDENTIFIER>",
     providerId: "<PROVIDER_ID>", // optional
     name: "<NAME>" // optional
-);
+);```

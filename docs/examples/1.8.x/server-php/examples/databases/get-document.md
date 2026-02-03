@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -16,4 +17,4 @@ $result = $databases->getDocument(
     documentId: '<DOCUMENT_ID>',
     queries: [], // optional
     transactionId: '<TRANSACTION_ID>' // optional
-);
+);```

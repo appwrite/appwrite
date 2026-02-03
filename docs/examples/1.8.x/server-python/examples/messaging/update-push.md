@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 from appwrite.enums import MessagePriority
@@ -30,3 +31,4 @@ result = messaging.update_push(
     critical = False, # optional
     priority = MessagePriority.NORMAL # optional
 )
+```

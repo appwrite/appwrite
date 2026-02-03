@@ -1,3 +1,4 @@
+```graphql
 mutation {
     storageUpdateFile(
         bucketId: "<BUCKET_ID>",
@@ -20,3 +21,4 @@ mutation {
         compression
     }
 }
+```

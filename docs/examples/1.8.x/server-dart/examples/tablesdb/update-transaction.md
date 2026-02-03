@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ Transaction result = await tablesDB.updateTransaction(
     commit: false, // (optional)
     rollback: false, // (optional)
 );
+```

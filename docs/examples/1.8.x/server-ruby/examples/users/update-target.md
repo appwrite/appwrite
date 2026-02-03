@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -16,3 +17,4 @@ result = users.update_target(
     provider_id: '<PROVIDER_ID>', # optional
     name: '<NAME>' # optional
 )
+```

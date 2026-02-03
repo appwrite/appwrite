@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ User result = await account.create(
     password: '',
     name: '<NAME>', // optional
 );
+```

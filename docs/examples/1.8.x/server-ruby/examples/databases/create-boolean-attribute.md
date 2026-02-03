@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = databases.create_boolean_attribute(
     default: false, # optional
     array: false # optional
 )
+```

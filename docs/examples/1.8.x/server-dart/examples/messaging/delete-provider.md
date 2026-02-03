@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Messaging messaging = Messaging(client);
 await messaging.deleteProvider(
     providerId: '<PROVIDER_ID>',
 );
+```

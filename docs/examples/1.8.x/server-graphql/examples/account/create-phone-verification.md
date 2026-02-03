@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreatePhoneVerification {
         _id
@@ -8,3 +9,4 @@ mutation {
         phrase
     }
 }
+```

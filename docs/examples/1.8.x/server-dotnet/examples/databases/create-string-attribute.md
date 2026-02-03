@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -18,4 +19,4 @@ AttributeString result = await databases.CreateStringAttribute(
     default: "<DEFAULT>", // optional
     array: false, // optional
     encrypt: false // optional
-);
+);```

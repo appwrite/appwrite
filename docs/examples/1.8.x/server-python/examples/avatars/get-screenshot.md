@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.avatars import Avatars
 from appwrite.enums import Theme
@@ -37,3 +38,4 @@ result = avatars.get_screenshot(
     quality = 85, # optional
     output = ImageFormat.JPEG # optional
 )
+```

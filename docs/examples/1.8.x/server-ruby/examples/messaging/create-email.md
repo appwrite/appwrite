@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -23,3 +24,4 @@ result = messaging.create_email(
     html: false, # optional
     scheduled_at: '' # optional
 )
+```

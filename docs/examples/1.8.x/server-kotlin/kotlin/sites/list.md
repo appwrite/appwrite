@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Sites
@@ -14,3 +15,4 @@ val response = sites.list(
     search = "<SEARCH>", // optional
     total = false // optional
 )
+```

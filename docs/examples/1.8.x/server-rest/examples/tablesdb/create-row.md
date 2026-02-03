@@ -1,3 +1,4 @@
+```http
 POST /v1/tablesdb/{databaseId}/tables/{tableId}/rows HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -19,3 +20,4 @@ X-Appwrite-JWT: <YOUR_JWT>
   "permissions": ["read(\"any\")"],
   "transactionId": "<TRANSACTION_ID>"
 }
+```

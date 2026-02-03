@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ File result = await storage.getFile(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
 );
+```

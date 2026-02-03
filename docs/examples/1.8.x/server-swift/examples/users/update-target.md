@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -15,3 +16,4 @@ let target = try await users.updateTarget(
     name: "<NAME>" // optional
 )
 
+```

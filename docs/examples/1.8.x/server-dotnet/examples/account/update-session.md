@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Account account = new Account(client);
 
 Session result = await account.UpdateSession(
     sessionId: "<SESSION_ID>"
-);
+);```

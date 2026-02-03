@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -31,3 +32,4 @@ val response = messaging.createPush(
     critical = false, // optional
     priority = MessagePriority.NORMAL // optional
 )
+```

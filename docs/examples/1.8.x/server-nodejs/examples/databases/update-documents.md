@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -20,3 +21,4 @@ const result = await databases.updateDocuments({
     queries: [], // optional
     transactionId: '<TRANSACTION_ID>' // optional
 });
+```

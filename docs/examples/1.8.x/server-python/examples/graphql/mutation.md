@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.graphql import Graphql
 
@@ -11,3 +12,4 @@ graphql = Graphql(client)
 result = graphql.mutation(
     query = {}
 )
+```

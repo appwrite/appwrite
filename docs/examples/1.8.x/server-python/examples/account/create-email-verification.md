@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.account import Account
 
@@ -11,3 +12,4 @@ account = Account(client)
 result = account.create_email_verification(
     url = 'https://example.com'
 )
+```

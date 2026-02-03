@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -21,3 +22,4 @@ val response = messaging.updateMailgunProvider(
     replyToName = "<REPLY_TO_NAME>", // optional
     replyToEmail = "<REPLY_TO_EMAIL>" // optional
 )
+```

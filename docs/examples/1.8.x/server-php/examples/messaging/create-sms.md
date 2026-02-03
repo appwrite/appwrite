@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -18,4 +19,4 @@ $result = $messaging->createSMS(
     targets: [], // optional
     draft: false, // optional
     scheduledAt: '' // optional
-);
+);```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -18,4 +19,4 @@ $result = $sites->createDeployment(
     installCommand: '<INSTALL_COMMAND>', // optional
     buildCommand: '<BUILD_COMMAND>', // optional
     outputDirectory: '<OUTPUT_DIRECTORY>' // optional
-);
+);```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -25,3 +26,4 @@ result = storage.create_bucket(
     antivirus: false, # optional
     transformations: false # optional
 )
+```

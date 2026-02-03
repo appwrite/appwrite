@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
@@ -18,3 +19,4 @@ val response = tablesDB.incrementRowColumn(
     max = 0, // optional
     transactionId = "<TRANSACTION_ID>" // optional
 )
+```

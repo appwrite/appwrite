@@ -1,3 +1,4 @@
+```http
 POST /v1/users/scrypt-modified HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -14,3 +15,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "passwordSignerKey": "<PASSWORD_SIGNER_KEY>",
   "name": "<NAME>"
 }
+```

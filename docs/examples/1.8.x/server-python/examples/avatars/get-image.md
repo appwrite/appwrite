@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.avatars import Avatars
 
@@ -13,3 +14,4 @@ result = avatars.get_image(
     width = 0, # optional
     height = 0 # optional
 )
+```

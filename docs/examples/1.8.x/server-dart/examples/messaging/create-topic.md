@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ Topic result = await messaging.createTopic(
     name: '<NAME>',
     subscribe: ["any"], // (optional)
 );
+```

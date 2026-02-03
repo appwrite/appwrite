@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Health health = Health(client);
 HealthQueue result = await health.getQueueAudits(
     threshold: 0, // (optional)
 );
+```

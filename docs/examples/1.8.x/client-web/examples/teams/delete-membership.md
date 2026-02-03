@@ -1,3 +1,4 @@
+```javascript
 import { Client, Teams } from "appwrite";
 
 const client = new Client()
@@ -12,3 +13,4 @@ const result = await teams.deleteMembership({
 });
 
 console.log(result);
+```
