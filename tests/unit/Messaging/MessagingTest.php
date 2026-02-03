@@ -26,6 +26,7 @@ class MessagingTest extends TestCase
         $realtime->subscribe(
             '1',
             1,
+            ID::unique(),
             [
                 Role::user(ID::custom('123'))->toString(),
                 Role::users()->toString(),
@@ -35,7 +36,8 @@ class MessagingTest extends TestCase
                 Role::team(ID::custom('def'))->toString(),
                 Role::team(ID::custom('def'), 'guest')->toString(),
             ],
-            ['files' => 0, 'documents' => 0, 'documents.789' => 0, 'account.123' => 0]
+            // Pass plain channel names, Realtime::subscribe will normalize them
+            ['files', 'documents', 'documents.789', 'account.123']
         );
 
         $event = [
@@ -44,7 +46,9 @@ class MessagingTest extends TestCase
             'data' => [
                 'channels' => [
                     0 => 'account.123',
-                ]
+                ],
+                // Non-empty payload so default select(\"*\") subscriptions match
+                'payload' => ['_match' => true],
             ]
         ];
 

@@ -81,11 +81,13 @@ class MessagingChannelsTest extends TestCase
 
                 $roles = $user->getRoles($this->getAuthorization());
 
-                $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
+                // Normalize channels to the format Realtime::subscribe expects (plain channel names)
+                $parsedChannels = array_keys(Realtime::convertChannels([0 => $channel], $user->getId()));
 
                 $this->realtime->subscribe(
                     '1',
                     $this->connectionsCount,
+                    ID::unique(),
                     $roles,
                     $parsedChannels
                 );
@@ -105,11 +107,13 @@ class MessagingChannelsTest extends TestCase
 
                 $roles = $user->getRoles($this->getAuthorization());
 
-                $parsedChannels = Realtime::convertChannels([0 => $channel], $user->getId());
+                // Normalize channels to the format Realtime::subscribe expects (plain channel names)
+                $parsedChannels = array_keys(Realtime::convertChannels([0 => $channel], $user->getId()));
 
                 $this->realtime->subscribe(
                     '1',
                     $this->connectionsCount,
+                    ID::unique(),
                     $roles,
                     $parsedChannels
                 );
@@ -183,7 +187,8 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ]
+                    ],
+                    'payload' => ['_match' => true],
                 ]
             ];
 
@@ -220,7 +225,8 @@ class MessagingChannelsTest extends TestCase
                     'data' => [
                         'channels' => [
                             0 => $channel,
-                        ]
+                        ],
+                        'payload' => ['_match' => true],
                     ]
                 ];
 
@@ -255,7 +261,8 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ]
+                    ],
+                    'payload' => ['_match' => true],
                 ]
             ];
 
@@ -290,7 +297,8 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ]
+                    ],
+                    'payload' => ['_match' => true],
                 ]
             ];
 
@@ -323,7 +331,8 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ]
+                    ],
+                    'payload' => ['_match' => true],
                 ]
             ];
 

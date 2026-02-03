@@ -283,7 +283,6 @@ class Realtime extends MessagingAdapter
 
                             // Process each subscription (OR logic across subscriptions)
                             foreach ($subscriptions as $subId => $queryStrings) {
-                                // Parse all queries in this subscription
                                 $parsedQueries = [];
                                 foreach ($queryStrings as $queryString) {
                                     $parsed = Query::parseQueries([$queryString]);
@@ -291,7 +290,6 @@ class Realtime extends MessagingAdapter
                                 }
                                 // Check if this subscription matches (AND logic within subscription)
                                 if (!empty(RuntimeQuery::filter($parsedQueries, $payload))) {
-                                    // This subscription matched - add subscription ID to matched subscriptions
                                     $matchedSubscriptions[$subId] = $queryStrings;
                                 }
                             }
