@@ -760,6 +760,75 @@ class DatabasesStringTypesTest extends Scope
     /**
      * @depends testGetLongtextColumn
      */
+    public function testGetTableWithStringTypeColumns(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        $tableId = $data['tableId'];
+
+        // Test SUCCESS: Get full table - verifies Table model serializes all string column types
+        $table = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(200, $table['headers']['status-code']);
+        $this->assertEquals($tableId, $table['body']['$id']);
+        $this->assertIsArray($table['body']['columns']);
+
+        // Extract column types from the response
+        $columnTypes = array_map(fn ($col) => $col['type'], $table['body']['columns']);
+
+        // Verify all new string types are present and properly serialized
+        $this->assertContains('varchar', $columnTypes, 'Table response should contain varchar columns');
+        $this->assertContains('text', $columnTypes, 'Table response should contain text columns');
+        $this->assertContains('mediumtext', $columnTypes, 'Table response should contain mediumtext columns');
+        $this->assertContains('longtext', $columnTypes, 'Table response should contain longtext columns');
+
+        // Verify column keys are present
+        $columnKeys = array_map(fn ($col) => $col['key'], $table['body']['columns']);
+        $this->assertContains('varchar_field', $columnKeys);
+        $this->assertContains('text_field', $columnKeys);
+        $this->assertContains('mediumtext_field', $columnKeys);
+        $this->assertContains('longtext_field', $columnKeys);
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetTableWithStringTypeColumns
+     */
+    public function testListColumnsWithStringTypes(array $data): array
+    {
+        $databaseId = $data['databaseId'];
+        $tableId = $data['tableId'];
+
+        // Test SUCCESS: List all columns - verifies ColumnList model serializes all string column types
+        $columns = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(200, $columns['headers']['status-code']);
+        $this->assertIsArray($columns['body']['columns']);
+        $this->assertGreaterThan(0, $columns['body']['total']);
+
+        // Extract column types from the response
+        $columnTypes = array_map(fn ($col) => $col['type'], $columns['body']['columns']);
+
+        // Verify all new string types are present and properly serialized
+        $this->assertContains('varchar', $columnTypes, 'Column list should contain varchar columns');
+        $this->assertContains('text', $columnTypes, 'Column list should contain text columns');
+        $this->assertContains('mediumtext', $columnTypes, 'Column list should contain mediumtext columns');
+        $this->assertContains('longtext', $columnTypes, 'Column list should contain longtext columns');
+
+        return $data;
+    }
+
+    /**
+     * @depends testListColumnsWithStringTypes
+     */
     public function testDeleteStringTypeColumns(array $data): void
     {
         $databaseId = $data['databaseId'];
