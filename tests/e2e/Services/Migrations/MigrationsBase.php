@@ -13,7 +13,6 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
-use Utopia\System\System;
 
 trait MigrationsBase
 {
