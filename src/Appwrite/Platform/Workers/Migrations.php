@@ -333,8 +333,10 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
+        //$protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        //$endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
+
+        $endpoint = 'http://localhost/v1';
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
@@ -350,9 +352,11 @@ class Migrations extends Action
                 $credentials['destinationEndpoint'] = $endpoint;
             }
 
-            if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
-                $credentials['endpoint'] = $endpoint;
-            }
+//            if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
+//                $credentials['endpoint'] = $endpoint;
+//            }
+
+            var_dump($credentials);
 
             $migration->setAttribute('credentials', $credentials);
 
