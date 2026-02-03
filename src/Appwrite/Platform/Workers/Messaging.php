@@ -191,6 +191,22 @@ class Messaging extends Action
 
         Span::add('recipientsTotal', \count($allTargets));
 
+        // Extract country codes for SMS targets
+        if ($providerType === MESSAGE_TYPE_SMS && !empty($allTargets)) {
+            $countryCodes = [];
+            foreach ($allTargets as $target) {
+                $identifier = $target->getAttribute('identifier', '');
+                if (\str_starts_with($identifier, '+')) {
+                    if (\preg_match('/^\+(\d{1,3})/', $identifier, $matches)) {
+                        $countryCodes[$matches[1]] = ($countryCodes[$matches[1]] ?? 0) + 1;
+                    }
+                }
+            }
+            if (!empty($countryCodes)) {
+                Span::add('countryCodes', \json_encode($countryCodes));
+            }
+        }
+
         if (empty($allTargets)) {
             $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
                 'status' => MessageStatus::FAILED,
