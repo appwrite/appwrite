@@ -18,13 +18,13 @@ abstract class Scope extends TestCase
     public const REQUEST_TYPE_SMS = 'sms';
 
     protected ?Client $client = null;
-    protected string $endpoint = 'http://appwrite.test/v1';
-    protected string $localhost = 'http://localhost/v1';
+    //protected string $endpoint = 'http://appwrite.test/v1';
+    protected string $endpoint = 'http://localhost/v1';
 
     protected function setUp(): void
     {
         $this->client = new Client();
-        $this->client->setEndpoint($this->localhost);
+        $this->client->setEndpoint($this->endpoint);
 
         $format = System::getEnv('_APP_E2E_RESPONSE_FORMAT');
         if (!empty($format)) {
