@@ -48,8 +48,13 @@ use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
+use Utopia\Span\Exporter;
+use Utopia\Span\Span;
+use Utopia\Span\Storage;
 
 Runtime::enableCoroutine();
+Span::setStorage(new Storage\Coroutine());
+Span::addExporter(new Exporter\Stdout());
 
 Server::setResource('register', fn () => $register);
 
