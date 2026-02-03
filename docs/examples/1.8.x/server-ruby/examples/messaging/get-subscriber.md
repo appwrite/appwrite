@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = messaging.get_subscriber(
     topic_id: '<TOPIC_ID>',
     subscriber_id: '<SUBSCRIBER_ID>'
 )
+```

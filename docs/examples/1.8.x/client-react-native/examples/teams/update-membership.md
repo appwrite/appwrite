@@ -1,3 +1,4 @@
+```javascript
 import { Client, Teams, Roles } from "react-native-appwrite";
 
 const client = new Client()
@@ -13,3 +14,4 @@ const result = await teams.updateMembership({
 });
 
 console.log(result);
+```

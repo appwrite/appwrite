@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = account.update_verification(
     user_id: '<USER_ID>',
     secret: '<SECRET>'
 )
+```

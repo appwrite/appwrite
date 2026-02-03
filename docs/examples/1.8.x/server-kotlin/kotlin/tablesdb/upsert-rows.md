@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
@@ -15,3 +16,4 @@ val response = tablesDB.upsertRows(
     rows = listOf(),
     transactionId = "<TRANSACTION_ID>" // optional
 )
+```

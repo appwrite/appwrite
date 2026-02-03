@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -18,4 +19,4 @@ $result = $databases->decrementDocumentAttribute(
     value: null, // optional
     min: null, // optional
     transactionId: '<TRANSACTION_ID>' // optional
-);
+);```

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
@@ -12,4 +13,4 @@ val result = functions.listExecutions(
     functionId = "<FUNCTION_ID>", 
     queries = listOf(), // (optional)
     total = false, // (optional)
-)
+)```

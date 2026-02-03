@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 
@@ -11,3 +12,4 @@ tables_db = TablesDB(client)
 result = tables_db.get_transaction(
     transaction_id = '<TRANSACTION_ID>'
 )
+```

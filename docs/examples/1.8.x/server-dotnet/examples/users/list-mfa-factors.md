@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Users users = new Users(client);
 
 MfaFactors result = await users.ListMFAFactors(
     userId: "<USER_ID>"
-);
+);```

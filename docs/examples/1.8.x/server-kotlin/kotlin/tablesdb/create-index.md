@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
@@ -20,3 +21,4 @@ val response = tablesDB.createIndex(
     orders = listOf(OrderBy.ASC), // optional
     lengths = listOf() // optional
 )
+```

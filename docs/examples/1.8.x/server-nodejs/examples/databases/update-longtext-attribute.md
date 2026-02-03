@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -15,3 +16,4 @@ const result = await databases.updateLongtextAttribute({
     default: '<DEFAULT>',
     newKey: '' // optional
 });
+```

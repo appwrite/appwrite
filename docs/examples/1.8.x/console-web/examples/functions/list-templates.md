@@ -1,3 +1,4 @@
+```javascript
 import { Client, Functions, Runtimes, UseCases } from "@appwrite.io/console";
 
 const client = new Client()
@@ -15,3 +16,4 @@ const result = await functions.listTemplates({
 });
 
 console.log(result);
+```

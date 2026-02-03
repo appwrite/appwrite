@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
@@ -14,3 +15,4 @@ val response = tablesDB.deleteColumn(
     tableId = "<TABLE_ID>",
     key = ""
 )
+```

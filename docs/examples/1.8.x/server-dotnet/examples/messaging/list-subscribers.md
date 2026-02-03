@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ SubscriberList result = await messaging.ListSubscribers(
     queries: new List<string>(), // optional
     search: "<SEARCH>", // optional
     total: false // optional
-);
+);```

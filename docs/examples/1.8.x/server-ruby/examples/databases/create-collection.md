@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -21,3 +22,4 @@ result = databases.create_collection(
     attributes: [], # optional
     indexes: [] # optional
 )
+```

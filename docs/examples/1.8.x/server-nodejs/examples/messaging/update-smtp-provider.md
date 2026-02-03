@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -23,3 +24,4 @@ const result = await messaging.updateSMTPProvider({
     replyToEmail: '<REPLY_TO_EMAIL>', // optional
     enabled: false // optional
 });
+```

@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -16,3 +17,4 @@ AttributeVarchar result = await databases.createVarcharAttribute(
     xdefault: '<DEFAULT>', // (optional)
     array: false, // (optional)
 );
+```

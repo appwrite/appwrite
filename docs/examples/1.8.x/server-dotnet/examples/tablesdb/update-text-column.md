@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ ColumnText result = await tablesDB.UpdateTextColumn(
     required: false,
     default: "<DEFAULT>",
     newKey: "" // optional
-);
+);```

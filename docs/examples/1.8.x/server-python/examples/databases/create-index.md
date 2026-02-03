@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 from appwrite.enums import IndexType
@@ -19,3 +20,4 @@ result = databases.create_index(
     orders = [OrderBy.ASC], # optional
     lengths = [] # optional
 )
+```

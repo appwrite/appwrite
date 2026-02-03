@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = messaging.list_provider_logs(
     queries: [], # optional
     total: false # optional
 )
+```

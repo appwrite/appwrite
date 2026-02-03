@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,3 +16,4 @@ result = databases.upsert_documents(
     documents: [],
     transaction_id: '<TRANSACTION_ID>' # optional
 )
+```

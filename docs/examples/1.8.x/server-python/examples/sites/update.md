@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.sites import Sites
 from appwrite.enums import Framework
@@ -31,3 +32,4 @@ result = sites.update(
     provider_root_directory = '<PROVIDER_ROOT_DIRECTORY>', # optional
     specification = '' # optional
 )
+```

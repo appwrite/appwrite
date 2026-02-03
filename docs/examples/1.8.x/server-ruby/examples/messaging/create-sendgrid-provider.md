@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = messaging.create_sendgrid_provider(
     reply_to_email: 'email@example.com', # optional
     enabled: false # optional
 )
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -25,4 +26,4 @@ Provider result = await messaging.CreateSMTPProvider(
     replyToName: "<REPLY_TO_NAME>", // optional
     replyToEmail: "email@example.com", // optional
     enabled: false // optional
-);
+);```

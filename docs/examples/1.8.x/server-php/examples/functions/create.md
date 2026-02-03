@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -31,4 +32,4 @@ $result = $functions->create(
     providerSilentMode: false, // optional
     providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>', // optional
     specification: '' // optional
-);
+);```

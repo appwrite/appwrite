@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $result = $storage->getFileView(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     token: '<TOKEN>' // optional
-);
+);```

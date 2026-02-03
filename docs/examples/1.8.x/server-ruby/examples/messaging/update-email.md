@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -23,3 +24,4 @@ result = messaging.update_email(
     scheduled_at: '', # optional
     attachments: [] # optional
 )
+```

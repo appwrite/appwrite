@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -18,4 +19,4 @@ $result = $tablesDB->updateEnumColumn(
     required: false,
     default: '<DEFAULT>',
     newKey: '' // optional
-);
+);```

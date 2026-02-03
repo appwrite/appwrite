@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -14,4 +15,4 @@ Membership result = await teams.UpdateMembership(
     teamId: "<TEAM_ID>",
     membershipId: "<MEMBERSHIP_ID>",
     roles: new List&lt;Roles&gt; { Roles.Admin }
-);
+);```

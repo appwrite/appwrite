@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ Database result = await tablesDB.Update(
     databaseId: "<DATABASE_ID>",
     name: "<NAME>", // optional
     enabled: false // optional
-);
+);```

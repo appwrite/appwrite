@@ -1,3 +1,4 @@
+```http
 DELETE /v1/databases/{databaseId}/collections/{collectionId}/documents HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -9,3 +10,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "queries": [],
   "transactionId": "<TRANSACTION_ID>"
 }
+```

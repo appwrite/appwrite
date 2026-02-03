@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ AttributeEmail result = await databases.UpdateEmailAttribute(
     required: false,
     default: "email@example.com",
     newKey: "" // optional
-);
+);```

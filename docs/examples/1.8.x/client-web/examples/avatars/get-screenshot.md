@@ -1,3 +1,4 @@
+```javascript
 import { Client, Avatars, Theme, Timezone, BrowserPermission, ImageFormat } from "appwrite";
 
 const client = new Client()
@@ -33,3 +34,4 @@ const result = avatars.getScreenshot({
 });
 
 console.log(result);
+```

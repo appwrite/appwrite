@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 from appwrite.enums import Runtime
@@ -30,3 +31,4 @@ result = functions.update(
     provider_root_directory = '<PROVIDER_ROOT_DIRECTORY>', # optional
     specification = '' # optional
 )
+```

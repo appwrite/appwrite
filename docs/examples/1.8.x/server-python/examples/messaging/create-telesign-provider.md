@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -16,3 +17,4 @@ result = messaging.create_telesign_provider(
     api_key = '<API_KEY>', # optional
     enabled = False # optional
 )
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -23,3 +24,4 @@ result = databases.create_operations(
 	    }
 	] # optional
 )
+```

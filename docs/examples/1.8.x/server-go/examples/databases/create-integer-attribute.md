@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -24,3 +24,4 @@ response, error := service.CreateIntegerAttribute(
     databases.WithCreateIntegerAttributeDefault(0),
     databases.WithCreateIntegerAttributeArray(false),
 )
+```

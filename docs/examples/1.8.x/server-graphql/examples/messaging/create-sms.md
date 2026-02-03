@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingCreateSMS(
         messageId: "<MESSAGE_ID>",
@@ -23,3 +24,4 @@ mutation {
         status
     }
 }
+```

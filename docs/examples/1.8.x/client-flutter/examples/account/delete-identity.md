@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -9,3 +10,4 @@ Account account = Account(client);
 await account.deleteIdentity(
     identityId: '<IDENTITY_ID>',
 );
+```

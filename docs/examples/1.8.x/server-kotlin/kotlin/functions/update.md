@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
@@ -31,3 +32,4 @@ val response = functions.update(
     providerRootDirectory = "<PROVIDER_ROOT_DIRECTORY>", // optional
     specification = "" // optional
 )
+```

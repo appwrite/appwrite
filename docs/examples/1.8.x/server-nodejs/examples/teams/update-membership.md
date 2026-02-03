@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -12,3 +13,4 @@ const result = await teams.updateMembership({
     membershipId: '<MEMBERSHIP_ID>',
     roles: [sdk.Roles.Admin]
 });
+```

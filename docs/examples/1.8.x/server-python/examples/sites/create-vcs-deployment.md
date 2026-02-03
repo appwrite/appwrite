@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.sites import Sites
 from appwrite.enums import VCSReferenceType
@@ -15,3 +16,4 @@ result = sites.create_vcs_deployment(
     reference = '<REFERENCE>',
     activate = False # optional
 )
+```

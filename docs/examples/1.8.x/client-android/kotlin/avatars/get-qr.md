@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Avatars
@@ -13,4 +14,4 @@ val result = avatars.getQR(
     size = 1, // (optional)
     margin = 0, // (optional)
     download = false, // (optional)
-)
+)```

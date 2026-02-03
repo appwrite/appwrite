@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreateJWT(
         duration: 0
@@ -5,3 +6,4 @@ mutation {
         jwt
     }
 }
+```

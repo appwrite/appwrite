@@ -1,3 +1,4 @@
+```graphql
 mutation {
     teamsCreateMembership(
         teamId: "<TEAM_ID>",
@@ -23,3 +24,4 @@ mutation {
         roles
     }
 }
+```

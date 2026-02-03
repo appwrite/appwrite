@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -16,3 +17,4 @@ ColumnVarchar result = await tablesDB.createVarcharColumn(
     xdefault: '<DEFAULT>', // (optional)
     array: false, // (optional)
 );
+```

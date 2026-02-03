@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ DocumentList result = await databases.UpsertDocuments(
     collectionId: "<COLLECTION_ID>",
     documents: new List<object>(),
     transactionId: "<TRANSACTION_ID>" // optional
-);
+);```
