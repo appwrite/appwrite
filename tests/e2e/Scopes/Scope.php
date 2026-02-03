@@ -19,7 +19,8 @@ abstract class Scope extends TestCase
 
     protected ?Client $client = null;
     //protected string $endpoint = 'http://appwrite.test/v1';
-    protected string $endpoint = 'http://localhost/v1';
+    //protected string $endpoint = 'http://localhost/v1';
+    protected string $endpoint = 'http://appwrite/v1';
 
     protected function setUp(): void
     {

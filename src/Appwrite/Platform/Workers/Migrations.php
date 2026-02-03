@@ -337,6 +337,7 @@ class Migrations extends Action
         //$endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
 
         $endpoint = 'http://localhost/v1';
+        $endpoint = 'http://appwrite/v1';
 
         try {
             $credentials = $migration->getAttribute('credentials', []);

@@ -84,6 +84,11 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     $url = $protocol . '://' . $platform['consoleHostname'];
     $platformHostnames = $platform['hostnames'] ?? [];
 
+    var_dump('getHostname=');
+    var_dump($host);
+
+    var_dump('$platformHostnames=');
+    var_dump($platformHostnames);
     if ($rule->isEmpty()) {
         $denyDomains = [];
         $denyEnvVars = [
