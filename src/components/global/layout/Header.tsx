@@ -21,6 +21,7 @@ import {
   Globe,
   Building2,
   FolderPlus,
+  Plug2,
 } from 'lucide-react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { ProjectSelector } from '@/components/pages/projects/$projectId/shared/ProjectSelector'
@@ -169,6 +170,34 @@ export function ConsoleHeader({
               <div className="hidden min-w-0 @[700px]:block">
                 <ProjectSelector projectId={projectId} />
               </div>
+
+              {/* Connect button - show when project has never received a ping */}
+              {project &&
+                (project.pingCount === 0 || !project.pingedAt) &&
+                projectId && (
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border bg-background px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer hidden @[700px]:flex text-[13px]"
+                          onClick={() =>
+                            navigate({
+                              to: '/projects/$projectId/apps',
+                              params: { projectId },
+                            })
+                          }
+                        >
+                          <Plug2 className="h-4 w-4" />
+                          Connect
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>Connect your app to this project</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
 
               {/* Create Button */}
               <div className="hidden @[700px]:block shrink-0">

@@ -1,12 +1,12 @@
 /**
  * Deployment Complete Screen
  *
- * Success screen with site preview and next steps.
+ * Redirects to the deploying route with the same params. The deploying view
+ * evolves in place when status is ready, so one URL and one view for the full flow.
  */
 
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
-import { FinishView } from '@/components/pages/projects/$projectId/sites/create/FinishView'
 
 const searchSchema = z.object({
   siteId: z.string().optional(),
@@ -17,10 +17,17 @@ export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/create/finish',
 )({
   validateSearch: searchSchema,
-  component: FinishPage,
+  beforeLoad: ({ params, search }) => {
+    throw redirect({
+      to: '/projects/$projectId/sites/create/deploying',
+      params: { projectId: params.projectId },
+      search: { siteId: search.siteId, deploymentId: search.deploymentId },
+      replace: true,
+    })
+  },
+  component: FinishRedirect,
 })
 
-function FinishPage() {
-  const { siteId, deploymentId } = Route.useSearch()
-  return <FinishView siteId={siteId} deploymentId={deploymentId} />
+function FinishRedirect() {
+  return null
 }

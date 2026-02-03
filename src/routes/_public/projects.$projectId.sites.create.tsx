@@ -12,6 +12,7 @@ import {
   fetchSiteFrameworks,
   vcsInstallationsQueryOptions,
   siteFrameworksQueryOptions,
+  siteTemplatesQueryOptions,
   fetchProject,
 } from '@/lib/react-query/hooks'
 import { useQuery } from '@tanstack/react-query'
@@ -39,10 +40,14 @@ export const Route = createFileRoute(
         staleTime: 5 * 60 * 1000,
       })
 
-      // Prefetch VCS installations and frameworks in parallel
+      // Prefetch VCS installations, frameworks, and first page of templates in parallel
+      // First page of templates: limit 9, offset 0, no filters (matches CreateSiteView initial request)
       await Promise.all([
         queryClient.ensureQueryData(vcsInstallationsQueryOptions(projectId)),
         queryClient.ensureQueryData(siteFrameworksQueryOptions(projectId)),
+        queryClient.ensureQueryData(
+          siteTemplatesQueryOptions(projectId, undefined, undefined, 9, 0),
+        ),
       ])
 
       return { projectData }

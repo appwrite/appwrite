@@ -105,6 +105,12 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
 
   const siteUrl = primaryDomain ? `https://${primaryDomain}` : null
 
+  // QR code image URL from console avatars API (for "View on mobile" dialog)
+  const qrImageUrl = useMemo(() => {
+    if (!siteUrl) return null
+    return sdk.forConsole.avatars.getQR({ text: siteUrl, size: 256 })
+  }, [siteUrl])
+
   const frameworkInfo = site
     ? frameworks.find((f) => f.key === site.framework)
     : null
@@ -154,14 +160,13 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
           </DialogHeader>
           <div className="border-t border-border" />
           <div className="px-6 py-6 flex items-center justify-center">
-            {siteUrl && (
+            {qrImageUrl && (
               <div className="p-4 bg-white rounded-lg">
-                {/* QR code would be generated here */}
-                <div className="h-48 w-48 flex items-center justify-center bg-muted rounded">
-                  <p className="text-[12px] text-muted-foreground text-center px-4">
-                    QR code for {siteUrl}
-                  </p>
-                </div>
+                <img
+                  src={qrImageUrl}
+                  alt="QR code to open site on mobile"
+                  className="h-48 w-48 rounded"
+                />
               </div>
             )}
           </div>
@@ -296,7 +301,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
             <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </Link>
 
-          {/* Share site */}
+          {/* Copy site URL */}
           <button
             onClick={() => {
               if (siteUrl) {
@@ -310,10 +315,10 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
             </div>
             <div className="flex-1">
               <p className="text-[13px] font-medium text-foreground">
-                Share site
+                Copy site URL
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Copy the site URL to share with others
+                Copy the site URL to clipboard
               </p>
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground" />

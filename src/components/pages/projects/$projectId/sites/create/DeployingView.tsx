@@ -1,12 +1,14 @@
 /**
  * Deploying View Component
  *
- * Shows real-time deployment progress with logs.
- * Subscribes to realtime updates and navigates to finish screen when complete.
+ * Shows real-time deployment progress with logs. The same view evolves when
+ * status changes to ready or failed: outcome appears with smooth transitions,
+ * and on success the completion content (preview + next steps) appears inline.
  */
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { useParams, useNavigate } from '@tanstack/react-router'
+import { useParams, useNavigate, Link } from '@tanstack/react-router'
+import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -16,20 +18,44 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { BuildLogsView } from '@/components/global/shared/BuildLogsView'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { getDeploymentStatusBadge } from '@/lib/utils/deployment-status'
-import { CircleDashed, CheckCircle2, XCircle, Search, ArrowUp, ArrowDown, Copy, Download } from 'lucide-react'
+import { sdk } from '@/lib/appwrite/sdk'
+import {
+  CircleDashed,
+  Search,
+  ArrowUp,
+  ArrowDown,
+  Copy,
+  Download,
+  ExternalLink,
+  Globe,
+  GitBranch,
+  Share2,
+  Smartphone,
+  Loader2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import {
   useProjectSite,
   useSiteDeployment,
   useRepository,
+  useSiteDomains,
 } from '@/lib/react-query/hooks'
 import { useWizard } from './WizardContext'
+
+const SCREENSHOTS_BUCKET_ID = 'screenshots'
 
 function GitHubIcon({ className }: { className?: string }) {
   return (
@@ -62,13 +88,16 @@ interface DeployingViewProps {
 export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
-  const { formData, frameworks } = useWizard()
+  const { theme, resolvedTheme } = useTheme()
+  const { formData, frameworks, resetFormData } = useWizard()
   const logsContainerRef = useRef<HTMLDivElement>(null)
   /** Set on first scroll; until then we auto-scroll so initial load follows tail. */
   const hasUserScrolledRef = useRef(false)
   const [logsSearch, setLogsSearch] = useState('')
   const [isAtTop, setIsAtTop] = useState(true)
   const [isAtBottom, setIsAtBottom] = useState(false)
+  const [qrDialogOpen, setQrDialogOpen] = useState(false)
+  const [previewImageLoaded, setPreviewImageLoaded] = useState(false)
 
   // Use provided IDs or fall back to form data
   const actualSiteId = siteId || formData.createdSiteId
@@ -90,6 +119,9 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     site?.installationId || null,
     site?.providerRepositoryId || null,
   )
+
+  // Fetch site domains (for completion: primary domain / site URL)
+  const { rules: domains } = useSiteDomains(projectId, actualSiteId, 0, 10)
 
   // Local state for status
   const [status, setStatus] = useState<string>('building')
@@ -172,23 +204,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     toast.success('Logs downloaded')
   }, [buildLogs, actualDeploymentId])
 
-  // Navigate to finish screen when deployment is ready
-  useEffect(() => {
-    if (status === 'ready' && actualSiteId && actualDeploymentId) {
-      // Wait a bit for screenshots to be generated
-      const timer = setTimeout(() => {
-        navigate({
-          to: '/projects/$projectId/sites/create/finish',
-          params: { projectId: projectId! },
-          search: { siteId: actualSiteId, deploymentId: actualDeploymentId },
-        })
-      }, 2000)
-
-      return () => clearTimeout(timer)
-    }
-  }, [status, actualSiteId, actualDeploymentId, navigate, projectId])
-
   const handleGoToDashboard = () => {
+    if (status === 'ready') {
+      resetFormData()
+    }
     if (actualSiteId) {
       navigate({
         to: '/projects/$projectId/sites/$siteId',
@@ -201,6 +220,156 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
       })
     }
   }
+
+  // Completion content (when status === 'ready'): screenshot URL and primary domain
+  const isDark = useMemo(() => {
+    if (typeof window === 'undefined') return true
+    return (
+      resolvedTheme === 'dark' ||
+      (resolvedTheme === 'system' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches) ||
+      theme === 'dark'
+    )
+  }, [theme, resolvedTheme])
+
+  const screenshotUrl = useMemo(() => {
+    if (!deployment) return null
+    const screenshotId = isDark
+      ? (deployment as any).screenshotDark
+      : (deployment as any).screenshotLight
+    if (!screenshotId) return null
+    return sdk.forConsole.storage.getFileDownload({
+      bucketId: SCREENSHOTS_BUCKET_ID,
+      fileId: screenshotId,
+    })
+  }, [deployment, isDark])
+
+  const primaryDomain = useMemo(() => {
+    if (domains.length > 0) return domains[0].domain
+    return null
+  }, [domains])
+  const siteUrl = primaryDomain ? `https://${primaryDomain}` : null
+
+  // QR code image URL from console avatars API (for "View on mobile" dialog)
+  const qrImageUrl = useMemo(() => {
+    if (!siteUrl) return null
+    return sdk.forConsole.avatars.getQR({ text: siteUrl, size: 256 })
+  }, [siteUrl])
+
+  // Reset preview loaded state when screenshot URL changes
+  useEffect(() => {
+    setPreviewImageLoaded(false)
+  }, [screenshotUrl])
+
+  // Shared build logs content (search, viewer, scroll buttons)
+  const buildLogsSectionContent = (
+    <>
+      <div className="border-t border-border px-4 sm:px-6 py-3">
+        <TooltipProvider>
+          <div className="flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search logs..."
+              value={logsSearch}
+              onChange={(e) => setLogsSearch(e.target.value)}
+              className="pl-9 h-9 text-[13px]"
+            />
+          </div>
+          <TooltipPrimitive.Root>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadLogs}
+                disabled={!buildLogs}
+                className="h-9 w-9 p-0 shrink-0"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Download logs</p>
+            </TooltipContent>
+          </TooltipPrimitive.Root>
+          <TooltipPrimitive.Root>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyLogs}
+                disabled={!buildLogs}
+                className="h-9 w-9 p-0 shrink-0"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Copy logs</p>
+            </TooltipContent>
+          </TooltipPrimitive.Root>
+        </div>
+      </TooltipProvider>
+    </div>
+    <div className="border-t border-border" />
+    <div className="relative">
+      <div
+        ref={logsContainerRef}
+        className="h-[400px] overflow-y-auto overflow-x-auto"
+      >
+        <BuildLogsView
+          buildLogs={buildLogs}
+          searchTerm={logsSearch}
+          highlightLineOnHover
+          emptyMessage={
+            <div className="flex items-center gap-2">
+              <CircleDashed className="h-3.5 w-3.5 shrink-0" />
+              Waiting for build logs...
+            </div>
+          }
+        />
+      </div>
+      {buildLogs && (
+        <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
+          <TooltipProvider>
+            <TooltipPrimitive.Root>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleScrollToTop}
+                  disabled={isAtTop}
+                  className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>Scroll to top</p>
+              </TooltipContent>
+            </TooltipPrimitive.Root>
+            <TooltipPrimitive.Root>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleScrollToBottom}
+                  disabled={isAtBottom}
+                  className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left">
+                <p>Scroll to bottom</p>
+              </TooltipContent>
+            </TooltipPrimitive.Root>
+          </TooltipProvider>
+        </div>
+      )}
+    </div>
+    </>
+  )
 
   const frameworkInfo = site
     ? frameworks.find((f) => f.key === site.framework)
@@ -238,44 +407,76 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   }, [deployment, elapsedSeconds])
 
   const sidebarContent = (site || deployment) ? (
-    <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      {/* Header: icon + site name + status */}
-      <div className="px-5 py-4">
-        <div className="flex items-start gap-3">
-          {site && (
-            <div className="relative shrink-0">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
-                <FrameworkIcon framework={site.framework} size="md" />
-              </div>
-              <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-2 ring-background">
-                <GitHubIcon className="h-3 w-3 text-muted-foreground" />
-              </div>
+    <div className="space-y-4">
+      {/* QR code dialog (used when status === 'ready') */}
+      {status === 'ready' && (
+        <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+          <DialogContent className="sm:max-w-md p-0">
+            <DialogHeader className="px-6 pt-6 text-left">
+              <DialogTitle>View on mobile</DialogTitle>
+              <DialogDescription className="text-[13px] mt-2">
+                Scan this QR code to open your site on a mobile device
+              </DialogDescription>
+            </DialogHeader>
+            <div className="border-t border-border" />
+            <div className="px-6 py-6 flex items-center justify-center">
+              {qrImageUrl && (
+                <div className="p-4 bg-white rounded-lg">
+                  <img
+                    src={qrImageUrl}
+                    alt="QR code to open site on mobile"
+                    className="h-48 w-48 rounded"
+                  />
+                </div>
+              )}
             </div>
-          )}
-          <div className="flex-1 min-w-0">
+            <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
+              <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+        {/* Header: icon + site name + status */}
+        <div className="px-5 py-4">
+          <div className="flex items-start gap-3">
             {site && (
-              <>
-                <h3 className="text-[15px] font-semibold text-foreground truncate">
-                  {site.name}
-                </h3>
-                <CopyableId id={site.$id} size="xs" className="mt-0.5" />
-              </>
+              <div className="relative shrink-0">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
+                  <FrameworkIcon framework={site.framework} size="md" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-2 ring-background">
+                  <GitHubIcon className="h-3 w-3 text-muted-foreground" />
+                </div>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              {site && (
+                <>
+                  <h3 className="text-[15px] font-semibold text-foreground truncate">
+                    {site.name}
+                  </h3>
+                  <CopyableId id={site.$id} size="xs" className="mt-0.5" />
+                </>
+              )}
+            </div>
+            {statusBadge && (
+              <Badge
+                variant={statusBadge.badgeVariant}
+                className="gap-1.5 text-[11px] font-medium shrink-0 h-6 px-2.5"
+              >
+                {(() => {
+                  const StatusIcon = statusBadge.icon
+                  return <StatusIcon className="h-3.5 w-3.5" />
+                })()}
+                {statusBadge.label}
+              </Badge>
             )}
           </div>
-          {statusBadge && (
-            <Badge
-              variant={statusBadge.badgeVariant}
-              className="gap-1.5 text-[11px] font-medium shrink-0 h-6 px-2.5"
-            >
-              {(() => {
-                const StatusIcon = statusBadge.icon
-                return <StatusIcon className="h-3.5 w-3.5" />
-              })()}
-              {statusBadge.label}
-            </Badge>
-          )}
         </div>
-      </div>
 
       {/* Metadata: key-value rows, tech style */}
       <div className="border-t border-border px-5 py-3.5 bg-muted/10">
@@ -336,6 +537,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
           )}
         </dl>
       </div>
+      </div>
     </div>
   ) : null
 
@@ -348,170 +550,197 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
       footerAlign="right"
       sidebar={sidebarContent}
       footer={
-        <Button variant="outline" onClick={handleGoToDashboard}>
+        <Button
+          variant={status === 'ready' ? 'default' : 'outline'}
+          onClick={handleGoToDashboard}
+        >
           Go to dashboard
         </Button>
       }
     >
-      {/* Deployment logs – same component as deployment details (line numbers + ANSI highlighting) */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4 flex items-center justify-between gap-3">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Build logs
-          </h3>
-          {buildDurationDisplay && (
-            <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
-              Duration: <span className="font-medium text-foreground">{buildDurationDisplay}</span>
-            </span>
-          )}
-        </div>
-        <div className="border-t border-border px-4 sm:px-6 py-3">
-          <TooltipProvider>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1 min-w-0">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search logs..."
-                  value={logsSearch}
-                  onChange={(e) => setLogsSearch(e.target.value)}
-                  className="pl-9 h-9 text-[13px]"
-                />
-              </div>
-              <TooltipPrimitive.Root>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadLogs}
-                    disabled={!buildLogs}
-                    className="h-9 w-9 p-0 shrink-0"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Download logs</p>
-                </TooltipContent>
-              </TooltipPrimitive.Root>
-              <TooltipPrimitive.Root>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCopyLogs}
-                    disabled={!buildLogs}
-                    className="h-9 w-9 p-0 shrink-0"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Copy logs</p>
-                </TooltipContent>
-              </TooltipPrimitive.Root>
-            </div>
-          </TooltipProvider>
-        </div>
-        <div className="border-t border-border" />
-        <div className="relative">
-          <div
-            ref={logsContainerRef}
-            className="h-[400px] overflow-y-auto overflow-x-auto"
-          >
-            <BuildLogsView
-              buildLogs={buildLogs}
-              searchTerm={logsSearch}
-              highlightLineOnHover
-              emptyMessage={
-                <div className="flex items-center gap-2">
-                  <CircleDashed className="h-3.5 w-3.5 shrink-0" />
-                  Waiting for build logs...
-                </div>
-              }
-            />
-          </div>
-          {buildLogs && (
-            <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
-              <TooltipProvider>
-                <TooltipPrimitive.Root>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleScrollToTop}
-                      disabled={isAtTop}
-                      className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    <p>Scroll to top</p>
-                  </TooltipContent>
-                </TooltipPrimitive.Root>
-                <TooltipPrimitive.Root>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleScrollToBottom}
-                      disabled={isAtBottom}
-                      className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    <p>Scroll to bottom</p>
-                  </TooltipContent>
-                </TooltipPrimitive.Root>
-              </TooltipProvider>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Deployment outcome – unified structure for ready and failed */}
-      {(status === 'ready' || status === 'failed') && (
-        <div
-          className={
-            status === 'ready'
-              ? 'rounded-xl border border-green-500/30 bg-green-500/10 p-4'
-              : 'rounded-xl border border-destructive/30 bg-destructive/10 p-4'
-          }
-        >
-          <div className="flex items-center gap-3">
-            {status === 'ready' ? (
-              <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-            ) : (
-              <XCircle className="h-5 w-5 text-destructive shrink-0" />
-            )}
-            <div className="flex-1 min-w-0">
-              <p
-                className={
-                  status === 'ready'
-                    ? 'text-[13px] font-medium text-green-600 dark:text-green-400'
-                    : 'text-[13px] font-medium text-destructive'
-                }
-              >
-                {status === 'ready'
-                  ? 'Deployment successful'
-                  : 'Deployment failed'}
-              </p>
-              <p className="text-[12px] text-muted-foreground mt-0.5">
-                {status === 'ready'
-                  ? 'Redirecting to completion screen...'
-                  : 'Check the build logs for more details'}
-              </p>
-              {status === 'ready' && deployment?.buildDuration != null && deployment.buildDuration >= 0 && (
-                <p className="text-[11px] text-muted-foreground mt-1.5">
-                  Build completed in {formatDuration(deployment.buildDuration)}
-                </p>
+      <div className="space-y-4">
+        {/* Build logs – only while building; hidden when ready */}
+        {status !== 'ready' && (
+          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+            <div className="px-6 py-4 flex items-center justify-between gap-3">
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Build logs
+              </h3>
+              {buildDurationDisplay && (
+                <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
+                  Duration: <span className="font-medium text-foreground">{buildDurationDisplay}</span>
+                </span>
               )}
             </div>
+            {buildLogsSectionContent}
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Completion content – appears when ready, same view evolves */}
+        {status === 'ready' && site && (
+          <div
+            className="space-y-4 transition-all duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-4"
+            style={{ animationDuration: '400ms', animationFillMode: 'backwards' }}
+          >
+            {/* Site preview card */}
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              {screenshotUrl ? (
+                <div className="aspect-[21/9] w-full relative overflow-hidden bg-muted">
+                  {!previewImageLoaded && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      <p className="text-[13px] font-medium text-muted-foreground">
+                        Loading preview…
+                      </p>
+                    </div>
+                  )}
+                  <img
+                    src={screenshotUrl}
+                    alt={`${site.name} preview`}
+                    className="h-full w-full object-cover"
+                    onLoad={() => setPreviewImageLoaded(true)}
+                  />
+                </div>
+              ) : (
+                <div className="aspect-[21/9] w-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <p className="text-[13px] font-medium text-muted-foreground">
+                    Generating preview…
+                  </p>
+                  <p className="text-[12px] text-muted-foreground/80">
+                    Screenshot may take a few moments after build completes
+                  </p>
+                  <FrameworkIcon framework={site.framework} size="lg" className="mt-2 opacity-50" />
+                </div>
+              )}
+              <div className="p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                      <FrameworkIcon framework={site.framework} size="md" />
+                    </div>
+                    <div>
+                      <h3 className="text-[16px] font-semibold text-foreground">
+                        {site.name}
+                      </h3>
+                      <CopyableId id={site.$id} size="xs" />
+                      {siteUrl && (
+                        <a
+                          href={siteUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 flex items-center gap-1 text-[12px] text-primary hover:underline"
+                        >
+                          <Globe className="h-3.5 w-3.5" />
+                          {primaryDomain}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  {siteUrl && (
+                    <Button asChild>
+                      <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="mr-1.5 h-4 w-4" />
+                        Visit site
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Next steps – standard settings card with action row */}
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Next steps
+                </h3>
+                <p className="text-[13px] text-muted-foreground mt-2">
+                  Configure your site or share it with others
+                </p>
+              </div>
+              <div className="border-t border-border" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 divide-x divide-y divide-border">
+                {site && !site.installationId && (
+                  <Link
+                    to="/projects/$projectId/sites/$siteId/settings"
+                    params={{ projectId: projectId!, siteId: actualSiteId! }}
+                    className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                      <GitBranch className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-foreground">
+                        Add repository
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Connect Git for automatic deployments
+                      </p>
+                    </div>
+                  </Link>
+                )}
+                <Link
+                  to="/projects/$projectId/sites/$siteId/domains"
+                  params={{ projectId: projectId!, siteId: actualSiteId! }}
+                  className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <Globe className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-foreground">
+                      Add custom domain
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Use your own domain name
+                    </p>
+                  </div>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (siteUrl) {
+                      navigator.clipboard.writeText(siteUrl)
+                      toast.success('URL copied to clipboard')
+                    }
+                  }}
+                  className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-left w-full"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <Share2 className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-foreground">
+                      Copy site URL
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Copy URL to clipboard
+                    </p>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQrDialogOpen(true)}
+                  className="flex items-center gap-4 px-6 py-4 hover:bg-muted/20 transition-colors cursor-pointer text-left w-full"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                    <Smartphone className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-foreground">
+                      Open on mobile
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Scan QR code
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </WizardLayout>
   )
 }

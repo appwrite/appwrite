@@ -25,6 +25,10 @@ export interface Project {
   createdAt: string
   icon?: string
   archived?: boolean
+  /** Number of times the ping was received for this project. */
+  pingCount?: number
+  /** Last ping datetime in ISO 8601 format. */
+  pingedAt?: string
 }
 
 export interface Database {

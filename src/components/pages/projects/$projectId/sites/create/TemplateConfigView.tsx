@@ -42,7 +42,6 @@ import {
   useCreateSiteDomain,
   useCreateTemplateDeployment,
   useProject,
-  Dependencies,
 } from '@/lib/react-query/hooks'
 import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
@@ -254,8 +253,10 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         createdDeploymentId: deployment.$id,
       })
 
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: Dependencies.SITES })
+      // Refetch sites list so cache is updated (list has refetchOnMount: false)
+      await queryClient.refetchQueries({
+        queryKey: ['sites', 'project', projectId],
+      })
 
       // Navigate to deploying screen
       navigate({

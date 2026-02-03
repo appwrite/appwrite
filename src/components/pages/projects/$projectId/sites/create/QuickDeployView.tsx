@@ -28,7 +28,6 @@ import {
   useCreateSite,
   useCreateSiteDomain,
   useCreateTemplateDeployment,
-  Dependencies,
 } from '@/lib/react-query/hooks'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
@@ -200,8 +199,10 @@ export function QuickDeployView({
         createdDeploymentId: deployment.$id,
       })
 
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: Dependencies.SITES })
+      // Refetch sites list so cache is updated (list has refetchOnMount: false)
+      await queryClient.refetchQueries({
+        queryKey: ['sites', 'project', projectId],
+      })
 
       // Navigate to deploying screen
       navigate({

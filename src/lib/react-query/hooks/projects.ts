@@ -287,6 +287,8 @@ export function useProject(projectId: string | undefined) {
       icon: projectData.name.charAt(0).toUpperCase(),
       archived: projectData.status === 'archived',
       platforms,
+      pingCount: (projectData as { pingCount?: number }).pingCount,
+      pingedAt: (projectData as { pingedAt?: string }).pingedAt,
     } as Project & { platforms: any[] }
   }, [projectData])
 

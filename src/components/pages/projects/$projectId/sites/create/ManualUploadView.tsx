@@ -33,7 +33,6 @@ import { sdk } from '@/lib/appwrite/sdk'
 import {
   useCreateSite,
   useCreateSiteDomain,
-  Dependencies,
 } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
@@ -200,8 +199,10 @@ export function ManualUploadView() {
         createdDeploymentId: deployment.$id,
       })
 
-      // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: Dependencies.SITES })
+      // Refetch sites list so cache is updated (list has refetchOnMount: false)
+      await queryClient.refetchQueries({
+        queryKey: ['sites', 'project', projectId],
+      })
 
       // Navigate to deploying screen
       navigate({

@@ -211,10 +211,11 @@ export function CreateSiteView() {
   const [debouncedRepoSearch, setDebouncedRepoSearch] = useState('')
   const [repoPage, setRepoPage] = useState(1)
 
-  // Template state
+  // Template state (requestedPage drives fetch; displayedPage stays until new page is ready - no-flash pagination)
   const [templateSearch, setTemplateSearch] = useState('')
   const [debouncedTemplateSearch, setDebouncedTemplateSearch] = useState('')
-  const [templatePage, setTemplatePage] = useState(1)
+  const [templateRequestedPage, setTemplateRequestedPage] = useState(1)
+  const [templateDisplayedPage, setTemplateDisplayedPage] = useState(1)
   const [templatePageSize, setTemplatePageSize] = useState(DEFAULT_TEMPLATE_PAGE_SIZE)
   const [selectedFramework, setSelectedFramework] = useState<string>('all')
   const [selectedUseCase, setSelectedUseCase] = useState<string>('all')
@@ -266,11 +267,12 @@ export function CreateSiteView() {
     return () => clearTimeout(timer)
   }, [repoSearch])
 
-  // Debounce template search
+  // Debounce template search (reset both pages on search change)
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedTemplateSearch(templateSearch)
-      setTemplatePage(1)
+      setTemplateRequestedPage(1)
+      setTemplateDisplayedPage(1)
     }, 300)
     return () => clearTimeout(timer)
   }, [templateSearch])
@@ -297,27 +299,56 @@ export function CreateSiteView() {
 
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
 
-  // Fetch templates with pagination, framework filter, and use case filter
+  // Fetch templates: requested page (triggers load) and displayed page (what we show until new page is ready)
   const frameworkFilter = selectedFramework !== 'all' ? [selectedFramework] : undefined
   const useCaseFilter = selectedUseCase !== 'all' ? [selectedUseCase] : undefined
-  const { templates, total: templatesTotal, isLoading: templatesLoading, isFetching: templatesFetching } = useSiteTemplates(
+  const {
+    isLoading: templatesLoading,
+    isFetching: templatesFetching,
+  } = useSiteTemplates(
     projectId,
     frameworkFilter,
     useCaseFilter,
     templatePageSize,
-    (templatePage - 1) * templatePageSize,
+    (templateRequestedPage - 1) * templatePageSize,
   )
+
+  const {
+    templates: displayedTemplates,
+    total: templatesTotal,
+    isLoading: templatesDisplayedLoading,
+  } = useSiteTemplates(
+    projectId,
+    frameworkFilter,
+    useCaseFilter,
+    templatePageSize,
+    (templateDisplayedPage - 1) * templatePageSize,
+  )
+
+  // Update displayed page only when requested page data is ready (no flash)
+  useEffect(() => {
+    if (
+      !templatesFetching &&
+      templateRequestedPage !== templateDisplayedPage &&
+      !templatesLoading
+    ) {
+      setTemplateDisplayedPage(templateRequestedPage)
+    }
+  }, [templatesFetching, templatesLoading, templateRequestedPage, templateDisplayedPage])
+
+  // Only show full loading when we have no data to display (initial load)
+  const showTemplatesLoading = templatesDisplayedLoading && displayedTemplates.length === 0
 
   // Filter templates by search (client-side since API may not support text search)
   const filteredTemplates = useMemo(() => {
-    if (!debouncedTemplateSearch.trim()) return templates
+    if (!debouncedTemplateSearch.trim()) return displayedTemplates
     const searchLower = debouncedTemplateSearch.toLowerCase()
-    return templates.filter(
+    return displayedTemplates.filter(
       (t) =>
         t.name.toLowerCase().includes(searchLower) ||
         (t.tagline && t.tagline.toLowerCase().includes(searchLower)),
     )
-  }, [templates, debouncedTemplateSearch])
+  }, [displayedTemplates, debouncedTemplateSearch])
 
   // Get unique frameworks from the wizard context for the filter
   const frameworkOptions = useMemo(() => {
@@ -609,7 +640,8 @@ export function CreateSiteView() {
                           value={option.value}
                           onSelect={() => {
                             setSelectedUseCase(option.value)
-                            setTemplatePage(1)
+                            setTemplateRequestedPage(1)
+                            setTemplateDisplayedPage(1)
                             setUseCaseOpen(false)
                           }}
                         >
@@ -654,7 +686,8 @@ export function CreateSiteView() {
                           value={option.label}
                           onSelect={() => {
                             setSelectedFramework(option.value)
-                            setTemplatePage(1)
+                            setTemplateRequestedPage(1)
+                            setTemplateDisplayedPage(1)
                             setFrameworkOpen(false)
                           }}
                         >
@@ -672,7 +705,7 @@ export function CreateSiteView() {
           </div>
 
           {/* Templates grid */}
-          {templatesLoading ? (
+          {showTemplatesLoading ? (
             <div className="grid gap-4 grid-cols-3">
               {Array.from({ length: templatePageSize }).map((_, i) => (
                 <TemplateSkeleton key={i} />
@@ -733,14 +766,15 @@ export function CreateSiteView() {
           {/* Template pagination */}
           {templatesTotal > templatePageSize && (
             <Pagination
-              currentPage={templatePage}
+              currentPage={templateDisplayedPage}
               totalItems={templatesTotal}
               pageSize={templatePageSize}
               pageSizeOptions={[9, 18, 36]}
-              onPageChange={setTemplatePage}
+              onPageChange={setTemplateRequestedPage}
               onPageSizeChange={(size) => {
                 setTemplatePageSize(size)
-                setTemplatePage(1)
+                setTemplateRequestedPage(1)
+                setTemplateDisplayedPage(1)
               }}
             />
           )}
