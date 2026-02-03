@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = storage.get_file_download(
     file_id: '<FILE_ID>',
     token: '<TOKEN>' # optional
 )
+```

@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -14,3 +15,4 @@ let deploymentList = try await sites.listDeployments(
     total: false // optional
 )
 
+```

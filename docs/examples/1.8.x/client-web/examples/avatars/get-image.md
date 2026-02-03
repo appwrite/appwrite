@@ -1,3 +1,4 @@
+```javascript
 import { Client, Avatars } from "appwrite";
 
 const client = new Client()
@@ -13,3 +14,4 @@ const result = avatars.getImage({
 });
 
 console.log(result);
+```

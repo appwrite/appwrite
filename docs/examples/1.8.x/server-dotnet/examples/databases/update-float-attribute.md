@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -18,4 +19,4 @@ AttributeFloat result = await databases.UpdateFloatAttribute(
     min: 0, // optional
     max: 0, // optional
     newKey: "" // optional
-);
+);```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $account = new Account($client);
 $result = $account->updateMFAAuthenticator(
     type: AuthenticatorType::TOTP(),
     otp: '<OTP>'
-);
+);```

@@ -1,3 +1,4 @@
+```http
 PATCH /v1/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}/{column}/decrement HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -11,3 +12,4 @@ X-Appwrite-JWT: <YOUR_JWT>
   "min": 0,
   "transactionId": "<TRANSACTION_ID>"
 }
+```

@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -15,3 +16,4 @@ let user = try await users.create(
     name: "<NAME>" // optional
 )
 
+```

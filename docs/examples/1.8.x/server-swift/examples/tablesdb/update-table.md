@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -16,3 +17,4 @@ let table = try await tablesDB.updateTable(
     enabled: false // optional
 )
 
+```

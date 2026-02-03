@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = account.update_magic_url_session(
     user_id: '<USER_ID>',
     secret: '<SECRET>'
 )
+```

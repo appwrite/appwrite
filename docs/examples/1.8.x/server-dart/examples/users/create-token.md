@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ Token result = await users.createToken(
     length: 4, // (optional)
     expire: 60, // (optional)
 );
+```

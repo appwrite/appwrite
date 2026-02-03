@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.storage import Storage
 
@@ -14,3 +15,4 @@ result = storage.list_files(
     search = '<SEARCH>', # optional
     total = False # optional
 )
+```

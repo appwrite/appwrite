@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -23,3 +23,4 @@ response, error := service.CreateSMS(
     messaging.WithCreateSMSDraft(false),
     messaging.WithCreateSMSScheduledAt(""),
 )
+```

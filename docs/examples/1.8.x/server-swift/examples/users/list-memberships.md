@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -14,3 +15,4 @@ let membershipList = try await users.listMemberships(
     total: false // optional
 )
 
+```

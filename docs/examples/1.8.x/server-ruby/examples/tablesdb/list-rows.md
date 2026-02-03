@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -16,3 +17,4 @@ result = tables_db.list_rows(
     transaction_id: '<TRANSACTION_ID>', # optional
     total: false # optional
 )
+```

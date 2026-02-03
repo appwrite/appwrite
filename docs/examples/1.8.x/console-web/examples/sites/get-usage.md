@@ -1,3 +1,4 @@
+```javascript
 import { Client, Sites, UsageRange } from "@appwrite.io/console";
 
 const client = new Client()
@@ -12,3 +13,4 @@ const result = await sites.getUsage({
 });
 
 console.log(result);
+```

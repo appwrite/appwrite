@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ byte[] result = await avatars.GetQR(
     size: 1, // optional
     margin: 0, // optional
     download: false // optional
-);
+);```

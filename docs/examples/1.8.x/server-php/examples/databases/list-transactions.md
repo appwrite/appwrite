@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -12,4 +13,4 @@ $databases = new Databases($client);
 
 $result = $databases->listTransactions(
     queries: [] // optional
-);
+);```

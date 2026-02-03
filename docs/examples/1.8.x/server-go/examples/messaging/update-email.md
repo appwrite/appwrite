@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -28,3 +28,4 @@ response, error := service.UpdateEmail(
     messaging.WithUpdateEmailScheduledAt(""),
     messaging.WithUpdateEmailAttachments([]interface{}{}),
 )
+```

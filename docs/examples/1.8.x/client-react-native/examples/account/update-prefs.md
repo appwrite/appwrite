@@ -1,3 +1,4 @@
+```javascript
 import { Client, Account } from "react-native-appwrite";
 
 const client = new Client()
@@ -15,3 +16,4 @@ const result = await account.updatePrefs({
 });
 
 console.log(result);
+```

@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 
@@ -17,3 +18,4 @@ result = users.create_scrypt_modified_user(
     password_signer_key = '<PASSWORD_SIGNER_KEY>',
     name = '<NAME>' # optional
 )
+```

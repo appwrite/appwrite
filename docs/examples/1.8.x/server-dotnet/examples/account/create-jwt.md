@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Account account = new Account(client);
 
 JWT result = await account.CreateJWT(
     duration: 0 // optional
-);
+);```

@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.models.InputFile;
@@ -27,3 +28,4 @@ storage.createFile(
     })
 );
 
+```

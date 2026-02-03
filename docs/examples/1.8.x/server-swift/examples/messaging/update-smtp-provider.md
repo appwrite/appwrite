@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -25,3 +26,4 @@ let provider = try await messaging.updateSMTPProvider(
     enabled: false // optional
 )
 
+```

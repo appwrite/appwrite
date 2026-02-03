@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -25,4 +26,4 @@ byte[] result = await storage.GetFilePreview(
     background: "", // optional
     output: ImageFormat.Jpg, // optional
     token: "<TOKEN>" // optional
-);
+);```

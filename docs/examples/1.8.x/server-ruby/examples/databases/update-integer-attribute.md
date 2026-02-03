@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = databases.update_integer_attribute(
     max: null, # optional
     new_key: '' # optional
 )
+```

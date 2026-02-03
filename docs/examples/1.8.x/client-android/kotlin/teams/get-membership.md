@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Teams
@@ -11,4 +12,4 @@ val teams = Teams(client)
 val result = teams.getMembership(
     teamId = "<TEAM_ID>", 
     membershipId = "<MEMBERSHIP_ID>", 
-)
+)```

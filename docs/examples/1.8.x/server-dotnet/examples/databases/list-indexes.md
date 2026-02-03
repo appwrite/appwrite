@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ IndexList result = await databases.ListIndexes(
     collectionId: "<COLLECTION_ID>",
     queries: new List<string>(), // optional
     total: false // optional
-);
+);```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -18,3 +19,4 @@ result = users.create_scrypt_modified_user(
     password_signer_key: '<PASSWORD_SIGNER_KEY>',
     name: '<NAME>' # optional
 )
+```

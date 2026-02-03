@@ -1,3 +1,4 @@
+```javascript
 import { Client, Messaging } from "appwrite";
 
 const client = new Client()
@@ -13,3 +14,4 @@ const result = await messaging.createSubscriber({
 });
 
 console.log(result);
+```

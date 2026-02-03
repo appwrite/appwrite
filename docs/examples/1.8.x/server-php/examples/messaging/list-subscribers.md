@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $messaging->listSubscribers(
     queries: [], // optional
     search: '<SEARCH>', // optional
     total: false // optional
-);
+);```

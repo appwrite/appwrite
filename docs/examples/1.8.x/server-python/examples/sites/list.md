@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.sites import Sites
 
@@ -13,3 +14,4 @@ result = sites.list(
     search = '<SEARCH>', # optional
     total = False # optional
 )
+```

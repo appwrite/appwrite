@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -25,4 +26,4 @@ $result = $tablesDB->upsertRow(
     ], // optional
     permissions: [Permission::read(Role::any())], // optional
     transactionId: '<TRANSACTION_ID>' // optional
-);
+);```

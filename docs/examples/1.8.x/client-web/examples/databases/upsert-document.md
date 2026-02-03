@@ -1,3 +1,4 @@
+```javascript
 import { Client, Databases, Permission, Role } from "appwrite";
 
 const client = new Client()
@@ -22,3 +23,4 @@ const result = await databases.upsertDocument({
 });
 
 console.log(result);
+```

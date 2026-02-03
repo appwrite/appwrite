@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountUpdatePassword(
         password: "",
@@ -36,3 +37,4 @@ mutation {
         accessedAt
     }
 }
+```

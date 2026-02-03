@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ User result = await users.CreatePHPassUser(
     email: "email@example.com",
     password: "password",
     name: "<NAME>" // optional
-);
+);```

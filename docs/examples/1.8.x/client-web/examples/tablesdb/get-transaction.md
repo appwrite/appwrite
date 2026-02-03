@@ -1,3 +1,4 @@
+```javascript
 import { Client, TablesDB } from "appwrite";
 
 const client = new Client()
@@ -11,3 +12,4 @@ const result = await tablesDB.getTransaction({
 });
 
 console.log(result);
+```

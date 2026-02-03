@@ -1,3 +1,4 @@
+```javascript
 import { Client, Projects, SMTPSecure } from "@appwrite.io/console";
 
 const client = new Client()
@@ -20,3 +21,4 @@ const result = await projects.createSMTPTest({
 });
 
 console.log(result);
+```

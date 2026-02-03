@@ -1,3 +1,4 @@
+```javascript
 import { Client, Account } from "appwrite";
 
 const client = new Client()
@@ -9,3 +10,4 @@ const account = new Account(client);
 const result = await account.deleteSessions();
 
 console.log(result);
+```

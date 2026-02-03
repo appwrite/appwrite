@@ -1,3 +1,4 @@
+```graphql
 mutation {
     databasesCreateVarcharAttribute(
         databaseId: "<DATABASE_ID>",
@@ -20,3 +21,4 @@ mutation {
         default
     }
 }
+```

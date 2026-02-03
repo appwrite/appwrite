@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ await tablesDB.deleteColumn(
     tableId: '<TABLE_ID>',
     key: '',
 );
+```

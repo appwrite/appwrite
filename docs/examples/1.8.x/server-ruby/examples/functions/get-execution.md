@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = functions.get_execution(
     function_id: '<FUNCTION_ID>',
     execution_id: '<EXECUTION_ID>'
 )
+```

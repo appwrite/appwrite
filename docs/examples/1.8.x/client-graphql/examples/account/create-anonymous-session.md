@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreateAnonymousSession {
         _id
@@ -31,3 +32,4 @@ mutation {
         mfaUpdatedAt
     }
 }
+```

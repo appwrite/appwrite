@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Teams
@@ -19,3 +20,4 @@ val response = teams.createMembership(
     url = "https://example.com", // optional
     name = "<NAME>" // optional
 )
+```

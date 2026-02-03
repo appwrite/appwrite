@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = storage.update_file(
     name: '<NAME>', # optional
     permissions: [Permission.read(Role.any())] # optional
 )
+```

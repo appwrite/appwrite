@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -18,3 +19,4 @@ result = tables_db.update_varchar_column(
     size: 1, # optional
     new_key: '' # optional
 )
+```

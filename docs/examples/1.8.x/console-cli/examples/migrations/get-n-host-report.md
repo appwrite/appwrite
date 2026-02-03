@@ -1,3 +1,4 @@
+```bash
 appwrite migrations get-n-host-report \
     --resources one two three \
     --subdomain <SUBDOMAIN> \
@@ -6,3 +7,4 @@ appwrite migrations get-n-host-report \
     --database <DATABASE> \
     --username <USERNAME> \
     --password <PASSWORD>
+```

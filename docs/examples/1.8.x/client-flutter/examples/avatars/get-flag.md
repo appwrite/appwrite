@@ -1,4 +1,6 @@
+```dart
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -31,3 +33,4 @@ FutureBuilder(
           : CircularProgressIndicator();
     }
 );
+```

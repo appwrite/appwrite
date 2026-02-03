@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -16,3 +17,4 @@ result = messaging.create_twilio_provider(
     auth_token = '<AUTH_TOKEN>', # optional
     enabled = False # optional
 )
+```

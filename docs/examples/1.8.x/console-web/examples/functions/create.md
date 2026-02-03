@@ -1,3 +1,4 @@
+```javascript
 import { Client, Functions, Runtime, Scopes } from "@appwrite.io/console";
 
 const client = new Client()
@@ -28,3 +29,4 @@ const result = await functions.create({
 });
 
 console.log(result);
+```

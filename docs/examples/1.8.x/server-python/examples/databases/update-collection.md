@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 from appwrite.permission import Permission
@@ -18,3 +19,4 @@ result = databases.update_collection(
     document_security = False, # optional
     enabled = False # optional
 )
+```

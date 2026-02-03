@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = teams.create_membership(
     url: 'https://example.com', # optional
     name: '<NAME>' # optional
 )
+```

@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.account import Account
 
@@ -13,3 +14,4 @@ result = account.update_recovery(
     secret = '<SECRET>',
     password = ''
 )
+```

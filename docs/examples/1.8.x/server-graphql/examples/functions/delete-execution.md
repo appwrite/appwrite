@@ -1,3 +1,4 @@
+```graphql
 mutation {
     functionsDeleteExecution(
         functionId: "<FUNCTION_ID>",
@@ -6,3 +7,4 @@ mutation {
         status
     }
 }
+```

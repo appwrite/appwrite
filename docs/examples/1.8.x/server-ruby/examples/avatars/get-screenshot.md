@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -35,3 +36,4 @@ result = avatars.get_screenshot(
     quality: 85, # optional
     output: ImageFormat::JPEG # optional
 )
+```

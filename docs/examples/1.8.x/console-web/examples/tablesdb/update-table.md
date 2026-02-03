@@ -1,3 +1,4 @@
+```javascript
 import { Client, TablesDB, Permission, Role } from "@appwrite.io/console";
 
 const client = new Client()
@@ -16,3 +17,4 @@ const result = await tablesDB.updateTable({
 });
 
 console.log(result);
+```

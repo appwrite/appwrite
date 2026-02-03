@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Users users = new Users(client);
 SessionList result = await users.ListSessions(
     userId: "<USER_ID>",
     total: false // optional
-);
+);```

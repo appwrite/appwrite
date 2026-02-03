@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountUpdateMFAAuthenticator(
         type: "totp",
@@ -36,3 +37,4 @@ mutation {
         accessedAt
     }
 }
+```

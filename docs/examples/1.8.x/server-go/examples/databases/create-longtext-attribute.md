@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -22,3 +22,4 @@ response, error := service.CreateLongtextAttribute(
     databases.WithCreateLongtextAttributeDefault("<DEFAULT>"),
     databases.WithCreateLongtextAttributeArray(false),
 )
+```

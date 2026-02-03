@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -26,3 +27,4 @@ val response = messaging.updateSMTPProvider(
     replyToEmail = "<REPLY_TO_EMAIL>", // optional
     enabled = false // optional
 )
+```

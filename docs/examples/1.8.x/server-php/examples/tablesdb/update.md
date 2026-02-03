@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $result = $tablesDB->update(
     databaseId: '<DATABASE_ID>',
     name: '<NAME>', // optional
     enabled: false // optional
-);
+);```

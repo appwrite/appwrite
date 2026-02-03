@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.teams import Teams
 
@@ -11,3 +12,4 @@ teams = Teams(client)
 result = teams.get(
     team_id = '<TEAM_ID>'
 )
+```

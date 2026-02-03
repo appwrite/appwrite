@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Target result = await account.updatePushTarget(
     targetId: '<TARGET_ID>',
     identifier: '<IDENTIFIER>',
 );
+```
