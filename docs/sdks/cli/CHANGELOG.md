@@ -1,5 +1,15 @@
 # Change Log
 
+## 13.2.0
+
+- Feat: Add dedicated commands for text-based attribute management:
+  - `create-varchar-attribute`, `create-text-attribute`, `create-mediumtext-attribute`, `create-longtext-attribute`
+  - `update-varchar-attribute`, `update-text-attribute`, `update-mediumtext-attribute`, `update-longtext-attribute`
+- Feat: Add specifications support to CLI
+- Fix: Include specifications parameter when updating functions
+- Chore: Update installation docs and examples for new text attribute/column commands
+- Refactor: Simplify `update-collection` command syntax
+
 ## 13.1.0
 
 - Mark `appwrite generate` command as stable
