@@ -46,9 +46,7 @@ class MessagingTest extends TestCase
             'data' => [
                 'channels' => [
                     0 => 'account.123',
-                ],
-                // Non-empty payload so default select(\"*\") subscriptions match
-                'payload' => ['_match' => true],
+                ]
             ]
         ];
 

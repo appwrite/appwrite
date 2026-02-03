@@ -289,7 +289,9 @@ class Realtime extends MessagingAdapter
                                     $parsedQueries = array_merge($parsedQueries, $parsed);
                                 }
                                 // Check if this subscription matches (AND logic within subscription)
-                                if (!empty(RuntimeQuery::filter($parsedQueries, $payload))) {
+                                // Or if empty payload and select all as filter will return empty payload out of it even if it passed
+                                $isEmptyPayloadAndSelectAll = RuntimeQuery::isSelectAll($parsedQueries[0]) && empty($payload);
+                                if ($isEmptyPayloadAndSelectAll || !empty(RuntimeQuery::filter($parsedQueries, $payload))) {
                                     $matchedSubscriptions[$subId] = $queryStrings;
                                 }
                             }

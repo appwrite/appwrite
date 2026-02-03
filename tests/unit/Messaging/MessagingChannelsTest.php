@@ -187,8 +187,7 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ],
-                    'payload' => ['_match' => true],
+                    ]
                 ]
             ];
 
@@ -225,8 +224,7 @@ class MessagingChannelsTest extends TestCase
                     'data' => [
                         'channels' => [
                             0 => $channel,
-                        ],
-                        'payload' => ['_match' => true],
+                        ]
                     ]
                 ];
 
@@ -261,8 +259,7 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ],
-                    'payload' => ['_match' => true],
+                    ]
                 ]
             ];
 
@@ -297,8 +294,7 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ],
-                    'payload' => ['_match' => true],
+                    ]
                 ]
             ];
 
@@ -331,8 +327,7 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ],
-                    'payload' => ['_match' => true],
+                    ]
                 ]
             ];
 

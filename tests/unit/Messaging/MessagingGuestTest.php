@@ -30,8 +30,6 @@ class MessagingGuestTest extends TestCase
                     0 => 'documents',
                     1 => 'documents',
                 ],
-                // Non-empty payload so default select(\"*\") subscriptions match
-                'payload' => ['_match' => true],
             ]
         ];
 
