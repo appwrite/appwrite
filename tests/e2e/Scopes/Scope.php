@@ -19,11 +19,12 @@ abstract class Scope extends TestCase
 
     protected ?Client $client = null;
     protected string $endpoint = 'http://appwrite.test/v1';
+    protected string $localhost = 'http://localhost/v1'; // todo: use variable
 
     protected function setUp(): void
     {
         $this->client = new Client();
-        $this->client->setEndpoint($this->endpoint);
+        $this->client->setEndpoint($this->localhost);
 
         $format = System::getEnv('_APP_E2E_RESPONSE_FORMAT');
         if (!empty($format)) {
