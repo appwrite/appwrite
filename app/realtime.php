@@ -482,46 +482,23 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                         $user = $database->getDocument('users', $userId);
 
                         $roles = $user->getRoles($database->getAuthorization());
-                        $channels = $realtime->connections[$connection]['channels'] ?? [];
                         $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-                        $oldSubscriptionMapping = $realtime->connections[$connection]['subscriptions'] ?? [];
 
-                        // Get subscription metadata from subscriptions tree before unsubscribing
-                        $subscriptionMetadata = $realtime->getSubscriptionIds($connection);
+                        $subscriptionMetadata = $realtime->getSubscriptionMetadata($connection);
 
                         $realtime->unsubscribe($connection);
 
-                        // Re-subscribe with the original subscription structure and queries
-                        $newSubscriptionMapping = [];
-                        if (!empty($subscriptionMetadata)) {
-                            // Restore each subscription with its original channels and queries
-                            foreach ($subscriptionMetadata as $oldSubId => $metadata) {
-                                $subscriptionId = ID::unique();
-
-                                // Parse query strings back to Query objects for subscribe
-                                $queries = Query::parseQueries($metadata['queries']);
-
-                                $realtime->subscribe(
-                                    $projectId,
-                                    $connection,
-                                    $subscriptionId,
-                                    $roles,
-                                    $metadata['channels'],
-                                    $queries
-                                );
-
-                                // Find the index of the old subscription ID in the mapping
-                                $oldIndex = array_search($oldSubId, $oldSubscriptionMapping);
-                                if ($oldIndex !== false) {
-                                    $newSubscriptionMapping[$oldIndex] = $subscriptionId;
-                                } else {
-                                    // If not found in mapping, use a new index
-                                    $newSubscriptionMapping[] = $subscriptionId;
-                                }
-                            }
+                        foreach ($subscriptionMetadata as $subscriptionId => $metadata) {
+                            $queries = Query::parseQueries($metadata['queries'] ?? []);
+                            $realtime->subscribe(
+                                $projectId,
+                                $connection,
+                                $subscriptionId,
+                                $roles,
+                                $metadata['channels'] ?? [],
+                                $queries
+                            );
                         }
-
-                        $realtime->connections[$connection]['subscriptions'] = $newSubscriptionMapping;
 
                         // Restore authorization after subscribe
                         if ($authorization !== null) {
@@ -662,10 +639,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         // Generate subscription IDs and subscribe
         $subscriptionMapping = [];
         foreach ($subscriptionsByIndex as $index => $subscription) {
-            // Generate unique subscription ID
             $subscriptionId = ID::unique();
 
-            // Subscribe with all channels for this subscription
             $realtime->subscribe(
                 $project->getId(),
                 $connection,
@@ -675,12 +650,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
                 $subscription['queries'] // Query objects
             );
 
-            // Store mapping: subscription index -> subscription ID
             $subscriptionMapping[$index] = $subscriptionId;
         }
 
         $realtime->connections[$connection]['authorization'] = $authorization;
-        $realtime->connections[$connection]['subscriptions'] = $subscriptionMapping;
 
         $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
 
@@ -821,26 +794,26 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 $channelNames = $realtime->connections[$connection]['channels'] ?? [];
                 $channels = Realtime::convertChannels(array_flip($channelNames), $user->getId());
 
-                // Preserve authorization and subscription mapping before subscribe overwrites the connection array
                 $authorization = $realtime->connections[$connection]['authorization'] ?? null;
-                $subscriptionMapping = $realtime->connections[$connection]['subscriptions'] ?? [];
+                $projectId = $realtime->connections[$connection]['projectId'] ?? null;
 
-                // Re-subscribe with the same subscription structure
-                // Note: We can't fully reconstruct the original subscription indices from stored data,
-                // so we'll create new subscriptions. In practice, authentication should preserve
-                // the subscription structure, but this is a limitation of the current design.
-                if (!empty($channelNames)) {
-                    // Create a single subscription with select("*") for all channels
-                    $subscriptionId = ID::unique();
-                    $realtime->subscribe(
-                        $realtime->connections[$connection]['projectId'],
-                        $connection,
-                        $subscriptionId,
-                        $roles,
-                        $channelNames,
-                        [Query::select(['*'])]
-                    );
-                    $realtime->connections[$connection]['subscriptions'] = [0 => $subscriptionId];
+                $subscriptionMetadata = $realtime->getSubscriptionMetadata($connection);
+
+                $realtime->unsubscribe($connection);
+
+                if (!empty($projectId)) {
+                    foreach ($subscriptionMetadata as $subscriptionId => $metadata) {
+                        $queries = Query::parseQueries($metadata['queries'] ?? []);
+
+                        $realtime->subscribe(
+                            $projectId,
+                            $connection,
+                            $subscriptionId,
+                            $roles,
+                            $metadata['channels'] ?? [],
+                            $queries
+                        );
+                    }
                 }
 
                 // Restore authorization after subscribe

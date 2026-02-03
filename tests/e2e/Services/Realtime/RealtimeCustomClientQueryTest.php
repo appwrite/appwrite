@@ -87,7 +87,6 @@ class RealtimeCustomClientQueryTest extends Scope
         // Should timeout - no event should be received
         try {
             $data = $client->receive();
-            var_dump($data);
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
             $this->assertTrue(true);
@@ -1867,5 +1866,223 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $clientQ1->close();
         $clientQ2->close();
+    }
+
+    public function testSubscriptionPreservedAfterPermissionChange()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $userId = $user['$id'] ?? '';
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Permission Change Test DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Permission Change Collection',
+            'permissions' => [
+                Permission::create(Role::user($userId)),
+                Permission::read(Role::user($userId)),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        $targetDocumentId = ID::unique();
+
+        // Subscribe with query for specific document ID
+        $client = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            Query::equal('$id', [$targetDocumentId])->toString(),
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+
+        // Store the original subscription mapping (index => subscriptionId)
+        $originalSubscriptionMapping = $response['data']['subscriptions'];
+        $this->assertNotEmpty($originalSubscriptionMapping);
+        // Get the first subscription ID and its index
+        $originalIndex = array_key_first($originalSubscriptionMapping);
+        $originalSubscriptionId = $originalSubscriptionMapping[$originalIndex];
+
+        // Create document with matching ID - should receive event
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $targetDocumentId,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+            ],
+        ]);
+
+        $event = json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEquals($targetDocumentId, $event['data']['payload']['$id']);
+        $this->assertArrayHasKey('subscriptions', $event['data']);
+        $this->assertContains($originalSubscriptionId, $event['data']['subscriptions']);
+
+        // Trigger permission change by creating a team owned by a DIFFERENT user,
+        $teamOwnerEmail = uniqid() . 'owner@localhost.test';
+        $teamOwnerPassword = 'password';
+
+        $teamOwner = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $teamOwnerEmail,
+            'password' => $teamOwnerPassword,
+            'name' => 'Team Owner',
+        ]);
+
+        $this->assertEquals(201, $teamOwner['headers']['status-code']);
+
+        $teamOwnerSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $teamOwnerEmail,
+            'password' => $teamOwnerPassword,
+        ]);
+
+        $teamOwnerSession = $teamOwnerSession['cookies']['a_session_' . $projectId] ?? '';
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $teamOwnerSession,
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Test Team',
+        ]);
+        $teamId = $team['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'email' => $user['email'],
+            'roles' => ['member'],
+            'url' => 'http://localhost',
+        ]);
+
+        sleep(3);
+
+        // Verify subscription is still working after permission change
+        $nonMatchingDocumentId = ID::unique();
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $nonMatchingDocumentId,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+            ],
+        ]);
+
+        // This document doesn't match the query, so we shouldn't receive it
+        try {
+            $data = $client->receive();
+            $this->fail('Expected TimeoutException - document does not match query after permission change');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // Create a NEW document with a different ID - should NOT receive event
+        $targetDocumentId2 = ID::unique();
+        $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $targetDocumentId2,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+            ],
+        ]);
+
+        sleep(2);
+
+        // This should NOT receive event because the query is for $targetDocumentId, not $targetDocumentId2
+        // This verifies the query is preserved after permission change
+        try {
+            $data = $client->receive();
+            $this->fail('Expected TimeoutException - new document does not match original query after permission change');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // Create a document with the ORIGINAL matching ID - should receive event
+        $document4 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $targetDocumentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'data' => [
+                'status' => 'updated-after-permission-change'
+            ],
+        ]);
+
+        // Wait a bit for the event to be processed
+        sleep(3);
+
+        // Verify the event is received with the preserved subscription
+        $event2 = json_decode($client->receive(), true);
+        $this->assertEquals('event', $event2['type']);
+        $this->assertEquals($targetDocumentId, $event2['data']['payload']['$id']);
+        $this->assertEquals('updated-after-permission-change', $event2['data']['payload']['status']);
+        $this->assertArrayHasKey('subscriptions', $event2['data']);
+        $this->assertIsArray($event2['data']['subscriptions']);
+        $this->assertNotEmpty($event2['data']['subscriptions']);
+        // Subscription ID should remain stable after permission change
+        $this->assertContains($originalSubscriptionId, $event2['data']['subscriptions']);
+
+        $client->close();
     }
 }

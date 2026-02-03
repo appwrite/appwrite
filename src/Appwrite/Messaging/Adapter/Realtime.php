@@ -94,28 +94,11 @@ class Realtime extends MessagingAdapter
         }
 
         // Update connection info
-        if (!isset($this->connections[$identifier])) {
-            $this->connections[$identifier] = [
-                'projectId' => $projectId,
-                'roles' => $roles,
-                'channels' => $channels,
-                'subscriptions' => []
-            ];
-        } else {
-            // Update existing connection info
-            $this->connections[$identifier]['projectId'] = $projectId;
-            $this->connections[$identifier]['roles'] = $roles;
-            $this->connections[$identifier]['channels'] = $channels;
-            // Initialize subscriptions array if not exists
-            if (!isset($this->connections[$identifier]['subscriptions'])) {
-                $this->connections[$identifier]['subscriptions'] = [];
-            }
-        }
-
-        // Add subscription ID to connections array
-        if (!in_array($subscriptionId, $this->connections[$identifier]['subscriptions'], true)) {
-            $this->connections[$identifier]['subscriptions'][] = $subscriptionId;
-        }
+        $this->connections[$identifier] = [
+            'projectId' => $projectId,
+            'roles' => $roles,
+            'channels' => $channels
+        ];
     }
 
     /**
@@ -125,7 +108,7 @@ class Realtime extends MessagingAdapter
      * @param mixed $connection Connection ID
      * @return array Array of [subscriptionId => ['channels' => string[], 'queries' => string[]]]
      */
-    public function getSubscriptionIds(mixed $connection): array
+    public function getSubscriptionMetadata(mixed $connection): array
     {
         $projectId = $this->connections[$connection]['projectId'] ?? null;
         $roles = $this->connections[$connection]['roles'] ?? [];
@@ -193,11 +176,6 @@ class Realtime extends MessagingAdapter
 
         if (empty($this->subscriptions[$projectId])) { // Remove project when no roles
             unset($this->subscriptions[$projectId]);
-        }
-
-        // Remove subscriptions array from connection before unsetting
-        if (isset($this->connections[$connection]['subscriptions'])) {
-            unset($this->connections[$connection]['subscriptions']);
         }
 
         if (isset($this->connections[$connection])) {
@@ -311,7 +289,6 @@ class Realtime extends MessagingAdapter
                                     $parsed = Query::parseQueries([$queryString]);
                                     $parsedQueries = array_merge($parsedQueries, $parsed);
                                 }
-
                                 // Check if this subscription matches (AND logic within subscription)
                                 if (!empty(RuntimeQuery::filter($parsedQueries, $payload))) {
                                     // This subscription matched - add subscription ID to matched subscriptions
@@ -401,12 +378,10 @@ class Realtime extends MessagingAdapter
                 continue;
             }
 
-            // Ensure it's an array
             if (!is_array($channelSubscriptions)) {
                 $channelSubscriptions = [$channelSubscriptions];
             }
 
-            // Process each subscription index for this channel
             foreach ($channelSubscriptions as $subscriptionIndex => $subscription) {
                 if (!isset($subscriptionsByIndex[$subscriptionIndex])) {
                     $subscriptionsByIndex[$subscriptionIndex] = [
@@ -415,19 +390,13 @@ class Realtime extends MessagingAdapter
                     ];
                 }
 
-                // Add this channel to the subscription
                 if (!in_array($channel, $subscriptionsByIndex[$subscriptionIndex]['channels'])) {
                     $subscriptionsByIndex[$subscriptionIndex]['channels'][] = $channel;
                 }
 
-                // Set queries for this subscription (queries are the same across all channels in a subscription)
                 if (empty($subscriptionsByIndex[$subscriptionIndex]['queries'])) {
-                    // Ensure $subscription is an array (handle both array and string inputs)
                     $queriesToParse = is_array($subscription) ? $subscription : [$subscription];
-
-                    // Parse and validate the queries
                     $parsedQueries = self::convertQueries($queriesToParse);
-                    // Store Query objects
                     $subscriptionsByIndex[$subscriptionIndex]['queries'] = $parsedQueries;
                 }
             }
