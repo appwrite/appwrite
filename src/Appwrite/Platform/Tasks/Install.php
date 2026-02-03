@@ -641,30 +641,29 @@ class Install extends Action
 
         $type = $isUpgrade ? 'upgrade' : 'install';
         $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
+        $name = $account['name'] ?? 'Admin';
+        $email = $account['email'] ?? 'admin@selfhosted.local';
 
         $payload = [
-            'domain' => $domain,
-            'database' => $database,
-            'type' => $type,
+            'action' => $type,
+            'account' => 'self-hosted',
+            'url' => 'https://' . $domain,
+            'category' => 'self_hosted',
+            'label' => 'self_hosted_' . $type,
             'version' => $version,
+            'data' => json_encode([
+                'name' => $name,
+                'email' => $email,
+                'domain' => $domain,
+                'database' => $database,
+            ]),
         ];
-
-        $name = $account['name'] ?? null;
-        $email = $account['email'] ?? null;
-
-        if (!empty($email)) {
-            $payload['email'] = $email;
-        }
-
-        if (!empty($name)) {
-            $payload['name'] = $name;
-        }
 
         try {
             $client = new Client();
             $client
                 ->addHeader('Content-Type', 'application/json')
-                ->fetch(self::GROWTH_API_URL . '/installs', Client::METHOD_POST, $payload);
+                ->fetch(self::GROWTH_API_URL . '/analytics', Client::METHOD_POST, $payload);
         } catch (\Throwable) {
             // tracking shouldn't block installation
         }
