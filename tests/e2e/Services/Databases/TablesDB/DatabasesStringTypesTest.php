@@ -777,7 +777,7 @@ class DatabasesStringTypesTest extends Scope
         $this->assertIsArray($table['body']['columns']);
 
         // Extract column types from the response
-        $columnTypes = array_map(fn($col) => $col['type'], $table['body']['columns']);
+        $columnTypes = array_map(fn ($col) => $col['type'], $table['body']['columns']);
 
         // Verify all new string types are present and properly serialized
         $this->assertContains('varchar', $columnTypes, 'Table response should contain varchar columns');
@@ -786,7 +786,7 @@ class DatabasesStringTypesTest extends Scope
         $this->assertContains('longtext', $columnTypes, 'Table response should contain longtext columns');
 
         // Verify column keys are present
-        $columnKeys = array_map(fn($col) => $col['key'], $table['body']['columns']);
+        $columnKeys = array_map(fn ($col) => $col['key'], $table['body']['columns']);
         $this->assertContains('varchar_field', $columnKeys);
         $this->assertContains('text_field', $columnKeys);
         $this->assertContains('mediumtext_field', $columnKeys);
@@ -815,7 +815,7 @@ class DatabasesStringTypesTest extends Scope
         $this->assertGreaterThan(0, $columns['body']['total']);
 
         // Extract column types from the response
-        $columnTypes = array_map(fn($col) => $col['type'], $columns['body']['columns']);
+        $columnTypes = array_map(fn ($col) => $col['type'], $columns['body']['columns']);
 
         // Verify all new string types are present and properly serialized
         $this->assertContains('varchar', $columnTypes, 'Column list should contain varchar columns');
