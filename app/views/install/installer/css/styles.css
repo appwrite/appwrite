@@ -587,12 +587,14 @@ body {
 }
 
 .installer-gradients {
-    left: 25%;
-    top: 47.5%;
+    top: 34%;
+    left: 17%;
+    width: 409px;
+    height: 194px;
     opacity: 0.32;
     position: absolute;
     pointer-events: none;
-    transform: translate(-101.3px, -295.3px);
+    transform: translateY(-50%) rotate(-25deg);
 }
 
 .installer-blob {
