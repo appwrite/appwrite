@@ -21,7 +21,7 @@ class Action extends UtopiaAction
 
     protected array $filters = [
         'subQueryKeys', 'subQueryWebhooks', 'subQueryPlatforms', 'subQueryBlocks', 'subQueryDevKeys', // Project
-        'subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets', 'subQueryTopicTargets',// Users
+        'subQueryAuthenticators', 'subQuerySessions', 'subQueryTokens', 'subQueryChallenges', 'subQueryMemberships', 'subQueryTargets', 'subQueryTopicTargets', 'subQueryPaymentMethods', 'subQueryAccountKeys', // Users
         'subQueryVariables', 'subQueryProjectVariables' // Sites / Functions
     ];
 
