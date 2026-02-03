@@ -58,15 +58,18 @@ class Interval extends Action
         $tasks = $this->getTasks();
         foreach ($tasks as $task) {
             $timers[] = Timer::tick($task['interval'], function () use ($task, $dbForPlatform, $getProjectDB, $queueForCertificates) {
-                $taskName = $task['name'];
-                Span::init("interval.{$taskName}");
-                try {
-                    $task['callback']($dbForPlatform, $getProjectDB, $queueForCertificates);
-                } catch (\Exception $e) {
-                    Span::error($e);
-                } finally {
-                    Span::current()->finish();
-                }
+                // Run each task in a coroutine to prevent blocking other timers
+                go(function () use ($task, $dbForPlatform, $getProjectDB, $queueForCertificates) {
+                    $taskName = $task['name'];
+                    Span::init("interval.{$taskName}");
+                    try {
+                        $task['callback']($dbForPlatform, $getProjectDB, $queueForCertificates);
+                    } catch (\Exception $e) {
+                        Span::error($e);
+                    } finally {
+                        Span::current()->finish();
+                    }
+                });
             });
         }
         return $timers;
@@ -84,7 +87,14 @@ class Interval extends Action
                     $this->verifyDomain($dbForPlatform, $queueForCertificates);
                 },
                 'interval' => $intervalDomainVerification * 1000,
-            ]
+            ],
+            [
+                'name' => 'cleanupStaleExecutions',
+                "callback" => function (Database $dbForPlatform, callable $getProjectDB, Certificate $queueForCertificates) {
+                    $this->cleanupStaleExecutions($dbForPlatform, $getProjectDB);
+                },
+                'interval' => $intervalCleanupStaleExecutions * 1000,
+            ],
         ];
     }
 
