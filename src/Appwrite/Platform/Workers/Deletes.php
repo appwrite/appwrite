@@ -23,6 +23,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -335,7 +336,7 @@ class Deletes extends Action
      * @throws Authorization
      * @throws Exception
      */
-    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, string $resourceType = null): void
+    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, ?string $resourceType = null): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -1316,7 +1317,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    protected function listByGroup(string $collection, array $queries, Database $database, ?callable $callback = null): void
     {
         $count = 0;
         $limit = 1000;
