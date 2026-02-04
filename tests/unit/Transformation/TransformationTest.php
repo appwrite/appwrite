@@ -58,8 +58,8 @@ class TransformationTest extends TestCase
             ->transform();
         $domain = $transformer->getOutput();
         $this->assertStringNotContainsString('/', $domain);
-        $this->assertStringStartsWith('branch-feature-test-', $domain->getOutput());
-        $this->assertStringEndsWith('.appwrite.network', $domain->getOutput());
+        $this->assertStringStartsWith('branch-feature-test-', $domain);
+        $this->assertStringEndsWith('.appwrite.network', $domain);
 
         // Branch domain consistency
         $transformer
@@ -149,7 +149,6 @@ class TransformationTest extends TestCase
             ])
             ->setTraits([])
             ->transform();
-        $transformer->transform();
         $domain = $transformer->getOutput();
         $this->assertStringStartsWith('branch-release-2024-01-', $domain);
         $this->assertStringEndsWith('.appwrite.network', $domain);
