@@ -13,6 +13,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
+use Appwrite\Vcs\Domain;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -369,13 +370,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS branch preview
                 if (!empty($providerBranch)) {
-                    $branchPrefix = substr($providerBranch, 0, 16);
-                    if (strlen($providerBranch) > 16) {
-                        $remainingChars = substr($providerBranch, 16);
-                        $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
-                    }
-                    $resourceProjectHash = substr(hash('sha256', $resource->getId() . $project->getId()), 0, 7);
-                    $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
+                    $domain = Domain::generateBranchDomain($providerBranch, $resource->getId(), $project->getId(), $sitesDomain);
                     $ruleId = md5($domain);
                     try {
                         $authorization->skip(

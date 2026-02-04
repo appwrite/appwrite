@@ -6,6 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
+use Appwrite\Vcs\Domain;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -296,13 +297,7 @@ class Base extends Action
 
         // VCS branch preview
         if (!empty($providerBranch)) {
-            $branchPrefix = substr($providerBranch, 0, 16);
-            if (strlen($providerBranch) > 16) {
-                $remainingChars = substr($providerBranch, 16);
-                $branchPrefix .= '-' . substr(hash('sha256', $remainingChars), 0, 7);
-            }
-            $resourceProjectHash = substr(hash('sha256', $site->getId() . $project->getId()), 0, 7);
-            $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
+            $domain = Domain::generateBranchDomain($providerBranch, $site->getId(), $project->getId(), $sitesDomain);
             $ruleId = md5($domain);
             try {
                 $authorization->skip(
