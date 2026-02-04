@@ -8,7 +8,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
 use Utopia\System\System;
@@ -31,11 +30,10 @@ class SSL extends Action
             ->inject('console')
             ->inject('dbForPlatform')
             ->inject('queueForCertificates')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, bool|string $skipCheck, Document $console, Database $dbForPlatform, Certificate $queueForCertificates, Authorization $authorization): void
+    public function action(string $domain, bool|string $skipCheck, Document $console, Database $dbForPlatform, Certificate $queueForCertificates): void
     {
         $domain = new Domain(!empty($domain) ? $domain : '');
         if (!$domain->isKnown() || $domain->isTest()) {
@@ -43,69 +41,67 @@ class SSL extends Action
             return;
         }
 
-        $authorization->skip(function () use ($skipCheck, $console, $dbForPlatform, $domain, $queueForCertificates) {
-            $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-            $skipCheck = \strval($skipCheck) === 'true';
+        $skipCheck = \strval($skipCheck) === 'true';
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
 
-            $rule = $isMd5
-                ? $dbForPlatform->getDocument('rules', md5($domain->get()))
-                : $dbForPlatform->findOne('rules', [
-                    Query::equal('domain', [$domain->get()]),
-                ]);
+        $rule = $isMd5
+            ? $dbForPlatform->getDocument('rules', md5($domain->get()))
+            : $dbForPlatform->findOne('rules', [
+                Query::equal('domain', [$domain->get()]),
+            ]);
 
-            if (!$rule->isEmpty()) {
-                Console::warning('Rule ' . $rule->getId() . ' already exists for domain: ' . $domain->get());
-                return;
-            }
+        if (!$rule->isEmpty()) {
+            Console::warning('Rule ' . $rule->getId() . ' already exists for domain: ' . $domain->get());
+            return;
+        }
 
-            $owner = '';
+        $owner = '';
 
-            // Mark owner as Appwrite if its appwrite-owned domain
-            $appwriteDomains = [];
-            $appwriteDomainEnvs = [
-                System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
-                System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
-                System::getEnv('_APP_DOMAIN_SITES', ''),
-            ];
-            foreach ($appwriteDomainEnvs as $appwriteDomainEnv) {
-                foreach (\explode(',', $appwriteDomainEnv) as $appwriteDomain) {
-                    if (empty($appwriteDomain)) {
-                        continue;
-                    }
-                    $appwriteDomains[] = $appwriteDomain;
+        // Mark owner as Appwrite if its appwrite-owned domain
+        $appwriteDomains = [];
+        $appwriteDomainEnvs = [
+            System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+            System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+            System::getEnv('_APP_DOMAIN_SITES', ''),
+        ];
+        foreach ($appwriteDomainEnvs as $appwriteDomainEnv) {
+            foreach (\explode(',', $appwriteDomainEnv) as $appwriteDomain) {
+                if (empty($appwriteDomain)) {
+                    continue;
                 }
+                $appwriteDomains[] = $appwriteDomain;
             }
+        }
 
-            foreach ($appwriteDomains as $appwriteDomain) {
-                if (\str_ends_with($domain->get(), $appwriteDomain)) {
-                    $owner = 'Appwrite';
-                    break;
-                }
+        foreach ($appwriteDomains as $appwriteDomain) {
+            if (\str_ends_with($domain->get(), $appwriteDomain)) {
+                $owner = 'Appwrite';
+                break;
             }
+        }
 
-            $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
-            $rule = $dbForPlatform->createDocument('rules', new Document([
-                '$id' => $ruleId,
-                'domain' => $domain->get(),
-                'type' => 'api',
-                'status' => RULE_STATUS_CERTIFICATE_GENERATING,
-                'projectId' => $console->getId(),
-                'projectInternalId' => $console->getSequence(),
-                'search' => implode(' ', [$ruleId, $domain->get()]),
-                'owner' => $owner,
-                'region' => $console->getAttribute('region')
-            ]));
+        $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
+        $rule = $dbForPlatform->createDocument('rules', new Document([
+            '$id' => $ruleId,
+            'domain' => $domain->get(),
+            'type' => 'api',
+            'status' => RULE_STATUS_CERTIFICATE_GENERATING,
+            'projectId' => $console->getId(),
+            'projectInternalId' => $console->getSequence(),
+            'search' => implode(' ', [$ruleId, $domain->get()]),
+            'owner' => $owner,
+            'region' => $console->getAttribute('region')
+        ]));
 
-            Console::success('Rule ' . $rule->getId() . ' created for domain: ' . $domain->get());
+        Console::info('Rule ' . $rule->getId() . ' created for domain: ' . $domain->get());
 
-            $queueForCertificates
-                ->setDomain(new Document([
-                    'domain' => $domain->get()
-                ]))
-                ->setSkipRenewCheck($skipCheck)
-                ->trigger();
+        $queueForCertificates
+            ->setDomain(new Document([
+                'domain' => $domain->get()
+            ]))
+            ->setSkipRenewCheck($skipCheck)
+            ->trigger();
 
-            Console::success('Scheduled a job to issue a TLS certificate for domain: ' . $domain->get());
-        });
+        Console::success('Scheduled a job to issue a TLS certificate for domain: ' . $domain->get());
     }
 }
