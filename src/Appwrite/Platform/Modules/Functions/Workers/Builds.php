@@ -9,9 +9,10 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
+use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
-use Appwrite\Vcs\Domain;
+use Appwrite\Transformation\Adapter\BranchDomain;
 use Exception;
 use Executor\Executor;
 use Swoole\Coroutine as Co;
@@ -1038,8 +1039,15 @@ class Builds extends Action
                 // VCS branch
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
-                    $sitesDomain = $platform['sitesDomain'];
-                    $domain = Domain::generateBranchDomain($branchName, $resource->getId(), $project->getId(), $sitesDomain);
+                    $transformation = new Transformation([new BranchDomain()]);
+                    $transformation->setInput([
+                        'branch' => $branchName,
+                        'resourceId' => $resource->getId(),
+                        'projectId' => $project->getId(),
+                        'sitesDomain' => $platform['sitesDomain'],
+                    ]);
+                    $transformation->transform();
+                    $domain = $transformation->getOutput();
                     $ruleId = md5($domain);
 
                     try {

@@ -9,11 +9,12 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Transformation\Transformation;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
-use Appwrite\Vcs\Domain;
+use Appwrite\Transformation\Adapter\BranchDomain;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\CLI\Console;
 use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
@@ -370,7 +371,15 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS branch preview
                 if (!empty($providerBranch)) {
-                    $domain = Domain::generateBranchDomain($providerBranch, $resource->getId(), $project->getId(), $sitesDomain);
+                    $transformation = new Transformation([new BranchDomain()]);
+                    $transformation->setInput([
+                        'branch' => $providerBranch,
+                        'resourceId' => $resource->getId(),
+                        'projectId' => $project->getId(),
+                        'sitesDomain' => $sitesDomain,
+                    ]);
+                    $transformation->transform();
+                    $domain = $transformation->getOutput();
                     $ruleId = md5($domain);
                     try {
                         $authorization->skip(

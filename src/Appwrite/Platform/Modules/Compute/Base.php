@@ -6,7 +6,8 @@ use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
-use Appwrite\Vcs\Domain;
+use Appwrite\Transformation\Adapter\BranchDomain;
+use Appwrite\Transformation\Transformation;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -297,7 +298,15 @@ class Base extends Action
 
         // VCS branch preview
         if (!empty($providerBranch)) {
-            $domain = Domain::generateBranchDomain($providerBranch, $site->getId(), $project->getId(), $sitesDomain);
+            $transformation = new Transformation([new BranchDomain()]);
+            $transformation->setInput([
+                'branch' => $providerBranch,
+                'resourceId' => $site->getId(),
+                'projectId' => $project->getId(),
+                'sitesDomain' => $sitesDomain,
+            ]);
+            $transformation->transform();
+            $domain = $transformation->getOutput();
             $ruleId = md5($domain);
             try {
                 $authorization->skip(
