@@ -299,13 +299,15 @@ class Base extends Action
         // VCS branch preview
         if (!empty($providerBranch)) {
             $transformation = new Transformation([new BranchDomain()]);
-            $transformation->setInput([
-                'branch' => $providerBranch,
-                'resourceId' => $site->getId(),
-                'projectId' => $project->getId(),
-                'sitesDomain' => $sitesDomain,
-            ]);
-            $transformation->transform();
+            $transformation
+                ->setInput([
+                    'branch' => $providerBranch,
+                    'resourceId' => $site->getId(),
+                    'projectId' => $project->getId(),
+                    'sitesDomain' => $sitesDomain,
+                ])
+                ->setTraits([])
+                ->transform();
             $domain = $transformation->getOutput();
             $ruleId = md5($domain);
             try {

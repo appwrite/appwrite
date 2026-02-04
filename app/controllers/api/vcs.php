@@ -372,13 +372,15 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 // VCS branch preview
                 if (!empty($providerBranch)) {
                     $transformation = new Transformation([new BranchDomain()]);
-                    $transformation->setInput([
-                        'branch' => $providerBranch,
-                        'resourceId' => $resource->getId(),
-                        'projectId' => $project->getId(),
-                        'sitesDomain' => $sitesDomain,
-                    ]);
-                    $transformation->transform();
+                    $transformation
+                        ->setInput([
+                            'branch' => $providerBranch,
+                            'resourceId' => $resource->getId(),
+                            'projectId' => $project->getId(),
+                            'sitesDomain' => $sitesDomain,
+                        ])
+                        ->setTraits([])
+                        ->transform();
                     $domain = $transformation->getOutput();
                     $ruleId = md5($domain);
                     try {

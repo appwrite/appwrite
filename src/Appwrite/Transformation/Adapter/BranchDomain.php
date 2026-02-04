@@ -43,7 +43,7 @@ class BranchDomain extends Adapter
 
         $branchPrefix = $this->generateBranchPrefix($branch);
         $resourceProjectHash = substr(hash('sha256', $resourceId . $projectId), 0, self::HASH_SUFFIX_LENGTH);
-        $this->output = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
+        $this->output = strtolower("branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}");
     }
 
     /**

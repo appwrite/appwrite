@@ -1040,13 +1040,15 @@ class Builds extends Action
                 $branchName = $deployment->getAttribute('providerBranch');
                 if (!empty($branchName)) {
                     $transformation = new Transformation([new BranchDomain()]);
-                    $transformation->setInput([
-                        'branch' => $branchName,
-                        'resourceId' => $resource->getId(),
-                        'projectId' => $project->getId(),
-                        'sitesDomain' => $platform['sitesDomain'],
-                    ]);
-                    $transformation->transform();
+                    $transformation
+                        ->setInput([
+                            'branch' => $branchName,
+                            'resourceId' => $resource->getId(),
+                            'projectId' => $project->getId(),
+                            'sitesDomain' => $platform['sitesDomain'],
+                        ])
+                        ->setTraits([])
+                        ->transform();
                     $domain = $transformation->getOutput();
                     $ruleId = md5($domain);
 
