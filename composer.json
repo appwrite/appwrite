@@ -91,7 +91,7 @@
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "*",
         "brianium/paratest": "7.*",
-        "phpunit/phpunit": "11.*",
+        "phpunit/phpunit": "12.*",
         "swoole/ide-helper": "6.*",
         "phpstan/phpstan": "1.8.*",
         "textalk/websocket": "1.5.*",
