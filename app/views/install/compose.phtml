@@ -12,6 +12,8 @@ $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
+$dbService = $this->getParam('database');
+$hostPath = rtrim($this->getParam('hostPath', ''), '/');
 ?>services:
   traefik:
     image: traefik:2.11
@@ -61,6 +63,9 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
+<?php if ($version === 'local' && !empty($hostPath)): ?>
+      - <?php echo $hostPath; ?>:/usr/src/code:rw
+<?php endif; ?>
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
@@ -70,7 +75,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - redis
 #      - clamav
     environment:
@@ -223,7 +228,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -253,7 +258,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -279,7 +284,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -307,7 +312,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
@@ -370,7 +375,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -396,7 +401,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     volumes:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
@@ -464,7 +469,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -501,7 +506,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - openruntimes-executor
     environment:
       - _APP_ENV
@@ -626,7 +631,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
     volumes:
       - appwrite-imports:/storage/imports:rw
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -700,7 +705,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -729,7 +734,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -757,7 +762,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
-      - mariadb
+      - <?= $dbService . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -784,7 +789,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -809,7 +814,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -834,7 +839,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
     networks:
       - appwrite
     depends_on:
-      - mariadb
+      - <?= $dbService . "\n" ?>
       - redis
     environment:
       - _APP_ENV
@@ -922,6 +927,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
 
+<?php if ($dbService === 'mariadb'): ?>
   mariadb:
     image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
@@ -931,6 +937,8 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
+    ports:
+      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -938,6 +946,28 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
+<?php else: ?>
+  mongodb:
+    image: mongo:8.0.8
+    container_name: appwrite-mongodb
+    <<: *x-logging
+    restart: unless-stopped
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mongodb:/data/db:rw
+      - appwrite-mongodb-config:/data/configdb:rw
+<?php if ($version === 'local' && !empty($hostPath)): ?>
+      - <?php echo $hostPath; ?>/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+<?php else: ?>
+      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+<?php endif; ?>
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
+    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
+<?php endif; ?>
 
   redis:
     image: redis:7.2.4-alpine
@@ -972,7 +1002,12 @@ networks:
     name: runtimes
 
 volumes:
+<?php if ($dbService === 'mariadb'): ?>
   appwrite-mariadb:
+<?php else: ?>
+  appwrite-mongodb:
+  appwrite-mongodb-config:
+<?php endif; ?>
   appwrite-redis:
   appwrite-cache:
   appwrite-uploads:

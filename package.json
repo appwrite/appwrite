@@ -8,5 +8,20 @@
   "files": [
     "docs/examples",
     "app/config/specs"
-  ]
+  ],
+  "version": "1.0.0",
+  "description": "> We just announced Timestamp Overrides for Appwrite Databases - [Learn more](https://appwrite.io/blog/post/announcing-timestamp-overrides)",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/appwrite/appwrite/issues"
+  },
+  "homepage": "https://github.com/appwrite/appwrite#readme"
 }

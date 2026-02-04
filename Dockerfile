@@ -37,6 +37,8 @@ COPY ./app /usr/src/code/app
 COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./src /usr/src/code/src
+COPY ./dev /usr/src/code/dev
+COPY ./mongo-entrypoint.sh /usr/src/code/mongo-entrypoint.sh
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
@@ -116,5 +118,6 @@ RUN if [ "$DEBUG" = "true" ]; then \
     fi
 
 EXPOSE 80
+EXPOSE 8080
 
 CMD [ "php", "app/http.php" ]

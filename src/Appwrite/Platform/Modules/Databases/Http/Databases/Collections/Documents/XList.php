@@ -16,6 +16,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Timeout;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
@@ -151,6 +152,8 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, $message);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        } catch (Timeout) {
+            throw new Exception(Exception::DATABASE_TIMEOUT);
         }
 
         $operations = 0;
