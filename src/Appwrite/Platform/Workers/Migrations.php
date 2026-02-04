@@ -353,9 +353,9 @@ class Migrations extends Action
                 $credentials['destinationEndpoint'] = $endpoint;
             }
 
-//            if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
-//                $credentials['endpoint'] = $endpoint;
-//            }
+            //            if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
+            //                $credentials['endpoint'] = $endpoint;
+            //            }
 
             var_dump($credentials);
 

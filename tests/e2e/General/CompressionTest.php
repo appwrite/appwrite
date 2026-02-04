@@ -87,7 +87,7 @@ class CompressionTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('content-encoding', $response['headers']);
 
-        if ($this->endpoint !== 'http://appwrite/v1'){
+        if ($this->endpoint !== 'http://appwrite/v1') {
             $this->assertEquals('chunked', $response['headers']['transfer-encoding'] ?? null, 'Uncompressed response should use chunked transfer, headers received: ' . json_encode($response['headers'], JSON_PRETTY_PRINT));
             $this->assertArrayNotHasKey('content-length', $response['headers'], 'Uncompressed response should not send content length when chunked.');
         }
