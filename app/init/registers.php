@@ -8,7 +8,6 @@ use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
-use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -18,6 +17,7 @@ use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
+use Utopia\Http;
 use Utopia\Logger\Adapter\AppSignal;
 use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
@@ -33,9 +33,9 @@ use Utopia\System\System;
 
 $register = new Registry();
 
-App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
+Http::setMode(System::getEnv('_APP_ENV', Http::MODE_TYPE_PRODUCTION));
 
-if (!App::isProduction()) {
+if (!Http::isProduction()) {
     // Allow specific domains to skip public domain validation in dev environment
     // Useful for existing tests involving webhooks
     PublicDomain::allow(['request-catcher-sms']);

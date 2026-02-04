@@ -11,12 +11,12 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
-use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
+use Utopia\Http;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator;
 use Utopia\Validator\Boolean;
@@ -98,7 +98,7 @@ class Create extends Action
         array $plan,
         Authorization $authorization
     ): void {
-        if (!App::isDevelopment() && $encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
+        if (!Http::isDevelopment() && $encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted string ' . $this->getSDKGroup() . ' are not available on your plan. Please upgrade to create encrypted string ' . $this->getSDKGroup() . '.');
         }
 
