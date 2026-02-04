@@ -90,10 +90,7 @@ class Upsert extends Action
 
     public function action(string $databaseId, string $collectionId, array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, StatsUsage $queueForStatsUsage, Event $queueForEvents, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, array $plan, EventProcessor $eventProcessor): void
     {
-        $database = $dbForProject->getDocument('databases', $databaseId);
-        if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
-        }
+        $database = $this->getDatabaseDocument($dbForProject, $databaseId, $dbForProject->getAuthorization(), true, true);
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
@@ -187,11 +184,6 @@ class Upsert extends Action
             throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $e->getMessage());
         } catch (StructureException $e) {
             throw new Exception($this->getStructureException(), $e->getMessage());
-        }
-
-        foreach ($upserted as $document) {
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
         }
 
         $queueForStatsUsage

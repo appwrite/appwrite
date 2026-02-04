@@ -110,10 +110,7 @@ class Upsert extends Action
         $isAPIKey = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
-        }
+        $database = $this->getDatabaseDocument($dbForProject, $databaseId, $authorization, $isAPIKey, $isPrivilegedUser);
 
         $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
@@ -346,8 +343,6 @@ class Upsert extends Action
             throw new Exception($this->getStructureException(), $e->getMessage());
         }
 
-        $collectionsCache = [];
-
         if (empty($upserted[0])) {
             if ($transactionId !== null) {
                 // For transactions, get the document with transaction changes applied
@@ -358,15 +353,6 @@ class Upsert extends Action
         }
 
         $document = $upserted[0];
-
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization
-        );
 
         $relationships = \array_map(
             fn ($document) => $document->getAttribute('key'),

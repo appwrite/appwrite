@@ -100,10 +100,7 @@ class Update extends Action
             throw new Exception($this->getMissingPayloadException());
         }
 
-        $database = $dbForProject->getDocument('databases', $databaseId);
-        if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
-        }
+        $database = $this->getDatabaseDocument($dbForProject, $databaseId, $dbForProject->getAuthorization(), true, true);
 
         $collection = $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId);
         if ($collection->isEmpty()) {
@@ -212,11 +209,6 @@ class Update extends Action
             throw new Exception($this->getStructureException(), $e->getMessage());
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        foreach ($documents as $document) {
-            $document->setAttribute('$databaseId', $database->getId());
-            $document->setAttribute('$'.$this->getCollectionsEventsContext().'Id', $collection->getId());
         }
 
         $queueForStatsUsage

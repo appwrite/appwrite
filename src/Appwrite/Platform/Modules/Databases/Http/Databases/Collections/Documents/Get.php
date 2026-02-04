@@ -79,10 +79,8 @@ class Get extends Action
         $isAPIKey = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
-        }
+        $operations = 0;
+        $database = $this->getDatabaseDocument($dbForProject, $databaseId, $authorization, $isAPIKey, $isPrivilegedUser, $operations);
 
         $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
@@ -117,18 +115,6 @@ class Get extends Action
         if ($document->isEmpty()) {
             throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
-
-        $operations = 0;
-        $collectionsCache = [];
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization,
-            operations: $operations
-        );
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_READS, max($operations, 1))

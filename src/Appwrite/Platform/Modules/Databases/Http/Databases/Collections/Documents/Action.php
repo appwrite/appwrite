@@ -281,99 +281,48 @@ abstract class Action extends DatabasesAction
     }
 
     /**
-     * Resolves relationships in a document and attaches metadata.
+     * Get the database document and configure the transformer automatically.
+     * Replaces manual database fetch + processDocument() pattern.
+     *
+     * @param Database $dbForProject
+     * @param string $databaseId
+     * @param Authorization $authorization
+     * @param bool $isAPIKey
+     * @param bool $isPrivilegedUser
+     * @param int|null &$operations Optional counter incremented for each document processed
+     * @return Document The database document
+     * @throws Exception
      */
-    protected function processDocument(
-        /* database */
-        Document $database,
-        Document $collection,
-        Document $document,
+    protected function getDatabaseDocument(
         Database $dbForProject,
-        /* options */
-        array &$collectionsCache,
+        string $databaseId,
         Authorization $authorization,
-        ?int &$operations = null,
-        int $depth = 0,
-    ): bool {
-        if ($operations !== null && $document->isEmpty()) {
-            return false;
+        bool $isAPIKey,
+        bool $isPrivilegedUser,
+        ?int &$operations = null
+    ): Document {
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
-        if ($operations !== null) {
-            $operations++;
-        }
+        // Auto-configure transformer
+        $contextKey = '$' . $this->getCollectionsEventsContext() . 'Id';
 
-        $collectionId = $collection->getId();
-        $document->removeAttribute('$collection');
-        $document->setAttribute('$databaseId', $database->getId());
-        $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
-
-        // Stop processing relationships if max depth reached
-        if ($depth >= Database::RELATION_MAX_DEPTH) {
-            return true;
-        }
-
-        $relationships = $collectionsCache[$collectionId] ??= \array_filter(
-            $collection->getAttribute('attributes', []),
-            fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
-        );
-
-        foreach ($relationships as $relationship) {
-            $key = $relationship->getAttribute('key');
-            $related = $document->getAttribute($key);
-
-            if (empty($related)) {
-                if (\in_array(\gettype($related), ['array', 'object']) && $operations !== null) {
+        $dbForProject->setTransformer(
+            function (Document $document, Document $collection, Database $db) use ($database, $contextKey, &$operations): Document {
+                if ($operations !== null) {
                     $operations++;
                 }
-                continue;
+                $document->removeAttribute('$collection');
+                $document->setAttribute('$databaseId', $database->getId());
+                $document->setAttribute($contextKey, $collection->getId());
+                return $document;
             }
+        );
 
-            $relations = \is_array($related) ? $related : [$related];
-            $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-
-            if (!isset($collectionsCache[$relatedCollectionId])) {
-                $relatedCollectionDoc = $authorization->skip(
-                    fn () => $dbForProject->getDocument(
-                        'database_' . $database->getSequence(),
-                        $relatedCollectionId
-                    )
-                );
-
-                $collectionsCache[$relatedCollectionId] = \array_filter(
-                    $relatedCollectionDoc->getAttribute('attributes', []),
-                    fn ($attr) => $attr->getAttribute('type') === Database::VAR_RELATIONSHIP
-                );
-            }
-
-            foreach ($relations as $relation) {
-                if ($relation instanceof Document) {
-                    $relatedCollection = new Document([
-                        '$id' => $relatedCollectionId,
-                        'attributes' => $collectionsCache[$relatedCollectionId],
-                    ]);
-
-                    $this->processDocument(
-                        database: $database,
-                        collection: $relatedCollection,
-                        document: $relation,
-                        dbForProject: $dbForProject,
-                        collectionsCache: $collectionsCache,
-                        authorization: $authorization,
-                        operations: $operations,
-                        depth: $depth + 1
-                    );
-                }
-            }
-
-            if (\is_array($related)) {
-                $document->setAttribute($relationship->getAttribute('key'), \array_values($relations));
-            } elseif (empty($relations)) {
-                $document->setAttribute($relationship->getAttribute('key'), null);
-            }
-        }
-
-        return true;
+        return $database;
     }
 
     /**

@@ -101,14 +101,10 @@ class Delete extends Action
         array $plan,
         Authorization $authorization
     ): void {
-        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-
         $isAPIKey = User::isApp($authorization->getRoles());
         $isPrivilegedUser = User::isPrivileged($authorization->getRoles());
 
-        if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
-        }
+        $database = $this->getDatabaseDocument($dbForProject, $databaseId, $authorization, $isAPIKey, $isPrivilegedUser);
 
         $collection = $authorization->skip(fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $collectionId));
 
@@ -199,16 +195,11 @@ class Delete extends Action
             throw new Exception($this->getRestrictedException());
         }
 
-        $collectionsCache = [];
-
-        $this->processDocument(
-            database: $database,
-            collection: $collection,
-            document: $document,
-            dbForProject: $dbForProject,
-            collectionsCache: $collectionsCache,
-            authorization: $authorization
-        );
+        // Apply transformation to deleted document for events
+        $contextKey = '$' . $this->getCollectionsEventsContext() . 'Id';
+        $document->removeAttribute('$collection');
+        $document->setAttribute('$databaseId', $database->getId());
+        $document->setAttribute($contextKey, $collection->getId());
 
         $queueForStatsUsage
             ->addMetric(METRIC_DATABASES_OPERATIONS_WRITES, 1)

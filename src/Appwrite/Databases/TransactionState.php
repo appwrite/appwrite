@@ -28,6 +28,24 @@ class TransactionState
         $this->authorization = $authorization;
     }
 
+    /**
+     * Apply database transformer to document if configured
+     *
+     * @param Document $document
+     * @param string $collectionId
+     * @return Document
+     */
+    private function transformDocument(Document $document, string $collectionId): Document
+    {
+        $transformer = $this->dbForProject->getTransformer();
+        if ($transformer === null || $document->isEmpty()) {
+            return $document;
+        }
+        // Create minimal collection Document - transformer only uses getId()
+        $collection = new Document(['$id' => $collectionId]);
+        return $transformer($document, $collection, $this->dbForProject);
+    }
+
 
     /**
      * Get a document with transaction-aware logic
@@ -61,7 +79,7 @@ class TransactionState
             }
 
             if ($docState['action'] === 'create') {
-                return $this->applyProjection($docState['document'], $queries);
+                return $this->transformDocument($this->applyProjection($docState['document'], $queries), $collectionId);
             }
 
             if ($docState['action'] === 'update' || $docState['action'] === 'upsert') {
@@ -74,9 +92,9 @@ class TransactionState
                         }
                     }
                     // Reapply projection in case transaction added new fields
-                    return $this->applyProjection($committedDoc, $queries);
+                    return $this->transformDocument($this->applyProjection($committedDoc, $queries), $collectionId);
                 } elseif ($docState['action'] === 'upsert') {
-                    return $this->applyProjection($docState['document'], $queries);
+                    return $this->transformDocument($this->applyProjection($docState['document'], $queries), $collectionId);
                 }
             }
         }
@@ -139,6 +157,11 @@ class TransactionState
                     }
                 }
             }
+        }
+
+        // Transform all documents before returning
+        foreach ($documentMap as $docId => $doc) {
+            $documentMap[$docId] = $this->transformDocument($doc, $collectionId);
         }
 
         return array_values($documentMap);
