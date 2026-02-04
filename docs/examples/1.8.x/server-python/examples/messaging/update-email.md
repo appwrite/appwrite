@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -22,3 +23,4 @@ result = messaging.update_email(
     scheduled_at = '', # optional
     attachments = [] # optional
 )
+```

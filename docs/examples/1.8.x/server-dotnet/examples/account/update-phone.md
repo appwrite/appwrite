@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Account account = new Account(client);
 User result = await account.UpdatePhone(
     phone: "+12065550100",
     password: "password"
-);
+);```

@@ -3,6 +3,9 @@
 ## v0.16.0
 
 * Added ability to create columns and indexes synchronously while creating a table
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `getQueueAudits` support to `Health` service.
+* Add longtext/mediumtext/text/varchar attribute and column helpers to `Databases` and `TablesDB` services.
 
 ## v0.15.0
 

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreateRecovery(
         email: "email@example.com",
@@ -11,3 +12,4 @@ mutation {
         phrase
     }
 }
+```

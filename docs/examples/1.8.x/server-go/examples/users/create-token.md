@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -19,3 +19,4 @@ response, error := service.CreateToken(
     users.WithCreateTokenLength(4),
     users.WithCreateTokenExpire(60),
 )
+```

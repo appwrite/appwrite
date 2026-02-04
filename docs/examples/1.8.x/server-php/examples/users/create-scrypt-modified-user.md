@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -18,4 +19,4 @@ $result = $users->createScryptModifiedUser(
     passwordSaltSeparator: '<PASSWORD_SALT_SEPARATOR>',
     passwordSignerKey: '<PASSWORD_SIGNER_KEY>',
     name: '<NAME>' // optional
-);
+);```

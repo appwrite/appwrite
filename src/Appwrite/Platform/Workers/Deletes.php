@@ -23,6 +23,7 @@ use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -124,6 +125,9 @@ class Deletes extends Action
                         break;
                     case DELETE_TYPE_USERS:
                         $this->deleteUser($getProjectDB, $document, $project);
+                        break;
+                    case DELETE_TYPE_TEAMS:
+                        $this->deleteTeam($getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $deviceForFiles, $document, $project);
@@ -332,7 +336,7 @@ class Deletes extends Action
      * @throws Authorization
      * @throws Exception
      */
-    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, string $resourceType = null): void
+    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, ?string $resourceType = null): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
@@ -530,7 +534,7 @@ class Deletes extends Action
         }
 
         /**
-         * @var $dbForProject Database
+         * @var Database $dbForProject
          */
         $dbForProject = $getProjectDB($document);
 
@@ -661,6 +665,24 @@ class Deletes extends Action
         }
     }
 
+    private function deleteTeam(callable $getProjectDB, Document $document, Document $project): void
+    {
+        $teamId = $document->getId();
+        $teamInternalId = $document->getSequence();
+        $dbForProject = $getProjectDB($project);
+
+        if ($project->getId() === 'console') {
+            // Delete Keys
+            $this->deleteByGroup('keys', [
+                Query::equal('resourceInternalId', [$teamInternalId]),
+                Query::equal('resourceType', ['teams']),
+                Query::orderAsc()
+            ], $dbForProject);
+        }
+
+        $dbForProject->purgeCachedDocument('teams', $teamId);
+    }
+
     /**
      * @param callable $getProjectDB
      * @param Document $document user document
@@ -679,6 +701,15 @@ class Deletes extends Action
             Query::equal('userInternalId', [$userInternalId]),
             Query::orderAsc()
         ], $dbForProject);
+
+        if ($project->getId() === 'console') {
+            // Delete Keys
+            $this->deleteByGroup('keys', [
+                Query::equal('resourceInternalId', [$userInternalId]),
+                Query::equal('resourceType', ['users']),
+                Query::orderAsc()
+            ], $dbForProject);
+        }
 
         $dbForProject->purgeCachedDocument('users', $userId);
 
@@ -1286,7 +1317,7 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
+    protected function listByGroup(string $collection, array $queries, Database $database, ?callable $callback = null): void
     {
         $count = 0;
         $limit = 1000;

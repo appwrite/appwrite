@@ -341,7 +341,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $projectId = $project->getId();
 
                 // Deployment preview
-                $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+                $sitesDomain = $platform['sitesDomain'];
                 $domain = ID::unique() . "." . $sitesDomain;
                 $ruleId = md5($domain);
                 $previewRuleId = $ruleId;

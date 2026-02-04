@@ -1,0 +1,47 @@
+<?php
+
+namespace Appwrite\Utopia\Response\Model;
+
+use Appwrite\Utopia\Response;
+
+class AttributeMediumtext extends Attribute
+{
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this
+            ->addRule('default', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Default value for attribute when not provided. Cannot be set when attribute is required.',
+                'default' => null,
+                'required' => false,
+                'example' => 'default',
+            ])
+        ;
+    }
+
+    public array $conditions = [
+        'type' => 'mediumtext',
+    ];
+
+    /**
+     * Get Name
+     *
+     * @return string
+     */
+    public function getName(): string
+    {
+        return 'AttributeMediumtext';
+    }
+
+    /**
+     * Get Type
+     *
+     * @return string
+     */
+    public function getType(): string
+    {
+        return Response::MODEL_ATTRIBUTE_MEDIUMTEXT;
+    }
+}

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -11,6 +12,7 @@ tables_db = TablesDB.new(client)
 
 result = tables_db.update(
     database_id: '<DATABASE_ID>',
-    name: '<NAME>',
+    name: '<NAME>', # optional
     enabled: false # optional
 )
+```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $sites->createVariable(
     key: '<KEY>',
     value: '<VALUE>',
     secret: false // optional
-);
+);```

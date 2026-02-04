@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ Provider result = await messaging.UpdateTextmagicProvider(
     username: "<USERNAME>", // optional
     apiKey: "<API_KEY>", // optional
     from: "<FROM>" // optional
-);
+);```

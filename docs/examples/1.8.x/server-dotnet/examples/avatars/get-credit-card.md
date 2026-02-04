@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -15,4 +16,4 @@ byte[] result = await avatars.GetCreditCard(
     width: 0, // optional
     height: 0, // optional
     quality: -1 // optional
-);
+);```

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Users
@@ -14,6 +15,7 @@ val response = users.createSHAUser(
     userId = "<USER_ID>",
     email = "email@example.com",
     password = "password",
-    passwordVersion = "sha1", // optional
+    passwordVersion = PasswordHash.SHA1, // optional
     name = "<NAME>" // optional
 )
+```

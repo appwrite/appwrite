@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -17,4 +18,4 @@ ColumnEnum result = await tablesDB.CreateEnumColumn(
     required: false,
     default: "<DEFAULT>", // optional
     array: false // optional
-);
+);```

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     usersCreatePHPassUser(
         userId: "<USER_ID>",
@@ -38,3 +39,4 @@ mutation {
         accessedAt
     }
 }
+```

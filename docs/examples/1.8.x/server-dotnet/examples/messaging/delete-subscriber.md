@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Messaging messaging = new Messaging(client);
 await messaging.DeleteSubscriber(
     topicId: "<TOPIC_ID>",
     subscriberId: "<SUBSCRIBER_ID>"
-);
+);```

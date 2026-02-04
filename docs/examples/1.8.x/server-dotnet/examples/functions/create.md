@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -22,11 +23,11 @@ Function result = await functions.Create(
     logging: false, // optional
     entrypoint: "<ENTRYPOINT>", // optional
     commands: "<COMMANDS>", // optional
-    scopes: new List<string>(), // optional
+    scopes: new List&lt;Scopes&gt; { Scopes.SessionsWrite }, // optional
     installationId: "<INSTALLATION_ID>", // optional
     providerRepositoryId: "<PROVIDER_REPOSITORY_ID>", // optional
     providerBranch: "<PROVIDER_BRANCH>", // optional
     providerSilentMode: false, // optional
     providerRootDirectory: "<PROVIDER_ROOT_DIRECTORY>", // optional
     specification: "" // optional
-);
+);```

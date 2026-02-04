@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -15,3 +16,4 @@ let columnPoint = try await tablesDB.createPointColumn(
     default: [1, 2] // optional
 )
 
+```

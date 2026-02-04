@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -12,3 +13,4 @@ const result = await messaging.updateTopic({
     name: '<NAME>', // optional
     subscribe: ["any"] // optional
 });
+```

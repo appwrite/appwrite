@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ users = Users.new(client)
 result = users.get(
     user_id: '<USER_ID>'
 )
+```

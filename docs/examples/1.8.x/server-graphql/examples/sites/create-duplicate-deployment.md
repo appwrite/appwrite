@@ -1,3 +1,4 @@
+```graphql
 mutation {
     sitesCreateDuplicateDeployment(
         siteId: "<SITE_ID>",
@@ -32,3 +33,4 @@ mutation {
         providerBranchUrl
     }
 }
+```

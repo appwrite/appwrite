@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -21,3 +22,4 @@ let document = try await databases.updateDocument(
     transactionId: "<TRANSACTION_ID>" // optional
 )
 
+```

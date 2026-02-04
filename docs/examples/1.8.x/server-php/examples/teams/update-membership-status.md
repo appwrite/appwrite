@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $teams->updateMembershipStatus(
     membershipId: '<MEMBERSHIP_ID>',
     userId: '<USER_ID>',
     secret: '<SECRET>'
-);
+);```

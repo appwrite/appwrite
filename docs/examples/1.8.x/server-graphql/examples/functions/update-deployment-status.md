@@ -1,3 +1,4 @@
+```graphql
 mutation {
     functionsUpdateDeploymentStatus(
         functionId: "<FUNCTION_ID>",
@@ -32,3 +33,4 @@ mutation {
         providerBranchUrl
     }
 }
+```

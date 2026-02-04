@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -15,3 +16,4 @@ ColumnEmail result = await tablesDB.createEmailColumn(
     xdefault: 'email@example.com', // (optional)
     array: false, // (optional)
 );
+```

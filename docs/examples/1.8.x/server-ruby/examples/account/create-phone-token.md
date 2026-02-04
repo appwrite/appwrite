@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = account.create_phone_token(
     user_id: '<USER_ID>',
     phone: '+12065550100'
 )
+```

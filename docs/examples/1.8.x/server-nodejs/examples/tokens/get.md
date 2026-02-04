@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -10,3 +11,4 @@ const tokens = new sdk.Tokens(client);
 const result = await tokens.get({
     tokenId: '<TOKEN_ID>'
 });
+```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -11,3 +12,4 @@ $client = (new Client())
 $locale = new Locale($client);
 
 $result = $locale->listCountriesPhones();
+```

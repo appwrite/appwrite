@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -12,4 +13,4 @@ $account = new Account($client);
 
 $result = $account->createVerification(
     url: 'https://example.com'
-);
+);```

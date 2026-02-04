@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/permission.dart';
 import 'package:appwrite/role.dart';
@@ -22,3 +23,4 @@ Document result = await databases.updateDocument(
     permissions: [Permission.read(Role.any())], // optional
     transactionId: '<TRANSACTION_ID>', // optional
 );
+```

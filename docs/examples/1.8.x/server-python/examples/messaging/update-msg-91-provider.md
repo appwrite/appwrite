@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -16,3 +17,4 @@ result = messaging.update_msg91_provider(
     sender_id = '<SENDER_ID>', # optional
     auth_key = '<AUTH_KEY>' # optional
 )
+```

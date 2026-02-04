@@ -85,22 +85,32 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     $platformHostnames = $platform['hostnames'] ?? [];
 
     if ($rule->isEmpty()) {
-        $appDomainFunctionsFallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
-        $appDomainFunctions = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-        $appDomainSites = System::getEnv('_APP_DOMAIN_SITES', '');
-        if (!empty($appDomainFunctionsFallback) && \str_ends_with($host, $appDomainFunctionsFallback)) {
-            $appDomainFunctions = $appDomainFunctionsFallback;
+        $denyDomains = [];
+        $denyEnvVars = [
+            System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+            System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+            System::getEnv('_APP_DOMAIN_SITES', ''),
+        ];
+        foreach ($denyEnvVars as $denyEnvVar) {
+            foreach (\explode(',', $denyEnvVar) as $denyDomain) {
+                if (empty($denyDomain)) {
+                    continue;
+                }
+                $denyDomains[] = $denyDomain;
+            }
         }
 
-        if ($host === $appDomainFunctions || $host === $appDomainSites) {
-            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
-        }
+        foreach ($denyDomains as $denyDomain) {
+            if ($host === $denyDomain) {
+                throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.', view: $errorView);
+            }
 
-        if (\str_ends_with($host, $appDomainFunctions) || \str_ends_with($host, $appDomainSites)) {
-            $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
+            if (\str_ends_with($host, $denyDomain)) {
+                $exception = new AppwriteException(AppwriteException::RULE_NOT_FOUND, 'This domain is not connected to any Appwrite resources. Visit domains tab under function/site settings to configure it.', view: $errorView);
 
-            $exception->addCTA('Start with this domain', $url . '/console');
-            throw $exception;
+                $exception->addCTA('Start with this domain', $url . '/console');
+                throw $exception;
+            }
         }
 
         if (!in_array($host, $platformHostnames)) {
@@ -1094,19 +1104,28 @@ App::init()
 
                // 5. Create new rule
                $owner = '';
-               $fallback = System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', '');
-               $funcDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-               $siteDomain = System::getEnv('_APP_DOMAIN_SITES', '');
 
-               if (!empty($fallback) && \str_ends_with($domain->get(), $fallback)) {
-                   $funcDomain = $fallback;
+               // Mark owner as Appwrite if its appwrite-owned domain
+               $appwriteDomains = [];
+               $appwriteDomainEnvs = [
+                   System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+                   System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+                   System::getEnv('_APP_DOMAIN_SITES', ''),
+               ];
+               foreach ($appwriteDomainEnvs as $appwriteDomainEnv) {
+                   foreach (\explode(',', $appwriteDomainEnv) as $appwriteDomain) {
+                       if (empty($appwriteDomain)) {
+                           continue;
+                       }
+                       $appwriteDomains[] = $appwriteDomain;
+                   }
                }
 
-               if (
-                   (!empty($funcDomain) && \str_ends_with($domain->get(), $funcDomain)) ||
-                   (!empty($siteDomain) && \str_ends_with($domain->get(), $siteDomain))
-               ) {
-                   $owner = 'Appwrite';
+               foreach ($appwriteDomains as $appwriteDomain) {
+                   if (\str_ends_with($domain->get(), $appwriteDomain)) {
+                       $owner = 'Appwrite';
+                       break;
+                   }
                }
 
                $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
@@ -1228,7 +1247,7 @@ App::error()
         }
 
         switch ($class) {
-            case 'Utopia\Exception':
+            case Utopia\Exception::class:
                 $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
                 switch ($code) {
                     case 400:
@@ -1239,10 +1258,10 @@ App::error()
                         break;
                 }
                 break;
-            case 'Utopia\Database\Exception\Authorization':
+            case Utopia\Database\Exception\Authorization::class:
                 $error = new AppwriteException(AppwriteException::USER_UNAUTHORIZED);
                 break;
-            case 'Utopia\Database\Exception\Timeout':
+            case Utopia\Database\Exception\Timeout::class:
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
         }
@@ -1503,7 +1522,7 @@ App::error()
         $template = $error->getView() ?? (($route) ? $route->getLabel('error', null) : null);
 
         // TODO: Ideally use group 'api' here, but all wildcard routes seem to have 'api' at the moment
-        if (!\str_starts_with($route->getPath(), '/v1')) {
+        if (empty($route) || !\str_starts_with($route->getPath(), '/v1')) {
             $template = __DIR__ . '/../views/general/error.phtml';
         }
 

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = teams.get_membership(
     team_id: '<TEAM_ID>',
     membership_id: '<MEMBERSHIP_ID>'
 )
+```

@@ -1,3 +1,4 @@
+```javascript
 import { Client, Avatars } from "appwrite";
 
 const client = new Client()
@@ -14,3 +15,4 @@ const result = avatars.getQR({
 });
 
 console.log(result);
+```

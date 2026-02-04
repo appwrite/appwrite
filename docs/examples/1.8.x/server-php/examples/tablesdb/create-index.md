@@ -1,8 +1,10 @@
+```php
 <?php
 
 use Appwrite\Client;
 use Appwrite\Services\TablesDB;
 use Appwrite\Enums\IndexType;
+use Appwrite\Enums\OrderBy;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -17,6 +19,6 @@ $result = $tablesDB->createIndex(
     key: '',
     type: IndexType::KEY(),
     columns: [],
-    orders: [], // optional
+    orders: [OrderBy::ASC()], // optional
     lengths: [] // optional
-);
+);```

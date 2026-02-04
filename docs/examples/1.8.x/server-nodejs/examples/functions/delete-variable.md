@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -11,3 +12,4 @@ const result = await functions.deleteVariable({
     functionId: '<FUNCTION_ID>',
     variableId: '<VARIABLE_ID>'
 });
+```

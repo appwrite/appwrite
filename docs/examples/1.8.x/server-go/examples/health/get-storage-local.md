@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -15,3 +15,4 @@ client := client.New(
 service := health.New(client)
 
 response, error := service.GetStorageLocal())
+```

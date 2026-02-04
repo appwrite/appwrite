@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Sites
@@ -12,3 +13,4 @@ val sites = Sites(client)
 val response = sites.get(
     siteId = "<SITE_ID>"
 )
+```

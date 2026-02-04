@@ -1,3 +1,4 @@
+```javascript
 import { Client, Databases, UsageRange } from "@appwrite.io/console";
 
 const client = new Client()
@@ -13,3 +14,4 @@ const result = await databases.getCollectionUsage({
 });
 
 console.log(result);
+```

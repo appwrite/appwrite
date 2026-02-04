@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreateMFAAuthenticator(
         type: "totp"
@@ -6,3 +7,4 @@ mutation {
         uri
     }
 }
+```

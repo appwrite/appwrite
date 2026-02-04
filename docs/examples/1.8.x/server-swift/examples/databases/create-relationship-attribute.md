@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -19,3 +20,4 @@ let attributeRelationship = try await databases.createRelationshipAttribute(
     onDelete: .cascade // optional
 )
 
+```

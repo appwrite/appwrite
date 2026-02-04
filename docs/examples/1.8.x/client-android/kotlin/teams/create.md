@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Teams
@@ -12,4 +13,4 @@ val result = teams.create(
     teamId = "<TEAM_ID>", 
     name = "<NAME>", 
     roles = listOf(), // (optional)
-)
+)```

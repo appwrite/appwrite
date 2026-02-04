@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ byte[] result = await avatars.GetImage(
     url: "https://example.com",
     width: 0, // optional
     height: 0 // optional
-);
+);```

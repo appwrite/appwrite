@@ -1,3 +1,4 @@
+```graphql
 mutation {
     teamsCreate(
         teamId: "<TEAM_ID>",
@@ -14,3 +15,4 @@ mutation {
         }
     }
 }
+```

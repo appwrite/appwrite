@@ -327,7 +327,7 @@ class Create extends Action
                     ->setPreview($preview)
                     ->setBody($body)
                     ->setBodyTemplate($bodyTemplate)
-                    ->setVariables($emailVariables)
+                    ->appendVariables($emailVariables)
                     ->setRecipient($user->getAttribute('email'));
 
                 // since this is console project, set email sender name!

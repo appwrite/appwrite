@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 
@@ -14,3 +15,4 @@ result = tables_db.list_columns(
     queries = [], # optional
     total = False # optional
 )
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = users.delete_mfa_authenticator(
     user_id: '<USER_ID>',
     type: AuthenticatorType::TOTP
 )
+```

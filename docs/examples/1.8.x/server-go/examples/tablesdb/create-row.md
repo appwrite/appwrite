@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -28,3 +28,4 @@ response, error := service.CreateRow(
     tablesdb.WithCreateRowPermissions(interface{}{"read("any")"}),
     tablesdb.WithCreateRowTransactionId("<TRANSACTION_ID>"),
 )
+```

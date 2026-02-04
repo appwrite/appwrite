@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -20,4 +21,4 @@ Provider result = await messaging.CreateMailgunProvider(
     replyToName: "<REPLY_TO_NAME>", // optional
     replyToEmail: "email@example.com", // optional
     enabled: false // optional
-);
+);```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,3 +16,4 @@ result = sites.list_deployments(
     search: '<SEARCH>', # optional
     total: false # optional
 )
+```

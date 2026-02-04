@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.avatars import Avatars
 
@@ -14,3 +15,4 @@ result = avatars.get_initials(
     height = 0, # optional
     background = '' # optional
 )
+```

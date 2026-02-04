@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -16,3 +17,4 @@ result = databases.get_document(
     queries: [], # optional
     transaction_id: '<TRANSACTION_ID>' # optional
 )
+```

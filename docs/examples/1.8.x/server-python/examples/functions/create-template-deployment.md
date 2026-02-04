@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 from appwrite.enums import TemplateReferenceType
@@ -18,3 +19,4 @@ result = functions.create_template_deployment(
     reference = '<REFERENCE>',
     activate = False # optional
 )
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ ColumnUrl result = await tablesDB.UpdateUrlColumn(
     required: false,
     default: "https://example.com",
     newKey: "" // optional
-);
+);```

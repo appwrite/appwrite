@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 from appwrite.enums import ExecutionMethod
@@ -18,3 +19,4 @@ result = functions.create_execution(
     headers = {}, # optional
     scheduled_at = '<SCHEDULED_AT>' # optional
 )
+```

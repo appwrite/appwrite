@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.sites import Sites
 
@@ -11,3 +12,4 @@ sites = Sites(client)
 result = sites.get(
     site_id = '<SITE_ID>'
 )
+```

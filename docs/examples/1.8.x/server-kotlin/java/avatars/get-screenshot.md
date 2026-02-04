@@ -1,9 +1,11 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Avatars;
 import io.appwrite.enums.Theme;
 import io.appwrite.enums.Timezone;
-import io.appwrite.enums.Output;
+import io.appwrite.enums.BrowserPermission;
+import io.appwrite.enums.ImageFormat;
 
 Client client = new Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -21,21 +23,21 @@ avatars.getScreenshot(
     1920, // viewportWidth (optional)
     1080, // viewportHeight (optional)
     2, // scale (optional)
-    Theme.LIGHT, // theme (optional)
+    Theme.DARK, // theme (optional)
     "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15", // userAgent (optional)
     true, // fullpage (optional)
     "en-US", // locale (optional)
-    Timezone.AFRICA_ABIDJAN, // timezone (optional)
+    Timezone.AMERICA_NEW_YORK, // timezone (optional)
     37.7749, // latitude (optional)
     -122.4194, // longitude (optional)
     100, // accuracy (optional)
     true, // touch (optional)
-    List.of("geolocation", "notifications"), // permissions (optional)
+    List.of(BrowserPermission.GEOLOCATION, BrowserPermission.NOTIFICATIONS), // permissions (optional)
     3, // sleep (optional)
     800, // width (optional)
     600, // height (optional)
     85, // quality (optional)
-    Output.JPG, // output (optional)
+    ImageFormat.JPEG, // output (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -46,3 +48,4 @@ avatars.getScreenshot(
     })
 );
 
+```

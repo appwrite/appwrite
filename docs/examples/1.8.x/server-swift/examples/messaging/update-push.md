@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -30,3 +31,4 @@ let message = try await messaging.updatePush(
     priority: .normal // optional
 )
 
+```

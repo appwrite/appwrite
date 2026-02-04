@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -12,3 +13,4 @@ val messaging = Messaging(client)
 val response = messaging.deleteTopic(
     topicId = "<TOPIC_ID>"
 )
+```

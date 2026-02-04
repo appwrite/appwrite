@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -22,3 +22,4 @@ response, error := service.CreateTelesignProvider(
     messaging.WithCreateTelesignProviderApiKey("<API_KEY>"),
     messaging.WithCreateTelesignProviderEnabled(false),
 )
+```

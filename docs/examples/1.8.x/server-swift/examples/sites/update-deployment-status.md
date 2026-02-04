@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -12,3 +13,4 @@ let deployment = try await sites.updateDeploymentStatus(
     deploymentId: "<DEPLOYMENT_ID>"
 )
 
+```

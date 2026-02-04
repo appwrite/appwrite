@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -14,3 +15,4 @@ AttributePolygon result = await databases.createPolygonAttribute(
     xrequired: false,
     xdefault: [[[1, 2], [3, 4], [5, 6], [1, 2]]], // (optional)
 );
+```

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Users
@@ -12,3 +13,4 @@ val users = Users(client)
 val response = users.deleteIdentity(
     identityId = "<IDENTITY_ID>"
 )
+```

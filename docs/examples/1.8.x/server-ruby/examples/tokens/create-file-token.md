@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = tokens.create_file_token(
     file_id: '<FILE_ID>',
     expire: '' # optional
 )
+```

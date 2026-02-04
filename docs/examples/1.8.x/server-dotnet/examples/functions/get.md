@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Functions functions = new Functions(client);
 
 Function result = await functions.Get(
     functionId: "<FUNCTION_ID>"
-);
+);```

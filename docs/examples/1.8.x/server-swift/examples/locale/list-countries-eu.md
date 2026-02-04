@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -9,3 +10,4 @@ let locale = Locale(client)
 
 let countryList = try await locale.listCountriesEU()
 
+```

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Account
@@ -12,4 +13,4 @@ val result = account.createEmailToken(
     userId = "<USER_ID>", 
     email = "email@example.com", 
     phrase = false, // (optional)
-)
+)```

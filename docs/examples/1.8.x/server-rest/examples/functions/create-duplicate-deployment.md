@@ -1,3 +1,4 @@
+```http
 POST /v1/functions/{functionId}/deployments/duplicate HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -9,3 +10,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "deploymentId": "<DEPLOYMENT_ID>",
   "buildId": "<BUILD_ID>"
 }
+```

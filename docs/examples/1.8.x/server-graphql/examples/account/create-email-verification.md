@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreateEmailVerification(
         url: "https://example.com"
@@ -10,3 +11,4 @@ mutation {
         phrase
     }
 }
+```

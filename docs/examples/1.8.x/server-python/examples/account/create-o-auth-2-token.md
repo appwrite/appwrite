@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.account import Account
 from appwrite.enums import OAuthProvider
@@ -15,3 +16,4 @@ result = account.create_o_auth2_token(
     failure = 'https://example.com', # optional
     scopes = [] # optional
 )
+```
