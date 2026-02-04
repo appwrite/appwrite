@@ -5216,13 +5216,13 @@ class ProjectsConsoleClientTest extends Scope
 
                 if (\in_array($projectId, $trustedProjectIds)) {
                     // Trusted projects can
+                    $this->assertEquals(200, $currencies['headers']['status-code']);
                     $this->assertSame('http://' . $domain, $currencies['headers']['access-control-allow-origin']);
                 } else {
                     // Untrusted projects cannot
+                    $this->assertEquals(403, $currencies['headers']['status-code']);
                     $this->assertArrayNotHasKey('access-control-allow-origin', $currencies['headers']);
                 }
-            } catch (\Throwable $th) {
-                throw $th;
             } finally {
                 // Cleanup
                 $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
