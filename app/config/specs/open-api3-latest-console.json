@@ -54690,6 +54690,18 @@
                                     "$ref": "#\/components\/schemas\/columnPolygon"
                                 },
                                 {
+                                    "$ref": "#\/components\/schemas\/columnVarchar"
+                                },
+                                {
+                                    "$ref": "#\/components\/schemas\/columnText"
+                                },
+                                {
+                                    "$ref": "#\/components\/schemas\/columnMediumtext"
+                                },
+                                {
+                                    "$ref": "#\/components\/schemas\/columnLongtext"
+                                },
+                                {
                                     "$ref": "#\/components\/schemas\/columnString"
                                 }
                             ]
@@ -54782,6 +54794,18 @@
                                 },
                                 {
                                     "$ref": "#\/components\/schemas\/columnPolygon"
+                                },
+                                {
+                                    "$ref": "#\/components\/schemas\/columnVarchar"
+                                },
+                                {
+                                    "$ref": "#\/components\/schemas\/columnText"
+                                },
+                                {
+                                    "$ref": "#\/components\/schemas\/columnMediumtext"
+                                },
+                                {
+                                    "$ref": "#\/components\/schemas\/columnLongtext"
                                 },
                                 {
                                     "$ref": "#\/components\/schemas\/columnString"
@@ -63690,8 +63714,8 @@
                     },
                     "_APP_DOMAIN_SITES": {
                         "type": "string",
-                        "description": "A domain to use for site URLs.",
-                        "x-example": "sites.localhost"
+                        "description": "A comma separated list of domains to use for site URLs.",
+                        "x-example": "sites.localhost,sites.example.com"
                     },
                     "_APP_DOMAIN_FUNCTIONS": {
                         "type": "string",
@@ -63738,7 +63762,7 @@
                     "_APP_VCS_ENABLED": true,
                     "_APP_DOMAIN_ENABLED": true,
                     "_APP_ASSISTANT_ENABLED": true,
-                    "_APP_DOMAIN_SITES": "sites.localhost",
+                    "_APP_DOMAIN_SITES": "sites.localhost,sites.example.com",
                     "_APP_DOMAIN_FUNCTIONS": "functions.localhost",
                     "_APP_OPTIONS_FORCE_HTTPS": "enabled",
                     "_APP_DOMAINS_NAMESERVERS": "ns1.example.com,ns2.example.com"
