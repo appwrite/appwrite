@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -15,3 +16,4 @@ val response = messaging.createFCMProvider(
     serviceAccountJSON = mapOf( "a" to "b" ), // optional
     enabled = false // optional
 )
+```

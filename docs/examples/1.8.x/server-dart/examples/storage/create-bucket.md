@@ -1,4 +1,6 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 import 'package:dart_appwrite/permission.dart';
 import 'package:dart_appwrite/role.dart';
 
@@ -22,3 +24,4 @@ Bucket result = await storage.createBucket(
     antivirus: false, // (optional)
     transformations: false, // (optional)
 );
+```

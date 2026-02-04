@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -21,3 +22,4 @@ let row = try await tablesDB.updateRow(
     transactionId: "<TRANSACTION_ID>" // optional
 )
 
+```

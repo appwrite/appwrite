@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -11,3 +12,4 @@ Team result = await teams.create(
     name: '<NAME>',
     roles: [], // optional
 );
+```

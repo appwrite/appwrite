@@ -1,3 +1,4 @@
+```http
 PUT /v1/tablesdb/{databaseId} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -9,3 +10,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "name": "<NAME>",
   "enabled": false
 }
+```

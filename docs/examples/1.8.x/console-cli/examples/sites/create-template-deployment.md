@@ -1,3 +1,4 @@
+```bash
 appwrite sites create-template-deployment \
     --site-id <SITE_ID> \
     --repository <REPOSITORY> \
@@ -5,3 +6,4 @@ appwrite sites create-template-deployment \
     --root-directory <ROOT_DIRECTORY> \
     --type branch \
     --reference <REFERENCE>
+```

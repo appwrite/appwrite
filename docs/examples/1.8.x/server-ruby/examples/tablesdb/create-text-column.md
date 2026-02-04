@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = tables_db.create_text_column(
     default: '<DEFAULT>', # optional
     array: false # optional
 )
+```

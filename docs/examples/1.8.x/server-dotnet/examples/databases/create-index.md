@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -18,4 +19,4 @@ Index result = await databases.CreateIndex(
     attributes: new List<string>(),
     orders: new List&lt;OrderBy&gt; { OrderBy.Asc }, // optional
     lengths: new List<long>() // optional
-);
+);```

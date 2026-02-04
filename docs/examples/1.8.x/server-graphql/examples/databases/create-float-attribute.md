@@ -1,3 +1,4 @@
+```graphql
 mutation {
     databasesCreateFloatAttribute(
         databaseId: "<DATABASE_ID>",
@@ -22,3 +23,4 @@ mutation {
         default
     }
 }
+```

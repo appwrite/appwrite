@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -10,3 +11,4 @@ client = Client.new
 account = Account.new(client)
 
 result = account.get_mfa_recovery_codes()
+```

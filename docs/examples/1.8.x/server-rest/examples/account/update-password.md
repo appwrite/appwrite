@@ -1,3 +1,4 @@
+```http
 PATCH /v1/account/password HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -10,3 +11,4 @@ X-Appwrite-JWT: <YOUR_JWT>
   "password": "",
   "oldPassword": "password"
 }
+```

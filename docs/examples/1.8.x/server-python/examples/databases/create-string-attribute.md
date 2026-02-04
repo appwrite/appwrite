@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -18,3 +19,4 @@ result = databases.create_string_attribute(
     array = False, # optional
     encrypt = False # optional
 )
+```

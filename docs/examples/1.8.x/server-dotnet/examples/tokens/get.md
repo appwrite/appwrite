@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Tokens tokens = new Tokens(client);
 
 ResourceToken result = await tokens.Get(
     tokenId: "<TOKEN_ID>"
-);
+);```

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountUpdateName(
         name: "<NAME>"
@@ -35,3 +36,4 @@ mutation {
         accessedAt
     }
 }
+```

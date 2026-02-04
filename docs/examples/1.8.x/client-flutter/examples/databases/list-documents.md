@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -13,3 +14,4 @@ DocumentList result = await databases.listDocuments(
     transactionId: '<TRANSACTION_ID>', // optional
     total: false, // optional
 );
+```

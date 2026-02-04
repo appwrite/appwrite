@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -15,4 +16,4 @@ DocumentList result = await databases.ListDocuments(
     queries: new List<string>(), // optional
     transactionId: "<TRANSACTION_ID>", // optional
     total: false // optional
-);
+);```

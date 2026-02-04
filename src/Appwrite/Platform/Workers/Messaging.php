@@ -124,7 +124,7 @@ class Messaging extends Action
             Span::error($e);
             throw $e;
         } finally {
-            Span::current()->finish();
+            Span::current()?->finish();
         }
     }
 
@@ -201,8 +201,8 @@ class Messaging extends Action
                     $countryCodes[$countryCode] = ($countryCodes[$countryCode] ?? 0) + 1;
                 }
             }
-            if (!empty($countryCodes)) {
-                Span::add('countryCodes', \json_encode($countryCodes));
+            foreach ($countryCodes as $code => $count) {
+                Span::add('countryCode_' . $code, $count);
             }
         }
 
@@ -441,8 +441,8 @@ class Messaging extends Action
                 $countryCodes[$countryCode] = ($countryCodes[$countryCode] ?? 0) + 1;
             }
         }
-        if (!empty($countryCodes)) {
-            Span::add('countryCodes', \json_encode($countryCodes));
+        foreach ($countryCodes as $code => $count) {
+            Span::add('countryCode_' . $code, $count);
         }
 
         if ($this->adapter === null) {

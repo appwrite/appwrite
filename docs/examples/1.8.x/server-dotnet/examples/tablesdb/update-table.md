@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ Table result = await tablesDB.UpdateTable(
     permissions: new List<string> { Permission.Read(Role.Any()) }, // optional
     rowSecurity: false, // optional
     enabled: false // optional
-);
+);```

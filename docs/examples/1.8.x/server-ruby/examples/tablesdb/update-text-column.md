@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = tables_db.update_text_column(
     default: '<DEFAULT>',
     new_key: '' # optional
 )
+```

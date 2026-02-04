@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -28,3 +28,4 @@ response, error := service.UpdateRow(
     tablesdb.WithUpdateRowPermissions(interface{}{"read("any")"}),
     tablesdb.WithUpdateRowTransactionId("<TRANSACTION_ID>"),
 )
+```

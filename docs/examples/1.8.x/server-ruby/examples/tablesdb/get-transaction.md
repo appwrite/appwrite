@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ tables_db = TablesDB.new(client)
 result = tables_db.get_transaction(
     transaction_id: '<TRANSACTION_ID>'
 )
+```

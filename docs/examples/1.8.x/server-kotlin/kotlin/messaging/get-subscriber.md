@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -13,3 +14,4 @@ val response = messaging.getSubscriber(
     topicId = "<TOPIC_ID>",
     subscriberId = "<SUBSCRIBER_ID>"
 )
+```

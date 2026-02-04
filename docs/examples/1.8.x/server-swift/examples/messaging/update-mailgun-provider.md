@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -20,3 +21,4 @@ let provider = try await messaging.updateMailgunProvider(
     replyToEmail: "<REPLY_TO_EMAIL>" // optional
 )
 
+```

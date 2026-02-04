@@ -1,3 +1,4 @@
+```bash
 appwrite tables-db update-enum-column \
     --database-id <DATABASE_ID> \
     --table-id <TABLE_ID> \
@@ -5,3 +6,4 @@ appwrite tables-db update-enum-column \
     --elements one two three \
     --required false \
     --default <DEFAULT>
+```

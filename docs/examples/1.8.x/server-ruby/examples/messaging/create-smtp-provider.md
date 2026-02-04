@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -26,3 +27,4 @@ result = messaging.create_smtp_provider(
     reply_to_email: 'email@example.com', # optional
     enabled: false # optional
 )
+```

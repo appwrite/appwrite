@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -25,3 +26,4 @@ result = tables_db.upsert_row(
     permissions: [Permission.read(Role.any())], # optional
     transaction_id: '<TRANSACTION_ID>' # optional
 )
+```

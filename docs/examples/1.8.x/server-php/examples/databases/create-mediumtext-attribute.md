@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -17,4 +18,4 @@ $result = $databases->createMediumtextAttribute(
     required: false,
     default: '<DEFAULT>', // optional
     array: false // optional
-);
+);```

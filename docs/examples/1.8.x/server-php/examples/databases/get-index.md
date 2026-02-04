@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $result = $databases->getIndex(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     key: ''
-);
+);```

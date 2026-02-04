@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -19,4 +20,4 @@ $result = $databases->updateCollection(
     permissions: [Permission::read(Role::any())], // optional
     documentSecurity: false, // optional
     enabled: false // optional
-);
+);```

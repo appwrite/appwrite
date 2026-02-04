@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 from appwrite.enums import DeploymentDownloadType
@@ -14,3 +15,4 @@ result = functions.get_deployment_download(
     deployment_id = '<DEPLOYMENT_ID>',
     type = DeploymentDownloadType.SOURCE # optional
 )
+```

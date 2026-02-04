@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = messaging.create_telesign_provider(
     api_key: '<API_KEY>', # optional
     enabled: false # optional
 )
+```

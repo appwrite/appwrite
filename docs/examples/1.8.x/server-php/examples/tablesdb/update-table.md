@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -19,4 +20,4 @@ $result = $tablesDB->updateTable(
     permissions: [Permission::read(Role::any())], // optional
     rowSecurity: false, // optional
     enabled: false // optional
-);
+);```

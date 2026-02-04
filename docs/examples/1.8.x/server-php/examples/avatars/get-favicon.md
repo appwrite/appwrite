@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -12,4 +13,4 @@ $avatars = new Avatars($client);
 
 $result = $avatars->getFavicon(
     url: 'https://example.com'
-);
+);```

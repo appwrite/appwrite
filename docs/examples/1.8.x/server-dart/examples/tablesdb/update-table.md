@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 import 'package:dart_appwrite/permission.dart';
 import 'package:dart_appwrite/role.dart';
@@ -17,3 +18,4 @@ Table result = await tablesDB.updateTable(
     rowSecurity: false, // (optional)
     enabled: false, // (optional)
 );
+```

@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -10,3 +11,4 @@ let user = try await account.updateName(
     name: "<NAME>"
 )
 
+```

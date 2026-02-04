@@ -1,3 +1,4 @@
+```http
 POST /v1/tablesdb/{databaseId}/tables/{tableId}/columns/datetime HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -11,3 +12,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "default": "",
   "array": false
 }
+```

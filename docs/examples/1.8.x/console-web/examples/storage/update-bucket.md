@@ -1,3 +1,4 @@
+```javascript
 import { Client, Storage, Compression, Permission, Role } from "@appwrite.io/console";
 
 const client = new Client()
@@ -21,3 +22,4 @@ const result = await storage.updateBucket({
 });
 
 console.log(result);
+```

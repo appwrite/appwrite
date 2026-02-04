@@ -1,3 +1,4 @@
+```javascript
 import { Client, Storage } from "appwrite";
 
 const client = new Client()
@@ -14,3 +15,4 @@ const result = await storage.listFiles({
 });
 
 console.log(result);
+```

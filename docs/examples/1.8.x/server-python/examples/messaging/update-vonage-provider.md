@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -16,3 +17,4 @@ result = messaging.update_vonage_provider(
     api_secret = '<API_SECRET>', # optional
     from = '<FROM>' # optional
 )
+```

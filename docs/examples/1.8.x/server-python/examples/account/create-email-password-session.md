@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.account import Account
 
@@ -12,3 +13,4 @@ result = account.create_email_password_session(
     email = 'email@example.com',
     password = 'password'
 )
+```

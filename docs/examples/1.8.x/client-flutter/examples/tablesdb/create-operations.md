@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -20,3 +21,4 @@ Transaction result = await tablesDB.createOperations(
 	    }
 	], // optional
 );
+```

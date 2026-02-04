@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -18,4 +19,4 @@ AttributeInteger result = await databases.CreateIntegerAttribute(
     max: 0, // optional
     default: 0, // optional
     array: false // optional
-);
+);```

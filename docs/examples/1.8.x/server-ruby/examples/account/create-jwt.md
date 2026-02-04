@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ account = Account.new(client)
 result = account.create_jwt(
     duration: 0 # optional
 )
+```

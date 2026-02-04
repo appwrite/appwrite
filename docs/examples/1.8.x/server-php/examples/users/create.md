@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -16,4 +17,4 @@ $result = $users->create(
     phone: '+12065550100', // optional
     password: '', // optional
     name: '<NAME>' // optional
-);
+);```

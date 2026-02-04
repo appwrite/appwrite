@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Health health = new Health(client);
 
 HealthCertificate result = await health.GetCertificate(
     domain: "" // optional
-);
+);```

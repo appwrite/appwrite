@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,3 +16,4 @@ result = tables_db.create_rows(
     rows: [],
     transaction_id: '<TRANSACTION_ID>' # optional
 )
+```

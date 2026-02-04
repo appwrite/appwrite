@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -14,3 +15,4 @@ Document result = await databases.getDocument(
     queries: [], // (optional)
     transactionId: '<TRANSACTION_ID>', // (optional)
 );
+```

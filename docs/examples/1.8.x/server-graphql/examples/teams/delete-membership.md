@@ -1,3 +1,4 @@
+```graphql
 mutation {
     teamsDeleteMembership(
         teamId: "<TEAM_ID>",
@@ -6,3 +7,4 @@ mutation {
         status
     }
 }
+```

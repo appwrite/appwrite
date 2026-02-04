@@ -1,3 +1,4 @@
+```http
 POST /v1/messaging/providers/twilio HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -13,3 +14,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "authToken": "<AUTH_TOKEN>",
   "enabled": false
 }
+```

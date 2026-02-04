@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ Deployment result = await functions.CreateDuplicateDeployment(
     functionId: "<FUNCTION_ID>",
     deploymentId: "<DEPLOYMENT_ID>",
     buildId: "<BUILD_ID>" // optional
-);
+);```

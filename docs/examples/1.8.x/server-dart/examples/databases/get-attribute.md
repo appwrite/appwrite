@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ AttributeBoolean result = await databases.getAttribute(
     collectionId: '<COLLECTION_ID>',
     key: '',
 );
+```

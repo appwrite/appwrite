@@ -1,3 +1,4 @@
+```javascript
 import { Client, Projects } from "@appwrite.io/console";
 
 const client = new Client()
@@ -19,3 +20,4 @@ const result = await projects.updateWebhook({
 });
 
 console.log(result);
+```

@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -30,3 +30,4 @@ response, error := service.GetFilePreview(
     storage.WithGetFilePreviewOutput("jpg"),
     storage.WithGetFilePreviewToken("<TOKEN>"),
 )
+```

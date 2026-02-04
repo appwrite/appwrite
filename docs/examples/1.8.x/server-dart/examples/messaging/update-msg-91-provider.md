@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -15,3 +16,4 @@ Provider result = await messaging.updateMsg91Provider(
     senderId: '<SENDER_ID>', // (optional)
     authKey: '<AUTH_KEY>', // (optional)
 );
+```

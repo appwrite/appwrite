@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
@@ -13,3 +14,4 @@ val response = functions.deleteVariable(
     functionId = "<FUNCTION_ID>",
     variableId = "<VARIABLE_ID>"
 )
+```

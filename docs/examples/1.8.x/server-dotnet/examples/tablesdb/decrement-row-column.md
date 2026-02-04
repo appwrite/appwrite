@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -17,4 +18,4 @@ Row result = await tablesDB.DecrementRowColumn(
     value: 0, // optional
     min: 0, // optional
     transactionId: "<TRANSACTION_ID>" // optional
-);
+);```

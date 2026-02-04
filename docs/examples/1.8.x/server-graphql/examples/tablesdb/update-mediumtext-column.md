@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBUpdateMediumtextColumn(
         databaseId: "<DATABASE_ID>",
@@ -18,3 +19,4 @@ mutation {
         default
     }
 }
+```

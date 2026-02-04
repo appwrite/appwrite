@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Users
@@ -16,3 +17,4 @@ val response = users.updateTarget(
     providerId = "<PROVIDER_ID>", // optional
     name = "<NAME>" // optional
 )
+```

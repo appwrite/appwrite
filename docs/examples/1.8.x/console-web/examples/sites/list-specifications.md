@@ -1,3 +1,4 @@
+```javascript
 import { Client, Sites } from "@appwrite.io/console";
 
 const client = new Client()
@@ -9,3 +10,4 @@ const sites = new Sites(client);
 const result = await sites.listSpecifications();
 
 console.log(result);
+```

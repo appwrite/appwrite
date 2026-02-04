@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -11,3 +12,4 @@ Target result = await account.createPushTarget(
     identifier: '<IDENTIFIER>',
     providerId: '<PROVIDER_ID>', // optional
 );
+```

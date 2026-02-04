@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -29,4 +30,4 @@ Function result = await functions.Create(
     providerSilentMode: false, // optional
     providerRootDirectory: "<PROVIDER_ROOT_DIRECTORY>", // optional
     specification: "" // optional
-);
+);```

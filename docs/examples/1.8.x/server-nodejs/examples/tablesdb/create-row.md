@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -21,3 +22,4 @@ const result = await tablesDB.createRow({
     permissions: [sdk.Permission.read(sdk.Role.any())], // optional
     transactionId: '<TRANSACTION_ID>' // optional
 });
+```

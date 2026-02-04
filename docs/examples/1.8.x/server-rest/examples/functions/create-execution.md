@@ -1,3 +1,4 @@
+```http
 POST /v1/functions/{functionId}/executions HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -15,3 +16,4 @@ X-Appwrite-JWT: <YOUR_JWT>
   "headers": {},
   "scheduledAt": "<SCHEDULED_AT>"
 }
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -15,4 +16,4 @@ Row result = await tablesDB.GetRow(
     rowId: "<ROW_ID>",
     queries: new List<string>(), // optional
     transactionId: "<TRANSACTION_ID>" // optional
-);
+);```

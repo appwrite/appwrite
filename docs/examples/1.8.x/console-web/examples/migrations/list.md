@@ -1,3 +1,4 @@
+```javascript
 import { Client, Migrations } from "@appwrite.io/console";
 
 const client = new Client()
@@ -13,3 +14,4 @@ const result = await migrations.list({
 });
 
 console.log(result);
+```

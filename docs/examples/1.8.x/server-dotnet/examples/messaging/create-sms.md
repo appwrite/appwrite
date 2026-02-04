@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -17,4 +18,4 @@ Message result = await messaging.CreateSMS(
     targets: new List<string>(), // optional
     draft: false, // optional
     scheduledAt: "" // optional
-);
+);```
