@@ -748,6 +748,9 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(204, $deleteVarchar['headers']['status-code']);
 
+        // Wait for async deletion to complete
+        sleep(2);
+
         // Verify deletion
         $getDeleted = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar_min', [
             'content-type' => 'application/json',
