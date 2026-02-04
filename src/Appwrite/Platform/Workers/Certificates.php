@@ -292,7 +292,7 @@ class Certificates extends Action
 
         try {
             $date = \date('H:i:s');
-            $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mCertificate generation started. \033[0m\n");
+            $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mProcessing SSL certificate issuance. \033[0m\n");
 
             // Persist ASAP so that logs are reset in retry flow and user can see the latest logs on Console.
             $certificate = $this->upsertCertificate($rule, $certificate, $dbForPlatform);
@@ -314,13 +314,14 @@ class Certificates extends Action
             $certName = ID::unique();
             $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
 
+            $date = \date('H:i:s');
             // If certificate is generated instantly, we can mark the rule as 'verified'.
             if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
-                $certificate->setAttribute('logs', 'Certificate successfully generated.');
+                $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n");
             } else {
                 // Delayed generation: third-party handles certificate issuance asynchronously
-                $certificate->setAttribute('logs', 'Certificate generation requested. We\'ll periodically check and update the status.');
+                $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We\'ll periodically check and update the status. \033[0m\n");
             }
 
             $certificate->setAttributes([
@@ -332,7 +333,7 @@ class Certificates extends Action
             $logs = $e->getMessage();
             $currentLogs = $certificate->getAttribute('logs', '');
             $date = \date('H:i:s');
-            $errorMessage = "\033[90m[{$date}] \033[31mCertificate generation failed: \033[0m\n";
+            $errorMessage = "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
 
             $attempts = $certificate->getAttribute('attempts', 0) + 1; // Increase attempts count
 
