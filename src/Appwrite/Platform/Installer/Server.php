@@ -71,7 +71,7 @@ class Server
 
     private function runCli(): void
     {
-        $opts = getopt('', ['mock', 'upgrade', 'locked-database::', 'docker', 'clean']);
+        $opts = getopt('', ['upgrade', 'locked-database::', 'docker', 'clean']);
         $cfg = $this->state->buildConfig([], true);
         $isDocker = isset($opts['docker']);
         if ($isDocker) {
@@ -83,9 +83,6 @@ class Server
                 }
             }
         }
-        if (isset($opts['mock'])) {
-            $cfg->setIsMock(true);
-        }
         if (isset($opts['upgrade'])) {
             $cfg->setIsUpgrade(true);
         }
@@ -96,7 +93,6 @@ class Server
 
         $host = self::INSTALLER_WEB_HOST;
         $port = (string) self::INSTALLER_WEB_PORT;
-        $isMock = $cfg->isMock();
 
         if (isset($opts['clean'])) {
             $this->removeDockerInstallerContainer(self::DEFAULT_CONTAINER);
@@ -106,20 +102,19 @@ class Server
         }
 
         if (isset($opts['docker'])) {
-            $this->printInstallerUrl($isMock, $host, $port);
+            $this->printInstallerUrl($host, $port);
             $this->startDockerInstaller($opts);
         }
 
-        $this->printInstallerUrl($isMock, $host, $port);
+        $this->printInstallerUrl($host, $port);
         $this->startInstallerDevServer($host, $port);
     }
 
-    private function printInstallerUrl(bool $isMock, string $host, string $port): void
+    private function printInstallerUrl(string $host, string $port): void
     {
         $displayHost = $host === self::INSTALLER_WEB_HOST ? 'localhost' : $host;
         $url = "http://$displayHost:$port";
-        $message = $isMock ? "Mock mode enabled: $url" : "Open $url";
-        fwrite(STDOUT, $message . PHP_EOL);
+        fwrite(STDOUT, "Open $url" . PHP_EOL);
     }
 
     private function killInstallerDevServers(): void
@@ -195,8 +190,7 @@ class Server
 
         $exitCode = proc_close($process);
         /**
-         * Playwright terminates the dev server after tests, which can yield 255 or a signaled status.
-         * Treat that as a clean shutdown so webServer doesn't fail.
+         * Treat exit code 255 or signaled status as a clean shutdown.
          */
         if ($exitCode === 255 || ($lastStatus['signaled'] ?? false)) {
             $exitCode = 0;
@@ -284,9 +278,6 @@ class Server
         $dockerConfig = $this->state->buildConfig([], false);
         $dockerConfig->setIsLocal(true);
         $dockerConfig->setHostPath($volumePath);
-        if (isset($opts['mock'])) {
-            $dockerConfig->setIsMock(true);
-        }
         if (isset($opts['upgrade'])) {
             $dockerConfig->setIsUpgrade(true);
         }

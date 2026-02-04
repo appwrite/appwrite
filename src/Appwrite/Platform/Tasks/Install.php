@@ -28,7 +28,7 @@ class Install extends Action
     private const string PATTERN_DB_PASSWORD_VAR = '/^_APP_DB_.*_PASS$/';
     private const string PATTERN_SESSION_COOKIE = '/a_session_console=([^;]+)/';
 
-    private const string TRAEFIK_URL = 'http://traefik:80';
+    private const string APPWRITE_API_URL = 'http://appwrite';
     private const string GROWTH_API_URL = 'https://growth.appwrite.io/v1';
 
     protected string $hostPath = '';
@@ -674,7 +674,7 @@ class Install extends Action
         $client = new Client();
         $pingHealth = function () use ($client): bool {
             try {
-                return $client->fetch(self::TRAEFIK_URL . '/v1/health/version')->getStatusCode() === 200;
+                return $client->fetch(self::APPWRITE_API_URL . '/v1/health/version')->getStatusCode() === 200;
             } catch (\Throwable) {
                 return false;
             }
@@ -693,7 +693,7 @@ class Install extends Action
         throw new \Exception('Failed to connect with Appwrite in time');
     }
 
-    /* easier to just connect and call traefik endpoint */
+    /* easier to just connect and call appwrite endpoint */
     private function connectInstallerToAppwriteNetwork(): void
     {
         $network = escapeshellarg('appwrite');
@@ -709,7 +709,7 @@ class Install extends Action
             ->addHeader('Content-Type', 'application/json')
             ->addHeader('X-Appwrite-Project', 'console');
 
-        $url = self::TRAEFIK_URL . $endpoint;
+        $url = self::APPWRITE_API_URL . $endpoint;
         $response = $client->fetch($url, Client::METHOD_POST, $body);
 
         if ($response->getStatusCode() !== 201) {

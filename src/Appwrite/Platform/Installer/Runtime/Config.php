@@ -12,7 +12,6 @@ final class Config
         'noStart',
         'isUpgrade',
         'isLocal',
-        'isMock',
         'hostPath',
         'lockedDatabase',
         'vars',
@@ -25,7 +24,6 @@ final class Config
     private bool $noStart = false;
     private bool $isUpgrade = false;
     private bool $isLocal = false;
-    private bool $isMock = false;
     private ?string $hostPath = null;
     private ?string $lockedDatabase = null;
     private array $vars = [];
@@ -61,9 +59,6 @@ final class Config
         }
         if (array_key_exists('isLocal', $values) && $values['isLocal'] !== null) {
             $this->setIsLocal((bool) $values['isLocal']);
-        }
-        if (array_key_exists('isMock', $values) && $values['isMock'] !== null) {
-            $this->setIsMock((bool) $values['isMock']);
         }
         if (array_key_exists('hostPath', $values)) {
             $hostPath = $values['hostPath'];
@@ -103,7 +98,6 @@ final class Config
             'vars' => $this->vars,
             'isUpgrade' => $this->isUpgrade,
             'isLocal' => $this->isLocal,
-            'isMock' => $this->isMock,
             'hostPath' => $this->hostPath,
             'lockedDatabase' => $this->lockedDatabase,
         ];
@@ -187,16 +181,6 @@ final class Config
     public function setIsLocal(bool $value): void
     {
         $this->isLocal = $value;
-    }
-
-    public function isMock(): bool
-    {
-        return $this->isMock;
-    }
-
-    public function setIsMock(bool $value): void
-    {
-        $this->isMock = $value;
     }
 
     public function getHostPath(): ?string

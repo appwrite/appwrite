@@ -8,13 +8,6 @@
         SSE_EVENTS
     } = window.InstallerStepsContext;
     const {
-        isMockMode,
-        isMockErrorMode,
-        isMockAccountErrorMode,
-        isMockProgressMode,
-        isMockToastMode
-    } = window.InstallerMock || {};
-    const {
         formState,
         applyLockPayload,
         applyBodyDefaults,
@@ -52,11 +45,6 @@
     };
 
     const validateInstallRequest = async () => {
-        if (isMockToastMode?.()) {
-            showCsrfToast();
-            return false;
-        }
-        if (isMockProgressMode?.()) return true;
         try {
             const response = await fetch('/install/validate', {
                 method: 'POST',
@@ -289,14 +277,12 @@
     };
 
     const redirectToApp = () => {
-        if (isMockMode?.()) return;
         const url = buildRedirectUrl();
         if (!url) return;
         window.location.href = url;
     };
 
     const notifyInstallComplete = (installId, session) => {
-        if (isMockProgressMode?.()) return Promise.resolve();
         if (!installId) return Promise.resolve();
         const payload = { installId };
         const sessionSecret = session?.sessionSecret || session?.secret;
@@ -348,7 +334,6 @@
     };
 
     const fetchInstallStatus = async (installId) => {
-        if (isMockProgressMode?.()) return null;
         if (!installId) return null;
         const response = await fetch(`/install/status?installId=${encodeURIComponent(installId)}`, {
             cache: 'no-store'
@@ -642,7 +627,6 @@
         };
 
         const startPolling = () => {
-            if (isMockProgressMode?.()) return;
             if (!activeInstall || activeInstall.pollTimer) return;
             activeInstall.pollTimer = setInterval(async () => {
                 if (!activeInstall || activeInstall.completed) return;
@@ -654,7 +638,6 @@
         };
 
         const scheduleFallback = () => {
-            if (isMockProgressMode?.()) return;
             if (!activeInstall) return;
             if (activeInstall.fallbackTimer) {
                 clearTimeout(activeInstall.fallbackTimer);
@@ -696,16 +679,10 @@
             if (options.retryStep) {
                 payload.retryStep = options.retryStep;
             }
-            if (!isMockProgressMode?.()) {
-                setInstallLock?.(installId, payload);
-                setUnloadGuard(true);
-            }
+            setInstallLock?.(installId, payload);
+            setUnloadGuard(true);
 
             try {
-                if (options.forceMock || isMockProgressMode?.()) {
-                    simulateInstallProgress(options);
-                    return;
-                }
                 scheduleFallback();
                 const response = await fetch('/install', {
                     method: 'POST',
@@ -880,7 +857,7 @@
 
             const installId = activeInstall?.installId || getInstallLock?.()?.installId || generateInstallId();
             storeInstallId?.(installId);
-            startInstallStream(installId, { retryStep: stepId, forceMock: isMockProgressMode?.() });
+            startInstallStream(installId, { retryStep: stepId });
         };
 
         list.addEventListener('click', (event) => {
@@ -898,80 +875,6 @@
                 retryInstallStep(stepId);
             }
         });
-
-        const simulateInstallProgress = (options = {}) => {
-            if (activeInstall?.pollTimer) {
-                clearInterval(activeInstall.pollTimer);
-            }
-
-            let index = options.retryStep
-                ? Math.max(0, INSTALLATION_STEPS.findIndex((step) => step.id === options.retryStep))
-                : 0;
-
-            let errorStepId = null;
-            if (isMockErrorMode?.() && !options.retryStep) {
-                errorStepId = isMockAccountErrorMode?.()
-                    ? STEP_IDS.ACCOUNT_SETUP
-                    : STEP_IDS.DOCKER_CONTAINERS;
-            }
-            const mockErrorDetails = (window.InstallerConstants || {}).mockErrorDetails || {
-                output: 'Error response from daemon: manifest for appwrite/appwrite:local not found: manifest unknown',
-                trace: '#0 /usr/src/code/src/Appwrite/Platform/Tasks/Install.php(540): Appwrite\\\\Platform\\\\Tasks\\\\Install->performInstallation(...)\\n#1 {main}'
-            };
-            const advance = () => {
-                if (index > 0) {
-                    const previous = INSTALLATION_STEPS[index - 1];
-                    const previousState = progressState.get(previous.id);
-                    if (!previousState || previousState.status !== STATUS.COMPLETED) {
-                        handleProgress({
-                            step: previous.id,
-                            status: STATUS.COMPLETED,
-                            message: previous.done
-                        });
-                    }
-                }
-
-                if (index >= INSTALLATION_STEPS.length) {
-                    finalizeInstall();
-                    return;
-                }
-
-                const step = INSTALLATION_STEPS[index];
-                handleProgress({
-                    step: step.id,
-                    status: STATUS.IN_PROGRESS,
-                    message: step.inProgress
-                });
-
-                if (errorStepId && step.id === errorStepId) {
-                    index += 1;
-                    activeInstall.pollTimer = setTimeout(() => {
-                        const errorMessage = errorStepId === STEP_IDS.ACCOUNT_SETUP
-                            ? 'A user with the same email already exists'
-                            : 'Failed to start containers';
-                        handleProgress({
-                            step: step.id,
-                            status: STATUS.ERROR,
-                            message: errorMessage,
-                            details: mockErrorDetails
-                        });
-                        finalizeInstall();
-                    }, TIMINGS?.mockStepDelay ?? 0);
-                    return;
-                }
-
-                index += 1;
-                activeInstall.pollTimer = setTimeout(advance, TIMINGS?.mockStepDelay ?? 0);
-            };
-            advance();
-        };
-
-        if (isMockProgressMode?.()) {
-            const newInstallId = generateInstallId();
-            storeInstallId?.(newInstallId);
-            startInstallStream(newInstallId);
-            return;
-        }
 
         const lock = getInstallLock?.();
         const existingInstallId = lock?.installId || getStoredInstallId?.();

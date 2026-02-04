@@ -10,7 +10,6 @@
         INSTALLATION_STEPS,
         clampStep
     } = Context;
-    const { isMockMode } = window.InstallerMock || {};
 
     const {
         formState,
@@ -127,10 +126,6 @@
 
     const initStep1 = (root) => {
         if (!root) return;
-        if (isMockMode?.()) {
-            clearInstallLock?.();
-            clearInstallId?.();
-        }
         syncInstallLockFlag?.();
         applyLockPayload?.();
         applyBodyDefaults?.();
@@ -195,10 +190,6 @@
 
     const initStep2 = (root) => {
         if (!root) return;
-        if (isMockMode?.()) {
-            clearInstallLock?.();
-            clearInstallId?.();
-        }
         syncInstallLockFlag?.();
         applyLockPayload?.();
         applyBodyDefaults?.();
@@ -276,10 +267,6 @@
 
     const initStep3 = (root) => {
         if (!root) return;
-        if (isMockMode?.()) {
-            clearInstallLock?.();
-            clearInstallId?.();
-        }
         syncInstallLockFlag?.();
         applyLockPayload?.();
         applyBodyDefaults?.();
@@ -311,10 +298,6 @@
 
     const initStep4 = (root) => {
         if (!root) return;
-        if (isMockMode?.()) {
-            clearInstallLock?.();
-            clearInstallId?.();
-        }
         syncInstallLockFlag?.();
         applyLockPayload?.();
         applyBodyDefaults?.();

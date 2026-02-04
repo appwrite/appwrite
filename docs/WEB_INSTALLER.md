@@ -43,8 +43,6 @@ Then open http://localhost:20080 in your browser.
 ```bash
 composer installer:dev              # Start web installer in Docker
 composer installer:dev-upgrade      # Start web installer in upgrade mode
-composer installer:mock             # Start web installer in mock mode (test without Docker)
-composer installer:mock-upgrade     # Start web installer in mock upgrade mode
 composer installer:clean            # Clean up installer containers and temp files
 ```
 

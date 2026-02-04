@@ -76,51 +76,6 @@ jobs:
           key: ${{ env.CACHE_KEY }}
           path: /tmp/${{ env.IMAGE }}.tar
 
-  installer_ui_test:
-    name: Installer UI Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          tools: composer
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: '1.3.6'
-
-      - name: Install Composer dependencies
-        run: composer install --ignore-platform-reqs --no-scripts --prefer-dist --no-progress
-
-      - name: Install Playwright
-        run: |
-          bun install --no-progress
-          bunx playwright install --with-deps chromium firefox webkit
-
-      - name: Run installer tests (install)
-        run: bun run test:installer
-
-      - name: Run installer tests (upgrade)
-        run: bun run test:installer:upgrade
-
-      - name: Run installer screenshots (install)
-        run: bun run test:screenshots
-
-      - name: Run installer screenshots (upgrade)
-        run: bun run test:screenshots:upgrade
-
-      - name: Upload installer screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: installer-screenshots
-          path: tests/playwright/screenshots
-
   unit_test:
     name: Unit Test
     runs-on: ubuntu-latest

@@ -562,11 +562,10 @@ class HttpHandler
         $defaultHttpsPort = $this->config->getDefaultHttpsPort();
         $isUpgrade = $this->config->isUpgrade();
         $lockedDatabase = $this->config->getLockedDatabase();
-        $isMock = $this->config->isMock();
         $isLocalInstall = $this->config->isLocal();
 
         $defaultEmailCertificates = $vars['_APP_EMAIL_CERTIFICATES']['default'] ?? '';
-        if ($isMock && empty($defaultEmailCertificates)) {
+        if ($isLocalInstall && empty($defaultEmailCertificates)) {
             $defaultEmailCertificates = 'walterobrien@example.com';
         }
 
