@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b7d213c39428e0c0e9524f25388cf95a",
+    "content-hash": "3536e299c47fdd06f2b9cf6b31415b49",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4950,16 +4950,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "dev-fix-servers-lib",
+            "version": "0.15.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "01d4b2e62cd564a2cac8f4c840f813cce5151975"
+                "reference": "2d693ec59119f853602f4be271602fddefbab507"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/01d4b2e62cd564a2cac8f4c840f813cce5151975",
-                "reference": "01d4b2e62cd564a2cac8f4c840f813cce5151975",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/2d693ec59119f853602f4be271602fddefbab507",
+                "reference": "2d693ec59119f853602f4be271602fddefbab507",
                 "shasum": ""
             },
             "require": {
@@ -5011,9 +5011,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/fix-servers-lib"
+                "source": "https://github.com/utopia-php/queue/tree/0.15.4"
             },
-            "time": "2026-02-04T07:18:48+00:00"
+            "time": "2026-02-04T08:50:35+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -9158,18 +9158,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/queue",
-            "version": "dev-fix-servers-lib",
-            "alias": "0.15.3",
-            "alias_normalized": "0.15.3.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/queue": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
