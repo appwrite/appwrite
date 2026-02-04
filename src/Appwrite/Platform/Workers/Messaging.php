@@ -431,6 +431,7 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
+        Span::add('providerType', 'sms');
         Span::add('recipientsCount', \count($recipients));
 
         // Extract country codes from phone numbers
