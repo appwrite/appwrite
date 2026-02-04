@@ -432,18 +432,11 @@ class Messaging extends Action
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
         Span::add('providerType', 'sms');
-        Span::add('recipientsCount', \count($recipients));
 
-        // Extract country codes from phone numbers
-        $countryCodes = [];
-        foreach ($recipients as $recipient) {
-            $countryCode = $this->extractCountryCode($recipient);
-            if ($countryCode !== null) {
-                $countryCodes[$countryCode] = ($countryCodes[$countryCode] ?? 0) + 1;
-            }
-        }
-        foreach ($countryCodes as $code => $count) {
-            Span::add('countryCode_' . $code, $count);
+        // Extract country code from the single recipient phone number
+        $countryCode = $this->extractCountryCode($recipients[0] ?? '');
+        if ($countryCode !== null) {
+            Span::add('countryCode', $countryCode);
         }
 
         if ($this->adapter === null) {
