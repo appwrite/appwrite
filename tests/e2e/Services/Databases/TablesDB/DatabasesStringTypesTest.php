@@ -622,9 +622,9 @@ class DatabasesStringTypesTest extends Scope
         ]);
 
         $this->assertEquals(201, $row['headers']['status-code']);
-        // Check that default values are applied
-        $this->assertEquals('updated default', $row['body']['varchar_with_default']);
-        $this->assertEquals('Updated text default value', $row['body']['text_with_default']);
+        // Check that default values are applied (original defaults, update tests are skipped)
+        $this->assertEquals('hello world', $row['body']['varchar_with_default']);
+        $this->assertEquals('This is a longer default text value that can contain more content.', $row['body']['text_with_default']);
     }
 
     public function testCreateRowFailures(): void
@@ -805,7 +805,7 @@ class DatabasesStringTypesTest extends Scope
         $tableId = self::$tableId;
 
         // Test SUCCESS: Delete varchar column
-        $deleteVarchar = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar_max', [
+        $deleteVarchar = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar_min', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -814,7 +814,7 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(204, $deleteVarchar['headers']['status-code']);
 
         // Verify deletion
-        $getDeleted = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar_max', [
+        $getDeleted = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar_min', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']

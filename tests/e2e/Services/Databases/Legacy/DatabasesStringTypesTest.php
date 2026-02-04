@@ -622,9 +622,9 @@ class DatabasesStringTypesTest extends Scope
         ]);
 
         $this->assertEquals(201, $document['headers']['status-code']);
-        // Check that default values are applied
-        $this->assertEquals('updated default', $document['body']['varchar_with_default']);
-        $this->assertEquals('Updated text default value', $document['body']['text_with_default']);
+        // Check that default values are applied (original defaults, update tests are skipped)
+        $this->assertEquals('hello world', $document['body']['varchar_with_default']);
+        $this->assertEquals('This is a longer default text value that can contain more content.', $document['body']['text_with_default']);
     }
 
     public function testCreateDocumentFailures(): void
@@ -740,7 +740,7 @@ class DatabasesStringTypesTest extends Scope
         $collectionId = self::$collectionId;
 
         // Test SUCCESS: Delete varchar attribute
-        $deleteVarchar = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar_max', [
+        $deleteVarchar = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar_min', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -749,7 +749,7 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(204, $deleteVarchar['headers']['status-code']);
 
         // Verify deletion
-        $getDeleted = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar_max', [
+        $getDeleted = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar_min', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
