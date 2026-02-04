@@ -318,6 +318,9 @@ class Certificates extends Action
             if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
                 $certificate->setAttribute('logs', 'Certificate successfully generated.');
+            } else {
+                // Delayed generation: third-party handles certificate issuance asynchronously
+                $certificate->setAttribute('logs', 'Certificate generation requested. We\'ll periodically check and update the status.');
             }
 
             $certificate->setAttributes([
