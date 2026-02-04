@@ -359,6 +359,7 @@ class Certificates extends Action
             $this->upsertCertificate($rule, $certificate, $dbForPlatform);
 
             // Update rule and emit events
+            $rule->setAttribute('certificateId', $certificate->getId());
             $rule->setAttribute('logs', $logs);
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
         }
