@@ -1,0 +1,16 @@
+<svg width="569" height="367" viewBox="0 0 569 367" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <g filter="url(#install-bg-2-filter)">
+        <path d="M136.265 227.973C89.0703 207.713 99.6672 144.647 110.865 115.646C130.119 111.289 176.904 102.33 210.005 101.35C251.382 100.125 288.253 121.773 333.317 135.252C378.381 148.731 466.051 125.449 467.28 160.577C468.509 195.704 412.793 254.522 402.142 242.269C391.49 230.015 319.798 227.973 246.057 254.522C172.316 281.072 195.257 253.297 136.265 227.973Z" fill="url(#install-bg-2-paint)"/>
+    </g>
+    <defs>
+        <filter id="install-bg-2-filter" x="-0.000198364" y="0.0000457764" width="568.6" height="366.6" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+            <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+            <feGaussianBlur stdDeviation="50.65" result="effect1_foregroundBlur_install_bg_2"/>
+        </filter>
+        <radialGradient id="install-bg-2-paint" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(284.3 183.3) rotate(-90) scale(82 183)">
+            <stop stop-color="#FD366E"/>
+            <stop offset="1" stop-color="#FD366E" stop-opacity="0"/>
+        </radialGradient>
+    </defs>
+</svg>

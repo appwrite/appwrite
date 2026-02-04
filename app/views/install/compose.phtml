@@ -12,7 +12,7 @@ $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $dbService = $this->getParam('database');
-$hostPath = $this->getParam('hostPath', '');
+$hostPath = rtrim($this->getParam('hostPath', ''), '/');
 
 ?>services:
   traefik:
@@ -63,6 +63,9 @@ $hostPath = $this->getParam('hostPath', '');
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
+<?php if ($version === 'local' && !empty($hostPath)): ?>
+      - <?php echo $hostPath; ?>:/usr/src/code:rw
+<?php endif; ?>
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
@@ -851,6 +854,7 @@ $hostPath = $this->getParam('hostPath', '');
       - _APP_DB_USER
       - _APP_DB_PASS
 
+<?php if (!empty($enableAssistant)): ?>
   appwrite-assistant:
     image: appwrite/assistant:0.8.3
     container_name: appwrite-assistant
@@ -860,7 +864,8 @@ $hostPath = $this->getParam('hostPath', '');
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
-      
+<?php endif; ?>
+
   appwrite-browser:
     image: appwrite/browser:0.3.2
     container_name: appwrite-browser
@@ -951,7 +956,11 @@ $hostPath = $this->getParam('hostPath', '');
     volumes:
       - appwrite-mongodb:/data/db:rw
       - appwrite-mongodb-config:/data/configdb:rw
+<?php if ($version === 'local' && !empty($hostPath)): ?>
+      - <?php echo $hostPath; ?>/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+<?php else: ?>
       - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+<?php endif; ?>
     ports:
       - "27017:27017"
     environment:

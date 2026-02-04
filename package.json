@@ -16,13 +16,6 @@
     "doc": "docs",
     "test": "tests"
   },
-  "scripts": {
-    "test": "playwright test",
-    "test:installer": "playwright test tests/playwright/installer.spec.js",
-    "test:screenshots": "playwright test tests/playwright/installer-screenshots.spec.js --project=chromium",
-    "test:headed": "playwright test --headed",
-    "test:ui": "playwright test --ui"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -30,8 +23,5 @@
   "bugs": {
     "url": "https://github.com/appwrite/appwrite/issues"
   },
-  "homepage": "https://github.com/appwrite/appwrite#readme",
-  "devDependencies": {
-    "@playwright/test": "^1.56.0"
-  }
+  "homepage": "https://github.com/appwrite/appwrite#readme"
 }

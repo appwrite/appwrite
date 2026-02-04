@@ -20,3 +20,13 @@ appwrite.config.json
 /.zed/
 playwright-report
 test-results
+
+# Web installer test files
+docker-compose.web-installer.yml
+.env.web-installer
+
+# backups when testing upgrade mode.
+docker-compose.web-installer.yml.**.backup
+
+# screenshots
+tests/playwright/screenshots
