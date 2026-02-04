@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -9,3 +10,4 @@ Teams teams = Teams(client);
 await teams.delete(
     teamId: '<TEAM_ID>',
 );
+```

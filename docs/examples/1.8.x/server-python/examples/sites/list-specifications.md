@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.sites import Sites
 
@@ -9,3 +10,4 @@ client.set_key('<YOUR_API_KEY>') # Your secret API key
 sites = Sites(client)
 
 result = sites.list_specifications()
+```

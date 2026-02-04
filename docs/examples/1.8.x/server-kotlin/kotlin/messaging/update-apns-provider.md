@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -19,3 +20,4 @@ val response = messaging.updateAPNSProvider(
     bundleId = "<BUNDLE_ID>", // optional
     sandbox = false // optional
 )
+```

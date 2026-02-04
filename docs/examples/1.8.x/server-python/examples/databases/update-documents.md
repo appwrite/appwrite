@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -11,7 +12,14 @@ databases = Databases(client)
 result = databases.update_documents(
     database_id = '<DATABASE_ID>',
     collection_id = '<COLLECTION_ID>',
-    data = {}, # optional
+    data = {
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 33,
+        "isAdmin": False
+    }, # optional
     queries = [], # optional
     transaction_id = '<TRANSACTION_ID>' # optional
 )
+```

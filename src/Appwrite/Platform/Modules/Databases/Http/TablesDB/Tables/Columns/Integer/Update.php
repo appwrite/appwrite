@@ -45,7 +45,7 @@ class Update extends IntegerUpdate
                 group: $this->getSDKGroup(),
                 name: self::getName(),
                 description: '/docs/references/tablesdb/update-integer-column.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -58,13 +58,14 @@ class Update extends IntegerUpdate
             ->param('tableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Table ID.', false, ['dbForProject'])
             ->param('key', '', fn (Database $dbForProject) => new Key(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Column Key.', false, ['dbForProject'])
             ->param('required', null, new Boolean(), 'Is column required?')
-            ->param('min', null, new Nullable(new Integer()), 'Minimum value', true)
-            ->param('max', null, new Nullable(new Integer()), 'Maximum value', true)
-            ->param('default', null, new Nullable(new Integer()), 'Default value. Cannot be set when column is required.')
+            ->param('min', null, new Nullable(new Integer(false, 64)), 'Minimum value', true)
+            ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true)
+            ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when column is required.')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

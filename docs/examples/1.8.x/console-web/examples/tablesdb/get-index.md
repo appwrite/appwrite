@@ -1,3 +1,4 @@
+```javascript
 import { Client, TablesDB } from "@appwrite.io/console";
 
 const client = new Client()
@@ -13,3 +14,4 @@ const result = await tablesDB.getIndex({
 });
 
 console.log(result);
+```

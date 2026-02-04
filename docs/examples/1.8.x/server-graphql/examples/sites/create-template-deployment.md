@@ -1,3 +1,4 @@
+```graphql
 mutation {
     sitesCreateTemplateDeployment(
         siteId: "<SITE_ID>",
@@ -37,3 +38,4 @@ mutation {
         providerBranchUrl
     }
 }
+```

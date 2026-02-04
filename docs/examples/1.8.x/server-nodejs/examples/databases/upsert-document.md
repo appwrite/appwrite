@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -11,7 +12,14 @@ const result = await databases.upsertDocument({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     documentId: '<DOCUMENT_ID>',
-    data: {},
+    data: {
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 30,
+        "isAdmin": false
+    }, // optional
     permissions: [sdk.Permission.read(sdk.Role.any())], // optional
     transactionId: '<TRANSACTION_ID>' // optional
 });
+```

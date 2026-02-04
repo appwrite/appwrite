@@ -48,7 +48,7 @@ class Create extends Action
                     group: 'databases',
                     name: 'create',
                     description: '/docs/references/databases/create.md',
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,
@@ -84,7 +84,7 @@ class Create extends Action
                 'type' => $this->getDatabaseType(),
             ]));
         } catch (DuplicateException) {
-            throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
+            throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$databaseId]);
         } catch (StructureException $e) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $e->getMessage());
         }
@@ -109,13 +109,13 @@ class Create extends Action
         try {
             $dbForProject->createCollection('database_' . $database->getSequence(), $attributes, $indexes);
         } catch (DuplicateException) {
-            throw new Exception(Exception::DATABASE_ALREADY_EXISTS);
-        } catch (IndexException) {
+            throw new Exception(Exception::DATABASE_ALREADY_EXISTS, params: [$databaseId]);
+        } catch (IndexException $e) {
             throw new Exception(Exception::INDEX_INVALID);
         } catch (LimitException) {
             // TODO: @Jake, how do we handle this collection/table?
             // there's no context awareness at this level on what the api is.
-            throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED);
+            throw new Exception(Exception::COLLECTION_LIMIT_EXCEEDED, params: [$databaseId]);
         }
 
         $queueForEvents->setParam('databaseId', $database->getId());

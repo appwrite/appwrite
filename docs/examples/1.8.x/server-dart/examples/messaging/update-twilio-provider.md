@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -15,3 +16,4 @@ Provider result = await messaging.updateTwilioProvider(
     authToken: '<AUTH_TOKEN>', // (optional)
     from: '<FROM>', // (optional)
 );
+```

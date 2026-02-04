@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -21,3 +21,4 @@ response, error := service.ListDocuments(
     databases.WithListDocumentsTransactionId("<TRANSACTION_ID>"),
     databases.WithListDocumentsTotal(false),
 )
+```

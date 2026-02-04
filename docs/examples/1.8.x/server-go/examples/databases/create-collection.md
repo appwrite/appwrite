@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -21,4 +21,7 @@ response, error := service.CreateCollection(
     databases.WithCreateCollectionPermissions(interface{}{"read("any")"}),
     databases.WithCreateCollectionDocumentSecurity(false),
     databases.WithCreateCollectionEnabled(false),
+    databases.WithCreateCollectionAttributes([]interface{}{}),
+    databases.WithCreateCollectionIndexes([]interface{}{}),
 )
+```

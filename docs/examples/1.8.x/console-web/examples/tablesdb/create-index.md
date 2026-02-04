@@ -1,4 +1,5 @@
-import { Client, TablesDB, IndexType } from "@appwrite.io/console";
+```javascript
+import { Client, TablesDB, IndexType, OrderBy } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -12,8 +13,9 @@ const result = await tablesDB.createIndex({
     key: '',
     type: IndexType.Key,
     columns: [],
-    orders: [], // optional
+    orders: [OrderBy.Asc], // optional
     lengths: [] // optional
 });
 
 console.log(result);
+```

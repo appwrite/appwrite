@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = users.update_password(
     user_id: '<USER_ID>',
     password: ''
 )
+```

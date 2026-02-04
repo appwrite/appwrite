@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBUpdateTable(
         databaseId: "<DATABASE_ID>",
@@ -30,3 +31,4 @@ mutation {
         }
     }
 }
+```

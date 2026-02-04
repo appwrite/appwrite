@@ -38,7 +38,7 @@ class Get extends TransactionsGet
                 group: 'transactions',
                 name: 'getTransaction',
                 description: '/docs/references/tablesdb/get-transaction.md',
-                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

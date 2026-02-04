@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -13,4 +14,4 @@ $users = new Users($client);
 $result = $users->updatePrefs(
     userId: '<USER_ID>',
     prefs: []
-);
+);```

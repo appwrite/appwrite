@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountUpdateVerification(
         userId: "<USER_ID>",
@@ -11,3 +12,4 @@ mutation {
         phrase
     }
 }
+```

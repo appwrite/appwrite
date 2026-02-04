@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ Deployment result = await sites.CreateDeployment(
     installCommand: "<INSTALL_COMMAND>", // optional
     buildCommand: "<BUILD_COMMAND>", // optional
     outputDirectory: "<OUTPUT_DIRECTORY>" // optional
-);
+);```

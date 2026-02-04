@@ -11,6 +11,7 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
+$enableAssistant = $this->getParam('enableAssistant', false);
 $dbService = $this->getParam('database');
 
 ?>services:
@@ -167,6 +168,7 @@ $dbService = $this->getParam('database');
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
+      - _APP_GRAPHQL_INTROSPECTION
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
@@ -869,6 +871,7 @@ $dbService = $this->getParam('database');
       - _APP_DB_USER
       - _APP_DB_PASS
 
+<?php if ($enableAssistant): ?>
   appwrite-assistant:
     image: appwrite/assistant:0.8.4
     container_name: appwrite-assistant
@@ -878,6 +881,7 @@ $dbService = $this->getParam('database');
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
+<?php endif; ?>
 
   appwrite-browser:
     image: appwrite/browser:0.3.2

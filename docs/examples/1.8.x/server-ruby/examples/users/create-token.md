@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = users.create_token(
     length: 4, # optional
     expire: 60 # optional
 )
+```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -19,4 +20,4 @@ $result = $databases->createStringAttribute(
     default: '<DEFAULT>', // optional
     array: false, // optional
     encrypt: false // optional
-);
+);```

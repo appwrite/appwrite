@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 
@@ -14,3 +15,4 @@ result = users.create_md5_user(
     password = 'password',
     name = '<NAME>' # optional
 )
+```

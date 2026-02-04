@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingCreateSMTPProvider(
         providerId: "<PROVIDER_ID>",
@@ -26,3 +27,4 @@ mutation {
         options
     }
 }
+```

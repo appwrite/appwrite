@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,3 +16,4 @@ result = users.create_md5_user(
     password: 'password',
     name: '<NAME>' # optional
 )
+```

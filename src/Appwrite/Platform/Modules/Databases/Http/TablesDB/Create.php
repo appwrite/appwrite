@@ -38,7 +38,7 @@ class Create extends DatabaseCreate
                 group: 'tablesdb',
                 name: 'create',
                 description: '/docs/references/tablesdb/create.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,

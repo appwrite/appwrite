@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ databases = Databases.new(client)
 result = databases.create_transaction(
     ttl: 60 # optional
 )
+```

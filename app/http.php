@@ -11,7 +11,8 @@ use Swoole\Http\Server;
 use Swoole\Process;
 use Swoole\Table;
 use Swoole\Timer;
-use Utopia\App;
+use Utopia\Audit\Adapter\Database as AdapterDatabase;
+use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Compression\Compression;
@@ -25,7 +26,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
+use Utopia\Http;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
@@ -99,11 +100,19 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
         $risky = false;
         if (str_starts_with($request, 'POST') && str_contains($request, '/executions')) {
             $risky = true;
-        } elseif (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
-            $risky = true;
         } elseif ($domains->get(md5($domain), 'value') === 1) {
             // executions request coming from custom domain
             $risky = true;
+        } else {
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS')) as $riskyDomain) {
+                if (empty($riskyDomain)) {
+                    continue;
+                }
+                if (str_ends_with($domain, $riskyDomain)) {
+                    $risky = true;
+                    break;
+                }
+            }
         }
 
         if ($risky) {
@@ -172,7 +181,7 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
 
 include __DIR__ . '/controllers/general.php';
 
-function createDatabase(App $app, string $resourceKey, string $dbName, array $collections, mixed $pools, callable $extraSetup = null): void
+function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, callable $extraSetup = null): void
 {
     $max = 15;
     $sleep = 2;
@@ -259,12 +268,12 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
 }
 
 $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {
-    $app = new App('UTC');
+    $app = new Http('UTC');
 
     go(function () use ($register, $app) {
         $pools = $register->get('pools');
         /** @var Group $pools */
-        App::setResource('pools', fn () => $pools);
+        Http::setResource('pools', fn () => $pools);
 
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
@@ -273,9 +282,12 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
         createDatabase($app, 'getLogsDB', 'logs', $collections['logs'], $pools);
 
         // create appwrite database, `dbForPlatform` is a direct access call.
-        createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections) {
-            if ($dbForPlatform->getCollection(Audit::COLLECTION)->isEmpty()) {
-                $audit = new Audit($dbForPlatform);
+        createDatabase($app, 'dbForPlatform', 'appwrite', $collections['console'], $pools, function (Database $dbForPlatform) use ($collections, $app) {
+            $authorization = $app->getResource('authorization');
+
+            if ($dbForPlatform->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
+                $adapter = new AdapterDatabase($dbForPlatform);
+                $audit = new Audit($adapter);
                 $audit->setup();
             }
 
@@ -332,9 +344,9 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes);
             }
 
-            if (Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
+            if ($authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots')->isEmpty())) {
                 Console::info("    └── Creating screenshots bucket...");
-                Authorization::skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
+                $authorization->skip(fn () => $dbForPlatform->createDocument('buckets', new Document([
                     '$id' => ID::custom('screenshots'),
                     '$collection' => ID::custom('buckets'),
                     'name' => 'Screenshots',
@@ -349,7 +361,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'search' => 'buckets Screenshots',
                 ])));
 
-                $bucket = Authorization::skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
+                $bucket = $authorization->skip(fn () => $dbForPlatform->getDocument('buckets', 'screenshots'));
 
                 Console::info("    └── Creating files collection for screenshots bucket...");
                 $files = $collections['buckets']['files'] ?? [];
@@ -377,7 +389,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                     'orders' => $index['orders'],
                 ]), $files['indexes']);
 
-                Authorization::skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
+                $authorization->skip(fn () => $dbForPlatform->createCollection('bucket_' . $bucket->getSequence(), $attributes, $indexes));
             }
         });
 
@@ -417,8 +429,9 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 }
             }
 
-            if ($dbForProject->getCollection(Audit::COLLECTION)->isEmpty()) {
-                $audit = new Audit($dbForProject);
+            if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
+                $adapter = new AdapterDatabase($dbForProject);
+                $audit = new Audit($adapter);
                 $audit->setup();
             }
 
@@ -456,9 +469,8 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
 });
 
 $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
-
-    App::setResource('swooleRequest', fn () => $swooleRequest);
-    App::setResource('swooleResponse', fn () => $swooleResponse);
+    Http::setResource('swooleRequest', fn () => $swooleRequest);
+    Http::setResource('swooleResponse', fn () => $swooleResponse);
 
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
@@ -475,16 +487,20 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         return;
     }
 
-    $app = new App('UTC');
+    $app = new Http('UTC');
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
     $pools = $register->get('pools');
-    App::setResource('pools', fn () => $pools);
+    Http::setResource('pools', fn () => $pools);
 
     try {
-        Authorization::cleanRoles();
-        Authorization::setRole(Role::any()->toString());
+        $authorization = $app->getResource('authorization');
+
+        $request->setAuthorization($authorization);
+        $response->setAuthorization($authorization);
+        $authorization->cleanRoles();
+        $authorization->addRole(Role::any()->toString());
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
@@ -526,7 +542,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
             $log->addExtra('file', $th->getFile());
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
-            $log->addExtra('roles', Authorization::getRoles());
+            $log->addExtra('roles', isset($authorization) ? $authorization->getRoles() : []);
 
             $sdk = $route->getLabel("sdk", false);
 
@@ -558,7 +574,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 
         $swooleResponse->setStatusCode(500);
 
-        $output = ((App::isDevelopment())) ? [
+        $output = ((Http::isDevelopment())) ? [
             'message' => 'Error: ' . $th->getMessage(),
             'code' => 500,
             'file' => $th->getFile(),
@@ -579,13 +595,13 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
     $lastSyncUpdate = null;
     $pools = $register->get('pools');
-    App::setResource('pools', fn () => $pools);
-    $app = new App('UTC');
+    Http::setResource('pools', fn () => $pools);
+    $app = new Http('UTC');
 
     /** @var Utopia\Database\Database $dbForPlatform */
     $dbForPlatform = $app->getResource('dbForPlatform');
 
-    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $domains, &$lastSyncUpdate) {
+    Timer::tick(DOMAIN_SYNC_TIMER * 1000, function () use ($dbForPlatform, $domains, &$lastSyncUpdate, $app) {
         try {
             $time = DateTime::now();
             $limit = 1000;
@@ -602,7 +618,8 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 }
                 $results = [];
                 try {
-                    $results = Authorization::skip(fn () =>  $dbForPlatform->find('rules', $queries));
+                    $authorization = $app->getResource('authorization');
+                    $results = $authorization->skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
                     Console::error('rules ' . $th->getMessage());
                 }
@@ -610,9 +627,33 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 $sum = count($results);
                 foreach ($results as $document) {
                     $domain = $document->getAttribute('domain');
-                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS')) || str_ends_with($domain, System::getEnv('_APP_DOMAIN_SITES'))) {
+
+                    $denyDomains = [];
+                    $denyEnvVars = [
+                        System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+                        System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+                        System::getEnv('_APP_DOMAIN_SITES', ''),
+                    ];
+                    foreach ($denyEnvVars as $denyEnvVar) {
+                        foreach (\explode(',', $denyEnvVar) as $denyDomain) {
+                            if (empty($denyDomain)) {
+                                continue;
+                            }
+                            $denyDomains[] = $denyDomain;
+                        }
+                    }
+
+                    $isDenyDomain = false;
+                    foreach ($denyDomains as $denyDomain) {
+                        if (str_ends_with($domain, $denyDomain)) {
+                            $isDenyDomain = true;
+                        }
+                    }
+
+                    if ($isDenyDomain) {
                         continue;
                     }
+
                     $domains->set(md5($domain), ['value' => 1]);
                 }
                 $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;

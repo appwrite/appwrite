@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -13,4 +14,4 @@ $health = new Health($client);
 $result = $health->getQueueDatabases(
     name: '<NAME>', // optional
     threshold: null // optional
-);
+);```

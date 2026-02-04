@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -12,3 +13,4 @@ result = messaging.get_subscriber(
     topic_id = '<TOPIC_ID>',
     subscriber_id = '<SUBSCRIBER_ID>'
 )
+```

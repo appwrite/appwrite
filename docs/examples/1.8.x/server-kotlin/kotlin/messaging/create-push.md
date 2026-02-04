@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -29,5 +30,6 @@ val response = messaging.createPush(
     scheduledAt = "", // optional
     contentAvailable = false, // optional
     critical = false, // optional
-    priority = "normal" // optional
+    priority = MessagePriority.NORMAL // optional
 )
+```

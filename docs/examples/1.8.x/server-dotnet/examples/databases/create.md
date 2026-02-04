@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ Database result = await databases.Create(
     databaseId: "<DATABASE_ID>",
     name: "<NAME>",
     enabled: false // optional
-);
+);```

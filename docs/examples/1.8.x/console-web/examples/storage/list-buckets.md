@@ -1,3 +1,4 @@
+```javascript
 import { Client, Storage } from "@appwrite.io/console";
 
 const client = new Client()
@@ -13,3 +14,4 @@ const result = await storage.listBuckets({
 });
 
 console.log(result);
+```

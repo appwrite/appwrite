@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Sites sites = new Sites(client);
 Deployment result = await sites.GetDeployment(
     siteId: "<SITE_ID>",
     deploymentId: "<DEPLOYMENT_ID>"
-);
+);```

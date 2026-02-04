@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Storage storage = new Storage(client);
 File result = await storage.GetFile(
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>"
-);
+);```

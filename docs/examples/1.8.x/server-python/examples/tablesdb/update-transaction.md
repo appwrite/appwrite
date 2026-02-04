@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 
@@ -13,3 +14,4 @@ result = tables_db.update_transaction(
     commit = False, # optional
     rollback = False # optional
 )
+```

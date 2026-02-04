@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -18,3 +19,4 @@ result = databases.update_string_attribute(
     size: 1, # optional
     new_key: '' # optional
 )
+```

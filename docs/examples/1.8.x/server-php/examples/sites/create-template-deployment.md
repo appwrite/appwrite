@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -19,4 +20,4 @@ $result = $sites->createTemplateDeployment(
     type: TemplateReferenceType::BRANCH(),
     reference: '<REFERENCE>',
     activate: false // optional
-);
+);```

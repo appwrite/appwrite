@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -11,3 +12,4 @@ Transaction result = await databases.updateTransaction(
     commit: false, // optional
     rollback: false, // optional
 );
+```

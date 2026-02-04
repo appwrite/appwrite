@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -24,3 +24,4 @@ response, error := service.CreateSendgridProvider(
     messaging.WithCreateSendgridProviderReplyToEmail("email@example.com"),
     messaging.WithCreateSendgridProviderEnabled(false),
 )
+```

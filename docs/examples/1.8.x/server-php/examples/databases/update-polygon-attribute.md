@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -17,4 +18,4 @@ $result = $databases->updatePolygonAttribute(
     required: false,
     default: [[[1, 2], [3, 4], [5, 6], [1, 2]]], // optional
     newKey: '' // optional
-);
+);```

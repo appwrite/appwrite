@@ -1,4 +1,6 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -14,7 +16,7 @@ Provider result = await messaging.updateSMTPProvider(
     port: 1, // (optional)
     username: '<USERNAME>', // (optional)
     password: '<PASSWORD>', // (optional)
-    encryption: SmtpEncryption.none, // (optional)
+    encryption: enums.SmtpEncryption.none, // (optional)
     autoTLS: false, // (optional)
     mailer: '<MAILER>', // (optional)
     fromName: '<FROM_NAME>', // (optional)
@@ -23,3 +25,4 @@ Provider result = await messaging.updateSMTPProvider(
     replyToEmail: '<REPLY_TO_EMAIL>', // (optional)
     enabled: false, // (optional)
 );
+```

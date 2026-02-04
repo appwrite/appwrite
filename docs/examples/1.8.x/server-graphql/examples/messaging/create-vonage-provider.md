@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingCreateVonageProvider(
         providerId: "<PROVIDER_ID>",
@@ -18,3 +19,4 @@ mutation {
         options
     }
 }
+```

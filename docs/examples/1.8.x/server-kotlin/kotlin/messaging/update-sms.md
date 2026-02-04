@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -18,3 +19,4 @@ val response = messaging.updateSMS(
     draft = false, // optional
     scheduledAt = "" // optional
 )
+```

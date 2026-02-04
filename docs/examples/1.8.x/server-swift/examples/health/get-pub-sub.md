@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -7,5 +8,6 @@ let client = Client()
 
 let health = Health(client)
 
-let healthStatus = try await health.getPubSub()
+let healthStatusList = try await health.getPubSub()
 
+```

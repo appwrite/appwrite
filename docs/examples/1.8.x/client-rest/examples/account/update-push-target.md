@@ -1,3 +1,4 @@
+```http
 PUT /v1/account/targets/{targetId}/push HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -8,3 +9,4 @@ X-Appwrite-Session:
 {
   "identifier": "<IDENTIFIER>"
 }
+```

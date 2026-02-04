@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -16,3 +17,4 @@ result = sites.create_vcs_deployment(
     reference: '<REFERENCE>',
     activate: false # optional
 )
+```

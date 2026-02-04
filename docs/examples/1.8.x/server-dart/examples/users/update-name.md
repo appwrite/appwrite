@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -11,3 +12,4 @@ User result = await users.updateName(
     userId: '<USER_ID>',
     name: '<NAME>',
 );
+```

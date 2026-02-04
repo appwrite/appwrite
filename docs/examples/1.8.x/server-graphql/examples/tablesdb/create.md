@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBCreate(
         databaseId: "<DATABASE_ID>",
@@ -12,3 +13,4 @@ mutation {
         type
     }
 }
+```

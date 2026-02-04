@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Locale;
@@ -17,3 +18,4 @@ locale.listCountriesEU(new CoroutineCallback<>((result, error) -> {
 
     System.out.println(result);
 }));
+```

@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ await tablesDB.deleteRow(
     rowId: '<ROW_ID>',
     transactionId: '<TRANSACTION_ID>', // optional
 );
+```

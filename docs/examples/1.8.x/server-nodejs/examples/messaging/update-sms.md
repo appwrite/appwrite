@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -16,3 +17,4 @@ const result = await messaging.updateSMS({
     draft: false, // optional
     scheduledAt: '' // optional
 });
+```

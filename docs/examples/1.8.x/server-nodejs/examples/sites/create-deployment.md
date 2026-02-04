@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 const fs = require('fs');
 
@@ -16,3 +17,4 @@ const result = await sites.createDeployment({
     buildCommand: '<BUILD_COMMAND>', // optional
     outputDirectory: '<OUTPUT_DIRECTORY>' // optional
 });
+```

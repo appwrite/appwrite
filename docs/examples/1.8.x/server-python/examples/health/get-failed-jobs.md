@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.health import Health
 from appwrite.enums import Name
@@ -13,3 +14,4 @@ result = health.get_failed_jobs(
     name = Name.V1_DATABASE,
     threshold = None # optional
 )
+```

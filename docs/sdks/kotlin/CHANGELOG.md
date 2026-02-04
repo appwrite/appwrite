@@ -1,5 +1,16 @@
 # Change Log
 
+## 14.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `getQueueAudits` support to `Health` service.
+* Add longtext/mediumtext/text/varchar attribute and column helpers to `Databases` and `TablesDB` services.
+
+## 13.1.0
+
+* Added ability to create columns and indexes synchronously while creating a table
+
 ## 13.0.0
 
 * Rename `VCSDeploymentType` enum to `VCSReferenceType`

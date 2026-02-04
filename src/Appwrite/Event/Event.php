@@ -23,6 +23,7 @@ class Event
 
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
+    public const FUNCTIONS_QUEUE_TTL = 60 * 60 * 24 * 7; // 7 days
 
     public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
     public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
@@ -39,6 +40,9 @@ class Event
     public const BUILDS_QUEUE_NAME = 'v1-builds';
     public const BUILDS_CLASS_NAME = 'BuildsV1';
 
+    public const SCREENSHOTS_QUEUE_NAME = 'v1-screenshots';
+    public const SCREENSHOTS_CLASS_NAME = 'ScreenshotsV1';
+
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
@@ -52,13 +56,17 @@ class Event
     protected array $sensitive = [];
     protected array $payload = [];
     protected array $context = [];
+    protected array $platform = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
     protected ?string $userId = null;
+
     protected bool $paused = false;
 
     /** @var bool Non-critical events will not throw an exception when enqueuing of the event fails. */
     protected bool $critical = true;
+
+    protected int $ttl = 0;
 
     /**
      * @param Publisher $publisher
@@ -90,9 +98,9 @@ class Event
      * Set queue used for this event.
      *
      * @param string $queue
-     * @return Event
+     * @return static
      */
-    public function setQueue(string $queue): self
+    public function setQueue(string $queue): static
     {
         $this->queue = $queue;
 
@@ -110,11 +118,34 @@ class Event
     }
 
     /**
+     * Set TTL (time-to-live) for jobs in this queue.
+     *
+     * @param int $ttl TTL in seconds
+     * @return static
+     */
+    public function setTTL(int $ttl): static
+    {
+        $this->ttl = $ttl;
+
+        return $this;
+    }
+
+    /**
+     * Get TTL (time-to-live) for jobs in this queue.
+     *
+     * @return int
+     */
+    public function getTTL(): int
+    {
+        return $this->ttl;
+    }
+
+    /**
      * Set event name used for this event.
      * @param string $event
-     * @return Event
+     * @return static
      */
-    public function setEvent(string $event): self
+    public function setEvent(string $event): static
     {
         $this->event = $event;
 
@@ -135,9 +166,9 @@ class Event
      * Set project for this event.
      *
      * @param Document $project
-     * @return self
+     * @return static
      */
-    public function setProject(Document $project): self
+    public function setProject(Document $project): static
     {
         $this->project = $project;
         return $this;
@@ -154,12 +185,34 @@ class Event
     }
 
     /**
+     * Set platform for this event.
+     *
+     * @param array $platform
+     * @return static
+     */
+    public function setPlatform(array $platform): static
+    {
+        $this->platform = $platform;
+        return $this;
+    }
+
+    /**
+     * Get platform for this event.
+     *
+     * @return array
+     */
+    public function getPlatform(): array
+    {
+        return $this->platform;
+    }
+
+    /**
      * Set user for this event.
      *
      * @param Document $user
-     * @return self
+     * @return static
      */
-    public function setUser(Document $user): self
+    public function setUser(Document $user): static
     {
         $this->user = $user;
 
@@ -169,9 +222,9 @@ class Event
     /**
      * Set user ID for this event.
      *
-     * @return self
+     * @return static
      */
-    public function setUserId(string $userId): self
+    public function setUserId(string $userId): static
     {
         $this->userId = $userId;
 
@@ -201,9 +254,9 @@ class Event
      *
      * @param array $payload
      * @param array $sensitive
-     * @return self
+     * @return static
      */
-    public function setPayload(array $payload, array $sensitive = []): self
+    public function setPayload(array $payload, array $sensitive = []): static
     {
         $this->payload = $payload;
 
@@ -342,7 +395,7 @@ class Event
         }
 
         /** The getter is required since events like Databases need to override the queue name depending on the project */
-        $queue = new Queue($this->getQueue());
+        $queue = new Queue($this->getQueue(), 'utopia-queue', $this->getTTL());
 
         // Merge the base payload with any trimmed values
         $payload = array_merge($this->preparePayload(), $this->trimPayload());

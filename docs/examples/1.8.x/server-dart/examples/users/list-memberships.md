@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -13,3 +14,4 @@ MembershipList result = await users.listMemberships(
     search: '<SEARCH>', // (optional)
     total: false, // (optional)
 );
+```

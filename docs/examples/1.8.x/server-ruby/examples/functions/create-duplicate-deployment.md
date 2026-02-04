@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = functions.create_duplicate_deployment(
     deployment_id: '<DEPLOYMENT_ID>',
     build_id: '<BUILD_ID>' # optional
 )
+```

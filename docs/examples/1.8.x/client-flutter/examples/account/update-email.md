@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ User result = await account.updateEmail(
     email: 'email@example.com',
     password: 'password',
 );
+```

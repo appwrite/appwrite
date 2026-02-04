@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -13,5 +14,8 @@ const result = await databases.createCollection({
     name: '<NAME>',
     permissions: [sdk.Permission.read(sdk.Role.any())], // optional
     documentSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    attributes: [], // optional
+    indexes: [] // optional
 });
+```

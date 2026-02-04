@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
@@ -14,4 +15,4 @@ val result = databases.getDocument(
     documentId = "<DOCUMENT_ID>", 
     queries = listOf(), // (optional)
     transactionId = "<TRANSACTION_ID>", // (optional)
-)
+)```

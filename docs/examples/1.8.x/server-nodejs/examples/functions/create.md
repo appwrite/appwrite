@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -19,7 +20,7 @@ const result = await functions.create({
     logging: false, // optional
     entrypoint: '<ENTRYPOINT>', // optional
     commands: '<COMMANDS>', // optional
-    scopes: [], // optional
+    scopes: [sdk.Scopes.SessionsWrite], // optional
     installationId: '<INSTALLATION_ID>', // optional
     providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // optional
     providerBranch: '<PROVIDER_BRANCH>', // optional
@@ -27,3 +28,4 @@ const result = await functions.create({
     providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>', // optional
     specification: '' // optional
 });
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ storage = Storage.new(client)
 result = storage.get_bucket(
     bucket_id: '<BUCKET_ID>'
 )
+```

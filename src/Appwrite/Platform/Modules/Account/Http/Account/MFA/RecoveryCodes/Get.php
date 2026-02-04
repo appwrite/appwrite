@@ -36,7 +36,7 @@ class Get extends Action
                     group: 'mfa',
                     name: 'getMfaRecoveryCodes',
                     description: '/docs/references/account/get-mfa-recovery-codes.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,
@@ -48,13 +48,14 @@ class Get extends Action
                         since: '1.8.0',
                         replaceWith: 'account.getMFARecoveryCodes',
                     ),
+                    public: false,
                 ),
                 new Method(
                     namespace: 'account',
                     group: 'mfa',
                     name: 'getMFARecoveryCodes',
                     description: '/docs/references/account/get-mfa-recovery-codes.md',
-                    auth: [AuthType::SESSION, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: Response::STATUS_CODE_OK,

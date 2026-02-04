@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = messaging.update_msg91_provider(
     sender_id: '<SENDER_ID>', # optional
     auth_key: '<AUTH_KEY>' # optional
 )
+```

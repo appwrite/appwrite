@@ -53,7 +53,7 @@ class Create extends Base
                 description: <<<EOT
                 Create a new site.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -150,6 +150,8 @@ class Create extends Base
             'timeout' => $timeout,
             'installCommand' => $installCommand,
             'buildCommand' => $buildCommand,
+            'deploymentRetention' => 0,
+            'startCommand' => '',
             'outputDirectory' => $outputDirectory,
             'search' => implode(' ', [$siteId, $name, $framework]),
             'fallbackFile' => $fallbackFile,
@@ -162,6 +164,8 @@ class Create extends Base
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
             'specification' => $specification,
+            'buildSpecification' => $specification,
+            'runtimeSpecification' => $specification,
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,
         ]));

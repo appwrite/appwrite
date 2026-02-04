@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Account;
@@ -16,3 +17,4 @@ account.createAnonymousSession(new CoroutineCallback<>((result, error) -> {
 
     Log.d("Appwrite", result.toString());
 }));
+```

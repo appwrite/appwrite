@@ -1,3 +1,4 @@
+```javascript
 import { Client, Databases } from "appwrite";
 
 const client = new Client()
@@ -11,3 +12,4 @@ const result = await databases.listTransactions({
 });
 
 console.log(result);
+```

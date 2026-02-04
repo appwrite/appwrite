@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ account = Account.new(client)
 result = account.delete_identity(
     identity_id: '<IDENTITY_ID>'
 )
+```

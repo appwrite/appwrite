@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -16,3 +17,4 @@ result = tables_db.create_line_column(
     required: false,
     default: [[1, 2], [3, 4], [5, 6]] # optional
 )
+```

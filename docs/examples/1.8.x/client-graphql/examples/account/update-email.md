@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountUpdateEmail(
         email: "email@example.com",
@@ -36,3 +37,4 @@ mutation {
         accessedAt
     }
 }
+```

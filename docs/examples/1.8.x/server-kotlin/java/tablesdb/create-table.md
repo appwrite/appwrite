@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.Permission;
@@ -18,6 +19,8 @@ tablesDB.createTable(
     List.of(Permission.read(Role.any())), // permissions (optional)
     false, // rowSecurity (optional)
     false, // enabled (optional)
+    List.of(), // columns (optional)
+    List.of(), // indexes (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -28,3 +31,4 @@ tablesDB.createTable(
     })
 );
 
+```

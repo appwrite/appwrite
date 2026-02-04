@@ -96,6 +96,14 @@ class StorageCustomServerTest extends Scope
         $this->assertEquals($id, $response['body']['buckets'][0]['$id']);
         $this->assertEquals('Test Bucket', $response['body']['buckets'][0]['name']);
 
+        foreach ($response['body']['buckets'] as $bucket) {
+            $this->assertArrayHasKey('totalSize', $bucket);
+            $this->assertIsInt($bucket['totalSize']);
+
+            /* always 0 because the stats worker runs hourly! */
+            $this->assertGreaterThanOrEqual(0, $bucket['totalSize']);
+        }
+
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -186,6 +194,7 @@ class StorageCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($id, $response['body']['$id']);
         $this->assertEquals('Test Bucket', $response['body']['name']);
+        $this->assertArrayHasKey('totalSize', $response['body']);
 
         /**
          * Test for FAILURE

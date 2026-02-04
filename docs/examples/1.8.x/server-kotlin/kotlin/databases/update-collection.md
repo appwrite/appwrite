@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
@@ -14,8 +15,9 @@ val databases = Databases(client)
 val response = databases.updateCollection(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
-    name = "<NAME>",
+    name = "<NAME>", // optional
     permissions = listOf(Permission.read(Role.any())), // optional
     documentSecurity = false, // optional
     enabled = false // optional
 )
+```

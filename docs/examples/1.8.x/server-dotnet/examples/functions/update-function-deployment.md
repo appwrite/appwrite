@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Functions functions = new Functions(client);
 Function result = await functions.UpdateFunctionDeployment(
     functionId: "<FUNCTION_ID>",
     deploymentId: "<DEPLOYMENT_ID>"
-);
+);```

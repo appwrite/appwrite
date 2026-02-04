@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Avatars
@@ -14,4 +15,4 @@ val result = avatars.getCreditCard(
     width = 0, // (optional)
     height = 0, // (optional)
     quality = -1, // (optional)
-)
+)```

@@ -4,6 +4,8 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Database\Document;
+use Utopia\Storage\Compression\Compression;
 
 class File extends Model
 {
@@ -77,6 +79,18 @@ class File extends Model
                 'default' => 0,
                 'example' => 17890,
             ])
+            ->addRule('encryption', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether file contents are encrypted at rest.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('compression', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Compression algorithm used for the file. Will be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
+                'default' => '',
+                'example' => 'gzip'
+            ])
         ;
     }
 
@@ -98,5 +112,15 @@ class File extends Model
     public function getType(): string
     {
         return Response::MODEL_FILE;
+    }
+
+    public function filter(Document $document): Document
+    {
+        $document->setAttribute('compression', $document->getAttribute('algorithm', ''));
+
+        $encryption = !empty($document->getAttribute('openSSLCipher', ''));
+        $document->setAttribute('encryption', $encryption);
+
+        return $document;
     }
 }

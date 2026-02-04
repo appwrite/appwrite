@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
@@ -16,4 +17,4 @@ val result = databases.decrementDocumentAttribute(
     value = 0, // (optional)
     min = 0, // (optional)
     transactionId = "<TRANSACTION_ID>", // (optional)
-)
+)```
