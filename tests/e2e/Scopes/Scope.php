@@ -18,8 +18,7 @@ abstract class Scope extends TestCase
     public const REQUEST_TYPE_SMS = 'sms';
 
     protected ?Client $client = null;
-    //protected string $endpoint = 'http://appwrite.test/v1';
-    //protected string $endpoint = 'http://localhost/v1';
+    protected string $webEndpoint = 'http://appwrite.test/v1';
     protected string $endpoint = 'http://appwrite/v1';
 
     protected function setUp(): void
