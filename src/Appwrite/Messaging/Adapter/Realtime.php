@@ -433,7 +433,7 @@ class Realtime extends MessagingAdapter
             }
 
             if (in_array($method, [Query::TYPE_AND, Query::TYPE_OR], true)) {
-                $stack = array_merge($stack, $query->getValues());
+                \array_push($stack, ...$query->getValues());
             }
         }
 
