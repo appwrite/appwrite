@@ -5173,6 +5173,68 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($origin, $response['headers']['access-control-allow-origin'] ?? null);
     }
 
+    public function testConsoleCorsWithTrustedProject(): void
+    {
+        $trustedProjectIds = ['trusted-project', 'another-trusted-project']; // Set in env variable
+
+        $projectIds = \array_merge($trustedProjectIds, ['untrusted-project-id']);
+
+        foreach ($projectIds as $projectId) {
+            try {
+                // Create project
+                $this->setupProject([
+                    'projectId' => $projectId,
+                    'name' => 'Trusted project',
+                    'region' => System::getEnv('_APP_REGION', 'default')
+                ]);
+
+                // Add domain to trusted project; API for simplicity, in real work this will be site
+                $domain = \uniqid() . '.custom.localhost';
+                $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-mode' => 'admin',
+                ], $this->getHeaders()), [
+                    'domain' => $domain
+                ]);
+
+                $this->assertEquals(201, $rule['headers']['status-code']);
+
+                // Talk to Console APIs from trusted project domain
+                $currencies = $this->client->call(
+                    Client::METHOD_GET,
+                    '/locale/currencies',
+                    array_merge(
+                        $this->getHeaders(),
+                        [
+                            'content-type' => 'application/json',
+                            'x-appwrite-project' => 'console',
+                            'origin' => 'http://' . $domain
+                        ]
+                    )
+                );
+
+                if (\in_array($projectId, $trustedProjectIds)) {
+                    // Trusted projects can
+                    $this->assertSame('http://' . $domain, $currencies['headers']['access-control-allow-origin']);
+                } else {
+                    // Untrusted projects cannot
+                    $this->assertArrayNotHasKey('access-control-allow-origin', $currencies['headers']);
+                }
+            } catch (\Throwable $th) {
+                throw $th;
+            } finally {
+                // Cleanup
+                $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), []);
+
+                $this->assertEquals(204, $response['headers']['status-code']);
+            }
+        }
+    }
+
     /**
      * @group abuseEnabled
      */
