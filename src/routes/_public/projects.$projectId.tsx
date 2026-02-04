@@ -77,11 +77,16 @@ function ProjectLayout() {
     pathParts.length >= 6 &&
     pathParts[5] === 'visualizer'
 
+  // Functions local code editor (Monaco)
+  const isFunctionsEditorView =
+    activeSection === 'functions' && pathParts[4] === 'editor'
+
   // Views that need overflow-hidden on main (they manage their own scrolling)
   const isFixedLayoutView =
     isDatabaseSpreadsheetView ||
     isDatabaseVisualizerView ||
-    activeSection === 'usage'
+    activeSection === 'usage' ||
+    isFunctionsEditorView
 
   // Check if we're on the function executions tab
   // Pattern: /projects/:projectId/functions/:functionId/executions
@@ -97,14 +102,15 @@ function ProjectLayout() {
     pathParts.length >= 6 &&
     pathParts[5] === 'logs'
 
-  // Hide footer for usage view, database spreadsheet view, visualizer, function executions tab, and site logs tab
+  // Hide footer for usage view, database spreadsheet view, visualizer, function executions tab, site logs tab, and functions editor
   const hideFooter =
     isDatabaseSpreadsheetView ||
     isDatabaseVisualizerView ||
     activeSection === 'usage' ||
     isFunctionExecutionsTab ||
     isSiteLogsTab ||
-    activeSection === 'activity'
+    activeSection === 'activity' ||
+    isFunctionsEditorView
 
   // Close sidebar on route change
   useEffect(() => {

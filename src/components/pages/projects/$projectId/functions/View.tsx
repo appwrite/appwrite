@@ -7,7 +7,7 @@ import {
   Link,
 } from '@tanstack/react-router'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
-import { Plus, Clock, Zap, Play } from 'lucide-react'
+import { Plus, Clock, Zap, Play, FileCode } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ResourceCard } from '../shared/ResourceCard'
@@ -261,6 +261,28 @@ export function View() {
           }
           createDisabled={activeTab === 'functions' ? isCreateDisabled : false}
           fullWidthBorder
+          beforeCreateButtons={
+            activeTab === 'functions' ? (
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 gap-1.5 text-[13px]" asChild>
+                      <Link
+                        to="/projects/$projectId/functions/editor"
+                        params={{ projectId: projectId as string }}
+                      >
+                        <FileCode className="h-4 w-4" />
+                        Local editor
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Edit code locally and prepare gzip for deployment</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : undefined
+          }
         />
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6">
           <div className="rounded-lg border border-border bg-card py-12 text-center">
@@ -290,6 +312,28 @@ export function View() {
         onCreate={activeTab === 'functions' ? handleCreateFunction : undefined}
         createDisabled={activeTab === 'functions' ? isCreateDisabled : false}
         fullWidthBorder
+        beforeCreateButtons={
+          activeTab === 'functions' ? (
+            <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5 text-[13px]" asChild>
+                    <Link
+                      to="/projects/$projectId/functions/editor"
+                      params={{ projectId: projectId as string }}
+                    >
+                      <FileCode className="h-4 w-4" />
+                      Local editor
+                    </Link>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Edit code locally and prepare gzip for deployment</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : undefined
+        }
         contentAfterBorder={
           // Data is prefetched in route loader, only render if data exists
           // PlanLimitWarning handles its own visibility logic

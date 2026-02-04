@@ -27,6 +27,8 @@ import {
   UserCircle,
   ArrowUp,
   Download,
+  Shield,
+  CreditCard,
 } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -64,6 +66,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
 import { formatDateTime } from '@/lib/date-utils'
 import { cn } from '@/lib/utils'
@@ -2204,20 +2212,37 @@ function ChangeOrganizationSection({
 }: ChangeOrganizationSectionProps) {
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
   const selectedOrg = organizations.find((org) => org.value === selectedOrgId)
+  const hasNoTargetOrgs =
+    !organizationsLoading && organizations.length === 0
+  const isMoveDisabled =
+    hasNoTargetOrgs ||
+    !selectedOrgId ||
+    selectedOrgId === project.teamId ||
+    onTransfer.isPending
 
   return (
     <>
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
         <div className="px-6 py-4">
           <h3 className="text-[15px] font-semibold text-foreground">
-            Change organization
+            Transfer project
           </h3>
         </div>
         <div className="border-t border-border" />
         <div className="px-6 py-4">
           <p className="text-[13px] text-muted-foreground mb-4">
-            Select an organization you own to move this project.
+            To transfer this project, you must be a member of both the current
+            and target organization. Select a destination below.
           </p>
+          {hasNoTargetOrgs && (
+            <Alert className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-[13px]">
+                You do not have any organizations you can transfer this project
+                to. Create or join another organization to transfer.
+              </AlertDescription>
+            </Alert>
+          )}
           <Label
             htmlFor="organization"
             className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-1.5 block"
@@ -2256,39 +2281,88 @@ function ChangeOrganizationSection({
           </Select>
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/30">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            disabled={
-              !selectedOrgId ||
-              selectedOrgId === project.teamId ||
-              onTransfer.isPending
-            }
-            onClick={() => setTransferDialogOpen(true)}
-          >
-            Move
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-block">
+                  <Button
+                    size="sm"
+                    className="h-9 text-[13px]"
+                    disabled={isMoveDisabled}
+                    onClick={() => setTransferDialogOpen(true)}
+                  >
+                    Transfer project
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                {hasNoTargetOrgs
+                  ? 'You do not have any organizations you can transfer this project to.'
+                  : !selectedOrgId || selectedOrgId === project.teamId
+                    ? 'Select a different organization to transfer to.'
+                    : 'Transfer this project to the selected organization'}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 
       {/* Transfer Confirmation Dialog */}
       <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
         <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>Change organization</DialogTitle>
+          <DialogHeader className="px-6 pt-6 pb-4 text-left">
+            <DialogTitle>Transfer project {project.name}</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to move <strong>{project.name}</strong> to{' '}
-              <strong>
-                {selectedOrg?.label || 'the selected organization'}
-              </strong>
-              ?
-              <br />
-              <br />
-              Members who are not part of the destination organization must be
-              invited to gain access to this project.
+              Consider the following before transferring your project:
             </DialogDescription>
           </DialogHeader>
-
+          <div className="border-t border-border" />
+          <div className="px-6 py-4 space-y-3">
+            <div className="flex gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <Shield className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-[13px] font-medium text-foreground">
+                  Permissions
+                </p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  Depending on your role in the target organization, your level
+                  of access may change after transfer.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-[13px] font-medium text-foreground">
+                  Access
+                </p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  Members who are not part of the destination organization will
+                  lose access and must be invited to the new organization to
+                  regain access.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-[13px] font-medium text-foreground">
+                  Features and usage
+                </p>
+                <p className="text-[12px] text-muted-foreground mt-0.5">
+                  The target organization’s pricing plan may limit features or
+                  usage (e.g. executions, storage, or team size) for this
+                  project.
+                </p>
+              </div>
+            </div>
+          </div>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="outline"
@@ -2309,7 +2383,7 @@ function ChangeOrganizationSection({
                 }
               }}
             >
-              Move
+              Transfer project
             </Button>
           </div>
         </DialogContent>

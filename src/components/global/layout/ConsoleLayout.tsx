@@ -142,7 +142,7 @@ export function ConsoleLayout({
             <div
               className={cn(
                 'h-full',
-                fixedLayout && 'min-h-0',
+                fixedLayout && 'min-h-0 flex flex-col',
               )}
             >
               {children}

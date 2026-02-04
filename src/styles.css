@@ -93,6 +93,8 @@ code {
   /* OLD VERSION - Strong black (original) - Uncomment to revert */
 
   --background: oklch(0.141 0.005 285.823);
+  /* Hex for Monaco editor (--vscode-editor-background); use #09090b to match desired editor look */
+  --editor-bg: #09090b;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.141 0.005 285.823);
   --card-foreground: oklch(0.985 0 0);
@@ -476,4 +478,13 @@ code {
     rgba(255, 255, 255, 0.7) 50%,
     transparent 70%
   );
+}
+
+/* Find in file highlight in Monaco editor */
+.find-in-file-highlight {
+  background-color: rgba(255, 235, 0, 0.35);
+}
+
+.dark .find-in-file-highlight {
+  background-color: rgba(255, 193, 7, 0.35);
 }

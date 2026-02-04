@@ -8,20 +8,27 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions')({
 function FunctionsPage() {
   const matches = useMatches()
 
-  // Check if we're on a child route (function detail, templates, etc.)
+  // Check if we're on a child route (function detail, templates, editor, etc.)
   const isChildRoute = matches.some(
     (match) =>
       match.routeId.includes('/functions/$functionId') ||
       match.routeId.includes('/functions/templates') ||
+      match.routeId.includes('/functions/editor') ||
       match.routeId.startsWith(
         '/_public/projects/$projectId/functions/$functionId',
       ) ||
-      match.routeId === '/_public/projects/$projectId/functions/templates',
+      match.routeId === '/_public/projects/$projectId/functions/templates' ||
+      match.routeId === '/_public/projects/$projectId/functions/editor',
   )
 
-  // If we're on a child route, render the outlet (child route component)
+  // If we're on a child route, render the outlet (child route component).
+  // Wrap in full-height flex container so fixed-layout children (e.g. editor) can fill space.
   if (isChildRoute) {
-    return <Outlet />
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <Outlet />
+      </div>
+    )
   }
 
   // Otherwise, show the functions list view

@@ -6,6 +6,7 @@ import {
 import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import {
@@ -82,6 +83,45 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   shellComponent: RootDocument,
 })
 
+/**
+ * Renders ThemeProvider only after client mount. next-themes uses React context
+ * in a way that can fail during SSR (renderToPipeableStream) with "Cannot read
+ * properties of null (reading 'useContext')". Deferring to client avoids this.
+ */
+function ClientThemeProvider({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  if (!mounted) {
+    return <>{children}</>
+  }
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem
+      disableTransitionOnChange
+      themes={['light', 'dark', 'system', 'crazy', 'stealth']}
+    >
+      {children}
+    </ThemeProvider>
+  )
+}
+
+/**
+ * Renders children only after client mount. Use for components that call
+ * next-themes useTheme() so they never run during SSR (avoids useContext crash).
+ */
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+  if (!mounted) return null
+  return <>{children}</>
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { isLoading } = useInitialLoader()
 
@@ -93,15 +133,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body suppressHydrationWarning>
         <DynamicFavicon />
         <UploadWarning />
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-          themes={['light', 'dark', 'system', 'crazy', 'stealth']}
-        >
+        <ClientThemeProvider>
           <NavigationHistoryProvider>
-            <FullscreenLoader isVisible={isLoading} />
+            <ClientOnly>
+              <FullscreenLoader isVisible={isLoading} />
+            </ClientOnly>
             <SentryContextProvider>
               <DebugModeProvider>
                 <AIChatProvider>
@@ -112,12 +148,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                       </div>
                       <AIChatPanel />
                     </div>
-                    <DebugMenu />
+                    <ClientOnly>
+                      <DebugMenu />
+                    </ClientOnly>
                   </PromoBannerProvider>
                 </AIChatProvider>
               </DebugModeProvider>
             </SentryContextProvider>
-            <Toaster />
+            <ClientOnly>
+              <Toaster />
+            </ClientOnly>
             <GlobalUploadProgress />
           </NavigationHistoryProvider>
           {/* <TanStackDevtools
@@ -132,7 +172,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               TanStackQueryDevtools,
             ]}
           /> */}
-        </ThemeProvider>
+        </ClientThemeProvider>
         <Scripts />
       </body>
     </html>
