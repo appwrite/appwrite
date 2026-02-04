@@ -163,7 +163,7 @@ class TransformationTest extends TestCase
             ->setTraits([])
             ->transform();
         $domain = $transformer->getOutput();
-        $this->assertStringStartsWith('branch-user-john-experiment-', $domain);
+        $this->assertStringStartsWith('branch-user-john-experi-', $domain);
         $this->assertStringEndsWith('.appwrite.network', $domain);
 
         $transformer
@@ -176,7 +176,7 @@ class TransformationTest extends TestCase
             ->setTraits([])
             ->transform();
         $domain = $transformer->getOutput();
-        $this->assertStringStartsWith('branch-dependabot-npm-and-yarn-lodash-4-17-21-', $domain);
+        $this->assertStringStartsWith('branch-dependabot-npm-a-', $domain);
         $this->assertStringEndsWith('.appwrite.network', $domain);
     }
 }
