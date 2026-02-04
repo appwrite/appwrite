@@ -324,7 +324,7 @@ class Certificates extends Action
                 $certificate->setAttribute('logs', $logs);
             } else {
                 // Delayed generation: third-party handles certificate issuance asynchronously
-                $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We\'ll periodically check and update the status. \033[0m\n";
+                $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
                 $certificate->setAttribute('logs', $logs);
             }
 
