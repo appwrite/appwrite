@@ -16,7 +16,6 @@ use Swoole\Table;
 use Swoole\Timer;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit\Redis as TimeLimitRedis;
-use Utopia\App;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Token;
 use Utopia\Auth\Store;
@@ -34,6 +33,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
+use Utopia\Http;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -509,7 +509,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $receivers = $realtime->getSubscribers($event); // [connectionId => [subId => queries]]
 
-                if (App::isDevelopment() && !empty($receivers)) {
+                if (Http::isDevelopment() && !empty($receivers)) {
                     Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
                     Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode(array_keys($receivers)));
                     Console::log("[Debug][Worker {$workerId}] Event Query: " . json_encode(array_values($receivers)));
@@ -552,15 +552,15 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 });
 
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
-    $app = new App('UTC');
+    $app = new Http('UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
     Console::info("Connection open (user: {$connection})");
 
-    App::setResource('pools', fn () => $register->get('pools'));
-    App::setResource('request', fn () => $request);
-    App::setResource('response', fn () => $response);
+    Http::setResource('pools', fn () => $register->get('pools'));
+    Http::setResource('request', fn () => $request);
+    Http::setResource('response', fn () => $response);
 
     try {
         /** @var Document $project */
@@ -688,7 +688,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $message = $th->getMessage();
 
         // sanitize 0 && 5xx errors
-        if (($code === 0 || $code >= 500) && !App::isDevelopment()) {
+        if (($code === 0 || $code >= 500) && !Http::isDevelopment()) {
             $message = 'Error: Server Error';
         }
 
@@ -703,7 +703,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $server->send([$connection], json_encode($response));
         $server->close($connection, $code);
 
-        if (App::isDevelopment()) {
+        if (Http::isDevelopment()) {
             Console::error('[Error] Connection Error');
             Console::error('[Error] Code: ' . $response['data']['code']);
             Console::error('[Error] Message: ' . $response['data']['message']);
@@ -845,7 +845,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $message = $th->getMessage();
 
         // sanitize 0 && 5xx errors
-        if (($code === 0 || $code >= 500) && !App::isDevelopment()) {
+        if (($code === 0 || $code >= 500) && !Http::isDevelopment()) {
             $message = 'Error: Server Error';
         }
 

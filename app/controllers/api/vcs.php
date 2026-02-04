@@ -15,7 +15,6 @@ use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
 use Appwrite\Vcs\Domain;
 use Swoole\Coroutine\WaitGroup;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Adapters\Dotenv as ConfigDotenv;
 use Utopia\Config\Config;
@@ -67,6 +66,7 @@ use Utopia\Detector\Detector\Framework;
 use Utopia\Detector\Detector\Packager;
 use Utopia\Detector\Detector\Runtime;
 use Utopia\Detector\Detector\Strategy;
+use Utopia\Http;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -516,7 +516,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
     }
 };
 
-App::get('/v1/vcs/github/authorize')
+Http::get('/v1/vcs/github/authorize')
     ->desc('Create GitHub app installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -568,7 +568,7 @@ App::get('/v1/vcs/github/authorize')
             ->redirect($url);
     });
 
-App::get('/v1/vcs/github/callback')
+Http::get('/v1/vcs/github/callback')
     ->desc('Get installation and authorization from GitHub app')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
@@ -705,7 +705,7 @@ App::get('/v1/vcs/github/callback')
             ->redirect($redirectSuccess);
     });
 
-App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/contents')
+Http::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/contents')
     ->desc('Get files and directories of a VCS repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -773,7 +773,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         ]), Response::MODEL_VCS_CONTENT_LIST);
     });
 
-App::post('/v1/vcs/github/installations/:installationId/detections')
+Http::post('/v1/vcs/github/installations/:installationId/detections')
     ->alias('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
     ->desc('Create repository detection')
     ->groups(['api', 'vcs'])
@@ -1007,7 +1007,7 @@ App::post('/v1/vcs/github/installations/:installationId/detections')
         $response->dynamic($output, $type === 'framework' ? Response::MODEL_DETECTION_FRAMEWORK : Response::MODEL_DETECTION_RUNTIME);
     });
 
-App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
+Http::get('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->desc('List repositories')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -1240,7 +1240,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         ]), ($type === 'framework') ? Response::MODEL_PROVIDER_REPOSITORY_FRAMEWORK_LIST : Response::MODEL_PROVIDER_REPOSITORY_RUNTIME_LIST);
     });
 
-App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
+Http::post('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->desc('Create repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
@@ -1353,7 +1353,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
 
-App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId')
+Http::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId')
     ->desc('Get repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -1409,7 +1409,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
 
-App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
+Http::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
     ->desc('List repository branches')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -1464,7 +1464,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         ]), Response::MODEL_BRANCH_LIST);
     });
 
-App::post('/v1/vcs/github/events')
+Http::post('/v1/vcs/github/events')
     ->desc('Create event')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
@@ -1607,7 +1607,7 @@ App::post('/v1/vcs/github/events')
         }
     );
 
-App::get('/v1/vcs/installations')
+Http::get('/v1/vcs/installations')
     ->desc('List installations')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -1683,7 +1683,7 @@ App::get('/v1/vcs/installations')
         ]), Response::MODEL_INSTALLATION_LIST);
     });
 
-App::get('/v1/vcs/installations/:installationId')
+Http::get('/v1/vcs/installations/:installationId')
     ->desc('Get installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -1718,7 +1718,7 @@ App::get('/v1/vcs/installations/:installationId')
         $response->dynamic($installation, Response::MODEL_INSTALLATION);
     });
 
-App::delete('/v1/vcs/installations/:installationId')
+Http::delete('/v1/vcs/installations/:installationId')
     ->desc('Delete installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
@@ -1759,7 +1759,7 @@ App::delete('/v1/vcs/installations/:installationId')
         $response->noContent();
     });
 
-App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
+Http::patch('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
     ->desc('Update external deployment (authorize)')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
