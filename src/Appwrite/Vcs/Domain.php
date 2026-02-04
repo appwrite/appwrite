@@ -2,6 +2,8 @@
 
 namespace Appwrite\Vcs;
 
+use Utopia\Validator\Text;
+
 class Domain
 {
     /**
@@ -25,7 +27,28 @@ class Domain
     public static function sanitizeBranchName(string $branch): string
     {
         // Replace any sequence of invalid characters with a single hyphen
-        $sanitized = preg_replace('/[^a-zA-Z0-9-]+/', '-', $branch);
+        $allowedChars = array_merge(
+            Text::NUMBERS,
+            Text::ALPHABET_UPPER,
+            Text::ALPHABET_LOWER,
+            ['-']
+        );
+        $allowedCharsFlip = array_flip($allowedChars); // Flip solves issues with named numeric indexes
+
+        $sanitized = '';
+        for ($i = 0; $i < \strlen($branch); $i++) {
+            $char = $branch[$i];
+
+            if (isset($allowedCharsFlip[$char])) {
+                $sanitized .= $char;
+            } else {
+                // Prevents two -- or more in row
+                if (strlen($sanitized) > 0 && $sanitized[strlen($sanitized) - 1] !== '-') {
+                    $sanitized .= '-';
+                }
+            }
+        }
+
         // Remove leading and trailing hyphens
         return trim($sanitized, '-');
     }
