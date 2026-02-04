@@ -18,7 +18,7 @@ import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
 import { NavigationHistoryProvider } from '@/components/global/providers/NavigationHistoryProvider'
-import { FullscreenLoader } from '@/components/ui/loader'
+import { FullscreenLoader, StaticFullscreenLoader } from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'
@@ -124,6 +124,10 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { isLoading } = useInitialLoader()
+  const [clientMounted, setClientMounted] = useState(false)
+  useEffect(() => {
+    setClientMounted(true)
+  }, [])
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -135,9 +139,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <UploadWarning />
         <ClientThemeProvider>
           <NavigationHistoryProvider>
-            <ClientOnly>
-              <FullscreenLoader isVisible={isLoading} />
-            </ClientOnly>
+            {/* Show branded loader (logo + 2.0) from first paint; avoid route "Loading..." flash */}
+            {isLoading &&
+              (clientMounted ? (
+                <FullscreenLoader isVisible={isLoading} />
+              ) : (
+                <StaticFullscreenLoader />
+              ))}
             <SentryContextProvider>
               <DebugModeProvider>
                 <AIChatProvider>

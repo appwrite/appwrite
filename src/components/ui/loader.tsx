@@ -2,6 +2,43 @@ import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
 
+// Logo dimensions from SVG viewBox (132×24)
+const LOGO_WIDTH = 132
+const LOGO_HEIGHT = 24
+const CONTENT_MIN_WIDTH = LOGO_WIDTH + 6 + 32 // logo + gap-1.5 + " / 2.0" text
+
+/**
+ * Static fullscreen loader (logo + " / 2.0") with no theme hooks.
+ * Used on first paint before client mount so the user sees the branded loader
+ * instead of route-level "Loading..." text.
+ */
+export function StaticFullscreenLoader() {
+  return (
+    <div
+      className="fixed inset-0 z-[9999] bg-background"
+      aria-label="Loading"
+    >
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <div
+          className="flex items-center gap-1.5 min-h-6"
+          style={{ minWidth: CONTENT_MIN_WIDTH }}
+        >
+          <img
+            src="/appwrite-dark.svg"
+            alt="Appwrite"
+            width={LOGO_WIDTH}
+            height={LOGO_HEIGHT}
+            className="h-6 w-auto"
+          />
+          <span className="text-foreground/60 text-xs font-extralight tracking-tight">
+            / 2.0
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface FullscreenLoaderProps {
   isVisible: boolean
   onComplete?: () => void
@@ -41,11 +78,6 @@ export function FullscreenLoader({
   // Only pick logo once theme is resolved to avoid flash
   const isDark = mounted ? (resolvedTheme ?? theme) === 'dark' : true
   const logoSrc = isDark ? '/appwrite-dark.svg' : '/appwrite-light.svg'
-
-  // Logo dimensions from SVG viewBox (132×24) – reserve space to prevent layout shift
-  const LOGO_WIDTH = 132
-  const LOGO_HEIGHT = 24
-  const CONTENT_MIN_WIDTH = LOGO_WIDTH + 6 + 32 // logo + gap-1.5 + " / 2.0" text
 
   useEffect(() => {
     if (isVisible) {
