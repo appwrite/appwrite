@@ -255,6 +255,7 @@ Http::setResource('rule', function (Request $request, Database $dbForPlatform, D
 
     $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
 
+    // Temporary implementation until custom wildcard domains are an official feature
     // Allow trusted projects; Used for Console (website) previews
     if (!$permitsCurrentProject && !$rule->isEmpty() && !empty($rule->getAttribute('projectId', ''))) {
         $trustedProjects = [];
