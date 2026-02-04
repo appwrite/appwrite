@@ -140,20 +140,19 @@ export function AccountPaymentMethods({
   if (methodsLoading) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
+        <div className="px-4 pt-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Payment Methods
+                Payment methods
               </h3>
-              <p className="text-[13px] text-muted-foreground mt-1">
+              <p className="text-[13px] text-muted-foreground mt-0.5">
                 Manage your payment methods and billing information.
               </p>
             </div>
           </div>
         </div>
-        <div className="border-t border-border -mx-6" />
-        <div className="px-6 py-12 text-center">
+        <div className="px-4 pt-3 pb-4 text-center">
           <p className="text-[13px] text-muted-foreground">
             Loading payment methods...
           </p>
@@ -165,20 +164,19 @@ export function AccountPaymentMethods({
   if (completedPaymentMethods.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
+        <div className="px-4 pt-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Payment Methods
+                Payment methods
               </h3>
-              <p className="text-[13px] text-muted-foreground mt-1">
+              <p className="text-[13px] text-muted-foreground mt-0.5">
                 Manage your payment methods and billing information.
               </p>
             </div>
           </div>
         </div>
-        <div className="border-t border-border -mx-6" />
-        <div className="px-6 py-8 text-center">
+        <div className="px-4 pt-3 pb-4 text-center">
           <EmptyState
             icon={CreditCard}
             title="No payment methods"
@@ -189,8 +187,9 @@ export function AccountPaymentMethods({
           >
             <div className="mt-4">
               <Button
+                variant="outline"
                 size="sm"
-                className="h-9 text-[13px]"
+                className="h-8 text-[13px]"
                 onClick={onAddPaymentMethod}
               >
                 <Plus className="mr-1.5 h-4 w-4" />
@@ -206,19 +205,20 @@ export function AccountPaymentMethods({
   return (
     <>
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
+        <div className="px-4 pt-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
-                Payment Methods
+                Payment methods
               </h3>
-              <p className="text-[13px] text-muted-foreground mt-1">
+              <p className="text-[13px] text-muted-foreground mt-0.5">
                 Manage your payment methods and billing information.
               </p>
             </div>
             <Button
+              variant="outline"
               size="sm"
-              className="h-9 text-[13px]"
+              className="h-8 text-[13px]"
               onClick={onAddPaymentMethod}
             >
               <Plus className="mr-1.5 h-4 w-4" />
@@ -226,31 +226,29 @@ export function AccountPaymentMethods({
             </Button>
           </div>
         </div>
-        <div className="border-t border-border -mx-6" />
-        <div className="px-6 py-4">
+        <div className="px-4 pt-3 pb-4">
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[220px]">
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground w-[300px]">
                     Card
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground w-[160px]">
                     Cardholder
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground w-[120px]">
                     Expires
                   </TableHead>
                   {hasPaymentError && (
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
+                    <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground w-[100px]">
                       Status
                     </TableHead>
                   )}
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground">
                     Linked To
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[60px]">
-                    Actions
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground text-right w-[60px]">
                   </TableHead>
                 </TableRow>
               </TableHeader>

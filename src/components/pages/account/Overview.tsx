@@ -106,17 +106,19 @@ function UpdateNameSection() {
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
+      {/* Section 1: Title + Description */}
+      <div className="px-4 pt-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Update name
         </h3>
+        <p className="text-[13px] text-muted-foreground mt-0.5">
+          Update your account display name.
+        </p>
       </div>
+
+      {/* Section 2: Content */}
       <form onSubmit={handleSubmit}>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground mb-3">
-            Update your account display name.
-          </p>
+        <div className="px-4 pt-3 pb-4">
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input
@@ -131,11 +133,13 @@ function UpdateNameSection() {
             />
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
+
+        {/* Section 3: Footer */}
+        <div className="px-4 pt-3 pb-3 border-t border-border bg-muted/30">
           <Button
             type="submit"
             size="sm"
-            className="h-9 text-[13px]"
+            className="h-8 text-[13px]"
             disabled={isDisabled}
           >
             Update
@@ -197,7 +201,8 @@ function UpdateEmailSection() {
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
+      {/* Section 1: Title + Description */}
+      <div className="px-4 pt-4">
         <div className="flex items-center gap-2">
           <h3 className="text-[15px] font-semibold text-foreground">
             Update email
@@ -209,14 +214,15 @@ function UpdateEmailSection() {
             </Badge>
           )}
         </div>
+        <p className="text-[13px] text-muted-foreground mt-0.5">
+          Update your account email address. Requires password verification
+          when changing email.
+        </p>
       </div>
+
+      {/* Section 2: Content */}
       <form onSubmit={handleSubmit}>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground mb-3">
-            Update your account email address. Requires password verification
-            when changing email.
-          </p>
+        <div className="px-4 pt-3 pb-4">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -248,11 +254,13 @@ function UpdateEmailSection() {
             )}
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
+
+        {/* Section 3: Footer */}
+        <div className="px-4 pt-3 pb-3 border-t border-border bg-muted/30">
           <Button
             type="submit"
             size="sm"
-            className="h-9 text-[13px]"
+            className="h-8 text-[13px]"
             disabled={isDisabled}
           >
             Update
@@ -308,18 +316,20 @@ function UpdatePasswordSection() {
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
+      {/* Section 1: Title + Description */}
+      <div className="px-4 pt-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Update password
         </h3>
+        <p className="text-[13px] text-muted-foreground mt-0.5">
+          Change your account password. Includes link to password recovery if
+          forgotten.
+        </p>
       </div>
+
+      {/* Section 2: Content */}
       <form onSubmit={handleSubmit}>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground mb-3">
-            Change your account password. Includes link to password recovery if
-            forgotten.
-          </p>
+        <div className="px-4 pt-3 pb-4">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="old-password">Old password</Label>
@@ -357,11 +367,13 @@ function UpdatePasswordSection() {
             </div>
           </div>
         </div>
-        <div className="px-6 py-4 border-t border-border bg-muted/30">
+
+        {/* Section 3: Footer */}
+        <div className="px-4 pt-3 pb-3 border-t border-border bg-muted/30">
           <Button
             type="submit"
             size="sm"
-            className="h-9 text-[13px]"
+            className="h-8 text-[13px]"
             disabled={isDisabled}
           >
             Update
@@ -425,13 +437,12 @@ function IdentitiesSection() {
   if (isLoading) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
+        <div className="px-4 pt-4">
           <h3 className="text-[15px] font-semibold text-foreground">
             Identities
           </h3>
         </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
+        <div className="px-4 pt-3 pb-3">
           <div className="text-sm text-muted-foreground">Loading...</div>
         </div>
       </div>
@@ -441,13 +452,12 @@ function IdentitiesSection() {
   if (identities.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
+        <div className="px-4 pt-4">
           <h3 className="text-[15px] font-semibold text-foreground">
             Identities
           </h3>
         </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4">
+        <div className="px-4 pt-3 pb-3">
           <div className="rounded-lg border border-border bg-muted/30 p-6 text-center">
             <p className="text-[14px] font-medium text-foreground mb-1">
               No identities are currently available.
@@ -463,13 +473,12 @@ function IdentitiesSection() {
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
+      <div className="px-4 pt-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Identities
         </h3>
       </div>
-      <div className="border-t border-border" />
-      <div className="px-6 py-4">
+      <div className="px-4 pt-3 pb-3">
         <div className="rounded-lg border border-border overflow-hidden">
           <Table>
             <TableHeader>
@@ -614,16 +623,15 @@ function MFASection() {
 
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-      <div className="px-6 py-4">
+      <div className="px-4 pt-4">
         <h3 className="text-[15px] font-semibold text-foreground">
           Multi-factor authentication
         </h3>
-        <p className="text-[13px] text-muted-foreground mt-1">
+        <p className="text-[13px] text-muted-foreground mt-0.5">
           Enhance your account's security by requiring a second sign-in method
         </p>
       </div>
-      <div className="border-t border-border" />
-      <div className="px-6 py-4 space-y-6">
+      <div className="px-4 pt-3 pb-3 space-y-6">
         <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 p-4">
           <div className="space-y-0.5">
             <Label
@@ -1193,20 +1201,21 @@ function DeleteAccountSection() {
   return (
     <>
       <div className="rounded-xl border border-red-500/30 bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-red-600 dark:text-red-400">
+        {/* Section 1: Title + Description */}
+        <div className="px-4 pt-4">
+          <h3 className="text-[15px] font-semibold text-foreground">
             Delete account
           </h3>
-        </div>
-        <div className="border-t border-red-500/20" />
-        <div className="px-6 py-4">
-          <p className="text-[13px] text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground mt-0.5">
             Your account will be permanently deleted and access will be lost to
             any of your teams and data. This action is irreversible.
           </p>
+        </div>
 
+        {/* Section 2: Content */}
+        <div className="px-4 pt-3 pb-4">
           {/* Account Info Summary */}
-          <div className="flex items-center gap-3 mt-4">
+          <div className="flex items-center gap-3">
             <InitialsAvatar
               name={account?.name || account?.email || 'User'}
               size="md"
@@ -1224,13 +1233,14 @@ function DeleteAccountSection() {
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-red-500/20 bg-red-500/5">
+        {/* Section 3: Footer */}
+        <div className="px-4 pt-3 pb-3 border-t border-red-500/20 bg-red-500/5">
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
               <Button
                 variant="destructive"
                 size="sm"
-                className="h-9 text-[13px]"
+                className="h-8 text-[13px]"
               >
                 Delete account
               </Button>

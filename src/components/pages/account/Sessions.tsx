@@ -100,12 +100,12 @@ function BrowserIcon({
   if (error || !iconUrl) {
     return (
       <div className="relative">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
-          <Activity className="h-4 w-4 text-muted-foreground" />
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
+          <Activity className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
         {deviceName && (
-          <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
-            <DeviceIcon className="h-2.5 w-2.5 text-muted-foreground" />
+          <div className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-background ring-2 ring-background">
+            <DeviceIcon className="h-2 w-2 text-muted-foreground" />
           </div>
         )}
       </div>
@@ -114,17 +114,17 @@ function BrowserIcon({
 
   return (
     <div className="relative">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50 overflow-hidden">
+      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50 overflow-hidden">
         <img
           src={iconUrl}
           alt={clientCode}
-          className="h-9 w-9 object-contain p-1"
+          className="h-7 w-7 object-contain p-1"
           onError={() => setError(true)}
         />
       </div>
       {deviceName && (
-        <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-background ring-2 ring-background">
-          <DeviceIcon className="h-2.5 w-2.5 text-muted-foreground" />
+        <div className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-background ring-2 ring-background">
+          <DeviceIcon className="h-2 w-2 text-muted-foreground" />
         </div>
       )}
     </div>
@@ -296,53 +296,44 @@ export function AccountSessions() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-[13px] text-muted-foreground">
+          Manage your active sessions across different devices. You can
+          revoke access from any device at any time.
+        </p>
+        {sessions.length > 1 && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-[13px]"
+            onClick={handleDeleteAllClick}
+            disabled={deleteAllSessionsMutation.isPending}
+          >
+            Delete all sessions
+          </Button>
+        )}
+      </div>
+
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Sessions
-              </h3>
-              <p className="text-[13px] text-muted-foreground mt-1">
-                Manage your active sessions across different devices. You can
-                revoke access from any device at any time.
-              </p>
-            </div>
-            {sessions.length > 1 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={handleDeleteAllClick}
-                disabled={deleteAllSessionsMutation.isPending}
-              >
-                Delete all sessions
-              </Button>
-            )}
-          </div>
-        </div>
-        <div className="border-t border-border -mx-6" />
-        <div className="px-6 py-4">
-          <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
+        <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[320px]">
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground w-[320px]">
                     Device & Auth
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground w-[180px]">
                     Location
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground w-[140px]">
                     IP Address
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[160px]">
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground w-[160px]">
                     Created
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground w-[180px]">
                     Expires
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
+                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground text-right w-[80px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -379,13 +370,13 @@ export function AccountSessions() {
 
                   return (
                     <TableRow key={session.$id} className="group">
-                      <TableCell className="px-4 py-3.5">
-                        <div className="flex items-start gap-3">
+                      <TableCell className="px-4 py-2.5">
+                        <div className="flex items-center gap-2.5">
                           <BrowserIcon
                             clientCode={session.clientCode}
                             deviceName={session.deviceName}
                           />
-                          <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex-1 min-w-0 space-y-0.5">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-[13px] font-semibold text-foreground">
                                 {deviceInfo.primary}
@@ -442,7 +433,7 @@ export function AccountSessions() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="px-4 py-3.5">
+                      <TableCell className="px-4 py-2.5">
                         <div className="flex items-center gap-2">
                           {flagUrl ? (
                             <img
@@ -463,7 +454,7 @@ export function AccountSessions() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="px-4 py-3.5">
+                      <TableCell className="px-4 py-2.5">
                         {session.ip ? (
                           <code className="text-[12px] text-muted-foreground font-mono bg-muted/30 px-1.5 py-0.5 rounded">
                             {formatIP(session.ip)}
@@ -472,19 +463,19 @@ export function AccountSessions() {
                           <span className="text-[12px] text-muted-foreground/50">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="px-4 py-3.5">
+                      <TableCell className="px-4 py-2.5">
                         <DateTooltip
                           date={session.$createdAt}
                           className="text-[12px] font-medium text-foreground"
                         />
                       </TableCell>
-                      <TableCell className="px-4 py-3.5">
+                      <TableCell className="px-4 py-2.5">
                         <DateTooltip
                           date={session.expire}
                           className="text-[12px] font-medium text-foreground"
                         />
                       </TableCell>
-                      <TableCell className="px-4 py-3.5 text-right">
+                      <TableCell className="px-4 py-2.5 text-right">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -502,8 +493,6 @@ export function AccountSessions() {
                 )}
               </TableBody>
             </Table>
-          </div>
-        </div>
       </div>
 
       {/* Logout Confirmation Dialog */}
