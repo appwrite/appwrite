@@ -54494,6 +54494,18 @@
                                 "$ref": "#\/definitions\/columnPolygon"
                             },
                             {
+                                "$ref": "#\/definitions\/columnVarchar"
+                            },
+                            {
+                                "$ref": "#\/definitions\/columnText"
+                            },
+                            {
+                                "$ref": "#\/definitions\/columnMediumtext"
+                            },
+                            {
+                                "$ref": "#\/definitions\/columnLongtext"
+                            },
+                            {
                                 "$ref": "#\/definitions\/columnString"
                             }
                         ]
@@ -54587,6 +54599,18 @@
                             },
                             {
                                 "$ref": "#\/definitions\/columnPolygon"
+                            },
+                            {
+                                "$ref": "#\/definitions\/columnVarchar"
+                            },
+                            {
+                                "$ref": "#\/definitions\/columnText"
+                            },
+                            {
+                                "$ref": "#\/definitions\/columnMediumtext"
+                            },
+                            {
+                                "$ref": "#\/definitions\/columnLongtext"
                             },
                             {
                                 "$ref": "#\/definitions\/columnString"
@@ -63606,8 +63630,8 @@
                 },
                 "_APP_DOMAIN_SITES": {
                     "type": "string",
-                    "description": "A domain to use for site URLs.",
-                    "x-example": "sites.localhost"
+                    "description": "A comma separated list of domains to use for site URLs.",
+                    "x-example": "sites.localhost,sites.example.com"
                 },
                 "_APP_DOMAIN_FUNCTIONS": {
                     "type": "string",
@@ -63654,7 +63678,7 @@
                 "_APP_VCS_ENABLED": true,
                 "_APP_DOMAIN_ENABLED": true,
                 "_APP_ASSISTANT_ENABLED": true,
-                "_APP_DOMAIN_SITES": "sites.localhost",
+                "_APP_DOMAIN_SITES": "sites.localhost,sites.example.com",
                 "_APP_DOMAIN_FUNCTIONS": "functions.localhost",
                 "_APP_OPTIONS_FORCE_HTTPS": "enabled",
                 "_APP_DOMAINS_NAMESERVERS": "ns1.example.com,ns2.example.com"
