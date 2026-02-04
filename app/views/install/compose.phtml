@@ -14,6 +14,7 @@ $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
 $dbService = $this->getParam('database');
 $hostPath = rtrim($this->getParam('hostPath', ''), '/');
+$isLocalInstall = (bool) $this->getParam('isLocalInstall', false);
 ?>services:
   traefik:
     image: traefik:2.11
@@ -63,7 +64,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
-<?php if ($version === 'local' && !empty($hostPath)): ?>
+<?php if ($isLocalInstall && !empty($hostPath)): ?>
       - <?php echo $hostPath; ?>:/usr/src/code:rw
 <?php endif; ?>
       - appwrite-uploads:/storage/uploads:rw
@@ -957,7 +958,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     volumes:
       - appwrite-mongodb:/data/db:rw
       - appwrite-mongodb-config:/data/configdb:rw
-<?php if ($version === 'local' && !empty($hostPath)): ?>
+<?php if ($isLocalInstall && !empty($hostPath)): ?>
       - <?php echo $hostPath; ?>/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
 <?php else: ?>
       - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro

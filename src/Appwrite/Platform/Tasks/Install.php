@@ -453,10 +453,9 @@ class Install extends Action
 
         $database = $input['_APP_DB_ADAPTER'] ?? 'mongodb';
 
-        $version = \defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest';
-        if ($isLocalInstall) {
-            $version = 'local';
-        }
+        $version = $isLocalInstall
+            ? 'latest'
+            : (defined('APP_VERSION_STABLE') ? APP_VERSION_STABLE : 'latest');
 
         $assistantKey = (string) ($input['_APP_ASSISTANT_OPENAI_API_KEY'] ?? '');
         $enableAssistant = trim($assistantKey) !== '';
@@ -469,6 +468,7 @@ class Install extends Action
             ->setParam('image', $image)
             ->setParam('database', $database)
             ->setParam('hostPath', $this->hostPath)
+            ->setParam('isLocalInstall', $isLocalInstall)
             ->setParam('enableAssistant', $enableAssistant);
 
         $templateForEnv->setParam('vars', $input);

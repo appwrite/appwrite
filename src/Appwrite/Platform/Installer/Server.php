@@ -249,7 +249,7 @@ class Server
         }
     }
 
-    private function ensureLocalInstallerTag(string $source, string $target): void
+    private function ensureCorrectTag(string $source, string $target): void
     {
         $sourceArg = escapeshellarg($source);
         $targetArg = escapeshellarg($target);
@@ -267,7 +267,7 @@ class Server
         if (!$this->dockerImageExists($image)) {
             $this->buildDockerInstallerImage($image);
         }
-        $this->ensureLocalInstallerTag($image, 'appwrite/appwrite:local');
+        $this->ensureCorrectTag($image, 'appwrite/appwrite:latest');
         $port = (string)self::INSTALLER_WEB_PORT;
         $entrypoint = isset($opts['upgrade']) ? 'upgrade' : 'install';
 
