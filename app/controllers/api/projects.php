@@ -396,6 +396,8 @@ App::patch('/v1/projects/:projectId')
 App::patch('/v1/projects/:projectId/team')
     ->desc('Update project team')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -471,6 +473,8 @@ App::patch('/v1/projects/:projectId/team')
 App::patch('/v1/projects/:projectId/service')
     ->desc('Update service status')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -509,6 +513,8 @@ App::patch('/v1/projects/:projectId/service')
 App::patch('/v1/projects/:projectId/service/all')
     ->desc('Update all service status')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -550,6 +556,8 @@ App::patch('/v1/projects/:projectId/service/all')
 App::patch('/v1/projects/:projectId/api')
     ->desc('Update API status')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', [
         new Method(
@@ -608,6 +616,8 @@ App::patch('/v1/projects/:projectId/api')
 App::patch('/v1/projects/:projectId/api/all')
     ->desc('Update all API status')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', [
         new Method(
@@ -669,6 +679,8 @@ App::patch('/v1/projects/:projectId/api/all')
 App::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update project OAuth2')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -720,6 +732,8 @@ App::patch('/v1/projects/:projectId/oauth2')
 App::patch('/v1/projects/:projectId/auth/session-alerts')
     ->desc('Update project sessions emails')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -758,6 +772,8 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
 App::patch('/v1/projects/:projectId/auth/memberships-privacy')
     ->desc('Update project memberships privacy attributes')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -800,6 +816,8 @@ App::patch('/v1/projects/:projectId/auth/memberships-privacy')
 App::patch('/v1/projects/:projectId/auth/limit')
     ->desc('Update project users limit')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -838,6 +856,8 @@ App::patch('/v1/projects/:projectId/auth/limit')
 App::patch('/v1/projects/:projectId/auth/duration')
     ->desc('Update project authentication duration')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -876,6 +896,8 @@ App::patch('/v1/projects/:projectId/auth/duration')
 App::patch('/v1/projects/:projectId/auth/:method')
     ->desc('Update project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -917,6 +939,8 @@ App::patch('/v1/projects/:projectId/auth/:method')
 App::patch('/v1/projects/:projectId/auth/password-history')
     ->desc('Update authentication password history. Use this endpoint to set the number of password history to save and 0 to disable password history.')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -955,6 +979,8 @@ App::patch('/v1/projects/:projectId/auth/password-history')
 App::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dicitonary check for user password')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -993,6 +1019,8 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
 App::patch('/v1/projects/:projectId/auth/personal-data')
     ->desc('Update personal data check')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -1031,6 +1059,8 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
 App::patch('/v1/projects/:projectId/auth/max-sessions')
     ->desc('Update project user sessions limit')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -1069,6 +1099,8 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
 App::patch('/v1/projects/:projectId/auth/mock-numbers')
     ->desc('Update the mock numbers for the project')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -1161,6 +1193,8 @@ App::delete('/v1/projects/:projectId')
 App::post('/v1/projects/:projectId/webhooks')
     ->desc('Create webhook')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'webhooks.create')
+    ->label('audits.resource', 'project/{request.projectId}/webhook/{response.$id}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -1373,6 +1407,8 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
 App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->desc('Update webhook signature key')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'webhooks.update')
+    ->label('audits.resource', 'project/{request.projectId}/webhook/{request.webhookId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -1419,6 +1455,8 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
 App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Delete webhook')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'webhooks.delete')
+    ->label('audits.resource', 'project/{request.projectId}/webhook/{request.webhookId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -1467,6 +1505,8 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 App::post('/v1/projects/:projectId/keys')
     ->desc('Create key')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'keys.create')
+    ->label('audits.resource', 'project/{request.projectId}/key/{response.$id}')
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -1662,6 +1702,8 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 App::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete key')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'keys.delete')
+    ->label('audits.resource', 'project/{request.projectId}/key/{request.keyId}')
     ->label('scope', 'keys.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -1711,6 +1753,8 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 App::post('/v1/projects/:projectId/jwts')
     ->groups(['api', 'projects'])
     ->desc('Create JWT')
+    ->label('audits.event', 'jwts.create')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -2018,6 +2062,8 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 App::patch('/v1/projects/:projectId/smtp')
     ->desc('Update SMTP')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', [
         new Method(
@@ -2136,6 +2182,8 @@ App::patch('/v1/projects/:projectId/smtp')
 App::post('/v1/projects/:projectId/smtp/tests')
     ->desc('Create SMTP test')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'smtp.tests.create')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', [
         new Method(
@@ -2398,6 +2446,8 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
 App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Update custom SMS template')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', [
         new Method(
@@ -2465,6 +2515,8 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
 App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Update custom email templates')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -2522,6 +2574,8 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
 App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Reset custom SMS template')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', [
         new Method(
@@ -2594,6 +2648,8 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
 App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Delete custom email template')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
@@ -2647,6 +2703,8 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
 App::patch('/v1/projects/:projectId/auth/session-invalidation')
     ->desc('Update invalidate session option of the project')
     ->groups(['api', 'projects'])
+    ->label('audits.event', 'projects.update')
+    ->label('audits.resource', 'project/{request.projectId}')
     ->label('scope', 'projects.write')
     ->label('sdk', new Method(
         namespace: 'projects',
