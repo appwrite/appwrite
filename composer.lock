@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7df8c3a4a15c147ffbfe7bb06eb486a7",
+    "content-hash": "9427afca17d27125632c7db4b5e34336",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4793,16 +4793,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.7.14",
+            "version": "0.7.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "9f18ce63f1425ae2dae57468200e4a5d1239d57b"
+                "reference": "1b94e9b7c3f86d8955178ed05696bb7c8f49839a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/9f18ce63f1425ae2dae57468200e4a5d1239d57b",
-                "reference": "9f18ce63f1425ae2dae57468200e4a5d1239d57b",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/1b94e9b7c3f86d8955178ed05696bb7c8f49839a",
+                "reference": "1b94e9b7c3f86d8955178ed05696bb7c8f49839a",
                 "shasum": ""
             },
             "require": {
@@ -4838,9 +4838,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.7.14"
+                "source": "https://github.com/utopia-php/platform/tree/0.7.15"
             },
-            "time": "2026-01-06T15:39:45+00:00"
+            "time": "2026-02-04T05:28:13+00:00"
         },
         {
             "name": "utopia-php/pools",
