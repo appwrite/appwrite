@@ -12,7 +12,7 @@ $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $dbService = $this->getParam('database');
-$hostPath = $this->getParam('hostPath', '');
+$hostPath = rtrim($this->getParam('hostPath', ''), '/');
 
 ?>services:
   traefik:
@@ -956,7 +956,11 @@ $hostPath = $this->getParam('hostPath', '');
     volumes:
       - appwrite-mongodb:/data/db:rw
       - appwrite-mongodb-config:/data/configdb:rw
+<?php if ($version === 'local' && !empty($hostPath)): ?>
+      - <?php echo $hostPath; ?>/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+<?php else: ?>
       - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+<?php endif; ?>
     ports:
       - "27017:27017"
     environment:
