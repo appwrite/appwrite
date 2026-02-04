@@ -1334,7 +1334,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
-        $this->assertEquals('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $fulltextArray['body']['message']);
 
         $actorsArray = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1346,7 +1346,8 @@ trait DatabasesBase
             'columns' => ['actors'],
         ]);
 
-        $this->assertEquals(202, $actorsArray['headers']['status-code']);
+        $this->assertEquals(400, $actorsArray['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $actorsArray['body']['message']);
 
         $twoLevelsArray = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1359,7 +1360,8 @@ trait DatabasesBase
             'orders' => ['DESC', 'DESC'],
         ]);
 
-        $this->assertEquals(202, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals(400, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $twoLevelsArray['body']['message']);
 
         $unknown = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1372,7 +1374,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $unknown['headers']['status-code']);
-        $this->assertEquals('Unknown column: Unknown. Verify the column name or create the column.', $unknown['body']['message']);
+        $this->assertEquals('The column \'Unknown\' required for the index could not be found. Please confirm all your columns are in the available state.', $unknown['body']['message']);
 
         $index1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1385,7 +1387,8 @@ trait DatabasesBase
             'orders' => ['DESC'], // Check order is removed in API
         ]);
 
-        $this->assertEquals(202, $index1['headers']['status-code']);
+        $this->assertEquals(400, $index1['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index1['body']['message']);
 
         $index2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1397,7 +1400,8 @@ trait DatabasesBase
             'columns' => ['integers'], // array column
         ]);
 
-        $this->assertEquals(202, $index2['headers']['status-code']);
+        $this->assertEquals(400, $index2['headers']['status-code']);
+        $this->assertEquals('Creating indexes on array attributes is not currently supported.', $index2['body']['message']);
 
         /**
          * Create Indexes by worker
@@ -1411,7 +1415,7 @@ trait DatabasesBase
         ]), []);
 
         $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(8, $movies['body']['indexes']);
+        $this->assertCount(4, $movies['body']['indexes']);
         $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);
@@ -7625,6 +7629,267 @@ trait DatabasesBase
     /**
      * @depends testCreateDatabase
      */
+    public function testInvalidRelationshipDocumentId(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        // Create parent table
+        $parentTable = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'ParentTable',
+        ]);
+        $this->assertEquals(201, $parentTable['headers']['status-code']);
+        $parentTableId = $parentTable['body']['$id'];
+
+        // Create child table
+        $childTable = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'ChildTable',
+        ]);
+        $this->assertEquals(201, $childTable['headers']['status-code']);
+        $childTableId = $childTable['body']['$id'];
+
+        // Add string column to parent
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 255,
+            'required' => false,
+        ]);
+
+        // Add string column to child
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $childTableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => false,
+        ]);
+
+        // Create one-to-many relationship
+        $relationship = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/columns/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedTableId' => $childTableId,
+            'type' => Database::RELATION_ONE_TO_MANY,
+            'twoWay' => false,
+            'key' => 'children',
+        ]);
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+
+        // Wait for relationship column to be available
+        $this->assertEventually(function () use ($databaseId, $parentTableId) {
+            $columns = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/columns', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            $columnKeys = array_column($columns['body']['columns'], 'key');
+            $this->assertContains('children', $columnKeys, "Relationship column 'children' not found in table {$parentTableId} of database {$databaseId}");
+        }, 2000, 200);
+
+        // ID too long (>36 chars) should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 1',
+                'children' => [
+                    [
+                        '$id' => 'this_id_is_way_too_long_and_should_fail_validation_check',
+                        'title' => 'Child 1',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // ID with invalid characters should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 2',
+                'children' => [
+                    [
+                        '$id' => 'invalid@id#with$special%chars',
+                        'title' => 'Child 2',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // ID starting with underscore should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 3',
+                'children' => [
+                    [
+                        '$id' => '_startsWithUnderscore',
+                        'title' => 'Child 3',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Valid ID should succeed
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 4',
+                'children' => [
+                    [
+                        '$id' => 'valid-id-123',
+                        'title' => 'Child 4',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $parentRowId = $response['body']['$id'];
+
+        // Update with invalid relationship ID should fail
+        $response = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows/' . $parentRowId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'children' => [
+                    [
+                        '$id' => 'another@invalid#id',
+                        'title' => 'Child 5',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Invalid string relation ID should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 6',
+                'children' => [
+                    'invalid@string#id',
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Integer as relation value should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 7',
+                'children' => [
+                    12345,
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // unique() as $id should succeed
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 8',
+                'children' => [
+                    [
+                        '$id' => 'unique()',
+                        'title' => 'Child 8',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Empty string as $id should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 9',
+                'children' => [
+                    [
+                        '$id' => '',
+                        'title' => 'Child 9',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Valid ID with allowed special chars (hyphen, period) should succeed
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 10',
+                'children' => [
+                    [
+                        '$id' => 'valid.id-with_chars',
+                        'title' => 'Child 10',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
     public function testTimeout(array $data): void
     {
         $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $data['databaseId'] . '/tables', array_merge([
@@ -7756,6 +8021,8 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
         $this->assertEquals(200, $inc['headers']['status-code']);
+        $this->assertEquals($tableId, $inc['body']['$tableId']);
+        $this->assertEquals($databaseId, $inc['body']['$databaseId']);
         $this->assertEquals(6, $inc['body']['count']);
 
         // Verify count = 6
@@ -7868,6 +8135,8 @@ trait DatabasesBase
         ]));
         $this->assertEquals(200, $dec['headers']['status-code']);
         $this->assertEquals(9, $dec['body']['count']);
+        $this->assertEquals($tableId, $dec['body']['$tableId']);
+        $this->assertEquals($databaseId, $dec['body']['$databaseId']);
 
         $get = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows/' . $rowId, array_merge([
             'content-type' => 'application/json',

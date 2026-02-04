@@ -42,7 +42,7 @@ class Update extends Action
                     group: 'databases',
                     name: 'update',
                     description: '/docs/references/databases/update.md',
-                    auth: [AuthType::KEY],
+                    auth: [AuthType::ADMIN, AuthType::KEY],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_OK,
@@ -57,7 +57,7 @@ class Update extends Action
                 ),
             ])
             ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.')
+            ->param('name', null, new Text(128), 'Database name. Max length: 128 chars.', true)
             ->param('enabled', true, new Boolean(), 'Is database enabled? When set to \'disabled\', users cannot access the database but Server SDKs with an API key can still read and write to the database. No data is lost when this is toggled.', true)
             ->inject('response')
             ->inject('dbForProject')
@@ -65,18 +65,23 @@ class Update extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $name, bool $enabled, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $databaseId, ?string $name, bool $enabled, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
     {
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
-            throw new Exception(Exception::DATABASE_NOT_FOUND);
+            throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
         }
 
+        if ($name) {
+            $database = $database->setAttribute('name', $name);
+        }
+
+        $searchName = $name ?? $database->getAttribute('name');
+
         $database = $dbForProject->updateDocument('databases', $databaseId, $database
-            ->setAttribute('name', $name)
             ->setAttribute('enabled', $enabled)
-            ->setAttribute('search', implode(' ', [$databaseId, $name])));
+            ->setAttribute('search', implode(' ', [$databaseId, $searchName])));
 
         $queueForEvents->setParam('databaseId', $database->getId());
 

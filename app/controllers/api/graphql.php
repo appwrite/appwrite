@@ -18,27 +18,28 @@ use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
-use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http;
 use Utopia\System\System;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 
-App::init()
+Http::init()
     ->groups(['graphql'])
     ->inject('project')
-    ->action(function (Document $project) {
+    ->inject('authorization')
+    ->action(function (Document $project, Authorization $authorization) {
         if (
             array_key_exists('graphql', $project->getAttribute('apis', []))
             && !$project->getAttribute('apis', [])['graphql']
-            && !(User::isPrivileged(Authorization::getRoles()) || User::isApp(Authorization::getRoles()))
+            && !(User::isPrivileged($authorization->getRoles()) || User::isApp($authorization->getRoles()))
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
         }
     });
 
-App::get('/v1/graphql')
+Http::get('/v1/graphql')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -46,7 +47,7 @@ App::get('/v1/graphql')
         namespace: 'graphql',
         group: 'graphql',
         name: 'get',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         hide: true,
         description: '/docs/references/graphql/get.md',
         responses: [
@@ -85,7 +86,7 @@ App::get('/v1/graphql')
             ->json($output);
     });
 
-App::post('/v1/graphql/mutation')
+Http::post('/v1/graphql/mutation')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -93,7 +94,7 @@ App::post('/v1/graphql/mutation')
         namespace: 'graphql',
         group: 'graphql',
         name: 'mutation',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         description: '/docs/references/graphql/post.md',
         responses: [
             new SDKResponse(
@@ -136,7 +137,7 @@ App::post('/v1/graphql/mutation')
             ->json($output);
     });
 
-App::post('/v1/graphql')
+Http::post('/v1/graphql')
     ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
@@ -144,7 +145,7 @@ App::post('/v1/graphql')
         namespace: 'graphql',
         group: 'graphql',
         name: 'query',
-        auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+        auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
         description: '/docs/references/graphql/post.md',
         responses: [
             new SDKResponse(
@@ -223,12 +224,15 @@ function execute(
     $flags = DebugFlag::INCLUDE_DEBUG_MESSAGE | DebugFlag::INCLUDE_TRACE;
     $validations = GraphQL::getStandardValidationRules();
 
-    if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
+    if (System::getEnv('_APP_GRAPHQL_INTROSPECTION', 'enabled') === 'disabled') {
         $validations[] = new DisableIntrospection();
+    }
+
+    if (System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled') {
         $validations[] = new QueryComplexity($maxComplexity);
         $validations[] = new QueryDepth($maxDepth);
     }
-    if (App::getMode() === App::MODE_TYPE_PRODUCTION) {
+    if (Http::getMode() === Http::MODE_TYPE_PRODUCTION) {
         $flags = DebugFlag::NONE;
     }
 
@@ -329,7 +333,7 @@ function processResult($result, $debugFlags): array
     );
 }
 
-App::shutdown()
+Http::shutdown()
     ->groups(['schema'])
     ->inject('project')
     ->action(function (Document $project) {

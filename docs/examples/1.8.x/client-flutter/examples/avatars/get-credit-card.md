@@ -1,4 +1,6 @@
+```dart
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -8,7 +10,7 @@ Avatars avatars = Avatars(client);
 
 // Downloading file
 Uint8List bytes = await avatars.getCreditCard(
-    code: CreditCard.americanExpress,
+    code: enums.CreditCard.americanExpress,
     width: 0, // optional
     height: 0, // optional
     quality: -1, // optional
@@ -20,7 +22,7 @@ file.writeAsBytesSync(bytes);
 // Displaying image preview
 FutureBuilder(
     future: avatars.getCreditCard(
-    code: CreditCard.americanExpress,
+    code: enums.CreditCard.americanExpress,
     width:0 , // optional
     height:0 , // optional
     quality:-1 , // optional
@@ -31,3 +33,4 @@ FutureBuilder(
           : CircularProgressIndicator();
     }
 );
+```

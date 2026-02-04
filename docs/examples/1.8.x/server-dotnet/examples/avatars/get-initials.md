@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ byte[] result = await avatars.GetInitials(
     width: 0, // optional
     height: 0, // optional
     background: "" // optional
-);
+);```

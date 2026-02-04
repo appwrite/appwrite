@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
@@ -12,7 +13,8 @@ val functions = Functions(client)
 
 val response = functions.createVcsDeployment(
     functionId = "<FUNCTION_ID>",
-    type =  VCSReferenceType.BRANCH,
+    type = VCSReferenceType.BRANCH,
     reference = "<REFERENCE>",
     activate = false // optional
 )
+```

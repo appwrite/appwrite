@@ -9,6 +9,11 @@ use Utopia\System\System;
 
 class Comment
 {
+    public function __construct(
+        private array $platform
+    ) {
+    }
+
     // TODO: Add more tips
     protected array $tips = [
         'Appwrite has crossed the 50K GitHub stars milestone with hundreds of active contributors',
@@ -114,7 +119,7 @@ class Comment
         $i = 0;
         foreach ($projects as $projectId => $project) {
             $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-            $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+            $hostname = $this->platform['consoleHostname'] ?? '';
 
             $text .= "## {$project['name']}\n\n";
             $text .= "Project ID: `{$projectId}`\n\n";
@@ -228,7 +233,7 @@ class Comment
     public function generatImage(string $pathLight, string $pathDark, string $alt, int $width): string
     {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_CONSOLE_DOMAIN', System::getEnv('_APP_DOMAIN', ''));
+        $hostname = $this->platform['consoleHostname'] ?? '';
 
         $imageLight = $protocol . '://' . $hostname . $pathLight;
         $imageDark = $protocol . '://' . $hostname . $pathDark;

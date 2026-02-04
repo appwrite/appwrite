@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,7 +13,14 @@ tables_db = TablesDB.new(client)
 result = tables_db.update_rows(
     database_id: '<DATABASE_ID>',
     table_id: '<TABLE_ID>',
-    data: {}, # optional
+    data: {
+        "username" => "walter.obrien",
+        "email" => "walter.obrien@example.com",
+        "fullName" => "Walter O'Brien",
+        "age" => 33,
+        "isAdmin" => false
+    }, # optional
     queries: [], # optional
     transaction_id: '<TRANSACTION_ID>' # optional
 )
+```

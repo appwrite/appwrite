@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -16,3 +17,4 @@ result = databases.update_point_attribute(
     default = [1, 2], # optional
     new_key = '' # optional
 )
+```

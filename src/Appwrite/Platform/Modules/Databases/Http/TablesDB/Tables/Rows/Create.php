@@ -56,7 +56,7 @@ class Create extends DocumentCreate
                     name: self::getName(),
                     desc: 'Create row',
                     description: '/docs/references/tablesdb/create-row.md',
-                    auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_CREATED,
@@ -111,6 +111,8 @@ class Create extends DocumentCreate
             ->inject('queueForFunctions')
             ->inject('queueForWebhooks')
             ->inject('plan')
+            ->inject('authorization')
+            ->inject('eventProcessor')
             ->callback($this->action(...));
     }
 }

@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 import 'package:dart_appwrite/permission.dart';
 import 'package:dart_appwrite/role.dart';
@@ -16,4 +17,7 @@ Collection result = await databases.createCollection(
     permissions: [Permission.read(Role.any())], // (optional)
     documentSecurity: false, // (optional)
     enabled: false, // (optional)
+    attributes: [], // (optional)
+    indexes: [], // (optional)
 );
+```

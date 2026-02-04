@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -12,3 +13,4 @@ let execution = try await functions.getExecution(
     executionId: "<EXECUTION_ID>"
 )
 
+```

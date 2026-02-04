@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 from appwrite.enums import RelationshipType
@@ -20,3 +21,4 @@ result = databases.create_relationship_attribute(
     two_way_key = '', # optional
     on_delete = RelationMutate.CASCADE # optional
 )
+```

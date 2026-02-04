@@ -1,3 +1,4 @@
+```javascript
 import { Client, TablesDB, Permission, Role } from "@appwrite.io/console";
 
 const client = new Client()
@@ -12,7 +13,10 @@ const result = await tablesDB.createTable({
     name: '<NAME>',
     permissions: [Permission.read(Role.any())], // optional
     rowSecurity: false, // optional
-    enabled: false // optional
+    enabled: false, // optional
+    columns: [], // optional
+    indexes: [] // optional
 });
 
 console.log(result);
+```

@@ -1,10 +1,12 @@
+```php
 <?php
 
 use Appwrite\Client;
 use Appwrite\Services\Avatars;
 use Appwrite\Enums\Theme;
 use Appwrite\Enums\Timezone;
-use Appwrite\Enums\Output;
+use Appwrite\Enums\BrowserPermission;
+use Appwrite\Enums\ImageFormat;
 
 $client = (new Client())
     ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -15,23 +17,26 @@ $avatars = new Avatars($client);
 
 $result = $avatars->getScreenshot(
     url: 'https://example.com',
-    headers: [], // optional
-    viewportWidth: 1, // optional
-    viewportHeight: 1, // optional
-    scale: 0.1, // optional
-    theme: Theme::LIGHT(), // optional
-    userAgent: '<USER_AGENT>', // optional
-    fullpage: false, // optional
-    locale: '<LOCALE>', // optional
-    timezone: Timezone::AFRICAABIDJAN(), // optional
-    latitude: -90, // optional
-    longitude: -180, // optional
-    accuracy: 0, // optional
-    touch: false, // optional
-    permissions: [], // optional
-    sleep: 0, // optional
-    width: 0, // optional
-    height: 0, // optional
-    quality: -1, // optional
-    output: Output::JPG() // optional
-);
+    headers: [
+        'Authorization' => 'Bearer token123',
+        'X-Custom-Header' => 'value'
+    ], // optional
+    viewportWidth: 1920, // optional
+    viewportHeight: 1080, // optional
+    scale: 2, // optional
+    theme: Theme::DARK(), // optional
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15', // optional
+    fullpage: true, // optional
+    locale: 'en-US', // optional
+    timezone: Timezone::AMERICANEWYORK(), // optional
+    latitude: 37.7749, // optional
+    longitude: -122.4194, // optional
+    accuracy: 100, // optional
+    touch: true, // optional
+    permissions: [BrowserPermission::GEOLOCATION(), BrowserPermission::NOTIFICATIONS()], // optional
+    sleep: 3, // optional
+    width: 800, // optional
+    height: 600, // optional
+    quality: 85, // optional
+    output: ImageFormat::JPEG() // optional
+);```

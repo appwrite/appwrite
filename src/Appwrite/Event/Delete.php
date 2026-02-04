@@ -4,6 +4,7 @@ namespace Appwrite\Event;
 
 use Utopia\Database\Document;
 use Utopia\Queue\Publisher;
+use Utopia\System\System;
 
 class Delete extends Event
 {
@@ -20,8 +21,8 @@ class Delete extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::DELETE_QUEUE_NAME)
-            ->setClass(Event::DELETE_CLASS_NAME);
+            ->setQueue(System::getEnv('_APP_DELETE_QUEUE_NAME', Event::DELETE_QUEUE_NAME))
+            ->setClass(System::getEnv('_APP_DELETE_CLASS_NAME', Event::DELETE_CLASS_NAME));
     }
 
     /**

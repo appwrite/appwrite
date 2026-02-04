@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = functions.create_template_deployment(
     reference: '<REFERENCE>',
     activate: false # optional
 )
+```

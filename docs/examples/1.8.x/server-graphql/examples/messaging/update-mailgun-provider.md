@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingUpdateMailgunProvider(
         providerId: "<PROVIDER_ID>",
@@ -22,3 +23,4 @@ mutation {
         options
     }
 }
+```

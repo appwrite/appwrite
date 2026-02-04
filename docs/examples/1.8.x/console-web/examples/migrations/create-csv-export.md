@@ -1,3 +1,4 @@
+```javascript
 import { Client, Migrations } from "@appwrite.io/console";
 
 const client = new Client()
@@ -19,3 +20,4 @@ const result = await migrations.createCSVExport({
 });
 
 console.log(result);
+```

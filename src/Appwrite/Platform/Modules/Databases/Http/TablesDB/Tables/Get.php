@@ -37,7 +37,7 @@ class Get extends CollectionGet
                 group: 'tables',
                 name: self::getName(),
                 description: '/docs/references/tablesdb/get-table.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -50,6 +50,7 @@ class Get extends CollectionGet
             ->param('tableId', '', new UID(), 'Table ID.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

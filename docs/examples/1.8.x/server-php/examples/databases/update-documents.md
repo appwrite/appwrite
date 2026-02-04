@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -13,7 +14,13 @@ $databases = new Databases($client);
 $result = $databases->updateDocuments(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    data: [], // optional
+    data: [
+        'username' => 'walter.obrien',
+        'email' => 'walter.obrien@example.com',
+        'fullName' => 'Walter O'Brien',
+        'age' => 33,
+        'isAdmin' => false
+    ], // optional
     queries: [], // optional
     transactionId: '<TRANSACTION_ID>' // optional
-);
+);```

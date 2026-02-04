@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -13,3 +14,4 @@ result = messaging.update_topic(
     name = '<NAME>', # optional
     subscribe = ["any"] # optional
 )
+```

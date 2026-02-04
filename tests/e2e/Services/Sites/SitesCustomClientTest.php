@@ -6,7 +6,6 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
-use Utopia\System\System;
 
 class SitesCustomClientTest extends Scope
 {
@@ -122,7 +121,6 @@ class SitesCustomClientTest extends Scope
          * Test for SUCCESS
          */
         $template = $this->getTemplate('starter-for-react');
-        $hostname = System::getEnv('_APP_DOMAIN') ?: '';
         $this->assertEquals(200, $template['headers']['status-code']);
         $this->assertIsArray($template['body']);
         $this->assertEquals('starter-for-react', $template['body']['key']);

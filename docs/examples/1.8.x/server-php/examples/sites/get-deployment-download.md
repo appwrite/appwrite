@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $sites->getDeploymentDownload(
     siteId: '<SITE_ID>',
     deploymentId: '<DEPLOYMENT_ID>',
     type: DeploymentDownloadType::SOURCE() // optional
-);
+);```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $result = $tokens->createFileToken(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>',
     expire: '' // optional
-);
+);```

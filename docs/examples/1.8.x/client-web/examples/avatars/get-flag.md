@@ -1,3 +1,4 @@
+```javascript
 import { Client, Avatars, Flag } from "appwrite";
 
 const client = new Client()
@@ -14,3 +15,4 @@ const result = avatars.getFlag({
 });
 
 console.log(result);
+```

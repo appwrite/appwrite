@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -18,3 +19,4 @@ result = messaging.create_resend_provider(
     reply_to_email = 'email@example.com', # optional
     enabled = False # optional
 )
+```

@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.health import Health
 
@@ -11,3 +12,4 @@ health = Health(client)
 result = health.get_queue_builds(
     threshold = None # optional
 )
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -18,4 +19,4 @@ ColumnString result = await tablesDB.CreateStringColumn(
     default: "<DEFAULT>", // optional
     array: false, // optional
     encrypt: false // optional
-);
+);```

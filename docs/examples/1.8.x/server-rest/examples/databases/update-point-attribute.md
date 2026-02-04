@@ -1,3 +1,4 @@
+```http
 PATCH /v1/databases/{databaseId}/collections/{collectionId}/attributes/point/{key} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -10,3 +11,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "default": [1, 2],
   "newKey": ""
 }
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -18,3 +19,4 @@ result = tables_db.increment_row_column(
     max: null, # optional
     transaction_id: '<TRANSACTION_ID>' # optional
 )
+```

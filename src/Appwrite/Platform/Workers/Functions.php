@@ -8,6 +8,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
 use Executor\Executor;
@@ -15,7 +16,6 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
@@ -87,6 +87,7 @@ class Functions extends Action
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
+        $platform = $payload['platform'] ?? Config::getParam('platform', []);
         $function = new Document($payload['function'] ?? []);
         $functionId = $payload['functionId'] ?? '';
         $user = new Document($payload['user'] ?? []);
@@ -121,14 +122,16 @@ class Functions extends Action
         $log->addTag('type', $type);
 
         if (!empty($events)) {
-            $limit = 30;
-            $sum = 30;
+            $limit = 100;
+            $sum = 100;
             $offset = 0;
             while ($sum >= $limit) {
                 $functions = $dbForProject->find('functions', [
+                    Query::select(['$id', 'events']), // Skip variables subqueries
+                    Query::contains('events', $events),
                     Query::limit($limit),
                     Query::offset($offset),
-                    Query::orderAsc('name'),
+                    Query::orderAsc('$sequence'),
                 ]);
 
                 $sum = \count($functions);
@@ -145,6 +148,11 @@ class Functions extends Action
                         Console::log('Function ' . $function->getId() . ' is blocked, skipping execution.');
                         continue;
                     }
+
+                    /**
+                     * get variables subqueries cached
+                     */
+                    $function = $dbForProject->getDocument('functions', $function->getId());
 
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
 
@@ -166,6 +174,7 @@ class Functions extends Action
                             'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
                             'content-type' => 'application/json'
                         ],
+                        platform: $platform,
                         data: null,
                         user: $user,
                         jwt: null,
@@ -206,6 +215,7 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
+                    platform: $platform,
                     data: $data,
                     user: $user,
                     jwt: $jwt,
@@ -231,6 +241,7 @@ class Functions extends Action
                     path: $path,
                     method: $method,
                     headers: $headers,
+                    platform: $platform,
                     data: $data,
                     user: $user,
                     jwt: $jwt,
@@ -261,8 +272,8 @@ class Functions extends Action
         string $path,
         string $method,
         Document $user,
-        string $jwt = null,
-        string $event = null,
+        ?string $jwt = null,
+        ?string $event = null,
     ): void {
         $executionId = ID::unique();
         $headers['x-appwrite-execution-id'] = $executionId ?? '';
@@ -326,7 +337,6 @@ class Functions extends Action
      * @param string|null $eventData
      * @param string|null $executionId
      * @return void
-     * @throws Authorization
      * @throws Structure
      * @throws \Utopia\Database\Exception
      * @throws Conflict
@@ -346,12 +356,13 @@ class Functions extends Action
         string $path,
         string $method,
         array $headers,
-        string $data = null,
+        array $platform,
+        ?string $data = null,
         ?Document $user = null,
-        string $jwt = null,
-        string $event = null,
-        string $eventData = null,
-        string $executionId = null,
+        ?string $jwt = null,
+        ?string $event = null,
+        ?string $eventData = null,
+        ?string $executionId = null,
     ): void {
         $user ??= new Document();
         $functionId = $function->getId();
@@ -452,7 +463,11 @@ class Functions extends Action
         if ($execution->getAttribute('status') !== 'processing') {
             $execution->setAttribute('status', 'processing');
 
-            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            try {
+                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            } catch (\Throwable $e) {
+                $log->addExtra('updateError', $e->getMessage());
+            }
         }
 
         $durationStart = \microtime(true);
@@ -487,8 +502,7 @@ class Functions extends Action
         }
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = System::getEnv('_APP_DOMAIN');
-        $endpoint = $protocol . '://' . $hostname . "/v1";
+        $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
         // Appwrite vars
         $vars = \array_merge($vars, [
@@ -596,6 +610,13 @@ class Functions extends Action
             $error = $th->getMessage();
             $errorCode = $th->getCode();
         } finally {
+            /** Update execution status */
+            try {
+                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            } catch (\Throwable $e) {
+                $log->addExtra('updateError', $e->getMessage());
+            }
+
             /** Trigger usage queue */
             $queueForStatsUsage
                 ->setProject($project)
@@ -611,8 +632,6 @@ class Functions extends Action
                 ->trigger()
             ;
         }
-
-        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
 
         $executionModel = new Execution();
         $realtimeExecution = $executionModel->filter(new Document($execution->getArrayCopy()));
@@ -643,7 +662,11 @@ class Functions extends Action
             ->trigger();
 
         if (!empty($error)) {
-            throw new Exception($error, $errorCode);
+            throw new AppwriteException(
+                AppwriteException::GENERAL_SERVER_ERROR,
+                $error ?: 'Function execution failed with no error message',
+                $errorCode
+            );
         }
     }
 }

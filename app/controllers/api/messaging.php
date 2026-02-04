@@ -25,7 +25,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -36,6 +35,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
@@ -43,6 +43,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
+use Utopia\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -56,7 +57,7 @@ use Utopia\Validator\WhiteList;
 
 use function Swoole\Coroutine\batch;
 
-App::post('/v1/messaging/providers/mailgun')
+Http::post('/v1/messaging/providers/mailgun')
     ->desc('Create Mailgun provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -150,7 +151,7 @@ App::post('/v1/messaging/providers/mailgun')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/sendgrid')
+Http::post('/v1/messaging/providers/sendgrid')
     ->desc('Create Sendgrid provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -232,7 +233,7 @@ App::post('/v1/messaging/providers/sendgrid')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/resend')
+Http::post('/v1/messaging/providers/resend')
     ->desc('Create Resend provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -314,7 +315,7 @@ App::post('/v1/messaging/providers/resend')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/smtp')
+Http::post('/v1/messaging/providers/smtp')
     ->desc('Create SMTP provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -339,6 +340,7 @@ App::post('/v1/messaging/providers/smtp')
                 since: '1.8.0',
                 replaceWith: 'messaging.createSMTPProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -428,7 +430,7 @@ App::post('/v1/messaging/providers/smtp')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/msg91')
+Http::post('/v1/messaging/providers/msg91')
     ->desc('Create Msg91 provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -511,7 +513,7 @@ App::post('/v1/messaging/providers/msg91')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/telesign')
+Http::post('/v1/messaging/providers/telesign')
     ->desc('Create Telesign provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -595,7 +597,7 @@ App::post('/v1/messaging/providers/telesign')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/textmagic')
+Http::post('/v1/messaging/providers/textmagic')
     ->desc('Create Textmagic provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -679,7 +681,7 @@ App::post('/v1/messaging/providers/textmagic')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/twilio')
+Http::post('/v1/messaging/providers/twilio')
     ->desc('Create Twilio provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -763,7 +765,7 @@ App::post('/v1/messaging/providers/twilio')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/vonage')
+Http::post('/v1/messaging/providers/vonage')
     ->desc('Create Vonage provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -847,7 +849,7 @@ App::post('/v1/messaging/providers/vonage')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/fcm')
+Http::post('/v1/messaging/providers/fcm')
     ->desc('Create FCM provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -872,6 +874,7 @@ App::post('/v1/messaging/providers/fcm')
                 since: '1.8.0',
                 replaceWith: 'messaging.createFCMProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -936,7 +939,7 @@ App::post('/v1/messaging/providers/fcm')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/apns')
+Http::post('/v1/messaging/providers/apns')
     ->desc('Create APNS provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
@@ -961,6 +964,7 @@ App::post('/v1/messaging/providers/apns')
                 since: '1.8.0',
                 replaceWith: 'messaging.createAPNSProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -1048,7 +1052,7 @@ App::post('/v1/messaging/providers/apns')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::get('/v1/messaging/providers')
+Http::get('/v1/messaging/providers')
     ->desc('List providers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
@@ -1070,8 +1074,9 @@ App::get('/v1/messaging/providers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -1097,7 +1102,7 @@ App::get('/v1/messaging/providers')
             }
 
             $providerId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
@@ -1117,7 +1122,7 @@ App::get('/v1/messaging/providers')
         ]), Response::MODEL_PROVIDER_LIST);
     });
 
-App::get('/v1/messaging/providers/:providerId/logs')
+Http::get('/v1/messaging/providers/:providerId/logs')
     ->desc('List provider logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
@@ -1142,7 +1147,8 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $providerId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1155,15 +1161,12 @@ App::get('/v1/messaging/providers/:providerId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
         $resource = 'provider/' . $providerId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
         $output = [];
 
         foreach ($logs as $i => &$log) {
@@ -1210,12 +1213,12 @@ App::get('/v1/messaging/providers/:providerId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/messaging/providers/:providerId')
+Http::get('/v1/messaging/providers/:providerId')
     ->desc('Get provider')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
@@ -1246,7 +1249,7 @@ App::get('/v1/messaging/providers/:providerId')
         $response->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/mailgun/:providerId')
+Http::patch('/v1/messaging/providers/mailgun/:providerId')
     ->desc('Update Mailgun provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1359,7 +1362,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/sendgrid/:providerId')
+Http::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->desc('Update Sendgrid provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1457,7 +1460,7 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/resend/:providerId')
+Http::patch('/v1/messaging/providers/resend/:providerId')
     ->desc('Update Resend provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1555,7 +1558,7 @@ App::patch('/v1/messaging/providers/resend/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/smtp/:providerId')
+Http::patch('/v1/messaging/providers/smtp/:providerId')
     ->desc('Update SMTP provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1580,6 +1583,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateSMTPProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -1703,7 +1707,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/msg91/:providerId')
+Http::patch('/v1/messaging/providers/msg91/:providerId')
     ->desc('Update Msg91 provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1790,7 +1794,7 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/telesign/:providerId')
+Http::patch('/v1/messaging/providers/telesign/:providerId')
     ->desc('Update Telesign provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1879,7 +1883,7 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/textmagic/:providerId')
+Http::patch('/v1/messaging/providers/textmagic/:providerId')
     ->desc('Update Textmagic provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -1968,7 +1972,7 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/twilio/:providerId')
+Http::patch('/v1/messaging/providers/twilio/:providerId')
     ->desc('Update Twilio provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -2057,7 +2061,7 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/vonage/:providerId')
+Http::patch('/v1/messaging/providers/vonage/:providerId')
     ->desc('Update Vonage provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -2146,7 +2150,7 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/fcm/:providerId')
+Http::patch('/v1/messaging/providers/fcm/:providerId')
     ->desc('Update FCM provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -2171,6 +2175,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateFCMProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -2241,7 +2246,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     });
 
 
-App::patch('/v1/messaging/providers/apns/:providerId')
+Http::patch('/v1/messaging/providers/apns/:providerId')
     ->desc('Update APNS provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
@@ -2266,6 +2271,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateAPNSProvider',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -2362,7 +2368,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::delete('/v1/messaging/providers/:providerId')
+Http::delete('/v1/messaging/providers/:providerId')
     ->desc('Delete provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.delete')
@@ -2405,7 +2411,7 @@ App::delete('/v1/messaging/providers/:providerId')
             ->noContent();
     });
 
-App::post('/v1/messaging/topics')
+Http::post('/v1/messaging/topics')
     ->desc('Create topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.create')
@@ -2455,7 +2461,7 @@ App::post('/v1/messaging/topics')
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
-App::get('/v1/messaging/topics')
+Http::get('/v1/messaging/topics')
     ->desc('List topics')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
@@ -2477,8 +2483,9 @@ App::get('/v1/messaging/topics')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2504,7 +2511,7 @@ App::get('/v1/messaging/topics')
             }
 
             $topicId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
@@ -2524,7 +2531,7 @@ App::get('/v1/messaging/topics')
         ]), Response::MODEL_TOPIC_LIST);
     });
 
-App::get('/v1/messaging/topics/:topicId/logs')
+Http::get('/v1/messaging/topics/:topicId/logs')
     ->desc('List topic logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
@@ -2549,7 +2556,8 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $topicId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2562,15 +2570,12 @@ App::get('/v1/messaging/topics/:topicId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
         $resource = 'topic/' . $topicId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, offset: $offset, limit: $limit);
 
         $output = [];
 
@@ -2618,12 +2623,12 @@ App::get('/v1/messaging/topics/:topicId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/messaging/topics/:topicId')
+Http::get('/v1/messaging/topics/:topicId')
     ->desc('Get topic')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
@@ -2655,7 +2660,7 @@ App::get('/v1/messaging/topics/:topicId')
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
-App::patch('/v1/messaging/topics/:topicId')
+Http::patch('/v1/messaging/topics/:topicId')
     ->desc('Update topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.update')
@@ -2706,7 +2711,7 @@ App::patch('/v1/messaging/topics/:topicId')
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
-App::delete('/v1/messaging/topics/:topicId')
+Http::delete('/v1/messaging/topics/:topicId')
     ->desc('Delete topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.delete')
@@ -2754,7 +2759,7 @@ App::delete('/v1/messaging/topics/:topicId')
             ->noContent();
     });
 
-App::post('/v1/messaging/topics/:topicId/subscribers')
+Http::post('/v1/messaging/topics/:topicId/subscribers')
     ->desc('Create subscriber')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.create')
@@ -2780,29 +2785,27 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->param('targetId', '', new UID(), 'Target ID. The target ID to link to the specified Topic ID.')
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
-
-        $validator = new Authorization('subscribe');
-
-        if (!$validator->isValid($topic->getAttribute('subscribe'))) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        if (!$authorization->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber = new Document([
             '$id' => $subscriberId,
@@ -2835,7 +2838,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
                 default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
             };
 
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute(
+            $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute(
                 'topics',
                 $topicId,
                 $totalAttribute,
@@ -2857,7 +2860,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
     });
 
-App::get('/v1/messaging/topics/:topicId/subscribers')
+Http::get('/v1/messaging/topics/:topicId/subscribers')
     ->desc('List subscribers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
@@ -2880,8 +2883,9 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $topicId, array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2892,7 +2896,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             $queries[] = Query::search('search', $search);
         }
 
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2915,7 +2919,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             }
 
             $subscriberId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Subscriber '{$subscriberId}' for the 'cursor' value not found.");
@@ -2929,10 +2933,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
 
-        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
-            return function () use ($subscriber, $dbForProject) {
-                $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-                $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject, $authorization) {
+            return function () use ($subscriber, $dbForProject, $authorization) {
+                $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+                $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
                 return $subscriber
                     ->setAttribute('target', $target)
@@ -2947,7 +2951,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             ]), Response::MODEL_SUBSCRIBER_LIST);
     });
 
-App::get('/v1/messaging/subscribers/:subscriberId/logs')
+Http::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->desc('List subscriber logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
@@ -2972,7 +2976,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $subscriberId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -2985,15 +2990,12 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
         $resource = 'subscriber/' . $subscriberId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
@@ -3041,12 +3043,12 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
+Http::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->desc('Get subscriber')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
@@ -3067,9 +3069,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Authorization $authorization, Response $response) {
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -3081,8 +3084,8 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+        $user = $authorization->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber
             ->setAttribute('target', $target)
@@ -3092,7 +3095,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
     });
 
-App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
+Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->desc('Delete subscriber')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.delete')
@@ -3118,9 +3121,10 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response) {
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Authorization $authorization, Response $response) {
+        $topic = $authorization->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -3143,7 +3147,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
-        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute(
+        $authorization->skip(fn () => $dbForProject->decreaseDocumentAttribute(
             'topics',
             $topicId,
             $totalAttribute,
@@ -3159,7 +3163,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             ->noContent();
     });
 
-App::post('/v1/messaging/messages/email')
+Http::post('/v1/messaging/messages/email')
     ->desc('Create email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
@@ -3318,7 +3322,7 @@ App::post('/v1/messaging/messages/email')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::post('/v1/messaging/messages/sms')
+Http::post('/v1/messaging/messages/sms')
     ->desc('Create SMS')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
@@ -3343,6 +3347,7 @@ App::post('/v1/messaging/messages/sms')
                 since: '1.8.0',
                 replaceWith: 'messaging.createSMS',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -3460,7 +3465,7 @@ App::post('/v1/messaging/messages/sms')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::post('/v1/messaging/messages/push')
+Http::post('/v1/messaging/messages/push')
     ->desc('Create push notification')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
@@ -3506,7 +3511,8 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->inject('platform')
+    ->action(function (string $messageId, string $title, string $body, ?array $topics, ?array $users, ?array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, int $badge, bool $draft, ?string $scheduledAt, bool $contentAvailable, bool $critical, string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response, array $platform) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -3562,8 +3568,8 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $host = System::getEnv('_APP_DOMAIN', 'localhost');
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $endpoint = "$protocol://{$platform['apiHostname']}/v1";
 
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
             if (!\is_null($scheduleTime)) {
@@ -3583,7 +3589,7 @@ App::post('/v1/messaging/messages/push')
             $image = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
-                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
+                'url' => "{$endpoint}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
             ];
         }
 
@@ -3678,7 +3684,7 @@ App::post('/v1/messaging/messages/push')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::get('/v1/messaging/messages')
+Http::get('/v1/messaging/messages')
     ->desc('List messages')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
@@ -3700,8 +3706,9 @@ App::get('/v1/messaging/messages')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('response')
-    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Response $response) {
+    ->action(function (array $queries, string $search, bool $includeTotal, Database $dbForProject, Authorization $authorization, Response $response) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -3727,7 +3734,7 @@ App::get('/v1/messaging/messages')
             }
 
             $messageId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('messages', $messageId));
+            $cursorDocument = $authorization->skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");
@@ -3747,7 +3754,7 @@ App::get('/v1/messaging/messages')
         ]), Response::MODEL_MESSAGE_LIST);
     });
 
-App::get('/v1/messaging/messages/:messageId/logs')
+Http::get('/v1/messaging/messages/:messageId/logs')
     ->desc('List message logs')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
@@ -3772,7 +3779,8 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('audit')
+    ->action(function (string $messageId, array $queries, bool $includeTotal, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Audit $audit) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3785,15 +3793,12 @@ App::get('/v1/messaging/messages/:messageId/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Temp fix for logs
-        $queries[] = Query::or([
-            Query::greaterThan('$createdAt', DateTime::format(new \DateTime('2025-02-26T01:30+00:00'))),
-            Query::lessThan('$createdAt', DateTime::format(new \DateTime('2025-02-13T00:00+00:00'))),
-        ]);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
         $resource = 'message/' . $messageId;
-        $logs = $audit->getLogsByResource($resource, $queries);
+        $logs = $audit->getLogsByResource($resource, limit: $limit, offset: $offset);
 
         $output = [];
 
@@ -3841,12 +3846,12 @@ App::get('/v1/messaging/messages/:messageId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByResource($resource, $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByResource($resource) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/messaging/messages/:messageId/targets')
+Http::get('/v1/messaging/messages/:messageId/targets')
     ->desc('List message targets')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
@@ -3929,7 +3934,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
         ]), Response::MODEL_TARGET_LIST);
     });
 
-App::get('/v1/messaging/messages/:messageId')
+Http::get('/v1/messaging/messages/:messageId')
     ->desc('Get message')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
@@ -3960,7 +3965,7 @@ App::get('/v1/messaging/messages/:messageId')
         $response->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::patch('/v1/messaging/messages/email/:messageId')
+Http::patch('/v1/messaging/messages/email/:messageId')
     ->desc('Update email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
@@ -4167,7 +4172,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::patch('/v1/messaging/messages/sms/:messageId')
+Http::patch('/v1/messaging/messages/sms/:messageId')
     ->desc('Update SMS')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
@@ -4192,6 +4197,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 since: '1.8.0',
                 replaceWith: 'messaging.updateSMS',
             ),
+            public: false,
         ),
         new Method(
             namespace: 'messaging',
@@ -4348,7 +4354,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::patch('/v1/messaging/messages/push/:messageId')
+Http::patch('/v1/messaging/messages/push/:messageId')
     ->desc('Update push notification')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
@@ -4394,7 +4400,8 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->inject('platform')
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?bool $draft, ?string $scheduledAt, ?bool $contentAvailable, ?bool $critical, ?string $priority, Event $queueForEvents, Database $dbForProject, Database $dbForPlatform, Document $project, Messaging $queueForMessaging, Response $response, array $platform) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -4562,9 +4569,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
-            $host = System::getEnv('_APP_DOMAIN', 'localhost');
-            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-
             $scheduleTime = $currentScheduledAt ?? $scheduledAt;
             if (!\is_null($scheduleTime)) {
                 $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
@@ -4580,10 +4584,13 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 'projectId' => $project->getId(),
             ]);
 
+            $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $endpoint = "$protocol://{$platform['apiHostname']}/v1";
+
             $pushData['image'] = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
-                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}"
+                'url' => "{$endpoint}/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
             ];
         }
 
@@ -4608,7 +4615,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::delete('/v1/messaging/messages/:messageId')
+Http::delete('/v1/messaging/messages/:messageId')
     ->desc('Delete message')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.delete')

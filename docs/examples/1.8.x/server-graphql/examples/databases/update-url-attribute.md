@@ -1,3 +1,4 @@
+```graphql
 mutation {
     databasesUpdateUrlAttribute(
         databaseId: "<DATABASE_ID>",
@@ -19,3 +20,4 @@ mutation {
         default
     }
 }
+```

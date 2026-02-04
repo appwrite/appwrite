@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Account account = new Account(client);
 Token result = await account.CreateRecovery(
     email: "email@example.com",
     url: "https://example.com"
-);
+);```

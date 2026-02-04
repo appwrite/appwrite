@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,7 +13,13 @@ Databases databases = new Databases(client);
 DocumentList result = await databases.UpdateDocuments(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
-    data: [object], // optional
+    data: new {
+        username = "walter.obrien",
+        email = "walter.obrien@example.com",
+        fullName = "Walter O'Brien",
+        age = 33,
+        isAdmin = false
+    }, // optional
     queries: new List<string>(), // optional
     transactionId: "<TRANSACTION_ID>" // optional
-);
+);```

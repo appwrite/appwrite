@@ -1,3 +1,4 @@
+```javascript
 import { Client, Storage } from "appwrite";
 
 const client = new Client()
@@ -13,3 +14,4 @@ const result = storage.getFileView({
 });
 
 console.log(result);
+```

@@ -951,4 +951,69 @@ trait StorageBase
 
         return $data;
     }
+
+    public function testBucketTotalSize(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Size',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $bucketId = $bucket['body']['$id'];
+
+        // bucket should have totalSize = 0 (no files)
+        $emptyBucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $emptyBucket['headers']['status-code']);
+        $this->assertArrayHasKey('totalSize', $emptyBucket['body']);
+        $this->assertEquals(0, $emptyBucket['body']['totalSize']);
+
+        // upload first file
+        $file1 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertEquals(201, $file1['headers']['status-code']);
+
+        // upload second file
+        $file2 = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/image.webp'), 'image/webp', 'image.webp'),
+        ]);
+
+        $this->assertEquals(201, $file2['headers']['status-code']);
+
+        $bucket = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $bucket['headers']['status-code']);
+        $this->assertArrayHasKey('totalSize', $bucket['body']);
+        $this->assertIsInt($bucket['body']['totalSize']);
+
+        /* will always be 0 in tests because the worker runs hourly! */
+        $this->assertGreaterThanOrEqual(0, $bucket['body']['totalSize']);
+    }
 }

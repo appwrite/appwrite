@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 from appwrite.permission import Permission
@@ -16,5 +17,8 @@ result = databases.create_collection(
     name = '<NAME>',
     permissions = [Permission.read(Role.any())], # optional
     document_security = False, # optional
-    enabled = False # optional
+    enabled = False, # optional
+    attributes = [], # optional
+    indexes = [] # optional
 )
+```

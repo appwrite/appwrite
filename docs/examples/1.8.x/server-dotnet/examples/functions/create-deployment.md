@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -15,4 +16,4 @@ Deployment result = await functions.CreateDeployment(
     activate: false,
     entrypoint: "<ENTRYPOINT>", // optional
     commands: "<COMMANDS>" // optional
-);
+);```

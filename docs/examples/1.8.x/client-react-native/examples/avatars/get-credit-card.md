@@ -1,3 +1,4 @@
+```javascript
 import { Client, Avatars, CreditCard } from "react-native-appwrite";
 
 const client = new Client()
@@ -14,3 +15,4 @@ const result = avatars.getCreditCard({
 });
 
 console.log(result);
+```

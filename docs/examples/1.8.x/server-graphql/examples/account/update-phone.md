@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountUpdatePhone(
         phone: "+12065550100",
@@ -36,3 +37,4 @@ mutation {
         accessedAt
     }
 }
+```

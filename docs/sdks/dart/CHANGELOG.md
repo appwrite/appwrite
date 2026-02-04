@@ -1,5 +1,26 @@
 # Change Log
 
+## 21.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `getQueueAudits` support to `Health` service.
+* Add longtext/mediumtext/text/varchar attribute and column helpers to `Databases` and `TablesDB` services.
+
+## 20.1.1
+
+* Fix boolean parameter not handled correctly in Client requests
+
+## 20.1.0
+
+* Added ability to create columns and indexes synchronously while creating a table
+
+## 20.0.0
+
+* Rename `VCSDeploymentType` enum to `VCSReferenceType`
+* Change `createTemplateDeployment` method signature: replace `version` parameter with `type` (TemplateReferenceType) and `reference` parameters
+* Add `Theme`, `Timezone` and `Output` enums
+
 ## 19.4.0
 
 * Add `getScreenshot` method to `Avatars` service

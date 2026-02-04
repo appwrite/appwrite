@@ -38,7 +38,7 @@ class Get extends Action
                 group: 'transactions',
                 name: 'getTransaction',
                 description: '/docs/references/databases/get-transaction.md',
-                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,
@@ -58,7 +58,7 @@ class Get extends Action
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
 
         if ($transaction->isEmpty()) {
-            throw new Exception(Exception::TRANSACTION_NOT_FOUND);
+            throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
 
         $response

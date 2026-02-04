@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -17,4 +18,4 @@ $result = $tablesDB->updateUrlColumn(
     required: false,
     default: 'https://example.com',
     newKey: '' // optional
-);
+);```

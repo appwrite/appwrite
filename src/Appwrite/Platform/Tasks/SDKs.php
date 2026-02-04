@@ -12,6 +12,7 @@ use Appwrite\SDK\Language\Flutter;
 use Appwrite\SDK\Language\Go;
 use Appwrite\SDK\Language\GraphQL;
 use Appwrite\SDK\Language\Kotlin;
+use Appwrite\SDK\Language\Markdown;
 use Appwrite\SDK\Language\Node;
 use Appwrite\SDK\Language\PHP;
 use Appwrite\SDK\Language\Python;
@@ -31,9 +32,35 @@ use Utopia\Validator\WhiteList;
 
 class SDKs extends Action
 {
+    protected array $supportedSDKS = [
+        'web',
+        'cli',
+        'php',
+        'nodejs',
+        'deno',
+        'python',
+        'ruby',
+        'flutter',
+        'react-native',
+        'dart',
+        'go',
+        'swift',
+        'apple',
+        'dotnet',
+        'android',
+        'graphql',
+        'rest',
+        'markdown',
+    ];
+
     public static function getName(): string
     {
         return 'sdks';
+    }
+
+    public static function getPlatforms(): array
+    {
+        return Specs::getPlatforms();
     }
 
     public function __construct()
@@ -44,7 +71,6 @@ class SDKs extends Action
             ->param('sdk', null, new Nullable(new Text(256)), 'Selected SDK', optional: true)
             ->param('version', null, new Nullable(new Text(256)), 'Selected SDK', optional: true)
             ->param('git', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we use git push?', optional: true)
-            ->param('production', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we push to production?', optional: true)
             ->param('message', null, new Nullable(new Text(256)), 'Commit Message', optional: true)
             ->param('release', null, new Nullable(new WhiteList(['yes', 'no'])), 'Should we create releases?', optional: true)
             ->param('commit', null, new Nullable(new WhiteList(['yes', 'no'])), 'Actually create releases (yes) or dry-run (no)?', optional: true)
@@ -52,11 +78,14 @@ class SDKs extends Action
             ->callback($this->action(...));
     }
 
-    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $production, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
+    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
     {
         if (!$sdks) {
-            $selectedPlatform ??= Console::confirm('Choose Platform ("' . APP_PLATFORM_CLIENT . '", "' . APP_PLATFORM_SERVER . '", "' . APP_PLATFORM_CONSOLE . '" or "*" for all):');
+            $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
+            if ($selectedSDK !== '*' && !\in_array($selectedSDK, $this->supportedSDKS)) {
+                throw new \Exception('Unknown SDK "' . $selectedSDK . '" given. Options are: ' . implode(', ', $this->supportedSDKS));
+            }
         } else {
             $sdks = explode(',', $sdks);
         }
@@ -70,15 +99,9 @@ class SDKs extends Action
             $git = ($git === 'yes');
 
             $prUrls = [];
-            $createPr = false;
 
             if ($git) {
-                $production ??= Console::confirm('Type "Appwrite" to push code to production git repos');
-                $production = $production === 'Appwrite';
                 $message ??= Console::confirm('Please enter your commit message:');
-
-                $createPr = Console::confirm('Should we create pull request automatically? (yes/no)');
-                $createPr = ($createPr === 'yes');
             }
         }
 
@@ -107,7 +130,7 @@ class SDKs extends Action
             throw new \Exception('Unknown version given');
         }
 
-        $platforms = Config::getParam('platforms');
+        $platforms = Config::getParam('sdks');
         foreach ($platforms as $key => $platform) {
             if ($selectedPlatform !== $key && $selectedPlatform !== '*' && ($sdks === null)) {
                 continue;
@@ -133,7 +156,7 @@ class SDKs extends Action
                 $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/' . $language['key'] . '/';
                 $readme = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/README.md');
                 $readme = ($readme) ? \file_get_contents($readme) : '';
-                $gettingStarted = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
+                $gettingStarted = $language['gettingStarted'] ?? \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/GETTING_STARTED.md');
                 $gettingStarted = ($gettingStarted) ? \file_get_contents($gettingStarted) : '';
                 $examples = \realpath(__DIR__ . '/../../../../docs/sdks/' . $language['key'] . '/EXAMPLES.md');
                 $examples = ($examples) ? \file_get_contents($examples) : '';
@@ -157,7 +180,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 switch ($language['key']) {
                     case 'web':
                         $config = new Web();
-                        if ($platform['key'] === APP_PLATFORM_CONSOLE) {
+                        if ($platform['key'] === APP_SDK_PLATFORM_CONSOLE) {
                             $config->setNPMPackage('@appwrite.io/console');
                             $config->setBowerPackage('@appwrite.io/console');
                         } else {
@@ -188,8 +211,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'php':
                         $config = new PHP();
-                        $config->setComposerVendor('appwrite');
-                        $config->setComposerPackage('appwrite');
+                        $config->setComposerVendor($language['composerVendor'] ?? 'appwrite');
+                        $config->setComposerPackage($language['composerPackage'] ?? 'appwrite');
                         break;
                     case 'nodejs':
                         $config = new Node();
@@ -253,6 +276,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         break;
                     case 'rest':
                         $config = new REST();
+                        break;
+                    case 'markdown':
+                        $config = new Markdown();
+                        $config->setNPMPackage('@appwrite.io/docs');
                         break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
@@ -374,9 +401,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $sdk
                     ->setName($language['name'])
-                    ->setNamespace('io appwrite')
-                    ->setDescription("Appwrite is an open-source backend as a service server that abstract and simplify complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way. Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")
-                    ->setShortDescription('Appwrite is an open-source self-hosted backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API')
+                    ->setNamespace($language['namespace'] ?? 'appwrite')
+                    ->setDescription($language['description'] ?? "Appwrite is an open-source backend as a service server that abstracts and simplifies complex and repetitive development tasks behind a very simple to use REST API. Appwrite aims to help you develop your apps faster and in a more secure way. Use the {$language['name']} SDK to integrate your app with the Appwrite server to easily start interacting with all of Appwrite backend APIs and tools. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)")
+                    ->setShortDescription($language['shortDescription'] ?? 'Appwrite is an open-source self-hosted backend server that abstracts and simplifies complex and repetitive development tasks behind a very simple REST API')
                     ->setLicense($license)
                     ->setLicenseContent($licenseContent)
                     ->setVersion($language['version'])
@@ -401,7 +428,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     ->setDefaultHeaders([
                         'X-Appwrite-Response-Format' => '1.8.0',
                     ])
-                    ->setExclude($language['exclude'] ?? []);
+                    ->setExclude($language['exclude'] ?? [])
+                    ->setTest(false);
 
                 // Make sure we have a clean slate.
                 // Otherwise, all files in this dir will be pushed,
@@ -416,10 +444,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 $gitUrl = $language['gitUrl'];
                 $gitBranch = $language['gitBranch'];
-
-                if (!$production) {
-                    $gitUrl = 'git@github.com:aw-tests/' . $language['gitRepoName'] . '.git';
-                }
 
                 $repoBranch = $language['repoBranch'] ?? 'main';
                 if ($git && !empty($gitUrl)) {
@@ -440,23 +464,17 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git rm -rf --cached . && \
                         git clean -fdx -e .git -e .github && \
                         cp -r ' . $result . '/. ' . $target . '/ && \
-                        (test -d /tmp/.github-backup-$$ && cp -r /tmp/.github-backup-$$/.github . && rm -rf /tmp/.github-backup-$$ || true) && \
+                        (test -d /tmp/.github-backup-$$ && cp -rn /tmp/.github-backup-$$/.github . && rm -rf /tmp/.github-backup-$$ || true) && \
                         git add -A && \
                         git commit -m "' . $message . '" && \
                         git push -u origin ' . $gitBranch . '
                     ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
-                    if ($createPr) {
+                    if ($git) {
                         $prTitle = "feat: {$language['name']} SDK update for version {$language['version']}";
                         $prBody = "This PR contains updates to the {$language['name']} SDK for version {$language['version']}.";
-
-                        $repoName = $language['gitRepoName'];
-                        if (!$production) {
-                            $repoName = 'aw-tests/' . $language['gitRepoName'];
-                        } else {
-                            $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
-                        }
+                        $repoName = $language['gitUserName'] . '/' . $language['gitRepoName'];
 
                         Console::info("Creating pull request for {$language['name']} SDK...");
 

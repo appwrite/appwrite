@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $result = $users->listTargets(
     userId: '<USER_ID>',
     queries: [], // optional
     total: false // optional
-);
+);```

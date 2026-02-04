@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -17,4 +18,4 @@ AttributeString result = await databases.UpdateStringAttribute(
     default: "<DEFAULT>",
     size: 1, // optional
     newKey: "" // optional
-);
+);```

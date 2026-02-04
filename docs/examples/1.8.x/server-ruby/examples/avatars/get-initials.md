@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,3 +16,4 @@ result = avatars.get_initials(
     height: 0, # optional
     background: '' # optional
 )
+```

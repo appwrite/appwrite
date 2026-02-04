@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -18,3 +19,4 @@ result = databases.increment_document_attribute(
     max: null, # optional
     transaction_id: '<TRANSACTION_ID>' # optional
 )
+```

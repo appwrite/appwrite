@@ -2,10 +2,11 @@
 
 namespace Appwrite\Certificates;
 
+use Appwrite\Certificates\Exception\CertificateStatus as CertificateStatusException;
 use Exception;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
+use Utopia\Http;
 use Utopia\Logger\Log;
 
 class LetsEncrypt implements Adapter
@@ -23,7 +24,7 @@ class LetsEncrypt implements Adapter
         $stdout = '';
         $stderr = '';
 
-        $staging = (App::isProduction()) ? '' : ' --dry-run';
+        $staging = (Http::isProduction()) ? '' : ' --dry-run';
         $exit = Console::execute(
             "certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
             . " --email " . $this->email
@@ -82,6 +83,16 @@ class LetsEncrypt implements Adapter
         $validTo = $certData['validTo_time_t'] ?? null;
         $dt = (new \DateTime())->setTimestamp($validTo);
         return DateTime::addSeconds($dt, -60 * 60 * 24 * 30);
+    }
+
+    public function isInstantGeneration(string $domain, ?string $domainType): bool
+    {
+        return true;
+    }
+
+    public function getCertificateStatus(string $domain, ?string $domainType): string
+    {
+        throw new CertificateStatusException('Certificate status retrieval is not supported for LetsEncrypt.');
     }
 
     public function isRenewRequired(string $domain, ?string $domainType, Log $log): bool

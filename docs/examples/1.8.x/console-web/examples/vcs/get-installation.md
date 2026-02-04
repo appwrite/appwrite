@@ -1,3 +1,4 @@
+```javascript
 import { Client, Vcs } from "@appwrite.io/console";
 
 const client = new Client()
@@ -11,3 +12,4 @@ const result = await vcs.getInstallation({
 });
 
 console.log(result);
+```

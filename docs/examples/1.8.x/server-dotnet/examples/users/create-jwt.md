@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ JWT result = await users.CreateJWT(
     userId: "<USER_ID>",
     sessionId: "<SESSION_ID>", // optional
     duration: 0 // optional
-);
+);```

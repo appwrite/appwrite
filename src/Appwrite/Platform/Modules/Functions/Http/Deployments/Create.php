@@ -17,6 +17,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -63,7 +64,7 @@ class Create extends Action
 
                 Use the "command" param to set the entrypoint used to execute your code.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_ACCEPTED,
@@ -88,6 +89,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('queueForBuilds')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -105,7 +107,8 @@ class Create extends Action
         Device $deviceForFunctions,
         Device $deviceForLocal,
         Build $queueForBuilds,
-        array $plan
+        array $plan,
+        Authorization $authorization
     ) {
         $activate = \strval($activate) === 'true' || \strval($activate) === '1';
 
@@ -243,6 +246,7 @@ class Create extends Action
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
                     'buildCommands' => $commands,
+                    'startCommand' => $function->getAttribute('startCommand', ''),
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
@@ -280,6 +284,7 @@ class Create extends Action
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
                     'buildCommands' => $commands,
+                    'startCommand' => $function->getAttribute('startCommand', ''),
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,

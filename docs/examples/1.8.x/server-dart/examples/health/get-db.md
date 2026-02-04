@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -7,4 +8,5 @@ Client client = Client()
 
 Health health = Health(client);
 
-HealthStatus result = await health.getDB();
+HealthStatusList result = await health.getDB();
+```

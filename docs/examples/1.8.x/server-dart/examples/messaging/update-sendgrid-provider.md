@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -17,3 +18,4 @@ Provider result = await messaging.updateSendgridProvider(
     replyToName: '<REPLY_TO_NAME>', // (optional)
     replyToEmail: '<REPLY_TO_EMAIL>', // (optional)
 );
+```

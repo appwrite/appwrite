@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -30,3 +30,4 @@ response, error := service.UpdateSMTPProvider(
     messaging.WithUpdateSMTPProviderReplyToEmail("<REPLY_TO_EMAIL>"),
     messaging.WithUpdateSMTPProviderEnabled(false),
 )
+```

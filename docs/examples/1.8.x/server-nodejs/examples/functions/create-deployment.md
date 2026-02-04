@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 const fs = require('fs');
 
@@ -15,3 +16,4 @@ const result = await functions.createDeployment({
     entrypoint: '<ENTRYPOINT>', // optional
     commands: '<COMMANDS>' // optional
 });
+```

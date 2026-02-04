@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.Permission;
@@ -14,7 +15,13 @@ tablesDB.updateRow(
     "<DATABASE_ID>", // databaseId 
     "<TABLE_ID>", // tableId 
     "<ROW_ID>", // rowId 
-    Map.of("a", "b"), // data (optional)
+    Map.of(
+        "username", "walter.obrien",
+        "email", "walter.obrien@example.com",
+        "fullName", "Walter O'Brien",
+        "age", 33,
+        "isAdmin", false
+    ), // data (optional)
     List.of(Permission.read(Role.any())), // permissions (optional)
     "<TRANSACTION_ID>", // transactionId (optional)
     new CoroutineCallback<>((result, error) -> {
@@ -27,3 +34,4 @@ tablesDB.updateRow(
     })
 );
 
+```

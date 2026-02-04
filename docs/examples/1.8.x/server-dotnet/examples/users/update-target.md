@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -15,4 +16,4 @@ Target result = await users.UpdateTarget(
     identifier: "<IDENTIFIER>", // optional
     providerId: "<PROVIDER_ID>", // optional
     name: "<NAME>" // optional
-);
+);```

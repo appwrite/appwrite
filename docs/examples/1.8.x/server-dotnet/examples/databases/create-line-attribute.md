@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -15,4 +16,4 @@ AttributeLine result = await databases.CreateLineAttribute(
     key: "",
     required: false,
     default: [[1, 2], [3, 4], [5, 6]] // optional
-);
+);```

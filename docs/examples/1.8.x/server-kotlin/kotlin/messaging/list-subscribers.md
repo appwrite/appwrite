@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -15,3 +16,4 @@ val response = messaging.listSubscribers(
     search = "<SEARCH>", // optional
     total = false // optional
 )
+```

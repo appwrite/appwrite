@@ -57,7 +57,7 @@ class Update extends Base
                 description: <<<EOT
                 Update site by its unique ID.
                 EOT,
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -254,6 +254,8 @@ class Update extends Base
             'timeout' => $timeout,
             'installCommand' => $installCommand,
             'buildCommand' => $buildCommand,
+            'deploymentRetention' => 0,
+            'startCommand' => '',
             'outputDirectory' => $outputDirectory,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
@@ -264,6 +266,8 @@ class Update extends Base
             'providerRootDirectory' => $providerRootDirectory,
             'providerSilentMode' => $providerSilentMode,
             'specification' => $specification,
+            'buildSpecification' => $specification,
+            'runtimeSpecification' => $specification,
             'search' => implode(' ', [$siteId, $name, $framework]),
             'buildRuntime' => $buildRuntime,
             'adapter' => $adapter,

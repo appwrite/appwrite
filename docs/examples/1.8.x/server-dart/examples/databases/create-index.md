@@ -1,4 +1,6 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -11,8 +13,9 @@ Index result = await databases.createIndex(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     key: '',
-    type: IndexType.key,
+    type: enums.IndexType.key,
     attributes: [],
-    orders: [], // (optional)
+    orders: [enums.OrderBy.asc], // (optional)
     lengths: [], // (optional)
 );
+```

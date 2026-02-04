@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 import 'package:dart_appwrite/permission.dart';
 import 'package:dart_appwrite/role.dart';
@@ -13,7 +14,14 @@ Row result = await tablesDB.upsertRow(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     rowId: '<ROW_ID>',
-    data: {}, // (optional)
+    data: {
+        "username": "walter.obrien",
+        "email": "walter.obrien@example.com",
+        "fullName": "Walter O'Brien",
+        "age": 33,
+        "isAdmin": false
+    }, // (optional)
     permissions: [Permission.read(Role.any())], // (optional)
     transactionId: '<TRANSACTION_ID>', // (optional)
 );
+```

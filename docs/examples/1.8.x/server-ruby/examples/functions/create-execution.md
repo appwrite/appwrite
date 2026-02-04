@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = functions.create_execution(
     headers: {}, # optional
     scheduled_at: '<SCHEDULED_AT>' # optional
 )
+```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $avatars->getQR(
     size: 1, // optional
     margin: 0, // optional
     download: false // optional
-);
+);```

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     databasesCreateEnumAttribute(
         databaseId: "<DATABASE_ID>",
@@ -21,3 +22,4 @@ mutation {
         default
     }
 }
+```
