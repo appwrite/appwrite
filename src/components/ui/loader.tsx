@@ -1,21 +1,25 @@
 import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
-import { useTheme } from 'next-themes'
 
 // Logo dimensions from SVG viewBox (132×24)
 const LOGO_WIDTH = 132
 const LOGO_HEIGHT = 24
 const CONTENT_MIN_WIDTH = LOGO_WIDTH + 6 + 32 // logo + gap-1.5 + " / 2.0" text
 
+// Loader is always dark regardless of app theme (matches .dark --background)
+const LOADER_BG = 'oklch(0.141 0.005 285.823)'
+const LOADER_TEXT = 'oklch(0.705 0.015 286.067)' // muted-foreground on dark
+
 /**
  * Static fullscreen loader (logo + " / 2.0") with no theme hooks.
  * Used on first paint before client mount so the user sees the branded loader
- * instead of route-level "Loading..." text.
+ * instead of route-level "Loading..." text. Always dark.
  */
 export function StaticFullscreenLoader() {
   return (
     <div
-      className="fixed inset-0 z-[9999] bg-background"
+      className="fixed inset-0 z-[9999]"
+      style={{ backgroundColor: LOADER_BG }}
       aria-label="Loading"
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -30,7 +34,10 @@ export function StaticFullscreenLoader() {
             height={LOGO_HEIGHT}
             className="h-6 w-auto"
           />
-          <span className="text-foreground/60 text-xs font-extralight tracking-tight">
+          <span
+            className="text-xs font-extralight tracking-tight"
+            style={{ color: LOADER_TEXT }}
+          >
             / 2.0
           </span>
         </div>
@@ -49,17 +56,7 @@ export function FullscreenLoader({
   onComplete,
 }: FullscreenLoaderProps) {
   const [shouldRender, setShouldRender] = useState(isVisible)
-  const [mounted, setMounted] = useState(false)
   const [showSpinner, setShowSpinner] = useState(false)
-  const { theme, resolvedTheme } = useTheme()
-
-  // Determine which logo to use based on theme
-  // appwrite-light.svg has dark fill (#19191C) - use on light backgrounds
-  // appwrite-dark.svg has light fill (#EDEDF0) - use on dark backgrounds
-  // Wait for theme to be mounted to avoid hydration mismatch
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   // Show spinner only after 3 seconds of loading
   useEffect(() => {
@@ -73,11 +70,6 @@ export function FullscreenLoader({
       setShowSpinner(false)
     }
   }, [isVisible])
-
-  // Use resolvedTheme when available (handles system theme), otherwise fall back to theme
-  // Only pick logo once theme is resolved to avoid flash
-  const isDark = mounted ? (resolvedTheme ?? theme) === 'dark' : true
-  const logoSrc = isDark ? '/appwrite-dark.svg' : '/appwrite-light.svg'
 
   useEffect(() => {
     if (isVisible) {
@@ -99,35 +91,34 @@ export function FullscreenLoader({
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5, ease: 'easeInOut' }}
-          className="fixed inset-0 z-[9999] bg-background"
+          className="fixed inset-0 z-[9999]"
+          style={{ backgroundColor: LOADER_BG }}
         >
-          {/* Loader content – fixed-size wrapper prevents layout shift when logo/text appear */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <div
               className="flex items-center gap-1.5 min-h-6"
               style={{ minWidth: CONTENT_MIN_WIDTH }}
-              suppressHydrationWarning
             >
-              {mounted ? (
-                <>
-                  <img
-                    src={logoSrc}
-                    alt="Appwrite"
-                    width={LOGO_WIDTH}
-                    height={LOGO_HEIGHT}
-                    className="h-6 w-auto"
-                  />
-                  <span className="text-foreground/60 text-xs font-extralight tracking-tight">/ 2.0</span>
-                </>
-              ) : (
-                <span className="sr-only">Loading</span>
-              )}
+              <img
+                src="/appwrite-dark.svg"
+                alt="Appwrite"
+                width={LOGO_WIDTH}
+                height={LOGO_HEIGHT}
+                className="h-6 w-auto"
+              />
+              <span
+                className="text-xs font-extralight tracking-tight"
+                style={{ color: LOADER_TEXT }}
+              >
+                / 2.0
+              </span>
             </div>
           </div>
-          {/* Spinner at bottom, only shown after 3s */}
           {showSpinner && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-              <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin"></div>
+              <div
+                className="w-4 h-4 border-2 rounded-full animate-spin border-[oklch(0.274_0.006_286.033)] border-t-[oklch(0.705_0.015_286.067)]"
+              />
             </div>
           )}
         </motion.div>

@@ -340,7 +340,7 @@ export async function fetchCouponAccount(couponCode: string) {
  */
 export async function fetchOrganizationUsage(organizationId: string) {
   if (!organizationId) {
-    return undefined
+    return null
   }
   try {
     // Try billing service first (if it exists)
@@ -353,9 +353,9 @@ export async function fetchOrganizationUsage(organizationId: string) {
         organizationId,
       )
     }
-    return undefined
+    return null
   } catch (error) {
-    return undefined
+    return null
   }
 }
 
