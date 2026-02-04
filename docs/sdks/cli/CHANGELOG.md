@@ -1,5 +1,9 @@
 # Change Log
 
+## 13.2.1
+
+- Fix site domain construction
+
 ## 13.2.0
 
 - Feat: Add dedicated commands for text-based attribute management:
