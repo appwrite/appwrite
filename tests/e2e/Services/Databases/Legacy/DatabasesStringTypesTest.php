@@ -18,7 +18,7 @@ class DatabasesStringTypesTest extends Scope
     private static string $databaseId;
     private static string $collectionId;
 
-    public function testCreateDatabase(): array
+    public function testCreateDatabase(): void
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', [
             'content-type' => 'application/json',
@@ -31,16 +31,13 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(201, $database['headers']['status-code']);
         self::$databaseId = $database['body']['$id'];
-
-        return ['databaseId' => $database['body']['$id']];
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
-    public function testCreateCollection(array $data): array
+    public function testCreateCollection(): void
     {
-        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections', [
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . self::$databaseId . '/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -56,20 +53,15 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(201, $collection['headers']['status-code']);
         self::$collectionId = $collection['body']['$id'];
-
-        return [
-            'databaseId' => $data['databaseId'],
-            'collectionId' => $collection['body']['$id'],
-        ];
     }
 
-    /**
-     * @depends testCreateCollection
-     */
-    public function testCreateVarcharAttribute(array $data): array
+    public function testCreateVarcharAttribute(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test SUCCESS: Create varchar attribute with valid size
         $varchar = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', [
@@ -146,17 +138,15 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $varcharMin['headers']['status-code']);
         $this->assertEquals(1, $varcharMin['body']['size']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateCollection
-     */
-    public function testCreateVarcharAttributeFailures(array $data): void
+    public function testCreateVarcharAttributeFailures(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test FAILURE: Size 0
         $varcharZero = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', [
@@ -237,13 +227,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(409, $varcharDuplicate['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateCollection
-     */
-    public function testCreateTextAttribute(array $data): array
+    public function testCreateTextAttribute(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test SUCCESS: Create text attribute
         $text = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text', [
@@ -300,17 +290,15 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $textArray['headers']['status-code']);
         $this->assertEquals(true, $textArray['body']['array']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateCollection
-     */
-    public function testCreateMediumtextAttribute(array $data): array
+    public function testCreateMediumtextAttribute(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test SUCCESS: Create mediumtext attribute
         $mediumtext = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', [
@@ -366,17 +354,15 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $mediumtextArray['headers']['status-code']);
         $this->assertEquals(true, $mediumtextArray['body']['array']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateCollection
-     */
-    public function testCreateLongtextAttribute(array $data): array
+    public function testCreateLongtextAttribute(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test SUCCESS: Create longtext attribute
         $longtext = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/longtext', [
@@ -432,19 +418,17 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $longtextArray['headers']['status-code']);
         $this->assertEquals(true, $longtextArray['body']['array']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateLongtextAttribute
-     */
-    public function testUpdateVarcharAttribute(array $data): array
+    public function testUpdateVarcharAttribute(): void
     {
         $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports VARCHAR type');
 
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Wait for attributes to be created
         sleep(3);
@@ -488,19 +472,17 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(200, $updateKey['headers']['status-code']);
         $this->assertEquals('varchar_renamed', $updateKey['body']['key']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateVarcharAttribute
-     */
-    public function testUpdateTextAttribute(array $data): array
+    public function testUpdateTextAttribute(): void
     {
         $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports TEXT type');
 
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test SUCCESS: Update text default value
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text/text_with_default', [
@@ -514,19 +496,17 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(200, $update['headers']['status-code']);
         $this->assertEquals('Updated text default value', $update['body']['default']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateTextAttribute
-     */
-    public function testUpdateMediumtextAttribute(array $data): array
+    public function testUpdateMediumtextAttribute(): void
     {
         $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports MEDIUMTEXT type');
 
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test SUCCESS: Update mediumtext default value
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext/mediumtext_with_default', [
@@ -540,19 +520,17 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(200, $update['headers']['status-code']);
         $this->assertEquals('Updated mediumtext default', $update['body']['default']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateMediumtextAttribute
-     */
-    public function testUpdateLongtextAttribute(array $data): array
+    public function testUpdateLongtextAttribute(): void
     {
         $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports LONGTEXT type');
 
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test SUCCESS: Update longtext default value
         $update = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/longtext/longtext_with_default', [
@@ -566,17 +544,15 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(200, $update['headers']['status-code']);
         $this->assertEquals('Updated longtext default', $update['body']['default']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateLongtextAttribute
-     */
-    public function testCreateDocumentWithStringTypes(array $data): array
+    public function testCreateDocumentWithStringTypes(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Wait for all attributes to be available
         sleep(2);
@@ -616,17 +592,15 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('Long text content for storing large amounts of data', $document['body']['longtext_field']);
         $this->assertCount(3, $document['body']['varchar_array']);
         $this->assertCount(2, $document['body']['text_array']);
-
-        return array_merge($data, ['documentId' => $document['body']['$id']]);
     }
 
-    /**
-     * @depends testCreateDocumentWithStringTypes
-     */
-    public function testCreateDocumentWithDefaultValues(array $data): void
+    public function testCreateDocumentWithDefaultValues(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test SUCCESS: Create document using default values
         $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
@@ -653,13 +627,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('Updated text default value', $document['body']['text_with_default']);
     }
 
-    /**
-     * @depends testCreateDocumentWithStringTypes
-     */
-    public function testCreateDocumentFailures(array $data): void
+    public function testCreateDocumentFailures(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test FAILURE: Missing required field
         $docMissingRequired = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
@@ -680,13 +654,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(400, $docMissingRequired['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateDocumentWithStringTypes
-     */
-    public function testGetVarcharAttribute(array $data): void
+    public function testGetVarcharAttribute(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar_with_default', [
             'content-type' => 'application/json',
@@ -700,13 +674,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(100, $attribute['body']['size']);
     }
 
-    /**
-     * @depends testCreateDocumentWithStringTypes
-     */
-    public function testGetTextAttribute(array $data): void
+    public function testGetTextAttribute(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text_field', [
             'content-type' => 'application/json',
@@ -719,13 +693,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('text', $attribute['body']['type']);
     }
 
-    /**
-     * @depends testCreateDocumentWithStringTypes
-     */
-    public function testGetMediumtextAttribute(array $data): void
+    public function testGetMediumtextAttribute(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext_field', [
             'content-type' => 'application/json',
@@ -738,13 +712,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('mediumtext', $attribute['body']['type']);
     }
 
-    /**
-     * @depends testCreateDocumentWithStringTypes
-     */
-    public function testGetLongtextAttribute(array $data): void
+    public function testGetLongtextAttribute(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/longtext_field', [
             'content-type' => 'application/json',
@@ -757,13 +731,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('longtext', $attribute['body']['type']);
     }
 
-    /**
-     * @depends testGetLongtextAttribute
-     */
-    public function testDeleteStringTypeAttributes(array $data): void
+    public function testDeleteStringTypeAttributes(): void
     {
-        $databaseId = $data['databaseId'];
-        $collectionId = $data['collectionId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$collectionId, 'Collection must be created first');
+
+        $databaseId = self::$databaseId;
+        $collectionId = self::$collectionId;
 
         // Test SUCCESS: Delete varchar attribute
         $deleteVarchar = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar_max', [

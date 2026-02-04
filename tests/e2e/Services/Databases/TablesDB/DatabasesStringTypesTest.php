@@ -18,7 +18,7 @@ class DatabasesStringTypesTest extends Scope
     private static string $databaseId;
     private static string $tableId;
 
-    public function testCreateDatabase(): array
+    public function testCreateDatabase(): void
     {
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
@@ -31,16 +31,13 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(201, $database['headers']['status-code']);
         self::$databaseId = $database['body']['$id'];
-
-        return ['databaseId' => $database['body']['$id']];
     }
 
-    /**
-     * @depends testCreateDatabase
-     */
-    public function testCreateTable(array $data): array
+    public function testCreateTable(): void
     {
-        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $data['databaseId'] . '/tables', [
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+
+        $table = $this->client->call(Client::METHOD_POST, '/tablesdb/' . self::$databaseId . '/tables', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -56,20 +53,15 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(201, $table['headers']['status-code']);
         self::$tableId = $table['body']['$id'];
-
-        return [
-            'databaseId' => $data['databaseId'],
-            'tableId' => $table['body']['$id'],
-        ];
     }
 
-    /**
-     * @depends testCreateTable
-     */
-    public function testCreateVarcharColumn(array $data): array
+    public function testCreateVarcharColumn(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: Create varchar column with valid size
         $varchar = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar', [
@@ -146,17 +138,15 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $varcharMin['headers']['status-code']);
         $this->assertEquals(1, $varcharMin['body']['size']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateTable
-     */
-    public function testCreateVarcharColumnFailures(array $data): void
+    public function testCreateVarcharColumnFailures(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test FAILURE: Size 0
         $varcharZero = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar', [
@@ -237,13 +227,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(409, $varcharDuplicate['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateTable
-     */
-    public function testCreateTextColumn(array $data): array
+    public function testCreateTextColumn(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: Create text column
         $text = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/text', [
@@ -300,17 +290,15 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $textArray['headers']['status-code']);
         $this->assertEquals(true, $textArray['body']['array']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateTable
-     */
-    public function testCreateMediumtextColumn(array $data): array
+    public function testCreateMediumtextColumn(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: Create mediumtext column
         $mediumtext = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/mediumtext', [
@@ -366,17 +354,15 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $mediumtextArray['headers']['status-code']);
         $this->assertEquals(true, $mediumtextArray['body']['array']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateTable
-     */
-    public function testCreateLongtextColumn(array $data): array
+    public function testCreateLongtextColumn(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: Create longtext column
         $longtext = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/longtext', [
@@ -432,19 +418,17 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(202, $longtextArray['headers']['status-code']);
         $this->assertEquals(true, $longtextArray['body']['array']);
-
-        return $data;
     }
 
-    /**
-     * @depends testCreateLongtextColumn
-     */
-    public function testUpdateVarcharColumn(array $data): array
+    public function testUpdateVarcharColumn(): void
     {
         $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports VARCHAR type');
 
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Wait for columns to be created
         sleep(3);
@@ -488,19 +472,17 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(200, $updateKey['headers']['status-code']);
         $this->assertEquals('varchar_renamed', $updateKey['body']['key']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateVarcharColumn
-     */
-    public function testUpdateTextColumn(array $data): array
+    public function testUpdateTextColumn(): void
     {
         $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports TEXT type');
 
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: Update text default value
         $update = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/text/text_with_default', [
@@ -514,19 +496,17 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(200, $update['headers']['status-code']);
         $this->assertEquals('Updated text default value', $update['body']['default']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateTextColumn
-     */
-    public function testUpdateMediumtextColumn(array $data): array
+    public function testUpdateMediumtextColumn(): void
     {
         $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports MEDIUMTEXT type');
 
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: Update mediumtext default value
         $update = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/mediumtext/mediumtext_with_default', [
@@ -540,19 +520,17 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(200, $update['headers']['status-code']);
         $this->assertEquals('Updated mediumtext default', $update['body']['default']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateMediumtextColumn
-     */
-    public function testUpdateLongtextColumn(array $data): array
+    public function testUpdateLongtextColumn(): void
     {
         $this->markTestSkipped('Skipped until utopia-php/database updateAttribute supports LONGTEXT type');
 
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: Update longtext default value
         $update = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/longtext/longtext_with_default', [
@@ -566,17 +544,15 @@ class DatabasesStringTypesTest extends Scope
 
         $this->assertEquals(200, $update['headers']['status-code']);
         $this->assertEquals('Updated longtext default', $update['body']['default']);
-
-        return $data;
     }
 
-    /**
-     * @depends testUpdateLongtextColumn
-     */
-    public function testCreateRowWithStringTypes(array $data): array
+    public function testCreateRowWithStringTypes(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Wait for all columns to be available
         sleep(2);
@@ -616,17 +592,15 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('Long text content for storing large amounts of data', $row['body']['longtext_field']);
         $this->assertCount(3, $row['body']['varchar_array']);
         $this->assertCount(2, $row['body']['text_array']);
-
-        return array_merge($data, ['rowId' => $row['body']['$id']]);
     }
 
-    /**
-     * @depends testCreateRowWithStringTypes
-     */
-    public function testCreateRowWithDefaultValues(array $data): void
+    public function testCreateRowWithDefaultValues(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: Create row using default values
         $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', [
@@ -653,13 +627,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('Updated text default value', $row['body']['text_with_default']);
     }
 
-    /**
-     * @depends testCreateRowWithStringTypes
-     */
-    public function testCreateRowFailures(array $data): void
+    public function testCreateRowFailures(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test FAILURE: Missing required field
         $rowMissingRequired = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', [
@@ -680,13 +654,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(400, $rowMissingRequired['headers']['status-code']);
     }
 
-    /**
-     * @depends testCreateRowWithStringTypes
-     */
-    public function testGetVarcharColumn(array $data): void
+    public function testGetVarcharColumn(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar_with_default', [
             'content-type' => 'application/json',
@@ -700,13 +674,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(100, $column['body']['size']);
     }
 
-    /**
-     * @depends testCreateRowWithStringTypes
-     */
-    public function testGetTextColumn(array $data): void
+    public function testGetTextColumn(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/text_field', [
             'content-type' => 'application/json',
@@ -719,13 +693,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('text', $column['body']['type']);
     }
 
-    /**
-     * @depends testCreateRowWithStringTypes
-     */
-    public function testGetMediumtextColumn(array $data): void
+    public function testGetMediumtextColumn(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/mediumtext_field', [
             'content-type' => 'application/json',
@@ -738,13 +712,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('mediumtext', $column['body']['type']);
     }
 
-    /**
-     * @depends testCreateRowWithStringTypes
-     */
-    public function testGetLongtextColumn(array $data): void
+    public function testGetLongtextColumn(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/longtext_field', [
             'content-type' => 'application/json',
@@ -757,13 +731,13 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals('longtext', $column['body']['type']);
     }
 
-    /**
-     * @depends testGetLongtextColumn
-     */
-    public function testGetTableWithStringTypeColumns(array $data): array
+    public function testGetTableWithStringTypeColumns(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: Get full table - verifies Table model serializes all string column types
         $table = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId, [
@@ -791,17 +765,15 @@ class DatabasesStringTypesTest extends Scope
         $this->assertContains('text_field', $columnKeys);
         $this->assertContains('mediumtext_field', $columnKeys);
         $this->assertContains('longtext_field', $columnKeys);
-
-        return $data;
     }
 
-    /**
-     * @depends testGetTableWithStringTypeColumns
-     */
-    public function testListColumnsWithStringTypes(array $data): array
+    public function testListColumnsWithStringTypes(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: List all columns - verifies ColumnList model serializes all string column types
         $columns = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns', [
@@ -822,17 +794,15 @@ class DatabasesStringTypesTest extends Scope
         $this->assertContains('text', $columnTypes, 'Column list should contain text columns');
         $this->assertContains('mediumtext', $columnTypes, 'Column list should contain mediumtext columns');
         $this->assertContains('longtext', $columnTypes, 'Column list should contain longtext columns');
-
-        return $data;
     }
 
-    /**
-     * @depends testListColumnsWithStringTypes
-     */
-    public function testDeleteStringTypeColumns(array $data): void
+    public function testDeleteStringTypeColumns(): void
     {
-        $databaseId = $data['databaseId'];
-        $tableId = $data['tableId'];
+        $this->assertNotEmpty(self::$databaseId, 'Database must be created first');
+        $this->assertNotEmpty(self::$tableId, 'Table must be created first');
+
+        $databaseId = self::$databaseId;
+        $tableId = self::$tableId;
 
         // Test SUCCESS: Delete varchar column
         $deleteVarchar = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/varchar_max', [
