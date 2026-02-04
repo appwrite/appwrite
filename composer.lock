@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3536e299c47fdd06f2b9cf6b31415b49",
+    "content-hash": "b7d213c39428e0c0e9524f25388cf95a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4950,16 +4950,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.15.3",
+            "version": "dev-fix-servers-lib",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "dbbf5ab4dafc4e5662772ebbf84ec4b98391ef3c"
+                "reference": "01d4b2e62cd564a2cac8f4c840f813cce5151975"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/dbbf5ab4dafc4e5662772ebbf84ec4b98391ef3c",
-                "reference": "dbbf5ab4dafc4e5662772ebbf84ec4b98391ef3c",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/01d4b2e62cd564a2cac8f4c840f813cce5151975",
+                "reference": "01d4b2e62cd564a2cac8f4c840f813cce5151975",
                 "shasum": ""
             },
             "require": {
@@ -5011,9 +5011,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.15.3"
+                "source": "https://github.com/utopia-php/queue/tree/fix-servers-lib"
             },
-            "time": "2026-02-04T04:49:02+00:00"
+            "time": "2026-02-04T07:18:48+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5069,16 +5069,16 @@
         },
         {
             "name": "utopia-php/servers",
-            "version": "0.2.3",
+            "version": "0.2.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/servers.git",
-                "reference": "84069bf28b0cfd4f7a22949bc575271ade0a9172"
+                "reference": "8675d32f4315e91cdb7757a829356030029ed4f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/servers/zipball/84069bf28b0cfd4f7a22949bc575271ade0a9172",
-                "reference": "84069bf28b0cfd4f7a22949bc575271ade0a9172",
+                "url": "https://api.github.com/repos/utopia-php/servers/zipball/8675d32f4315e91cdb7757a829356030029ed4f5",
+                "reference": "8675d32f4315e91cdb7757a829356030029ed4f5",
                 "shasum": ""
             },
             "require": {
@@ -5117,9 +5117,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/servers/issues",
-                "source": "https://github.com/utopia-php/servers/tree/0.2.3"
+                "source": "https://github.com/utopia-php/servers/tree/0.2.4"
             },
-            "time": "2026-02-03T05:50:20+00:00"
+            "time": "2026-02-04T07:15:26+00:00"
         },
         {
             "name": "utopia-php/span",
@@ -9158,9 +9158,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/queue",
+            "version": "dev-fix-servers-lib",
+            "alias": "0.15.3",
+            "alias_normalized": "0.15.3.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/queue": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
