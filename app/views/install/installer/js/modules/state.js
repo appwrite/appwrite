@@ -4,7 +4,6 @@
         isUpgradeMode,
         getLockedDatabase
     } = window.InstallerStepsContext || {};
-    const { isMockProgressMode } = window.InstallerMock || {};
 
     const INSTALL_LOCK_KEY = 'appwrite-install-lock';
     const INSTALL_ID_KEY = 'appwrite-install-id';
@@ -90,7 +89,6 @@
     };
 
     const isInstallLocked = () => {
-        if (isMockProgressMode?.()) return false;
         return Boolean(getInstallLock());
     };
 

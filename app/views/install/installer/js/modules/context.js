@@ -81,7 +81,6 @@
         installPollInterval: CONSTANTS.installPollIntervalMs ?? 4000,
         installFallbackDelay: CONSTANTS.installFallbackDelayMs ?? 12000,
         redirectDelay: CONSTANTS.redirectDelayMs ?? 500,
-        mockStepDelay: CONSTANTS.mockStepDelayMs ?? 1800,
         progressTransitionDelay: CONSTANTS.progressTransitionDelayMs ?? 140,
         progressCompleteDelay: CONSTANTS.progressCompleteDelayMs ?? 120
     };

@@ -402,10 +402,6 @@
 
     const initStep5 = (root) => {
         if (!root) return;
-        if (isMockProgressMode?.()) {
-            clearInstallLock?.();
-            clearInstallId?.();
-        }
 
         if (activeInstall?.controller) {
             activeInstall.controller.abort();
