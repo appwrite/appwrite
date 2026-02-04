@@ -5832,14 +5832,23 @@ trait DatabasesBase
     }
 
     /**
-     * @depends testCreateDatabase
-     * @param array $data
      * @return void
      * @throws \Exception
      */
-    public function testUpdateWithExistingRelationships(array $data): void
+    public function testUpdateWithExistingRelationships(): void
     {
-        $databaseId = $data['databaseId'];
+        // Create a new database for this test to be self-contained
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Relationships Test Database'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
 
         $collection1 = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
