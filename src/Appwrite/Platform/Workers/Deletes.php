@@ -1391,21 +1391,24 @@ class Deletes extends Action
     /**
      * @param Database $dbForPlatform
      * @param callable $getProjectDB
-     * @param Document $document
+     * @param Document $installation
      * @param Document $project
      * @return void
      * @throws Exception
      */
-    private function deleteInstallation(Database $dbForPlatform, callable $getProjectDB, Document $document, Document $project): void
+    private function deleteInstallation(Database $dbForPlatform, callable $getProjectDB, Document $installation, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
 
         // Cleanup sites and functions
-        foreach (['sites', 'functions'] as $resource) {
-            $this->listByGroup($resource, [
-                Query::equal('installationInternalId', [$document->getSequence()])
-            ], $dbForProject, function ($document) use ($resource, $dbForProject, $dbForPlatform) {
-                $dbForPlatform->deleteDocument('repositories', $document->getAttribute('repositoryId'));
+        foreach (['sites', 'functions'] as $collection) {
+            $this->listByGroup($collection, [
+                Query::equal('installationInternalId', [$installation->getSequence()])
+            ], $dbForProject, function ($document) use ($collection, $dbForProject, $dbForPlatform) {
+                $repositoryId = $document->getAttribute('repositoryId', '');
+                if (!empty($repositoryId)) {
+                    $dbForPlatform->deleteDocument('repositories', $repositoryId);
+                }
 
                 $document = $document
                     ->setAttribute('installationId', '')
@@ -1416,7 +1419,7 @@ class Deletes extends Action
                     ->setAttribute('providerRootDirectory', '')
                     ->setAttribute('repositoryId', '')
                     ->setAttribute('repositoryInternalId', '');
-                $dbForProject->updateDocument($resource, $document->getId(), $document);
+                $dbForProject->updateDocument($collection, $document->getId(), $document);
             });
         }
     }
