@@ -94,13 +94,13 @@ class Table extends Model
             ])
             ->addRule('bytesMax', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Maximum row size in bytes. Returns 0 when no limit applies (e.g., MongoDB).',
+                'description' => 'Maximum row size in bytes. Returns 0 when no limit applies.',
                 'default' => 0,
                 'example' => 65535,
             ])
             ->addRule('bytesUsed', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Currently used row size in bytes based on defined attributes.',
+                'description' => 'Currently used row size in bytes based on defined columns.',
                 'default' => 0,
                 'example' => 1500,
             ])
