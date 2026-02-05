@@ -433,11 +433,18 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
             $subscribers = $realtime->getSubscribers($event);
 
+            $groups = [];
             foreach ($subscribers as $id => $matched) {
-                $data = $event['data'];
-                $data['subscriptions'] = array_keys($matched);
+                $key = implode(',', array_keys($matched));
+                $groups[$key]['ids'][] = $id;
+                $groups[$key]['subscriptions'] = array_keys($matched);
+            }
 
-                $server->send([$id], json_encode([
+            foreach ($groups as $group) {
+                $data = $event['data'];
+                $data['subscriptions'] = $group['subscriptions'];
+
+                $server->send($group['ids'], json_encode([
                     'type' => 'event',
                     'data' => $data
                 ]));
@@ -514,17 +521,24 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
                 }
 
-                $total = 0;
-
+                // Group connections by matched subscription IDs for batch sending
+                $groups = [];
                 foreach ($receivers as $id => $matched) {
-                    $data = $event['data'];
-                    $data['subscriptions'] = array_keys($matched);
+                    $key = implode(',', array_keys($matched));
+                    $groups[$key]['ids'][] = $id;
+                    $groups[$key]['subscriptions'] = array_keys($matched);
+                }
 
-                    $server->send([$id], json_encode([
+                $total = 0;
+                foreach ($groups as $group) {
+                    $data = $event['data'];
+                    $data['subscriptions'] = $group['subscriptions'];
+
+                    $server->send($group['ids'], json_encode([
                         'type' => 'event',
                         'data' => $data
                     ]));
-                    $total++;
+                    $total += count($group['ids']);
                 }
 
                 if ($total > 0) {
