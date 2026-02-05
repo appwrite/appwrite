@@ -16,7 +16,6 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
