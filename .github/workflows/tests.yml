@@ -201,7 +201,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's|^_APP_BROWSER_HOST=.*|_APP_BROWSER_HOST=http://invalid-browser/v1|' .env
-          docker compose up -d
+          docker compose up -d --scale appwrite-worker-databases=4
           sleep 30
 
       - name: Wait for Open Runtimes
@@ -284,7 +284,7 @@ jobs:
       - name: Load and Start Appwrite
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
-          docker compose up -d
+          docker compose up -d --scale appwrite-worker-databases=4
           sleep 30
 
       - name: Wait for Open Runtimes
