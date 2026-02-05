@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\VCS\Services;
 
-use Appwrite\Platform\Modules\VCS\Http\Installations\Get as GetInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Delete as DeleteInstallation;
+use Appwrite\Platform\Modules\VCS\Http\Installations\Get as GetInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\XList as ListInstallations;
 use Utopia\Platform\Service;
 
