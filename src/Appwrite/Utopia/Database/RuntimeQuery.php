@@ -4,6 +4,11 @@ namespace Appwrite\Utopia\Database;
 
 use Utopia\Database\Query;
 
+/**
+ * RuntimeQuery handles real-time query filtering for Appwrite's Realtime subscriptions.
+ *
+ * Queries are pre-compiled at subscription time for fast evaluation during message delivery.
+ */
 class RuntimeQuery extends Query
 {
     public const ALLOWED_QUERIES = [
@@ -28,19 +33,6 @@ class RuntimeQuery extends Query
     ];
 
     /**
-     * Checks if a query is select("*") which means "listen to all events"
-     *
-     * @param Query $query
-     * @return bool
-     */
-    public static function isSelectAll(Query $query): bool
-    {
-        return $query->getMethod() === Query::TYPE_SELECT
-            && count($query->getValues()) === 1
-            && $query->getValues()[0] === '*';
-    }
-
-    /**
      * Validates a select query - only select("*") is allowed in Realtime
      *
      * @param Query $query
@@ -52,7 +44,10 @@ class RuntimeQuery extends Query
             return;
         }
 
-        if (!self::isSelectAll($query)) {
+        $values = $query->getValues();
+        $isSelectAll = count($values) === 1 && $values[0] === '*';
+
+        if (!$isSelectAll) {
             throw new \InvalidArgumentException(
                 'Only select("*") is allowed in Realtime queries. select("*") means "listen to all events".'
             );
@@ -60,60 +55,150 @@ class RuntimeQuery extends Query
     }
 
     /**
+     * Pre-compile queries into an optimized format for fast evaluation.
+     * Call this once when subscription is created, store the result.
+     *
      * @param array<Query> $queries
-     * @param array<string, mixed> $payload
+     * @return array Compiled query structure with 'type' key
      */
-    public static function filter(array $queries, array $payload): array
+    public static function compile(array $queries): array
     {
         if (empty($queries)) {
-            return $payload;
+            return ['type' => 'selectAll'];
         }
 
-        // Check if select("*") is present - if so, return payload (match all)
+        // Check for select("*") upfront
         foreach ($queries as $query) {
-            if (self::isSelectAll($query)) {
-                return $payload;
+            if ($query->getMethod() === Query::TYPE_SELECT) {
+                $values = $query->getValues();
+                if (count($values) === 1 && $values[0] === '*') {
+                    return ['type' => 'selectAll'];
+                }
             }
         }
 
-        // multiple queries follows and condition
+        // Compile queries into flat structure
+        $compiled = [
+            'type' => 'filter',
+            'conditions' => [],
+            'attributes' => [],
+        ];
+
         foreach ($queries as $query) {
-            if (!self::evaluateFilter($query, $payload)) {
-                return [];
-            };
+            $condition = self::compileCondition($query);
+            $compiled['conditions'][] = $condition;
+            self::extractAttributes($condition, $compiled['attributes']);
         }
+
+        $compiled['attributes'] = array_unique($compiled['attributes']);
+
+        return $compiled;
+    }
+
+    /**
+     * Compile a single query condition into an optimized array format.
+     */
+    private static function compileCondition(Query $query): array
+    {
+        $method = $query->getMethod();
+
+        if ($method === Query::TYPE_AND) {
+            return [
+                'op' => 'AND',
+                'conditions' => array_map([self::class, 'compileCondition'], $query->getValues()),
+            ];
+        }
+
+        if ($method === Query::TYPE_OR) {
+            return [
+                'op' => 'OR',
+                'conditions' => array_map([self::class, 'compileCondition'], $query->getValues()),
+            ];
+        }
+
+        return [
+            'op' => $method,
+            'attr' => $query->getAttribute(),
+            'values' => $query->getValues(),
+        ];
+    }
+
+    /**
+     * Extract all attribute names from a compiled condition tree.
+     */
+    private static function extractAttributes(array $condition, array &$attributes): void
+    {
+        if (isset($condition['attr'])) {
+            $attributes[] = $condition['attr'];
+        }
+        if (isset($condition['conditions'])) {
+            foreach ($condition['conditions'] as $sub) {
+                self::extractAttributes($sub, $attributes);
+            }
+        }
+    }
+
+    /**
+     * Fast filter using pre-compiled query structure.
+     *
+     * @param array $compiled Result from compile()
+     * @param array $payload Event payload
+     * @return array Empty array if no match, payload if match
+     */
+    public static function filter(array $compiled, array $payload): array
+    {
+        // Fast path for select("*") subscriptions
+        if ($compiled['type'] === 'selectAll') {
+            return $payload;
+        }
+
+        // Quick rejection: if payload is missing any required attribute, fail fast
+        foreach ($compiled['attributes'] as $attr) {
+            if (!isset($payload[$attr]) && !\array_key_exists($attr, $payload)) {
+                return [];
+            }
+        }
+
+        // Evaluate all conditions (AND logic at top level)
+        foreach ($compiled['conditions'] as $condition) {
+            if (!self::evaluateCondition($condition, $payload)) {
+                return [];
+            }
+        }
+
         return $payload;
     }
 
-    private static function evaluateFilter(Query $query, array $payload): bool
+    /**
+     * Evaluate a single compiled condition against a payload.
+     */
+    private static function evaluateCondition(array $condition, array $payload): bool
     {
-        $attribute = $query->getAttribute();
-        $method = $query->getMethod();
-        $values = $query->getValues();
+        $op = $condition['op'];
 
-        // during 'and' and 'or' attribute will not be present
-        switch ($method) {
-            case Query::TYPE_AND:
-                // All subqueries must evaluate to true
-                foreach ($query->getValues() as $subquery) {
-                    if (!self::evaluateFilter($subquery, $payload)) {
-                        return false;
-                    }
+        // Handle AND/OR
+        if ($op === 'AND') {
+            foreach ($condition['conditions'] as $sub) {
+                if (!self::evaluateCondition($sub, $payload)) {
+                    return false;
                 }
-                return true;
-
-            case Query::TYPE_OR:
-                // At least one subquery must evaluate to true
-                foreach ($query->getValues() as $subquery) {
-                    if (self::evaluateFilter($subquery, $payload)) {
-                        return true;
-                    }
-                }
-                return false;
+            }
+            return true;
         }
 
-        $hasAttribute = \array_key_exists($attribute, $payload);
-        if (!$hasAttribute) {
+        if ($op === 'OR') {
+            foreach ($condition['conditions'] as $sub) {
+                if (self::evaluateCondition($sub, $payload)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Leaf condition - direct comparison
+        $attr = $condition['attr'];
+
+        if (!\array_key_exists($attr, $payload)) {
             return false;
         }
 
@@ -159,6 +244,6 @@ class RuntimeQuery extends Query
                 return true;
             }
         }
-        return false;
+                return false;
+        }
     }
-}
