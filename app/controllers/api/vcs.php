@@ -2,14 +2,12 @@
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
-use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
@@ -22,15 +20,12 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Exception\Order as OrderException;
-use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries;
-use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Detector\Detection\Framework\Analog;
@@ -1611,158 +1606,6 @@ Http::post('/v1/vcs/github/events')
             $response->json($parsedPayload);
         }
     );
-
-Http::get('/v1/vcs/installations')
-    ->desc('List installations')
-    ->groups(['api', 'vcs'])
-    ->label('scope', 'vcs.read')
-    ->label('sdk', new Method(
-        namespace: 'vcs',
-        group: 'installations',
-        name: 'listInstallations',
-        description: '/docs/references/vcs/list-installations.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_INSTALLATION_LIST,
-            )
-        ]
-    ))
-    ->param('queries', [], new Installations(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Installations::ALLOWED_ATTRIBUTES), true)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
-    ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-    ->inject('response')
-    ->inject('project')
-    ->inject('dbForProject')
-    ->inject('dbForPlatform')
-    ->action(function (array $queries, string $search, bool $includeTotal, Response $response, Document $project, Database $dbForProject, Database $dbForPlatform) {
-        try {
-            $queries = Query::parseQueries($queries);
-        } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        $queries[] = Query::equal('projectInternalId', [$project->getSequence()]);
-
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
-        }
-
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
-
-            $validator = new Cursor();
-            if (!$validator->isValid($cursor)) {
-                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
-            }
-
-            $installationId = $cursor->getValue();
-            $cursorDocument = $dbForPlatform->getDocument('installations', $installationId);
-
-            if ($cursorDocument->isEmpty()) {
-                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Installation '{$installationId}' for the 'cursor' value not found.");
-            }
-
-            $cursor->setValue($cursorDocument);
-        }
-
-        $filterQueries = Query::groupByType($queries)['filters'];
-        try {
-            $results = $dbForPlatform->find('installations', $queries);
-            $total = $includeTotal ? $dbForPlatform->count('installations', $filterQueries, APP_LIMIT_COUNT) : 0;
-        } catch (OrderException $e) {
-            throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
-        }
-
-        $response->dynamic(new Document([
-            'installations' => $results,
-            'total' => $total,
-        ]), Response::MODEL_INSTALLATION_LIST);
-    });
-
-Http::get('/v1/vcs/installations/:installationId')
-    ->desc('Get installation')
-    ->groups(['api', 'vcs'])
-    ->label('scope', 'vcs.read')
-    ->label('sdk', new Method(
-        namespace: 'vcs',
-        group: 'installations',
-        name: 'getInstallation',
-        description: '/docs/references/vcs/get-installation.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_INSTALLATION,
-            )
-        ]
-    ))
-    ->param('installationId', '', new Text(256), 'Installation Id')
-    ->inject('response')
-    ->inject('project')
-    ->inject('dbForPlatform')
-    ->action(function (string $installationId, Response $response, Document $project, Database $dbForPlatform) {
-        $installation = $dbForPlatform->getDocument('installations', $installationId);
-
-        if ($installation === false || $installation->isEmpty()) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-
-        if ($installation->getAttribute('projectInternalId') !== $project->getSequence()) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-
-        $response->dynamic($installation, Response::MODEL_INSTALLATION);
-    });
-
-Http::delete('/v1/vcs/installations/:installationId')
-    ->desc('Delete installation')
-    ->groups(['api', 'vcs'])
-    ->label('scope', 'vcs.write')
-    ->label('sdk', new Method(
-        namespace: 'vcs',
-        group: 'installations',
-        name: 'deleteInstallation',
-        description: '/docs/references/vcs/delete-installation.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_NOCONTENT,
-                model: Response::MODEL_NONE,
-            )
-        ],
-        contentType: ContentType::NONE
-    ))
-    ->param('installationId', '', new Text(256), 'Installation Id')
-    ->inject('response')
-    ->inject('project')
-    ->inject('dbForPlatform')
-    ->inject('queueForDeletes')
-    ->action(function (string $installationId, Response $response, Document $project, Database $dbForPlatform, Delete $queueForDeletes) {
-        $installation = $dbForPlatform->getDocument('installations', $installationId);
-
-        if ($installation->isEmpty()) {
-            throw new Exception(Exception::INSTALLATION_NOT_FOUND);
-        }
-
-        if (!$dbForPlatform->deleteDocument('installations', $installation->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove installation from DB');
-        }
-
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($installation);
-
-        $response->noContent();
-    });
 
 Http::patch('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
     ->desc('Update external deployment (authorize)')
