@@ -974,7 +974,7 @@ class Deletes extends Action
         $deploymentIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$siteInternalId]),
-            Query::equal('resourceType', ['site']),
+            Query::equal('resourceType', ['sites']),
             Query::orderAsc()
         ], $dbForProject, function (Document $document) use ($project, $certificates, $deviceForSites, $deviceForBuilds, $deviceForFiles, $dbForPlatform, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getSequence();
@@ -1062,7 +1062,7 @@ class Deletes extends Action
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$functionInternalId]),
-            Query::equal('resourceType', ['function']),
+            Query::equal('resourceType', ['functions']),
             Query::orderAsc()
         ], $dbForProject, function (Document $document) use ($dbForPlatform, $project, $certificates, $deviceForFunctions, $deviceForBuilds, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getSequence();
@@ -1400,22 +1400,25 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
 
-        $this->listByGroup('functions', [
-            Query::equal('installationInternalId', [$document->getSequence()])
-        ], $dbForProject, function ($function) use ($dbForProject, $dbForPlatform) {
-            $dbForPlatform->deleteDocument('repositories', $function->getAttribute('repositoryId'));
+        // Cleanup sites and functions
+        foreach (['sites', 'functions'] as $resource) {
+            $this->listByGroup($resource, [
+                Query::equal('installationInternalId', [$document->getSequence()])
+            ], $dbForProject, function ($document) use ($resource, $dbForProject, $dbForPlatform) {
+                $dbForPlatform->deleteDocument('repositories', $document->getAttribute('repositoryId'));
 
-            $function = $function
-                ->setAttribute('installationId', '')
-                ->setAttribute('installationInternalId', '')
-                ->setAttribute('providerRepositoryId', '')
-                ->setAttribute('providerBranch', '')
-                ->setAttribute('providerSilentMode', false)
-                ->setAttribute('providerRootDirectory', '')
-                ->setAttribute('repositoryId', '')
-                ->setAttribute('repositoryInternalId', '');
-            $dbForProject->updateDocument('functions', $function->getId(), $function);
-        });
+                $document = $document
+                    ->setAttribute('installationId', '')
+                    ->setAttribute('installationInternalId', '')
+                    ->setAttribute('providerRepositoryId', '')
+                    ->setAttribute('providerBranch', '')
+                    ->setAttribute('providerSilentMode', false)
+                    ->setAttribute('providerRootDirectory', '')
+                    ->setAttribute('repositoryId', '')
+                    ->setAttribute('repositoryInternalId', '');
+                $dbForProject->updateDocument($resource, $document->getId(), $document);
+            });
+        }
     }
 
     /**
