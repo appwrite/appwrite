@@ -2262,22 +2262,4 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $client->close();
     }
-
-    public function testConsole()
-    {
-        $this->client->call(Client::METHOD_POST, '/databases/' . '6981e806000e18b050be' . '/collections/' . 'kv' . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => '6981e7dc0003192f3424',
-        ], $this->getHeaders()), [
-            'documentId' => ID::unique(),
-            'data' => [
-                'key' => 'key',
-                'value' => 'value'
-            ],
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-            ],
-        ]);
-    }
 }
