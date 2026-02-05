@@ -229,7 +229,7 @@ services:
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
-      - _APP_HOSTNAMES
+      - _APP_MIGRATION_HOST
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
