@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Databases;
 
 use Appwrite\Extend\Exception;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
@@ -21,7 +20,572 @@ trait DatabasesBase
 {
     use DatabasesUrlHelpers;
     use SchemaPolling;
-    public function testCreateDatabase(): array
+
+    /**
+     * Static caches for test data - keyed by project ID to support parallel test runs
+     */
+    private static array $databaseCache = [];
+    private static array $collectionCache = [];
+    private static array $attributesCache = [];
+    private static array $indexesCache = [];
+    private static array $documentsCache = [];
+    private static array $oneToOneCache = [];
+    private static array $oneToManyCache = [];
+
+    /**
+     * Get cache key for current test instance (based on project ID)
+     */
+    protected function getCacheKey(): string
+    {
+        return $this->getProject()['$id'] ?? 'default';
+    }
+
+    /**
+     * Setup: Create database and return data
+     * Uses static caching to avoid recreating resources
+     */
+    protected function setupDatabase(): array
+    {
+        $cacheKey = $this->getCacheKey();
+        if (!empty(self::$databaseCache[$cacheKey])) {
+            return self::$databaseCache[$cacheKey];
+        }
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Test Database'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+
+        self::$databaseCache[$cacheKey] = ['databaseId' => $database['body']['$id']];
+        return self::$databaseCache[$cacheKey];
+    }
+
+    /**
+     * Setup: Create database and collections
+     * Uses static caching to avoid recreating resources
+     */
+    protected function setupCollection(): array
+    {
+        $cacheKey = $this->getCacheKey();
+        if (!empty(self::$collectionCache[$cacheKey])) {
+            return self::$collectionCache[$cacheKey];
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+
+        $movies = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Movies',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $movies['headers']['status-code']);
+
+        $actors = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Actors',
+            $this->getSecurityParam() => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $actors['headers']['status-code']);
+
+        self::$collectionCache[$cacheKey] = [
+            'databaseId' => $databaseId,
+            'moviesId' => $movies['body']['$id'],
+            'actorsId' => $actors['body']['$id'],
+        ];
+        return self::$collectionCache[$cacheKey];
+    }
+
+    /**
+     * Setup: Create database, collections, and attributes
+     * Uses static caching to avoid recreating resources
+     */
+    protected function setupAttributes(): array
+    {
+        $cacheKey = $this->getCacheKey();
+        if (!empty(self::$attributesCache[$cacheKey])) {
+            return self::$attributesCache[$cacheKey];
+        }
+
+        $data = $this->setupCollection();
+        $databaseId = $data['databaseId'];
+
+        $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $description = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'description',
+            'size' => 512,
+            'required' => false,
+            'default' => '',
+        ]);
+
+        $tagline = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'tagline',
+            'size' => 512,
+            'required' => false,
+            'default' => '',
+        ]);
+
+        $releaseYear = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'releaseYear',
+            'required' => true,
+            'min' => 1900,
+            'max' => 2200,
+        ]);
+
+        $duration = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'duration',
+            'required' => false,
+            'min' => 60,
+        ]);
+
+        $actors = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'actors',
+            'size' => 256,
+            'required' => false,
+            'array' => true,
+        ]);
+
+        $datetime = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/datetime', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'birthDay',
+            'required' => false,
+        ]);
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRelatedIdParam() => $data['actorsId'],
+            'type' => 'oneToMany',
+            'twoWay' => true,
+            'key' => 'starringActors',
+            'twoWayKey' => 'movie'
+        ]);
+
+        $integers = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'integers',
+            'required' => false,
+            'array' => true,
+            'min' => 10,
+            'max' => 99,
+        ]);
+
+        $this->assertEquals(202, $title['headers']['status-code']);
+        $this->assertEquals(202, $description['headers']['status-code']);
+        $this->assertEquals(202, $tagline['headers']['status-code']);
+        $this->assertEquals(202, $releaseYear['headers']['status-code']);
+        $this->assertEquals(202, $duration['headers']['status-code']);
+        $this->assertEquals(202, $actors['headers']['status-code']);
+        $this->assertEquals(202, $datetime['headers']['status-code']);
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+        $this->assertEquals(202, $integers['headers']['status-code']);
+
+        // wait for database worker to create attributes
+        $this->waitForAllAttributes($databaseId, $data['moviesId']);
+
+        self::$attributesCache[$cacheKey] = $data;
+        return self::$attributesCache[$cacheKey];
+    }
+
+    /**
+     * Setup: Create database, collections, attributes, and indexes
+     * Uses static caching to avoid recreating resources
+     */
+    protected function setupIndexes(): array
+    {
+        $cacheKey = $this->getCacheKey();
+        if (!empty(self::$indexesCache[$cacheKey])) {
+            return self::$indexesCache[$cacheKey];
+        }
+
+        $data = $this->setupAttributes();
+        $databaseId = $data['databaseId'];
+
+        $titleIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'titleIndex',
+            'type' => 'fulltext',
+            $this->getIndexAttributesParam() => ['title'],
+        ]);
+
+        $releaseYearIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'releaseYear',
+            'type' => 'key',
+            $this->getIndexAttributesParam() => ['releaseYear'],
+        ]);
+
+        $releaseWithDate1 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'releaseYearDated',
+            'type' => 'key',
+            $this->getIndexAttributesParam() => ['releaseYear', '$createdAt', '$updatedAt'],
+        ]);
+
+        $releaseWithDate2 = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'birthDay',
+            'type' => 'key',
+            $this->getIndexAttributesParam() => ['birthDay'],
+        ]);
+
+        $this->assertEquals(202, $titleIndex['headers']['status-code']);
+        $this->assertEquals(202, $releaseYearIndex['headers']['status-code']);
+        $this->assertEquals(202, $releaseWithDate1['headers']['status-code']);
+        $this->assertEquals(202, $releaseWithDate2['headers']['status-code']);
+
+        $this->waitForAllIndexes($databaseId, $data['moviesId']);
+
+        self::$indexesCache[$cacheKey] = $data;
+        return self::$indexesCache[$cacheKey];
+    }
+
+    /**
+     * Setup: Create database, collections, attributes, indexes, and documents
+     * Uses static caching to avoid recreating resources
+     */
+    protected function setupDocuments(): array
+    {
+        $cacheKey = $this->getCacheKey();
+        if (!empty(self::$documentsCache[$cacheKey])) {
+            return self::$documentsCache[$cacheKey];
+        }
+
+        $data = $this->setupIndexes();
+        $databaseId = $data['databaseId'];
+
+        $document1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'title' => 'Captain America',
+                'releaseYear' => 1944,
+                'birthDay' => '1975-06-12 14:12:55+02:00',
+                'actors' => [
+                    'Chris Evans',
+                    'Samuel Jackson',
+                ]
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $document2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'title' => 'Spider-Man: Far From Home',
+                'releaseYear' => 2019,
+                'birthDay' => null,
+                'actors' => [
+                    'Tom Holland',
+                    'Zendaya Maree Stoermer',
+                    'Samuel Jackson',
+                ],
+                'integers' => [50, 60]
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $document3 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'title' => 'Spider-Man: Homecoming',
+                'releaseYear' => 2017,
+                'birthDay' => '1975-06-12 14:12:55 America/New_York',
+                'duration' => 65,
+                'actors' => [
+                    'Tom Holland',
+                    'Zendaya Maree Stoermer',
+                ],
+                'integers' => [50]
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $this->assertEquals(201, $document1['headers']['status-code']);
+        $this->assertEquals(201, $document2['headers']['status-code']);
+        $this->assertEquals(201, $document3['headers']['status-code']);
+
+        self::$documentsCache[$cacheKey] = $data;
+        return self::$documentsCache[$cacheKey];
+    }
+
+    /**
+     * Setup: Create one-to-one relationship collections
+     * Uses static caching to avoid recreating resources
+     */
+    protected function setupOneToOneRelationship(): array
+    {
+        $cacheKey = $this->getCacheKey();
+        if (!empty(self::$oneToOneCache[$cacheKey])) {
+            return self::$oneToOneCache[$cacheKey];
+        }
+
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+
+        $person = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => 'person',
+            'name' => 'person',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertEquals(201, $person['headers']['status-code']);
+
+        $library = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => 'library',
+            'name' => 'library',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+
+        $this->assertEquals(201, $library['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $person['body']['$id']) . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'fullName',
+            'size' => 255,
+            'required' => false,
+        ]);
+
+        $this->waitForAttribute($databaseId, $person['body']['$id'], 'fullName');
+
+        $libraryName = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $library['body']['$id']) . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'libraryName',
+            'size' => 255,
+            'required' => true,
+        ]);
+
+        $this->waitForAttribute($databaseId, $library['body']['$id'], 'libraryName');
+        $this->assertEquals(202, $libraryName['headers']['status-code']);
+
+        self::$oneToOneCache[$cacheKey] = [
+            'databaseId' => $databaseId,
+            'personCollection' => $person['body']['$id'],
+            'libraryCollection' => $library['body']['$id'],
+        ];
+        return self::$oneToOneCache[$cacheKey];
+    }
+
+    /**
+     * Setup: Create one-to-many relationship collections (extends one-to-one)
+     * Uses static caching to avoid recreating resources
+     */
+    protected function setupOneToManyRelationship(): array
+    {
+        $cacheKey = $this->getCacheKey();
+        if (!empty(self::$oneToManyCache[$cacheKey])) {
+            return self::$oneToManyCache[$cacheKey];
+        }
+
+        $data = $this->setupOneToOneRelationship();
+        $databaseId = $data['databaseId'];
+        $personCollection = $data['personCollection'];
+        $libraryCollection = $data['libraryCollection'];
+
+        // One person can own several libraries
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $personCollection) . '/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getRelatedIdParam() => 'library',
+            'type' => Database::RELATION_ONE_TO_MANY,
+            'twoWay' => true,
+            'key' => 'libraries',
+            'twoWayKey' => 'person_one_to_many',
+        ]);
+
+        $this->waitForAttribute($databaseId, $personCollection, 'libraries');
+
+        // Create a person with libraries
+        $person = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => 'person10',
+            'data' => [
+                'fullName' => 'Stevie Wonder',
+                'libraries' => [
+                    [
+                        '$id' => 'library10',
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::any()),
+                            Permission::delete(Role::any()),
+                        ],
+                        'libraryName' => 'Library 10',
+                    ],
+                    [
+                        '$id' => 'library11',
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::any()),
+                            Permission::delete(Role::any()),
+                        ],
+                        'libraryName' => 'Library 11',
+                    ]
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $person['headers']['status-code']);
+
+        // Update onDelete to cascade
+        $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $personCollection, 'relationship', 'libraries'), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+        ]);
+
+        self::$oneToManyCache[$cacheKey] = ['databaseId' => $databaseId, 'personCollection' => $personCollection];
+        return self::$oneToManyCache[$cacheKey];
+    }
+
+    /**
+     * Helper: Get list of documents (for tests that need document data)
+     */
+    protected function getDocumentsList(): array
+    {
+        $data = $this->setupDocuments();
+        $databaseId = $data['databaseId'];
+
+        $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderDesc('releaseYear')->toString(),
+            ],
+        ]);
+
+        return [$this->getRecordResource() => $documents['body'][$this->getRecordResource()], 'databaseId' => $databaseId];
+    }
+
+    public function testCreateDatabase(): void
     {
         /**
          * Test for SUCCESS
@@ -39,13 +603,11 @@ trait DatabasesBase
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('Test Database', $database['body']['name']);
         $this->assertEquals($this->getDatabaseType(), $database['body']['type']);
-
-        return ['databaseId' => $database['body']['$id']];
     }
 
-    #[Depends('testCreateDatabase')]
-    public function testCreateCollection(array $data): array
+    public function testCreateCollection(): void
     {
+        $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
         /**
          * Test for SUCCESS
@@ -87,17 +649,11 @@ trait DatabasesBase
 
         $this->assertEquals(201, $actors['headers']['status-code']);
         $this->assertEquals($actors['body']['name'], 'Actors');
-
-        return [
-            'databaseId' => $databaseId,
-            'moviesId' => $movies['body']['$id'],
-            'actorsId' => $actors['body']['$id'],
-        ];
     }
 
-    #[Depends('testCreateCollection')]
-    public function testConsoleProject(array $data): void
+    public function testConsoleProject(): void
     {
+        $data = $this->setupCollection();
         if ($this->getSide() === 'server') {
             // Server side can't get past the invalid key check anyway
             $this->expectNotToPerformAssertions();
@@ -135,9 +691,9 @@ trait DatabasesBase
         }
     }
 
-    #[Depends('testCreateCollection')]
-    public function testDisableCollection(array $data): void
+    public function testDisableCollection(): void
     {
+        $data = $this->setupCollection();
         $databaseId = $data['databaseId'];
         /**
          * Test for SUCCESS
@@ -204,9 +760,9 @@ trait DatabasesBase
         $this->assertTrue($response['body']['enabled']);
     }
 
-    #[Depends('testCreateCollection')]
-    public function testCreateAttributes(array $data): array
+    public function testCreateAttributes(): void
     {
+        $data = $this->setupCollection();
         $databaseId = $data['databaseId'];
 
         $title = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $data['moviesId']) . '/string', array_merge([
@@ -385,13 +941,11 @@ trait DatabasesBase
         $this->assertEquals($movies['body'][$this->getSchemaResource()][6]['key'], $datetime['body']['key']);
         $this->assertEquals($movies['body'][$this->getSchemaResource()][7]['key'], $relationship['body']['key']);
         $this->assertEquals($movies['body'][$this->getSchemaResource()][8]['key'], $integers['body']['key']);
-
-        return $data;
     }
 
-    #[Depends('testCreateAttributes')]
-    public function testListAttributes(array $data): void
+    public function testListAttributes(): void
     {
+        $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
         $response = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -417,9 +971,9 @@ trait DatabasesBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    #[Depends('testCreateDatabase')]
-    public function testPatchAttribute(array $data): void
+    public function testPatchAttribute(): void
     {
+        $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
@@ -539,9 +1093,9 @@ trait DatabasesBase
         $this->assertEquals($attribute['body']['elements'], ['goalkeeper', 'defender', 'midfielder', 'forward', 'coach']);
     }
 
-    #[Depends('testCreateAttributes')]
-    public function testAttributeResponseModels(array $data): array
+    public function testAttributeResponseModels(): void
     {
+        $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
@@ -1218,13 +1772,11 @@ trait DatabasesBase
 
         $this->assertEquals(400, $badEnum['headers']['status-code']);
         $this->assertEquals('Invalid `elements` param: Value must a valid array no longer than 100 items and Value must be a valid string and at least 1 chars and no longer than 255 chars', $badEnum['body']['message']);
-
-        return $data;
     }
 
-    #[Depends('testCreateAttributes')]
-    public function testCreateIndexes(array $data): array
+    public function testCreateIndexes(): void
     {
+        $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
 
         $titleIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
@@ -1457,13 +2009,11 @@ trait DatabasesBase
 
             return true;
         }, 60000, 500);
-
-        return $data;
     }
 
-    #[Depends('testCreateAttributes')]
-    public function testGetIndexByKeyWithLengths(array $data): void
+    public function testGetIndexByKeyWithLengths(): void
     {
+        $data = $this->setupAttributes();
         $databaseId = $data['databaseId'];
         $collectionId = $data['moviesId'];
 
@@ -1544,9 +2094,10 @@ trait DatabasesBase
         ]);
         $this->assertEquals(400, $create['headers']['status-code']);
     }
-    #[Depends('testCreateIndexes')]
-    public function testListIndexes(array $data): void
+
+    public function testListIndexes(): void
     {
+        $data = $this->setupIndexes();
         $databaseId = $data['databaseId'];
         $response = $this->client->call(Client::METHOD_GET, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -1573,9 +2124,9 @@ trait DatabasesBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
-    #[Depends('testCreateIndexes')]
-    public function testCreateDocument(array $data): array
+    public function testCreateDocument(): void
     {
+        $data = $this->setupIndexes();
         $databaseId = $data['databaseId'];
         $document1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -1708,14 +2259,11 @@ trait DatabasesBase
         $this->assertTrue(array_key_exists('$sequence', $document3['body']));
 
         $this->assertEquals(400, $document4['headers']['status-code']);
-
-        return $data;
     }
 
-
-    #[Depends('testCreateIndexes')]
-    public function testUpsertDocument(array $data): void
+    public function testUpsertDocument(): void
     {
+        $data = $this->setupIndexes();
         $databaseId = $data['databaseId'];
         $documentId = ID::unique();
 
@@ -2277,9 +2825,9 @@ trait DatabasesBase
         }
     }
 
-    #[Depends('testCreateDocument')]
-    public function testListDocuments(array $data): array
+    public function testListDocuments(): array
     {
+        $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -2364,12 +2912,11 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-        return [$this->getRecordResource() => $documents['body'][$this->getRecordResource()], 'databaseId' => $databaseId];
     }
 
-    #[Depends('testListDocuments')]
-    public function testGetDocument(array $data): void
+    public function testGetDocument(): void
     {
+        $data = $this->getDocumentsList();
         $databaseId = $data['databaseId'];
         foreach ($data[$this->getRecordResource()] as $document) {
             $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $document[$this->getContainerIdResponseKey()], $document['$id']), array_merge([
@@ -2391,9 +2938,9 @@ trait DatabasesBase
         }
     }
 
-    #[Depends('testListDocuments')]
-    public function testGetDocumentWithQueries(array $data): void
+    public function testGetDocumentWithQueries(): void
     {
+        $data = $this->getDocumentsList();
         $databaseId = $data['databaseId'];
         $document = $data[$this->getRecordResource()][0];
 
@@ -2428,9 +2975,9 @@ trait DatabasesBase
         $this->assertTrue(array_key_exists('$sequence', $response['body']));
     }
 
-    #[Depends('testCreateDocument')]
-    public function testListDocumentsAfterPagination(array $data): array
+    public function testListDocumentsAfterPagination(): void
     {
+        $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         /**
          * Test after without order.
@@ -2564,13 +3111,11 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $documents['headers']['status-code']);
-
-        return [];
     }
 
-    #[Depends('testCreateDocument')]
-    public function testListDocumentsBeforePagination(array $data): array
+    public function testListDocumentsBeforePagination(): void
     {
+        $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         /**
          * Test before without order.
@@ -2675,13 +3220,11 @@ trait DatabasesBase
         $this->assertEquals(200, $documents['headers']['status-code']);
         $this->assertEquals($base['body'][$this->getRecordResource()][0]['$id'], $documents['body'][$this->getRecordResource()][0]['$id']);
         $this->assertCount(1, $documents['body'][$this->getRecordResource()]);
-
-        return [];
     }
 
-    #[Depends('testCreateDocument')]
-    public function testListDocumentsLimitAndOffset(array $data): array
+    public function testListDocumentsLimitAndOffset(): void
     {
+        $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -2712,13 +3255,11 @@ trait DatabasesBase
         $this->assertEquals(2017, $documents['body'][$this->getRecordResource()][0]['releaseYear']);
         $this->assertEquals(2019, $documents['body'][$this->getRecordResource()][1]['releaseYear']);
         $this->assertCount(2, $documents['body'][$this->getRecordResource()]);
-
-        return [];
     }
 
-    #[Depends('testCreateDocument')]
-    public function testDocumentsListQueries(array $data): array
+    public function testDocumentsListQueries(): void
     {
+        $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $documents = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -2955,13 +3496,11 @@ trait DatabasesBase
         // ]);
         // $this->assertEquals(400, $documents['headers']['status-code']);
         // $this->assertEquals('Invalid query: Cannot query search on attribute "actors" because it is an array.', $documents['body']['message']);
-
-        return [];
     }
 
-    #[Depends('testCreateDocument')]
-    public function testUpdateDocument(array $data): array
+    public function testUpdateDocument(): void
     {
+        $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -3479,9 +4018,9 @@ trait DatabasesBase
         $this->assertEquals(2031, $verify2['body']['releaseYear']);
     }
 
-    #[Depends('testCreateDocument')]
-    public function testDeleteDocument(array $data): array
+    public function testDeleteDocument(): void
     {
+        $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -3525,8 +4064,6 @@ trait DatabasesBase
         ], $this->getHeaders()));
 
         $this->assertEquals(404, $document['headers']['status-code']);
-
-        return $data;
     }
 
     public function testInvalidDocumentStructure(): void
@@ -4079,9 +4616,9 @@ trait DatabasesBase
         $this->assertEquals('Invalid document structure: Attribute "lowerBound" has invalid format. Value must be a valid range between 5 and 9,223,372,036,854,775,807', $tooLow['body']['message']);
     }
 
-    #[Depends('testDeleteDocument')]
-    public function testDefaultPermissions(array $data): array
+    public function testDefaultPermissions(): void
     {
+        $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -4193,8 +4730,6 @@ trait DatabasesBase
                 $this->assertEquals(200, $document['headers']['status-code']);
                 break;
         }
-
-        return $data;
     }
 
     public function testEnforceCollectionAndDocumentPermissions(): void
@@ -4586,9 +5121,9 @@ trait DatabasesBase
         $this->assertCount(1, $documentsUser2['body'][$this->getRecordResource()]);
     }
 
-    #[Depends('testDefaultPermissions')]
-    public function testUniqueIndexDuplicate(array $data): array
+    public function testUniqueIndexDuplicate(): void
     {
+        $data = $this->setupDocuments();
         $databaseId = $data['databaseId'];
         $uniqueIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
             'content-type' => 'application/json',
@@ -4672,13 +5207,11 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testUniqueIndexDuplicate')]
-    public function testPersistentCreatedAt(array $data): array
+    public function testPersistentCreatedAt(): void
     {
+        $data = $this->setupDocuments();
         $headers = $this->getSide() === 'client' ? array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4735,11 +5268,9 @@ trait DatabasesBase
             $this->assertEquals($document['body']['$updatedAt'], DateTime::formatTz('2022-08-01 13:09:23.050'));
 
         }
-
-        return $data;
     }
 
-    public function testUpdatePermissionsWithEmptyPayload(): array
+    public function testUpdatePermissionsWithEmptyPayload(): void
     {
         // Create Database
         $database = $this->client->call(Client::METHOD_POST, $this->getApiBasePath(), array_merge([
@@ -4852,13 +5383,11 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
-
-        return [];
     }
 
-    #[Depends('testCreateDatabase')]
-    public function testAttributeBooleanDefault(array $data): void
+    public function testAttributeBooleanDefault(): void
     {
+        $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 
         /**
@@ -4902,9 +5431,9 @@ trait DatabasesBase
         $this->assertEquals(202, $false['headers']['status-code']);
     }
 
-    #[Depends('testCreateDatabase')]
-    public function testOneToOneRelationship(array $data): array
+    public function testOneToOneRelationship(): void
     {
+        $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 
         $person = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
@@ -5146,17 +5675,11 @@ trait DatabasesBase
         $this->assertEquals(200, $attributes['headers']['status-code']);
         $this->assertEquals(1, $attributes['body']['total']);
         $this->assertEquals('libraryName', $attributes['body'][$this->getSchemaResource()][0]['key']);
-
-        return [
-            'databaseId' => $databaseId,
-            'personCollection' => $person['body']['$id'],
-            'libraryCollection' => $library['body']['$id'],
-        ];
     }
 
-    #[Depends('testOneToOneRelationship')]
-    public function testOneToManyRelationship(array $data): array
+    public function testOneToManyRelationship(): void
     {
+        $data = $this->setupOneToOneRelationship();
         $databaseId = $data['databaseId'];
         $personCollection = $data['personCollection'];
         $libraryCollection = $data['libraryCollection'];
@@ -5303,13 +5826,11 @@ trait DatabasesBase
         $this->assertEquals('oneToMany', $attribute['body']['relationType']);
         $this->assertEquals(true, $attribute['body']['twoWay']);
         $this->assertEquals(Database::RELATION_MUTATE_CASCADE, $attribute['body']['onDelete']);
-
-        return ['databaseId' => $databaseId, 'personCollection' => $personCollection];
     }
 
-    #[Depends('testCreateDatabase')]
-    public function testManyToOneRelationship(array $data): array
+    public function testManyToOneRelationship(): void
     {
+        $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 
         // Create album collection
@@ -5457,9 +5978,9 @@ trait DatabasesBase
         ];
     }
 
-    #[Depends('testCreateDatabase')]
-    public function testManyToManyRelationship(array $data): array
+    public function testManyToManyRelationship(): void
     {
+        $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
 
         // Create sports collection
@@ -5618,9 +6139,9 @@ trait DatabasesBase
         ];
     }
 
-    #[Depends('testOneToManyRelationship')]
-    public function testValidateOperators(array $data): void
+    public function testValidateOperators(): void
     {
+        $data = $this->setupOneToManyRelationship();
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['personCollection']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5659,9 +6180,9 @@ trait DatabasesBase
         $this->assertArrayHasKey($this->getContainerIdResponseKey(), $response['body'][$this->getRecordResource()][0]);
     }
 
-    #[Depends('testOneToManyRelationship')]
-    public function testSelectQueries(array $data): void
+    public function testSelectQueries(): void
     {
+        $data = $this->setupOneToManyRelationship();
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($data['databaseId'], $data['personCollection']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -5951,9 +6472,9 @@ trait DatabasesBase
         $this->assertEquals(200, $update['headers']['status-code']);
     }
 
-    #[Depends('testCreateDatabase')]
-    public function testTimeout(array $data): void
+    public function testTimeout(): void
     {
+        $data = $this->setupDatabase();
         $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($data['databaseId']), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Databases\Permissions;
 
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ApiLegacy;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -49,15 +48,16 @@ class LegacyPermissionsMemberTest extends Scope
     }
 
     /**
-     * Setup database
-     *
-     * Data providers lose object state so explicitly pass [$users, $collections] to each iteration
-     *
-     * @return array
-     * @throws \Exception
+     * Setup database helper with caching
      */
-    public function testSetupDatabase(): array
+    protected function setupDatabase(): array
     {
+        $cacheKey = $this->getProject()['$id'] . '_' . static::class;
+
+        if (!empty(self::$setupDatabaseCache[$cacheKey])) {
+            return self::$setupDatabaseCache[$cacheKey];
+        }
+
         $this->createUsers();
 
         $db = $this->client->call(
@@ -163,17 +163,28 @@ class LegacyPermissionsMemberTest extends Scope
 
         sleep(2);
 
-        return [
+        self::$setupDatabaseCache[$cacheKey] = [
             'users' => $this->users,
             'collections' => $this->collections,
             'databaseId' => $databaseId
         ];
+
+        return self::$setupDatabaseCache[$cacheKey];
+    }
+
+    /**
+     * Setup database test
+     */
+    public function testSetupDatabase(): void
+    {
+        $data = $this->setupDatabase();
+        $this->assertNotEmpty($data['databaseId']);
     }
 
     #[DataProvider('permissionsProvider')]
-    #[Depends('testSetupDatabase')]
-    public function testReadDocuments($permissions, $anyCount, $usersCount, $docOnlyCount, $data)
+    public function testReadDocuments($permissions, $anyCount, $usersCount, $docOnlyCount)
     {
+        $data = $this->setupDatabase();
         $users = $data['users'];
         $collections = $data['collections'];
         $databaseId = $data['databaseId'];
