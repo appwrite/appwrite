@@ -12,11 +12,20 @@ class Action extends AppwriteAction
     protected function getPermissions(string $teamId, string $projectId): array
     {
         return [
-            Permission::read(Role::team(ID::custom($teamId))),
+            // Team-wide permissions
+            Permission::read(Role::team(ID::custom($teamId), 'owner')),
+            Permission::read(Role::team(ID::custom($teamId), 'developer')),
             Permission::update(Role::team(ID::custom($teamId), 'owner')),
             Permission::update(Role::team(ID::custom($teamId), 'developer')),
             Permission::delete(Role::team(ID::custom($teamId), 'owner')),
             Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            // Project-wide permissions
+            Permission::read(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
+            Permission::read(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
+            Permission::update(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
+            Permission::update(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
+            Permission::delete(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
+            Permission::delete(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
         ];
     }
 }
