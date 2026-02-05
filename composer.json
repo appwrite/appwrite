@@ -9,6 +9,12 @@
             "email": "eldad@appwrite.io"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/utopia-php/websocket"
+        }
+    ],
     "scripts": {
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test --config pint.json",
@@ -76,7 +82,7 @@
         "utopia-php/system": "0.9.*",
         "utopia-php/telemetry": "0.2.*",
         "utopia-php/vcs": "1.*",
-        "utopia-php/websocket": "0.3.*",
+        "utopia-php/websocket": "dev-fix-conditional-compression",
         "matomo/device-detector": "6.4.*",
         "dragonmantank/cron-expression": "3.4.*",
         "phpmailer/phpmailer": "6.9.*",
