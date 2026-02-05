@@ -13,6 +13,90 @@ use Utopia\Database\Query;
 trait TransactionsBase
 {
     use SchemaPolling;
+
+    protected static string $sharedDatabaseId = '';
+    protected static string $sharedCollectionId = '';
+    protected static bool $sharedSetupDone = false;
+
+    /**
+     * Get or create a shared database for tests that don't need isolation
+     */
+    protected function getSharedDatabase(): string
+    {
+        if (!empty(self::$sharedDatabaseId)) {
+            return self::$sharedDatabaseId;
+        }
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'SharedTransactionTestDB'
+        ]);
+
+        $this->assertEquals(201, $database['headers']['status-code']);
+        self::$sharedDatabaseId = $database['body']['$id'];
+        return self::$sharedDatabaseId;
+    }
+
+    /**
+     * Get or create a shared collection with a 'name' attribute for tests
+     */
+    protected function getSharedCollection(): string
+    {
+        if (!empty(self::$sharedCollectionId)) {
+            return self::$sharedCollectionId;
+        }
+
+        $databaseId = $this->getSharedDatabase();
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'SharedTestCollection',
+            'permissions' => [
+                Permission::create(Role::any()),
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        self::$sharedCollectionId = $collection['body']['$id'];
+
+        // Create a standard 'name' attribute
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, self::$sharedCollectionId, "string", null), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->waitForAllAttributes($databaseId, self::$sharedCollectionId);
+
+        return self::$sharedCollectionId;
+    }
+
+    /**
+     * Reset shared state after all tests
+     */
+    public static function tearDownAfterClass(): void
+    {
+        self::$sharedDatabaseId = '';
+        self::$sharedCollectionId = '';
+        self::$sharedSetupDone = false;
+        parent::tearDownAfterClass();
+    }
+
     /**
      * Test creating a transaction
      */
@@ -1847,46 +1931,10 @@ trait TransactionsBase
      */
     public function testDeleteDocument(): void
     {
-        // Create database and collection
-        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'databaseId' => ID::unique(),
-            'name' => 'DeleteRouteTestDB'
-        ]);
-
-        $databaseId = $database['body']['$id'];
-
-        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            $this->getContainerIdParam() => ID::unique(),
-            'name' => 'TestCollection',
-            'permissions' => [
-                Permission::create(Role::any()),
-                Permission::read(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-        ]);
-
-        $collectionId = $collection['body']['$id'];
-
-        // Create attribute
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, "string", null), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'name',
-            'size' => 256,
-            'required' => true,
-        ]);
-
-        $this->waitForAllAttributes($databaseId, $collectionId);
+        // Use shared database and collection to avoid overwhelming the worker
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+        $docId = ID::unique();
 
         // Create document outside transaction
         $doc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), array_merge([
@@ -1894,7 +1942,7 @@ trait TransactionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getRecordIdParam() => 'doc_to_delete',
+            $this->getRecordIdParam() => $docId,
             'data' => ['name' => 'Will be deleted']
         ]);
 
@@ -1909,7 +1957,7 @@ trait TransactionsBase
         $transactionId = $transaction['body']['$id'];
 
         // Delete document via normal route with transactionId
-        $response = $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $collectionId, "doc_to_delete"), array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, $this->getRecordUrl($databaseId, $collectionId, $docId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1920,7 +1968,7 @@ trait TransactionsBase
         $this->assertEquals(204, $response['headers']['status-code']);
 
         // Document should still exist outside transaction
-        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, "doc_to_delete"), array_merge([
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $docId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
