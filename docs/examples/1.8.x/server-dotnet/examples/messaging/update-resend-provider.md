@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -18,4 +19,4 @@ Provider result = await messaging.UpdateResendProvider(
     fromEmail: "email@example.com", // optional
     replyToName: "<REPLY_TO_NAME>", // optional
     replyToEmail: "<REPLY_TO_EMAIL>" // optional
-);
+);```

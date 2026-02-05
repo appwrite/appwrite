@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -16,3 +17,4 @@ let columnMediumtext = try await tablesDB.updateMediumtextColumn(
     newKey: "" // optional
 )
 
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -18,4 +19,4 @@ Provider result = await messaging.CreateAPNSProvider(
     bundleId: "<BUNDLE_ID>", // optional
     sandbox: false, // optional
     enabled: false // optional
-);
+);```

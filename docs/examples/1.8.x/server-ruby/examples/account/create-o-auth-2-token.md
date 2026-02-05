@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -16,3 +17,4 @@ result = account.create_o_auth2_token(
     failure: 'https://example.com', # optional
     scopes: [] # optional
 )
+```

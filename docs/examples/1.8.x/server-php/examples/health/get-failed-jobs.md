@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $health = new Health($client);
 $result = $health->getFailedJobs(
     name: Name::V1DATABASE(),
     threshold: null // optional
-);
+);```

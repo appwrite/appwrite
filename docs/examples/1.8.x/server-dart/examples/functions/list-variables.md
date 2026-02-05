@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Functions functions = Functions(client);
 VariableList result = await functions.listVariables(
     functionId: '<FUNCTION_ID>',
 );
+```

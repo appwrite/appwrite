@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -14,3 +15,4 @@ ColumnPoint result = await tablesDB.createPointColumn(
     xrequired: false,
     xdefault: [1, 2], // (optional)
 );
+```

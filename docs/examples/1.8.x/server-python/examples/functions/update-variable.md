@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 
@@ -15,3 +16,4 @@ result = functions.update_variable(
     value = '<VALUE>', # optional
     secret = False # optional
 )
+```

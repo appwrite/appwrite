@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -15,3 +16,4 @@ AttributeBoolean result = await databases.updateBooleanAttribute(
     xdefault: false,
     newKey: '', // (optional)
 );
+```

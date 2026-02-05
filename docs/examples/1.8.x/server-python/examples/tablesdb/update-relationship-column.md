@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 from appwrite.enums import RelationMutate
@@ -16,3 +17,4 @@ result = tables_db.update_relationship_column(
     on_delete = RelationMutate.CASCADE, # optional
     new_key = '' # optional
 )
+```

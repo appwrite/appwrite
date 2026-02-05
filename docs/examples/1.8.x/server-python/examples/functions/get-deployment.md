@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 
@@ -12,3 +13,4 @@ result = functions.get_deployment(
     function_id = '<FUNCTION_ID>',
     deployment_id = '<DEPLOYMENT_ID>'
 )
+```

@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Token result = await account.createRecovery(
     email: 'email@example.com',
     url: 'https://example.com',
 );
+```

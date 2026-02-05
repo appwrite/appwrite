@@ -1,3 +1,4 @@
+```graphql
 mutation {
     functionsUpdate(
         functionId: "<FUNCTION_ID>",
@@ -58,3 +59,4 @@ mutation {
         specification
     }
 }
+```

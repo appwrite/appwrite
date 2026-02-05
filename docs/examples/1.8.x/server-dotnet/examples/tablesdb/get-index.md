@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ ColumnIndex result = await tablesDB.GetIndex(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>",
     key: ""
-);
+);```

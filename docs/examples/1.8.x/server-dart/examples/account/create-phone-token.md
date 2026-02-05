@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -11,3 +12,4 @@ Token result = await account.createPhoneToken(
     userId: '<USER_ID>',
     phone: '+12065550100',
 );
+```

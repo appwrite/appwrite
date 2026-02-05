@@ -1,3 +1,4 @@
+```http
 POST /v1/messaging/messages/push HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -26,3 +27,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "critical": false,
   "priority": "normal"
 }
+```

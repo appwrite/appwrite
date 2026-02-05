@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Teams
@@ -13,4 +14,4 @@ val result = teams.updateMembership(
     teamId = "<TEAM_ID>", 
     membershipId = "<MEMBERSHIP_ID>", 
     roles = roles.ADMIN,
-)
+)```

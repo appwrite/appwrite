@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.teams import Teams
 from appwrite.enums import Roles
@@ -14,3 +15,4 @@ result = teams.update_membership(
     membership_id = '<MEMBERSHIP_ID>',
     roles = [Roles.ADMIN]
 )
+```

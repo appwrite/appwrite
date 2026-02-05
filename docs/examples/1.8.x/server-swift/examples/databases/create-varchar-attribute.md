@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -17,3 +18,4 @@ let attributeVarchar = try await databases.createVarcharAttribute(
     array: false // optional
 )
 
+```

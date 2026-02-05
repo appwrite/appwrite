@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -18,4 +19,4 @@ Collection result = await databases.CreateCollection(
     enabled: false, // optional
     attributes: new List<object>(), // optional
     indexes: new List<object>() // optional
-);
+);```

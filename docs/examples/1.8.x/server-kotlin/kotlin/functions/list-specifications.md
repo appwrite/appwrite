@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
@@ -10,3 +11,4 @@ val client = Client()
 val functions = Functions(client)
 
 val response = functions.listSpecifications()
+```

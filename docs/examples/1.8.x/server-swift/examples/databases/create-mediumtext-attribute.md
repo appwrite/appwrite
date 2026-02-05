@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -16,3 +17,4 @@ let attributeMediumtext = try await databases.createMediumtextAttribute(
     array: false // optional
 )
 
+```

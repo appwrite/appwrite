@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -11,3 +12,4 @@ let mfaType = try await account.createMFAAuthenticator(
     type: .totp
 )
 
+```

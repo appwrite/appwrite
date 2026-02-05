@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = functions.delete_deployment(
     function_id: '<FUNCTION_ID>',
     deployment_id: '<DEPLOYMENT_ID>'
 )
+```

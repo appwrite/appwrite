@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -34,3 +35,4 @@ let bytes = try await avatars.getScreenshot(
     output: .jpeg // optional
 )
 
+```

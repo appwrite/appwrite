@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -14,3 +15,4 @@ result = messaging.create_fcm_provider(
     service_account_json = {}, # optional
     enabled = False # optional
 )
+```

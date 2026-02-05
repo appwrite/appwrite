@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
@@ -16,3 +17,4 @@ val response = tablesDB.createPointColumn(
     required = false,
     default = listOf(1, 2) // optional
 )
+```

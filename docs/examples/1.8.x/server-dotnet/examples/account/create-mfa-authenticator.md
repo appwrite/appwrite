@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -12,4 +13,4 @@ Account account = new Account(client);
 
 MfaType result = await account.CreateMFAAuthenticator(
     type: AuthenticatorType.Totp
-);
+);```

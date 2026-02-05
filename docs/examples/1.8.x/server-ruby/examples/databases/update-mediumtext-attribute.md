@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = databases.update_mediumtext_attribute(
     default: '<DEFAULT>',
     new_key: '' # optional
 )
+```

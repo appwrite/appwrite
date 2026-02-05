@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -13,4 +14,4 @@ $functions = new Functions($client);
 $result = $functions->updateFunctionDeployment(
     functionId: '<FUNCTION_ID>',
     deploymentId: '<DEPLOYMENT_ID>'
-);
+);```

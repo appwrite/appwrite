@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ account = Account.new(client)
 result = account.delete_mfa_authenticator(
     type: AuthenticatorType::TOTP
 )
+```

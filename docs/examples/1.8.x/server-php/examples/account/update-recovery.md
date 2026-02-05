@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $result = $account->updateRecovery(
     userId: '<USER_ID>',
     secret: '<SECRET>',
     password: ''
-);
+);```

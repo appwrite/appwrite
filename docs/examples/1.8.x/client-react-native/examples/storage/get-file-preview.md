@@ -1,3 +1,4 @@
+```javascript
 import { Client, Storage, ImageGravity, ImageFormat } from "react-native-appwrite";
 
 const client = new Client()
@@ -24,3 +25,4 @@ const result = storage.getFilePreview({
 });
 
 console.log(result);
+```

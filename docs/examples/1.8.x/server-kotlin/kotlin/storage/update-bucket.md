@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Storage
@@ -25,3 +26,4 @@ val response = storage.updateBucket(
     antivirus = false, // optional
     transformations = false // optional
 )
+```

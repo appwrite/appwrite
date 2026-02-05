@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = messaging.create_apns_provider(
     sandbox: false, # optional
     enabled: false # optional
 )
+```

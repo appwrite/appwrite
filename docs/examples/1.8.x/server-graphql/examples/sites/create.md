@@ -1,3 +1,4 @@
+```graphql
 mutation {
     sitesCreate(
         siteId: "<SITE_ID>",
@@ -59,3 +60,4 @@ mutation {
         fallbackFile
     }
 }
+```

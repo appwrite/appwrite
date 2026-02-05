@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 const fs = require('fs');
 
@@ -14,3 +15,4 @@ const result = await storage.createFile({
     file: InputFile.fromPath('/path/to/file', 'filename'),
     permissions: [sdk.Permission.read(sdk.Role.any())] // optional
 });
+```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -18,4 +19,4 @@ $result = $databases->createVarcharAttribute(
     required: false,
     default: '<DEFAULT>', // optional
     array: false // optional
-);
+);```

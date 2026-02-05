@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -34,3 +34,4 @@ response, error := service.Create(
     sites.WithCreateProviderRootDirectory("<PROVIDER_ROOT_DIRECTORY>"),
     sites.WithCreateSpecification(""),
 )
+```

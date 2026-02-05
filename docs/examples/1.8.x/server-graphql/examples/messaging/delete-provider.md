@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingDeleteProvider(
         providerId: "<PROVIDER_ID>"
@@ -5,3 +6,4 @@ mutation {
         status
     }
 }
+```

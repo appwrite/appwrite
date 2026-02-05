@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = tables_db.update_float_column(
     max: null, # optional
     new_key: '' # optional
 )
+```

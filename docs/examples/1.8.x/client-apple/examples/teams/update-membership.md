@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -13,3 +14,4 @@ let membership = try await teams.updateMembership(
     roles: [.admin]
 )
 
+```

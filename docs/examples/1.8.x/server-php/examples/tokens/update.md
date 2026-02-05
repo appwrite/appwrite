@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -13,4 +14,4 @@ $tokens = new Tokens($client);
 $result = $tokens->update(
     tokenId: '<TOKEN_ID>',
     expire: '' // optional
-);
+);```

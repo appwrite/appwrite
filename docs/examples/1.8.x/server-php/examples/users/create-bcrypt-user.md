@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $users->createBcryptUser(
     email: 'email@example.com',
     password: 'password',
     name: '<NAME>' // optional
-);
+);```

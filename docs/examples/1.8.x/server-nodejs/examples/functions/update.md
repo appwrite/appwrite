@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -27,3 +28,4 @@ const result = await functions.update({
     providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>', // optional
     specification: '' // optional
 });
+```

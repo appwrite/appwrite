@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Health;
@@ -17,3 +18,4 @@ health.getTime(new CoroutineCallback<>((result, error) -> {
 
     System.out.println(result);
 }));
+```

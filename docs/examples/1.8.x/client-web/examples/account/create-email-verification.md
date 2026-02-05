@@ -1,3 +1,4 @@
+```javascript
 import { Client, Account } from "appwrite";
 
 const client = new Client()
@@ -11,3 +12,4 @@ const result = await account.createEmailVerification({
 });
 
 console.log(result);
+```

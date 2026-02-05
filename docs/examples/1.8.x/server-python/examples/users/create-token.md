@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 
@@ -13,3 +14,4 @@ result = users.create_token(
     length = 4, # optional
     expire = 60 # optional
 )
+```

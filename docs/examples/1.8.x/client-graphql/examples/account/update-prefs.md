@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountUpdatePrefs(
         prefs: "{\"language\":\"en\",\"timezone\":\"UTC\",\"darkTheme\":true}"
@@ -35,3 +36,4 @@ mutation {
         accessedAt
     }
 }
+```

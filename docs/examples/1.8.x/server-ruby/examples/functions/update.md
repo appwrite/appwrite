@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -30,3 +31,4 @@ result = functions.update(
     provider_root_directory: '<PROVIDER_ROOT_DIRECTORY>', # optional
     specification: '' # optional
 )
+```

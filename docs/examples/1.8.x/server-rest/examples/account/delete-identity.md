@@ -1,3 +1,4 @@
+```http
 DELETE /v1/account/identities/{identityId} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -6,3 +7,4 @@ X-Appwrite-Project: <YOUR_PROJECT_ID>
 X-Appwrite-Session: 
 X-Appwrite-JWT: <YOUR_JWT>
 
+```

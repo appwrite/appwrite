@@ -1,3 +1,4 @@
+```javascript
 import { Client, Messaging, MessagePriority } from "@appwrite.io/console";
 
 const client = new Client()
@@ -29,3 +30,4 @@ const result = await messaging.updatePush({
 });
 
 console.log(result);
+```

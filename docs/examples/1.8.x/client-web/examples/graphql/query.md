@@ -1,3 +1,4 @@
+```javascript
 import { Client, Graphql } from "appwrite";
 
 const client = new Client()
@@ -11,3 +12,4 @@ const result = await graphql.query({
 });
 
 console.log(result);
+```

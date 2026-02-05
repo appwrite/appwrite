@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 from appwrite.enums import MessagingProviderType
@@ -17,3 +18,4 @@ result = users.create_target(
     provider_id = '<PROVIDER_ID>', # optional
     name = '<NAME>' # optional
 )
+```

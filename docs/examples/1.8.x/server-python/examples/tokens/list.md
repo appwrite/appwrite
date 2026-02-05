@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tokens import Tokens
 
@@ -14,3 +15,4 @@ result = tokens.list(
     queries = [], # optional
     total = False # optional
 )
+```

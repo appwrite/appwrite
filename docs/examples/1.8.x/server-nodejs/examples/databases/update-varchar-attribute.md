@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -16,3 +17,4 @@ const result = await databases.updateVarcharAttribute({
     size: 1, // optional
     newKey: '' // optional
 });
+```

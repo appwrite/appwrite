@@ -1,3 +1,4 @@
+```javascript
 import { Client, Storage, Permission, Role } from "@appwrite.io/console";
 
 const client = new Client()
@@ -14,3 +15,4 @@ const result = await storage.createFile({
 });
 
 console.log(result);
+```

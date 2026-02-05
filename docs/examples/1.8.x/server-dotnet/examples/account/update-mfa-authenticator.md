@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -13,4 +14,4 @@ Account account = new Account(client);
 User result = await account.UpdateMFAAuthenticator(
     type: AuthenticatorType.Totp,
     otp: "<OTP>"
-);
+);```

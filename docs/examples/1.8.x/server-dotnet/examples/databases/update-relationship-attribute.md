@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -16,4 +17,4 @@ AttributeRelationship result = await databases.UpdateRelationshipAttribute(
     key: "",
     onDelete: RelationMutate.Cascade, // optional
     newKey: "" // optional
-);
+);```
