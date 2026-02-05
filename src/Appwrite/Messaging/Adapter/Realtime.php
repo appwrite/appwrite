@@ -345,7 +345,7 @@ class Realtime extends MessagingAdapter
         $subscriptions = [];
 
         foreach ($channelNames as $channel) {
-            $params = $getQueryParam($channel);
+            $params = $getQueryParam(\str_replace('.', '_', $channel));
 
             if ($params === null) {
                 if (!isset($subscriptions[0])) {
