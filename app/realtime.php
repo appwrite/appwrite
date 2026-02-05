@@ -797,8 +797,6 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 }
 
                 $roles = $user->getRoles($database->getAuthorization());
-                $names = $realtime->connections[$connection]['channels'] ?? [];
-                $channels = Realtime::convertChannels(array_flip($names), $user->getId());
 
                 $authorization = $realtime->connections[$connection]['authorization'] ?? null;
                 $projectId = $realtime->connections[$connection]['projectId'] ?? null;

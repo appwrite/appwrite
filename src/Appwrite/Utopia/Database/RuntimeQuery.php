@@ -95,12 +95,13 @@ class RuntimeQuery extends Query
             'type' => 'filter',
             'conditions' => [],
             'attributes' => [],
+            'hasOr' => false,
         ];
 
         foreach ($queries as $query) {
             $condition = self::compileCondition($query);
             $compiled['conditions'][] = $condition;
-            self::extractAttributes($condition, $compiled['attributes']);
+            self::extractAttributes($condition, $compiled['attributes'], $compiled['hasOr']);
         }
 
         $compiled['attributes'] = array_unique($compiled['attributes']);
@@ -138,15 +139,19 @@ class RuntimeQuery extends Query
 
     /**
      * Extract all attribute names from a compiled condition tree.
+     * Also tracks whether any OR conditions exist.
      */
-    private static function extractAttributes(array $condition, array &$attributes): void
+    private static function extractAttributes(array $condition, array &$attributes, bool &$hasOr): void
     {
+        if (isset($condition['op']) && $condition['op'] === 'OR') {
+            $hasOr = true;
+        }
         if (isset($condition['attr'])) {
             $attributes[] = $condition['attr'];
         }
         if (isset($condition['conditions'])) {
             foreach ($condition['conditions'] as $sub) {
-                self::extractAttributes($sub, $attributes);
+                self::extractAttributes($sub, $attributes, $hasOr);
             }
         }
     }
@@ -166,9 +171,12 @@ class RuntimeQuery extends Query
         }
 
         // Quick rejection: if payload is missing any required attribute, fail fast
-        foreach ($compiled['attributes'] as $attr) {
-            if (!isset($payload[$attr]) && !\array_key_exists($attr, $payload)) {
-                return null;
+        // Skip this optimization when OR conditions exist (OR can match with partial attributes)
+        if (empty($compiled['hasOr'])) {
+            foreach ($compiled['attributes'] as $attr) {
+                if (!isset($payload[$attr]) && !\array_key_exists($attr, $payload)) {
+                    return null;
+                }
             }
         }
 

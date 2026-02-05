@@ -463,6 +463,32 @@ class RuntimeQueryTest extends TestCase
         $this->assertEquals($payload, $result);
     }
 
+    public function testOrWithMissingAttributeInOneBranch(): void
+    {
+        // OR should match when one branch's attribute is missing but another branch matches
+        $query = Query::or([
+            Query::equal('name', ['John']),
+            Query::equal('email', ['john@example.com'])
+        ]);
+        // Payload only has email, not name - should still match via email branch
+        $payload = ['email' => 'john@example.com'];
+        $result = $this->compileAndFilter([$query], $payload);
+        $this->assertEquals($payload, $result);
+    }
+
+    public function testOrWithMissingAttributeNoMatch(): void
+    {
+        // OR should not match when the only matching branch has missing attribute
+        $query = Query::or([
+            Query::equal('name', ['John']),
+            Query::equal('email', ['john@example.com'])
+        ]);
+        // Payload only has name but it doesn't match - should not match
+        $payload = ['name' => 'Jane'];
+        $result = $this->compileAndFilter([$query], $payload);
+        $this->assertNull($result);
+    }
+
     // Complex combinations
     public function testAndOrCombination(): void
     {
