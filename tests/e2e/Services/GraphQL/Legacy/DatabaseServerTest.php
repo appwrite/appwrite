@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\GraphQL\Legacy;
 
 use Exception;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -20,7 +19,673 @@ class DatabaseServerTest extends Scope
     use SideServer;
     use Base;
 
-    public function testCreateDatabase(): array
+    /**
+     * Static cache for database data
+     */
+    private static array $databaseCache = [];
+
+    /**
+     * Static cache for collection data (includes database, collection, collection2)
+     */
+    private static array $collectionCache = [];
+
+    /**
+     * Static cache for data after all attributes are created
+     */
+    private static array $allAttributesCache = [];
+
+    /**
+     * Static cache for index data
+     */
+    private static array $indexCache = [];
+
+    /**
+     * Static cache for document data
+     */
+    private static array $documentCache = [];
+
+    /**
+     * Static cache for relationship data
+     */
+    private static array $relationshipCache = [];
+
+    /**
+     * Static cache for bulk operations data
+     */
+    private static array $bulkCache = [];
+
+    /**
+     * Helper to set up a database
+     */
+    protected function setupDatabase(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+        if (!empty(self::$databaseCache[$cacheKey])) {
+            return self::$databaseCache[$cacheKey];
+        }
+
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::CREATE_DATABASE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => 'actors',
+                'name' => 'Actors',
+            ]
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertIsArray($database['body']['data']);
+        $this->assertArrayNotHasKey('errors', $database['body']);
+        $database = $database['body']['data']['databasesCreate'];
+
+        self::$databaseCache[$cacheKey] = $database;
+        return self::$databaseCache[$cacheKey];
+    }
+
+    /**
+     * Helper to set up collections (requires database)
+     */
+    protected function setupCollections(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+        if (!empty(self::$collectionCache[$cacheKey])) {
+            return self::$collectionCache[$cacheKey];
+        }
+
+        $database = $this->setupDatabase();
+
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::CREATE_COLLECTION);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $database['_id'],
+                'collectionId' => 'actors',
+                'name' => 'Actors',
+                'documentSecurity' => false,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ],
+            ]
+        ];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertIsArray($collection['body']['data']);
+        $this->assertArrayNotHasKey('errors', $collection['body']);
+        $collection = $collection['body']['data']['databasesCreateCollection'];
+
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $database['_id'],
+                'collectionId' => 'movies',
+                'name' => 'Movies',
+                'documentSecurity' => false,
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::create(Role::users()),
+                    Permission::update(Role::users()),
+                    Permission::delete(Role::users()),
+                ],
+            ]
+        ];
+
+        $collection2 = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertIsArray($collection2['body']['data']);
+        $this->assertArrayNotHasKey('errors', $collection2['body']);
+        $collection2 = $collection2['body']['data']['databasesCreateCollection'];
+
+        self::$collectionCache[$cacheKey] = [
+            'database' => $database,
+            'collection' => $collection,
+            'collection2' => $collection2,
+        ];
+
+        return self::$collectionCache[$cacheKey];
+    }
+
+    /**
+     * Helper to set up all attributes on the collection
+     */
+    protected function setupAllAttributes(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+        if (!empty(self::$allAttributesCache[$cacheKey])) {
+            return self::$allAttributesCache[$cacheKey];
+        }
+
+        $data = $this->setupCollections();
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create string attribute
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        sleep(1);
+
+        // Update string attribute
+        $query = $this->getQuery(self::UPDATE_STRING_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'name',
+                'required' => false,
+                'default' => 'Default Value',
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
+        // Create integer attribute
+        $query = $this->getQuery(self::CREATE_INTEGER_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'age',
+                'min' => 18,
+                'max' => 150,
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        sleep(1);
+
+        // Update integer attribute
+        $query = $this->getQuery(self::UPDATE_INTEGER_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'age',
+                'required' => false,
+                'min' => 12,
+                'max' => 160,
+                'default' => 50
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
+        // Create boolean attribute
+        $query = $this->getQuery(self::CREATE_BOOLEAN_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'alive',
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        sleep(1);
+
+        // Update boolean attribute
+        $query = $this->getQuery(self::UPDATE_BOOLEAN_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'alive',
+                'required' => false,
+                'default' => true
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
+        // Create float attribute
+        $query = $this->getQuery(self::CREATE_FLOAT_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'salary',
+                'min' => 1000.0,
+                'max' => 999999.99,
+                'default' => 1000.0,
+                'required' => false,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        sleep(1);
+
+        // Update float attribute
+        $query = $this->getQuery(self::UPDATE_FLOAT_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'salary',
+                'required' => false,
+                'min' => 100.0,
+                'max' => 1000000.0,
+                'default' => 2500.0
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
+        // Create email attribute
+        $query = $this->getQuery(self::CREATE_EMAIL_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'email',
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        sleep(1);
+
+        // Update email attribute
+        $query = $this->getQuery(self::UPDATE_EMAIL_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'email',
+                'required' => false,
+                'default' => 'torsten@appwrite.io',
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
+        // Create enum attribute
+        $query = $this->getQuery(self::CREATE_ENUM_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'role',
+                'elements' => [
+                    'crew',
+                    'actor',
+                    'guest',
+                ],
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        sleep(1);
+
+        // Update enum attribute
+        $query = $this->getQuery(self::UPDATE_ENUM_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'role',
+                'required' => false,
+                'elements' => [
+                    'crew',
+                    'tech',
+                    'actor'
+                ],
+                'default' => 'tech'
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
+        // Create datetime attribute
+        $query = $this->getQuery(self::CREATE_DATETIME_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'dob',
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        sleep(1);
+
+        // Update datetime attribute
+        $query = $this->getQuery(self::UPDATE_DATETIME_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'dob',
+                'required' => false,
+                'default' => '2000-01-01T00:00:00Z'
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
+        // Create IP attribute
+        $query = $this->getQuery(self::CREATE_IP_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'ip',
+                'required' => false,
+                'default' => '::1',
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        sleep(3);
+
+        // Update IP attribute
+        $query = $this->getQuery(self::UPDATE_IP_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'ip',
+                'required' => false,
+                'default' => '127.0.0.1'
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
+        // Create URL attribute
+        $query = $this->getQuery(self::CREATE_URL_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'url',
+                'required' => false,
+                'default' => 'https://appwrite.io',
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+        sleep(3);
+
+        // Update URL attribute
+        $query = $this->getQuery(self::UPDATE_URL_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'url',
+                'required' => false,
+                'default' => 'https://cloud.appwrite.io'
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
+        self::$allAttributesCache[$cacheKey] = $data;
+        return self::$allAttributesCache[$cacheKey];
+    }
+
+    /**
+     * Helper to set up an index (requires all attributes)
+     */
+    protected function setupIndex(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+        if (!empty(self::$indexCache[$cacheKey])) {
+            return self::$indexCache[$cacheKey];
+        }
+
+        $data = $this->setupAllAttributes();
+        $projectId = $this->getProject()['$id'];
+
+        $query = $this->getQuery(self::CREATE_INDEX);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'index',
+                'type' => 'key',
+                'attributes' => [
+                    'name',
+                    'age',
+                ],
+            ]
+        ];
+
+        $index = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertArrayNotHasKey('errors', $index['body']);
+        $this->assertIsArray($index['body']['data']);
+        $this->assertIsArray($index['body']['data']['databasesCreateIndex']);
+
+        self::$indexCache[$cacheKey] = [
+            'database' => $data['database'],
+            'collection' => $data['collection'],
+            'index' => $index['body']['data']['databasesCreateIndex'],
+        ];
+
+        return self::$indexCache[$cacheKey];
+    }
+
+    /**
+     * Helper to set up a document (requires index)
+     */
+    protected function setupDocument(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+        if (!empty(self::$documentCache[$cacheKey])) {
+            return self::$documentCache[$cacheKey];
+        }
+
+        $data = $this->setupIndex();
+        $projectId = $this->getProject()['$id'];
+
+        $query = $this->getQuery(self::CREATE_DOCUMENT);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'documentId' => ID::unique(),
+                'data' => [
+                    'name' => 'John Doe',
+                    'email' => 'example@appwrite.io',
+                    'age' => 30,
+                    'alive' => true,
+                    'salary' => 9999.9,
+                    'role' => 'crew',
+                    'dob' => '2000-01-01T00:00:00Z',
+                ],
+                'permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
+                ],
+            ]
+        ];
+
+        $document = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertArrayNotHasKey('errors', $document['body']);
+        $this->assertIsArray($document['body']['data']);
+
+        $document = $document['body']['data']['databasesCreateDocument'];
+
+        self::$documentCache[$cacheKey] = [
+            'database' => $data['database'],
+            'collection' => $data['collection'],
+            'document' => $document,
+        ];
+
+        return self::$documentCache[$cacheKey];
+    }
+
+    /**
+     * Helper to set up relationship attribute (requires collections)
+     */
+    protected function setupRelationship(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+        if (!empty(self::$relationshipCache[$cacheKey])) {
+            return self::$relationshipCache[$cacheKey];
+        }
+
+        $data = $this->setupCollections();
+        $projectId = $this->getProject()['$id'];
+
+        $query = $this->getQuery(self::CREATE_RELATIONSHIP_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection2']['_id'],          // Movies
+                'relatedCollectionId' => $data['collection']['_id'],    // Actors
+                'type' => Database::RELATION_ONE_TO_MANY,
+                'twoWay' => true,
+                'key' => 'actors',
+                'twoWayKey' => 'movie'
+            ]
+        ];
+
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $gqlPayload);
+
+        $this->assertArrayNotHasKey('errors', $attribute['body']);
+        $this->assertIsArray($attribute['body']['data']);
+        $this->assertIsArray($attribute['body']['data']['databasesCreateRelationshipAttribute']);
+
+        self::$relationshipCache[$cacheKey] = $data;
+        return self::$relationshipCache[$cacheKey];
+    }
+
+    /**
+     * Helper to set up bulk operations data
+     */
+    protected function setupBulkData(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+        if (!empty(self::$bulkCache[$cacheKey])) {
+            return self::$bulkCache[$cacheKey];
+        }
+
+        $project = $this->getProject();
+        $projectId = $project['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Step 1: Create database
+        $query = $this->getQuery(self::CREATE_DATABASE);
+        $payload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => 'bulk',
+                'name' => 'Bulk',
+            ],
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        $databaseId = $res['body']['data']['databasesCreate']['_id'];
+
+        // Step 2: Create collection
+        $query = $this->getQuery(self::CREATE_COLLECTION);
+        $payload['query'] = $query;
+        $payload['variables'] = [
+            'databaseId' => $databaseId,
+            'collectionId' => 'operations',
+            'name' => 'Operations',
+            'documentSecurity' => false,
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        $collectionId = $res['body']['data']['databasesCreateCollection']['_id'];
+
+        // Step 3: Create attribute
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
+        $payload['query'] = $query;
+        $payload['variables'] = [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        sleep(1);
+
+        // Step 4: Create documents
+        $query = $this->getQuery(self::CREATE_DOCUMENTS);
+        $documents = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $documents[] = ['$id' => 'doc' . $i, 'name' => 'Doc #' . $i];
+        }
+
+        $payload['query'] = $query;
+        $payload['variables'] = [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'documents' => $documents,
+        ];
+        $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
+        $this->assertArrayNotHasKey('errors', $res['body']);
+        $this->assertCount(10, $res['body']['data']['databasesCreateDocuments']['documents']);
+
+        self::$bulkCache[$cacheKey] = [
+            'databaseId' => $databaseId,
+            'collectionId' => $collectionId,
+            'projectId' => $projectId,
+        ];
+
+        return self::$bulkCache[$cacheKey];
+    }
+
+    public function testCreateDatabase(): void
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_DATABASE);
@@ -41,13 +706,12 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $database['body']);
         $database = $database['body']['data']['databasesCreate'];
         $this->assertEquals('Actors', $database['name']);
-
-        return $database;
     }
 
-    #[Depends('testCreateDatabase')]
-    public function testCreateCollection($database): array
+    public function testCreateCollection(): void
     {
+        $database = $this->setupDatabase();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_COLLECTION);
         $gqlPayload = [
@@ -101,20 +765,15 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $collection2['body']);
         $collection2 = $collection2['body']['data']['databasesCreateCollection'];
         $this->assertEquals('Movies', $collection2['name']);
-
-        return [
-            'database' => $database,
-            'collection' => $collection,
-            'collection2' => $collection2,
-        ];
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateCollection')]
-    public function testCreateStringAttribute($data): array
+    public function testCreateStringAttribute(): void
     {
+        $data = $this->setupCollections();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
         $gqlPayload = [
@@ -137,20 +796,38 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateStringAttribute']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateStringAttribute')]
-    public function testUpdateStringAttribute($data): array
+    public function testUpdateStringAttribute(): void
     {
+        $data = $this->setupCollections();
+
+        // Create string attribute first
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        $query = $this->getQuery(self::CREATE_STRING_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'name',
+                'size' => 256,
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
         // Wait for attributes to be available
         sleep(1);
 
-        $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_STRING_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
@@ -163,26 +840,22 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateStringAttribute']);
         $this->assertFalse($attribute['body']['data']['databasesUpdateStringAttribute']['required']);
         $this->assertEquals('Default Value', $attribute['body']['data']['databasesUpdateStringAttribute']['default']);
         $this->assertEquals(200, $attribute['headers']['status-code']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testUpdateStringAttribute')]
-    public function testCreateIntegerAttribute($data): array
+    public function testCreateIntegerAttribute(): void
     {
+        $data = $this->setupCollections();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_INTEGER_ATTRIBUTE);
         $gqlPayload = [
@@ -205,20 +878,39 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateIntegerAttribute']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateIntegerAttribute')]
-    public function testUpdateIntegerAttribute($data): array
+    public function testUpdateIntegerAttribute(): void
     {
+        $data = $this->setupCollections();
+
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create integer attribute first
+        $query = $this->getQuery(self::CREATE_INTEGER_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'age',
+                'min' => 18,
+                'max' => 150,
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
         // Wait for attributes to be available
         sleep(1);
 
-        $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_INTEGER_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
@@ -233,10 +925,7 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateIntegerAttribute']);
@@ -245,16 +934,15 @@ class DatabaseServerTest extends Scope
         $this->assertEquals(160, $attribute['body']['data']['databasesUpdateIntegerAttribute']['max']);
         $this->assertEquals(50, $attribute['body']['data']['databasesUpdateIntegerAttribute']['default']);
         $this->assertEquals(200, $attribute['headers']['status-code']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testUpdateIntegerAttribute')]
-    public function testCreateBooleanAttribute($data): array
+    public function testCreateBooleanAttribute(): void
     {
+        $data = $this->setupCollections();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_BOOLEAN_ATTRIBUTE);
         $gqlPayload = [
@@ -275,20 +963,37 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateBooleanAttribute']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateBooleanAttribute')]
-    public function testUpdateBooleanAttribute($data): array
+    public function testUpdateBooleanAttribute(): void
     {
+        $data = $this->setupCollections();
+
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create boolean attribute first
+        $query = $this->getQuery(self::CREATE_BOOLEAN_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'alive',
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
         // Wait for attributes to be available
         sleep(1);
 
-        $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_BOOLEAN_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
@@ -301,26 +1006,22 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateBooleanAttribute']);
         $this->assertFalse($attribute['body']['data']['databasesUpdateBooleanAttribute']['required']);
         $this->assertTrue($attribute['body']['data']['databasesUpdateBooleanAttribute']['default']);
         $this->assertEquals(200, $attribute['headers']['status-code']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testUpdateBooleanAttribute')]
-    public function testCreateFloatAttribute($data): array
+    public function testCreateFloatAttribute(): void
     {
+        $data = $this->setupCollections();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_FLOAT_ATTRIBUTE);
         $gqlPayload = [
@@ -344,20 +1045,40 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateFloatAttribute']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateFloatAttribute')]
-    public function testUpdateFloatAttribute($data): array
+    public function testUpdateFloatAttribute(): void
     {
+        $data = $this->setupCollections();
+
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create float attribute first
+        $query = $this->getQuery(self::CREATE_FLOAT_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'salary',
+                'min' => 1000.0,
+                'max' => 999999.99,
+                'default' => 1000.0,
+                'required' => false,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
         // Wait for attributes to be available
         sleep(1);
 
-        $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_FLOAT_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
@@ -372,10 +1093,7 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateFloatAttribute']);
@@ -384,16 +1102,15 @@ class DatabaseServerTest extends Scope
         $this->assertEquals(1000000.0, $attribute['body']['data']['databasesUpdateFloatAttribute']['max']);
         $this->assertEquals(2500.0, $attribute['body']['data']['databasesUpdateFloatAttribute']['default']);
         $this->assertEquals(200, $attribute['headers']['status-code']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testUpdateFloatAttribute')]
-    public function testCreateEmailAttribute($data): array
+    public function testCreateEmailAttribute(): void
     {
+        $data = $this->setupCollections();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_EMAIL_ATTRIBUTE);
         $gqlPayload = [
@@ -414,20 +1131,37 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateEmailAttribute']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateEmailAttribute')]
-    public function testUpdateEmailAttribute($data): array
+    public function testUpdateEmailAttribute(): void
     {
+        $data = $this->setupCollections();
+
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create email attribute first
+        $query = $this->getQuery(self::CREATE_EMAIL_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'email',
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
         // Wait for attributes to be available
         sleep(1);
 
-        $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_EMAIL_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
@@ -440,26 +1174,22 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateEmailAttribute']);
         $this->assertFalse($attribute['body']['data']['databasesUpdateEmailAttribute']['required']);
         $this->assertEquals('torsten@appwrite.io', $attribute['body']['data']['databasesUpdateEmailAttribute']['default']);
         $this->assertEquals(200, $attribute['headers']['status-code']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testUpdateEmailAttribute')]
-    public function testCreateEnumAttribute($data): array
+    public function testCreateEnumAttribute(): void
     {
+        $data = $this->setupCollections();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_ENUM_ATTRIBUTE);
         $gqlPayload = [
@@ -485,20 +1215,42 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateEnumAttribute']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateEnumAttribute')]
-    public function testUpdateEnumAttribute($data): array
+    public function testUpdateEnumAttribute(): void
     {
+        $data = $this->setupCollections();
+
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create enum attribute first
+        $query = $this->getQuery(self::CREATE_ENUM_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'role',
+                'elements' => [
+                    'crew',
+                    'actor',
+                    'guest',
+                ],
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
         // Wait for attributes to be available
         sleep(1);
 
-        $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_ENUM_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
@@ -516,10 +1268,7 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateEnumAttribute']);
@@ -528,16 +1277,15 @@ class DatabaseServerTest extends Scope
         $this->assertContains('tech', $attribute['body']['data']['databasesUpdateEnumAttribute']['elements']);
         $this->assertNotContains('guest', $attribute['body']['data']['databasesUpdateEnumAttribute']['elements']);
         $this->assertEquals(200, $attribute['headers']['status-code']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testUpdateEnumAttribute')]
-    public function testCreateDatetimeAttribute($data): array
+    public function testCreateDatetimeAttribute(): void
     {
+        $data = $this->setupCollections();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_DATETIME_ATTRIBUTE);
         $gqlPayload = [
@@ -558,20 +1306,37 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateDatetimeAttribute']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDatetimeAttribute')]
-    public function testUpdateDatetimeAttribute($data): array
+    public function testUpdateDatetimeAttribute(): void
     {
+        $data = $this->setupCollections();
+
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create datetime attribute first
+        $query = $this->getQuery(self::CREATE_DATETIME_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'dob',
+                'required' => true,
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
         // Wait for attributes to be available
         sleep(1);
 
-        $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_DATETIME_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
@@ -584,23 +1349,19 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateDatetimeAttribute']);
         $this->assertFalse($attribute['body']['data']['databasesUpdateDatetimeAttribute']['required']);
         $this->assertEquals('2000-01-01T00:00:00Z', $attribute['body']['data']['databasesUpdateDatetimeAttribute']['default']);
         $this->assertEquals(200, $attribute['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testCreateCollection')]
-    public function testCreateRelationshipAttribute(array $data): array
+    public function testCreateRelationshipAttribute(): void
     {
+        $data = $this->setupCollections();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_RELATIONSHIP_ATTRIBUTE);
         $gqlPayload = [
@@ -624,13 +1385,12 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateRelationshipAttribute']);
-
-        return $data;
     }
 
-    #[Depends('testCreateRelationshipAttribute')]
-    public function testUpdateRelationshipAttribute(array $data): array
+    public function testUpdateRelationshipAttribute(): void
     {
+        $data = $this->setupRelationship();
+
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
@@ -653,16 +1413,15 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateRelationshipAttribute']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testUpdateDatetimeAttribute')]
-    public function testCreateIPAttribute($data): array
+    public function testCreateIPAttribute(): void
     {
+        $data = $this->setupCollections();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_IP_ATTRIBUTE);
         $gqlPayload = [
@@ -684,20 +1443,38 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateIpAttribute']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateIPAttribute')]
-    public function testUpdateIPAttribute($data): array
+    public function testUpdateIPAttribute(): void
     {
+        $data = $this->setupCollections();
+
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create IP attribute first
+        $query = $this->getQuery(self::CREATE_IP_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'ip',
+                'required' => false,
+                'default' => '::1',
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
         // Wait for attributes to be available
         sleep(3);
 
-        $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_IP_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
@@ -710,26 +1487,22 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateIpAttribute']);
         $this->assertFalse($attribute['body']['data']['databasesUpdateIpAttribute']['required']);
         $this->assertEquals('127.0.0.1', $attribute['body']['data']['databasesUpdateIpAttribute']['default']);
         $this->assertEquals(200, $attribute['headers']['status-code']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testUpdateIPAttribute')]
-    public function testCreateURLAttribute($data): array
+    public function testCreateURLAttribute(): void
     {
+        $data = $this->setupCollections();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_URL_ATTRIBUTE);
         $gqlPayload = [
@@ -751,20 +1524,38 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateUrlAttribute']);
-
-        return $data;
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateURLAttribute')]
-    public function testUpdateURLAttribute($data): void
+    public function testUpdateURLAttribute(): void
     {
+        $data = $this->setupCollections();
+
+        $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create URL attribute first
+        $query = $this->getQuery(self::CREATE_URL_ATTRIBUTE);
+        $gqlPayload = [
+            'query' => $query,
+            'variables' => [
+                'databaseId' => $data['database']['_id'],
+                'collectionId' => $data['collection']['_id'],
+                'key' => 'url',
+                'required' => false,
+                'default' => 'https://appwrite.io',
+            ]
+        ];
+        $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
         // Wait for attributes to be available
         sleep(3);
 
-        $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_URL_ATTRIBUTE);
         $gqlPayload = [
             'query' => $query,
@@ -777,10 +1568,7 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $attribute = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesUpdateUrlAttribute']);
@@ -792,9 +1580,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateURLAttribute')]
-    public function testCreateIndex($data): array
+    public function testCreateIndex(): void
     {
+        $data = $this->setupAllAttributes();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_INDEX);
         $gqlPayload = [
@@ -819,20 +1608,15 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
         $this->assertIsArray($index['body']['data']['databasesCreateIndex']);
-
-        return [
-            'database' => $data['database'],
-            'collection' => $data['collection'],
-            'index' => $index['body']['data']['databasesCreateIndex'],
-        ];
     }
 
     /**
      * @throws Exception
      */
-    #[Depends('testCreateIndex')]
-    public function testCreateDocument($data): array
+    public function testCreateDocument(): void
     {
+        $data = $this->setupIndex();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_DOCUMENT);
         $gqlPayload = [
@@ -868,12 +1652,6 @@ class DatabaseServerTest extends Scope
 
         $document = $document['body']['data']['databasesCreateDocument'];
         $this->assertIsArray($document);
-
-        return [
-            'database' => $data['database'],
-            'collection' => $data['collection'],
-            'document' => $document,
-        ];
     }
 
     //    /**
@@ -937,9 +1715,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDatabase')]
-    public function testGetDatabase($database): void
+    public function testGetDatabase(): void
     {
+        $database = $this->setupDatabase();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_DATABASE);
         $gqlPayload = [
@@ -962,9 +1741,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testGetCollections($data): void
+    public function testGetCollections(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_COLLECTIONS);
         $gqlPayload = [
@@ -987,9 +1767,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testGetCollection($data): void
+    public function testGetCollection(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_COLLECTION);
         $gqlPayload = [
@@ -1013,9 +1794,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testGetAttributes($data): void
+    public function testGetAttributes(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_ATTRIBUTES);
         $gqlPayload = [
@@ -1039,9 +1821,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testGetAttribute($data): void
+    public function testGetAttribute(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_ATTRIBUTE);
         $gqlPayload = [
@@ -1066,9 +1849,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateIndex')]
-    public function testGetIndexes($data): void
+    public function testGetIndexes(): void
     {
+        $data = $this->setupIndex();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_INDEXES);
         $gqlPayload = [
@@ -1092,9 +1876,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateIndex')]
-    public function testGetIndex($data): void
+    public function testGetIndex(): void
     {
+        $data = $this->setupIndex();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_INDEX);
         $gqlPayload = [
@@ -1119,9 +1904,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testGetDocuments($data): void
+    public function testGetDocuments(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_DOCUMENTS);
         $gqlPayload = [
@@ -1145,9 +1931,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testGetDocument($data): void
+    public function testGetDocument(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_DOCUMENT);
         $gqlPayload = [
@@ -1219,9 +2006,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDatabase')]
-    public function testUpdateDatabase($database)
+    public function testUpdateDatabase(): void
     {
+        $database = $this->setupDatabase();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_DATABASE);
         $gqlPayload = [
@@ -1245,9 +2033,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testUpdateCollection($data)
+    public function testUpdateCollection(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_COLLECTION);
         $gqlPayload = [
@@ -1273,9 +2062,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testUpdateDocument($data): void
+    public function testUpdateDocument(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::UPDATE_DOCUMENT);
         $gqlPayload = [
@@ -1333,9 +2123,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testDeleteDocument($data): void
+    public function testDeleteDocument(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::DELETE_DOCUMENT);
         $gqlPayload = [
@@ -1383,9 +2174,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testDeleteAttribute($data): void
+    public function testDeleteAttribute(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::DELETE_ATTRIBUTE);
         $gqlPayload = [
@@ -1409,9 +2201,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDocument')]
-    public function testDeleteCollection($data)
+    public function testDeleteCollection(): void
     {
+        $data = $this->setupDocument();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::DELETE_COLLECTION);
         $gqlPayload = [
@@ -1434,9 +2227,10 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    #[Depends('testCreateDatabase')]
-    public function testDeleteDatabase($database)
+    public function testDeleteDatabase(): void
     {
+        $database = $this->setupDatabase();
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::DELETE_DATABASE);
         $gqlPayload = [
@@ -1458,7 +2252,7 @@ class DatabaseServerTest extends Scope
     /**
      * @throws Exception
      */
-    public function testBulkCreateDocuments(): array
+    public function testBulkCreateDocuments(): void
     {
         $project = $this->getProject();
         $projectId = $project['$id'];
@@ -1528,17 +2322,12 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
         $this->assertCount(10, $res['body']['data']['databasesCreateDocuments']['documents']);
-
-        return [
-            'databaseId' => $databaseId,
-            'collectionId' => $collectionId,
-            'projectId' => $projectId,
-        ];
     }
 
-    #[Depends('testBulkCreateDocuments')]
-    public function testBulkUpdateDocuments(array $data): array
+    public function testBulkUpdateDocuments(): void
     {
+        $data = $this->setupBulkData();
+
         $userId = $this->getUser()['$id'];
         $permissions = [
             Permission::read(Role::user($userId)),
@@ -1566,13 +2355,12 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
         $this->assertCount(10, $res['body']['data']['databasesUpdateDocuments']['documents']);
-
-        return $data;
     }
 
-    #[Depends('testBulkUpdateDocuments')]
-    public function testBulkUpsertDocuments(array $data): array
+    public function testBulkUpsertDocuments(): void
     {
+        $data = $this->setupBulkData();
+
         $headers = array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectId'],
@@ -1594,13 +2382,12 @@ class DatabaseServerTest extends Scope
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
         $this->assertCount(2, $res['body']['data']['databasesUpsertDocuments']['documents']);
-
-        return $data;
     }
 
-    #[Depends('testBulkUpsertDocuments')]
-    public function testBulkDeleteDocuments(array $data): array
+    public function testBulkDeleteDocuments(): void
     {
+        $data = $this->setupBulkData();
+
         $headers = array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $data['projectId'],
@@ -1616,8 +2403,6 @@ class DatabaseServerTest extends Scope
         ];
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(11, $res['body']['data']['databasesDeleteDocuments']['documents']);
-
-        return $data;
+        $this->assertCount(10, $res['body']['data']['databasesDeleteDocuments']['documents']);
     }
 }
