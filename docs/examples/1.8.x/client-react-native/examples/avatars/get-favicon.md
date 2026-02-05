@@ -1,3 +1,4 @@
+```javascript
 import { Client, Avatars } from "react-native-appwrite";
 
 const client = new Client()
@@ -11,3 +12,4 @@ const result = avatars.getFavicon({
 });
 
 console.log(result);
+```

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Account
@@ -15,3 +16,4 @@ val response = account.createMagicURLToken(
     url = "https://example.com", // optional
     phrase = false // optional
 )
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ ColumnBoolean result = await tablesDB.UpdateBooleanColumn(
     required: false,
     default: false,
     newKey: "" // optional
-);
+);```

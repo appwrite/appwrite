@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $result = $messaging->listMessageLogs(
     messageId: '<MESSAGE_ID>',
     queries: [], // optional
     total: false // optional
-);
+);```

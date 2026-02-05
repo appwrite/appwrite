@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = sites.create_deployment(
     build_command: '<BUILD_COMMAND>', # optional
     output_directory: '<OUTPUT_DIRECTORY>' # optional
 )
+```

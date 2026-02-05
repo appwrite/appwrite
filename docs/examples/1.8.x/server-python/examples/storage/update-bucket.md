@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.storage import Storage
 from appwrite.enums import Compression
@@ -24,3 +25,4 @@ result = storage.update_bucket(
     antivirus = False, # optional
     transformations = False # optional
 )
+```

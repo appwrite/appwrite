@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -9,3 +10,4 @@ Teams teams = Teams(client);
 Preferences result = await teams.getPrefs(
     teamId: '<TEAM_ID>',
 );
+```

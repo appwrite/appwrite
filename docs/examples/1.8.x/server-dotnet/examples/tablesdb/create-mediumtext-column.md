@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ ColumnMediumtext result = await tablesDB.CreateMediumtextColumn(
     required: false,
     default: "<DEFAULT>", // optional
     array: false // optional
-);
+);```

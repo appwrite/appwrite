@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -24,3 +24,4 @@ response, error := service.CreateFloatColumn(
     tablesdb.WithCreateFloatColumnDefault(0),
     tablesdb.WithCreateFloatColumnArray(false),
 )
+```

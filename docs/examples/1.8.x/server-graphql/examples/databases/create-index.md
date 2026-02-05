@@ -1,3 +1,4 @@
+```graphql
 mutation {
     databasesCreateIndex(
         databaseId: "<DATABASE_ID>",
@@ -20,3 +21,4 @@ mutation {
         orders
     }
 }
+```

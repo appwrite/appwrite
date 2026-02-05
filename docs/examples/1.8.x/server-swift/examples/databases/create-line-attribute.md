@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -15,3 +16,4 @@ let attributeLine = try await databases.createLineAttribute(
     default: [[1, 2], [3, 4], [5, 6]] // optional
 )
 
+```

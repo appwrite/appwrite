@@ -1,3 +1,4 @@
+```graphql
 mutation {
     sitesDelete(
         siteId: "<SITE_ID>"
@@ -5,3 +6,4 @@ mutation {
         status
     }
 }
+```

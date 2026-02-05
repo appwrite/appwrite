@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Health health = new Health(client);
 HealthQueue result = await health.GetQueueDatabases(
     name: "<NAME>", // optional
     threshold: 0 // optional
-);
+);```

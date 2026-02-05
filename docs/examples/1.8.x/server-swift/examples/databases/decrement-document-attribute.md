@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -17,3 +18,4 @@ let document = try await databases.decrementDocumentAttribute(
     transactionId: "<TRANSACTION_ID>" // optional
 )
 
+```

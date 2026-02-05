@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tokens import Tokens
 
@@ -13,3 +14,4 @@ result = tokens.create_file_token(
     file_id = '<FILE_ID>',
     expire = '' # optional
 )
+```

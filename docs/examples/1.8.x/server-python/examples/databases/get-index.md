@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -13,3 +14,4 @@ result = databases.get_index(
     collection_id = '<COLLECTION_ID>',
     key = ''
 )
+```

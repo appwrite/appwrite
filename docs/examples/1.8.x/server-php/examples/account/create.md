@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $account->create(
     email: 'email@example.com',
     password: '',
     name: '<NAME>' // optional
-);
+);```

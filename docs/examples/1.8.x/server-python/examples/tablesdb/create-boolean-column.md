@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 
@@ -16,3 +17,4 @@ result = tables_db.create_boolean_column(
     default = False, # optional
     array = False # optional
 )
+```

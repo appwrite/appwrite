@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -12,4 +13,4 @@ $teams = new Teams($client);
 
 $result = $teams->getPrefs(
     teamId: '<TEAM_ID>'
-);
+);```

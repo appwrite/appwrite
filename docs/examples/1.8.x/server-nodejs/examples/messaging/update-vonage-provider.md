@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -15,3 +16,4 @@ const result = await messaging.updateVonageProvider({
     apiSecret: '<API_SECRET>', // optional
     from: '<FROM>' // optional
 });
+```

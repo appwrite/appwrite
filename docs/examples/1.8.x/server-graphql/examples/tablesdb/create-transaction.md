@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBCreateTransaction(
         ttl: 60
@@ -10,3 +11,4 @@ mutation {
         expiresAt
     }
 }
+```

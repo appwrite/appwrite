@@ -35,7 +35,6 @@ use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -47,6 +46,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
+use Utopia\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Log;
@@ -61,7 +61,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Authorization $authorization, ?Key $apiKey, DeleteEvent $queueForDeletes, int $executionsRetentionCount)
+function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Authorization $authorization, ?Key $apiKey, DeleteEvent $queueForDeletes, int $executionsRetentionCount)
 {
     $host = $request->getHostname() ?? '';
     if (!empty($previewHostname)) {
@@ -840,7 +840,7 @@ function router(App $utopia, Database $dbForPlatform, callable $getProjectDB, Sw
     }
 }
 
-App::init()
+Http::init()
     ->groups(['api'])
     ->inject('project')
     ->inject('mode')
@@ -850,7 +850,7 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['database', 'functions', 'sites', 'messaging'])
     ->inject('project')
     ->inject('request')
@@ -863,7 +863,7 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['api', 'web'])
     ->inject('utopia')
     ->inject('swooleRequest')
@@ -889,7 +889,7 @@ App::init()
     ->inject('authorization')
     ->inject('queueForDeletes')
     ->inject('executionsRetentionCount')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Func $queueForFunctions, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Document $project, Database $dbForPlatform, callable $getProjectDB, Locale $locale, array $localeCodes, Reader $geodb, StatsUsage $queueForStatsUsage, Event $queueForEvents, Func $queueForFunctions, Executor $executor, array $platform, callable $isResourceBlocked, string $previewHostname, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
         /*
         * Appwrite Router
         */
@@ -1016,7 +1016,7 @@ App::init()
  *
  * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
  */
-App::init()
+Http::init()
     ->groups(['api', 'web'])
     ->inject('request')
     ->inject('response')
@@ -1056,7 +1056,7 @@ App::init()
 /**
  * Automatic certificate generation
  */
-App::init()
+Http::init()
    ->groups(['api', 'web'])
    ->inject('request')
    ->inject('console')
@@ -1161,7 +1161,7 @@ App::init()
        });
    });
 
-App::options()
+Http::options()
     ->inject('utopia')
     ->inject('swooleRequest')
     ->inject('request')
@@ -1184,7 +1184,7 @@ App::options()
     ->inject('authorization')
     ->inject('queueForDeletes')
     ->inject('executionsRetentionCount')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, Document $project, Document $devKey, ?Key $apiKey, Cors $cors, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
         /*
         * Appwrite Router
         */
@@ -1215,7 +1215,7 @@ App::options()
             ->trigger();
     });
 
-App::error()
+Http::error()
     ->inject('error')
     ->inject('utopia')
     ->inject('request')
@@ -1226,7 +1226,7 @@ App::error()
     ->inject('queueForStatsUsage')
     ->inject('devKey')
     ->inject('authorization')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage, Document $devKey, Authorization $authorization) {
+    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, StatsUsage $queueForStatsUsage, Document $devKey, Authorization $authorization) {
         $version = System::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
         $class = \get_class($error);
@@ -1502,7 +1502,7 @@ App::error()
 
         $type = $error->getType();
 
-        $output = App::isDevelopment() ? [
+        $output = Http::isDevelopment() ? [
             'message' => $message,
             'code' => $code,
             'file' => $file,
@@ -1535,7 +1535,7 @@ App::error()
 
             $layout
                 ->setParam('title', $project->getAttribute('name') . ' - Error')
-                ->setParam('development', App::isDevelopment())
+                ->setParam('development', Http::isDevelopment())
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $output['message'] ?? '')
@@ -1554,7 +1554,7 @@ App::error()
         );
     });
 
-App::get('/robots.txt')
+Http::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -1577,7 +1577,7 @@ App::get('/robots.txt')
     ->inject('authorization')
     ->inject('queueForDeletes')
     ->inject('executionsRetentionCount')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
         $platformHostnames = $platform['hostnames'] ?? [];
         if (in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/robots.phtml');
@@ -1589,7 +1589,7 @@ App::get('/robots.txt')
         }
     });
 
-App::get('/humans.txt')
+Http::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -1612,7 +1612,7 @@ App::get('/humans.txt')
     ->inject('authorization')
     ->inject('queueForDeletes')
     ->inject('executionsRetentionCount')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Log $log, Database $dbForPlatform, callable $getProjectDB, Event $queueForEvents, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Executor $executor, Reader $geodb, callable $isResourceBlocked, array $platform, string $previewHostname, ?Key $apiKey, Authorization $authorization, DeleteEvent $queueForDeletes, int $executionsRetentionCount) {
         $platformHostnames = $platform['hostnames'] ?? [];
         if (in_array($request->getHostname(), $platformHostnames) || !empty($previewHostname)) {
             $template = new View(__DIR__ . '/../views/general/humans.phtml');
@@ -1624,7 +1624,7 @@ App::get('/humans.txt')
         }
     });
 
-App::get('/.well-known/acme-challenge/*')
+Http::get('/.well-known/acme-challenge/*')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -1677,7 +1677,7 @@ App::get('/.well-known/acme-challenge/*')
 include_once __DIR__ . '/shared/api.php';
 include_once __DIR__ . '/shared/api/auth.php';
 
-App::get('/v1/ping')
+Http::get('/v1/ping')
     ->groups(['api', 'general'])
     ->desc('Test the connection between the Appwrite and the SDK.')
     ->label('scope', 'global')
@@ -1727,7 +1727,7 @@ App::get('/v1/ping')
     });
 
 // Preview authorization
-App::get('/_appwrite/authorize')
+Http::get('/_appwrite/authorize')
     ->inject('request')
     ->inject('response')
     ->inject('previewHostname')
@@ -1754,7 +1754,7 @@ App::get('/_appwrite/authorize')
             ->redirect($protocol . '://' . $host . $path);
     });
 
-App::wildcard()
+Http::wildcard()
     ->groups(['api'])
     ->label('scope', 'global')
     ->action(function () {

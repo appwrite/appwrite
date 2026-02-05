@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.teams import Teams
 
@@ -12,3 +13,4 @@ result = teams.update_prefs(
     team_id = '<TEAM_ID>',
     prefs = {}
 )
+```

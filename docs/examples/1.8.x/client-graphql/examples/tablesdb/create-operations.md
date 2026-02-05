@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBCreateOperations(
         transactionId: "<TRANSACTION_ID>",
@@ -21,3 +22,4 @@ mutation {
         expiresAt
     }
 }
+```

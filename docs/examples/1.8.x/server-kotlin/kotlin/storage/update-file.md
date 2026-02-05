@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Storage
@@ -17,3 +18,4 @@ val response = storage.updateFile(
     name = "<NAME>", // optional
     permissions = listOf(Permission.read(Role.any())) // optional
 )
+```

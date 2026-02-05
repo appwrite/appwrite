@@ -1,3 +1,4 @@
+```graphql
 mutation {
     functionsCreateTemplateDeployment(
         functionId: "<FUNCTION_ID>",
@@ -37,3 +38,4 @@ mutation {
         providerBranchUrl
     }
 }
+```

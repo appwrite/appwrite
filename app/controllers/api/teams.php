@@ -27,7 +27,6 @@ use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
-use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
@@ -52,6 +51,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
+use Utopia\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -60,7 +60,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-App::post('/v1/teams')
+Http::post('/v1/teams')
     ->desc('Create team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].create')
@@ -156,7 +156,7 @@ App::post('/v1/teams')
             ->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::get('/v1/teams')
+Http::get('/v1/teams')
     ->desc('List teams')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -230,7 +230,7 @@ App::get('/v1/teams')
         ]), Response::MODEL_TEAM_LIST);
     });
 
-App::get('/v1/teams/:teamId')
+Http::get('/v1/teams/:teamId')
     ->desc('Get team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -261,7 +261,7 @@ App::get('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::get('/v1/teams/:teamId/prefs')
+Http::get('/v1/teams/:teamId/prefs')
     ->desc('Get team preferences')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -300,7 +300,7 @@ App::get('/v1/teams/:teamId/prefs')
         $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
-App::put('/v1/teams/:teamId')
+Http::put('/v1/teams/:teamId')
     ->desc('Update name')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update')
@@ -345,7 +345,7 @@ App::put('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::put('/v1/teams/:teamId/prefs')
+Http::put('/v1/teams/:teamId/prefs')
     ->desc('Update preferences')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update.prefs')
@@ -393,7 +393,7 @@ App::put('/v1/teams/:teamId/prefs')
         $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
-App::delete('/v1/teams/:teamId')
+Http::delete('/v1/teams/:teamId')
     ->desc('Delete team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].delete')
@@ -457,7 +457,7 @@ App::delete('/v1/teams/:teamId')
         $response->noContent();
     });
 
-App::post('/v1/teams/:teamId/memberships')
+Http::post('/v1/teams/:teamId/memberships')
     ->desc('Create team membership')
     ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
@@ -844,7 +844,7 @@ App::post('/v1/teams/:teamId/memberships')
             );
     });
 
-App::get('/v1/teams/:teamId/memberships')
+Http::get('/v1/teams/:teamId/memberships')
     ->desc('List team memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -988,7 +988,7 @@ App::get('/v1/teams/:teamId/memberships')
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-App::get('/v1/teams/:teamId/memberships/:membershipId')
+Http::get('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Get team membership')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -1073,7 +1073,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
 
-App::patch('/v1/teams/:teamId/memberships/:membershipId')
+Http::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Update membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
@@ -1183,7 +1183,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         );
     });
 
-App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
+Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->desc('Update team membership status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
@@ -1350,7 +1350,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         );
     });
 
-App::delete('/v1/teams/:teamId/memberships/:membershipId')
+Http::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Delete team membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
@@ -1450,7 +1450,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $response->noContent();
     });
 
-App::get('/v1/teams/:teamId/logs')
+Http::get('/v1/teams/:teamId/logs')
     ->desc('List team logs')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')

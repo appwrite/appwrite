@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Account
@@ -13,4 +14,4 @@ val result = account.create(
     email = "email@example.com", 
     password = "", 
     name = "<NAME>", // (optional)
-)
+)```

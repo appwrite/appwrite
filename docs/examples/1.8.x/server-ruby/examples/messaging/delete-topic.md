@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ messaging = Messaging.new(client)
 result = messaging.delete_topic(
     topic_id: '<TOPIC_ID>'
 )
+```

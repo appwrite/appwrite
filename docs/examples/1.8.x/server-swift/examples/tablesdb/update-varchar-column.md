@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -17,3 +18,4 @@ let columnVarchar = try await tablesDB.updateVarcharColumn(
     newKey: "" // optional
 )
 
+```

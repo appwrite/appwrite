@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -13,4 +14,4 @@ $account = new Account($client);
 $result = $account->updatePhone(
     phone: '+12065550100',
     password: 'password'
-);
+);```

@@ -1,3 +1,4 @@
+```javascript
 import { Client, Account } from "appwrite";
 
 const client = new Client()
@@ -13,3 +14,4 @@ const result = await account.createEmailToken({
 });
 
 console.log(result);
+```

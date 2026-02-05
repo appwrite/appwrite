@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = users.create_jwt(
     session_id: '<SESSION_ID>', # optional
     duration: 0 # optional
 )
+```

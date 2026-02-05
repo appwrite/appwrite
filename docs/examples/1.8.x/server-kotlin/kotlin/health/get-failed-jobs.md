@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Health
@@ -14,3 +15,4 @@ val response = health.getFailedJobs(
     name = Name.V1_DATABASE,
     threshold = 0 // optional
 )
+```

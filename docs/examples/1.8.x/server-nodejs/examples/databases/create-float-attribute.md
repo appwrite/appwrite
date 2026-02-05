@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -17,3 +18,4 @@ const result = await databases.createFloatAttribute({
     default: null, // optional
     array: false // optional
 });
+```

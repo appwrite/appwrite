@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -13,3 +14,4 @@ FileList result = await storage.listFiles(
     search: '<SEARCH>', // (optional)
     total: false, // (optional)
 );
+```

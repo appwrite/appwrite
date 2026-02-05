@@ -1,3 +1,4 @@
+```javascript
 import { Client, Sites, Framework, BuildRuntime, Adapter } from "@appwrite.io/console";
 
 const client = new Client()
@@ -28,3 +29,4 @@ const result = await sites.update({
 });
 
 console.log(result);
+```

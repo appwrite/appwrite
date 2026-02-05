@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ await tablesDB.DeleteRows(
     tableId: "<TABLE_ID>",
     queries: new List<string>(), // optional
     transactionId: "<TRANSACTION_ID>" // optional
-);
+);```

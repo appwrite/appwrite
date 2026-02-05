@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ Provider result = await messaging.UpdateMsg91Provider(
     templateId: "<TEMPLATE_ID>", // optional
     senderId: "<SENDER_ID>", // optional
     authKey: "<AUTH_KEY>" // optional
-);
+);```

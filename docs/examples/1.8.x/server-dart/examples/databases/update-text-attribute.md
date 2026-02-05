@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -15,3 +16,4 @@ AttributeText result = await databases.updateTextAttribute(
     xdefault: '<DEFAULT>',
     newKey: '', // (optional)
 );
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -22,4 +23,4 @@ Message result = await messaging.UpdateEmail(
     bcc: new List<string>(), // optional
     scheduledAt: "", // optional
     attachments: new List<string>() // optional
-);
+);```

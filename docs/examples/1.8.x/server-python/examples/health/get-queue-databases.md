@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.health import Health
 
@@ -12,3 +13,4 @@ result = health.get_queue_databases(
     name = '<NAME>', # optional
     threshold = None # optional
 )
+```

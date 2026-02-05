@@ -37,7 +37,6 @@ use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
-use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
@@ -59,6 +58,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
+use Utopia\Http;
 use Utopia\Locale\Locale;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
@@ -342,7 +342,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $response->dynamic($session, Response::MODEL_SESSION);
 };
 
-App::post('/v1/account')
+Http::post('/v1/account')
     ->desc('Create account')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'sessions.write')
@@ -505,7 +505,7 @@ App::post('/v1/account')
             ->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::get('/v1/account')
+Http::get('/v1/account')
     ->desc('Get account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -533,7 +533,7 @@ App::get('/v1/account')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::delete('/v1/account')
+Http::delete('/v1/account')
     ->desc('Delete account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -588,7 +588,7 @@ App::delete('/v1/account')
         $response->noContent();
     });
 
-App::get('/v1/account/sessions')
+Http::get('/v1/account/sessions')
     ->desc('List sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -633,7 +633,7 @@ App::get('/v1/account/sessions')
         ]), Response::MODEL_SESSION_LIST);
     });
 
-App::delete('/v1/account/sessions')
+Http::delete('/v1/account/sessions')
     ->desc('Delete sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -708,7 +708,7 @@ App::delete('/v1/account/sessions')
         $response->noContent();
     });
 
-App::get('/v1/account/sessions/:sessionId')
+Http::get('/v1/account/sessions/:sessionId')
     ->desc('Get session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -756,7 +756,7 @@ App::get('/v1/account/sessions/:sessionId')
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
-App::delete('/v1/account/sessions/:sessionId')
+Http::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
@@ -843,7 +843,7 @@ App::delete('/v1/account/sessions/:sessionId')
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
-App::patch('/v1/account/sessions/:sessionId')
+Http::patch('/v1/account/sessions/:sessionId')
     ->desc('Update session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -932,7 +932,7 @@ App::patch('/v1/account/sessions/:sessionId')
         return $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/account/sessions/email')
+Http::post('/v1/account/sessions/email')
     ->alias('/v1/account/sessions')
     ->desc('Create email password session')
     ->groups(['api', 'account', 'auth', 'session'])
@@ -1084,7 +1084,7 @@ App::post('/v1/account/sessions/email')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/account/sessions/anonymous')
+Http::post('/v1/account/sessions/anonymous')
     ->desc('Create anonymous session')
     ->groups(['api', 'account', 'auth', 'session'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -1235,7 +1235,7 @@ App::post('/v1/account/sessions/anonymous')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/account/sessions/token')
+Http::post('/v1/account/sessions/token')
     ->desc('Create session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account', 'session'])
@@ -1278,7 +1278,7 @@ App::post('/v1/account/sessions/token')
 ->inject('authorization')
     ->action($createSession);
 
-App::get('/v1/account/sessions/oauth2/:provider')
+Http::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create OAuth2 session')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -1372,7 +1372,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
             ->redirect($oauth2->getLoginURL());
     });
 
-App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('Get OAuth2 callback')
     ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -1407,7 +1407,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
                 . \http_build_query($params));
     });
 
-App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('Create OAuth2 callback')
     ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -1443,7 +1443,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
                 . \http_build_query($params));
     });
 
-App::get('/v1/account/sessions/oauth2/:provider/redirect')
+Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('Get OAuth2 redirect')
     ->groups(['api', 'account', 'session'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -1946,7 +1946,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
     });
 
-App::get('/v1/account/tokens/oauth2/:provider')
+Http::get('/v1/account/tokens/oauth2/:provider')
     ->desc('Create OAuth2 token')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -2041,7 +2041,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
             ->redirect($oauth2->getLoginURL());
     });
 
-App::post('/v1/account/tokens/magic-url')
+Http::post('/v1/account/tokens/magic-url')
     ->alias('/v1/account/sessions/magic-url')
     ->desc('Create magic URL token')
     ->groups(['api', 'account', 'auth'])
@@ -2322,7 +2322,7 @@ App::post('/v1/account/tokens/magic-url')
             ->dynamic($token, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/tokens/email')
+Http::post('/v1/account/tokens/email')
     ->desc('Create email token (OTP)')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'sessions.write')
@@ -2624,7 +2624,7 @@ App::post('/v1/account/tokens/email')
             ->dynamic($token, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/sessions/magic-url')
+Http::put('/v1/account/sessions/magic-url')
     ->desc('Update magic URL session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account', 'session'])
@@ -2674,7 +2674,7 @@ App::put('/v1/account/sessions/magic-url')
         $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode, $authorization);
     });
 
-App::put('/v1/account/sessions/phone')
+Http::put('/v1/account/sessions/phone')
     ->desc('Update phone session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account', 'session'])
@@ -2720,7 +2720,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('authorization')
     ->action($createSession);
 
-App::post('/v1/account/tokens/phone')
+Http::post('/v1/account/tokens/phone')
     ->alias('/v1/account/sessions/phone')
     ->desc('Create phone token')
     ->groups(['api', 'account', 'auth'])
@@ -2940,7 +2940,7 @@ App::post('/v1/account/tokens/phone')
             ->dynamic($token, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/jwts')
+Http::post('/v1/account/jwts')
     ->alias('/v1/account/jwt')
     ->desc('Create JWT')
     ->groups(['api', 'account', 'auth'])
@@ -2987,7 +2987,7 @@ App::post('/v1/account/jwts')
             ]), Response::MODEL_JWT);
     });
 
-App::get('/v1/account/prefs')
+Http::get('/v1/account/prefs')
     ->desc('Get account preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -3014,7 +3014,7 @@ App::get('/v1/account/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::get('/v1/account/logs')
+Http::get('/v1/account/logs')
     ->desc('List logs')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -3085,7 +3085,7 @@ App::get('/v1/account/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::patch('/v1/account/name')
+Http::patch('/v1/account/name')
     ->desc('Update name')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.name')
@@ -3122,7 +3122,7 @@ App::patch('/v1/account/name')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/password')
+Http::patch('/v1/account/password')
     ->desc('Update password')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.password')
@@ -3215,7 +3215,7 @@ App::patch('/v1/account/password')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/email')
+Http::patch('/v1/account/email')
     ->desc('Update email')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.email')
@@ -3327,7 +3327,7 @@ App::patch('/v1/account/email')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/phone')
+Http::patch('/v1/account/phone')
     ->desc('Update phone')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.phone')
@@ -3416,7 +3416,7 @@ App::patch('/v1/account/phone')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/prefs')
+Http::patch('/v1/account/prefs')
     ->desc('Update preferences')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.prefs')
@@ -3454,7 +3454,7 @@ App::patch('/v1/account/prefs')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/status')
+Http::patch('/v1/account/status')
     ->desc('Update status')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.status')
@@ -3504,7 +3504,7 @@ App::patch('/v1/account/status')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::post('/v1/account/recovery')
+Http::post('/v1/account/recovery')
     ->desc('Create password recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'sessions.write')
@@ -3699,7 +3699,7 @@ App::post('/v1/account/recovery')
             ->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/recovery')
+Http::put('/v1/account/recovery')
     ->desc('Update password recovery (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'sessions.write')
@@ -3796,7 +3796,7 @@ App::put('/v1/account/recovery')
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verifications/email')
+Http::post('/v1/account/verifications/email')
     ->alias('/v1/account/verification')
     ->desc('Create email verification')
     ->groups(['api', 'account'])
@@ -4029,7 +4029,7 @@ App::post('/v1/account/verifications/email')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verifications/email')
+Http::put('/v1/account/verifications/email')
     ->alias('/v1/account/verification')
     ->desc('Update email verification (confirmation)')
     ->groups(['api', 'account'])
@@ -4119,7 +4119,7 @@ App::put('/v1/account/verifications/email')
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verifications/phone')
+Http::post('/v1/account/verifications/phone')
     ->alias('/v1/account/verification/phone')
     ->desc('Create phone verification')
     ->groups(['api', 'account', 'auth'])
@@ -4266,7 +4266,7 @@ App::post('/v1/account/verifications/phone')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verifications/phone')
+Http::put('/v1/account/verifications/phone')
     ->alias('/v1/account/verification/phone')
     ->desc('Update phone verification (confirmation)')
     ->groups(['api', 'account'])
@@ -4334,7 +4334,7 @@ App::put('/v1/account/verifications/phone')
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/targets/push')
+Http::post('/v1/account/targets/push')
     ->desc('Create push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
@@ -4418,7 +4418,7 @@ App::post('/v1/account/targets/push')
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::put('/v1/account/targets/:targetId/push')
+Http::put('/v1/account/targets/:targetId/push')
     ->desc('Update push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
@@ -4484,7 +4484,7 @@ App::put('/v1/account/targets/:targetId/push')
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::delete('/v1/account/targets/:targetId/push')
+Http::delete('/v1/account/targets/:targetId/push')
     ->desc('Delete push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
@@ -4539,7 +4539,7 @@ App::delete('/v1/account/targets/:targetId/push')
 
         $response->noContent();
     });
-App::get('/v1/account/identities')
+Http::get('/v1/account/identities')
     ->desc('List identities')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -4611,7 +4611,7 @@ App::get('/v1/account/identities')
         ]), Response::MODEL_IDENTITY_LIST);
     });
 
-App::delete('/v1/account/identities/:identityId')
+Http::delete('/v1/account/identities/:identityId')
     ->desc('Delete identity')
     ->groups(['api', 'account'])
     ->label('scope', 'account')

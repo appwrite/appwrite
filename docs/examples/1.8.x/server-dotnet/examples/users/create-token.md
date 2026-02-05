@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ Token result = await users.CreateToken(
     userId: "<USER_ID>",
     length: 4, // optional
     expire: 60 // optional
-);
+);```

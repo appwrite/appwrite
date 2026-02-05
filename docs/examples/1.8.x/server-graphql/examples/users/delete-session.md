@@ -1,3 +1,4 @@
+```graphql
 mutation {
     usersDeleteSession(
         userId: "<USER_ID>",
@@ -6,3 +7,4 @@ mutation {
         status
     }
 }
+```

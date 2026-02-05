@@ -1,3 +1,4 @@
+```graphql
 mutation {
     sitesUpdate(
         siteId: "<SITE_ID>",
@@ -59,3 +60,4 @@ mutation {
         fallbackFile
     }
 }
+```

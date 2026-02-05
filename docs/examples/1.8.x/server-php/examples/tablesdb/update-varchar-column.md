@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -18,4 +19,4 @@ $result = $tablesDB->updateVarcharColumn(
     default: '<DEFAULT>',
     size: 1, // optional
     newKey: '' // optional
-);
+);```

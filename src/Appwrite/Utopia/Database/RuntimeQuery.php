@@ -21,8 +21,43 @@ class RuntimeQuery extends Query
 
         // Recursive checks
         Query::TYPE_AND,
-        Query::TYPE_OR
+        Query::TYPE_OR,
+
+        // Special: select("*") means "listen to all events"
+        Query::TYPE_SELECT
     ];
+
+    /**
+     * Checks if a query is select("*") which means "listen to all events"
+     *
+     * @param Query $query
+     * @return bool
+     */
+    public static function isSelectAll(Query $query): bool
+    {
+        return $query->getMethod() === Query::TYPE_SELECT
+            && count($query->getValues()) === 1
+            && $query->getValues()[0] === '*';
+    }
+
+    /**
+     * Validates a select query - only select("*") is allowed in Realtime
+     *
+     * @param Query $query
+     * @throws \InvalidArgumentException
+     */
+    public static function validateSelectQuery(Query $query): void
+    {
+        if ($query->getMethod() !== Query::TYPE_SELECT) {
+            return;
+        }
+
+        if (!self::isSelectAll($query)) {
+            throw new \InvalidArgumentException(
+                'Only select("*") is allowed in Realtime queries. select("*") means "listen to all events".'
+            );
+        }
+    }
 
     /**
      * @param array<Query> $queries
@@ -33,6 +68,14 @@ class RuntimeQuery extends Query
         if (empty($queries)) {
             return $payload;
         }
+
+        // Check if select("*") is present - if so, return payload (match all)
+        foreach ($queries as $query) {
+            if (self::isSelectAll($query)) {
+                return $payload;
+            }
+        }
+
         // multiple queries follows and condition
         foreach ($queries as $query) {
             if (!self::evaluateFilter($query, $payload)) {

@@ -1,3 +1,4 @@
+```javascript
 import { Client, TablesDB } from "@appwrite.io/console";
 
 const client = new Client()
@@ -17,3 +18,4 @@ const result = await tablesDB.updateVarcharColumn({
 });
 
 console.log(result);
+```

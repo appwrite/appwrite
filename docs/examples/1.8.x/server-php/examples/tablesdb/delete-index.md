@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $result = $tablesDB->deleteIndex(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
     key: ''
-);
+);```
