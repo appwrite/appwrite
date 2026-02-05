@@ -955,9 +955,15 @@ Http::init()
                 $endDomain->getRegisterable() !== ''
         );
 
-        $localhosts = ['localhost', 'appwrite', 'localhost:'.$request->getPort(), 'appwrite:'.$request->getPort()];
+        $localHosts = ['localhost','localhost:'.$request->getPort()];
 
-        $isLocalHost = in_array($request->getHostname(), $localhosts);
+        $migrationHost = System::getEnv('_APP_MIGRATION_HOST');
+        if (!empty($migrationHost)) {
+            $localHosts[] = $migrationHost;
+            $localHosts[] = $migrationHost.':'.$request->getPort();
+        }
+
+        $isLocalHost = in_array($request->getHostname(), $localHosts);
         $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
 
         $isConsoleProject = $project->getAttribute('$id', '') === 'console';
@@ -1004,7 +1010,7 @@ Http::init()
         }
 
         if (System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-            if ($request->getProtocol() !== 'https' && !in_array(($swooleRequest->header['host'] ?? ''), $localhosts)) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
+            if ($request->getProtocol() !== 'https' && !in_array(($swooleRequest->header['host'] ?? ''), $localHosts)) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
                 }
