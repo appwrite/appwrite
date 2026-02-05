@@ -65,6 +65,12 @@ trait DatabasesBase
 
         $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
+        $this->assertArrayHasKey('bytesMax', $movies['body']);
+        $this->assertArrayHasKey('bytesUsed', $movies['body']);
+        $this->assertIsInt($movies['body']['bytesMax']);
+        $this->assertIsInt($movies['body']['bytesUsed']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesMax']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesUsed']);
 
         $actors = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), array_merge([
             'content-type' => 'application/json',
@@ -148,6 +154,8 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertFalse($response['body']['enabled']);
+        $this->assertArrayHasKey('bytesMax', $response['body']);
+        $this->assertArrayHasKey('bytesUsed', $response['body']);
 
         if ($this->getSide() === 'client') {
             $responseCreateDocument = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
@@ -364,6 +372,8 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
+        $this->assertArrayHasKey('bytesMax', $movies['body']);
+        $this->assertArrayHasKey('bytesUsed', $movies['body']);
         $this->assertIsArray($movies['body'][$this->getSchemaResource()]);
         $this->assertCount(9, $movies['body'][$this->getSchemaResource()]);
         $this->assertEquals($movies['body'][$this->getSchemaResource()][0]['key'], $title['body']['key']);

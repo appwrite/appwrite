@@ -333,8 +333,12 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
+        $host = System::getEnv('_APP_MIGRATION_HOST');
+        if (empty($host)) {
+            throw new \Exception('_APP_MIGRATION_HOST is not set');
+        }
+
+        $endpoint = 'http://'.$host.'/v1';
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
@@ -348,10 +352,6 @@ class Migrations extends Action
             if ($migration->getAttribute('destination') === DestinationAppwrite::getName()) {
                 $credentials['destinationApiKey'] = $tempAPIKey;
                 $credentials['destinationEndpoint'] = $endpoint;
-            }
-
-            if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
-                $credentials['endpoint'] = $endpoint;
             }
 
             $migration->setAttribute('credentials', $credentials);
