@@ -50,50 +50,53 @@ class SSL extends Action
                 Query::equal('domain', [$domain->get()]),
             ]);
 
-        if (!$rule->isEmpty()) {
-            Console::warning('Rule ' . $rule->getId() . ' already exists for domain: ' . $domain->get());
-            return;
-        }
+        if ($rule->isEmpty()) {
+            $owner = '';
 
-        $owner = '';
-
-        // Mark owner as Appwrite if its appwrite-owned domain
-        $appwriteDomains = [];
-        $appwriteDomainEnvs = [
-            System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
-            System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
-            System::getEnv('_APP_DOMAIN_SITES', ''),
-        ];
-        foreach ($appwriteDomainEnvs as $appwriteDomainEnv) {
-            foreach (\explode(',', $appwriteDomainEnv) as $appwriteDomain) {
-                if (empty($appwriteDomain)) {
-                    continue;
+            // Mark owner as Appwrite if its appwrite-owned domain
+            $appwriteDomains = [];
+            $appwriteDomainEnvs = [
+                System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+                System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+                System::getEnv('_APP_DOMAIN_SITES', ''),
+            ];
+            foreach ($appwriteDomainEnvs as $appwriteDomainEnv) {
+                foreach (\explode(',', $appwriteDomainEnv) as $appwriteDomain) {
+                    if (empty($appwriteDomain)) {
+                        continue;
+                    }
+                    $appwriteDomains[] = $appwriteDomain;
                 }
-                $appwriteDomains[] = $appwriteDomain;
             }
-        }
 
-        foreach ($appwriteDomains as $appwriteDomain) {
-            if (\str_ends_with($domain->get(), $appwriteDomain)) {
-                $owner = 'Appwrite';
-                break;
+            foreach ($appwriteDomains as $appwriteDomain) {
+                if (\str_ends_with($domain->get(), $appwriteDomain)) {
+                    $owner = 'Appwrite';
+                    break;
+                }
             }
+
+            $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
+            $rule = $dbForPlatform->createDocument('rules', new Document([
+                '$id' => $ruleId,
+                'domain' => $domain->get(),
+                'type' => 'api',
+                'status' => RULE_STATUS_CERTIFICATE_GENERATING,
+                'projectId' => $console->getId(),
+                'projectInternalId' => $console->getSequence(),
+                'search' => implode(' ', [$ruleId, $domain->get()]),
+                'owner' => $owner,
+                'region' => $console->getAttribute('region')
+            ]));
+
+            Console::info('Rule ' . $rule->getId() . ' created for domain: ' . $domain->get());
+        } else {
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'status' => RULE_STATUS_CERTIFICATE_GENERATING,
+            ]));
+
+            Console::info('Updated existing rule ' . $rule->getId() . ' for domain: ' . $domain->get());
         }
-
-        $ruleId = $isMd5 ? md5($domain->get()) : ID::unique();
-        $rule = $dbForPlatform->createDocument('rules', new Document([
-            '$id' => $ruleId,
-            'domain' => $domain->get(),
-            'type' => 'api',
-            'status' => RULE_STATUS_CERTIFICATE_GENERATING,
-            'projectId' => $console->getId(),
-            'projectInternalId' => $console->getSequence(),
-            'search' => implode(' ', [$ruleId, $domain->get()]),
-            'owner' => $owner,
-            'region' => $console->getAttribute('region')
-        ]));
-
-        Console::info('Rule ' . $rule->getId() . ' created for domain: ' . $domain->get());
 
         $queueForCertificates
             ->setDomain(new Document([
