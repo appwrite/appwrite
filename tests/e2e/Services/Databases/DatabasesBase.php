@@ -4565,7 +4565,7 @@ trait DatabasesBase
         $this->assertEquals(401, $documentsUser2['headers']['status-code']);
 
         // Enable document permissions
-        $collection = $this->client->call(CLient::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId), [
+        $collection = $this->client->call(Client::METHOD_PUT, $this->getContainerUrl($databaseId, $collectionId), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']

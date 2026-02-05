@@ -425,7 +425,7 @@ class StorageCustomClientTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
-        $this->client->call(CLient::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+        $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [

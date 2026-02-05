@@ -172,7 +172,7 @@ class FunctionsScheduleTest extends Scope
         ]);
         $this->assertEquals(400, $execution['headers']['status-code']);
 
-        $this->cleanupFunction($functionId, $executionId);
+        $this->cleanupFunction($functionId);
     }
 
     public function testDeleteScheduledExecution()
