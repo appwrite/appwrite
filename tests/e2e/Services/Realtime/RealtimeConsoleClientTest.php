@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Services\Realtime;
 
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -18,6 +17,139 @@ class RealtimeConsoleClientTest extends Scope
     use RealtimeBase;
     use ProjectCustom;
     use SideConsole;
+
+    /**
+     * Helper to create database + collection with a string attribute.
+     * Used by tests that need an existing collection setup.
+     */
+    protected function createCollectionWithAttribute(): array
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'collectionId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $actorsId = $actors['body']['$id'];
+
+        // Create attribute and wait for it to be available
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        // Wait for attribute to be available
+        sleep(2);
+
+        return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
+    }
+
+    /**
+     * Helper to create database + table with a string attribute (for TablesDB).
+     */
+    protected function createTableWithAttribute(): array
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors Tables DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'tableId' => ID::unique(),
+            'name' => 'Actors',
+        ]);
+
+        $actorsId = $actors['body']['$id'];
+
+        // Create attribute and wait for it to be available
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        // Wait for attribute to be available
+        sleep(2);
+
+        return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
+    }
+
+    /**
+     * Helper to create collection with attribute and index.
+     */
+    protected function createCollectionWithIndex(): array
+    {
+        $data = $this->createCollectionWithAttribute();
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['actorsId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'key_name',
+            'type' => 'key',
+            'attributes' => ['name'],
+        ]);
+
+        // Wait for index to be available
+        sleep(2);
+
+        return $data;
+    }
+
+    /**
+     * Helper to create table with attribute and index.
+     */
+    protected function createTableWithIndex(): array
+    {
+        $data = $this->createTableWithAttribute();
+
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['actorsId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'key' => 'key_name',
+            'type' => 'key',
+            'attributes' => ['name'],
+        ]);
+
+        // Wait for index to be available
+        sleep(2);
+
+        return $data;
+    }
 
     public function testManualAuthentication(): void
     {
@@ -234,11 +366,9 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertEquals('available', $response['data']['payload']['status']);
 
         $client->close();
-
-        return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
     }
 
-    public function testAttributesTablesAPI(): array
+    public function testAttributesTablesAPI(): void
     {
         $projectId = 'console';
 
@@ -349,13 +479,11 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertEquals('available', $response['data']['payload']['status']);
 
         $client->close();
-
-        return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
     }
 
-    #[Depends('testAttributesCollectionsAPI')]
-    public function testIndexesCollectionAPI(array $data)
+    public function testIndexesCollectionAPI(): void
     {
+        $data = $this->createCollectionWithAttribute();
         $projectId = 'console';
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
@@ -431,13 +559,11 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertEquals('available', $response['data']['payload']['status']);
 
         $client->close();
-
-        return $data;
     }
 
-    #[Depends('testAttributesTablesAPI')]
-    public function testIndexesTablesAPI(array $data)
+    public function testIndexesTablesAPI(): void
     {
+        $data = $this->createTableWithAttribute();
         $projectId = 'console';
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
@@ -513,13 +639,11 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertEquals('available', $response['data']['payload']['status']);
 
         $client->close();
-
-        return $data;
     }
 
-    #[Depends('testIndexesCollectionAPI')]
-    public function testDeleteIndexCollectionsAPI(array $data)
+    public function testDeleteIndexCollectionsAPI(): void
     {
+        $data = $this->createCollectionWithIndex();
         $actorsId = $data['actorsId'];
         $projectId = 'console';
         $databaseId = $data['databaseId'];
@@ -590,13 +714,11 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
-
-        return $data;
     }
 
-    #[Depends('testIndexesTablesAPI')]
-    public function testDeleteIndexTablesAPI(array $data)
+    public function testDeleteIndexTablesAPI(): void
     {
+        $data = $this->createTableWithIndex();
         $projectId = 'console';
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
@@ -667,13 +789,11 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();
-
-        return $data;
     }
 
-    #[Depends('testDeleteIndexCollectionsAPI')]
-    public function testDeleteAttributeCollectionsAPI(array $data)
+    public function testDeleteAttributeCollectionsAPI(): void
     {
+        $data = $this->createCollectionWithAttribute();
         $projectId = 'console';
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
@@ -744,9 +864,9 @@ class RealtimeConsoleClientTest extends Scope
         $client->close();
     }
 
-    #[Depends('testDeleteIndexTablesAPI')]
-    public function testDeleteAttributeTablesAPI(array $data)
+    public function testDeleteAttributeTablesAPI(): void
     {
+        $data = $this->createTableWithAttribute();
         $projectId = 'console';
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
