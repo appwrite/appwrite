@@ -270,16 +270,16 @@ class Realtime extends MessagingAdapter
 
         $payload = $event['data']['payload'] ?? [];
 
-        foreach ($this->subscriptions[$event['project']] as $role => $subscription) {
+        foreach ($this->subscriptions[$event['project']] as $role => $subscriptionsByChannel) {
             foreach ($event['data']['channels'] as $channel) {
                 if (
-                    !\array_key_exists($channel, $this->subscriptions[$event['project']][$role])
+                    !\array_key_exists($channel, $subscriptionsByChannel)
                     || (!\in_array($role, $event['roles']) && !\in_array(Role::any()->toString(), $event['roles']))
                 ) {
                     continue;
                 }
 
-                foreach ($this->subscriptions[$event['project']][$role][$channel] as $id => $subscriptions) {
+                foreach ($subscriptionsByChannel[$channel] as $id => $subscriptions) {
                     $matched = [];
 
                     foreach ($subscriptions as $subscriptionId => $data) {
@@ -298,7 +298,6 @@ class Realtime extends MessagingAdapter
                         $receivers[$id] += $matched;
                     }
                 }
-                break;
             }
         }
 

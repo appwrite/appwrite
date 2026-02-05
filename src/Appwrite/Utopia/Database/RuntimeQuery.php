@@ -33,6 +33,22 @@ class RuntimeQuery extends Query
     ];
 
     /**
+     * Checks if a query is a select("*") query.
+     *
+     * @param Query $query
+     * @return bool
+     */
+    public static function isSelectAll(Query $query): bool
+    {
+        if ($query->getMethod() !== Query::TYPE_SELECT) {
+            return false;
+        }
+
+        $values = $query->getValues();
+        return count($values) === 1 && $values[0] === '*';
+    }
+
+    /**
      * Validates a select query - only select("*") is allowed in Realtime
      *
      * @param Query $query
@@ -44,10 +60,7 @@ class RuntimeQuery extends Query
             return;
         }
 
-        $values = $query->getValues();
-        $isSelectAll = count($values) === 1 && $values[0] === '*';
-
-        if (!$isSelectAll) {
+        if (!self::isSelectAll($query)) {
             throw new \InvalidArgumentException(
                 'Only select("*") is allowed in Realtime queries. select("*") means "listen to all events".'
             );
