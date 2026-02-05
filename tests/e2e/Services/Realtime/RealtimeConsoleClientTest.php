@@ -67,11 +67,11 @@ class RealtimeConsoleClientTest extends Scope
     }
 
     /**
-     * Helper to create database + table with a string attribute (for TablesDB).
+     * Helper to create database + table with a string column (for TablesDB).
      */
     protected function createTableWithAttribute(): array
     {
-        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -91,8 +91,8 @@ class RealtimeConsoleClientTest extends Scope
 
         $actorsId = $actors['body']['$id'];
 
-        // Create attribute and wait for it to be available
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/attributes/string', array_merge([
+        // Create column and wait for it to be available
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -101,7 +101,7 @@ class RealtimeConsoleClientTest extends Scope
             'required' => true,
         ]);
 
-        // Wait for attribute to be available
+        // Wait for column to be available
         sleep(2);
 
         return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
@@ -256,7 +256,7 @@ class RealtimeConsoleClientTest extends Scope
         $client->close();
     }
 
-    public function testAttributesCollectionsAPI(): array
+    public function testAttributesCollectionsAPI(): void
     {
         $projectId = 'console';
 
