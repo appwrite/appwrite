@@ -6,24 +6,24 @@
 import { useMemo } from 'react'
 import * as React from 'react'
 
-// ANSI color code mapping
+// ANSI color code mapping – light mode uses dark text, dark mode uses light text for readability
 const ANSI_COLORS: Record<number, string> = {
-  30: 'text-gray-700 dark:text-gray-300', // Black
-  31: 'text-red-500', // Red
-  32: 'text-green-500', // Green
-  33: 'text-yellow-500', // Yellow
-  34: 'text-blue-500', // Blue
-  35: 'text-purple-500', // Magenta
-  36: 'text-cyan-500', // Cyan
-  37: 'text-gray-200 dark:text-gray-400', // White
-  90: 'text-gray-500 dark:text-gray-500', // Bright Black (Gray)
-  91: 'text-red-400', // Bright Red
-  92: 'text-green-400', // Bright Green
-  93: 'text-yellow-400', // Bright Yellow
-  94: 'text-blue-400', // Bright Blue
-  95: 'text-purple-400', // Bright Magenta
-  96: 'text-cyan-400', // Bright Cyan
-  97: 'text-gray-100 dark:text-gray-300', // Bright White
+  30: 'text-gray-800 dark:text-gray-200', // Black
+  31: 'text-red-600 dark:text-red-400', // Red
+  32: 'text-green-700 dark:text-green-400', // Green
+  33: 'text-yellow-700 dark:text-yellow-400', // Yellow
+  34: 'text-blue-600 dark:text-blue-400', // Blue
+  35: 'text-purple-600 dark:text-purple-400', // Magenta
+  36: 'text-cyan-600 dark:text-cyan-400', // Cyan
+  37: 'text-gray-900 dark:text-gray-100', // White
+  90: 'text-gray-600 dark:text-gray-400', // Bright Black (Gray)
+  91: 'text-red-600 dark:text-red-400', // Bright Red
+  92: 'text-green-600 dark:text-green-400', // Bright Green
+  93: 'text-yellow-600 dark:text-yellow-400', // Bright Yellow
+  94: 'text-blue-600 dark:text-blue-400', // Bright Blue
+  95: 'text-purple-600 dark:text-purple-400', // Bright Magenta
+  96: 'text-cyan-600 dark:text-cyan-400', // Bright Cyan
+  97: 'text-gray-900 dark:text-gray-100', // Bright White
 }
 
 function extractTextFromReactNode(node: React.ReactNode): string {

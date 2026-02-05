@@ -1039,7 +1039,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                       const totalCount = membershipsTotal
 
                       return (
-                        <div className="flex -space-x-2">
+                        <Link
+                          to="/organizations/$orgId/members"
+                          params={{ orgId: orgId! }}
+                          className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
+                          title="View members"
+                        >
                           {displayMembers.map(
                             (member: TeamMember, index: number) => (
                               <div
@@ -1065,7 +1070,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               +{totalCount - 2}
                             </div>
                           )}
-                        </div>
+                        </Link>
                       )
                     })()
                   ) : (
@@ -2117,7 +2122,13 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             {/* Member Avatars */}
                             {memberships.length > 0 && (
                               <div className="flex items-center gap-2">
-                                <div className="flex -space-x-2">
+                                <Link
+                                  to="/organizations/$orgId/members"
+                                  params={{ orgId: orgId! }}
+                                  className="flex -space-x-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer hover:opacity-90 transition-opacity"
+                                  title="View members"
+                                  onClick={() => setDeleteDialogOpen(false)}
+                                >
                                   {memberships
                                     .slice(0, 4)
                                     .map(
@@ -2143,7 +2154,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                       +{membershipsTotal - 4}
                                     </div>
                                   )}
-                                </div>
+                                </Link>
                               </div>
                             )}
                           </div>

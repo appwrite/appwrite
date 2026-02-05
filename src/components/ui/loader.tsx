@@ -24,7 +24,7 @@ export function StaticFullscreenLoader() {
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div
-          className="flex items-center gap-1.5 min-h-6"
+          className="flex items-center gap-1.5 min-h-6 animate-in fade-in duration-500"
           style={{ minWidth: CONTENT_MIN_WIDTH }}
         >
           <img
@@ -75,11 +75,11 @@ export function FullscreenLoader({
     if (isVisible) {
       setShouldRender(true)
     } else {
-      // Delay unmounting to allow fade-out animation to complete
+      // Start fade-out immediately; onComplete after animation finishes
+      setShouldRender(false)
       const timer = setTimeout(() => {
-        setShouldRender(false)
         onComplete?.()
-      }, 500) // Match the exit animation duration
+      }, 500) // Match exit animation duration
       return () => clearTimeout(timer)
     }
   }, [isVisible, onComplete])
@@ -95,9 +95,12 @@ export function FullscreenLoader({
           style={{ backgroundColor: LOADER_BG }}
         >
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div
+            <motion.div
               className="flex items-center gap-1.5 min-h-6"
               style={{ minWidth: CONTENT_MIN_WIDTH }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               <img
                 src="/appwrite-dark.svg"
@@ -112,7 +115,7 @@ export function FullscreenLoader({
               >
                 / 2.0
               </span>
-            </div>
+            </motion.div>
           </div>
           {showSpinner && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2">

@@ -139,13 +139,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <UploadWarning />
         <ClientThemeProvider>
           <NavigationHistoryProvider>
-            {/* Show branded loader (logo + 2.0) from first paint; avoid route "Loading..." flash */}
-            {isLoading &&
-              (clientMounted ? (
-                <FullscreenLoader isVisible={isLoading} />
-              ) : (
-                <StaticFullscreenLoader />
-              ))}
+            {/* Show branded loader (logo + 2.0) from first paint; avoid route "Loading..." flash.
+                When clientMounted, always render FullscreenLoader so it can run fade-out before unmount. */}
+            {clientMounted ? (
+              <FullscreenLoader isVisible={isLoading} />
+            ) : isLoading ? (
+              <StaticFullscreenLoader />
+            ) : null}
             <SentryContextProvider>
               <DebugModeProvider>
                 <AIChatProvider>
