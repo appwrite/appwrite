@@ -3476,7 +3476,7 @@ trait TransactionsBase
             'required' => true,
         ]);
 
-        $this->waitForAllAttributes($databaseId, $collectionId, 180000); // 3 minute timeout for CI
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         // Create existing documents
         for ($i = 1; $i <= 5; $i++) {
