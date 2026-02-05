@@ -447,6 +447,24 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
+    // Debug incoming Origin header for HTTP requests
+    $origin = $request->getOrigin();
+    if ($origin !== '') {
+        $originHost = \parse_url($origin, PHP_URL_HOST) ?: '';
+        Console::warning(
+            '[HTTP][Origin] Incoming origin: ' . $origin .
+            ' (originHost=' . $originHost .
+            ', requestHost=' . $request->getHostname() .
+            ', uri=' . $request->getURI() . ')'
+        );
+    } else {
+        Console::warning(
+            '[HTTP][Origin] No Origin header ' .
+            '(requestHost=' . $request->getHostname() .
+            ', uri=' . $request->getURI() . ')'
+        );
+    }
+
     if (Files::isFileLoaded($request->getURI())) {
         $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
 

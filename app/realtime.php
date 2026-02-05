@@ -607,9 +607,20 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
          * Skip this check for non-web platforms which are not required to send an origin header.
          */
         $origin = $request->getOrigin();
+        $originHost = \parse_url($origin, PHP_URL_HOST) ?: '';
+        Console::warning(
+            '[Realtime][Origin] Incoming origin: ' . $origin .
+            ' (originHost=' . $originHost .
+            ', requestHost=' . $request->getHostname() .
+            ', projectId=' . $project->getId() . ')'
+        );
         $originValidator = $app->getResource('originValidator');
 
         if (!empty($origin) && !$originValidator->isValid($origin) && $project->getId() !== 'console') {
+            Console::warning(
+                '[Realtime][Origin] Origin failed validation: ' . $origin .
+                ' | reason="' . $originValidator->getDescription() . '"'
+            );
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
