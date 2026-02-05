@@ -2,7 +2,6 @@
 
 namespace Tests\E2E\Services\Storage;
 
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -18,7 +17,38 @@ class StorageCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testCreateBucket(): array
+    /**
+     * @var array Cached bucket data for tests
+     */
+    private static array $cachedBucket = [];
+
+    /**
+     * Helper method to set up a bucket for tests.
+     * Uses static caching to avoid recreating resources.
+     */
+    protected function setupBucket(): array
+    {
+        $cacheKey = $this->getProject()['$id'];
+
+        if (!empty(self::$cachedBucket[$cacheKey])) {
+            return self::$cachedBucket[$cacheKey];
+        }
+
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'fileSecurity' => true,
+        ]);
+
+        self::$cachedBucket[$cacheKey] = ['bucketId' => $bucket['body']['$id']];
+
+        return self::$cachedBucket[$cacheKey];
+    }
+
+    public function testCreateBucket(): void
     {
         /**
          * Test for SUCCESS
@@ -68,13 +98,11 @@ class StorageCustomServerTest extends Scope
             'fileSecurity' => true,
         ]);
         $this->assertEquals(400, $bucket['headers']['status-code']);
-
-        return ['bucketId' => $bucketId];
     }
 
-    #[Depends('testCreateBucket')]
-    public function testListBucket($data): array
+    public function testListBucket(): void
     {
+        $data = $this->setupBucket();
         $id = $data['bucketId'] ?? '';
         /**
          * Test for SUCCESS
@@ -166,12 +194,11 @@ class StorageCustomServerTest extends Scope
         $this->assertCount(1, $response['body']['buckets']);
 
         $this->assertEquals('bucket1', $response['body']['buckets'][0]['$id']);
-        return $data;
     }
 
-    #[Depends('testCreateBucket')]
-    public function testGetBucket(array $data): array
+    public function testGetBucket(): void
     {
+        $data = $this->setupBucket();
         $id = $data['bucketId'] ?? '';
         /**
          * Test for SUCCESS
@@ -222,13 +249,11 @@ class StorageCustomServerTest extends Scope
             )
         );
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testCreateBucket')]
-    public function testUpdateBucket(array $data): array
+    public function testUpdateBucket(): void
     {
+        $data = $this->setupBucket();
         $id = $data['bucketId'] ?? '';
         /**
          * Test for SUCCESS
@@ -263,14 +288,22 @@ class StorageCustomServerTest extends Scope
             'enabled' => 'false',
         ]);
         $this->assertEquals(400, $bucket['headers']['status-code']);
-
-        return ['bucketId' => $bucketId];
     }
 
-    #[Depends('testCreateBucket')]
-    public function testDeleteBucket(array $data): array
+    public function testDeleteBucket(): void
     {
-        $id = $data['bucketId'] ?? '';
+        // Create a fresh bucket for deletion testing (not using cache since we delete it)
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket Delete',
+            'fileSecurity' => true,
+        ]);
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+
+        $id = $bucket['body']['$id'];
         /**
          * Test for SUCCESS
          */
@@ -300,7 +333,5 @@ class StorageCustomServerTest extends Scope
             )
         );
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        return $data;
     }
 }

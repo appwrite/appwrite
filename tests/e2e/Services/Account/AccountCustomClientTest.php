@@ -3,7 +3,6 @@
 namespace Tests\E2E\Services\Account;
 
 use Appwrite\Tests\Retry;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -21,11 +20,614 @@ class AccountCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    #[Depends('testCreateAccount')]
-    public function testCreateAccountSession($data): array
+    /**
+     * Static cache for account data across tests
+     */
+    private static array $accountData = [];
+    private static array $sessionData = [];
+    private static array $updatedNameData = [];
+    private static array $updatedPasswordData = [];
+    private static array $updatedEmailData = [];
+    private static array $updatedPrefsData = [];
+    private static array $verificationData = [];
+    private static array $verifiedData = [];
+    private static array $recoveryData = [];
+    private static array $phoneData = [];
+    private static array $phoneSessionData = [];
+    private static array $phonePasswordData = [];
+    private static array $phoneUpdatedData = [];
+    private static array $phoneVerificationData = [];
+    private static array $magicUrlData = [];
+    private static array $magicUrlSessionData = [];
+
+    /**
+     * Helper to set up an account with session
+     */
+    protected function setupAccountWithSession(): array
     {
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$sessionData[$cacheKey])) {
+            return self::$sessionData[$cacheKey];
+        }
+
+        // First create an account
+        $accountData = $this->setupAccount();
+
+        $email = $accountData['email'];
+        $password = $accountData['password'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $sessionId = $response['body']['$id'];
+        $session = $response['cookies']['a_session_' . $projectId];
+
+        self::$sessionData[$cacheKey] = array_merge($accountData, [
+            'sessionId' => $sessionId,
+            'session' => $session,
+        ]);
+
+        return self::$sessionData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up a basic account
+     */
+    protected function setupAccount(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$accountData[$cacheKey])) {
+            return self::$accountData[$cacheKey];
+        }
+
+        $email = uniqid() . 'user@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $id = $response['body']['$id'];
+
+        self::$accountData[$cacheKey] = [
+            'id' => $id,
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ];
+
+        return self::$accountData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up account with updated name
+     */
+    protected function setupAccountWithUpdatedName(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$updatedNameData[$cacheKey])) {
+            return self::$updatedNameData[$cacheKey];
+        }
+
+        $data = $this->setupAccountWithSession();
+        $session = $data['session'];
+        $newName = 'Lorem';
+
+        $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'name' => $newName
+        ]);
+
+        self::$updatedNameData[$cacheKey] = array_merge($data, ['name' => $newName]);
+
+        return self::$updatedNameData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up account with updated password
+     */
+    protected function setupAccountWithUpdatedPassword(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$updatedPasswordData[$cacheKey])) {
+            return self::$updatedPasswordData[$cacheKey];
+        }
+
+        $data = $this->setupAccountWithUpdatedName();
+        $session = $data['session'];
+        $password = $data['password'];
+
+        $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'password' => 'new-password',
+            'oldPassword' => $password,
+        ]);
+
+        self::$updatedPasswordData[$cacheKey] = array_merge($data, ['password' => 'new-password']);
+
+        return self::$updatedPasswordData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up account with updated email
+     */
+    protected function setupAccountWithUpdatedEmail(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$updatedEmailData[$cacheKey])) {
+            return self::$updatedEmailData[$cacheKey];
+        }
+
+        $data = $this->setupAccountWithUpdatedPassword();
+        $session = $data['session'];
+        $newEmail = uniqid() . 'new@localhost.test';
+
+        $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'email' => $newEmail,
+            'password' => 'new-password',
+        ]);
+
+        self::$updatedEmailData[$cacheKey] = array_merge($data, ['email' => $newEmail]);
+
+        return self::$updatedEmailData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up account with updated prefs
+     */
+    protected function setupAccountWithUpdatedPrefs(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$updatedPrefsData[$cacheKey])) {
+            return self::$updatedPrefsData[$cacheKey];
+        }
+
+        $data = $this->setupAccountWithUpdatedEmail();
+        $session = $data['session'];
+
+        $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'prefs' => [
+                'prefKey1' => 'prefValue1',
+                'prefKey2' => 'prefValue2',
+            ]
+        ]);
+
+        self::$updatedPrefsData[$cacheKey] = $data;
+
+        return self::$updatedPrefsData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up account with verification created
+     */
+    protected function setupAccountWithVerification(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$verificationData[$cacheKey])) {
+            return self::$verificationData[$cacheKey];
+        }
+
+        $data = $this->setupAccountWithUpdatedPrefs();
+        $email = $data['email'];
+        $session = $data['session'];
+
+        $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'url' => 'http://localhost/verification',
+        ]);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $verification = $tokens['secret'];
+
+        self::$verificationData[$cacheKey] = array_merge($data, ['verification' => $verification]);
+
+        return self::$verificationData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up account with verified email
+     */
+    protected function setupAccountWithVerifiedEmail(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$verifiedData[$cacheKey])) {
+            return self::$verifiedData[$cacheKey];
+        }
+
+        $data = $this->setupAccountWithVerification();
+        $id = $data['id'];
+        $session = $data['session'];
+        $verification = $data['verification'];
+
+        $this->client->call(Client::METHOD_PUT, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'userId' => $id,
+            'secret' => $verification,
+        ]);
+
+        self::$verifiedData[$cacheKey] = $data;
+
+        return self::$verifiedData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up account with recovery token
+     */
+    protected function setupAccountWithRecovery(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$recoveryData[$cacheKey])) {
+            return self::$recoveryData[$cacheKey];
+        }
+
+        $data = $this->setupAccountWithVerifiedEmail();
+        $email = $data['email'];
+
+        $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html']);
+        $recovery = $tokens['secret'];
+
+        self::$recoveryData[$cacheKey] = array_merge($data, ['recovery' => $recovery]);
+
+        return self::$recoveryData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up phone account
+     */
+    protected function setupPhoneAccount(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$phoneData[$cacheKey])) {
+            return self::$phoneData[$cacheKey];
+        }
+
+        $number = '+123456789';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'phone' => $number,
+        ]);
+
+        $userId = $response['body']['userId'];
+
+        $smsRequest = $this->getLastRequestForProject(
+            $projectId,
+            Scope::REQUEST_TYPE_SMS,
+            [
+                'header_X-Username' => 'username',
+                'header_X-Key' => 'password',
+                'method' => 'POST',
+            ],
+            probe: function (array $request) use ($number) {
+                $this->assertEquals($number, $request['data']['to'] ?? null);
+            }
+        );
+
+        self::$phoneData[$cacheKey] = [
+            'token' => $smsRequest['data']['message'],
+            'id' => $userId,
+            'number' => $number,
+        ];
+
+        return self::$phoneData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up phone session
+     */
+    protected function setupPhoneSession(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$phoneSessionData[$cacheKey])) {
+            return self::$phoneSessionData[$cacheKey];
+        }
+
+        $data = $this->setupPhoneAccount();
+        $id = $data['id'];
+        $token = explode(" ", $data['token'])[0] ?? '';
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $id,
+            'secret' => $token,
+        ]);
+
+        $session = $response['cookies']['a_session_' . $projectId];
+
+        self::$phoneSessionData[$cacheKey] = array_merge($data, ['session' => $session]);
+
+        return self::$phoneSessionData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up phone account converted to password
+     */
+    protected function setupPhoneConvertedToPassword(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$phonePasswordData[$cacheKey])) {
+            return self::$phonePasswordData[$cacheKey];
+        }
+
+        $data = $this->setupPhoneSession();
+        $session = $data['session'];
+        $email = uniqid() . 'new@localhost.test';
+        $password = 'new-password';
+
+        $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        self::$phonePasswordData[$cacheKey] = array_merge($data, [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        return self::$phonePasswordData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up phone account with updated phone
+     */
+    protected function setupPhoneUpdated(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$phoneUpdatedData[$cacheKey])) {
+            return self::$phoneUpdatedData[$cacheKey];
+        }
+
+        $data = $this->setupPhoneConvertedToPassword();
+        $session = $data['session'];
+        $newPhone = '+45632569856';
+
+        $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]), [
+            'phone' => $newPhone,
+            'password' => 'new-password'
+        ]);
+
+        self::$phoneUpdatedData[$cacheKey] = array_merge($data, ['phone' => $newPhone]);
+
+        return self::$phoneUpdatedData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up phone verification
+     */
+    protected function setupPhoneVerification(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$phoneVerificationData[$cacheKey])) {
+            return self::$phoneVerificationData[$cacheKey];
+        }
+
+        $data = $this->setupPhoneUpdated();
+        $session = $data['session'];
+        $phone = $data['phone'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]));
+
+        $tokenCreatedAt = $response['body']['$createdAt'];
+
+        $smsRequest = $this->getLastRequestForProject(
+            $projectId,
+            Scope::REQUEST_TYPE_SMS,
+            [
+                'header_X-Username' => 'username',
+                'header_X-Key' => 'password',
+                'method' => 'POST',
+            ],
+            probe: function (array $request) use ($tokenCreatedAt, $phone) {
+                if (!empty($phone)) {
+                    $this->assertEquals($phone, $request['data']['to'] ?? null);
+                }
+                $tokenRecievedAt = $request['time'];
+                $this->assertGreaterThan($tokenCreatedAt, $tokenRecievedAt);
+            }
+        );
+
+        self::$phoneVerificationData[$cacheKey] = array_merge($data, [
+            'token' => \substr($smsRequest['data']['message'], 0, 6)
+        ]);
+
+        return self::$phoneVerificationData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up magic URL account
+     */
+    protected function setupMagicUrl(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$magicUrlData[$cacheKey])) {
+            return self::$magicUrlData[$cacheKey];
+        }
+
+        $email = \time() . 'user@appwrite.io';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+        ]);
+
+        $userId = $response['body']['userId'];
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
+
+        self::$magicUrlData[$cacheKey] = [
+            'token' => $token,
+            'id' => $userId,
+            'email' => $email,
+        ];
+
+        return self::$magicUrlData[$cacheKey];
+    }
+
+    /**
+     * Helper to set up magic URL session
+     */
+    protected function setupMagicUrlSession(): array
+    {
+        $projectId = $this->getProject()['$id'];
+        $cacheKey = $projectId;
+
+        if (!empty(self::$magicUrlSessionData[$cacheKey])) {
+            return self::$magicUrlSessionData[$cacheKey];
+        }
+
+        $data = $this->setupMagicUrl();
+        $id = $data['id'];
+        $token = $data['token'];
+
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => $id,
+            'secret' => $token,
+        ]);
+
+        $sessionId = $response['body']['$id'];
+        $session = $response['cookies']['a_session_' . $projectId];
+
+        self::$magicUrlSessionData[$cacheKey] = array_merge($data, [
+            'sessionId' => $sessionId,
+            'session' => $session,
+        ]);
+
+        return self::$magicUrlSessionData[$cacheKey];
+    }
+
+    /**
+     * Helper to create an anonymous session (returns new session each time)
+     */
+    protected function createAnonymousSession(): string
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]);
+
+        return $response['cookies']['a_session_' . $projectId];
+    }
+
+    public function testCreateAccountSession(): void
+    {
+        $data = $this->setupAccount();
+        $email = $data['email'];
+        $password = $data['password'];
 
         /**
          * Test for SUCCESS
@@ -120,19 +722,14 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return array_merge($data, [
-            'sessionId' => $sessionId,
-            'session' => $session,
-        ]);
     }
 
-    #[Depends('testCreateAccountSession')]
-    public function testGetAccount($data): array
+    public function testGetAccount(): void
     {
-        $email = $data['email'] ?? '';
-        $name = $data['name'] ?? '';
-        $session = $data['session'] ?? '';
+        $data = $this->setupAccountWithSession();
+        $email = $data['email'];
+        $name = $data['name'];
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -170,14 +767,12 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testCreateAccountSession')]
-    public function testGetAccountPrefs($data): array
+    public function testGetAccountPrefs(): void
     {
-        $session = $data['session'] ?? '';
+        $data = $this->setupAccountWithSession();
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -204,15 +799,13 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testCreateAccountSession')]
-    public function testGetAccountSessions($data): array
+    public function testGetAccountSessions(): void
     {
-        $session = $data['session'] ?? '';
-        $sessionId = $data['sessionId'] ?? '';
+        $data = $this->setupAccountWithSession();
+        $session = $data['session'];
+        $sessionId = $data['sessionId'];
 
         /**
          * Test for SUCCESS
@@ -259,15 +852,13 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testCreateAccountSession')]
-    public function testGetAccountLogs($data): array
+    public function testGetAccountLogs(): void
     {
         sleep(5);
-        $session = $data['session'] ?? '';
+        $data = $this->setupAccountWithSession();
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -410,17 +1001,15 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
     // TODO Add tests for OAuth2 session creation
 
-    #[Depends('testCreateAccountSession')]
-    public function testUpdateAccountName($data): array
+    public function testUpdateAccountName(): void
     {
-        $email = $data['email'] ?? '';
-        $session = $data['session'] ?? '';
+        $data = $this->setupAccountWithSession();
+        $email = $data['email'];
+        $session = $data['session'];
         $newName = 'Lorem';
 
         /**
@@ -473,19 +1062,15 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        $data['name'] = $newName;
-
-        return $data;
     }
 
     #[Retry(count: 1)]
-    #[Depends('testUpdateAccountName')]
-    public function testUpdateAccountPassword($data): array
+    public function testUpdateAccountPassword(): void
     {
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
-        $session = $data['session'] ?? '';
+        $data = $this->setupAccountWithUpdatedName();
+        $email = $data['email'];
+        $password = $data['password'];
+        $session = $data['session'];
 
         for ($i = 0; $i < 5; $i++) {
             $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -709,17 +1294,13 @@ class AccountCustomClientTest extends Scope
             'password' => 'new-password'
         ]);
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        $data['password'] = 'new-password';
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountPassword')]
-    public function testUpdateAccountEmail($data): array
+    public function testUpdateAccountEmail(): void
     {
+        $data = $this->setupAccountWithUpdatedPassword();
         $newEmail = uniqid() . 'new@localhost.test';
-        $session = $data['session'] ?? '';
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -784,18 +1365,12 @@ class AccountCustomClientTest extends Scope
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $data['email']);
         $this->assertEquals($response['body']['name'], $data['name']);
-
-
-        $data['email'] = $newEmail;
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountEmail')]
-    public function testUpdateAccountPrefs($data): array
+    public function testUpdateAccountPrefs(): void
     {
-        $newEmail = uniqid() . 'new@localhost.test';
-        $session = $data['session'] ?? '';
+        $data = $this->setupAccountWithUpdatedEmail();
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -892,16 +1467,14 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountPrefs')]
-    public function testCreateAccountVerification($data): array
+    public function testCreateAccountVerification(): void
     {
-        $email = $data['email'] ?? '';
-        $name = $data['name'] ?? '';
-        $session = $data['session'] ?? '';
+        $data = $this->setupAccountWithUpdatedPrefs();
+        $email = $data['email'];
+        $name = $data['name'];
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -965,18 +1538,14 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        $data['verification'] = $verification;
-
-        return $data;
     }
 
-    #[Depends('testCreateAccountVerification')]
-    public function testUpdateAccountVerification($data): array
+    public function testUpdateAccountVerification(): void
     {
-        $id = $data['id'] ?? '';
-        $session = $data['session'] ?? '';
-        $verification = $data['verification'] ?? '';
+        $data = $this->setupAccountWithVerification();
+        $id = $data['id'];
+        $session = $data['session'];
+        $verification = $data['verification'];
 
         /**
          * Test for SUCCESS
@@ -1019,16 +1588,14 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountVerification')]
-    public function testDeleteAccountSession($data): array
+    public function testDeleteAccountSession(): void
     {
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
-        $session = $data['session'] ?? '';
+        $data = $this->setupAccountWithVerifiedEmail();
+        $email = $data['email'];
+        $password = $data['password'];
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -1085,15 +1652,13 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountVerification')]
-    public function testDeleteAccountSessionCurrent($data): array
+    public function testDeleteAccountSessionCurrent(): void
     {
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
+        $data = $this->setupAccountWithVerifiedEmail();
+        $email = $data['email'];
+        $password = $data['password'];
 
         /**
          * Test for SUCCESS
@@ -1140,14 +1705,12 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testUpdateAccountVerification')]
-    public function testDeleteAccountSessions($data): array
+    public function testDeleteAccountSessions(): void
     {
-        $session = $data['session'] ?? '';
+        $data = $this->setupAccountWithVerifiedEmail();
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -1172,31 +1735,13 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(401, $response['headers']['status-code']);
 
-        /**
-         * Create new fallback session
-         */
-        $email = $data['email'] ?? '';
-        $password = $data['password'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'email' => $email,
-            'password' => $password,
-        ]);
-
-        $data['session'] = $response['cookies']['a_session_' . $this->getProject()['$id']];
-
-        return $data;
     }
 
-    #[Depends('testDeleteAccountSession')]
-    public function testCreateAccountRecovery($data): array
+    public function testCreateAccountRecovery(): void
     {
-        $email = $data['email'] ?? '';
-        $name = $data['name'] ?? '';
+        $data = $this->setupAccountWithVerifiedEmail();
+        $email = $data['email'];
+        $name = $data['name'];
 
         /**
          * Test for SUCCESS
@@ -1278,18 +1823,14 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
-
-        $data['recovery'] = $tokens['secret'];
-
-        return $data;
     }
 
     #[Retry(count: 1)]
-    #[Depends('testCreateAccountRecovery')]
-    public function testUpdateAccountRecovery($data): array
+    public function testUpdateAccountRecovery(): void
     {
-        $id = $data['id'] ?? '';
-        $recovery = $data['recovery'] ?? '';
+        $data = $this->setupAccountWithRecovery();
+        $id = $data['id'];
+        $recovery = $data['recovery'];
         $newPassword = 'test-recovery';
 
         /**
@@ -1333,8 +1874,6 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
     public function testSessionAlert(): void
@@ -1457,9 +1996,11 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($lastEmailId, $lastEmail['id']);
     }
 
-    #[Depends('testCreateAccountSession')]
-    public function testCreateOAuth2AccountSession(): array
+    public function testCreateOAuth2AccountSession(): void
     {
+        // Just ensure we have a session set up
+        $this->setupAccountWithSession();
+
         $provider = 'mock';
         $appId = '1';
         $secret = '123456';
@@ -1520,11 +2061,9 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(412, $response['headers']['status-code']);
-
-        return [];
     }
 
-    public function testCreateOidcOAuth2Token(): array
+    public function testCreateOidcOAuth2Token(): void
     {
         $provider = 'oidc';
         $appId = '1';
@@ -1591,11 +2130,9 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(500, $response['headers']['status-code']);
-
-        return [];
     }
 
-    public function testBlockedAccount(): array
+    public function testBlockedAccount(): void
     {
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
@@ -1671,12 +2208,10 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return [];
     }
 
 
-    public function testSelfBlockedAccount(): array
+    public function testSelfBlockedAccount(): void
     {
         $email = uniqid() . 'user55@localhost.test';
         $password = 'password';
@@ -1753,11 +2288,9 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return [];
     }
 
-    public function testCreateJWT(): array
+    public function testCreateJWT(): void
     {
         $email = uniqid() . 'user@localhost.test';
         $password = 'password';
@@ -1904,11 +2437,9 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return [];
     }
 
-    public function testCreateAnonymousAccount()
+    public function testCreateAnonymousAccount(): void
     {
         /**
          * Test for SUCCESS
@@ -1953,13 +2484,11 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $session;
     }
 
-    #[Depends('testCreateAnonymousAccount')]
-    public function testCreateAnonymousAccountVerification($session): array
+    public function testCreateAnonymousAccountVerification(): void
     {
+        $session = $this->createAnonymousSession();
         $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -1971,13 +2500,11 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['body']['code']);
         $this->assertEquals('user_email_not_found', $response['body']['type']);
-
-        return [];
     }
 
-    #[Depends('testCreateAnonymousAccount')]
-    public function testUpdateAnonymousAccountPassword($session)
+    public function testUpdateAnonymousAccountPassword(): void
     {
+        $session = $this->createAnonymousSession();
         /**
          * Test for FAILURE
          */
@@ -1991,13 +2518,11 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $session;
     }
 
-    #[Depends('testUpdateAnonymousAccountPassword')]
-    public function testUpdateAnonymousAccountEmail($session)
+    public function testUpdateAnonymousAccountEmail(): void
     {
+        $session = $this->createAnonymousSession();
         $email = uniqid() . 'new@localhost.test';
 
         /**
@@ -2014,13 +2539,11 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return [];
     }
 
-    public function testConvertAnonymousAccount()
+    public function testConvertAnonymousAccount(): void
     {
-        $session = $this->testCreateAnonymousAccount();
+        $session = $this->createAnonymousSession();
         $email = uniqid() . 'new@localhost.test';
         $password = 'new-password';
 
@@ -2093,13 +2616,11 @@ class AccountCustomClientTest extends Scope
 
 
         $this->assertEquals(201, $response['headers']['status-code']);
-
-        return [];
     }
 
-    public function testConvertAnonymousAccountOAuth2()
+    public function testConvertAnonymousAccountOAuth2(): void
     {
-        $session = $this->testCreateAnonymousAccount();
+        $session = $this->createAnonymousSession();
         $provider = 'mock';
         $appId = '1';
         $secret = '123456';
@@ -2204,11 +2725,9 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(204, $response['headers']['status-code']);
-
-        return [];
     }
 
-    public function testOAuthUnverifiedEmailCannotLinkToExistingAccount()
+    public function testOAuthUnverifiedEmailCannotLinkToExistingAccount(): void
     {
         $provider = 'mock-unverified';
         $appId = '1';
@@ -2268,11 +2787,9 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(204, $response['headers']['status-code']);
-
-        return [];
     }
 
-    public function testOAuthVerifiedEmailCanLinkToExistingAccount()
+    public function testOAuthVerifiedEmailCanLinkToExistingAccount(): void
     {
         $provider = 'mock';
         $appId = '1';
@@ -2345,13 +2862,11 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(204, $response['headers']['status-code']);
-
-        return [];
     }
 
-    public function testGetSessionByID()
+    public function testGetSessionByID(): void
     {
-        $session = $this->testCreateAnonymousAccount();
+        $session = $this->createAnonymousSession();
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
             'origin' => 'http://localhost',
@@ -2387,10 +2902,10 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
     }
 
-    #[Depends('testUpdateAccountName')]
-    public function testUpdateAccountNameSearch($data): void
+    public function testUpdateAccountNameSearch(): void
     {
-        $id = $data['id'] ?? '';
+        $data = $this->setupAccountWithUpdatedName();
+        $id = $data['id'];
         $newName = 'Lorem';
 
         /**
@@ -2425,11 +2940,11 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($newName, $response['body']['users'][0]['name']);
     }
 
-    #[Depends('testUpdateAccountEmail')]
-    public function testUpdateAccountEmailSearch($data): void
+    public function testUpdateAccountEmailSearch(): void
     {
-        $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
+        $data = $this->setupAccountWithUpdatedEmail();
+        $id = $data['id'];
+        $email = $data['email'];
 
         /**
          * Test for SUCCESS
@@ -2464,7 +2979,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['users'][0]['email'], $email);
     }
 
-    public function testCreatePhone(): array
+    public function testCreatePhone(): void
     {
         $number = '+123456789';
 
@@ -2505,10 +3020,6 @@ class AccountCustomClientTest extends Scope
             }
         );
 
-        $data['token'] = $smsRequest['data']['message'];
-        $data['id'] = $userId;
-        $data['number'] = $number;
-
         /**
          * Test for FAILURE
          */
@@ -2521,16 +3032,14 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testCreatePhone')]
-    public function testCreateSessionWithPhone(array $data): array
+    public function testCreateSessionWithPhone(): void
     {
-        $id = $data['id'] ?? '';
+        $data = $this->setupPhoneAccount();
+        $id = $data['id'];
         $token = explode(" ", $data['token'])[0] ?? '';
-        $number = $data['number'] ?? '';
+        $number = $data['number'];
 
         /**
          * Test for FAILURE
@@ -2604,23 +3113,14 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        $data['session'] = $session;
-
-        return $data;
     }
 
-    #[Depends('testCreateSessionWithPhone')]
-    public function testConvertPhoneToPassword(array $data): array
+    public function testConvertPhoneToPassword(): void
     {
+        $data = $this->setupPhoneSession();
         $session = $data['session'];
         $email = uniqid() . 'new@localhost.test';
         $password = 'new-password';
-
-        /**
-         * Test for SUCCESS
-         */
-        $email = uniqid() . 'new@localhost.test';
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
@@ -2649,15 +3149,13 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testConvertPhoneToPassword')]
-    public function testUpdatePhone(array $data): array
+    public function testUpdatePhone(): void
     {
+        $data = $this->setupPhoneConvertedToPassword();
         $newPhone = '+45632569856';
-        $session = $data['session'] ?? '';
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -2698,15 +3196,12 @@ class AccountCustomClientTest extends Scope
         ]), []);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        $data['phone'] = $newPhone;
-
-        return $data;
     }
 
-    #[Depends('testUpdatePhone')]
-    public function testCreateSession(array $data): array
+    public function testCreateSession(): void
     {
+        $data = $this->setupPhoneUpdated();
+
         $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2815,14 +3310,12 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    #[Depends('testUpdatePhone')]
-    public function testPhoneVerification(array $data): array
+    public function testPhoneVerification(): void
     {
-        $session = $data['session'] ?? '';
+        $data = $this->setupPhoneUpdated();
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -2893,18 +3386,14 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(501, $response['headers']['status-code']);
         $this->assertEquals("Phone authentication is disabled for this project", $response['body']['message']);
-
-        return \array_merge($data, [
-            'token' => \substr($smsRequest['data']['message'], 0, 6)
-        ]);
     }
 
-    #[Depends('testPhoneVerification')]
-    public function testUpdatePhoneVerification($data): array
+    public function testUpdatePhoneVerification(): void
     {
-        $id = $data['id'] ?? '';
-        $session = $data['session'] ?? '';
-        $secret = $data['token'] ?? '';
+        $data = $this->setupPhoneVerification();
+        $id = $data['id'];
+        $session = $data['session'];
+        $secret = $data['token'];
 
         /**
          * Test for SUCCESS
@@ -2947,11 +3436,9 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        return $data;
     }
 
-    public function testCreateMagicUrl(): array
+    public function testCreateMagicUrl(): void
     {
         $email = \time() . 'user@appwrite.io';
 
@@ -3050,20 +3537,14 @@ class AccountCustomClientTest extends Scope
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
         $this->assertStringContainsStringIgnoringCase($response['body']['phrase'], $lastEmail['text']);
-
-        $data['token'] = $token;
-        $data['id'] = $userId;
-        $data['email'] = $email;
-
-        return $data;
     }
 
-    #[Depends('testCreateMagicUrl')]
-    public function testCreateSessionWithMagicUrl($data): array
+    public function testCreateSessionWithMagicUrl(): void
     {
-        $id = $data['id'] ?? '';
-        $token = $data['token'] ?? '';
-        $email = $data['email'] ?? '';
+        $data = $this->setupMagicUrl();
+        $id = $data['id'];
+        $token = $data['token'];
+        $email = $data['email'];
 
         /**
          * Test for SUCCESS
@@ -3125,19 +3606,13 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-
-        $data['sessionId'] = $sessionId;
-        $data['session'] = $session;
-
-        return $data;
     }
 
-    #[Depends('testCreateSessionWithMagicUrl')]
-    public function testUpdateAccountPasswordWithMagicUrl($data): array
+    public function testUpdateAccountPasswordWithMagicUrl(): void
     {
-        $email = $data['email'] ?? '';
-        $session = $data['session'] ?? '';
+        $data = $this->setupMagicUrlSession();
+        $email = $data['email'];
+        $session = $data['session'];
 
         /**
          * Test for SUCCESS
@@ -3216,10 +3691,6 @@ class AccountCustomClientTest extends Scope
             'password' => 'new-password'
         ]);
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        $data['password'] = 'new-password';
-
-        return $data;
     }
 
     public function testCreatePushTarget(): void
