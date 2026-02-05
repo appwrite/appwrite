@@ -202,48 +202,67 @@ class RuntimeQuery extends Query
             return false;
         }
 
-        // null can be a value as well
-        $payloadAttributeValue = $payload[$attribute];
-        switch ($method) {
+        $value = $payload[$attr];
+        $targets = $condition['values'];
+
+        // Inlined comparisons - no closures, no method calls
+        switch ($op) {
             case Query::TYPE_EQUAL:
-                return self::anyMatch($values, fn ($value) => $payloadAttributeValue === $value);
+                foreach ($targets as $target) {
+                    if ($value === $target) {
+                        return true;
+                    }
+                }
+                return false;
 
             case Query::TYPE_NOT_EQUAL:
-                return !self::anyMatch($values, fn ($value) => $payloadAttributeValue === $value);
+                foreach ($targets as $target) {
+                    if ($value === $target) {
+                        return false;
+                    }
+                }
+                return true;
 
             case Query::TYPE_LESSER:
-                return self::anyMatch($values, fn ($value) => $payloadAttributeValue < $value);
+                foreach ($targets as $target) {
+                    if ($value < $target) {
+                        return true;
+                    }
+                }
+                return false;
 
             case Query::TYPE_LESSER_EQUAL:
-                return self::anyMatch($values, fn ($value) => $payloadAttributeValue <= $value);
+                foreach ($targets as $target) {
+                    if ($value <= $target) {
+                        return true;
+                    }
+                }
+                return false;
 
             case Query::TYPE_GREATER:
-                return self::anyMatch($values, fn ($value) => $payloadAttributeValue > $value);
+                foreach ($targets as $target) {
+                    if ($value > $target) {
+                        return true;
+                    }
+                }
+                return false;
 
             case Query::TYPE_GREATER_EQUAL:
-                return self::anyMatch($values, fn ($value) => $payloadAttributeValue >= $value);
+                foreach ($targets as $target) {
+                    if ($value >= $target) {
+                        return true;
+                    }
+                }
+                return false;
 
-                // attribute must be present and should be explicitly null
             case Query::TYPE_IS_NULL:
-                return $payloadAttributeValue === null;
+                return $value === null;
 
             case Query::TYPE_IS_NOT_NULL:
-                return $payloadAttributeValue !== null;
+                return $value !== null;
 
             default:
-                throw new \InvalidArgumentException(
-                    "Unsupported query method: {$method}"
-                );
-        }
-    }
-
-    private static function anyMatch(array $values, callable $fn): bool
-    {
-        foreach ($values as $value) {
-            if ($fn($value)) {
-                return true;
-            }
-        }
                 return false;
         }
     }
+}
