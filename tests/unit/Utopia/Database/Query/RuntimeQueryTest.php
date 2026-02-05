@@ -37,7 +37,7 @@ class RuntimeQueryTest extends TestCase
         $queries = [Query::equal('name', ['Jane'])];
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter($queries, $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testFilterWithMatchingQuery(): void
@@ -62,7 +62,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('name', ['Jane']);
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testEqualMultipleValuesMatch(): void
@@ -78,7 +78,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('status', ['active', 'pending', 'approved']);
         $payload = ['status' => 'rejected'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testEqualNumericValues(): void
@@ -102,7 +102,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('missing', ['value']);
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     // TYPE_NOT_EQUAL tests
@@ -119,7 +119,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::notEqual('name', ['John']);
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testNotEqualMultipleValues(): void
@@ -134,7 +134,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::notEqual('status', ['active', 'pending']);
         $payload = ['status' => 'active'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     // TYPE_LESSER tests
@@ -151,7 +151,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::lessThan('age', 30);
         $payload = ['age' => 35];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testLesserEqualValue(): void
@@ -159,7 +159,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::lessThan('age', 30);
         $payload = ['age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testLesserMultipleValues(): void
@@ -202,7 +202,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::lessThanEqual('age', 30);
         $payload = ['age' => 35];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testLesserEqualMultipleValues(): void
@@ -228,7 +228,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::greaterThan('age', 30);
         $payload = ['age' => 25];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testGreaterEqualValue(): void
@@ -236,7 +236,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::greaterThan('age', 30);
         $payload = ['age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testGreaterMultipleValues(): void
@@ -270,7 +270,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::greaterThanEqual('age', 30);
         $payload = ['age' => 25];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testGreaterEqualMultipleValues(): void
@@ -296,7 +296,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::isNull('description');
         $payload = ['description' => 'Some text'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testIsNullMissingAttribute(): void
@@ -304,7 +304,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::isNull('missing');
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     // TYPE_IS_NOT_NULL tests
@@ -321,7 +321,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::isNotNull('description');
         $payload = ['description' => null];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testIsNotNullMissingAttribute(): void
@@ -329,7 +329,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::isNotNull('missing');
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     // TYPE_AND tests
@@ -352,7 +352,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testAndAllFail(): void
@@ -363,7 +363,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testAndMultipleConditions(): void
@@ -423,7 +423,7 @@ class RuntimeQueryTest extends TestCase
         ]);
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testOrMultipleConditions(): void
@@ -516,7 +516,7 @@ class RuntimeQueryTest extends TestCase
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter($queries, $payload);
         // With AND logic, if first matches but second doesn't, should return empty
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testMultipleQueriesSecondMatches(): void
@@ -528,7 +528,7 @@ class RuntimeQueryTest extends TestCase
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter($queries, $payload);
         // With AND logic, if second matches but first doesn't, should return empty
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testMultipleQueriesNoneMatch(): void
@@ -539,7 +539,7 @@ class RuntimeQueryTest extends TestCase
         ];
         $payload = ['name' => 'John', 'age' => 30];
         $result = $this->compileAndFilter($queries, $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testEmptyPayload(): void
@@ -547,7 +547,7 @@ class RuntimeQueryTest extends TestCase
         $query = Query::equal('name', ['John']);
         $payload = [];
         $result = $this->compileAndFilter([$query], $payload);
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     public function testEmptyAndQuery(): void
@@ -565,7 +565,7 @@ class RuntimeQueryTest extends TestCase
         $payload = ['name' => 'John'];
         $result = $this->compileAndFilter([$query], $payload);
         // Empty OR should return false (no conditions match)
-        $this->assertEquals([], $result);
+        $this->assertNull($result);
     }
 
     // Type-specific edge cases

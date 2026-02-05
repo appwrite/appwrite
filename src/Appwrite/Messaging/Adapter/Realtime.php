@@ -286,7 +286,7 @@ class Realtime extends MessagingAdapter
                         $compiled = $data['compiled'] ?? ['type' => 'selectAll'];
                         $strings = $data['strings'] ?? [];
 
-                        if (!empty(RuntimeQuery::filter($compiled, $payload))) {
+                        if (RuntimeQuery::filter($compiled, $payload) !== null) {
                             $matched[$subscriptionId] = $strings;
                         }
                     }

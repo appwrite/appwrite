@@ -156,9 +156,9 @@ class RuntimeQuery extends Query
      *
      * @param array $compiled Result from compile()
      * @param array $payload Event payload
-     * @return array Empty array if no match, payload if match
+     * @return array|null Null if no match, payload if match
      */
-    public static function filter(array $compiled, array $payload): array
+    public static function filter(array $compiled, array $payload): ?array
     {
         // Fast path for select("*") subscriptions
         if ($compiled['type'] === 'selectAll') {
@@ -168,14 +168,14 @@ class RuntimeQuery extends Query
         // Quick rejection: if payload is missing any required attribute, fail fast
         foreach ($compiled['attributes'] as $attr) {
             if (!isset($payload[$attr]) && !\array_key_exists($attr, $payload)) {
-                return [];
+                return null;
             }
         }
 
         // Evaluate all conditions (AND logic at top level)
         foreach ($compiled['conditions'] as $condition) {
             if (!self::evaluateCondition($condition, $payload)) {
-                return [];
+                return null;
             }
         }
 
