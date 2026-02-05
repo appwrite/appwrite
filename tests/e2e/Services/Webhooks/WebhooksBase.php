@@ -5,7 +5,6 @@ namespace Tests\E2E\Services\Webhooks;
 use Appwrite\Tests\Async;
 use Appwrite\Tests\Retry;
 use CURLFile;
-use PHPUnit\Framework\Attributes\Depends;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -37,8 +36,330 @@ trait WebhooksBase
         return base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
     }
 
+    /**
+     * Creates a database and collection with proper attributes for document operations.
+     *
+     * @return array Array containing 'databaseId' and 'actorsId'
+     */
+    protected function setupCollectionWithAttributes(): array
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        // Create collection
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $actorsId = $actors['body']['$id'];
+
+        // Create attributes
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'firstName',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'lastName',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        // Wait for attributes to be available
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actorsId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertCount(2, $collection['body']['attributes']);
+            $this->assertEquals('available', $collection['body']['attributes'][0]['status']);
+            $this->assertEquals('available', $collection['body']['attributes'][1]['status']);
+        }, 15000, 500);
+
+        return ['databaseId' => $databaseId, 'actorsId' => $actorsId];
+    }
+
+    /**
+     * Creates a database and table with proper columns for row operations.
+     *
+     * @return array Array containing 'databaseId' and 'actorsId'
+     */
+    protected function setupTableWithColumns(): array
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        // Create table
+        $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'rowSecurity' => true,
+        ]);
+
+        $actorsId = $actors['body']['$id'];
+
+        // Create columns
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'firstName',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'lastName',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        // Wait for columns to be available
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $table = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $actorsId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+            $this->assertCount(2, $table['body']['columns']);
+            $this->assertEquals('available', $table['body']['columns'][0]['status']);
+            $this->assertEquals('available', $table['body']['columns'][1]['status']);
+        }, 15000, 500);
+
+        return ['databaseId' => $databaseId, 'actorsId' => $actorsId];
+    }
+
+    /**
+     * Creates an enabled storage bucket.
+     *
+     * @return array Array containing 'bucketId'
+     */
+    protected function setupStorageBucket(): array
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'fileSecurity' => true,
+            'enabled' => true,
+        ]);
+
+        return ['bucketId' => $bucket['body']['$id']];
+    }
+
+    /**
+     * Creates a team and returns its ID.
+     *
+     * @param string $name Team name
+     * @return array Array containing 'teamId'
+     */
+    protected function setupTeam(string $name = 'Arsenal'): array
+    {
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => $name
+        ]);
+
+        return ['teamId' => $team['body']['$id']];
+    }
+
+    /**
+     * Creates a team membership and returns membership details including secret.
+     *
+     * @param string $teamId The team ID
+     * @return array Array containing 'teamId', 'membershipId', 'userId', 'secret'
+     */
+    protected function setupTeamMembership(string $teamId): array
+    {
+        $email = uniqid() . 'friend@localhost.test';
+
+        // Create user first to ensure team event is triggered after user event
+        $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => 'password',
+            'name' => 'Friend User',
+        ]);
+
+        // Create membership
+        $team = $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => $email,
+            'roles' => ['admin', 'editor'],
+            'url' => 'http://localhost:5000/join-us#title'
+        ]);
+
+        $membershipId = $team['body']['$id'];
+        $userId = $team['body']['userId'];
+
+        // Get the secret from email
+        $lastEmail = $this->getLastEmail();
+        $tokens = $this->extractQueryParamsFromEmailLink($lastEmail['html'] ?? '');
+        $secret = $tokens['secret'] ?? '';
+
+        return [
+            'teamId' => $teamId,
+            'membershipId' => $membershipId,
+            'userId' => $userId,
+            'secret' => $secret,
+        ];
+    }
+
+    /**
+     * Creates a document in a collection.
+     *
+     * @param string $databaseId Database ID
+     * @param string $collectionId Collection ID
+     * @return array Array containing document details including 'documentId'
+     */
+    protected function setupDocument(string $databaseId, string $collectionId): array
+    {
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'firstName' => 'Chris',
+                'lastName' => 'Evans',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        return ['documentId' => $document['body']['$id']];
+    }
+
+    /**
+     * Creates a row in a table.
+     *
+     * @param string $databaseId Database ID
+     * @param string $tableId Table ID
+     * @return array Array containing row details including 'rowId'
+     */
+    protected function setupRow(string $databaseId, string $tableId): array
+    {
+        $row = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'firstName' => 'Chris',
+                'lastName' => 'Evans',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        return ['rowId' => $row['body']['$id']];
+    }
+
+    /**
+     * Creates a file in a bucket.
+     *
+     * @param string $bucketId Bucket ID
+     * @return array Array containing file details including 'fileId'
+     */
+    protected function setupBucketFile(string $bucketId): array
+    {
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'folderId' => ID::custom('xyz'),
+        ]);
+
+        return ['fileId' => $file['body']['$id']];
+    }
+
     // Collection APIs
-    public function testCreateCollection(): array
+    public function testCreateCollection(): void
     {
         /**
          * Create database
@@ -96,15 +417,44 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['name'], 'Actors');
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(4, $webhook['data']['$permissions']);
-
-        return array_merge(['actorsId' => $actorsId, 'databaseId' => $databaseId]);
     }
 
-    #[Depends('testCreateCollection')]
-    public function testCreateAttributes(array $data): array
+    public function testCreateAttributes(): void
     {
-        $actorsId = $data['actorsId'];
-        $databaseId = $data['databaseId'];
+        /**
+         * Create database
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        /**
+         * Create collection
+         */
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $actorsId = $actors['body']['$id'];
 
         $firstName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/string', array_merge([
             'content-type' => 'application/json',
@@ -191,13 +541,12 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertNotEmpty($webhook['data']['key']);
         $this->assertEquals($webhook['data']['key'], 'extra');
-
-        return $data;
     }
 
-    #[Depends('testCreateAttributes')]
-    public function testCreateDocument(array $data): array
+    public function testCreateDocument(): void
     {
+        // Set up collection with attributes
+        $data = $this->setupCollectionWithAttributes();
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
@@ -250,22 +599,21 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['lastName'], 'Evans');
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(3, $webhook['data']['$permissions']);
-
-        $data['documentId'] = $document['body']['$id'];
-
-        return $data;
     }
 
-    #[Depends('testCreateDocument')]
-    public function testUpdateDocument(array $data): array
+    public function testUpdateDocument(): void
     {
+        // Set up collection with attributes and create a document
+        $data = $this->setupCollectionWithAttributes();
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
+        $documentData = $this->setupDocument($databaseId, $actorsId);
+        $documentId = $documentData['documentId'];
 
         /**
          * Test for SUCCESS
          */
-        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $data['documentId'], array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $actorsId . '/documents/' . $documentId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -310,14 +658,13 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['lastName'], 'Evans2');
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(3, $webhook['data']['$permissions']);
-
-        return $data;
     }
 
     #[Retry(count: 1)]
-    #[Depends('testUpdateDocument')]
-    public function testDeleteDocument(array $data): array
+    public function testDeleteDocument(): void
     {
+        // Set up collection with attributes
+        $data = $this->setupCollectionWithAttributes();
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
@@ -378,12 +725,10 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['lastName'], 'Cooper');
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(3, $webhook['data']['$permissions']);
-
-        return $data;
     }
 
     // Table APIs
-    public function testCreateTable(): array
+    public function testCreateTable(): void
     {
         /**
          * Create database
@@ -441,15 +786,44 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['name'], 'Actors');
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(4, $webhook['data']['$permissions']);
-
-        return array_merge(['actorsId' => $actorsId, 'databaseId' => $databaseId]);
     }
 
-    #[Depends('testCreateTable')]
-    public function testCreateColumns(array $data): array
+    public function testCreateColumns(): void
     {
-        $actorsId = $data['actorsId'];
-        $databaseId = $data['databaseId'];
+        /**
+         * Create database
+         */
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Actors DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
+
+        /**
+         * Create table
+         */
+        $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'Actors',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'rowSecurity' => true,
+        ]);
+
+        $actorsId = $actors['body']['$id'];
 
         $firstName = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
             'content-type' => 'application/json',
@@ -534,13 +908,12 @@ trait WebhooksBase
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertNotEmpty($webhook['data']['key']);
         $this->assertEquals($webhook['data']['key'], 'extra');
-
-        return $data;
     }
 
-    #[Depends('testCreateColumns')]
-    public function testCreateRow(array $data): array
+    public function testCreateRow(): void
     {
+        // Set up table with columns
+        $data = $this->setupTableWithColumns();
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
@@ -593,22 +966,21 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['lastName'], 'Evans');
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(3, $webhook['data']['$permissions']);
-
-        $data['rowId'] = $row['body']['$id'];
-
-        return $data;
     }
 
-    #[Depends('testCreateRow')]
-    public function testUpdateRow(array $data): array
+    public function testUpdateRow(): void
     {
+        // Set up table with columns and create a row
+        $data = $this->setupTableWithColumns();
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
+        $rowData = $this->setupRow($databaseId, $actorsId);
+        $rowId = $rowData['rowId'];
 
         /**
          * Test for SUCCESS
          */
-        $document = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/rows/' . $data['rowId'], array_merge([
+        $document = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/rows/' . $rowId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -653,14 +1025,13 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['lastName'], 'Evans2');
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(3, $webhook['data']['$permissions']);
-
-        return $data;
     }
 
     #[Retry(count: 1)]
-    #[Depends('testUpdateRow')]
-    public function testDeleteRow(array $data): array
+    public function testDeleteRow(): void
     {
+        // Set up table with columns
+        $data = $this->setupTableWithColumns();
         $actorsId = $data['actorsId'];
         $databaseId = $data['databaseId'];
 
@@ -721,11 +1092,9 @@ trait WebhooksBase
         $this->assertEquals($webhook['data']['lastName'], 'Cooper');
         $this->assertIsArray($webhook['data']['$permissions']);
         $this->assertCount(3, $webhook['data']['$permissions']);
-
-        return $data;
     }
 
-    public function testCreateStorageBucket(): array
+    public function testCreateStorageBucket(): void
     {
         /**
          * Test for SUCCESS
@@ -768,19 +1137,18 @@ trait WebhooksBase
         $this->assertEquals('Test Bucket', $webhook['data']['name']);
         $this->assertEquals(true, $webhook['data']['enabled']);
         $this->assertIsArray($webhook['data']['$permissions']);
-
-        return array_merge(['bucketId' => $bucketId]);
     }
 
-    #[Depends('testCreateStorageBucket')]
-    public function testUpdateStorageBucket(array $data): array
+    public function testUpdateStorageBucket(): void
     {
+        // Set up a storage bucket
+        $data = $this->setupStorageBucket();
         $bucketId = $data['bucketId'];
 
         /**
          * Test for SUCCESS
          */
-        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'], array_merge([
+        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -811,31 +1179,18 @@ trait WebhooksBase
         $this->assertEquals('Test Bucket Updated', $webhook['data']['name']);
         $this->assertEquals(false, $webhook['data']['enabled']);
         $this->assertIsArray($webhook['data']['$permissions']);
-
-        return array_merge(['bucketId' => $bucket['body']['$id']]);
     }
 
-    #[Depends('testCreateStorageBucket')]
-    public function testCreateBucketFile(array $data): array
+    public function testCreateBucketFile(): void
     {
+        // Set up an enabled storage bucket
+        $data = $this->setupStorageBucket();
         $bucketId = $data['bucketId'];
 
-        //enable bucket
-        $bucket = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $data['bucketId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'name' => 'Test Bucket Updated',
-            'fileSecurity' => true,
-            'enabled' => true,
-        ]);
-
-        $this->assertEquals($bucket['headers']['status-code'], 200);
         /**
          * Test for SUCCESS
          */
-        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -881,17 +1236,15 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
-
-        $data['fileId'] = $fileId;
-
-        return $data;
     }
 
-    #[Depends('testCreateBucketFile')]
-    public function testUpdateBucketFile(array $data): array
+    public function testUpdateBucketFile(): void
     {
+        // Set up an enabled storage bucket and create a file
+        $data = $this->setupStorageBucket();
         $bucketId = $data['bucketId'];
-        $fileId = $data['fileId'];
+        $fileData = $this->setupBucketFile($bucketId);
+        $fileId = $fileData['fileId'];
 
         /**
          * Test for SUCCESS
@@ -937,20 +1290,20 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
-
-        return $data;
     }
 
-    #[Depends('testUpdateBucketFile')]
-    public function testDeleteBucketFile(array $data): array
+    public function testDeleteBucketFile(): void
     {
+        // Set up an enabled storage bucket and create a file
+        $data = $this->setupStorageBucket();
         $bucketId = $data['bucketId'];
-        $fileId = $data['fileId'];
+        $fileData = $this->setupBucketFile($bucketId);
+        $fileId = $fileData['fileId'];
 
         /**
          * Test for SUCCESS
          */
-        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
+        $file = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -985,13 +1338,12 @@ trait WebhooksBase
         $this->assertNotEmpty($webhook['data']['signature']);
         $this->assertEquals($webhook['data']['mimeType'], 'image/png');
         $this->assertEquals($webhook['data']['sizeOriginal'], 47218);
-
-        return $data;
     }
 
-    #[Depends('testDeleteBucketFile')]
-    public function testDeleteStorageBucket(array $data)
+    public function testDeleteStorageBucket(): void
     {
+        // Set up an enabled storage bucket
+        $data = $this->setupStorageBucket();
         $bucketId = $data['bucketId'];
         /**
          * Test for SUCCESS
@@ -1025,7 +1377,7 @@ trait WebhooksBase
         $this->assertIsArray($webhook['data']['$permissions']);
     }
 
-    public function testCreateTeam(): array
+    public function testCreateTeam(): void
     {
         /**
          * Test for SUCCESS
@@ -1062,16 +1414,12 @@ trait WebhooksBase
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['$createdAt']));
-
-        /**
-         * Test for FAILURE
-         */
-        return ['teamId' => $teamId];
     }
 
-    #[Depends('testCreateTeam')]
-    public function testUpdateTeam($data): array
+    public function testUpdateTeam(): void
     {
+        // Set up a team
+        $data = $this->setupTeam();
         $teamId = $data['teamId'];
         /**
          * Test for SUCCESS
@@ -1105,17 +1453,13 @@ trait WebhooksBase
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['$createdAt']));
-
-        /**
-         * Test for FAILURE
-         */
-        return ['teamId' => $team['body']['$id']];
     }
 
-    #[Depends('testCreateTeam')]
-    public function testUpdateTeamPrefs(array $data): array
+    public function testUpdateTeamPrefs(): void
     {
-        $id = $data['teamId'] ?? '';
+        // Set up a team
+        $data = $this->setupTeam();
+        $id = $data['teamId'];
 
         $team = $this->client->call(Client::METHOD_PUT, '/teams/' . $id . '/prefs', array_merge([
             'content-type' => 'application/json',
@@ -1153,11 +1497,9 @@ trait WebhooksBase
             'prefKey1' => 'prefValue1',
             'prefKey2' => 'prefValue2',
         ]);
-
-        return $data;
     }
 
-    public function testDeleteTeam(): array
+    public function testDeleteTeam(): void
     {
         /**
          * Test for SUCCESS
@@ -1199,17 +1541,13 @@ trait WebhooksBase
         $this->assertGreaterThan(-1, $webhook['data']['total']);
         $this->assertIsInt($webhook['data']['total']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['$createdAt']));
-
-        /**
-         * Test for FAILURE
-         */
-        return [];
     }
 
-    #[Depends('testCreateTeam')]
-    public function testCreateTeamMembership($data): array
+    public function testCreateTeamMembership(): void
     {
-        $teamId = $data['teamId'] ?? '';
+        // Set up a team
+        $data = $this->setupTeam();
+        $teamId = $data['teamId'];
         $email = uniqid() . 'friend@localhost.test';
 
         // Create user to ensure team event is triggered after user event
@@ -1272,22 +1610,13 @@ trait WebhooksBase
         $this->assertCount(2, $webhook['data']['roles']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['invited']));
         $this->assertEquals(('server' === $this->getSide()), $webhook['data']['confirm']);
-
-        /**
-         * Test for FAILURE
-         */
-        return [
-            'teamId' => $teamId,
-            'secret' => $secret,
-            'membershipId' => $membershipId,
-            'userId' => $webhook['data']['userId'],
-        ];
     }
 
-    #[Depends('testCreateTeamMembership')]
-    public function testDeleteTeamMembership($data): void
+    public function testDeleteTeamMembership(): void
     {
-        $teamId = $data['teamId'] ?? '';
+        // Set up a team
+        $data = $this->setupTeam();
+        $teamId = $data['teamId'];
         $email = uniqid() . 'friend@localhost.test';
 
         /**
@@ -1401,12 +1730,22 @@ trait WebhooksBase
         $this->assertEquals(400, $webhook['headers']['status-code']);
     }
 
-    #[Depends('testCreateCollection')]
-    public function testWebhookAutoDisable(array $data): void
+    public function testWebhookAutoDisable(): void
     {
         $projectId = $this->getProject()['$id'];
         $webhookId = $this->getProject()['webhookId'];
-        $databaseId = $data['databaseId'];
+
+        // Create a database for this test
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'AutoDisable DB',
+        ]);
+
+        $databaseId = $database['body']['$id'];
 
         $webhook = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId . '/webhooks/' . $webhookId, [
             'origin' => 'http://localhost',
