@@ -1,3 +1,4 @@
+```graphql
 mutation {
     usersUpdateTarget(
         userId: "<USER_ID>",
@@ -17,3 +18,4 @@ mutation {
         expired
     }
 }
+```

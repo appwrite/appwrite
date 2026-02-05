@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Health
@@ -11,6 +12,7 @@ val client = Client()
 val health = Health(client)
 
 val response = health.getFailedJobs(
-    name =  Name.V1_DATABASE,
+    name = Name.V1_DATABASE,
     threshold = 0 // optional
 )
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = databases.delete_collection(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>'
 )
+```

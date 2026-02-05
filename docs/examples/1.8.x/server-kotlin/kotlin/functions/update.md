@@ -1,7 +1,9 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
 import io.appwrite.enums.Runtime
+import io.appwrite.enums.Scopes
 
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -13,7 +15,7 @@ val functions = Functions(client)
 val response = functions.update(
     functionId = "<FUNCTION_ID>",
     name = "<NAME>",
-    runtime = "node-14.5", // optional
+    runtime = Runtime.NODE_14_5, // optional
     execute = listOf("any"), // optional
     events = listOf(), // optional
     schedule = "", // optional
@@ -22,7 +24,7 @@ val response = functions.update(
     logging = false, // optional
     entrypoint = "<ENTRYPOINT>", // optional
     commands = "<COMMANDS>", // optional
-    scopes = listOf(), // optional
+    scopes = listOf(Scopes.SESSIONS_WRITE), // optional
     installationId = "<INSTALLATION_ID>", // optional
     providerRepositoryId = "<PROVIDER_REPOSITORY_ID>", // optional
     providerBranch = "<PROVIDER_BRANCH>", // optional
@@ -30,3 +32,4 @@ val response = functions.update(
     providerRootDirectory = "<PROVIDER_ROOT_DIRECTORY>", // optional
     specification = "" // optional
 )
+```

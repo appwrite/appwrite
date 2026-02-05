@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -14,3 +15,4 @@ result = messaging.update_fcm_provider(
     enabled = False, # optional
     service_account_json = {} # optional
 )
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ Token result = await account.CreateMagicURLToken(
     email: "email@example.com",
     url: "https://example.com", // optional
     phrase: false // optional
-);
+);```

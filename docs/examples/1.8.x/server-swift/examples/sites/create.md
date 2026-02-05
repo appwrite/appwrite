@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -29,3 +30,4 @@ let site = try await sites.create(
     specification: "" // optional
 )
 
+```

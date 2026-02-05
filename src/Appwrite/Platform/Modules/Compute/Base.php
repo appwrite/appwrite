@@ -32,20 +32,11 @@ class Base extends Action
     protected function getPermissions(string $teamId, string $projectId): array
     {
         return [
-            // Team-wide permissions
-            Permission::read(Role::team(ID::custom($teamId), 'owner')),
-            Permission::read(Role::team(ID::custom($teamId), 'developer')),
+            Permission::read(Role::team(ID::custom($teamId))),
             Permission::update(Role::team(ID::custom($teamId), 'owner')),
             Permission::update(Role::team(ID::custom($teamId), 'developer')),
             Permission::delete(Role::team(ID::custom($teamId), 'owner')),
             Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            // Project-wide permissions
-            Permission::read(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
-            Permission::read(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
-            Permission::update(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
-            Permission::update(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
-            Permission::delete(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
-            Permission::delete(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
         ];
     }
 
@@ -171,7 +162,7 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -262,7 +253,7 @@ class Base extends Action
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('sites', $site->getId(), $site);
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration

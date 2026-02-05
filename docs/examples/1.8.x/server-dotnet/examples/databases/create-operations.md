@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -22,4 +23,4 @@ Transaction result = await databases.CreateOperations(
 	        }
 	    }
 	] // optional
-);
+);```

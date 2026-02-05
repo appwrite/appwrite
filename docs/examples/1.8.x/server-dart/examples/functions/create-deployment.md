@@ -1,3 +1,4 @@
+```dart
 import 'dart:io';
 import 'package:dart_appwrite/dart_appwrite.dart';
 
@@ -15,3 +16,4 @@ Deployment result = await functions.createDeployment(
     entrypoint: '<ENTRYPOINT>', // (optional)
     commands: '<COMMANDS>', // (optional)
 );
+```

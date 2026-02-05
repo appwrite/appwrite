@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -13,3 +14,4 @@ Variable result = await functions.createVariable(
     value: '<VALUE>',
     secret: false, // (optional)
 );
+```

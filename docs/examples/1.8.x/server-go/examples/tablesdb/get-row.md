@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -21,3 +21,4 @@ response, error := service.GetRow(
     tablesdb.WithGetRowQueries([]interface{}{}),
     tablesdb.WithGetRowTransactionId("<TRANSACTION_ID>"),
 )
+```

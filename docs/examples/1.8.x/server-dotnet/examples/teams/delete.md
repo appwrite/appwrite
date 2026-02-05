@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Teams teams = new Teams(client);
 
 await teams.Delete(
     teamId: "<TEAM_ID>"
-);
+);```

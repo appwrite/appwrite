@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = account.create_email_token(
     email: 'email@example.com',
     phrase: false # optional
 )
+```

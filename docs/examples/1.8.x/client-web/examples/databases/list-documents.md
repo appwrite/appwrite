@@ -1,3 +1,4 @@
+```javascript
 import { Client, Databases } from "appwrite";
 
 const client = new Client()
@@ -15,3 +16,4 @@ const result = await databases.listDocuments({
 });
 
 console.log(result);
+```

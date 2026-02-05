@@ -1,4 +1,6 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -10,5 +12,6 @@ Functions functions = Functions(client);
 Uint8List result = await functions.getDeploymentDownload(
     functionId: '<FUNCTION_ID>',
     deploymentId: '<DEPLOYMENT_ID>',
-    type: DeploymentDownloadType.source, // (optional)
+    type: enums.DeploymentDownloadType.source, // (optional)
 );
+```

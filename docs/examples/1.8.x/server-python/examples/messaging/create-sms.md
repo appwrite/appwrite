@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -17,3 +18,4 @@ result = messaging.create_sms(
     draft = False, # optional
     scheduled_at = '' # optional
 )
+```

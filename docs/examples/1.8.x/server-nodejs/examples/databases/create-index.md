@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -13,6 +14,7 @@ const result = await databases.createIndex({
     key: '',
     type: sdk.IndexType.Key,
     attributes: [],
-    orders: [], // optional
+    orders: [sdk.OrderBy.Asc], // optional
     lengths: [] // optional
 });
+```

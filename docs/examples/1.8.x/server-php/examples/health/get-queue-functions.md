@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -12,4 +13,4 @@ $health = new Health($client);
 
 $result = $health->getQueueFunctions(
     threshold: null // optional
-);
+);```

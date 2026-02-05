@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -13,3 +14,4 @@ DeploymentList result = await functions.listDeployments(
     search: '<SEARCH>', // (optional)
     total: false, // (optional)
 );
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = teams.update_name(
     team_id: '<TEAM_ID>',
     name: '<NAME>'
 )
+```

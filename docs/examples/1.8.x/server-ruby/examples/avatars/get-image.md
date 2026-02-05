@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = avatars.get_image(
     width: 0, # optional
     height: 0 # optional
 )
+```

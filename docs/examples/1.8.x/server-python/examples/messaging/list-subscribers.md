@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -14,3 +15,4 @@ result = messaging.list_subscribers(
     search = '<SEARCH>', # optional
     total = False # optional
 )
+```

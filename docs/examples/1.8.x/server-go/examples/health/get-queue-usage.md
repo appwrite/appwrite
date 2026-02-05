@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -17,3 +17,4 @@ service := health.New(client)
 response, error := service.GetQueueUsage(
     health.WithGetQueueUsageThreshold(0),
 )
+```

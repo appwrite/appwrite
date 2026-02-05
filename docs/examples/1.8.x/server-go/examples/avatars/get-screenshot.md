@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -39,3 +39,4 @@ response, error := service.GetScreenshot(
     avatars.WithGetScreenshotQuality(85),
     avatars.WithGetScreenshotOutput("jpeg"),
 )
+```

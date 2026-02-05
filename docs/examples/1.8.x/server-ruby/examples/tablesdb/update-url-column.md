@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = tables_db.update_url_column(
     default: 'https://example.com',
     new_key: '' # optional
 )
+```

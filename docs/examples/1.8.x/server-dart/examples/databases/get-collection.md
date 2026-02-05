@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -11,3 +12,4 @@ Collection result = await databases.getCollection(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
 );
+```

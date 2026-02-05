@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -16,3 +17,4 @@ result = databases.update_boolean_attribute(
     default = False,
     new_key = '' # optional
 )
+```

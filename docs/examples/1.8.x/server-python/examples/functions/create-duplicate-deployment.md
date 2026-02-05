@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 
@@ -13,3 +14,4 @@ result = functions.create_duplicate_deployment(
     deployment_id = '<DEPLOYMENT_ID>',
     build_id = '<BUILD_ID>' # optional
 )
+```

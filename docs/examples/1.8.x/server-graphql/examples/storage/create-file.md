@@ -1,3 +1,4 @@
+```graphql
 POST /v1/storage/buckets/{bucketId}/files HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: multipart/form-data; boundary="cec8e8123c05ba25"
@@ -24,3 +25,4 @@ Content-Disposition: form-data; name="0"; filename="file.ext"
 File contents
 
 --cec8e8123c05ba25--
+```

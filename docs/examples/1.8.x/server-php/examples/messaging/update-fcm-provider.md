@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $messaging->updateFCMProvider(
     name: '<NAME>', // optional
     enabled: false, // optional
     serviceAccountJSON: [] // optional
-);
+);```

@@ -1,3 +1,4 @@
+```http
 POST /v1/account/tokens/magic-url HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -12,3 +13,4 @@ X-Appwrite-JWT: <YOUR_JWT>
   "url": "https://example.com",
   "phrase": false
 }
+```

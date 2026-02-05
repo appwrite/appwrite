@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -11,3 +12,4 @@ let provider = try await messaging.getProvider(
     providerId: "<PROVIDER_ID>"
 )
 
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ Subscriber result = await messaging.CreateSubscriber(
     topicId: "<TOPIC_ID>",
     subscriberId: "<SUBSCRIBER_ID>",
     targetId: "<TARGET_ID>"
-);
+);```

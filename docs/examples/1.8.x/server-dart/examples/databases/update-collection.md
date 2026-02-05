@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 import 'package:dart_appwrite/permission.dart';
 import 'package:dart_appwrite/role.dart';
@@ -12,8 +13,9 @@ Databases databases = Databases(client);
 Collection result = await databases.updateCollection(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // (optional)
     permissions: [Permission.read(Role.any())], // (optional)
     documentSecurity: false, // (optional)
     enabled: false, // (optional)
 );
+```

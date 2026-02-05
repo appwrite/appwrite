@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = tables_db.create_integer_column(
     default: null, # optional
     array: false # optional
 )
+```

@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.sites import Sites
 from appwrite.input_file import InputFile
@@ -17,3 +18,4 @@ result = sites.create_deployment(
     build_command = '<BUILD_COMMAND>', # optional
     output_directory = '<OUTPUT_DIRECTORY>' # optional
 )
+```

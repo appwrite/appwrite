@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -22,3 +23,4 @@ let bucket = try await storage.updateBucket(
     transformations: false // optional
 )
 
+```

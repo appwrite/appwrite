@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -13,3 +14,4 @@ Token result = await account.createMagicURLToken(
     url: 'https://example.com', // (optional)
     phrase: false, // (optional)
 );
+```

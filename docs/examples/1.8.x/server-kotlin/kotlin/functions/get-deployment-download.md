@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
@@ -13,5 +14,6 @@ val functions = Functions(client)
 val result = functions.getDeploymentDownload(
     functionId = "<FUNCTION_ID>",
     deploymentId = "<DEPLOYMENT_ID>",
-    type = "source" // optional
+    type = DeploymentDownloadType.SOURCE // optional
 )
+```

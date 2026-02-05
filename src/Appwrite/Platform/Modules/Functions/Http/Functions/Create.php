@@ -116,6 +116,7 @@ class Create extends Base
             ->inject('request')
             ->inject('gitHub')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -154,7 +155,8 @@ class Create extends Base
         Database $dbForPlatform,
         Request $request,
         GitHub $github,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
 
         // Temporary abuse check
@@ -315,7 +317,6 @@ class Create extends Base
                     template: $template,
                     github: $github,
                     activate: true,
-                    authorization: $authorization,
                     reference: $providerBranch,
                     referenceType: 'branch'
                 );
@@ -360,7 +361,7 @@ class Create extends Base
                     ->setTemplate($template);
             }
 
-            $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+            $functionsDomain = $platform['functionsDomain'];
             if (!empty($functionsDomain)) {
                 $routeSubdomain = ID::unique();
                 $domain = "{$routeSubdomain}.{$functionsDomain}";

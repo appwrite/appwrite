@@ -1,4 +1,6 @@
+```dart
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -9,5 +11,6 @@ Teams teams = Teams(client);
 Membership result = await teams.updateMembership(
     teamId: '<TEAM_ID>',
     membershipId: '<MEMBERSHIP_ID>',
-    roles: [],
+    roles: [enums.Roles.admin],
 );
+```

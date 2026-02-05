@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.storage import Storage
 from appwrite.enums import ImageGravity
@@ -26,3 +27,4 @@ result = storage.get_file_preview(
     output = ImageFormat.JPG, # optional
     token = '<TOKEN>' # optional
 )
+```

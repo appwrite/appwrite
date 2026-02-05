@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -12,4 +13,4 @@ $users = new Users($client);
 
 $result = $users->deleteSessions(
     userId: '<USER_ID>'
-);
+);```

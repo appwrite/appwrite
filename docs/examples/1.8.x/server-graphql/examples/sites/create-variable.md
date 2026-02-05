@@ -1,3 +1,4 @@
+```graphql
 mutation {
     sitesCreateVariable(
         siteId: "<SITE_ID>",
@@ -15,3 +16,4 @@ mutation {
         resourceId
     }
 }
+```

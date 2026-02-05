@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Tokens
@@ -12,3 +13,4 @@ val tokens = Tokens(client)
 val response = tokens.get(
     tokenId = "<TOKEN_ID>"
 )
+```

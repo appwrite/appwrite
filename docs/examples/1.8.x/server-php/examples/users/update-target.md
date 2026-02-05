@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -16,4 +17,4 @@ $result = $users->updateTarget(
     identifier: '<IDENTIFIER>', // optional
     providerId: '<PROVIDER_ID>', // optional
     name: '<NAME>' // optional
-);
+);```

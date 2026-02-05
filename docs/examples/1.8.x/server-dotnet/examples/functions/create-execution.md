@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -18,4 +19,4 @@ Execution result = await functions.CreateExecution(
     method: ExecutionMethod.GET, // optional
     headers: [object], // optional
     scheduledAt: "<SCHEDULED_AT>" // optional
-);
+);```

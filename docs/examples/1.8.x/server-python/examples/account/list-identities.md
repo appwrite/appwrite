@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.account import Account
 
@@ -12,3 +13,4 @@ result = account.list_identities(
     queries = [], # optional
     total = False # optional
 )
+```

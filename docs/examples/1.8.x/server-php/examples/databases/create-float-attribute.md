@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -19,4 +20,4 @@ $result = $databases->createFloatAttribute(
     max: null, // optional
     default: null, // optional
     array: false // optional
-);
+);```

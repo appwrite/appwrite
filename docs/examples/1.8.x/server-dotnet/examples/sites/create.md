@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -29,4 +30,4 @@ Site result = await sites.Create(
     providerSilentMode: false, // optional
     providerRootDirectory: "<PROVIDER_ROOT_DIRECTORY>", // optional
     specification: "" // optional
-);
+);```

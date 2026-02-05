@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Account
@@ -12,4 +13,4 @@ val result = account.createPushTarget(
     targetId = "<TARGET_ID>", 
     identifier = "<IDENTIFIER>", 
     providerId = "<PROVIDER_ID>", // (optional)
-)
+)```

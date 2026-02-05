@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -21,3 +22,4 @@ result = databases.update_documents(
     queries = [], # optional
     transaction_id = '<TRANSACTION_ID>' # optional
 )
+```

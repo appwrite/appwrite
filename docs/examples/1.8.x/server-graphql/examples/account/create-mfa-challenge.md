@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreateMFAChallenge(
         factor: "email"
@@ -8,3 +9,4 @@ mutation {
         expire
     }
 }
+```

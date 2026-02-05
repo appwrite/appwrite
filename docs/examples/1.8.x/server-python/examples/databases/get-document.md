@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -15,3 +16,4 @@ result = databases.get_document(
     queries = [], # optional
     transaction_id = '<TRANSACTION_ID>' # optional
 )
+```

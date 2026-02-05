@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountUpdateSession(
         sessionId: "<SESSION_ID>"
@@ -33,3 +34,4 @@ mutation {
         mfaUpdatedAt
     }
 }
+```

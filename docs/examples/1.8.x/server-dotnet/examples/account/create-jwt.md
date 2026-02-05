@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -9,4 +10,6 @@ Client client = new Client()
 
 Account account = new Account(client);
 
-JWT result = await account.CreateJWT();
+JWT result = await account.CreateJWT(
+    duration: 0 // optional
+);```

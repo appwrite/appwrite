@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -22,4 +23,4 @@ $result = $databases->updateDocuments(
     ], // optional
     queries: [], // optional
     transactionId: '<TRANSACTION_ID>' // optional
-);
+);```

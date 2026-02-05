@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tokensDelete(
         tokenId: "<TOKEN_ID>"
@@ -5,3 +6,4 @@ mutation {
         status
     }
 }
+```

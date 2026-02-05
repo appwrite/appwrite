@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -13,3 +14,4 @@ ResourceTokenList result = await tokens.list(
     queries: [], // (optional)
     total: false, // (optional)
 );
+```

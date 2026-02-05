@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Users
@@ -13,3 +14,4 @@ val response = users.listSessions(
     userId = "<USER_ID>",
     total = false // optional
 )
+```

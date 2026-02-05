@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -14,4 +15,4 @@ byte[] result = await functions.GetDeploymentDownload(
     functionId: "<FUNCTION_ID>",
     deploymentId: "<DEPLOYMENT_ID>",
     type: DeploymentDownloadType.Source // optional
-);
+);```

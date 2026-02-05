@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Sites;
@@ -17,3 +18,4 @@ sites.listFrameworks(new CoroutineCallback<>((result, error) -> {
 
     System.out.println(result);
 }));
+```

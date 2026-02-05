@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Graphql graphql = Graphql(client);
 Any result = await graphql.query(
     query: {},
 );
+```

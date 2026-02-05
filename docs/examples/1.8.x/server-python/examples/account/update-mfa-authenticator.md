@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.account import Account
 from appwrite.enums import AuthenticatorType
@@ -13,3 +14,4 @@ result = account.update_mfa_authenticator(
     type = AuthenticatorType.TOTP,
     otp = '<OTP>'
 )
+```

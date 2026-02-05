@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 
@@ -11,3 +12,4 @@ users = Users(client)
 result = users.get_mfa_recovery_codes(
     user_id = '<USER_ID>'
 )
+```

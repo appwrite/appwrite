@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingCreateSubscriber(
         topicId: "<TOPIC_ID>",
@@ -25,3 +26,4 @@ mutation {
         providerType
     }
 }
+```

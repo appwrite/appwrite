@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -12,4 +13,4 @@ $functions = new Functions($client);
 
 $result = $functions->get(
     functionId: '<FUNCTION_ID>'
-);
+);```

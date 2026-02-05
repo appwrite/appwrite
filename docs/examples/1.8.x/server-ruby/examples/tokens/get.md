@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ tokens = Tokens.new(client)
 result = tokens.get(
     token_id: '<TOKEN_ID>'
 )
+```

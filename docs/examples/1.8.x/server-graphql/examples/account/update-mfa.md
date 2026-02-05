@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountUpdateMFA(
         mfa: false
@@ -35,3 +36,4 @@ mutation {
         accessedAt
     }
 }
+```

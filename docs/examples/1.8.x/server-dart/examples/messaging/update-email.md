@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -21,3 +22,4 @@ Message result = await messaging.updateEmail(
     scheduledAt: '', // (optional)
     attachments: [], // (optional)
 );
+```

@@ -1,3 +1,4 @@
+```http
 POST /v1/messaging/providers/mailgun HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -17,3 +18,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "replyToEmail": "email@example.com",
   "enabled": false
 }
+```

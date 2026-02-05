@@ -1,3 +1,4 @@
+```javascript
 import { Client, Proxy, StatusCode, ProxyResourceType } from "@appwrite.io/console";
 
 const client = new Client()
@@ -15,3 +16,4 @@ const result = await proxy.createRedirectRule({
 });
 
 console.log(result);
+```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -19,4 +20,4 @@ $result = $functions->createExecution(
     method: ExecutionMethod::GET(), // optional
     headers: [], // optional
     scheduledAt: '<SCHEDULED_AT>' // optional
-);
+);```

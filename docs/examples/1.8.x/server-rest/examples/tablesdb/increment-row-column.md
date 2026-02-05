@@ -1,3 +1,4 @@
+```http
 PATCH /v1/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId}/{column}/increment HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -12,3 +13,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "max": 0,
   "transactionId": "<TRANSACTION_ID>"
 }
+```

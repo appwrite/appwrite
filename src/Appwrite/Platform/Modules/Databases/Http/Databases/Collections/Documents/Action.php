@@ -293,8 +293,8 @@ abstract class Action extends DatabasesAction
         array &$collectionsCache,
         Authorization $authorization,
         ?int &$operations = null,
+        int $depth = 0,
     ): bool {
-
         if ($operations !== null && $document->isEmpty()) {
             return false;
         }
@@ -307,6 +307,11 @@ abstract class Action extends DatabasesAction
         $document->removeAttribute('$collection');
         $document->setAttribute('$databaseId', $database->getId());
         $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
+
+        // Stop processing relationships if max depth reached
+        if ($depth >= Database::RELATION_MAX_DEPTH) {
+            return true;
+        }
 
         $relationships = $collectionsCache[$collectionId] ??= \array_filter(
             $collection->getAttribute('attributes', []),
@@ -354,8 +359,9 @@ abstract class Action extends DatabasesAction
                         document: $relation,
                         dbForProject: $dbForProject,
                         collectionsCache: $collectionsCache,
+                        authorization: $authorization,
                         operations: $operations,
-                        authorization: $authorization
+                        depth: $depth + 1
                     );
                 }
             }

@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Membership result = await teams.getMembership(
     teamId: '<TEAM_ID>',
     membershipId: '<MEMBERSHIP_ID>',
 );
+```

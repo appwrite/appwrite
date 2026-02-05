@@ -1,3 +1,4 @@
+```http
 PATCH /v1/databases/{databaseId}/collections/{collectionId}/attributes/enum/{key} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -11,3 +12,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "default": "<DEFAULT>",
   "newKey": ""
 }
+```

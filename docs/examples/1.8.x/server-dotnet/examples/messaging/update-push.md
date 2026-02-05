@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -30,4 +31,4 @@ Message result = await messaging.UpdatePush(
     contentAvailable: false, // optional
     critical: false, // optional
     priority: MessagePriority.Normal // optional
-);
+);```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -16,4 +17,4 @@ $result = $account->createOAuth2Token(
     success: 'https://example.com', // optional
     failure: 'https://example.com', // optional
     scopes: [] // optional
-);
+);```

@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Users users = Users(client);
 MfaFactors result = await users.listMFAFactors(
     userId: '<USER_ID>',
 );
+```
