@@ -253,7 +253,24 @@ Http::setResource('rule', function (Request $request, Database $dbForPlatform, D
         ]) ?? new Document();
     });
 
-    if ($rule->getAttribute('projectInternalId') !== $project->getSequence()) {
+    $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
+
+    // Temporary implementation until custom wildcard domains are an official feature
+    // Allow trusted projects; Used for Console (website) previews
+    if (!$permitsCurrentProject && !$rule->isEmpty() && !empty($rule->getAttribute('projectId', ''))) {
+        $trustedProjects = [];
+        foreach (\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')) as $trustedProject) {
+            if (empty($trustedProject)) {
+                continue;
+            }
+            $trustedProjects[] = $trustedProject;
+        }
+        if (\in_array($rule->getAttribute('projectId', ''), $trustedProjects)) {
+            $permitsCurrentProject = true;
+        }
+    }
+
+    if (!$permitsCurrentProject) {
         return new Document();
     }
 
