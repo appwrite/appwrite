@@ -248,6 +248,8 @@ class Create extends Action
             ->setParam('databaseId', $databaseId)
             ->setParam($this->getEventsParamKey(), $collection->getId());
 
+        $this->addRowBytesInfo($collection, $dbForProject);
+
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)
             ->dynamic($collection, $this->getResponseModel());

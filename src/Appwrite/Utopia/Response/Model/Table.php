@@ -92,6 +92,18 @@ class Table extends Model
                 'example' => new \stdClass(),
                 'array' => true
             ])
+            ->addRule('bytesMax', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Maximum row size in bytes. Returns 0 when no limit applies (e.g., MongoDB).',
+                'default' => 0,
+                'example' => 65535,
+            ])
+            ->addRule('bytesUsed', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Currently used row size in bytes based on defined attributes.',
+                'default' => 0,
+                'example' => 1500,
+            ])
         ;
     }
 
