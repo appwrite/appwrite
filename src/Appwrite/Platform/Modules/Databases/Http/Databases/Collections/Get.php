@@ -75,6 +75,8 @@ class Get extends Action
             throw new Exception($this->getNotFoundException(), params: [$collectionId]);
         }
 
+        $this->addRowBytesInfo($collection, $dbForProject);
+
         $response->dynamic($collection, $this->getResponseModel());
     }
 }
