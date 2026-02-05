@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "81f8f80b2d2599846eb85012ad35c553",
+    "content-hash": "1163d54ea0862b8b1bdc72efcda8631d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -5480,16 +5480,16 @@
         },
         {
             "name": "utopia-php/websocket",
-            "version": "dev-fix-conditional-compression",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/websocket.git",
-                "reference": "a6c2be0cd0e1d99c4f4b7df16fedb1381a073c44"
+                "reference": "d230de8d4d2450184297327238ed1fbde676b8d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/a6c2be0cd0e1d99c4f4b7df16fedb1381a073c44",
-                "reference": "a6c2be0cd0e1d99c4f4b7df16fedb1381a073c44",
+                "url": "https://api.github.com/repos/utopia-php/websocket/zipball/d230de8d4d2450184297327238ed1fbde676b8d2",
+                "reference": "d230de8d4d2450184297327238ed1fbde676b8d2",
                 "shasum": ""
             },
             "require": {
@@ -5509,25 +5509,7 @@
                     "Utopia\\WebSocket\\": "src/WebSocket"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\WebSocket\\Tests\\": "tests/e2e"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "./vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test --preset=psr12 src tests"
-                ],
-                "format": [
-                    "./vendor/bin/pint --preset=psr12 src tests"
-                ],
-                "check": [
-                    "./vendor/bin/phpstan analyse --level max src tests"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -5540,10 +5522,10 @@
                 "websocket"
             ],
             "support": {
-                "source": "https://github.com/utopia-php/websocket/tree/fix-conditional-compression",
-                "issues": "https://github.com/utopia-php/websocket/issues"
+                "issues": "https://github.com/utopia-php/websocket/issues",
+                "source": "https://github.com/utopia-php/websocket/tree/1.0.0"
             },
-            "time": "2026-02-05T12:41:42+00:00"
+            "time": "2026-02-05T13:40:16+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -9178,9 +9160,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/websocket": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
