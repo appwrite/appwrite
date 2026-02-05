@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -9,3 +10,4 @@ Databases databases = Databases(client);
 await databases.deleteTransaction(
     transactionId: '<TRANSACTION_ID>',
 );
+```

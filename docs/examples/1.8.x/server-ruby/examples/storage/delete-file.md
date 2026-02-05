@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = storage.delete_file(
     bucket_id: '<BUCKET_ID>',
     file_id: '<FILE_ID>'
 )
+```

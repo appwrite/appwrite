@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -18,4 +19,4 @@ $result = $storage->createFile(
     fileId: '<FILE_ID>',
     file: InputFile::withPath('file.png'),
     permissions: [Permission::read(Role::any())] // optional
-);
+);```

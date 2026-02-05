@@ -1,4 +1,6 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -12,7 +14,8 @@ Execution result = await functions.createExecution(
     body: '<BODY>', // (optional)
     xasync: false, // (optional)
     path: '<PATH>', // (optional)
-    method: ExecutionMethod.gET, // (optional)
+    method: enums.ExecutionMethod.gET, // (optional)
     headers: {}, // (optional)
     scheduledAt: '<SCHEDULED_AT>', // (optional)
 );
+```

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingUpdateEmail(
         messageId: "<MESSAGE_ID>",
@@ -28,3 +29,4 @@ mutation {
         status
     }
 }
+```

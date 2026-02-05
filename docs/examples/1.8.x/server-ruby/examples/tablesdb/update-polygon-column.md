@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = tables_db.update_polygon_column(
     default: [[[1, 2], [3, 4], [5, 6], [1, 2]]], # optional
     new_key: '' # optional
 )
+```

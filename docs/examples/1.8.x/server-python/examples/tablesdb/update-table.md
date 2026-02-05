@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 from appwrite.permission import Permission
@@ -13,8 +14,9 @@ tables_db = TablesDB(client)
 result = tables_db.update_table(
     database_id = '<DATABASE_ID>',
     table_id = '<TABLE_ID>',
-    name = '<NAME>',
+    name = '<NAME>', # optional
     permissions = [Permission.read(Role.any())], # optional
     row_security = False, # optional
     enabled = False # optional
 )
+```

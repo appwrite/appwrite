@@ -1,5 +1,7 @@
+```graphql
 mutation {
     accountCreateMFARecoveryCodes {
         recoveryCodes
     }
 }
+```

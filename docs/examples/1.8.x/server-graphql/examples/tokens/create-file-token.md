@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tokensCreateFileToken(
         bucketId: "<BUCKET_ID>",
@@ -13,3 +14,4 @@ mutation {
         accessedAt
     }
 }
+```

@@ -1,3 +1,4 @@
+```javascript
 import { Client, Account, OAuthProvider } from "react-native-appwrite";
 
 const client = new Client()
@@ -13,3 +14,4 @@ account.createOAuth2Token({
     scopes: [] // optional
 });
 
+```

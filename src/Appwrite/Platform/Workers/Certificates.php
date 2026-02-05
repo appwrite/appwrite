@@ -290,9 +290,11 @@ class Certificates extends Action
             $certificate->setAttribute('domain', $domain->get());
         }
 
+        $date = \date('H:i:s');
+        $logs = "\033[90m[{$date}] \033[97mProcessing SSL certificate issuance. \033[0m\n";
+
         try {
-            $date = \date('H:i:s');
-            $certificate->setAttribute('logs', "\033[90m[{$date}] \033[97mCertificate generation started. \033[0m\n");
+            $certificate->setAttribute('logs', $logs);
 
             // Persist ASAP so that logs are reset in retry flow and user can see the latest logs on Console.
             $certificate = $this->upsertCertificate($rule, $certificate, $dbForPlatform);
@@ -314,10 +316,16 @@ class Certificates extends Action
             $certName = ID::unique();
             $renewDate = $certificates->issueCertificate($certName, $domain->get(), $domainType);
 
+            $date = \date('H:i:s');
             // If certificate is generated instantly, we can mark the rule as 'verified'.
             if ($certificates->isInstantGeneration($domain->get(), $domainType)) {
                 $rule->setAttribute('status', RULE_STATUS_VERIFIED);
-                $certificate->setAttribute('logs', 'Certificate successfully generated.');
+                $logs .= "\033[90m[{$date}] \033[97mSSL certificate successfully issued. \033[0m\n";
+                $certificate->setAttribute('logs', $logs);
+            } else {
+                // Delayed generation: third-party handles certificate issuance asynchronously
+                $logs .= "\033[90m[{$date}] \033[97mSSL certificate is being issued. This usually takes a few minutes — no action needed on your end. We'll periodically check and update the status. \033[0m\n";
+                $certificate->setAttribute('logs', $logs);
             }
 
             $certificate->setAttributes([
@@ -326,16 +334,14 @@ class Certificates extends Action
                 'renewDate' => $renewDate,
             ]);
         } catch (Throwable $e) {
-            $logs = $e->getMessage();
-            $currentLogs = $certificate->getAttribute('logs', '');
             $date = \date('H:i:s');
-            $errorMessage = "\033[90m[{$date}] \033[31mCertificate generation failed: \033[0m\n";
+            $logs .= "\033[90m[{$date}] \033[31mSSL certificate issuance failed: \033[0m\n";
+            $logs .= \mb_strcut($e->getMessage(), 0, 500000); // Limit to 500kb
 
             $attempts = $certificate->getAttribute('attempts', 0) + 1; // Increase attempts count
 
             // Update attributes on certificate document
             $certificate->setAttributes([
-                'logs' => $currentLogs . $errorMessage . \mb_strcut($logs, 0, 500000), // Limit to 500kb
                 'attempts' => $attempts,
                 'renewDate' => DateTime::now(), // Store current time as renew date to ensure another attempt in next maintenance cycle.
             ]);
@@ -348,14 +354,13 @@ class Certificates extends Action
 
             throw $e;
         } finally {
-            // All actions result in new 'updated' date
-            $certificate->setAttribute('updated', DateTime::now());
-            // Save certificate document to database
+            // Update certificate document with logs
+            $certificate->setAttribute('logs', $logs);
             $this->upsertCertificate($rule, $certificate, $dbForPlatform);
 
-            // Ensure certificate is associated with the rule
-            $rule->setAttribute('certificateId', $certificate->getId());
             // Update rule and emit events
+            $rule->setAttribute('certificateId', $certificate->getId());
+            $rule->setAttribute('logs', $logs);
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
         }
     }

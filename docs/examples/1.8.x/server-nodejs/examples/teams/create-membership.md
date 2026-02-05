@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -9,10 +10,11 @@ const teams = new sdk.Teams(client);
 
 const result = await teams.createMembership({
     teamId: '<TEAM_ID>',
-    roles: [],
+    roles: [sdk.Roles.Admin],
     email: 'email@example.com', // optional
     userId: '<USER_ID>', // optional
     phone: '+12065550100', // optional
     url: 'https://example.com', // optional
     name: '<NAME>' // optional
 });
+```

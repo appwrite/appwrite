@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ AttributeBoolean result = await databases.CreateBooleanAttribute(
     required: false,
     default: false, // optional
     array: false // optional
-);
+);```

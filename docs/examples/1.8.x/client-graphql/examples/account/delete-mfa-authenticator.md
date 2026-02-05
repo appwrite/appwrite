@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountDeleteMFAAuthenticator(
         type: "totp"
@@ -5,3 +6,4 @@ mutation {
         status
     }
 }
+```

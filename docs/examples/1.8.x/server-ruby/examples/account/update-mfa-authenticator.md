@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = account.update_mfa_authenticator(
     type: AuthenticatorType::TOTP,
     otp: '<OTP>'
 )
+```

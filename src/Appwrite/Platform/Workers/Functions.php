@@ -272,8 +272,8 @@ class Functions extends Action
         string $path,
         string $method,
         Document $user,
-        string $jwt = null,
-        string $event = null,
+        ?string $jwt = null,
+        ?string $event = null,
     ): void {
         $executionId = ID::unique();
         $headers['x-appwrite-execution-id'] = $executionId ?? '';
@@ -357,12 +357,12 @@ class Functions extends Action
         string $method,
         array $headers,
         array $platform,
-        string $data = null,
+        ?string $data = null,
         ?Document $user = null,
-        string $jwt = null,
-        string $event = null,
-        string $eventData = null,
-        string $executionId = null,
+        ?string $jwt = null,
+        ?string $event = null,
+        ?string $eventData = null,
+        ?string $executionId = null,
     ): void {
         $user ??= new Document();
         $functionId = $function->getId();

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,8 +15,9 @@ tables_db = TablesDB.new(client)
 result = tables_db.update_table(
     database_id: '<DATABASE_ID>',
     table_id: '<TABLE_ID>',
-    name: '<NAME>',
+    name: '<NAME>', # optional
     permissions: [Permission.read(Role.any())], # optional
     row_security: false, # optional
     enabled: false # optional
 )
+```

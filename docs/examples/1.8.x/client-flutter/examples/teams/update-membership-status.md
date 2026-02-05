@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ Membership result = await teams.updateMembershipStatus(
     userId: '<USER_ID>',
     secret: '<SECRET>',
 );
+```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $result = $users->createToken(
     userId: '<USER_ID>',
     length: 4, // optional
     expire: 60 // optional
-);
+);```

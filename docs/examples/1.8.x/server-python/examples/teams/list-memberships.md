@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.teams import Teams
 
@@ -14,3 +15,4 @@ result = teams.list_memberships(
     search = '<SEARCH>', # optional
     total = False # optional
 )
+```

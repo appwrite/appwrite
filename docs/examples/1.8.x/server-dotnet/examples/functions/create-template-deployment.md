@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -18,4 +19,4 @@ Deployment result = await functions.CreateTemplateDeployment(
     type: TemplateReferenceType.Commit,
     reference: "<REFERENCE>",
     activate: false // optional
-);
+);```

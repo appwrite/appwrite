@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -14,4 +14,7 @@ client := client.New(
 
 service := account.New(client)
 
-response, error := service.CreateJWT())
+response, error := service.CreateJWT(
+    account.WithCreateJWTDuration(0),
+)
+```

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     usersCreateScryptUser(
         userId: "<USER_ID>",
@@ -43,3 +44,4 @@ mutation {
         accessedAt
     }
 }
+```

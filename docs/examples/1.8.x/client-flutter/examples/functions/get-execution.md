@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Execution result = await functions.getExecution(
     functionId: '<FUNCTION_ID>',
     executionId: '<EXECUTION_ID>',
 );
+```

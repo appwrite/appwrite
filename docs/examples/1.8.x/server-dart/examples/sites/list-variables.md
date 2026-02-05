@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Sites sites = Sites(client);
 VariableList result = await sites.listVariables(
     siteId: '<SITE_ID>',
 );
+```

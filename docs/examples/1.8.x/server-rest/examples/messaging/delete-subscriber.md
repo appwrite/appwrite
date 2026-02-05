@@ -1,3 +1,4 @@
+```http
 DELETE /v1/messaging/topics/{topicId}/subscribers/{subscriberId} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -7,3 +8,4 @@ X-Appwrite-JWT: <YOUR_JWT>
 X-Appwrite-Session: 
 X-Appwrite-Key: <YOUR_API_KEY>
 
+```

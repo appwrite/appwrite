@@ -1,3 +1,4 @@
+```http
 POST /v1/functions/{functionId}/deployments HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: multipart/form-data; boundary="cec8e8123c05ba25"
@@ -27,3 +28,4 @@ Content-Disposition: form-data; name="activate"
 false
 
 --cec8e8123c05ba25--
+```

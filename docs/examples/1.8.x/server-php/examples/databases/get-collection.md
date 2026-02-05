@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -13,4 +14,4 @@ $databases = new Databases($client);
 $result = $databases->getCollection(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>'
-);
+);```

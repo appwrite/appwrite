@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -13,4 +14,4 @@ $storage = new Storage($client);
 $result = $storage->deleteFile(
     bucketId: '<BUCKET_ID>',
     fileId: '<FILE_ID>'
-);
+);```

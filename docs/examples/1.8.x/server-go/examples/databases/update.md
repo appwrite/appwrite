@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -16,6 +16,7 @@ service := databases.New(client)
 
 response, error := service.Update(
     "<DATABASE_ID>",
-    "<NAME>",
+    databases.WithUpdateName("<NAME>"),
     databases.WithUpdateEnabled(false),
 )
+```

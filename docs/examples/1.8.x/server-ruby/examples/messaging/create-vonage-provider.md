@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = messaging.create_vonage_provider(
     api_secret: '<API_SECRET>', # optional
     enabled: false # optional
 )
+```

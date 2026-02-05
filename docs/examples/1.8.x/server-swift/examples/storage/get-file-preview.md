@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -25,3 +26,4 @@ let bytes = try await storage.getFilePreview(
     token: "<TOKEN>" // optional
 )
 
+```

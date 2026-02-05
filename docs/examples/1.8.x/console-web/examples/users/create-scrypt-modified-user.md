@@ -1,3 +1,4 @@
+```javascript
 import { Client, Users } from "@appwrite.io/console";
 
 const client = new Client()
@@ -17,3 +18,4 @@ const result = await users.createScryptModifiedUser({
 });
 
 console.log(result);
+```

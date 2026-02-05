@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 from appwrite.permission import Permission
@@ -20,3 +21,4 @@ result = tables_db.create_table(
     columns = [], # optional
     indexes = [] # optional
 )
+```

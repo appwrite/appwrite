@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -9,6 +10,7 @@ TablesDB tablesDB = TablesDB(client);
 
 Database result = await tablesDB.update(
     databaseId: '<DATABASE_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // (optional)
     enabled: false, // (optional)
 );
+```

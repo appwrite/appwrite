@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -10,8 +11,9 @@ const databases = new sdk.Databases(client);
 const result = await databases.updateCollection({
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // optional
     permissions: [sdk.Permission.read(sdk.Role.any())], // optional
     documentSecurity: false, // optional
     enabled: false // optional
 });
+```

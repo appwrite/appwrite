@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Storage storage = new Storage(client);
 
 await storage.DeleteBucket(
     bucketId: "<BUCKET_ID>"
-);
+);```

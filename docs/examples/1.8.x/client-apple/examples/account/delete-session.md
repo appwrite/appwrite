@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -10,3 +11,4 @@ let result = try await account.deleteSession(
     sessionId: "<SESSION_ID>"
 )
 
+```

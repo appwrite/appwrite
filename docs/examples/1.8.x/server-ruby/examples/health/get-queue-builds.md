@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ health = Health.new(client)
 result = health.get_queue_builds(
     threshold: null # optional
 )
+```

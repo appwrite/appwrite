@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -13,3 +14,4 @@ result = messaging.create_subscriber(
     subscriber_id = '<SUBSCRIBER_ID>',
     target_id = '<TARGET_ID>'
 )
+```

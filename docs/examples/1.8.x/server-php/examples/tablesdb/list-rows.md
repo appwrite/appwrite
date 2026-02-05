@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -16,4 +17,4 @@ $result = $tablesDB->listRows(
     queries: [], // optional
     transactionId: '<TRANSACTION_ID>', // optional
     total: false // optional
-);
+);```

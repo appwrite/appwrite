@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.storage import Storage
 
@@ -12,3 +13,4 @@ result = storage.delete_file(
     bucket_id = '<BUCKET_ID>',
     file_id = '<FILE_ID>'
 )
+```

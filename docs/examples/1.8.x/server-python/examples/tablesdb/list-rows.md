@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 
@@ -15,3 +16,4 @@ result = tables_db.list_rows(
     transaction_id = '<TRANSACTION_ID>', # optional
     total = False # optional
 )
+```

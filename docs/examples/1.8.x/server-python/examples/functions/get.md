@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 
@@ -11,3 +12,4 @@ functions = Functions(client)
 result = functions.get(
     function_id = '<FUNCTION_ID>'
 )
+```

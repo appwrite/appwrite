@@ -1,5 +1,11 @@
 # Change Log
 
+## 21.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
 ## 20.3.3
 
 * Fix boolean parameter not handled correctly in Client requests

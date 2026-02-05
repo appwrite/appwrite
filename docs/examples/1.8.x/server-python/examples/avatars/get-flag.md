@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.avatars import Avatars
 from appwrite.enums import Flag
@@ -15,3 +16,4 @@ result = avatars.get_flag(
     height = 0, # optional
     quality = -1 # optional
 )
+```

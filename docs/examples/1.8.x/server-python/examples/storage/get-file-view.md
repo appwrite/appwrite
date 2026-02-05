@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.storage import Storage
 
@@ -13,3 +14,4 @@ result = storage.get_file_view(
     file_id = '<FILE_ID>',
     token = '<TOKEN>' # optional
 )
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = health.get_failed_jobs(
     name: Name::V1_DATABASE,
     threshold: null # optional
 )
+```

@@ -1,3 +1,4 @@
+```http
 POST /v1/teams/{teamId}/memberships HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -15,3 +16,4 @@ X-Appwrite-JWT: <YOUR_JWT>
   "url": "https://example.com",
   "name": "<NAME>"
 }
+```

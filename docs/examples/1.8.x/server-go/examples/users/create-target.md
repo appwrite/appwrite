@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -22,3 +22,4 @@ response, error := service.CreateTarget(
     users.WithCreateTargetProviderId("<PROVIDER_ID>"),
     users.WithCreateTargetName("<NAME>"),
 )
+```

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tokensUpdate(
         tokenId: "<TOKEN_ID>",
@@ -12,3 +13,4 @@ mutation {
         accessedAt
     }
 }
+```

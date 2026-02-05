@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ functions = Functions.new(client)
 result = functions.list_variables(
     function_id: '<FUNCTION_ID>'
 )
+```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -19,4 +20,4 @@ ColumnRelationship result = await tablesDB.CreateRelationshipColumn(
     key: "", // optional
     twoWayKey: "", // optional
     onDelete: RelationMutate.Cascade // optional
-);
+);```

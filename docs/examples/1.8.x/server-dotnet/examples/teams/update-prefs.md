@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Teams teams = new Teams(client);
 Preferences result = await teams.UpdatePrefs(
     teamId: "<TEAM_ID>",
     prefs: [object]
-);
+);```

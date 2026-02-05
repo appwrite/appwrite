@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
@@ -17,4 +18,4 @@ val result = functions.createExecution(
     method = ExecutionMethod.GET, // (optional)
     headers = mapOf( "a" to "b" ), // (optional)
     scheduledAt = "<SCHEDULED_AT>", // (optional)
-)
+)```

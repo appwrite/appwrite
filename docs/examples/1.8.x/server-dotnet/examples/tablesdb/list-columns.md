@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ ColumnList result = await tablesDB.ListColumns(
     tableId: "<TABLE_ID>",
     queries: new List<string>(), // optional
     total: false // optional
-);
+);```

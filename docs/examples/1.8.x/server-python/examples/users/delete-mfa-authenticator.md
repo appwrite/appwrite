@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 from appwrite.enums import AuthenticatorType
@@ -13,3 +14,4 @@ result = users.delete_mfa_authenticator(
     user_id = '<USER_ID>',
     type = AuthenticatorType.TOTP
 )
+```

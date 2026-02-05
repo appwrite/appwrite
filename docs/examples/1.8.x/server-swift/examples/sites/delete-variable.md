@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -12,3 +13,4 @@ let result = try await sites.deleteVariable(
     variableId: "<VARIABLE_ID>"
 )
 
+```

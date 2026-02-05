@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -11,3 +12,4 @@ TeamList result = await teams.list(
     search: '<SEARCH>', // optional
     total: false, // optional
 );
+```

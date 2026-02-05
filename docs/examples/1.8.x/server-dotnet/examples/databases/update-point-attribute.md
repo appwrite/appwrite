@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ AttributePoint result = await databases.UpdatePointAttribute(
     required: false,
     default: [1, 2], // optional
     newKey: "" // optional
-);
+);```

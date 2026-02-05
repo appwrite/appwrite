@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -17,4 +18,4 @@ $result = $messaging->createTextmagicProvider(
     username: '<USERNAME>', // optional
     apiKey: '<API_KEY>', // optional
     enabled: false // optional
-);
+);```

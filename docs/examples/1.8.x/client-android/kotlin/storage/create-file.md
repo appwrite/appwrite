@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.models.InputFile
@@ -16,4 +17,4 @@ val result = storage.createFile(
     fileId = "<FILE_ID>", 
     file = InputFile.fromPath("file.png"), 
     permissions = listOf(Permission.read(Role.any())), // (optional)
-)
+)```

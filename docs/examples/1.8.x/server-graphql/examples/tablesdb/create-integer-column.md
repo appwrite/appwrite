@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBCreateIntegerColumn(
         databaseId: "<DATABASE_ID>",
@@ -22,3 +23,4 @@ mutation {
         default
     }
 }
+```

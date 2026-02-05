@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -21,4 +22,4 @@ $result = $messaging->createMailgunProvider(
     replyToName: '<REPLY_TO_NAME>', // optional
     replyToEmail: 'email@example.com', // optional
     enabled: false // optional
-);
+);```
