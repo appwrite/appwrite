@@ -58,8 +58,7 @@ trait UsersBase
         }
 
         if ($user['headers']['status-code'] === 201) {
-            $body = json_decode($user['body'], true);
-            static::$cachedUser[$projectId] = ['userId' => $body['$id']];
+            static::$cachedUser[$projectId] = ['userId' => $user['body']['$id']];
         }
 
         return static::$cachedUser[$projectId];
