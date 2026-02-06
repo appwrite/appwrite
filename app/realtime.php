@@ -440,7 +440,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 $data = $event['data'];
                 // Send matched subscription IDs
                 $data['subscriptions'] = array_keys($matchedSubscriptions);
-
+                Console::log("[Debug][Worker test endpoint sending time: " . $time);
                 $server->send([$connectionId], json_encode([
                     'type' => 'event',
                     'data' => $data
@@ -653,8 +653,10 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $subscriptionMapping = [];
         foreach ($subscriptionsByIndex as $index => $subscription) {
             $subscriptionId = ID::unique();
-            Console::info("[Channels received] {$subscription['queries']}");
-            Console::info("[Queries received] {$subscription['queries']}");
+            $queries = json_encode($subscription['queries']);
+            $channelsPresent = json_encode($subscription['channels']);
+            Console::info("[Channels received] {$channelsPresent}");
+            Console::info("[Queries received] {$queries}");
             $realtime->subscribe(
                 $project->getId(),
                 $connection,
