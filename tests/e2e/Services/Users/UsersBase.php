@@ -720,7 +720,10 @@ trait UsersBase
         $data = $this->setupUser();
         $this->setupUser1();
         $this->setupHashedPasswordUsers();
-        $totalUsers = 15;
+        // In --functional mode, this test runs independently with 9 users created above
+        // (setupUser: 1 + setupUser1: 1 + setupHashedPasswordUsers: 7)
+        // In sequential mode, there may be more users from other tests
+        $minUsers = 9;
 
         /**
          * Test for SUCCESS listUsers
@@ -733,12 +736,22 @@ trait UsersBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount($totalUsers, $response['body']['users']);
+        $this->assertGreaterThanOrEqual($minUsers, count($response['body']['users']));
 
-        $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
-        $this->assertEquals($response['body']['users'][1]['$id'], 'user1');
+        // Find our users by ID instead of assuming position
+        $userIds = array_column($response['body']['users'], '$id');
+        $this->assertContains($data['userId'], $userIds);
+        $this->assertContains('user1', $userIds);
 
-        $user1 = $response['body']['users'][1];
+        // Find user1 for later use in queries
+        $user1 = null;
+        foreach ($response['body']['users'] as $user) {
+            if ($user['$id'] === 'user1') {
+                $user1 = $user;
+                break;
+            }
+        }
+        $this->assertNotNull($user1, 'user1 should exist in user list');
 
         // This test ensures that by default, endpoints dont support select queries
         // If we add select query to this endpoint, you will need to remove this test
