@@ -861,6 +861,15 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
 
         switch ($message['type']) {
             case 'ping':
+                $heartbeatTime = new \DateTimeImmutable();
+                $heartbeatTimeFormatted = $heartbeatTime->format('Y-m-d H:i:s.v');
+
+                Console::log('[Realtime][Heartbeat] '
+                    . 'time=' . $heartbeatTimeFormatted
+                    . ' connectionId=' . $connection
+                    . ' projectId=' . ($projectId ?? 'unknown')
+                );
+
                 $server->send([$connection], json_encode([
                     'type' => 'pong'
                 ]));
