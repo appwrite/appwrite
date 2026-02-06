@@ -3,8 +3,8 @@
 namespace Appwrite\Platform;
 
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Helpers\Permission as DbPermission;
+use Utopia\Database\Helpers\Role;
 
 trait Permission
 {
