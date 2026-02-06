@@ -575,7 +575,21 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals(200, $user['headers']['status-code']);
         $this->assertNotEmpty($user['body']['$id']);
 
-        $webhook = $this->getLastRequest();
+        // Use probe to find the specific status update webhook for this user (parallel-safe)
+        $webhook = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            self::REQUEST_TYPE_WEBHOOK,
+            [],
+            10,
+            500,
+            function ($request) use ($id) {
+                // Verify this is the status update event for our specific user
+                $events = $request['headers']['X-Appwrite-Webhook-Events'] ?? '';
+                if (!str_contains($events, "users.{$id}.update.status")) {
+                    throw new \Exception('Not the status update event for this user');
+                }
+            }
+        );
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
@@ -646,7 +660,8 @@ class WebhooksCustomServerTest extends Scope
         $this->assertNotEmpty($webhook['data']['$id']);
         $this->assertEquals($webhook['data']['name'], $data['name']);
         $this->assertTrue((new DatetimeValidator())->isValid($webhook['data']['registration']));
-        $this->assertFalse($webhook['data']['status']);
+        // User is created with status=true by default, so webhook shows that status at deletion
+        $this->assertTrue($webhook['data']['status']);
         $this->assertEquals($webhook['data']['email'], $data['email']);
         $this->assertFalse($webhook['data']['emailVerification']);
     }
