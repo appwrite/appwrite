@@ -439,7 +439,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                 $data = $event['data'];
                 // Send matched subscription IDs
                 $data['subscriptions'] = array_keys($matchedSubscriptions);
-                Console::log("[Debug][Worker test endpoint sending time: " . $time);
+                Console::log("[Debug][Worker test endpoint sending time". "to connection :". $connectionId . " is" . $time);
                 $server->send([$connectionId], json_encode([
                     'type' => 'event',
                     'data' => $data
