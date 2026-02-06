@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Detection;
+namespace Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Detections;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;

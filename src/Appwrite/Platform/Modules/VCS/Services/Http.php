@@ -7,7 +7,7 @@ use Appwrite\Platform\Modules\VCS\Http\Installations\Get as GetInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Branches\XList as ListRepositoryBranches;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Contents\Get as GetRepositoryContents;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Create as CreateRepository;
-use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Detection\Create as CreateRepositoryDetection;
+use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Detections\Create as CreateRepositoryDetections;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Get as GetRepository;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\XList as ListRepositories;
 use Appwrite\Platform\Modules\VCS\Http\Installations\XList as ListInstallations;
@@ -30,6 +30,6 @@ class Http extends Service
         $this->addAction(ListRepositories::getName(), new ListRepositories());
         $this->addAction(ListRepositoryBranches::getName(), new ListRepositoryBranches());
         $this->addAction(GetRepositoryContents::getName(), new GetRepositoryContents());
-        $this->addAction(CreateRepositoryDetection::getName(), new CreateRepositoryDetection());
+        $this->addAction(CreateRepositoryDetections::getName(), new CreateRepositoryDetections());
     }
 }
