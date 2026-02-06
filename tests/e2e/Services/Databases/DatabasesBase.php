@@ -5968,12 +5968,6 @@ trait DatabasesBase
         $this->assertEquals('album1', $artist['body']['albums'][0]['$id']);
         $this->assertEquals('Album 1', $artist['body']['albums'][0]['name']);
         $this->assertEquals($permissions, $artist['body']['albums'][0]['$permissions']);
-
-        return [
-            'databaseId' => $databaseId,
-            'albumsCollection' => $albums['body']['$id'],
-            'artistsCollection' => $artists['body']['$id'],
-        ];
     }
 
     public function testManyToManyRelationship(): void
@@ -6129,12 +6123,6 @@ trait DatabasesBase
         $this->assertEquals('sport1', $player['body']['sports'][0]['$id']);
         $this->assertEquals('Sport 1', $player['body']['sports'][0]['name']);
         $this->assertEquals($permissions, $player['body']['sports'][0]['$permissions']);
-
-        return [
-            'databaseId' => $databaseId,
-            'sportsCollection' => $sports['body']['$id'],
-            'playersCollection' => $players['body']['$id'],
-        ];
     }
 
     public function testValidateOperators(): void
