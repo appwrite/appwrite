@@ -79,6 +79,57 @@ class AccountCustomClientTest extends Scope
     }
 
     /**
+     * Helper to create a fresh account with session (bypasses cache).
+     * Use this when you need a predictable session/log count for testing.
+     */
+    protected function createFreshAccountWithSession(): array
+    {
+        $projectId = $this->getProject()['$id'];
+
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
+        $password = 'password';
+        $name = 'User Name';
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $id = $response['body']['$id'];
+
+        // Create session
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $sessionId = $response['body']['$id'];
+        $session = $response['cookies']['a_session_' . $projectId];
+
+        return [
+            'id' => $id,
+            'email' => $email,
+            'password' => $password,
+            'name' => $name,
+            'sessionId' => $sessionId,
+            'session' => $session,
+        ];
+    }
+
+    /**
      * Helper to set up a basic account
      */
     protected function setupAccount(): array
@@ -803,7 +854,8 @@ class AccountCustomClientTest extends Scope
 
     public function testGetAccountSessions(): void
     {
-        $data = $this->setupAccountWithSession();
+        // Use fresh account for predictable session count
+        $data = $this->createFreshAccountWithSession();
         $session = $data['session'];
         $sessionId = $data['sessionId'];
 
@@ -818,7 +870,7 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['total']);
+        $this->assertEquals(1, $response['body']['total']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
         $this->assertEmpty($response['body']['sessions'][0]['secret']);
 
@@ -857,7 +909,8 @@ class AccountCustomClientTest extends Scope
     public function testGetAccountLogs(): void
     {
         sleep(5);
-        $data = $this->setupAccountWithSession();
+        // Use fresh account for predictable log count
+        $data = $this->createFreshAccountWithSession();
         $session = $data['session'];
 
         /**
@@ -873,12 +926,34 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
-        $this->assertCount(3, $response['body']['logs']);
+        // Fresh account: 1 user.create + 1 session.create = 2 logs
+        // logs[0] = session.create (most recent), logs[1] = user.create (oldest)
+        $this->assertCount(2, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
-        $this->assertEquals("user.create", $response['body']['logs'][2]['event']);
-        $this->assertEquals(filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][2]['ip']);
-        $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][2]['time']));
+        $this->assertEquals("user.create", $response['body']['logs'][1]['event']);
+        $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
+        $this->assertTrue((new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
 
+        // Check session.create log (logs[0] - most recent)
+        $this->assertEquals('Windows', $response['body']['logs'][0]['osName']);
+        $this->assertEquals('WIN', $response['body']['logs'][0]['osCode']);
+        $this->assertEquals('10', $response['body']['logs'][0]['osVersion']);
+
+        $this->assertEquals('browser', $response['body']['logs'][0]['clientType']);
+        $this->assertEquals('Chrome', $response['body']['logs'][0]['clientName']);
+        $this->assertEquals('CH', $response['body']['logs'][0]['clientCode']);
+        $this->assertEquals('70.0', $response['body']['logs'][0]['clientVersion']);
+        $this->assertEquals('Blink', $response['body']['logs'][0]['clientEngine']);
+
+        $this->assertEquals('desktop', $response['body']['logs'][0]['deviceName']);
+        $this->assertEquals('', $response['body']['logs'][0]['deviceBrand']);
+        $this->assertEquals('', $response['body']['logs'][0]['deviceModel']);
+        $this->assertEquals(filter_var($response['body']['logs'][0]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][0]['ip']);
+
+        $this->assertEquals('--', $response['body']['logs'][0]['countryCode']);
+        $this->assertEquals('Unknown', $response['body']['logs'][0]['countryName']);
+
+        // Check user.create log (logs[1] - oldest)
         $this->assertEquals('Windows', $response['body']['logs'][1]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][1]['osCode']);
         $this->assertEquals('10', $response['body']['logs'][1]['osVersion']);
@@ -892,27 +967,9 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals('desktop', $response['body']['logs'][1]['deviceName']);
         $this->assertEquals('', $response['body']['logs'][1]['deviceBrand']);
         $this->assertEquals('', $response['body']['logs'][1]['deviceModel']);
-        $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
 
         $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
-
-        $this->assertEquals('Windows', $response['body']['logs'][2]['osName']);
-        $this->assertEquals('WIN', $response['body']['logs'][2]['osCode']);
-        $this->assertEquals('10', $response['body']['logs'][2]['osVersion']);
-
-        $this->assertEquals('browser', $response['body']['logs'][2]['clientType']);
-        $this->assertEquals('Chrome', $response['body']['logs'][2]['clientName']);
-        $this->assertEquals('CH', $response['body']['logs'][2]['clientCode']);
-        $this->assertEquals('70.0', $response['body']['logs'][2]['clientVersion']);
-        $this->assertEquals('Blink', $response['body']['logs'][2]['clientEngine']);
-
-        $this->assertEquals('desktop', $response['body']['logs'][2]['deviceName']);
-        $this->assertEquals('', $response['body']['logs'][2]['deviceBrand']);
-        $this->assertEquals('', $response['body']['logs'][2]['deviceModel']);
-
-        $this->assertEquals('--', $response['body']['logs'][2]['countryCode']);
-        $this->assertEquals('Unknown', $response['body']['logs'][2]['countryName']);
 
         $responseLimit = $this->client->call(Client::METHOD_GET, '/account/logs', array_merge([
             'origin' => 'http://localhost',
@@ -947,7 +1004,8 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
         $this->assertIsArray($responseOffset['body']['logs']);
         $this->assertNotEmpty($responseOffset['body']['logs']);
-        $this->assertCount(2, $responseOffset['body']['logs']);
+        // With 2 logs and offset(1), we get 1 log remaining
+        $this->assertCount(1, $responseOffset['body']['logs']);
         $this->assertIsNumeric($responseOffset['body']['total']);
 
         $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);

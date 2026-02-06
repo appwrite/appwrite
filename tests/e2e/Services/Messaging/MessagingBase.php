@@ -1298,9 +1298,18 @@ trait MessagingBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertGreaterThanOrEqual(1, $response['body']['total']);
-        $this->assertEquals($userId, $response['body']['subscribers'][0]['target']['userId']);
-        $this->assertEquals($providerType, $response['body']['subscribers'][0]['target']['providerType']);
-        $this->assertEquals($identifier, $response['body']['subscribers'][0]['target']['identifier']);
+        // Find our subscriber by ID (may not be first in parallel execution)
+        $ourSubscriber = null;
+        foreach ($response['body']['subscribers'] as $subscriber) {
+            if ($subscriber['$id'] === $subscriberId) {
+                $ourSubscriber = $subscriber;
+                break;
+            }
+        }
+        $this->assertNotNull($ourSubscriber, 'Created subscriber should exist in subscriber list');
+        $this->assertEquals($userId, $ourSubscriber['target']['userId']);
+        $this->assertEquals($providerType, $ourSubscriber['target']['providerType']);
+        $this->assertEquals($identifier, $ourSubscriber['target']['identifier']);
         $this->assertEquals(\count($response['body']['subscribers']), $response['body']['total']);
 
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers', \array_merge([
