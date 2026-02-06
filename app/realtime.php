@@ -420,8 +420,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
         if ($realtime->hasSubscriber('console', Role::guests()->toString(), 'tests')) {
             $time = (new \DateTimeImmutable())->format('Y-m-d H:i:s.v');
             Console::log("[Debug][Worker test endppoint] time: " . $time);
-            
             $payload = ['response' => 'WS:/v1/realtime:passed'];
+            
             $event = [
                 'project' => 'console',
                 'roles' => [Role::guests()->toString()],
@@ -511,14 +511,12 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $receivers = $realtime->getSubscribers($event); // [connectionId => [subId => queries]]
 
-                if (!empty($receivers)) {
-                    $time = (new \DateTimeImmutable())->format('Y-m-d H:i:s.v');
-                    Console::log("[Debug][Worker {$workerId}] time: " . $time);
-                    Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                    Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode(array_keys($receivers)));
-                    Console::log("[Debug][Worker {$workerId}] Event Query: " . json_encode(array_values($receivers)));
-                    Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
-                }
+                $time = (new \DateTimeImmutable())->format('Y-m-d H:i:s.v');
+                Console::log("[Debug][Worker {$workerId}] time: " . $time);
+                Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
+                Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode(array_keys($receivers)));
+                Console::log("[Debug][Worker {$workerId}] Event Query: " . json_encode(array_values($receivers)));
+                Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
 
                 $totalMessages = 0;
 
