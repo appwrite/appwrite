@@ -6,6 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
 use Appwrite\Platform\Modules\Compute\Validator\Specification as SpecificationValidator;
+use Appwrite\Platform\Permission as AppwritePermission;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -22,32 +23,7 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
 {
-    /**
-     * Permissions for resources in this project.
-     *
-     * @param string $teamId
-     * @param string $projectId
-     * @return string[]
-     */
-    protected function getPermissions(string $teamId, string $projectId): array
-    {
-        return [
-            // Team-wide permissions
-            Permission::read(Role::team(ID::custom($teamId), 'owner')),
-            Permission::read(Role::team(ID::custom($teamId), 'developer')),
-            Permission::update(Role::team(ID::custom($teamId), 'owner')),
-            Permission::update(Role::team(ID::custom($teamId), 'developer')),
-            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            // Project-wide permissions
-            Permission::read(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
-            Permission::read(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
-            Permission::update(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
-            Permission::update(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
-            Permission::delete(Role::team(ID::custom($teamId), "project-{$projectId}-owner")),
-            Permission::delete(Role::team(ID::custom($teamId), "project-{$projectId}-developer")),
-        ];
-    }
+    use AppwritePermission;
 
     /**
      * Get default specification based on plan and available specifications.

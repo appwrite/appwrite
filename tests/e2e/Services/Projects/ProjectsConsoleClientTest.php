@@ -5941,4 +5941,102 @@ class ProjectsConsoleClientTest extends Scope
             }
         }
     }
+
+    /**
+     * Test project specific permissions for project resources, in this case 'variables'.
+     */
+    public function testProjectSpecificPermissionsForProjectResources(): void
+    {
+        $teamId = ID::unique();
+        $projectIdA = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test A',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId);
+        $projectIdB = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'Project Test B',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ], $teamId, false);
+        $teamOwnerEmail = 'team-' . ID::unique() . '-owner@localhost.test';
+        $teamOwnerName = 'Team - owner';
+        $teamDeveloperAndProjectAOwnerEmail = 'teamdeveloperandprojecta-' . ID::unique() . '-owner@localhost.test';
+        $teamDeveloperAndProjectAOwnerName = 'Team Developer and Project A - owner';
+        $projectAOwnerEmail = 'projecta-' . ID::unique() . '-owner@localhost.test';
+        $projectAOwnerName = 'Project A - owner';
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $teamOwnerEmail,
+            'name' => $teamOwnerName,
+            'roles' => ["owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $teamDeveloperAndProjectAOwnerEmail,
+            'name' => $teamDeveloperAndProjectAOwnerName,
+            'roles' => ["developer", "project-$projectIdA-owner"],
+        ]);
+        $this->setupUserMembership([
+            'teamId' => $teamId,
+            'email' => $projectAOwnerEmail,
+            'name' => $projectAOwnerName,
+            'roles' => ["project-$projectIdA-owner"],
+        ]);
+
+        $testCases = [
+            ['userEmail' => $teamOwnerEmail, 'accessibleProjectIds' => [$projectIdA, $projectIdB], 'inaccessibleProjectIds' => []],
+            ['userEmail' => $teamDeveloperAndProjectAOwnerEmail, 'accessibleProjectIds' => [$projectIdA, $projectIdB], 'inaccessibleProjectIds' => []],
+            ['userEmail' => $projectAOwnerEmail, 'accessibleProjectIds' => [$projectIdA], 'inaccessibleProjectIds' => [$projectIdB]],
+        ];
+
+        foreach ($testCases as $testCase) {
+            $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], [
+                'email' => $testCase['userEmail'],
+                'password' => 'password',
+            ]);
+            $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
+
+            foreach ($testCase['accessibleProjectIds'] as $projectId) {
+                $variableId = ID::unique();
+                $response = $this->client->call(Client::METHOD_POST, '/project/variables', [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-mode' => 'admin',
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'key' => 'APP_TEST_' . $variableId,
+                    'value' => 'TESTINGVALUE',
+                    'secret' => false
+                ]);
+
+                $this->assertEquals(201, $response['headers']['status-code']);
+                $this->assertEquals('APP_TEST_' . $variableId, $response['body']['key']);
+                $this->assertEquals('TESTINGVALUE', $response['body']['value']);
+            }
+
+            foreach ($testCase['inaccessibleProjectIds'] as $projectId) {
+                echo "processing user " . $testCase['userEmail'] . " for project " . $projectId . "\n";
+
+                $variableId = ID::unique();
+                $response = $this->client->call(Client::METHOD_POST, '/project/variables', [
+                    'origin' => 'http://localhost',
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-mode' => 'admin',
+                    'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+                ], [
+                    'key' => 'APP_TEST_' . $variableId,
+                    'value' => 'TESTINGVALUE',
+                    'secret' => false
+                ]);
+
+                $this->assertEquals(404, $response['headers']['status-code']);
+            }
+        }
+    }
 }

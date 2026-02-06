@@ -297,7 +297,12 @@ Http::init()
          * whether the admin user has necessary permission on the project (sites, functions, etc. don't have permissions associated to them).
          */
         if ($project->getId() !== 'console' && $mode === APP_MODE_ADMIN) {
-            $input = new Input(Database::PERMISSION_READ, $project->getPermissionsByType(Database::PERMISSION_READ));
+            $action = match ($route->getMethod()) {
+                Request::METHOD_GET => Database::PERMISSION_READ,
+                Request::METHOD_DELETE => Database::PERMISSION_DELETE,
+                default => Database::PERMISSION_UPDATE,
+            };
+            $input = new Input($action, $project->getPermissionsByType($action));
             $initialStatus = $authorization->getStatus();
             $authorization->enable();
             if (!$authorization->isValid($input)) {
