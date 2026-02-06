@@ -189,7 +189,8 @@ class StorageCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(2, $response['body']['buckets']);
+        // In parallel execution, there may be more buckets with fileSecurity=true
+        $this->assertGreaterThanOrEqual(2, count($response['body']['buckets']));
 
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets', array_merge([
             'content-type' => 'application/json',
