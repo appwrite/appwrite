@@ -53,7 +53,6 @@ class Get extends Action
             ->param('providerReference', '', new Text(256, 0), 'Git reference (branch, tag, commit) to get contents from', true)
             ->inject('gitHub')
             ->inject('response')
-            ->inject('project')
             ->inject('dbForPlatform')
             ->callback($this->action(...));
     }
