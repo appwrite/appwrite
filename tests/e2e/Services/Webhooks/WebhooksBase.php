@@ -516,7 +516,7 @@ trait WebhooksBase
             $this->assertEquals($webhook['data']['key'], 'extra');
         }, 15000, 500);
 
-        $removed = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $data['actorsId'] . '/attributes/' . $extra['body']['key'], array_merge([
+        $removed = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/' . $extra['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -883,7 +883,7 @@ trait WebhooksBase
             $this->assertEquals($webhook['data']['key'], 'extra');
         }, 15000, 500);
 
-        $removed = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $data['actorsId'] . '/columns/' . $extra['body']['key'], array_merge([
+        $removed = $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/' . $extra['body']['key'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']

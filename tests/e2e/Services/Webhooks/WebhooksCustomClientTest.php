@@ -186,8 +186,8 @@ class WebhooksCustomClientTest extends Scope
 
     public function testCreateAccountSession(): void
     {
-        // Create a fresh account
-        $email = uniqid() . 'user@localhost.test';
+        // Create a fresh account with unique email
+        $email = 'webhook-session-' . uniqid() . '@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -202,6 +202,8 @@ class WebhooksCustomClientTest extends Scope
             'name' => $name,
         ]);
 
+        // Verify account was created successfully
+        $this->assertEquals(201, $account['headers']['status-code'], 'Account creation failed: ' . ($account['body']['message'] ?? 'unknown error'));
         $id = $account['body']['$id'];
 
         /**
@@ -216,7 +218,7 @@ class WebhooksCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($accountSession['headers']['status-code'], 201);
+        $this->assertEquals(201, $accountSession['headers']['status-code'], 'Session creation failed: ' . ($accountSession['body']['message'] ?? 'unknown error'));
 
         $sessionId = $accountSession['body']['$id'];
         $session = $accountSession['cookies']['a_session_' . $this->getProject()['$id']];
