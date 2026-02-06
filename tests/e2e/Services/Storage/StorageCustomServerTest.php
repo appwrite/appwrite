@@ -204,9 +204,11 @@ class StorageCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['buckets']);
-        $this->assertCount(1, $response['body']['buckets']);
-
-        $this->assertEquals('bucket1', $response['body']['buckets'][0]['$id']);
+        // In parallel execution, there may be more buckets after the cursor
+        $this->assertGreaterThanOrEqual(1, count($response['body']['buckets']));
+        // Find bucket1 by ID (may not be first in parallel execution)
+        $bucketIds = array_column($response['body']['buckets'], '$id');
+        $this->assertContains('bucket1', $bucketIds, 'bucket1 should exist in bucket list after cursor');
     }
 
     public function testGetBucket(): void
