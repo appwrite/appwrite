@@ -832,7 +832,8 @@ class Migrations extends Action
                     ->addMetric(
                         str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
                         $count
-                    );
+                    )
+                    ->addMetric(METRIC_DOCUMENTS, $count);
                 break;
 
             default:
