@@ -297,7 +297,8 @@ class AccountCustomServerTest extends Scope
 
     public function testCreateMagicUrl(): void
     {
-        $email = \time() . 'user@appwrite.io';
+        // Use uniqid for uniqueness in parallel test execution
+        $email = 'magic-' . uniqid() . '-' . \time() . '@appwrite.io';
 
         /**
          * Test for SUCCESS

@@ -48,10 +48,11 @@ class DatabaseClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_DATABASE);
+        $databaseId = ID::unique();
         $gqlPayload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => ID::unique(),
+                'databaseId' => $databaseId,
                 'name' => 'Actors',
             ]
         ];
@@ -62,8 +63,13 @@ class DatabaseClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
+        // Handle errors with better diagnostics
+        if (isset($database['body']['errors'])) {
+            $errorMessage = $database['body']['errors'][0]['message'] ?? 'Unknown error';
+            $this->fail('Failed to create database: ' . $errorMessage);
+        }
+
         $this->assertIsArray($database['body']['data']);
-        $this->assertArrayNotHasKey('errors', $database['body']);
         static::$database = $database['body']['data']['databasesCreate'];
 
         return static::$database;
@@ -82,11 +88,12 @@ class DatabaseClientTest extends Scope
 
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_COLLECTION);
+        $collectionId = ID::unique();
         $gqlPayload = [
             'query' => $query,
             'variables' => [
                 'databaseId' => $database['_id'],
-                'collectionId' => 'actors',
+                'collectionId' => $collectionId,
                 'name' => 'Actors',
                 'documentSecurity' => false,
                 'permissions' => [
@@ -104,8 +111,13 @@ class DatabaseClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $gqlPayload);
 
+        // Handle errors with better diagnostics
+        if (isset($collection['body']['errors'])) {
+            $errorMessage = $collection['body']['errors'][0]['message'] ?? 'Unknown error';
+            $this->fail('Failed to create collection: ' . $errorMessage);
+        }
+
         $this->assertIsArray($collection['body']['data']);
-        $this->assertArrayNotHasKey('errors', $collection['body']);
 
         static::$collection = [
             'database' => $database,

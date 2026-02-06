@@ -403,7 +403,8 @@ class AccountCustomClientTest extends Scope
             return self::$phoneData[$cacheKey];
         }
 
-        $number = '+123456789';
+        // Use a unique phone number for parallel test safety
+        $number = '+1' . substr(str_replace('.', '', microtime(true)), -9);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
@@ -3508,7 +3509,8 @@ class AccountCustomClientTest extends Scope
 
     public function testCreateMagicUrl(): void
     {
-        $email = \time() . 'user@appwrite.io';
+        // Use uniqid for uniqueness in parallel test execution
+        $email = 'magic-' . uniqid() . '-' . \time() . '@appwrite.io';
 
         /**
          * Test for SUCCESS

@@ -2835,7 +2835,8 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['total']);
+        // In parallel mode, multiple tests may create webhooks on the same project
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
 
         /**
          * Test for FAILURE
@@ -3085,7 +3086,8 @@ class ProjectsConsoleClientTest extends Scope
 
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['total']);
+        // In parallel mode, multiple tests may create keys on the same project
+        $this->assertGreaterThanOrEqual(1, $response['body']['total']);
 
         /**
          * Test for FAILURE
@@ -3653,7 +3655,9 @@ class ProjectsConsoleClientTest extends Scope
             ], $this->getHeaders()), []);
 
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals(8, $response['body']['total']);
+            // In parallel mode, multiple tests may create platforms on the same project
+            // The setup creates 8 platforms, so we should have at least that many
+            $this->assertGreaterThanOrEqual(8, $response['body']['total']);
         });
 
         /**
@@ -4603,9 +4607,12 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(2, $response['body']['variables']);
-        $this->assertEquals("APP_TEST_UPDATE", $response['body']['variables'][0]['key']);
-        $this->assertEquals("APP_TEST_UPDATE_1", $response['body']['variables'][1]['key']);
+        // In parallel mode, other tests may create variables on the same project
+        $this->assertGreaterThanOrEqual(2, count($response['body']['variables']));
+        // Verify our updated variables exist (may not be at specific positions)
+        $variableKeys = array_column($response['body']['variables'], 'key');
+        $this->assertContains("APP_TEST_UPDATE", $variableKeys);
+        $this->assertContains("APP_TEST_UPDATE_1", $variableKeys);
 
         /**
          * Test for FAILURE
@@ -4725,8 +4732,11 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(0, $response['body']['variables']);
-        $this->assertEquals(0, $response['body']['total']);
+        // In parallel mode, other tests may have created variables on the same project
+        // Verify our deleted variables no longer exist by checking their IDs are not present
+        $variableIds = array_column($response['body']['variables'], '$id');
+        $this->assertNotContains($variableId, $variableIds);
+        $this->assertNotContains($secretVariableId, $variableIds);
 
         /**
          * Test for FAILURE

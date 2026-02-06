@@ -615,7 +615,21 @@ class WebhooksCustomServerTest extends Scope
 
         $this->assertEquals(204, $user['headers']['status-code']);
 
-        $webhook = $this->getLastRequest();
+        // Use probe to find the specific delete webhook for this user (parallel-safe)
+        $webhook = $this->getLastRequestForProject(
+            $this->getProject()['$id'],
+            self::REQUEST_TYPE_WEBHOOK,
+            [],
+            10,
+            500,
+            function ($request) use ($id) {
+                // Verify this is the delete event for our specific user
+                $events = $request['headers']['X-Appwrite-Webhook-Events'] ?? '';
+                if (!str_contains($events, "users.{$id}.delete")) {
+                    throw new \Exception('Not the delete event for this user');
+                }
+            }
+        );
         $signatureExpected = self::getWebhookSignature($webhook, $this->getProject()['signatureKey']);
 
         $this->assertEquals('POST', $webhook['method']);
