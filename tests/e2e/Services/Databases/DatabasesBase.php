@@ -3616,8 +3616,6 @@ trait DatabasesBase
             $this->assertEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$createdAt']);
             $this->assertEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$updatedAt']);
         }
-
-        return [];
     }
 
     public function testOperators(): void
