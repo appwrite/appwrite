@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Account
@@ -8,4 +9,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val result = account.createJWT()
+val result = account.createJWT(
+    duration = 0, // (optional)
+)```

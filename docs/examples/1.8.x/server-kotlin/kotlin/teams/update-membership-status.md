@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Teams
@@ -15,3 +16,4 @@ val response = teams.updateMembershipStatus(
     userId = "<USER_ID>",
     secret = "<SECRET>"
 )
+```

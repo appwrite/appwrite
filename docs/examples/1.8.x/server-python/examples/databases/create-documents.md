@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -14,3 +15,4 @@ result = databases.create_documents(
     documents = [],
     transaction_id = '<TRANSACTION_ID>' # optional
 )
+```

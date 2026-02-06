@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -18,3 +19,4 @@ User result = await users.createScryptUser(
     passwordLength: 0,
     name: '<NAME>', // (optional)
 );
+```

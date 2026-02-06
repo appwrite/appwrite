@@ -1,4 +1,6 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -8,6 +10,7 @@ Client client = Client()
 Health health = Health(client);
 
 HealthQueue result = await health.getFailedJobs(
-    name: Name.v1Database,
+    name: enums.Name.v1Database,
     threshold: 0, // (optional)
 );
+```

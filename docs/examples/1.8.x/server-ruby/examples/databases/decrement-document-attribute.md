@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -18,3 +19,4 @@ result = databases.decrement_document_attribute(
     min: null, # optional
     transaction_id: '<TRANSACTION_ID>' # optional
 )
+```

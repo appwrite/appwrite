@@ -11,6 +11,7 @@ $httpsPort = $this->getParam('httpsPort', '');
 $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
+$enableAssistant = $this->getParam('enableAssistant', false);
 $dbService = $this->getParam('database');
 ?>services:
   traefik:
@@ -166,6 +167,7 @@ $dbService = $this->getParam('database');
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
+      - _APP_GRAPHQL_INTROSPECTION
       - _APP_GRAPHQL_MAX_BATCH_SIZE
       - _APP_GRAPHQL_MAX_COMPLEXITY
       - _APP_GRAPHQL_MAX_DEPTH
@@ -181,7 +183,7 @@ $dbService = $this->getParam('database');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:7.4.7
+    image: <?php echo $organization; ?>/console:7.5.7
     restart: unless-stopped
     networks:
       - appwrite
@@ -871,6 +873,7 @@ $dbService = $this->getParam('database');
       - _APP_DB_PASS
       - _APP_DB_ADAPTER
 
+<?php if ($enableAssistant): ?>
   appwrite-assistant:
     image: appwrite/assistant:0.8.4
     container_name: appwrite-assistant
@@ -880,6 +883,7 @@ $dbService = $this->getParam('database');
       - appwrite
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
+<?php endif; ?>
 
   appwrite-browser:
     image: appwrite/browser:0.3.2

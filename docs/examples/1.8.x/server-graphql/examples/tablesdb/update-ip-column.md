@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBUpdateIpColumn(
         databaseId: "<DATABASE_ID>",
@@ -19,3 +20,4 @@ mutation {
         default
     }
 }
+```

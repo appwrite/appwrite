@@ -1,4 +1,6 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -11,6 +13,7 @@ AttributeRelationship result = await databases.updateRelationshipAttribute(
     databaseId: '<DATABASE_ID>',
     collectionId: '<COLLECTION_ID>',
     key: '',
-    onDelete: RelationMutate.cascade, // (optional)
+    onDelete: enums.RelationMutate.cascade, // (optional)
     newKey: '', // (optional)
 );
+```

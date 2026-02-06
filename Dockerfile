@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM appwrite/base:0.10.6 AS base
+FROM appwrite/base:0.11.5 AS base
 
 LABEL maintainer="team@appwrite.io"
 
@@ -77,6 +77,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/queue-count-success && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-builds && \
+    chmod +x /usr/local/bin/worker-screenshots && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-databases && \
     chmod +x /usr/local/bin/worker-deletes && \

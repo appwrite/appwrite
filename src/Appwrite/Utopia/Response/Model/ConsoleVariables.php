@@ -78,9 +78,9 @@ class ConsoleVariables extends Model
             ])
             ->addRule('_APP_DOMAIN_SITES', [
                 'type' => self::TYPE_STRING,
-                'description' => 'A domain to use for site URLs.',
+                'description' => 'A comma separated list of domains to use for site URLs.',
                 'default' => '',
-                'example' => 'sites.localhost',
+                'example' => 'sites.localhost,sites.example.com',
             ])
             ->addRule('_APP_DOMAIN_FUNCTIONS', [
                 'type' => self::TYPE_STRING,

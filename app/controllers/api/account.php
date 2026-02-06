@@ -33,11 +33,10 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
-use Utopia\Abuse\Abuse;
-use Utopia\App;
-use Utopia\Audit\Audit as EventAudit;
+use Utopia\Audit\Audit;
 use Utopia\Auth\Hashes\Sha;
 use Utopia\Auth\Proofs\Code as ProofsCode;
 use Utopia\Auth\Proofs\Password as ProofsPassword;
@@ -61,6 +60,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
+use Utopia\Http;
 use Utopia\Locale\Locale;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
@@ -195,7 +195,7 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
         ->setPreview($preview)
         ->setBody($body)
         ->setBodyTemplate($bodyTemplate)
-        ->setVariables($emailVariables)
+        ->appendVariables($emailVariables)
         ->setRecipient($email);
 
     // since this is console project, set email sender name!
@@ -207,10 +207,10 @@ function sendSessionAlert(Locale $locale, Document $user, Document $project, arr
 }
 
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Store $store, ProofsToken $proofForToken, ProofsCode $proofForCode, Authorization $authorization) {
 
     /** @var Appwrite\Utopia\Database\Documents\User $userFromRequest */
-    $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+    $userFromRequest = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
     if ($userFromRequest->isEmpty()) {
         throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -266,7 +266,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $detector->getDevice()
     ));
 
-    Authorization::setRole(Role::user($user->getId())->toString());
+    $authorization->addRole(Role::user($user->getId())->toString());
 
     $session = $dbForProject->createDocument('sessions', $session
         ->setAttribute('$permissions', [
@@ -275,7 +275,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Permission::delete(Role::user($user->getId())),
         ]));
 
-    Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+    $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
     // Magic URL + Email OTP
@@ -344,7 +344,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $response->dynamic($session, Response::MODEL_SESSION);
 };
 
-App::post('/v1/account')
+Http::post('/v1/account')
     ->desc('Create account')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'sessions.write')
@@ -376,8 +376,9 @@ App::post('/v1/account')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
+    ->inject('authorization')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Hooks $hooks) {
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Authorization $authorization, Hooks $hooks) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -469,9 +470,9 @@ App::post('/v1/account')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             try {
-                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -497,16 +498,16 @@ App::post('/v1/account')
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
 
-        Authorization::unsetRole(Role::guests()->toString());
-        Authorization::setRole(Role::user($user->getId())->toString());
-        Authorization::setRole(Role::users()->toString());
+        $authorization->removeRole(Role::guests()->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::users()->toString());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::get('/v1/account')
+Http::get('/v1/account')
     ->desc('Get account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -534,7 +535,7 @@ App::get('/v1/account')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::delete('/v1/account')
+Http::delete('/v1/account')
     ->desc('Delete account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -589,7 +590,7 @@ App::delete('/v1/account')
         $response->noContent();
     });
 
-App::get('/v1/account/sessions')
+Http::get('/v1/account/sessions')
     ->desc('List sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -634,7 +635,7 @@ App::get('/v1/account/sessions')
         ]), Response::MODEL_SESSION_LIST);
     });
 
-App::delete('/v1/account/sessions')
+Http::delete('/v1/account/sessions')
     ->desc('Delete sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -709,7 +710,7 @@ App::delete('/v1/account/sessions')
         $response->noContent();
     });
 
-App::get('/v1/account/sessions/:sessionId')
+Http::get('/v1/account/sessions/:sessionId')
     ->desc('Get session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -757,7 +758,7 @@ App::get('/v1/account/sessions/:sessionId')
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
-App::delete('/v1/account/sessions/:sessionId')
+Http::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
@@ -844,7 +845,7 @@ App::delete('/v1/account/sessions/:sessionId')
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
-App::patch('/v1/account/sessions/:sessionId')
+Http::patch('/v1/account/sessions/:sessionId')
     ->desc('Update session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -933,7 +934,7 @@ App::patch('/v1/account/sessions/:sessionId')
         return $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/account/sessions/email')
+Http::post('/v1/account/sessions/email')
     ->alias('/v1/account/sessions')
     ->desc('Create email password session')
     ->groups(['api', 'account', 'auth', 'session'])
@@ -959,6 +960,7 @@ App::post('/v1/account/sessions/email')
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->label('abuse-reset', [201])
     ->param('email', '', new EmailValidator(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
     ->inject('request')
@@ -975,7 +977,8 @@ App::post('/v1/account/sessions/email')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+    ->inject('authorization')
+    ->action(function (string $email, string $password, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails, Hooks $hooks, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -1020,7 +1023,7 @@ App::post('/v1/account/sessions/email')
             $detector->getDevice()
         ));
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         // Re-hash if not using recommended algo
         if ($user->getAttribute('hash') !== $proofForPassword->getHash()->getName()) {
@@ -1083,7 +1086,7 @@ App::post('/v1/account/sessions/email')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/account/sessions/anonymous')
+Http::post('/v1/account/sessions/anonymous')
     ->desc('Create anonymous session')
     ->groups(['api', 'account', 'auth', 'session'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -1119,7 +1122,8 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-    ->action(function (Request $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+    ->inject('authorization')
+    ->action(function (Request $request, Response $response, Locale $locale, User $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) {
         $protocol = $request->getProtocol();
 
         if ('console' === $project->getId()) {
@@ -1164,7 +1168,7 @@ App::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$sequence');
-        Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+        $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
@@ -1190,7 +1194,7 @@ App::post('/v1/account/sessions/anonymous')
             $detector->getDevice()
         ));
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
@@ -1233,7 +1237,7 @@ App::post('/v1/account/sessions/anonymous')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/account/sessions/token')
+Http::post('/v1/account/sessions/token')
     ->desc('Create session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account', 'session'])
@@ -1257,6 +1261,7 @@ App::post('/v1/account/sessions/token')
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
+    ->label('abuse-reset', [201])
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('secret', '', new Text(256), 'Secret of a token generated by login methods. For example, the `createMagicURLToken` or `createPhoneToken` methods.')
     ->inject('request')
@@ -1272,9 +1277,10 @@ App::post('/v1/account/sessions/token')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('proofForCode')
+->inject('authorization')
     ->action($createSession);
 
-App::get('/v1/account/sessions/oauth2/:provider')
+Http::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create OAuth2 session')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -1368,7 +1374,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
             ->redirect($oauth2->getLoginURL());
     });
 
-App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('Get OAuth2 callback')
     ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -1403,7 +1409,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
                 . \http_build_query($params));
     });
 
-App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('Create OAuth2 callback')
     ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -1439,7 +1445,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
                 . \http_build_query($params));
     });
 
-App::get('/v1/account/sessions/oauth2/:provider/redirect')
+Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('Get OAuth2 redirect')
     ->groups(['api', 'account', 'session'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -1468,7 +1474,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken) use ($oauthDefaultSuccess) {
+    ->inject('authorization')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) use ($oauthDefaultSuccess) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1724,7 +1731,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     ]);
 
                     $user->removeAttribute('$sequence');
-                    $userDoc = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+                    $userDoc = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
                     $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
@@ -1742,8 +1749,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         }
 
-        Authorization::setRole(Role::user($user->getId())->toString());
-        Authorization::setRole(Role::users()->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::users()->toString());
 
         if (false === $user->getAttribute('status')) { // Account is blocked
             $failureRedirect(Exception::USER_BLOCKED); // User is in status blocked
@@ -1814,7 +1821,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $state['success'] = URLParser::parse($state['success']);
         $query = URLParser::parseQuery($state['success']['query']);
@@ -1838,7 +1845,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'ip' => $request->getIP(),
             ]);
 
-            Authorization::setRole(Role::user($user->getId())->toString());
+            $authorization->addRole(Role::user($user->getId())->toString());
 
             $token = $dbForProject->createDocument('tokens', $token
                 ->setAttribute('$permissions', [
@@ -1941,7 +1948,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
     });
 
-App::get('/v1/account/tokens/oauth2/:provider')
+Http::get('/v1/account/tokens/oauth2/:provider')
     ->desc('Create OAuth2 token')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -2036,7 +2043,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
             ->redirect($oauth2->getLoginURL());
     });
 
-App::post('/v1/account/tokens/magic-url')
+Http::post('/v1/account/tokens/magic-url')
     ->alias('/v1/account/sessions/magic-url')
     ->desc('Create magic URL token')
     ->groups(['api', 'account', 'auth'])
@@ -2075,7 +2082,8 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('queueForMails')
     ->inject('proofForPassword')
     ->inject('platform')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, User $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, array $platform) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, array $platform, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2148,7 +2156,7 @@ App::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$sequence');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
@@ -2168,7 +2176,7 @@ App::post('/v1/account/tokens/magic-url')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
@@ -2293,7 +2301,7 @@ App::post('/v1/account/tokens/magic-url')
             ->setSubject($subject)
             ->setPreview($preview)
             ->setBody($body)
-            ->setVariables($emailVariables)
+            ->appendVariables($emailVariables)
             ->setRecipient($email);
 
         if ($project->getId() === 'console') {
@@ -2316,7 +2324,7 @@ App::post('/v1/account/tokens/magic-url')
             ->dynamic($token, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/tokens/email')
+Http::post('/v1/account/tokens/email')
     ->desc('Create email token (OTP)')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'sessions.write')
@@ -2354,7 +2362,8 @@ App::post('/v1/account/tokens/email')
     ->inject('queueForMails')
     ->inject('proofForPassword')
     ->inject('proofForCode')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsPassword $proofForPassword, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -2423,9 +2432,9 @@ App::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$sequence');
-            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             try {
-                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -2463,7 +2472,7 @@ App::post('/v1/account/tokens/email')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
@@ -2593,7 +2602,7 @@ App::post('/v1/account/tokens/email')
             ->setPreview($preview)
             ->setBody($body)
             ->setBodyTemplate($bodyTemplate)
-            ->setVariables($emailVariables)
+            ->appendVariables($emailVariables)
             ->setRecipient($email);
 
         // since this is console project, set email sender name!
@@ -2617,7 +2626,7 @@ App::post('/v1/account/tokens/email')
             ->dynamic($token, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/sessions/magic-url')
+Http::put('/v1/account/sessions/magic-url')
     ->desc('Update magic URL session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account', 'session'])
@@ -2645,6 +2654,7 @@ App::put('/v1/account/sessions/magic-url')
     ))
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
+    ->label('abuse-reset', [201])
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('secret', '', new Text(256), 'Valid verification token.')
     ->inject('request')
@@ -2659,13 +2669,14 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('queueForMails')
     ->inject('store')
     ->inject('proofForCode')
-    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode) use ($createSession) {
+    ->inject('authorization')
+    ->action(function ($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForCode, $authorization) use ($createSession) {
         $proofForToken = new ProofsToken(TOKEN_LENGTH_MAGIC_URL);
         $proofForToken->setHash(new Sha());
-        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode);
+        $createSession($userId, $secret, $request, $response, $user, $dbForProject, $project, $platform, $locale, $geodb, $queueForEvents, $queueForMails, $store, $proofForToken, $proofForCode, $authorization);
     });
 
-App::put('/v1/account/sessions/phone')
+Http::put('/v1/account/sessions/phone')
     ->desc('Update phone session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account', 'session'])
@@ -2708,9 +2719,10 @@ App::put('/v1/account/sessions/phone')
     ->inject('store')
     ->inject('proofForToken')
     ->inject('proofForCode')
+    ->inject('authorization')
     ->action($createSession);
 
-App::post('/v1/account/tokens/phone')
+Http::post('/v1/account/tokens/phone')
     ->alias('/v1/account/sessions/phone')
     ->desc('Create phone token')
     ->groups(['api', 'account', 'auth'])
@@ -2751,7 +2763,8 @@ App::post('/v1/account/tokens/phone')
     ->inject('plan')
     ->inject('store')
     ->inject('proofForCode')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, User $user, Document $project, array $platform, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, Store $store, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2801,9 +2814,9 @@ App::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$sequence');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             try {
-                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
+                $target = $authorization->skip(fn () => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
                         Permission::read(Role::user($user->getId())),
                         Permission::update(Role::user($user->getId())),
@@ -2849,7 +2862,7 @@ App::post('/v1/account/tokens/phone')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $token = $dbForProject->createDocument('tokens', $token
             ->setAttribute('$permissions', [
@@ -2895,26 +2908,21 @@ App::post('/v1/account/tokens/phone')
                 ->setRecipients([$phone])
                 ->setProviderType(MESSAGE_TYPE_SMS);
 
-            if (isset($plan['authPhone'])) {
-                $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
-                $timelimit
-                    ->setParam('{organizationId}', $project->getAttribute('teamId'));
+            $helper = PhoneNumberUtil::getInstance();
+            try {
+                $countryCode = $helper->parse($phone)->getCountryCode();
 
-                $abuse = new Abuse($timelimit);
-                if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-                    $helper = PhoneNumberUtil::getInstance();
-                    $countryCode = $helper->parse($phone)->getCountryCode();
-
-                    if (!empty($countryCode)) {
-                        $queueForStatsUsage
-                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                    }
+                if (!empty($countryCode)) {
+                    $queueForStatsUsage
+                        ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
-                $queueForStatsUsage
-                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                    ->setProject($project)
-                    ->trigger();
+            } catch (NumberParseException $e) {
+                // Ignore invalid phone number for country code stats
             }
+            $queueForStatsUsage
+                ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                ->setProject($project)
+                ->trigger();
         }
 
         $token->setAttribute('secret', $secret);
@@ -2934,7 +2942,7 @@ App::post('/v1/account/tokens/phone')
             ->dynamic($token, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/jwts')
+Http::post('/v1/account/jwts')
     ->alias('/v1/account/jwt')
     ->desc('Create JWT')
     ->groups(['api', 'account', 'auth'])
@@ -2981,7 +2989,7 @@ App::post('/v1/account/jwts')
             ]), Response::MODEL_JWT);
     });
 
-App::get('/v1/account/prefs')
+Http::get('/v1/account/prefs')
     ->desc('Get account preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -3008,7 +3016,7 @@ App::get('/v1/account/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::get('/v1/account/logs')
+Http::get('/v1/account/logs')
     ->desc('List logs')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -3033,7 +3041,8 @@ App::get('/v1/account/logs')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForProject')
-    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
+    ->inject('audit')
+    ->action(function (array $queries, bool $includeTotal, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Audit $audit) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -3041,9 +3050,10 @@ App::get('/v1/account/logs')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        $audit = new EventAudit($dbForProject);
-
-        $logs = $audit->getLogsByUser($user->getSequence(), $queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? 25;
+        $offset = $grouped['offset'] ?? 0;
+        $logs = $audit->getLogsByUser($user->getSequence(), offset: $offset, limit: $limit);
 
         $output = [];
 
@@ -3072,12 +3082,12 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence(), $queries) : 0,
+            'total' => $includeTotal ? $audit->countLogsByUser($user->getSequence()) : 0,
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::patch('/v1/account/name')
+Http::patch('/v1/account/name')
     ->desc('Update name')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.name')
@@ -3114,7 +3124,7 @@ App::patch('/v1/account/name')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/password')
+Http::patch('/v1/account/password')
     ->desc('Update password')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.password')
@@ -3207,7 +3217,7 @@ App::patch('/v1/account/password')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/email')
+Http::patch('/v1/account/email')
     ->desc('Update email')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.email')
@@ -3238,7 +3248,8 @@ App::patch('/v1/account/email')
     ->inject('project')
     ->inject('hooks')
     ->inject('proofForPassword')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword) {
+ ->inject('authorization')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3290,7 +3301,7 @@ App::patch('/v1/account/email')
                 ->setAttribute('passwordUpdate', DateTime::now());
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->findOne('targets', [
+        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$email]),
         ]));
 
@@ -3306,7 +3317,7 @@ App::patch('/v1/account/email')
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
+                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
@@ -3318,7 +3329,7 @@ App::patch('/v1/account/email')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/phone')
+Http::patch('/v1/account/phone')
     ->desc('Update phone')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.phone')
@@ -3347,8 +3358,9 @@ App::patch('/v1/account/phone')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->inject('proofForPassword')
-    ->action(function (string $phone, string $password, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword) {
+                ->inject('proofForPassword')
+->inject('authorization')
+    ->action(function (string $phone, string $password, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, ProofsPassword $proofForPassword, Authorization $authorization) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -3363,7 +3375,7 @@ App::patch('/v1/account/phone')
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
-        $target = Authorization::skip(fn () => $dbForProject->findOne('targets', [
+        $target = $authorization->skip(fn () => $dbForProject->findOne('targets', [
             Query::equal('identifier', [$phone]),
         ]));
 
@@ -3394,7 +3406,7 @@ App::patch('/v1/account/phone')
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+                $authorization->skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
@@ -3406,7 +3418,7 @@ App::patch('/v1/account/phone')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/prefs')
+Http::patch('/v1/account/prefs')
     ->desc('Update preferences')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.prefs')
@@ -3444,7 +3456,7 @@ App::patch('/v1/account/prefs')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/status')
+Http::patch('/v1/account/status')
     ->desc('Update status')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.status')
@@ -3494,7 +3506,7 @@ App::patch('/v1/account/status')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::post('/v1/account/recovery')
+Http::post('/v1/account/recovery')
     ->desc('Create password recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'sessions.write')
@@ -3530,7 +3542,9 @@ App::post('/v1/account/recovery')
     ->inject('queueForMails')
     ->inject('queueForEvents')
     ->inject('proofForToken')
-    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken) {
+    ->inject('authorization')
+    ->action(function (string $email, string $url, Request $request, Response $response, User $user, Database $dbForProject, Document $project, array $platform, Locale $locale, Mail $queueForMails, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
+
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
@@ -3566,7 +3580,7 @@ App::post('/v1/account/recovery')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole(Role::user($profile->getId())->toString());
+        $authorization->addRole(Role::user($profile->getId())->toString());
 
         $recovery = $dbForProject->createDocument('tokens', $recovery
             ->setAttribute('$permissions', [
@@ -3664,7 +3678,7 @@ App::post('/v1/account/recovery')
             ->setRecipient($profile->getAttribute('email', ''))
             ->setName($profile->getAttribute('name', ''))
             ->setBody($body)
-            ->setVariables($emailVariables)
+            ->appendVariables($emailVariables)
             ->setSubject($subject)
             ->setPreview($preview);
 
@@ -3687,7 +3701,7 @@ App::post('/v1/account/recovery')
             ->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/recovery')
+Http::put('/v1/account/recovery')
     ->desc('Update password recovery (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'sessions.write')
@@ -3722,7 +3736,8 @@ App::put('/v1/account/recovery')
     ->inject('hooks')
     ->inject('proofForPassword')
     ->inject('proofForToken')
-    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken) {
+->inject('authorization')
+    ->action(function (string $userId, string $secret, string $password, Response $response, User $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
         $profile = $dbForProject->getDocument('users', $userId);
 
@@ -3736,7 +3751,7 @@ App::put('/v1/account/recovery')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        Authorization::setRole(Role::user($profile->getId())->toString());
+        $authorization->addRole(Role::user($profile->getId())->toString());
 
         $newPassword = $proofForPassword->hash($password);
 
@@ -3783,7 +3798,7 @@ App::put('/v1/account/recovery')
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verifications/email')
+Http::post('/v1/account/verifications/email')
     ->alias('/v1/account/verification')
     ->desc('Create email verification')
     ->groups(['api', 'account'])
@@ -3839,7 +3854,8 @@ App::post('/v1/account/verifications/email')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->inject('proofForToken')
-    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken) {
+    ->inject('authorization')
+    ->action(function (string $url, Request $request, Response $response, Document $project, array $platform, User $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, ProofsToken $proofForToken, Authorization $authorization) {
 
         if (empty(System::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3868,7 +3884,7 @@ App::post('/v1/account/verifications/email')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $verification = $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
@@ -3993,7 +4009,7 @@ App::post('/v1/account/verifications/email')
             ->setPreview($preview)
             ->setBody($body)
             ->setBodyTemplate($bodyTemplate)
-            ->setVariables($emailVariables)
+            ->appendVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
             ->setName($user->getAttribute('name') ?? '');
 
@@ -4015,7 +4031,7 @@ App::post('/v1/account/verifications/email')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verifications/email')
+Http::put('/v1/account/verifications/email')
     ->alias('/v1/account/verification')
     ->desc('Update email verification (confirmation)')
     ->groups(['api', 'account'])
@@ -4067,9 +4083,10 @@ App::put('/v1/account/verifications/email')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('proofForToken')
-    ->action(function (string $userId, string $secret, Response $response, User $user, Database $dbForProject, Event $queueForEvents, ProofsToken $proofForToken) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $secret, Response $response, User $user, Database $dbForProject, Event $queueForEvents, ProofsToken $proofForToken, Authorization $authorization) {
         /** @var Appwrite\Utopia\Database\Documents\User $profile */
-        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -4081,7 +4098,7 @@ App::put('/v1/account/verifications/email')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        Authorization::setRole(Role::user($profile->getId())->toString());
+        $authorization->addRole(Role::user($profile->getId())->toString());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('emailVerification', true));
 
@@ -4104,7 +4121,7 @@ App::put('/v1/account/verifications/email')
         $response->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verifications/phone')
+Http::post('/v1/account/verifications/phone')
     ->alias('/v1/account/verification/phone')
     ->desc('Create phone verification')
     ->groups(['api', 'account', 'auth'])
@@ -4141,7 +4158,8 @@ App::post('/v1/account/verifications/phone')
     ->inject('queueForStatsUsage')
     ->inject('plan')
     ->inject('proofForCode')
-    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsCode $proofForCode) {
+                ->inject('authorization')
+    ->action(function (Request $request, Response $response, User $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, callable $timelimit, StatsUsage $queueForStatsUsage, array $plan, ProofsCode $proofForCode, Authorization $authorization) {
         if (empty(System::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -4180,7 +4198,7 @@ App::post('/v1/account/verifications/phone')
             'ip' => $request->getIP(),
         ]);
 
-        Authorization::setRole(Role::user($user->getId())->toString());
+        $authorization->addRole(Role::user($user->getId())->toString());
 
         $verification = $dbForProject->createDocument('tokens', $verification
             ->setAttribute('$permissions', [
@@ -4221,26 +4239,21 @@ App::post('/v1/account/verifications/phone')
                 ->setRecipients([$user->getAttribute('phone')])
                 ->setProviderType(MESSAGE_TYPE_SMS);
 
-            if (isset($plan['authPhone'])) {
-                $timelimit = $timelimit('organization:{organizationId}', $plan['authPhone'], 30 * 24 * 60 * 60); // 30 days
-                $timelimit
-                    ->setParam('{organizationId}', $project->getAttribute('teamId'));
+            $helper = PhoneNumberUtil::getInstance();
+            try {
+                $countryCode = $helper->parse($phone)->getCountryCode();
 
-                $abuse = new Abuse($timelimit);
-                if ($abuse->check() && System::getEnv('_APP_OPTIONS_ABUSE', 'enabled') === 'enabled') {
-                    $helper = PhoneNumberUtil::getInstance();
-                    $countryCode = $helper->parse($phone)->getCountryCode();
-
-                    if (!empty($countryCode)) {
-                        $queueForStatsUsage
-                            ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
-                    }
+                if (!empty($countryCode)) {
+                    $queueForStatsUsage
+                        ->addMetric(str_replace('{countryCode}', $countryCode, METRIC_AUTH_METHOD_PHONE_COUNTRY_CODE), 1);
                 }
-                $queueForStatsUsage
-                    ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
-                    ->setProject($project)
-                    ->trigger();
+            } catch (NumberParseException $e) {
+                // Ignore invalid phone number for country code stats
             }
+            $queueForStatsUsage
+                ->addMetric(METRIC_AUTH_METHOD_PHONE, 1)
+                ->setProject($project)
+                ->trigger();
         }
 
         $verification->setAttribute('secret', $secret);
@@ -4255,7 +4268,7 @@ App::post('/v1/account/verifications/phone')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verifications/phone')
+Http::put('/v1/account/verifications/phone')
     ->alias('/v1/account/verification/phone')
     ->desc('Update phone verification (confirmation)')
     ->groups(['api', 'account'])
@@ -4286,9 +4299,10 @@ App::put('/v1/account/verifications/phone')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('proofForCode')
-    ->action(function (string $userId, string $secret, Response $response, User $user, Database $dbForProject, Event $queueForEvents, ProofsCode $proofForCode) {
+    ->inject('authorization')
+    ->action(function (string $userId, string $secret, Response $response, User $user, Database $dbForProject, Event $queueForEvents, ProofsCode $proofForCode, Authorization $authorization) {
         /** @var Appwrite\Utopia\Database\Documents\User  $profile */
-        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+        $profile = $authorization->skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -4300,7 +4314,7 @@ App::put('/v1/account/verifications/phone')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        Authorization::setRole(Role::user($profile->getId())->toString());
+        $authorization->addRole(Role::user($profile->getId())->toString());
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile->setAttribute('phoneVerification', true));
 
@@ -4322,7 +4336,7 @@ App::put('/v1/account/verifications/phone')
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/targets/push')
+Http::post('/v1/account/targets/push')
     ->desc('Create push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
@@ -4353,12 +4367,13 @@ App::post('/v1/account/targets/push')
     ->inject('dbForProject')
     ->inject('store')
     ->inject('proofForToken')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, User $user, Request $request, Response $response, Database $dbForProject, Store $store, ProofsToken $proofForToken) {
+    ->inject('authorization')
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, User $user, Request $request, Response $response, Database $dbForProject, Store $store, ProofsToken $proofForToken, Authorization $authorization) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
-        $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+        $provider = $authorization->skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if (!$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -4405,7 +4420,7 @@ App::post('/v1/account/targets/push')
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::put('/v1/account/targets/:targetId/push')
+Http::put('/v1/account/targets/:targetId/push')
     ->desc('Update push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
@@ -4433,9 +4448,10 @@ App::put('/v1/account/targets/:targetId/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+    ->inject('authorization')
+    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
@@ -4470,7 +4486,7 @@ App::put('/v1/account/targets/:targetId/push')
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::delete('/v1/account/targets/:targetId/push')
+Http::delete('/v1/account/targets/:targetId/push')
     ->desc('Delete push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
@@ -4498,8 +4514,9 @@ App::delete('/v1/account/targets/:targetId/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject) {
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+    ->inject('authorization')
+    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $authorization) {
+        $target = $authorization->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
@@ -4524,7 +4541,7 @@ App::delete('/v1/account/targets/:targetId/push')
 
         $response->noContent();
     });
-App::get('/v1/account/identities')
+Http::get('/v1/account/identities')
     ->desc('List identities')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -4596,7 +4613,7 @@ App::get('/v1/account/identities')
         ]), Response::MODEL_IDENTITY_LIST);
     });
 
-App::delete('/v1/account/identities/:identityId')
+Http::delete('/v1/account/identities/:identityId')
     ->desc('Delete identity')
     ->groups(['api', 'account'])
     ->label('scope', 'account')

@@ -1,3 +1,4 @@
+```bash
 appwrite migrations get-supabase-report \
     --resources one two three \
     --endpoint https://example.com \
@@ -5,3 +6,4 @@ appwrite migrations get-supabase-report \
     --database-host <DATABASE_HOST> \
     --username <USERNAME> \
     --password <PASSWORD>
+```

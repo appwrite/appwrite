@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -16,3 +17,4 @@ let deployment = try await sites.createDeployment(
     outputDirectory: "<OUTPUT_DIRECTORY>" // optional
 )
 
+```

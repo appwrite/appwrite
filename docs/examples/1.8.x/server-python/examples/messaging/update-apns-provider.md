@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 
@@ -18,3 +19,4 @@ result = messaging.update_apns_provider(
     bundle_id = '<BUNDLE_ID>', # optional
     sandbox = False # optional
 )
+```

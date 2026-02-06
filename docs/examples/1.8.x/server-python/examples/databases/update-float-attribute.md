@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -18,3 +19,4 @@ result = databases.update_float_attribute(
     max = None, # optional
     new_key = '' # optional
 )
+```

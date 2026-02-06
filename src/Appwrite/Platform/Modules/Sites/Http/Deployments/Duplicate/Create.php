@@ -65,6 +65,8 @@ class Create extends Action
             ->inject('queueForEvents')
             ->inject('queueForBuilds')
             ->inject('deviceForSites')
+            ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -78,7 +80,9 @@ class Create extends Action
         Database $dbForPlatform,
         Event $queueForEvents,
         Build $queueForBuilds,
-        Device $deviceForSites
+        Device $deviceForSites,
+        Authorization $authorization,
+        array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -117,6 +121,7 @@ class Create extends Action
             'sourcePath' => $destination,
             'totalSize' => $deployment->getAttribute('sourceSize', 0),
             'buildCommands' => \implode(' && ', $commands),
+            'startCommand' => $site->getAttribute('startCommand', ''),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
@@ -140,14 +145,14 @@ class Create extends Action
         $dbForProject->updateDocument('sites', $site->getId(), $site);
 
         // Preview deployments for sites
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        Authorization::skip(
+        $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),

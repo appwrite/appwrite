@@ -26,7 +26,6 @@ use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Source;
-use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
 use Utopia\Migration\Sources\Firebase;
@@ -80,6 +79,7 @@ class Migrations extends Action
             ->inject('deviceForFiles')
             ->inject('queueForMails')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -97,6 +97,7 @@ class Migrations extends Action
         Device $deviceForFiles,
         Mail $queueForMails,
         array $plan,
+        Authorization $authorization,
     ): void {
         $payload = $message->getPayload() ?? [];
         $this->deviceForMigrations = $deviceForMigrations;
@@ -110,8 +111,16 @@ class Migrations extends Action
         $events = $payload['events'] ?? [];
         $migration = new Document($payload['migration'] ?? []);
 
+        if ($migration->isEmpty()) {
+            throw new \Exception('Migration not found');
+        }
+
         if ($project->getId() === 'console') {
             return;
+        }
+
+        if ($project->isEmpty()) {
+            throw new \Exception('Project not found');
         }
 
         $this->dbForProject = $dbForProject;
@@ -126,7 +135,13 @@ class Migrations extends Action
         }
 
         try {
-            $this->processMigration($migration, $queueForRealtime, $queueForMails, $platform);
+            $this->processMigration(
+                $migration,
+                $queueForRealtime,
+                $queueForMails,
+                $platform,
+                $authorization
+            );
         } finally {
             $this->dbForProject = null;
             $this->dbForPlatform = null;
@@ -137,26 +152,26 @@ class Migrations extends Action
             $this->plan = [];
             $this->sourceReport = [];
 
-            gc_collect_cycles();
+            \gc_collect_cycles();
         }
     }
 
     /**
      * @throws Exception
      */
-    protected function processSource(Document $migration, array $platform): Source
+    protected function processSource(Document $migration): Source
     {
         $source = $migration->getAttribute('source');
         $destination = $migration->getAttribute('destination');
         $resourceId = $migration->getAttribute('resourceId');
         $credentials = $migration->getAttribute('credentials');
         $migrationOptions = $migration->getAttribute('options');
-        $dataSource = Appwrite::SOURCE_API;
+        $dataSource = SourceAppwrite::SOURCE_API;
         $database = null;
         $queries = [];
 
-        if ($source === Appwrite::getName() && $destination === DestinationCSV::getName()) {
-            $dataSource = Appwrite::SOURCE_DATABASE;
+        if ($source === SourceAppwrite::getName() && $destination === DestinationCSV::getName()) {
+            $dataSource = SourceAppwrite::SOURCE_DATABASE;
             $database = $this->dbForProject;
             $queries = Query::parseQueries($migrationOptions['queries']);
         }
@@ -200,7 +215,8 @@ class Migrations extends Action
             default => throw new \Exception('Invalid source type'),
         };
 
-        $this->sourceReport = $migrationSource->report();
+        $resources = $migration->getAttribute('resources', []);
+        $this->sourceReport = $migrationSource->report($resources);
 
         return $migrationSource;
     }
@@ -208,18 +224,17 @@ class Migrations extends Action
     /**
      * @throws Exception
      */
-    protected function processDestination(Document $migration, string $apiKey, array $platform): Destination
+    protected function processDestination(Document $migration): Destination
     {
         $destination = $migration->getAttribute('destination');
         $options = $migration->getAttribute('options', []);
-
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+        $credentials = $migration->getAttribute('credentials');
 
         return match ($destination) {
             DestinationAppwrite::getName() => new DestinationAppwrite(
                 $this->project->getId(),
-                $protocol . '://' . $platform['apiHostname'] . '/v1',
-                $apiKey,
+                $credentials['destinationEndpoint'],
+                $credentials['destinationApiKey'],
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
             ),
@@ -310,37 +325,43 @@ class Migrations extends Action
         Realtime $queueForRealtime,
         Mail $queueForMails,
         array $platform,
+        Authorization $authorization,
     ): void {
-        $project = $this->dbForPlatform->getDocument('projects', $this->project->getId());
+        $project = $this->project;
+
         $tempAPIKey = $this->generateAPIKey($project);
 
         $transfer = $source = $destination = null;
 
+        $host = System::getEnv('_APP_MIGRATION_HOST');
+        if (empty($host)) {
+            throw new \Exception('_APP_MIGRATION_HOST is not set');
+        }
+
+        $endpoint = 'http://'.$host.'/v1';
+
         try {
-            if (
-                $migration->getAttribute('source') === SourceAppwrite::getName() &&
-                empty($migration->getAttribute('credentials', []))
-            ) {
-                $credentials = $migration->getAttribute('credentials', []);
+            $credentials = $migration->getAttribute('credentials', []);
+
+            if ($migration->getAttribute('source') === SourceAppwrite::getName()) {
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
-
-                /**
-                 * endpoint set
-                 */
-                if (empty($credentials['endpoint'])) {
-                    $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-                    $credentials['endpoint'] = $protocol . '://' . $platform['apiHostname'] . '/v1';
-                }
-                $migration->setAttribute('credentials', $credentials);
+                $credentials['endpoint'] = $credentials['endpoint'] ?? $endpoint;
             }
+
+            if ($migration->getAttribute('destination') === DestinationAppwrite::getName()) {
+                $credentials['destinationApiKey'] = $tempAPIKey;
+                $credentials['destinationEndpoint'] = $endpoint;
+            }
+
+            $migration->setAttribute('credentials', $credentials);
 
             $migration->setAttribute('stage', 'processing');
             $migration->setAttribute('status', 'processing');
             $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-            $source = $this->processSource($migration, $platform);
-            $destination = $this->processDestination($migration, $tempAPIKey, $platform);
+            $source = $this->processSource($migration);
+            $destination = $this->processDestination($migration);
 
             $transfer = new Transfer(
                 $source,
@@ -362,10 +383,10 @@ class Migrations extends Action
                     $migration->getAttribute('resourceId'),
                     $migration->getAttribute('resourceType')
                 );
-            }
 
-            $destination->shutdown();
-            $source->shutdown();
+                $destination->shutdown();
+                $source->shutdown();
+            }
 
             $sourceErrors = $source->getErrors();
             $destinationErrors = $destination->getErrors();
@@ -385,62 +406,59 @@ class Migrations extends Action
             Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
 
-            if (! $migration->isEmpty()) {
-                $migration->setAttribute('status', 'failed');
-                $migration->setAttribute('stage', 'finished');
+            $migration->setAttribute('status', 'failed');
+            $migration->setAttribute('stage', 'finished');
 
-                call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
-                    'migrationId' => $migration->getId(),
-                    'source' => $migration->getAttribute('source') ?? '',
-                    'destination' => $migration->getAttribute('destination') ?? '',
-                ]);
+            call_user_func($this->logError, $th, 'appwrite-worker', 'appwrite-queue-'.self::getName(), [
+                'migrationId' => $migration->getId(),
+                'source' => $migration->getAttribute('source') ?? '',
+                'destination' => $migration->getAttribute('destination') ?? '',
+            ]);
 
-                return;
-            }
-
-            if ($transfer) {
-                $sourceErrors = $source->getErrors();
-                $destinationErrors = $destination->getErrors();
-                $migration->setAttribute('errors', $this->sanitizeErrors($sourceErrors, $destinationErrors));
-            }
         } finally {
-            $this->updateMigrationDocument($migration, $project, $queueForRealtime);
+            try {
+                $this->updateMigrationDocument($migration, $project, $queueForRealtime);
 
-            if ($migration->getAttribute('status', '') === 'failed') {
-                Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
+                if ($migration->getAttribute('status', '') === 'failed') {
+                    Console::error('Migration('.$migration->getSequence().':'.$migration->getId().') failed, Project('.$this->project->getSequence().':'.$this->project->getId().')');
 
-                $sourceErrors = $source?->getErrors() ?? [];
-                $destinationErrors = $destination?->getErrors() ?? [];
+                    $sourceErrors = $source?->getErrors() ?? [];
+                    $destinationErrors = $destination?->getErrors() ?? [];
 
-                foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
-                    /** @var MigrationException $error */
-                    if ($error->getCode() === 0 || $error->getCode() >= 500) {
-                        ($this->logError)($error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
-                            'migrationId' => $migration->getId(),
-                            'source' => $migration->getAttribute('source') ?? '',
-                            'destination' => $migration->getAttribute('destination') ?? '',
-                            'resourceName' => $error->getResourceName(),
-                            'resourceGroup' => $error->getResourceGroup(),
-                        ]);
+                    foreach ([...$sourceErrors, ...$destinationErrors] as $error) {
+                        /** @var MigrationException $error */
+                        if ($error->getCode() === 0 || $error->getCode() >= 500) {
+                            ($this->logError)($error, 'appwrite-worker', 'appwrite-queue-' . self::getName(), [
+                                'migrationId' => $migration->getId(),
+                                'source' => $migration->getAttribute('source') ?? '',
+                                'destination' => $migration->getAttribute('destination') ?? '',
+                                'resourceName' => $error->getResourceName(),
+                                'resourceGroup' => $error->getResourceGroup(),
+                            ]);
+                        }
+                    }
+
+                    $source?->error();
+                    $destination?->error();
+                }
+
+                if ($migration->getAttribute('status', '') === 'completed') {
+                    $destination?->success();
+                    $source?->success();
+
+                    // TODO: Move to CSV hook
+                    if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
+                        $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform, $authorization);
                     }
                 }
+            } finally {
+                $source?->cleanup();
+                $destination?->cleanup();
 
-                $source?->error();
-                $destination?->error();
+                $transfer = null;
+                $source = null;
+                $destination = null;
             }
-
-            if ($migration->getAttribute('status', '') === 'completed') {
-                $destination?->success();
-                $source?->success();
-
-                if ($migration->getAttribute('destination') === DestinationCSV::getName()) {
-                    $this->handleCSVExportComplete($project, $migration, $queueForMails, $queueForRealtime, $platform);
-                }
-            }
-
-            $transfer = null;
-            $source = null;
-            $destination = null;
         }
     }
 
@@ -450,11 +468,10 @@ class Migrations extends Action
      * @param Document $project
      * @param Document $migration
      * @param Mail $queueForMails
+     * @param Realtime $queueForRealtime
+     * @param array $platform
+     * @param Authorization $authorization
      * @return void
-     * @throws AuthorizationException
-     * @throws Structure
-     * @throws \Utopia\Database\Exception
-     * @throws Exception
      */
     protected function handleCSVExportComplete(
         Document $project,
@@ -462,6 +479,7 @@ class Migrations extends Action
         Mail $queueForMails,
         Realtime $queueForRealtime,
         array $platform,
+        Authorization $authorization,
     ): void {
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
@@ -475,7 +493,7 @@ class Migrations extends Action
             throw new \Exception('User ' . $userInternalId . ' not found');
         }
 
-        $bucket = Authorization::skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
+        $bucket = $authorization->skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
         if ($bucket->isEmpty()) {
             throw new \Exception('Bucket not found');
         }
@@ -560,7 +578,9 @@ class Migrations extends Action
         // Generate download URL with JWT
         $endpoint = System::getEnv('_APP_DOMAIN', '');
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled' ? 'https' : 'http';
+
         $downloadUrl = "{$protocol}://{$endpoint}/v1/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
+
         $options['downloadUrl'] = $downloadUrl;
         $migration->setAttribute('options', $options);
         $this->updateMigrationDocument($migration, $project, $queueForRealtime);

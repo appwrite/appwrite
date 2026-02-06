@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -19,3 +19,4 @@ response, error := service.ListProviderLogs(
     messaging.WithListProviderLogsQueries([]interface{}{}),
     messaging.WithListProviderLogsTotal(false),
 )
+```

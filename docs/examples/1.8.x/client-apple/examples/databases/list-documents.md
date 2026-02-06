@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -14,3 +15,4 @@ let documentList = try await databases.listDocuments(
     total: false // optional
 )
 
+```

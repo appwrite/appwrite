@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBDelete(
         databaseId: "<DATABASE_ID>"
@@ -5,3 +6,4 @@ mutation {
         status
     }
 }
+```

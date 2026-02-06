@@ -1,4 +1,6 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart' as enums;
 
 Client client = Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -11,6 +13,7 @@ User result = await users.createSHAUser(
     userId: '<USER_ID>',
     email: 'email@example.com',
     password: 'password',
-    passwordVersion: PasswordHash.sha1, // (optional)
+    passwordVersion: enums.PasswordHash.sha1, // (optional)
     name: '<NAME>', // (optional)
 );
+```

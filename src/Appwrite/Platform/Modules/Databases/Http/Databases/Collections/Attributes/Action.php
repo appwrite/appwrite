@@ -265,6 +265,22 @@ abstract class Action extends UtopiaAction
                 ? UtopiaResponse::MODEL_ATTRIBUTE_POLYGON
                 : UtopiaResponse::MODEL_COLUMN_POLYGON,
 
+            Database::VAR_VARCHAR => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_VARCHAR
+                : UtopiaResponse::MODEL_COLUMN_VARCHAR,
+
+            Database::VAR_TEXT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_TEXT
+                : UtopiaResponse::MODEL_COLUMN_TEXT,
+
+            Database::VAR_MEDIUMTEXT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_MEDIUMTEXT
+                : UtopiaResponse::MODEL_COLUMN_MEDIUMTEXT,
+
+            Database::VAR_LONGTEXT => $isCollections
+                ? UtopiaResponse::MODEL_ATTRIBUTE_LONGTEXT
+                : UtopiaResponse::MODEL_COLUMN_LONGTEXT,
+
             Database::VAR_STRING => match ($format) {
                 APP_DATABASE_ATTRIBUTE_EMAIL => $isCollections
                     ? UtopiaResponse::MODEL_ATTRIBUTE_EMAIL
@@ -292,7 +308,7 @@ abstract class Action extends UtopiaAction
         };
     }
 
-    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): Document
+    protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $authorization): Document
     {
         $key = $attribute->getAttribute('key');
         $type = $attribute->getAttribute('type', '');
@@ -310,7 +326,7 @@ abstract class Action extends UtopiaAction
             throw new Exception($this->getSpatialTypeNotSupportedException(), params: [$type]);
         }
 
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
@@ -371,7 +387,7 @@ abstract class Action extends UtopiaAction
                 \in_array($attribute->getAttribute('type'), Database::SPATIAL_TYPES) &&
                 $attribute->getAttribute('required')
             ) {
-                $hasData = !Authorization::skip(fn () => $dbForProject
+                $hasData = !$authorization->skip(fn () => $dbForProject
                     ->findOne('database_' . $db->getSequence() . '_collection_' . $collection->getSequence()))
                     ->isEmpty();
 
@@ -472,9 +488,9 @@ abstract class Action extends UtopiaAction
         return $attribute;
     }
 
-    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, string $type, int $size = null, string $filter = null, string|bool|int|float|array $default = null, bool $required = null, int|float|null $min = null, int|float|null $max = null, array $elements = null, array $options = [], string $newKey = null): Document
+    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, Event $queueForEvents, Authorization $authorization, string $type, ?int $size = null, ?string $filter = null, string|bool|int|float|array|null $default = null, ?bool $required = null, int|float|null $min = null, int|float|null $max = null, ?array $elements = null, array $options = [], ?string $newKey = null): Document
     {
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);

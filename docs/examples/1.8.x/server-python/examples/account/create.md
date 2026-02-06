@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.account import Account
 
@@ -14,3 +15,4 @@ result = account.create(
     password = '',
     name = '<NAME>' # optional
 )
+```

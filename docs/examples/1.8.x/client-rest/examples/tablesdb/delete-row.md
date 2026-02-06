@@ -1,3 +1,4 @@
+```http
 DELETE /v1/tablesdb/{databaseId}/tables/{tableId}/rows/{rowId} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -9,3 +10,4 @@ X-Appwrite-JWT: <YOUR_JWT>
 {
   "transactionId": "<TRANSACTION_ID>"
 }
+```

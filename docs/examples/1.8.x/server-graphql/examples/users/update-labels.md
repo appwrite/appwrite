@@ -1,3 +1,4 @@
+```graphql
 mutation {
     usersUpdateLabels(
         userId: "<USER_ID>",
@@ -36,3 +37,4 @@ mutation {
         accessedAt
     }
 }
+```

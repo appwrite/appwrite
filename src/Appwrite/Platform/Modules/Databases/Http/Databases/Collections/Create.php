@@ -85,12 +85,13 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, array $attributes, array $indexes, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents): void
+    public function action(string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, array $attributes, array $indexes, UtopiaResponse $response, Database $dbForProject, Event $queueForEvents, Authorization $authorization): void
     {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
@@ -185,7 +186,13 @@ class Create extends Action
             $dbForProject->getAdapter()->getSupportForVectors(),
             $dbForProject->getAdapter()->getSupportForAttributes(),
             $dbForProject->getAdapter()->getSupportForMultipleFulltextIndexes(),
-            $dbForProject->getAdapter()->getSupportForIdenticalIndexes()
+            $dbForProject->getAdapter()->getSupportForIdenticalIndexes(),
+            $dbForProject->getAdapter()->getSupportForObjectIndexes(),
+            $dbForProject->getAdapter()->getSupportForTrigramIndex(),
+            $dbForProject->getAdapter()->getSupportForSpatialAttributes(),
+            $dbForProject->getAdapter()->getSupportForIndex(),
+            $dbForProject->getAdapter()->getSupportForUniqueIndex(),
+            $dbForProject->getAdapter()->getSupportForFulltextIndex(),
         );
 
         foreach ($collectionIndexes as $indexDoc) {
@@ -240,6 +247,8 @@ class Create extends Action
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam($this->getEventsParamKey(), $collection->getId());
+
+        $this->addRowBytesInfo($collection, $dbForProject);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)

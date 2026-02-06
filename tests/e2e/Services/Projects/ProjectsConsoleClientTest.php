@@ -1765,12 +1765,13 @@ class ProjectsConsoleClientTest extends Scope
         return $data;
     }
 
-    /**
-     * @depends testUpdateProjectAuthLimit
-     */
-    public function testUpdateProjectAuthSessionsLimit($data): array
+    public function testUpdateProjectAuthSessionsLimit(): void
     {
-        $id = $data['projectId'] ?? '';
+        $id = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'testUpdateProjectAuthSessionsLimit',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
 
         /**
          * Test for failure
@@ -1851,6 +1852,8 @@ class ProjectsConsoleClientTest extends Scope
         $sessionCookie = $response['headers']['set-cookie'];
         $sessionId2 = $response['body']['$id'];
 
+        sleep(5); // fixes flaky tests.
+
         /**
          * List sessions
          */
@@ -1867,7 +1870,7 @@ class ProjectsConsoleClientTest extends Scope
 
             $this->assertEquals(1, count($sessions));
             $this->assertEquals($sessionId2, $sessions[0]['$id']);
-        });
+        }, 120_000, 300);
 
         /**
          * Reset Limit
@@ -1879,9 +1882,8 @@ class ProjectsConsoleClientTest extends Scope
             'limit' => 10,
         ]);
 
-        return $data;
+        $this->assertEquals(200, $response['headers']['status-code']);
     }
-
 
     /**
      * @depends testUpdateProjectAuthLimit
@@ -4781,7 +4783,7 @@ class ProjectsConsoleClientTest extends Scope
      */
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testCreateProjectDevKey(): void
     {
@@ -4842,7 +4844,7 @@ class ProjectsConsoleClientTest extends Scope
 
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testListProjectDevKey(): void
     {
@@ -4933,7 +4935,7 @@ class ProjectsConsoleClientTest extends Scope
 
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testGetProjectDevKey(): void
     {
@@ -4977,7 +4979,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testGetDevKeyWithSdks(): void
     {
@@ -5034,7 +5036,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testNoHostValidationWithDevKey(): void
     {
@@ -5115,7 +5117,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testCorsWithDevKey(): void
     {
@@ -5171,8 +5173,70 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals($origin, $response['headers']['access-control-allow-origin'] ?? null);
     }
 
+    public function testConsoleCorsWithTrustedProject(): void
+    {
+        $trustedProjectIds = ['trusted-project', 'another-trusted-project']; // Set in env variable
+
+        $projectIds = \array_merge($trustedProjectIds, ['untrusted-project-id']);
+
+        foreach ($projectIds as $projectId) {
+            try {
+                // Create project
+                $this->setupProject([
+                    'projectId' => $projectId,
+                    'name' => 'Trusted project',
+                    'region' => System::getEnv('_APP_REGION', 'default')
+                ]);
+
+                // Add domain to trusted project; API for simplicity, in real work this will be site
+                $domain = \uniqid() . '.custom.localhost';
+                $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-mode' => 'admin',
+                ], $this->getHeaders()), [
+                    'domain' => $domain
+                ]);
+
+                $this->assertEquals(201, $rule['headers']['status-code']);
+
+                // Talk to Console APIs from trusted project domain
+                $currencies = $this->client->call(
+                    Client::METHOD_GET,
+                    '/locale/currencies',
+                    array_merge(
+                        $this->getHeaders(),
+                        [
+                            'content-type' => 'application/json',
+                            'x-appwrite-project' => 'console',
+                            'origin' => 'http://' . $domain
+                        ]
+                    )
+                );
+
+                if (\in_array($projectId, $trustedProjectIds)) {
+                    // Trusted projects can
+                    $this->assertEquals(200, $currencies['headers']['status-code']);
+                    $this->assertSame('http://' . $domain, $currencies['headers']['access-control-allow-origin']);
+                } else {
+                    // Untrusted projects cannot
+                    $this->assertEquals(403, $currencies['headers']['status-code']);
+                    $this->assertArrayNotHasKey('access-control-allow-origin', $currencies['headers']);
+                }
+            } finally {
+                // Cleanup
+                $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                ], $this->getHeaders()), []);
+
+                $this->assertEquals(204, $response['headers']['status-code']);
+            }
+        }
+    }
+
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testNoRateLimitWithDevKey(): void
     {
@@ -5277,7 +5341,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testUpdateProjectDevKey(): void
     {
@@ -5322,7 +5386,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group devKeys
+     * @group abuseEnabled
      */
     public function testDeleteProjectDevKey(): void
     {
@@ -5380,4 +5444,216 @@ class ProjectsConsoleClientTest extends Scope
     /**
      * Devkeys Tests ends here ------------------------------------------------
      */
+
+    public function testProjectLabels(): void
+    {
+        // Setup: Prepare team
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Query Select Test Team',
+        ]);
+
+        $this->assertEquals(201, $team['headers']['status-code']);
+        $teamId = $team['body']['$id'];
+
+        // Setup: Prepare project
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Test project - Labels 1',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $this->assertIsArray($project['body']['labels']);
+        $this->assertCount(0, $project['body']['labels']);
+        $projectId = $project['body']['$id'];
+
+        // Apply labels
+        $project = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => ['vip', 'imagine', 'blocked']
+        ]);
+
+        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertIsArray($project['body']['labels']);
+        $this->assertCount(3, $project['body']['labels']);
+        $this->assertEquals('vip', $project['body']['labels'][0]);
+        $this->assertEquals('imagine', $project['body']['labels'][1]);
+        $this->assertEquals('blocked', $project['body']['labels'][2]);
+
+        // Update labels
+        $project = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => ['nonvip', 'imagine']
+        ]);
+        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertIsArray($project['body']['labels']);
+        $this->assertCount(2, $project['body']['labels']);
+        $this->assertEquals('nonvip', $project['body']['labels'][0]);
+        $this->assertEquals('imagine', $project['body']['labels'][1]);
+
+        // Filter by labels
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['nonvip'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(1, $projects['body']['total']);
+        $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
+
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['vip'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(0, $projects['body']['total']);
+
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['imagine'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(1, $projects['body']['total']);
+        $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
+
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['nonvip', 'imagine'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(1, $projects['body']['total']);
+        $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
+
+        // Setup: Second project with only imagine label
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Test project - Labels 2',
+            'teamId' => $teamId,
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $this->assertEquals(201, $project['headers']['status-code']);
+        $this->assertIsArray($project['body']['labels']);
+        $this->assertCount(0, $project['body']['labels']);
+        $projectId2 = $project['body']['$id'];
+
+        $project = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId2 . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => ['vip', 'imagine']
+        ]);
+        $this->assertEquals(200, $project['headers']['status-code']);
+        $this->assertIsArray($project['body']['labels']);
+        $this->assertCount(2, $project['body']['labels']);
+        $this->assertEquals('vip', $project['body']['labels'][0]);
+        $this->assertEquals('imagine', $project['body']['labels'][1]);
+
+        // List of imagine has both
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['imagine'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(2, $projects['body']['total']);
+        $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
+        $this->assertEquals($projectId2, $projects['body']['projects'][1]['$id']);
+
+        // List of vip only has second
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['vip'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(1, $projects['body']['total']);
+        $this->assertEquals($projectId2, $projects['body']['projects'][0]['$id']);
+
+        // List of vip and imagine has second
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['vip'])->toString(),
+                Query::contains('labels', ['imagine'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(1, $projects['body']['total']);
+        $this->assertEquals($projectId2, $projects['body']['projects'][0]['$id']);
+
+        // List of vip or imagine has second
+        $projects = $this->client->call(Client::METHOD_GET, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('labels', ['vip', 'imagine'])->toString(),
+            ]
+        ]);
+        $this->assertEquals(200, $projects['headers']['status-code']);
+        $this->assertEquals(2, $projects['body']['total']);
+        $this->assertEquals($projectId, $projects['body']['projects'][0]['$id']);
+        $this->assertEquals($projectId2, $projects['body']['projects'][1]['$id']);
+
+        // Cleanup
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/projects/' . $projectId2, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
 }

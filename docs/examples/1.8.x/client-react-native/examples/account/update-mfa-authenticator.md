@@ -1,3 +1,4 @@
+```javascript
 import { Client, Account, AuthenticatorType } from "react-native-appwrite";
 
 const client = new Client()
@@ -12,3 +13,4 @@ const result = await account.updateMFAAuthenticator({
 });
 
 console.log(result);
+```

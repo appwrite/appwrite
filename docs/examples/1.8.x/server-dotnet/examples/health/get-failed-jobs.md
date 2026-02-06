@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Enums;
 using Appwrite.Models;
@@ -13,4 +14,4 @@ Health health = new Health(client);
 HealthQueue result = await health.GetFailedJobs(
     name: Name.V1Database,
     threshold: 0 // optional
-);
+);```

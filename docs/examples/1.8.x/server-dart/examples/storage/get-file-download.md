@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ Uint8List result = await storage.getFileDownload(
     fileId: '<FILE_ID>',
     token: '<TOKEN>', // (optional)
 );
+```

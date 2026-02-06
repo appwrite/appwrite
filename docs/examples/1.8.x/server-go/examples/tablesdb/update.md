@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -16,6 +16,7 @@ service := tablesdb.New(client)
 
 response, error := service.Update(
     "<DATABASE_ID>",
-    "<NAME>",
+    tablesdb.WithUpdateName("<NAME>"),
     tablesdb.WithUpdateEnabled(false),
 )
+```

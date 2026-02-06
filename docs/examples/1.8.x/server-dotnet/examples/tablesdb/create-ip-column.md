@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ ColumnIp result = await tablesDB.CreateIpColumn(
     required: false,
     default: "", // optional
     array: false // optional
-);
+);```

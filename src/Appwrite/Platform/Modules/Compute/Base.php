@@ -13,6 +13,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Swoole\Request;
 use Utopia\System\System;
@@ -21,6 +22,24 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 
 class Base extends Action
 {
+    /**
+     * Permissions for resources in this project.
+     *
+     * @param string $teamId
+     * @param string $projectId
+     * @return string[]
+     */
+    protected function getPermissions(string $teamId, string $projectId): array
+    {
+        return [
+            Permission::read(Role::team(ID::custom($teamId))),
+            Permission::update(Role::team(ID::custom($teamId), 'owner')),
+            Permission::update(Role::team(ID::custom($teamId), 'developer')),
+            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+        ];
+    }
+
     /**
      * Get default specification based on plan and available specifications.
      *
@@ -106,6 +125,7 @@ class Base extends Action
             'resourceType' => 'functions',
             'entrypoint' => $entrypoint,
             'buildCommands' => $function->getAttribute('commands', ''),
+            'startCommand' => $function->getAttribute('startCommand', ''),
             'type' => 'vcs',
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getSequence(),
@@ -142,7 +162,7 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -202,6 +222,7 @@ class Base extends Action
             'resourceInternalId' => $site->getSequence(),
             'resourceType' => 'sites',
             'buildCommands' => implode(' && ', $commands),
+            'startCommand' => $site->getAttribute('startCommand', ''),
             'buildOutput' => $site->getAttribute('outputDirectory', ''),
             'adapter' => $site->getAttribute('adapter', ''),
             'fallbackFile' => $site->getAttribute('fallbackFile', ''),
@@ -232,14 +253,14 @@ class Base extends Action
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('sites', $site->getId(), $site);
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
         $ruleId = $isMd5 ? md5($domain) : ID::unique();
 
-        Authorization::skip(
+        $authorization->skip(
             fn () => $dbForPlatform->createDocument('rules', new Document([
                 '$id' => $ruleId,
                 'projectId' => $project->getId(),
@@ -265,7 +286,7 @@ class Base extends Action
             $domain = "commit-" . substr($commitDetails['commitHash'], 0, 16) . ".{$sitesDomain}";
             $ruleId = md5($domain);
             try {
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -302,7 +323,7 @@ class Base extends Action
             $domain = "branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}";
             $ruleId = md5($domain);
             try {
-                Authorization::skip(
+                $authorization->skip(
                     fn () => $dbForPlatform->createDocument('rules', new Document([
                         '$id' => $ruleId,
                         'projectId' => $project->getId(),
@@ -328,6 +349,8 @@ class Base extends Action
             }
         }
 
+        $this->updateEmptyManualRule($project, $site, $deployment, $dbForPlatform, $authorization);
+
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($site)
@@ -335,5 +358,35 @@ class Base extends Action
             ->setTemplate($template);
 
         return $deployment;
+    }
+
+    /**
+     * Update empty manual rule for deployment.
+     * In case of first deployment, deployment ID will be empty in the rules, so we need to update it here.
+     *
+     * @param \Utopia\Database\Document $project
+     * @param \Utopia\Database\Document $resource
+     * @param \Utopia\Database\Document $deployment
+     * @param \Utopia\Database\Database $dbForPlatform
+     * @return void
+     */
+    public static function updateEmptyManualRule(Document $project, Document $resource, Document $deployment, Database $dbForPlatform, Authorization $authorization)
+    {
+        $resourceType = $resource->getCollection() === 'sites' ? 'site' : 'function';
+
+        $queries = [
+            Query::equal('projectInternalId', [$project->getSequence()]),
+            Query::equal('deploymentResourceInternalId', [$resource->getSequence()]),
+            Query::equal('deploymentResourceType', [$resourceType]),
+            Query::equal('deploymentId', ['']),
+            Query::equal('type', ['deployment']),
+            Query::equal('trigger', ['manual']),
+        ];
+        $dbForPlatform->forEach('rules', function (Document $rule) use ($deployment, $dbForPlatform, $authorization) {
+            $authorization->skip(fn () => $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'deploymentId' => $deployment->getId(),
+                'deploymentInternalId' => $deployment->getSequence(),
+            ])));
+        }, $queries);
     }
 }

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBUpdateEnumColumn(
         databaseId: "<DATABASE_ID>",
@@ -21,3 +22,4 @@ mutation {
         default
     }
 }
+```

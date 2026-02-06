@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -10,3 +11,4 @@ let session = try await account.updateSession(
     sessionId: "<SESSION_ID>"
 )
 
+```

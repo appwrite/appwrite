@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Account
@@ -11,4 +12,4 @@ val account = Account(client)
 
 val result = account.createMFAChallenge(
     factor = AuthenticationFactor.EMAIL,
-)
+)```

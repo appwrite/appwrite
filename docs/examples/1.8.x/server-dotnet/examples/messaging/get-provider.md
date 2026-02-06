@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Messaging messaging = new Messaging(client);
 
 Provider result = await messaging.GetProvider(
     providerId: "<PROVIDER_ID>"
-);
+);```

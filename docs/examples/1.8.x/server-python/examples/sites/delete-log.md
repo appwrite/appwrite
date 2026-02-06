@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.sites import Sites
 
@@ -12,3 +13,4 @@ result = sites.delete_log(
     site_id = '<SITE_ID>',
     log_id = '<LOG_ID>'
 )
+```

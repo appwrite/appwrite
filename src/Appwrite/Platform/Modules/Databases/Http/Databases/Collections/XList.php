@@ -67,12 +67,13 @@ class XList extends Action
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, array $queries, string $search, bool $includeTotal, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, array $queries, string $search, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND, params: [$databaseId]);
@@ -119,6 +120,10 @@ class XList extends Action
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL);
         } catch (QueryException) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID);
+        }
+
+        foreach ($collections as $collection) {
+            $this->addRowBytesInfo($collection, $dbForProject);
         }
 
         $response->dynamic(new Document([

@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\TablesDB\Tables\Columns\Strin
 
 use Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Attributes\String\Create as StringCreate;
 use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response as UtopiaResponse;
@@ -51,7 +52,11 @@ class Create extends StringCreate
                         code: SwooleResponse::STATUS_CODE_ACCEPTED,
                         model: $this->getResponseModel()
                     )
-                ]
+                ],
+                deprecated: new Deprecated(
+                    since: '1.9.0',
+                    replaceWith: 'tablesDB.createTextColumn',
+                ),
             ))
             ->param('databaseId', '', new UID(), 'Database ID.')
             ->param('tableId', '', new UID(), 'Table ID. You can create a new table using the Database service [server integration](https://appwrite.io/docs/references/cloud/server-dart/tablesDB#createTable).')
@@ -66,6 +71,7 @@ class Create extends StringCreate
             ->inject('queueForDatabase')
             ->inject('queueForEvents')
             ->inject('plan')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 }

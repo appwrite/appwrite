@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBUpdateStringColumn(
         databaseId: "<DATABASE_ID>",
@@ -21,3 +22,4 @@ mutation {
         encrypt
     }
 }
+```

@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.functions import Functions
 
@@ -12,3 +13,4 @@ result = functions.delete_variable(
     function_id = '<FUNCTION_ID>',
     variable_id = '<VARIABLE_ID>'
 )
+```

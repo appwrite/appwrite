@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -16,3 +17,4 @@ result = functions.update_variable(
     value: '<VALUE>', # optional
     secret: false # optional
 )
+```

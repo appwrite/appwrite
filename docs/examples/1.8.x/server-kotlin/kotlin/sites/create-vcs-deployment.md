@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Sites
@@ -12,7 +13,8 @@ val sites = Sites(client)
 
 val response = sites.createVcsDeployment(
     siteId = "<SITE_ID>",
-    type =  VCSReferenceType.BRANCH,
+    type = VCSReferenceType.BRANCH,
     reference = "<REFERENCE>",
     activate = false // optional
 )
+```

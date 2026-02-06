@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
@@ -10,4 +11,4 @@ val tablesDB = TablesDB(client)
 
 val result = tablesDB.getTransaction(
     transactionId = "<TRANSACTION_ID>", 
-)
+)```

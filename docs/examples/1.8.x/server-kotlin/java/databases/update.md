@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Databases;
@@ -11,7 +12,7 @@ Databases databases = new Databases(client);
 
 databases.update(
     "<DATABASE_ID>", // databaseId
-    "<NAME>", // name
+    "<NAME>", // name (optional)
     false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
@@ -23,3 +24,4 @@ databases.update(
     })
 );
 
+```

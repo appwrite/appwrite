@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 import 'package:dart_appwrite/permission.dart';
 import 'package:dart_appwrite/role.dart';
@@ -15,3 +16,4 @@ File result = await storage.updateFile(
     name: '<NAME>', // (optional)
     permissions: [Permission.read(Role.any())], // (optional)
 );
+```

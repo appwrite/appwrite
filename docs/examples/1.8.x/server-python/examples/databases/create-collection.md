@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 from appwrite.permission import Permission
@@ -20,3 +21,4 @@ result = databases.create_collection(
     attributes = [], # optional
     indexes = [] # optional
 )
+```

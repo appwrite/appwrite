@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -18,3 +19,4 @@ let collection = try await databases.createCollection(
     indexes: [] // optional
 )
 
+```

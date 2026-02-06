@@ -1,4 +1,5 @@
-import { Client, Projects } from "@appwrite.io/console";
+```javascript
+import { Client, Projects, Scopes } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -9,8 +10,9 @@ const projects = new Projects(client);
 const result = await projects.createKey({
     projectId: '<PROJECT_ID>',
     name: '<NAME>',
-    scopes: [],
+    scopes: [Scopes.SessionsWrite],
     expire: '' // optional
 });
 
 console.log(result);
+```

@@ -1,4 +1,5 @@
-import { Client, Projects } from "@appwrite.io/console";
+```javascript
+import { Client, Projects, Scopes } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
@@ -8,8 +9,9 @@ const projects = new Projects(client);
 
 const result = await projects.createJWT({
     projectId: '<PROJECT_ID>',
-    scopes: [],
+    scopes: [Scopes.SessionsWrite],
     duration: 0 // optional
 });
 
 console.log(result);
+```

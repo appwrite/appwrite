@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -26,3 +26,4 @@ response, error := service.CreateMailgunProvider(
     messaging.WithCreateMailgunProviderReplyToEmail("email@example.com"),
     messaging.WithCreateMailgunProviderEnabled(false),
 )
+```

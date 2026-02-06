@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -10,3 +11,4 @@ client = Client.new
 health = Health.new(client)
 
 result = health.get_storage()
+```

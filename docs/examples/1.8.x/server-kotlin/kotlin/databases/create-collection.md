@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
@@ -21,3 +22,4 @@ val response = databases.createCollection(
     attributes = listOf(), // optional
     indexes = listOf() // optional
 )
+```

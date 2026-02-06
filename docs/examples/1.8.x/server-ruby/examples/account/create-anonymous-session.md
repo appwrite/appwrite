@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -10,3 +11,4 @@ client = Client.new
 account = Account.new(client)
 
 result = account.create_anonymous_session()
+```

@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -14,3 +15,4 @@ const result = await databases.createPolygonAttribute({
     required: false,
     default: [[[1, 2], [3, 4], [5, 6], [1, 2]]] // optional
 });
+```

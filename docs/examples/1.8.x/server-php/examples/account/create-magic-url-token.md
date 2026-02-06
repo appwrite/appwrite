@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $account->createMagicURLToken(
     email: 'email@example.com',
     url: 'https://example.com', // optional
     phrase: false // optional
-);
+);```

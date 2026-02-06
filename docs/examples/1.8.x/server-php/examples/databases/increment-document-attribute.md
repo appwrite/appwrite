@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -18,4 +19,4 @@ $result = $databases->incrementDocumentAttribute(
     value: null, // optional
     max: null, // optional
     transactionId: '<TRANSACTION_ID>' // optional
-);
+);```

@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -12,3 +13,4 @@ const result = await storage.getFileView({
     fileId: '<FILE_ID>',
     token: '<TOKEN>' // optional
 });
+```

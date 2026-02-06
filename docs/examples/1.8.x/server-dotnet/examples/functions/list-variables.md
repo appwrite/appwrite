@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Functions functions = new Functions(client);
 
 VariableList result = await functions.ListVariables(
     functionId: "<FUNCTION_ID>"
-);
+);```

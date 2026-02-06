@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Realtime;
 
 use CURLFile;
 use Exception;
+use Swoole\Coroutine;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -692,8 +693,8 @@ class RealtimeCustomClientTest extends Scope
 
         $client = $this->getWebsocket(['documents', 'collections'], [
             'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $session
-        ]);
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null);
 
         $response = json_decode($client->receive(), true);
 
@@ -2962,7 +2963,7 @@ class RealtimeCustomClientTest extends Scope
         sleep(1);
 
         try {
-            $client->receive(1); // 1 second timeout
+            $client->receive();
             $this->fail('Should not receive any event after rollback');
         } catch (TimeoutException $e) {
             // Expected - no event should be triggered
@@ -3121,5 +3122,154 @@ class RealtimeCustomClientTest extends Scope
         $this->assertArrayNotHasKey('level2Ref', $event['data']['payload']);
 
         $client->close();
+    }
+
+    /**
+     * Simulate concurrent realtime traffic using Swoole coroutines.
+     * Opens multiple websocket clients concurrently, then performs create/update/delete ops.
+     */
+    public function testConcurrentRealtimeTrafficCoroutines()
+    {
+        if (!class_exists(\Swoole\Coroutine::class)) {
+            $this->markTestSkipped('Swoole Coroutine not available in this environment.');
+        }
+
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        Coroutine\run(function () use ($session, $projectId) {
+            $headers = [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session
+            ];
+
+            $clientCount = 5;
+            $clients = [];
+            for ($i = 0; $i < $clientCount; $i++) {
+                $clients[] = $this->getWebsocket(['documents', 'collections'], $headers);
+            }
+
+            foreach ($clients as $client) {
+                $response = json_decode($client->receive(), true);
+                $this->assertEquals('connected', $response['type']);
+            }
+
+            // Setup DB/collection/attribute
+            $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'databaseId' => ID::unique(),
+                'name' => 'Concurrent DB',
+            ]);
+            $databaseId = $database['body']['$id'];
+
+            $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'collectionId' => ID::unique(),
+                'name' => 'Concurrent Collection',
+                'permissions' => [
+                    Permission::create(Role::user($this->getUser()['$id'])),
+                ],
+                'documentSecurity' => true,
+            ]);
+            $collectionId = $collection['body']['$id'];
+
+            $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/attributes/string", array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'name',
+                'size' => 64,
+                'required' => true,
+            ]);
+
+            Coroutine::sleep(1);
+
+            $creates = [
+                ['name' => 'Doc A'],
+                ['name' => 'Doc B'],
+                ['name' => 'Doc C'],
+                ['name' => 'Doc D'],
+                ['name' => 'Doc E'],
+                ['name' => 'Doc F'],
+            ];
+
+            $expectedEvents = count($creates);
+
+            // Per-client receipts
+            $receivedEvents = array_fill(0, $clientCount, []);
+
+            // Launch receiver coroutines (one per client)
+            foreach ($clients as $idx => $client) {
+                Coroutine::create(function () use ($client, &$receivedEvents, $expectedEvents, $idx) {
+                    $local = [];
+                    for ($i = 0; $i < $expectedEvents; $i++) {
+                        $event = json_decode($client->receive(), true);
+                        $local[] = $event;
+                    }
+                    $receivedEvents[$idx] = $local;
+                });
+            }
+
+            // Create docs
+            foreach ($creates as $payload) {
+                $this->client->call(Client::METHOD_POST, "/databases/{$databaseId}/collections/{$collectionId}/documents", array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-key' => $this->getProject()['apiKey']
+                ]), [
+                    'documentId' => ID::unique(),
+                    'data' => $payload,
+                    'permissions' => [
+                        Permission::read(Role::any()),
+                        Permission::update(Role::any()),
+                        Permission::delete(Role::any()),
+                    ],
+                ]);
+            }
+
+            // Wait for receivers to collect; timeout ~10s
+            $deadline = microtime(true) + 10;
+            while (microtime(true) < $deadline) {
+                $done = true;
+                foreach ($receivedEvents as $events) {
+                    if (count($events) < $expectedEvents) {
+                        $done = false;
+                        break;
+                    }
+                }
+                if ($done) {
+                    break;
+                }
+                Coroutine::sleep(0.1);
+            }
+
+            $expectedNames = array_column($creates, 'name');
+
+            for ($c = 0; $c < $clientCount; $c++) {
+                $events = $receivedEvents[$c];
+                $this->assertCount($expectedEvents, $events, 'Unexpected event count on client '.$c);
+                $seen = [];
+                foreach ($events as $event) {
+                    $this->assertEquals('event', $event['type']);
+                    $this->assertArrayHasKey('payload', $event['data']);
+                    $seen[] = $event['data']['payload']['name'] ?? '';
+                }
+                foreach ($expectedNames as $name) {
+                    $this->assertContains($name, $seen);
+                }
+            }
+
+            foreach ($clients as $client) {
+                $client->close();
+            }
+        });
     }
 }

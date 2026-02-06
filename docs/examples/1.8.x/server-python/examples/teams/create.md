@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.teams import Teams
 
@@ -13,3 +14,4 @@ result = teams.create(
     name = '<NAME>',
     roles = [] # optional
 )
+```

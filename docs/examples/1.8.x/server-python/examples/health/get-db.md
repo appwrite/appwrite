@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.health import Health
 
@@ -9,3 +10,4 @@ client.set_key('<YOUR_API_KEY>') # Your secret API key
 health = Health(client)
 
 result = health.get_db()
+```

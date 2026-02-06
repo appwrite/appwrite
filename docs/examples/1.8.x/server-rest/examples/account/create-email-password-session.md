@@ -1,3 +1,4 @@
+```http
 POST /v1/account/sessions/email HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -10,3 +11,4 @@ X-Appwrite-JWT: <YOUR_JWT>
   "email": "email@example.com",
   "password": "password"
 }
+```

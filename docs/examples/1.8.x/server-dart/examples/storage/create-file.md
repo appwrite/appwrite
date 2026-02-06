@@ -1,3 +1,4 @@
+```dart
 import 'dart:io';
 import 'package:dart_appwrite/dart_appwrite.dart';
 import 'package:dart_appwrite/permission.dart';
@@ -16,3 +17,4 @@ File result = await storage.createFile(
     file: InputFile(path: './path-to-files/image.jpg', filename: 'image.jpg'),
     permissions: [Permission.read(Role.any())], // (optional)
 );
+```

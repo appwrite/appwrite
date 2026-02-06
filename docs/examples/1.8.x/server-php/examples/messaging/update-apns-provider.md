@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -19,4 +20,4 @@ $result = $messaging->updateAPNSProvider(
     teamId: '<TEAM_ID>', // optional
     bundleId: '<BUNDLE_ID>', // optional
     sandbox: false // optional
-);
+);```

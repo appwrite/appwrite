@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBCreateDatetimeColumn(
         databaseId: "<DATABASE_ID>",
@@ -19,3 +20,4 @@ mutation {
         default
     }
 }
+```

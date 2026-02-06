@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 from appwrite.permission import Permission
@@ -13,8 +14,9 @@ databases = Databases(client)
 result = databases.update_collection(
     database_id = '<DATABASE_ID>',
     collection_id = '<COLLECTION_ID>',
-    name = '<NAME>',
+    name = '<NAME>', # optional
     permissions = [Permission.read(Role.any())], # optional
     document_security = False, # optional
     enabled = False # optional
 )
+```

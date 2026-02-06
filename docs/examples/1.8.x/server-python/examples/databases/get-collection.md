@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -12,3 +13,4 @@ result = databases.get_collection(
     database_id = '<DATABASE_ID>',
     collection_id = '<COLLECTION_ID>'
 )
+```

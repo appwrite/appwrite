@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -12,6 +13,6 @@ $databases = new Databases($client);
 
 $result = $databases->update(
     databaseId: '<DATABASE_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // optional
     enabled: false // optional
-);
+);```

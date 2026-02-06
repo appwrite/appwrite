@@ -60,6 +60,7 @@ class Get extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('platform')
+            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -68,38 +69,44 @@ class Get extends Action
         string $type,
         Response $response,
         Database $dbForPlatform,
-        array $platform
+        array $platform,
+        Authorization $authorization,
     ) {
         $domains = $platform['hostnames'] ?? [];
         if ($type === 'rules') {
-            $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-            $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-
+            $deniedDomains = [...$domains];
             $restrictions = [];
-            if (!empty($sitesDomain)) {
+
+            $sitesDomains = System::getEnv('_APP_DOMAIN_SITES', '');
+            foreach (\explode(',', $sitesDomains) as $sitesDomain) {
+                if (empty($sitesDomain)) {
+                    continue;
+                }
+
+                $deniedDomains[] = $sitesDomain;
+
                 // Ensure site domains are exactly 1 subdomain, and dont start with reserved prefix
                 $domainLevel = \count(\explode('.', $sitesDomain));
                 $restrictions[] = DomainValidator::createRestriction($sitesDomain, $domainLevel + 1, ['commit-', 'branch-']);
             }
-            if (!empty($functionsDomain)) {
+
+            $functionsDomains = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+            foreach (\explode(',', $functionsDomains) as $functionsDomain) {
+                if (empty($functionsDomain)) {
+                    continue;
+                }
+
+                $deniedDomains[] = $functionsDomain;
+
                 // Ensure function domains are exactly 1 subdomain
                 $domainLevel = \count(\explode('.', $functionsDomain));
                 $restrictions[] = DomainValidator::createRestriction($functionsDomain, $domainLevel + 1);
             }
+
             $validator = new DomainValidator($restrictions);
 
             if (!$validator->isValid($value)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'This domain name is not allowed. Please use a different domain.');
-            }
-
-            $deniedDomains = [...$domains];
-
-            if (!empty($sitesDomain)) {
-                $deniedDomains[] = $sitesDomain;
-            }
-
-            if (!empty($functionsDomain)) {
-                $deniedDomains[] = $functionsDomain;
             }
 
             $denyListDomains = System::getEnv('_APP_CUSTOM_DOMAIN_DENY_LIST', '');
@@ -121,7 +128,7 @@ class Get extends Action
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
             }
 
-            $document = Authorization::skip(fn () => $dbForPlatform->findOne('rules', [
+            $document = $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$value]),
             ]));
 

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
@@ -15,9 +16,10 @@ val response = databases.createRelationshipAttribute(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
     relatedCollectionId = "<RELATED_COLLECTION_ID>",
-    type =  RelationshipType.ONETOONE,
+    type = RelationshipType.ONETOONE,
     twoWay = false, // optional
     key = "", // optional
     twoWayKey = "", // optional
-    onDelete = "cascade" // optional
+    onDelete = RelationMutate.CASCADE // optional
 )
+```

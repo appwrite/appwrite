@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.users import Users
 from appwrite.enums import PasswordHash
@@ -16,3 +17,4 @@ result = users.create_sha_user(
     password_version = PasswordHash.SHA1, # optional
     name = '<NAME>' # optional
 )
+```

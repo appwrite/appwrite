@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -12,3 +13,4 @@ let collection = try await databases.getCollection(
     collectionId: "<COLLECTION_ID>"
 )
 
+```
