@@ -298,7 +298,8 @@ abstract class Scope extends TestCase
             return self::$root;
         }
 
-        $email = uniqid() . 'user@localhost.test';
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -350,7 +351,8 @@ abstract class Scope extends TestCase
             return self::$user[$this->getProject()['$id']];
         }
 
-        $email = uniqid() . 'user@localhost.test';
+        // Use more entropy to avoid collisions in parallel test execution
+        $email = uniqid('', true) . getmypid() . bin2hex(random_bytes(4)) . '@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
