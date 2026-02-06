@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -16,3 +17,4 @@ result = account.update_prefs(
         "darkTheme" => true
     }
 )
+```

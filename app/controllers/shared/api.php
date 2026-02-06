@@ -21,7 +21,6 @@ use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
-use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -31,6 +30,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Http;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Validator\WhiteList;
@@ -74,7 +74,7 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-App::init()
+Http::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -89,7 +89,7 @@ App::init()
     ->inject('team')
     ->inject('apiKey')
     ->inject('authorization')
-    ->action(function (App $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
+    ->action(function (Http $utopia, Request $request, Database $dbForPlatform, Database $dbForProject, Audit $queueForAudits, Document $project, Document $user, ?Document $session, array $servers, string $mode, Document $team, ?Key $apiKey, Authorization $authorization) {
         $route = $utopia->getRoute();
 
         /**
@@ -157,10 +157,6 @@ App::init()
 
         // Step 5: API Key Authentication
         if (!empty($apiKey)) {
-            // Verify no user session exists simultaneously
-            if (!$user->isEmpty()) {
-                throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
-            }
             // Check if key is expired
             if ($apiKey->isExpired()) {
                 throw new Exception(Exception::PROJECT_KEY_EXPIRED);
@@ -189,23 +185,38 @@ App::init()
             }
 
             // For standard keys, update last accessed time
-            if ($apiKey->getType() === API_KEY_STANDARD) {
-                $dbKey = $project->find(
-                    key: 'secret',
-                    find: $request->getHeader('x-appwrite-key', ''),
-                    subject: 'keys'
-                );
+            if (\in_array($apiKey->getType(), [API_KEY_STANDARD, API_KEY_ORGANIZATION, API_KEY_ACCOUNT])) {
+                $dbKey = null;
+                if (!empty($apiKey->getProjectId())) {
+                    $dbKey = $project->find(
+                        key: 'secret',
+                        find: $request->getHeader('x-appwrite-key', ''),
+                        subject: 'keys'
+                    );
+                } elseif (!empty($apiKey->getUserId())) {
+                    $dbKey = $user->find(
+                        key: 'secret',
+                        find: $request->getHeader('x-appwrite-key', ''),
+                        subject: 'keys'
+                    );
+                } elseif (!empty($apiKey->getTeamId())) {
+                    $dbKey = $team->find(
+                        key: 'secret',
+                        find: $request->getHeader('x-appwrite-key', ''),
+                        subject: 'keys'
+                    );
+                }
 
                 if (!$dbKey) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
 
+                $updates = new Document();
+
                 $accessedAt = $dbKey->getAttribute('accessedAt', 0);
 
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCESS)) > $accessedAt) {
-                    $dbKey->setAttribute('accessedAt', DateTime::now());
-                    $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
-                    $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                    $updates->setAttribute('accessedAt', DateTime::now());
                 }
 
                 $sdkValidator = new WhiteList($servers, true);
@@ -216,12 +227,21 @@ App::init()
 
                     if (!in_array($sdk, $sdks)) {
                         $sdks[] = $sdk;
-                        $dbKey->setAttribute('sdks', $sdks);
 
-                        /** Update access time as well */
-                        $dbKey->setAttribute('accessedAt', Datetime::now());
-                        $dbForPlatform->updateDocument('keys', $dbKey->getId(), $dbKey);
-                        $dbForPlatform->purgeCachedDocument('projects', $project->getId());
+                        $updates->setAttribute('sdks', $sdks);
+                        $updates->setAttribute('accessedAt', Datetime::now());
+                    }
+                }
+
+                if (!$updates->isEmpty()) {
+                    $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->updateDocument('keys', $dbKey->getId(), $updates));
+
+                    if (!empty($apiKey->getProjectId())) {
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('projects', $project->getId()));
+                    } elseif (!empty($apiKey->getUserId())) {
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('users', $user->getId()));
+                    } elseif (!empty($apiKey->getTeamId())) {
+                        $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
                     }
                 }
 
@@ -336,7 +356,7 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -362,7 +382,7 @@ App::init()
     ->inject('telemetry')
     ->inject('platform')
     ->inject('authorization')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, StatsUsage $queueForStatsUsage, Func $queueForFunctions, Mail $queueForMails, Database $dbForProject, callable $timelimit, Document $resourceToken, string $mode, ?Key $apiKey, array $plan, Document $devKey, Telemetry $telemetry, array $platform, Authorization $authorization) {
 
         $route = $utopia->getRoute();
 
@@ -572,7 +592,7 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['session'])
     ->inject('user')
     ->inject('request')
@@ -592,14 +612,14 @@ App::init()
  * Delete older sessions if the number of sessions have crossed
  * the session limit set for the project
  */
-App::shutdown()
+Http::shutdown()
     ->groups(['session'])
     ->inject('utopia')
     ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Database $dbForProject) {
         $sessionLimit = $project->getAttribute('auths', [])['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT;
         $session = $response->getPayload();
         $userId = $session['userId'] ?? '';
@@ -626,7 +646,7 @@ App::shutdown()
         $dbForProject->purgeCachedDocument('users', $userId);
     });
 
-App::shutdown()
+Http::shutdown()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -647,7 +667,7 @@ App::shutdown()
     ->inject('authorization')
     ->inject('timelimit')
     ->inject('eventProcessor')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor) use ($parseLabel) {
+    ->action(function (Http $utopia, Request $request, Response $response, Document $project, User $user, Event $queueForEvents, Audit $queueForAudits, StatsUsage $queueForStatsUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Func $queueForFunctions, Event $queueForWebhooks, Realtime $queueForRealtime, Database $dbForProject, Authorization $authorization, callable $timelimit, EventProcessor $eventProcessor) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -872,7 +892,7 @@ App::shutdown()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['usage'])
     ->action(function () {
         if (System::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {

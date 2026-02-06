@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ TablesDB tablesDB = new TablesDB(client);
 
 Database result = await tablesDB.Get(
     databaseId: "<DATABASE_ID>"
-);
+);```

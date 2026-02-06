@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.sites import Sites
 
@@ -12,3 +13,4 @@ result = sites.delete_deployment(
     site_id = '<SITE_ID>',
     deployment_id = '<DEPLOYMENT_ID>'
 )
+```

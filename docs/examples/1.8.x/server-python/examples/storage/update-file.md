@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.storage import Storage
 from appwrite.permission import Permission
@@ -16,3 +17,4 @@ result = storage.update_file(
     name = '<NAME>', # optional
     permissions = [Permission.read(Role.any())] # optional
 )
+```

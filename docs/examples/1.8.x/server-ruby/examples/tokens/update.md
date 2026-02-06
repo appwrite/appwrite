@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = tokens.update(
     token_id: '<TOKEN_ID>',
     expire: '' # optional
 )
+```

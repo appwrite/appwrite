@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -22,3 +22,4 @@ response, error := service.UpdateTextmagicProvider(
     messaging.WithUpdateTextmagicProviderApiKey("<API_KEY>"),
     messaging.WithUpdateTextmagicProviderFrom("<FROM>"),
 )
+```

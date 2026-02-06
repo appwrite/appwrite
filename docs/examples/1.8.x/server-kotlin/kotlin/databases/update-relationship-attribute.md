@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Databases
@@ -14,6 +15,7 @@ val response = databases.updateRelationshipAttribute(
     databaseId = "<DATABASE_ID>",
     collectionId = "<COLLECTION_ID>",
     key = "",
-    onDelete = "cascade", // optional
+    onDelete = RelationMutate.CASCADE, // optional
     newKey = "" // optional
 )
+```

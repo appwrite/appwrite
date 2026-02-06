@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -7,5 +8,8 @@ let client = Client()
 
 let account = Account(client)
 
-let jwt = try await account.createJWT()
+let jwt = try await account.createJWT(
+    duration: 0 // optional
+)
 
+```

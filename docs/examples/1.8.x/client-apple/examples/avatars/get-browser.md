@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -14,3 +15,4 @@ let bytes = try await avatars.getBrowser(
     quality: -1 // optional
 )
 
+```

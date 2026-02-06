@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingUpdatePush(
         messageId: "<MESSAGE_ID>",
@@ -35,3 +36,4 @@ mutation {
         status
     }
 }
+```

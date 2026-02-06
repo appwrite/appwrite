@@ -194,6 +194,7 @@ const DELETE_TYPE_SITES = 'sites';
 const DELETE_TYPE_FUNCTIONS = 'functions';
 const DELETE_TYPE_DEPLOYMENTS = 'deployments';
 const DELETE_TYPE_USERS = 'users';
+const DELETE_TYPE_TEAMS = 'teams';
 const DELETE_TYPE_TEAM_PROJECTS = 'teams_projects';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_EXECUTIONS_LIMIT = 'executionsLimit';
@@ -249,6 +250,8 @@ const MESSAGE_TYPE_PUSH = 'push';
 // API key types
 const API_KEY_STANDARD = 'standard';
 const API_KEY_DYNAMIC = 'dynamic';
+const API_KEY_ORGANIZATION = 'organization';
+const API_KEY_ACCOUNT = 'account';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -366,6 +369,7 @@ const RESOURCE_TYPE_TOPICS = 'topics';
 const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
 const RESOURCE_TYPE_EXECUTIONS = 'executions';
+const RESOURCE_TYPE_VCS = 'vcs';
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
@@ -380,3 +384,7 @@ const SCHEDULE_RESOURCE_TYPE_MESSAGE = 'message';
 
 /** Preview cookie */
 const COOKIE_NAME_PREVIEW = 'a_jwt_console';
+
+// Cache Reconnect
+const CACHE_RECONNECT_MAX_RETRIES = 2;
+const CACHE_RECONNECT_RETRY_DELAY = 1000;

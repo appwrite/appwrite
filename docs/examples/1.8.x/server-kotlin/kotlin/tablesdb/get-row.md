@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.TablesDB
@@ -16,3 +17,4 @@ val response = tablesDB.getRow(
     queries = listOf(), // optional
     transactionId = "<TRANSACTION_ID>" // optional
 )
+```

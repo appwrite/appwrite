@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -20,3 +20,4 @@ response, error := service.ListFiles(
     storage.WithListFilesSearch("<SEARCH>"),
     storage.WithListFilesTotal(false),
 )
+```

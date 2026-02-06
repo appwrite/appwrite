@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -10,4 +11,6 @@ $client = (new Client())
 
 $account = new Account($client);
 
-$result = $account->createJWT();
+$result = $account->createJWT(
+    duration: 0 // optional
+);```

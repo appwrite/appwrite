@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -10,3 +11,4 @@ const databases = new sdk.Databases(client);
 const result = await databases.get({
     databaseId: '<DATABASE_ID>'
 });
+```

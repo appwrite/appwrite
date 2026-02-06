@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.teams import Teams
 
@@ -12,3 +13,4 @@ result = teams.delete_membership(
     team_id = '<TEAM_ID>',
     membership_id = '<MEMBERSHIP_ID>'
 )
+```

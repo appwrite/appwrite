@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = messaging.update_topic(
     name: '<NAME>', # optional
     subscribe: ["any"] # optional
 )
+```

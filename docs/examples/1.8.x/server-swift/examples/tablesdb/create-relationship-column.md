@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -19,3 +20,4 @@ let columnRelationship = try await tablesDB.createRelationshipColumn(
     onDelete: .cascade // optional
 )
 
+```

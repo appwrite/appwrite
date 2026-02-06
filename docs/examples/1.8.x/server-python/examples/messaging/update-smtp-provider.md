@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.messaging import Messaging
 from appwrite.enums import SmtpEncryption
@@ -25,3 +26,4 @@ result = messaging.update_smtp_provider(
     reply_to_email = '<REPLY_TO_EMAIL>', # optional
     enabled = False # optional
 )
+```

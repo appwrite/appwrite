@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingUpdateAPNSProvider(
         providerId: "<PROVIDER_ID>",
@@ -20,3 +21,4 @@ mutation {
         options
     }
 }
+```

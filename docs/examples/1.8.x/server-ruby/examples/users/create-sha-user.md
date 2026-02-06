@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = users.create_sha_user(
     password_version: PasswordHash::SHA1, # optional
     name: '<NAME>' # optional
 )
+```

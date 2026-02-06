@@ -1,1 +1,3 @@
+```bash
 appwrite projects list
+```

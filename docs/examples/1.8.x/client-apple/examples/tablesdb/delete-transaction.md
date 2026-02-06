@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -10,3 +11,4 @@ let result = try await tablesDB.deleteTransaction(
     transactionId: "<TRANSACTION_ID>"
 )
 
+```

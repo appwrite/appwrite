@@ -1,3 +1,4 @@
+```graphql
 mutation {
     sitesCreateVcsDeployment(
         siteId: "<SITE_ID>",
@@ -34,3 +35,4 @@ mutation {
         providerBranchUrl
     }
 }
+```

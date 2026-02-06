@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 
@@ -18,3 +19,4 @@ result = tables_db.update_integer_column(
     max = None, # optional
     new_key = '' # optional
 )
+```

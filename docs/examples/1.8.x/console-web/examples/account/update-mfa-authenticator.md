@@ -1,3 +1,4 @@
+```javascript
 import { Client, Account, AuthenticatorType } from "@appwrite.io/console";
 
 const client = new Client()
@@ -12,3 +13,4 @@ const result = await account.updateMFAAuthenticator({
 });
 
 console.log(result);
+```

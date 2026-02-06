@@ -87,6 +87,18 @@ class Collection extends Model
                 'example' => new \stdClass(),
                 'array' => true
             ])
+            ->addRule('bytesMax', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Maximum document size in bytes. Returns 0 when no limit applies.',
+                'default' => 0,
+                'example' => 65535,
+            ])
+            ->addRule('bytesUsed', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Currently used document size in bytes based on defined attributes.',
+                'default' => 0,
+                'example' => 1500,
+            ])
         ;
     }
 

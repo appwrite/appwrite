@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -8,3 +9,4 @@ const client = new sdk.Client()
 const account = new sdk.Account(client);
 
 const result = await account.updateStatus();
+```

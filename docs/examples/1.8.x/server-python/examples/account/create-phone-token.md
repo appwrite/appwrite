@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.account import Account
 
@@ -12,3 +13,4 @@ result = account.create_phone_token(
     user_id = '<USER_ID>',
     phone = '+12065550100'
 )
+```

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Storage
@@ -25,4 +26,4 @@ val result = storage.getFilePreview(
     background = "", // (optional)
     output = ImageFormat.JPG, // (optional)
     token = "<TOKEN>", // (optional)
-)
+)```

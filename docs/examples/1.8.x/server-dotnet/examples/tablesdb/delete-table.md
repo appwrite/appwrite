@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ TablesDB tablesDB = new TablesDB(client);
 await tablesDB.DeleteTable(
     databaseId: "<DATABASE_ID>",
     tableId: "<TABLE_ID>"
-);
+);```

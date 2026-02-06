@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -22,3 +23,4 @@ result = databases.create_operations(
 	    }
 	] # optional
 )
+```

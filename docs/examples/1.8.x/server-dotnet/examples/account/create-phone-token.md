@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Account account = new Account(client);
 Token result = await account.CreatePhoneToken(
     userId: "<USER_ID>",
     phone: "+12065550100"
-);
+);```

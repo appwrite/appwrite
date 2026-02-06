@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ ResourceToken result = await tokens.CreateFileToken(
     bucketId: "<BUCKET_ID>",
     fileId: "<FILE_ID>",
     expire: "" // optional
-);
+);```

@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -13,3 +14,4 @@ ColumnList result = await tablesDB.listColumns(
     queries: [], // (optional)
     total: false, // (optional)
 );
+```

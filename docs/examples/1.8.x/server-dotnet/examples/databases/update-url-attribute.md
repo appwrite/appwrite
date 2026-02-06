@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ AttributeUrl result = await databases.UpdateUrlAttribute(
     required: false,
     default: "https://example.com",
     newKey: "" // optional
-);
+);```

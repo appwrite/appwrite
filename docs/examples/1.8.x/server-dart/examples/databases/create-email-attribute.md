@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -15,3 +16,4 @@ AttributeEmail result = await databases.createEmailAttribute(
     xdefault: 'email@example.com', // (optional)
     array: false, // (optional)
 );
+```

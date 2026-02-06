@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -15,4 +16,4 @@ User result = await account.UpdatePrefs(
         timezone = "UTC",
         darkTheme = true
     }
-);
+);```

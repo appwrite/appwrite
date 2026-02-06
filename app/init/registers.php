@@ -8,7 +8,6 @@ use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
-use Utopia\App;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -18,22 +17,26 @@ use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
+use Utopia\Http;
 use Utopia\Logger\Adapter\AppSignal;
 use Utopia\Logger\Adapter\LogOwl;
 use Utopia\Logger\Adapter\Raygun;
 use Utopia\Logger\Adapter\Sentry;
 use Utopia\Logger\Logger;
+use Utopia\Pools\Adapter\Stack as StackPool;
+use Utopia\Pools\Adapter\Swoole as SwoolePool;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Utopia\Queue;
 use Utopia\Registry\Registry;
 use Utopia\System\System;
 
+global $register;
 $register = new Registry();
 
-App::setMode(System::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
+Http::setMode(System::getEnv('_APP_ENV', Http::MODE_TYPE_PRODUCTION));
 
-if (!App::isProduction()) {
+if (!Http::isProduction()) {
     // Allow specific domains to skip public domain validation in dev environment
     // Useful for existing tests involving webhooks
     PublicDomain::allow(['request-catcher-sms']);
@@ -285,7 +288,9 @@ $register->set('pools', function () {
                 default => throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme'),
             };
 
-            $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
+            $poolAdapter = System::getEnv('_APP_POOL_ADAPTER', default: 'stack') === 'swoole' ? new SwoolePool() : new StackPool();
+
+            $pool = new Pool($poolAdapter, $name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
                 switch ($type) {
                     case 'database':
@@ -309,10 +314,17 @@ $register->set('pools', function () {
                             default => null
                         };
                     case 'cache':
-                        return match ($dsn->getScheme()) {
+                        $adapter = match ($dsn->getScheme()) {
                             'redis' => new RedisCache($resource()),
                             default => null
                         };
+
+                        if ($adapter !== null) {
+                            $adapter->setMaxRetries(CACHE_RECONNECT_MAX_RETRIES);
+                            $adapter->setRetryDelay(CACHE_RECONNECT_RETRY_DELAY);
+                        }
+
+                        return $adapter;
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
                 }

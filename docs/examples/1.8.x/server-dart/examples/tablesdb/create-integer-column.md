@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -17,3 +18,4 @@ ColumnInteger result = await tablesDB.createIntegerColumn(
     xdefault: 0, // (optional)
     array: false, // (optional)
 );
+```

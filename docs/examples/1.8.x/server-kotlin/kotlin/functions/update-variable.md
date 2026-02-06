@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
@@ -16,3 +17,4 @@ val response = functions.updateVariable(
     value = "<VALUE>", // optional
     secret = false // optional
 )
+```

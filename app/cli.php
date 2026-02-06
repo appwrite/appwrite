@@ -30,6 +30,9 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher;
 use Utopia\Registry\Registry;
+use Utopia\Span\Exporter;
+use Utopia\Span\Span;
+use Utopia\Span\Storage;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
@@ -41,6 +44,7 @@ Config::setParam('runtimes', (new Runtimes('v5'))->getAll(supported: false));
 // require controllers after overwriting runtimes
 require_once __DIR__ . '/controllers/general.php';
 
+global $register;
 CLI::setResource('register', fn () => $register);
 
 CLI::setResource('cache', function ($pools) {
@@ -325,4 +329,6 @@ $cli
 $cli->shutdown()->action(fn () => Timer::clearAll());
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
+Span::setStorage(new Storage\Coroutine());
+Span::addExporter(new Exporter\Stdout());
 run($cli->run(...));

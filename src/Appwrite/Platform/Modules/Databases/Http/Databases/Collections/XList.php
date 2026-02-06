@@ -117,6 +117,10 @@ class XList extends Action
             throw new Exception(Exception::GENERAL_QUERY_INVALID);
         }
 
+        foreach ($collections as $collection) {
+            $this->addRowBytesInfo($collection, $dbForProject);
+        }
+
         $response->dynamic(new Document([
             'total' => $total,
             $this->getSDKGroup() => $collections,

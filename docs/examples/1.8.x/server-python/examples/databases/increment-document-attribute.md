@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -17,3 +18,4 @@ result = databases.increment_document_attribute(
     max = None, # optional
     transaction_id = '<TRANSACTION_ID>' # optional
 )
+```

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
@@ -12,3 +13,4 @@ val functions = Functions(client)
 val response = functions.get(
     functionId = "<FUNCTION_ID>"
 )
+```

@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -28,3 +29,4 @@ const result = await messaging.createPush({
     critical: false, // optional
     priority: sdk.MessagePriority.Normal // optional
 });
+```

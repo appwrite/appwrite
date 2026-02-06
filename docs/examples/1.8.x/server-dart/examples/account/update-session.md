@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Account account = Account(client);
 Session result = await account.updateSession(
     sessionId: '<SESSION_ID>',
 );
+```

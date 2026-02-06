@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -16,3 +17,4 @@ result = databases.update_email_attribute(
     default = 'email@example.com',
     new_key = '' # optional
 )
+```

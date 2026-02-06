@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ avatars = Avatars.new(client)
 result = avatars.get_favicon(
     url: 'https://example.com'
 )
+```

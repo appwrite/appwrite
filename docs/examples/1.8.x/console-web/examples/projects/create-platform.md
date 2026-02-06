@@ -1,3 +1,4 @@
+```javascript
 import { Client, Projects, PlatformType } from "@appwrite.io/console";
 
 const client = new Client()
@@ -16,3 +17,4 @@ const result = await projects.createPlatform({
 });
 
 console.log(result);
+```

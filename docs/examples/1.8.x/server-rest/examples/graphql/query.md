@@ -1,3 +1,4 @@
+```http
 POST /v1/graphql HTTP/1.1
 Host: cloud.appwrite.io
 X-Sdk-Graphql: true
@@ -11,3 +12,4 @@ X-Appwrite-JWT: <YOUR_JWT>
 {
   "query": {}
 }
+```
