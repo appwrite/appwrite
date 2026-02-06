@@ -493,6 +493,17 @@ class WebhooksCustomClientTest extends Scope
         $password = $data['password'];
         $session = $data['session'];
 
+        // Update name first to make test self-sufficient
+        // (In parallel execution, testUpdateAccountName may not have run)
+        $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'name' => 'New Name'
+        ]);
+
         $account = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -544,6 +555,17 @@ class WebhooksCustomClientTest extends Scope
         $newEmail = uniqid() . 'new@localhost.test';
         $session = $data['session'];
 
+        // Update name first to make test self-sufficient
+        // (In parallel execution, testUpdateAccountName may not have run)
+        $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'name' => 'New Name'
+        ]);
+
         $account = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -592,6 +614,17 @@ class WebhooksCustomClientTest extends Scope
         $id = $data['id'];
         $email = $data['email'];
         $session = $data['session'];
+
+        // Update name first to make test self-sufficient
+        // (In parallel execution, testUpdateAccountName may not have run)
+        $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'name' => 'New Name'
+        ]);
 
         $account = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
