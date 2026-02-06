@@ -79,6 +79,29 @@ class DatabaseServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
+        // Handle 409 conflict - database already exists from parallel test
+        if (isset($database['body']['errors'])) {
+            $errorMessage = $database['body']['errors'][0]['message'] ?? '';
+            if (strpos($errorMessage, 'already exists') !== false || strpos($errorMessage, 'Document with the requested ID already exists') !== false) {
+                // Fetch the existing database
+                $getQuery = $this->getQuery(self::GET_DATABASE);
+                $gqlPayload = [
+                    'query' => $getQuery,
+                    'variables' => [
+                        'databaseId' => 'actors',
+                    ]
+                ];
+                $database = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                ], $this->getHeaders()), $gqlPayload);
+                $this->assertArrayNotHasKey('errors', $database['body']);
+                $database = $database['body']['data']['databasesGet'];
+                self::$databaseCache[$cacheKey] = $database;
+                return self::$databaseCache[$cacheKey];
+            }
+        }
+
         $this->assertIsArray($database['body']['data']);
         $this->assertArrayNotHasKey('errors', $database['body']);
         $database = $database['body']['data']['databasesCreate'];
@@ -100,6 +123,12 @@ class DatabaseServerTest extends Scope
         $database = $this->setupDatabase();
 
         $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create or get 'actors' collection
         $query = $this->getQuery(self::CREATE_COLLECTION);
         $gqlPayload = [
             'query' => $query,
@@ -117,15 +146,33 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $collection = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $collection = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        $this->assertIsArray($collection['body']['data']);
-        $this->assertArrayNotHasKey('errors', $collection['body']);
-        $collection = $collection['body']['data']['databasesCreateCollection'];
+        // Handle 409 conflict - collection already exists
+        if (isset($collection['body']['errors'])) {
+            $errorMessage = $collection['body']['errors'][0]['message'] ?? '';
+            if (strpos($errorMessage, 'already exists') !== false || strpos($errorMessage, 'Document with the requested ID already exists') !== false) {
+                $getQuery = $this->getQuery(self::GET_COLLECTION);
+                $gqlPayload = [
+                    'query' => $getQuery,
+                    'variables' => [
+                        'databaseId' => $database['_id'],
+                        'collectionId' => 'actors',
+                    ]
+                ];
+                $collection = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+                $this->assertArrayNotHasKey('errors', $collection['body']);
+                $collection = $collection['body']['data']['databasesGetCollection'];
+            } else {
+                $this->assertArrayNotHasKey('errors', $collection['body']);
+            }
+        } else {
+            $this->assertIsArray($collection['body']['data']);
+            $collection = $collection['body']['data']['databasesCreateCollection'];
+        }
 
+        // Create or get 'movies' collection
+        $query = $this->getQuery(self::CREATE_COLLECTION);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -142,14 +189,30 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $collection2 = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $collection2 = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        $this->assertIsArray($collection2['body']['data']);
-        $this->assertArrayNotHasKey('errors', $collection2['body']);
-        $collection2 = $collection2['body']['data']['databasesCreateCollection'];
+        // Handle 409 conflict
+        if (isset($collection2['body']['errors'])) {
+            $errorMessage = $collection2['body']['errors'][0]['message'] ?? '';
+            if (strpos($errorMessage, 'already exists') !== false || strpos($errorMessage, 'Document with the requested ID already exists') !== false) {
+                $getQuery = $this->getQuery(self::GET_COLLECTION);
+                $gqlPayload = [
+                    'query' => $getQuery,
+                    'variables' => [
+                        'databaseId' => $database['_id'],
+                        'collectionId' => 'movies',
+                    ]
+                ];
+                $collection2 = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+                $this->assertArrayNotHasKey('errors', $collection2['body']);
+                $collection2 = $collection2['body']['data']['databasesGetCollection'];
+            } else {
+                $this->assertArrayNotHasKey('errors', $collection2['body']);
+            }
+        } else {
+            $this->assertIsArray($collection2['body']['data']);
+            $collection2 = $collection2['body']['data']['databasesCreateCollection'];
+        }
 
         self::$collectionCache[$cacheKey] = [
             'database' => $database,
