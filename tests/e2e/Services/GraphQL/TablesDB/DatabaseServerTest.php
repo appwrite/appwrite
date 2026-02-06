@@ -43,6 +43,11 @@ class DatabaseServerTest extends Scope
         }
 
         $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
         $query = $this->getQuery(self::TABLESDB_CREATE_DATABASE);
         $gqlPayload = [
             'query' => $query,
@@ -52,10 +57,26 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $database = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $database = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+
+        // Handle 409 conflict - database already exists from parallel test
+        if (isset($database['body']['errors'])) {
+            $errorMessage = $database['body']['errors'][0]['message'] ?? '';
+            if (strpos($errorMessage, 'already exists') !== false || strpos($errorMessage, 'Document with the requested ID already exists') !== false) {
+                // Fetch the existing database
+                $getQuery = $this->getQuery(self::TABLESDB_GET_DATABASE);
+                $gqlPayload = [
+                    'query' => $getQuery,
+                    'variables' => [
+                        'databaseId' => 'actors',
+                    ]
+                ];
+                $database = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+                $this->assertArrayNotHasKey('errors', $database['body']);
+                static::$cachedDatabase = $database['body']['data']['tablesDBGet'];
+                return static::$cachedDatabase;
+            }
+        }
 
         static::$cachedDatabase = $database['body']['data']['tablesDBCreate'];
         return static::$cachedDatabase;
@@ -69,6 +90,12 @@ class DatabaseServerTest extends Scope
 
         $database = $this->setupDatabase();
         $projectId = $this->getProject()['$id'];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders());
+
+        // Create or get 'actors' table
         $query = $this->getQuery(self::CREATE_TABLE);
         $gqlPayload = [
             'query' => $query,
@@ -86,13 +113,30 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $table = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $table = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        $table = $table['body']['data']['tablesDBCreateTable'];
+        // Handle 409 conflict - table already exists
+        if (isset($table['body']['errors'])) {
+            $errorMessage = $table['body']['errors'][0]['message'] ?? '';
+            if (strpos($errorMessage, 'already exists') !== false || strpos($errorMessage, 'Document with the requested ID already exists') !== false) {
+                $getQuery = $this->getQuery(self::GET_TABLE);
+                $gqlPayload = [
+                    'query' => $getQuery,
+                    'variables' => [
+                        'databaseId' => $database['_id'],
+                        'tableId' => 'actors',
+                    ]
+                ];
+                $table = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+                $this->assertArrayNotHasKey('errors', $table['body']);
+                $table = $table['body']['data']['tablesDBGetTable'];
+            }
+        } else {
+            $table = $table['body']['data']['tablesDBCreateTable'];
+        }
 
+        // Create or get 'movies' table
+        $query = $this->getQuery(self::CREATE_TABLE);
         $gqlPayload = [
             'query' => $query,
             'variables' => [
@@ -109,12 +153,27 @@ class DatabaseServerTest extends Scope
             ]
         ];
 
-        $table2 = $this->client->call(Client::METHOD_POST, '/graphql', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $gqlPayload);
+        $table2 = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
-        $table2 = $table2['body']['data']['tablesDBCreateTable'];
+        // Handle 409 conflict
+        if (isset($table2['body']['errors'])) {
+            $errorMessage = $table2['body']['errors'][0]['message'] ?? '';
+            if (strpos($errorMessage, 'already exists') !== false || strpos($errorMessage, 'Document with the requested ID already exists') !== false) {
+                $getQuery = $this->getQuery(self::GET_TABLE);
+                $gqlPayload = [
+                    'query' => $getQuery,
+                    'variables' => [
+                        'databaseId' => $database['_id'],
+                        'tableId' => 'movies',
+                    ]
+                ];
+                $table2 = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
+                $this->assertArrayNotHasKey('errors', $table2['body']);
+                $table2 = $table2['body']['data']['tablesDBGetTable'];
+            }
+        } else {
+            $table2 = $table2['body']['data']['tablesDBCreateTable'];
+        }
 
         static::$cachedTableData = [
             'database' => $database,
