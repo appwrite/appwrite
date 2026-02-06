@@ -104,6 +104,19 @@ class StorageCustomServerTest extends Scope
     {
         $data = $this->setupBucket();
         $id = $data['bucketId'] ?? '';
+
+        // Create bucket1 for this test (may already exist from testCreateBucket in parallel runs)
+        $bucket1Response = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::custom('bucket1'),
+            'name' => 'Test Bucket 1',
+            'fileSecurity' => true,
+        ]);
+        // Accept both 201 (created) and 409 (already exists from parallel test)
+        $this->assertContains($bucket1Response['headers']['status-code'], [201, 409]);
+
         /**
          * Test for SUCCESS
          */
@@ -164,7 +177,7 @@ class StorageCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        // In parallel execution, there may be more than 2 buckets total
+        // With offset(1) and at least 2 buckets created, expect at least 1 result
         $this->assertGreaterThanOrEqual(1, count($response['body']['buckets']));
 
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets', array_merge([
@@ -189,7 +202,7 @@ class StorageCustomServerTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        // In parallel execution, there may be more buckets with fileSecurity=true
+        // We created 2 buckets with fileSecurity=true (setupBucket + bucket1)
         $this->assertGreaterThanOrEqual(2, count($response['body']['buckets']));
 
         $response = $this->client->call(Client::METHOD_GET, '/storage/buckets', array_merge([
