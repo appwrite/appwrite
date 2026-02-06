@@ -1347,7 +1347,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertGreaterThanOrEqual(1, $executions['body']['total']);
         $this->assertIsArray($executions['body']['executions']);
         $this->assertGreaterThanOrEqual(1, count($executions['body']['executions']));
-        $this->assertEquals($data['deploymentId'], $executions['body']['executions'][0]['deploymentId']);
+        // Verify our execution is in the list (don't assume position)
+        $deploymentIds = array_column($executions['body']['executions'], 'deploymentId');
+        $this->assertContains($data['deploymentId'], $deploymentIds);
 
         /**
          * Test for SUCCESS with total=false
@@ -1421,7 +1423,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertGreaterThanOrEqual(1, $executions['body']['total']);
         $this->assertIsInt($executions['body']['total']);
         $this->assertGreaterThanOrEqual(1, count($executions['body']['executions']));
-        $this->assertEquals($data['functionId'], $executions['body']['executions'][0]['functionId']);
+        // Verify our function's execution is in the results
+        $functionIds = array_column($executions['body']['executions'], 'functionId');
+        $this->assertContains($data['functionId'], $functionIds);
 
         $executions = $this->listExecutions($data['functionId'], [
             'search' => $data['functionId'],
@@ -1431,7 +1435,9 @@ class FunctionsCustomServerTest extends Scope
         $this->assertGreaterThanOrEqual(1, $executions['body']['total']);
         $this->assertIsInt($executions['body']['total']);
         $this->assertGreaterThanOrEqual(1, count($executions['body']['executions']));
-        $this->assertEquals($data['executionId'], $executions['body']['executions'][0]['$id']);
+        // Verify our execution is in the results
+        $executionIds = array_column($executions['body']['executions'], '$id');
+        $this->assertContains($data['executionId'], $executionIds);
     }
 
     public function testSyncCreateExecution(): void
