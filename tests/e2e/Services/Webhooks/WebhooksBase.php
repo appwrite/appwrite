@@ -1345,6 +1345,18 @@ trait WebhooksBase
         // Set up an enabled storage bucket
         $data = $this->setupStorageBucket();
         $bucketId = $data['bucketId'];
+
+        // Update bucket name before deleting to make test self-sufficient
+        // (In parallel execution, testUpdateStorageBucket may not have run)
+        $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Test Bucket Updated',
+            'fileSecurity' => true,
+        ]);
+
         /**
          * Test for SUCCESS
          */
