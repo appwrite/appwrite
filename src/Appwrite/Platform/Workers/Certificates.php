@@ -153,11 +153,11 @@ class Certificates extends Action
     ): void {
         // Get rule
         $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
-            : $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+            ? $dbForPlatform->getDocument('rules', md5($domain->get()))
+            : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
                 Query::limit(1),
-            ]));
+            ]);
 
         // Skip if rule is not desired state (created but not verified yet).
         if ($rule->getAttribute('status', '') !== RULE_STATUS_CREATED) {
@@ -269,11 +269,11 @@ class Certificates extends Action
         // Get rule document for domain
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
-            : $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+            ? $dbForPlatform->getDocument('rules', md5($domain->get()))
+            : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
                 Query::limit(1),
-            ]));
+            ]);
 
         // Rule not found (or) not in the expected state
         if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED])) {
