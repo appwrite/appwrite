@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "647d248df5990c3470fe85b7cce60498",
+    "content-hash": "917f9050c673379c91e46814c7c07f64",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -161,21 +161,21 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.19.2",
+            "version": "0.19.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "e5c142519df5aced37de9c302971c29c079ce3d9"
+                "reference": "bfe9f3c730c8c203c5e2d80bd5a81c9b1579714e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/e5c142519df5aced37de9c302971c29c079ce3d9",
-                "reference": "e5c142519df5aced37de9c302971c29c079ce3d9",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/bfe9f3c730c8c203c5e2d80bd5a81c9b1579714e",
+                "reference": "bfe9f3c730c8c203c5e2d80bd5a81c9b1579714e",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/system": "0.9.*"
+                "utopia-php/system": "0.10.*"
             },
             "require-dev": {
                 "laravel/pint": "^1.15",
@@ -210,9 +210,9 @@
             ],
             "support": {
                 "issues": "https://github.com/appwrite/runtimes/issues",
-                "source": "https://github.com/appwrite/runtimes/tree/0.19.2"
+                "source": "https://github.com/appwrite/runtimes/tree/0.19.3"
             },
-            "time": "2025-11-11T13:44:44+00:00"
+            "time": "2026-02-06T10:08:18+00:00"
         },
         {
             "name": "brick/math",
@@ -5109,16 +5109,16 @@
         },
         {
             "name": "utopia-php/system",
-            "version": "0.9.0",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/system.git",
-                "reference": "8e4a7edaf2dfeb4c9524e9f766d27754f2c4b64d"
+                "reference": "6441a9c180958a373e5ddb330264dd638539dfdb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/system/zipball/8e4a7edaf2dfeb4c9524e9f766d27754f2c4b64d",
-                "reference": "8e4a7edaf2dfeb4c9524e9f766d27754f2c4b64d",
+                "url": "https://api.github.com/repos/utopia-php/system/zipball/6441a9c180958a373e5ddb330264dd638539dfdb",
+                "reference": "6441a9c180958a373e5ddb330264dd638539dfdb",
                 "shasum": ""
             },
             "require": {
@@ -5126,7 +5126,7 @@
             },
             "require-dev": {
                 "laravel/pint": "1.13.*",
-                "phpstan/phpstan": "1.10.*",
+                "phpstan/phpstan": "1.12.*",
                 "phpunit/phpunit": "9.6.*"
             },
             "type": "library",
@@ -5159,9 +5159,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/system/issues",
-                "source": "https://github.com/utopia-php/system/tree/0.9.0"
+                "source": "https://github.com/utopia-php/system/tree/0.10.0"
             },
-            "time": "2024-10-09T14:44:01+00:00"
+            "time": "2025-10-15T19:12:00+00:00"
         },
         {
             "name": "utopia-php/telemetry",
@@ -5265,16 +5265,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "3a427529dae09c0794541adac19062603d441e28"
+                "reference": "0f942f667319bb22cd420431e4e79107b41061f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/3a427529dae09c0794541adac19062603d441e28",
-                "reference": "3a427529dae09c0794541adac19062603d441e28",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/0f942f667319bb22cd420431e4e79107b41061f3",
+                "reference": "0f942f667319bb22cd420431e4e79107b41061f3",
                 "shasum": ""
             },
             "require": {
@@ -5282,7 +5282,7 @@
                 "php": ">=8.0",
                 "utopia-php/cache": "1.0.*",
                 "utopia-php/framework": "0.*.*",
-                "utopia-php/system": "0.9.*"
+                "utopia-php/system": "0.10.*"
             },
             "require-dev": {
                 "laravel/pint": "1.*.*",
@@ -5308,9 +5308,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/1.0.0"
+                "source": "https://github.com/utopia-php/vcs/tree/1.0.1"
             },
-            "time": "2026-01-30T06:18:24+00:00"
+            "time": "2026-02-06T10:11:58+00:00"
         },
         {
             "name": "utopia-php/websocket",
