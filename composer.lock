@@ -606,16 +606,16 @@
         },
         {
             "name": "giggsey/libphonenumber-for-php-lite",
-            "version": "8.13.36",
+            "version": "9.0.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/giggsey/libphonenumber-for-php-lite.git",
-                "reference": "144bbe70d67664b5245910a475c7190ff140ab4b"
+                "reference": "e8f6f896c1bef398136849934a934904bd9bf072"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php-lite/zipball/144bbe70d67664b5245910a475c7190ff140ab4b",
-                "reference": "144bbe70d67664b5245910a475c7190ff140ab4b",
+                "url": "https://api.github.com/repos/giggsey/libphonenumber-for-php-lite/zipball/e8f6f896c1bef398136849934a934904bd9bf072",
+                "reference": "e8f6f896c1bef398136849934a934904bd9bf072",
                 "shasum": ""
             },
             "require": {
@@ -627,18 +627,19 @@
             },
             "require-dev": {
                 "ext-dom": "*",
-                "friendsofphp/php-cs-fixer": "^3.12",
-                "infection/infection": "^0.28",
-                "pear/pear-core-minimal": "^1.10.11",
-                "pear/pear_exception": "^1.0.2",
-                "pear/versioncontrol_git": "^0.7",
-                "phing/phing": "^2.17.4",
-                "phpstan/extension-installer": "^1.2",
-                "phpstan/phpstan": "^1.8",
-                "phpstan/phpstan-phpunit": "^1.2",
-                "phpunit/phpunit": "^10.5",
-                "symfony/console": "^6.0",
-                "symfony/var-exporter": "^6.0"
+                "friendsofphp/php-cs-fixer": "^3.71",
+                "infection/infection": "^0.29|^0.31.0",
+                "nette/php-generator": "^4.1",
+                "php-coveralls/php-coveralls": "^2.7",
+                "phpstan/extension-installer": "^1.4.3",
+                "phpstan/phpstan": "^2.1.7",
+                "phpstan/phpstan-deprecation-rules": "^2.0.1",
+                "phpstan/phpstan-phpunit": "^2.0.4",
+                "phpstan/phpstan-strict-rules": "^2.0.3",
+                "phpunit/phpunit": "^10.5.45",
+                "symfony/console": "^6.4",
+                "symfony/filesystem": "^6.4",
+                "symfony/process": "^6.4"
             },
             "suggest": {
                 "giggsey/libphonenumber-for-php": "Use libphonenumber-for-php for geocoding, carriers, timezones and matching"
@@ -646,19 +647,13 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "8.x-dev"
+                    "dev-master": "9.x-dev"
                 }
             },
             "autoload": {
                 "psr-4": {
                     "libphonenumber\\": "src/"
-                },
-                "exclude-from-classmap": [
-                    "/src/data/",
-                    "/src/carrier/data/",
-                    "/src/geocoding/data/",
-                    "/src/timezone/data/"
-                ]
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -685,7 +680,7 @@
                 "issues": "https://github.com/giggsey/libphonenumber-for-php-lite/issues",
                 "source": "https://github.com/giggsey/libphonenumber-for-php-lite"
             },
-            "time": "2024-05-03T06:31:11+00:00"
+            "time": "2026-01-30T12:33:03+00:00"
         },
         {
             "name": "google/protobuf",
@@ -3610,16 +3605,16 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.15.2",
+            "version": "0.15.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "da00ff6b8b29a826a1794002ae43442cdf3a0f5f"
+                "reference": "cc873548dcab4329f2d56ca35f2edf3ae9d70f51"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/da00ff6b8b29a826a1794002ae43442cdf3a0f5f",
-                "reference": "da00ff6b8b29a826a1794002ae43442cdf3a0f5f",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/cc873548dcab4329f2d56ca35f2edf3ae9d70f51",
+                "reference": "cc873548dcab4329f2d56ca35f2edf3ae9d70f51",
                 "shasum": ""
             },
             "require": {
@@ -3653,9 +3648,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.15.2"
+                "source": "https://github.com/utopia-php/cli/tree/0.15.4"
             },
-            "time": "2025-04-15T10:08:48+00:00"
+            "time": "2026-02-06T09:49:09+00:00"
         },
         {
             "name": "utopia-php/compression",
@@ -4414,22 +4409,22 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.20.0",
+            "version": "0.20.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "6c5be4588d97e3732a1907ecb13cd8a098eade96"
+                "reference": "fcb4c3c46a48008a677957690bd45ec934dd33b0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/6c5be4588d97e3732a1907ecb13cd8a098eade96",
-                "reference": "6c5be4588d97e3732a1907ecb13cd8a098eade96",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/fcb4c3c46a48008a677957690bd45ec934dd33b0",
+                "reference": "fcb4c3c46a48008a677957690bd45ec934dd33b0",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-openssl": "*",
-                "giggsey/libphonenumber-for-php-lite": "8.13.36",
+                "giggsey/libphonenumber-for-php-lite": "9.0.23",
                 "php": ">=8.0.0",
                 "phpmailer/phpmailer": "6.9.1"
             },
@@ -4459,9 +4454,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.20.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.20.1"
             },
-            "time": "2025-10-22T04:27:37+00:00"
+            "time": "2026-02-06T09:56:06+00:00"
         },
         {
             "name": "utopia-php/migration",
