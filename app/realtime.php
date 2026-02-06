@@ -653,7 +653,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $subscriptionMapping = [];
         foreach ($subscriptionsByIndex as $index => $subscription) {
             $subscriptionId = ID::unique();
-
+            Console::info("[Channels received] {$subscription['queries']}");
+            Console::info("[Queries received] {$subscription['queries']}");
             $realtime->subscribe(
                 $project->getId(),
                 $connection,
