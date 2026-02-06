@@ -219,7 +219,7 @@ class Create extends Action
             foreach ($strategies as $strategy) {
                 $detector = new Runtime($strategy, $packager);
 
-                if ($strategy === Strategy::LANGUAGES) {
+                if ($strategy->getValue() === Strategy::LANGUAGES) {
                     foreach ($languages as $language) {
                         $detector->addInput($language);
                     }
