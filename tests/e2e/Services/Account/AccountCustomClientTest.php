@@ -2980,8 +2980,18 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount(2, $response['body']['users']);
-        $this->assertEquals($newName, $response['body']['users'][1]['name']);
+        // In parallel execution, there may be more users with name 'Lorem'
+        $this->assertGreaterThanOrEqual(1, count($response['body']['users']));
+        // Find our user in the results
+        $foundUser = null;
+        foreach ($response['body']['users'] as $user) {
+            if ($user['$id'] === $id) {
+                $foundUser = $user;
+                break;
+            }
+        }
+        $this->assertNotNull($foundUser, 'User should be found in search results');
+        $this->assertEquals($newName, $foundUser['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/users', [
             'content-type' => 'application/json',
