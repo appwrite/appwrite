@@ -419,7 +419,6 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
          */
         if ($realtime->hasSubscriber('console', Role::guests()->toString(), 'tests')) {
             $time = (new \DateTimeImmutable())->format('Y-m-d H:i:s.v');
-            Console::log("[Debug][Worker test endppoint] time: " . $time);
             $payload = ['response' => 'WS:/v1/realtime:passed'];
             
             $event = [
@@ -492,6 +491,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                         foreach ($subscriptionMetadata as $subscriptionId => $metadata) {
                             $queries = Query::parseQueries($metadata['queries'] ?? []);
+
                             $realtime->subscribe(
                                 $projectId,
                                 $connection,
@@ -499,6 +499,29 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                                 $roles,
                                 $metadata['channels'] ?? [],
                                 $queries
+                            );
+
+                            $createdAt = new \DateTimeImmutable();
+                            $createdAtFormatted = $createdAt->format('Y-m-d H:i:s.v');
+
+                            if (!isset($realtime->connections[$connection]['subscriptionCreatedAt'])) {
+                                $realtime->connections[$connection]['subscriptionCreatedAt'] = [];
+                            }
+
+                            $realtime->connections[$connection]['subscriptionCreatedAt'][$subscriptionId] = [
+                                'timestamp' => $createdAtFormatted,
+                                'createdAtMs' => microtime(true),
+                                'channels' => $metadata['channels'] ?? [],
+                                'queries' => $metadata['queries'] ?? [],
+                            ];
+
+                            Console::info('[Realtime][Resubscribe][PermissionsChanged] '
+                                . 'time=' . $createdAtFormatted
+                                . ' projectId=' . $projectId
+                                . ' connectionId=' . $connection
+                                . ' subscriptionId=' . $subscriptionId
+                                . ' channels=' . json_encode($metadata['channels'] ?? [])
+                                . ' queries=' . json_encode($metadata['queries'] ?? [])
                             );
                         }
 
@@ -511,12 +534,21 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
                 $receivers = $realtime->getSubscribers($event); // [connectionId => [subId => queries]]
 
-                $time = (new \DateTimeImmutable())->format('Y-m-d H:i:s.v');
-                Console::log("[Debug][Worker {$workerId}] time: " . $time);
-                Console::log("[Debug][Worker {$workerId}] Receivers: " . count($receivers));
-                Console::log("[Debug][Worker {$workerId}] Receivers Connection IDs: " . json_encode(array_keys($receivers)));
-                Console::log("[Debug][Worker {$workerId}] Event Query: " . json_encode(array_values($receivers)));
-                Console::log("[Debug][Worker {$workerId}] Event: " . $payload);
+                $deliveryTime = new \DateTimeImmutable();
+                $deliveryTimeFormatted = $deliveryTime->format('Y-m-d H:i:s.v');
+
+                Console::log('[Realtime][Event] '
+                    . 'workerId=' . $workerId
+                    . ' time=' . $deliveryTimeFormatted
+                    . ' projectId=' . ($event['project'] ?? '')
+                    . ' channels=' . json_encode($event['data']['channels'] ?? [])
+                    . ' events=' . json_encode($event['data']['events'] ?? [])
+                    . ' receiversCount=' . count($receivers)
+                );
+
+                Console::log('[Realtime][EventDebug] ReceiversConnectionIds=' . json_encode(array_keys($receivers)));
+                Console::log('[Realtime][EventDebug] MatchedSubscriptions=' . json_encode($receivers));
+                Console::log('[Realtime][EventDebug] RawEventPayload=' . $payload);
 
                 $totalMessages = 0;
 
@@ -524,6 +556,31 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     $data = $event['data'];
                     // Send matched subscription IDs
                     $data['subscriptions'] = array_keys($matchedSubscriptions);
+
+                    // Per-subscription logging for latency & query visibility
+                    foreach ($matchedSubscriptions as $subscriptionId => $subscriptionQueries) {
+                        $subscriptionMeta = $realtime->connections[$connectionId]['subscriptionCreatedAt'][$subscriptionId] ?? null;
+                        $createdAt = $subscriptionMeta['timestamp'] ?? null;
+                        $createdAtMs = $subscriptionMeta['createdAtMs'] ?? null;
+
+                        $latencyMs = null;
+                        if ($createdAtMs !== null) {
+                            $latencyMs = (int) ((microtime(true) - $createdAtMs) * 1000);
+                        }
+
+                        Console::log('[Realtime][Delivery] '
+                            . 'time=' . $deliveryTimeFormatted
+                            . ' projectId=' . ($event['project'] ?? '')
+                            . ' connectionId=' . $connectionId
+                            . ' subscriptionId=' . $subscriptionId
+                            . ' eventChannels=' . json_encode($event['data']['channels'] ?? [])
+                            . ' eventEvents=' . json_encode($event['data']['events'] ?? [])
+                            . ' subscriptionChannels=' . json_encode($subscriptionMeta['channels'] ?? [])
+                            . ' subscriptionQueries=' . json_encode($subscriptionQueries)
+                            . ' subscriptionCreatedAt=' . ($createdAt ?? 'null')
+                            . ' subscriptionAgeMs=' . ($latencyMs !== null ? $latencyMs : 'null')
+                        );
+                    }
 
                     $server->send(
                         [$connectionId],
@@ -653,18 +710,50 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         $subscriptionMapping = [];
         foreach ($subscriptionsByIndex as $index => $subscription) {
             $subscriptionId = ID::unique();
-            $queries = json_encode($subscription['queries']);
-            $channelsPresent = json_encode($subscription['channels']);
-            Console::info("[Channels received] {$channelsPresent}");
-            Console::info("[Queries received] {$queries}");
+
+            $subscriptionChannels = $subscription['channels'];
+            $subscriptionQueriesObjects = $subscription['queries']; // array<Query>
+            $subscriptionQueries = [];
+
+            foreach ($subscriptionQueriesObjects as $queryObject) {
+                if ($queryObject instanceof Query) {
+                    $subscriptionQueries[] = $queryObject->toString();
+                }
+            }
+
+            $createdAt = new \DateTimeImmutable();
+            $createdAtFormatted = $createdAt->format('Y-m-d H:i:s.v');
+
+            Console::info('[Realtime][Subscribe] '
+                . 'time=' . $createdAtFormatted
+                . ' projectId=' . $project->getId()
+                . ' connectionId=' . $connection
+                . ' subscriptionIndex=' . $index
+                . ' subscriptionId=' . $subscriptionId
+                . ' channels=' . json_encode($subscriptionChannels)
+                . ' queries=' . json_encode($subscriptionQueries)
+            );
+
             $realtime->subscribe(
                 $project->getId(),
                 $connection,
                 $subscriptionId,
                 $roles,
-                $subscription['channels'],
+                $subscriptionChannels,
                 $subscription['queries'] // Query objects
             );
+
+            // Track subscription timing & metadata for latency / perf debugging
+            if (!isset($realtime->connections[$connection]['subscriptionCreatedAt'])) {
+                $realtime->connections[$connection]['subscriptionCreatedAt'] = [];
+            }
+
+            $realtime->connections[$connection]['subscriptionCreatedAt'][$subscriptionId] = [
+                'timestamp' => $createdAtFormatted,
+                'createdAtMs' => microtime(true),
+                'channels' => $subscriptionChannels,
+                'queries' => $subscriptionQueries,
+            ];
 
             $subscriptionMapping[$index] = $subscriptionId;
         }
@@ -828,6 +917,29 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                             $roles,
                             $metadata['channels'] ?? [],
                             $queries
+                        );
+
+                        $createdAt = new \DateTimeImmutable();
+                        $createdAtFormatted = $createdAt->format('Y-m-d H:i:s.v');
+
+                        if (!isset($realtime->connections[$connection]['subscriptionCreatedAt'])) {
+                            $realtime->connections[$connection]['subscriptionCreatedAt'] = [];
+                        }
+
+                        $realtime->connections[$connection]['subscriptionCreatedAt'][$subscriptionId] = [
+                            'timestamp' => $createdAtFormatted,
+                            'createdAtMs' => microtime(true),
+                            'channels' => $metadata['channels'] ?? [],
+                            'queries' => $metadata['queries'] ?? [],
+                        ];
+
+                        Console::info('[Realtime][Resubscribe][Authentication] '
+                            . 'time=' . $createdAtFormatted
+                            . ' projectId=' . $projectId
+                            . ' connectionId=' . $connection
+                            . ' subscriptionId=' . $subscriptionId
+                            . ' channels=' . json_encode($metadata['channels'] ?? [])
+                            . ' queries=' . json_encode($metadata['queries'] ?? [])
                         );
                     }
                 }
