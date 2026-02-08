@@ -487,9 +487,9 @@ class Certificates extends Action
         try {
             $this->verifyRule($rule, $log);
         } catch (AppwriteException $err) {
-            $msg = $err->getMessage();
-            $msg .= "\nVerify your DNS records are correctly configured and try again.";
-            $msg .= "\nAlternatively, we'll periodically retry verification and update the status.";
+            $msg = $err->getMessage() . "\n";
+            $msg .= "Verify your DNS records are correctly configured and try again.\n";
+            $msg .= "Alternatively, we'll periodically retry verification and update the status.\n";
             throw new AppwriteException($err->getType(), $msg);
         }
     }

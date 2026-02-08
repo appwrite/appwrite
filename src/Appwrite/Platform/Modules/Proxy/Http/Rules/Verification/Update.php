@@ -88,28 +88,24 @@ class Update extends Action
 
         try {
             $this->verifyRule($rule, $log);
+            // Reset logs and status for the rule
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                'logs' => '',
+                'status' => RULE_STATUS_CERTIFICATE_GENERATING,
+            ]));
+
+            $certificateId = $rule->getAttribute('certificateId', '');
+            // Reset logs for the associated certificate.
+            if (!empty($certificateId)) {
+                $certificate = $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
+                    'logs' => '',
+                ]));
+            }
         } catch (Exception $err) {
-            $date = \date('H:i:s');
-            $logs = "\033[90m[{$date}] \033[97m" . $err->getMessage() . "\033[0m\n";
-            $logs .= "\033[90m[{$date}] \033[97mVerify your DNS records are correct and retry.\033[0m\n";
-            $logs .= "\033[90m[{$date}] \033[97mAlternatively, we'll periodically retry verification and update the status.\033[0m\n";
-            $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-                'logs' => $logs,
+            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+                '$updatedAt' => DateTime::now(),
             ]));
             throw $err;
-        }
-
-        // Reset logs and status for the rule
-        $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
-            'logs' => '',
-            'status' => RULE_STATUS_CERTIFICATE_GENERATING,
-        ]));
-        $certificateId = $rule->getAttribute('certificateId', '');
-        // Reset logs for the associated certificate.
-        if (!empty($certificateId)) {
-            $certificate = $dbForPlatform->updateDocument('certificates', $certificateId, new Document([
-                'logs' => '',
-            ]));
         }
 
         // Issue a TLS certificate when DNS verification is successful
