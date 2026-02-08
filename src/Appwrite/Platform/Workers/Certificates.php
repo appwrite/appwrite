@@ -178,9 +178,8 @@ class Certificates extends Action
         } catch (AppwriteException $err) {
             Console::warning('Domain verification failed: ' . $err->getMessage());
             $date = \date('H:i:s');
-            $logs = "\033[90m[{$date}] \033[97m" . $err->getMessage() . "\033[0m\n";
-            $logs .= "\033[90m[{$date}] \033[97mVerify your DNS records are correct and retry.\033[0m\n";
-            $logs .= "\033[90m[{$date}] \033[97mAlternatively, we'll periodically retry verification and update the status.\033[0m\n";
+            $logs = "\033[90m[{$date}] \033[31mDNS verification failed: \033[0m\n";
+            $logs .= \mb_strcut($err->getMessage(), 0, 500000); // Limit to 500kb
             $rule->setAttribute('logs', $logs);
         } finally {
             // Update rule and emit events
@@ -478,11 +477,20 @@ class Certificates extends Action
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
-        if (!$isMainDomain) {
-            $this->verifyRule($rule, $log);
-        } else {
+
+        if ($isMainDomain) {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
+            return;
+        }
+
+        try {
+            $this->verifyRule($rule, $log);
+        } catch (Exception $err) {
+            $msg = $err->getMessage();
+            $msg .= "\nVerify your DNS records are correctly configured and try again.";
+            $msg .= "\nAlternatively, we'll periodically retry verification and update the status.";
+            throw new Exception($msg);
         }
     }
 

@@ -92,7 +92,7 @@ class Update extends Action
             $date = \date('H:i:s');
             $logs = "\033[90m[{$date}] \033[97m" . $err->getMessage() . "\033[0m\n";
             $logs .= "\033[90m[{$date}] \033[97mVerify your DNS records are correct and retry.\033[0m\n";
-            $logs .= "\033[90m[{$date}] \033[97mAlternatively, we'll periodically retry verification.\033[0m\n";
+            $logs .= "\033[90m[{$date}] \033[97mAlternatively, we'll periodically retry verification and update the status.\033[0m\n";
             $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'logs' => $logs,
             ]));
