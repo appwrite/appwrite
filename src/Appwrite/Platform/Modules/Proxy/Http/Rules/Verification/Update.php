@@ -102,7 +102,7 @@ class Update extends Action
                 ]));
             }
         } catch (Exception $err) {
-            $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
+            $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 '$updatedAt' => DateTime::now(),
             ]));
             throw $err;
