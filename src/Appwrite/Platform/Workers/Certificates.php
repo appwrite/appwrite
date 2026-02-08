@@ -490,7 +490,7 @@ class Certificates extends Action
             $msg = $err->getMessage();
             $msg .= "\nVerify your DNS records are correctly configured and try again.";
             $msg .= "\nAlternatively, we'll periodically retry verification and update the status.";
-            throw new AppwriteException($msg);
+            throw new AppwriteException($err->getType(), $msg);
         }
     }
 
