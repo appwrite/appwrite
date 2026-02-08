@@ -333,8 +333,12 @@ class Migrations extends Action
 
         $transfer = $source = $destination = null;
 
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $endpoint = $protocol . '://' . $platform['apiHostname'] . '/v1';
+        $host = System::getEnv('_APP_MIGRATION_HOST');
+        if (empty($host)) {
+            throw new \Exception('_APP_MIGRATION_HOST is not set');
+        }
+
+        $endpoint = 'http://'.$host.'/v1';
 
         try {
             $credentials = $migration->getAttribute('credentials', []);
@@ -348,10 +352,6 @@ class Migrations extends Action
             if ($migration->getAttribute('destination') === DestinationAppwrite::getName()) {
                 $credentials['destinationApiKey'] = $tempAPIKey;
                 $credentials['destinationEndpoint'] = $endpoint;
-            }
-
-            if (($credentials['endpoint'] ?? '') === 'http://localhost/v1') {
-                $credentials['endpoint'] = $endpoint;
             }
 
             $migration->setAttribute('credentials', $credentials);
@@ -481,7 +481,6 @@ class Migrations extends Action
         array $platform,
         Authorization $authorization,
     ): void {
-        $credentials = $migration->getAttribute('credentials', []);
         $options = $migration->getAttribute('options', []);
         $bucketId = 'default'; // Always use platform default bucket
         $filename = $options['filename'] ?? 'export_' . \time();
@@ -494,7 +493,7 @@ class Migrations extends Action
             throw new \Exception('User ' . $userInternalId . ' not found');
         }
 
-        $bucket = $authorization->skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
+        $bucket = $this->dbForPlatform->getDocument('buckets', $bucketId);
         if ($bucket->isEmpty()) {
             throw new \Exception('Bucket not found');
         }
@@ -577,8 +576,11 @@ class Migrations extends Action
         ]);
 
         // Generate download URL with JWT
+        $endpoint = System::getEnv('_APP_DOMAIN', '');
+        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled' ? 'https' : 'http';
 
-        $downloadUrl = "{$credentials['endpoint']}/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
+        $downloadUrl = "{$protocol}://{$endpoint}/v1/storage/buckets/{$bucketId}/files/{$fileId}/push?project={$project->getId()}&jwt={$jwt}";
+
         $options['downloadUrl'] = $downloadUrl;
         $migration->setAttribute('options', $options);
         $this->updateMigrationDocument($migration, $project, $queueForRealtime);

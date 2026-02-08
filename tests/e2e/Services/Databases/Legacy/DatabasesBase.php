@@ -62,6 +62,12 @@ trait DatabasesBase
 
         $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
+        $this->assertArrayHasKey('bytesMax', $movies['body']);
+        $this->assertArrayHasKey('bytesUsed', $movies['body']);
+        $this->assertIsInt($movies['body']['bytesMax']);
+        $this->assertIsInt($movies['body']['bytesUsed']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesMax']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesUsed']);
 
         $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
@@ -143,6 +149,8 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertFalse($response['body']['enabled']);
+        $this->assertArrayHasKey('bytesMax', $response['body']);
+        $this->assertArrayHasKey('bytesUsed', $response['body']);
 
         if ($this->getSide() === 'client') {
             $responseCreateDocument = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -363,6 +371,9 @@ trait DatabasesBase
 
         $this->assertIsArray($movies['body']['attributes']);
         $this->assertCount(9, $movies['body']['attributes']);
+        $this->assertArrayHasKey('bytesMax', $movies['body']);
+        $this->assertArrayHasKey('bytesUsed', $movies['body']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesUsed']);
         $this->assertEquals($movies['body']['attributes'][0]['key'], $title['body']['key']);
         $this->assertEquals($movies['body']['attributes'][1]['key'], $description['body']['key']);
         $this->assertEquals($movies['body']['attributes'][2]['key'], $tagline['body']['key']);

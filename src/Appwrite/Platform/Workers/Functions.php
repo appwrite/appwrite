@@ -80,7 +80,9 @@ class Functions extends Action
         // Short-term solution to offhand write operation from API container
         if ($type === Func::TYPE_ASYNC_WRITE) {
             $execution = new Document($payload['execution'] ?? []);
-            $dbForProject->createDocument('executions', $execution);
+            if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
+                $dbForProject->createDocument('executions', $execution);
+            }
             return;
         }
 
@@ -310,10 +312,12 @@ class Functions extends Action
             'duration' => 0.0,
         ]);
 
-        $execution = $dbForProject->createDocument('executions', $execution);
+        if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
+            $execution = $dbForProject->createDocument('executions', $execution);
 
-        if ($execution->isEmpty()) {
-            throw new Exception('Failed to create execution');
+            if ($execution->isEmpty()) {
+                throw new Exception('Failed to create execution');
+            }
         }
     }
 
@@ -452,22 +456,26 @@ class Functions extends Action
                 'duration' => 0.0,
             ]);
 
-            $execution = $dbForProject->createDocument('executions', $execution);
+            if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
+                $execution = $dbForProject->createDocument('executions', $execution);
 
-            // TODO: @Meldiron Trigger executions.create event here
+                // TODO: @Meldiron Trigger executions.create event here
 
-            if ($execution->isEmpty()) {
-                throw new Exception('Failed to create or read execution');
+                if ($execution->isEmpty()) {
+                    throw new Exception('Failed to create or read execution');
+                }
             }
         }
 
         if ($execution->getAttribute('status') !== 'processing') {
             $execution->setAttribute('status', 'processing');
 
-            try {
-                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-            } catch (\Throwable $e) {
-                $log->addExtra('updateError', $e->getMessage());
+            if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
+                try {
+                    $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+                } catch (\Throwable $e) {
+                    $log->addExtra('updateError', $e->getMessage());
+                }
             }
         }
 
@@ -612,10 +620,12 @@ class Functions extends Action
             $errorCode = $th->getCode();
         } finally {
             /** Update execution status */
-            try {
-                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-            } catch (\Throwable $e) {
-                $log->addExtra('updateError', $e->getMessage());
+            if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
+                try {
+                    $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+                } catch (\Throwable $e) {
+                    $log->addExtra('updateError', $e->getMessage());
+                }
             }
 
             /** Trigger usage queue */
