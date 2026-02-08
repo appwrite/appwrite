@@ -5091,6 +5091,31 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://example.com'
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
+        
+        /** Ensure any hostname is allowed */
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-dev-key' => $devKey['secret'],
+            'origin' => '',
+            'referer' => 'https://domain-without-rule.com'
+        ], [
+            'success' => 'https://domain-without-rule.com',
+            'failure' => 'https://domain-without-rule.com'
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-dev-key' => $devKey['secret'],
+            'referer' => '',
+            'origin' => 'https://domain-without-rule.com'
+        ], [
+            'success' => 'https://domain-without-rule.com',
+            'failure' => 'https://domain-without-rule.com'
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
 
         /** Test hostname in Magic URL */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
@@ -5159,6 +5184,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'referer' => 'https://' . $domain,
+            'origin' => '',
         ], [
             'success' => 'https://domain-without-rule.com',
             'failure' => 'https://domain-without-rule.com'
@@ -5170,6 +5196,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'referer' => 'https://' . $domain,
+            'origin' => '',
         ], [
             'success' => 'https://' . $domain,
             'failure' => 'https://' . $domain
@@ -5181,6 +5208,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'referer' => 'https://' . $domain,
+            'origin' => '',
         ], [
             'userId' => ID::unique(),
             'email' => 'user@appwrite.io',
@@ -5193,6 +5221,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
             'referer' => 'https://' . $domain,
+            'origin' => '',
         ], [
             'userId' => ID::unique(),
             'email' => 'user@appwrite.io',
