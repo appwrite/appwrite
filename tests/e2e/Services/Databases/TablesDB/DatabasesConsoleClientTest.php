@@ -16,6 +16,169 @@ class DatabasesConsoleClientTest extends Scope
     use ProjectCustom;
     use SideConsole;
 
+    public function testJoins(): void
+    {
+        $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => 'joins',
+            'name' => 'Joins'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('Joins', $database['body']['name']);
+        $this->assertEquals('tablesdb', $database['body']['type']);
+
+        $databaseId = $database['body']['$id'];
+
+        $users = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => 'users',
+            'name' => 'users',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $users['headers']['status-code']);
+        $this->assertEquals($users['body']['name'], 'users');
+
+        $sessions = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => 'sessions',
+            'name' => 'sessions',
+            'rowSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $sessions['headers']['status-code']);
+        $this->assertEquals($sessions['body']['name'], 'sessions');
+
+        /**
+         * Create columns users
+         */
+        $username = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $users['body']['$id'] . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'username',
+            'size' => 256,
+            'required' => false,
+        ]);
+        $this->assertEquals('username', $username['body']['key']);
+
+        $age = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $users['body']['$id'] . '/columns/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'age',
+            'required' => false,
+            'min' => 0,
+            'max' => 100,
+        ]);
+        $this->assertEquals('age', $age['body']['key']);
+
+        /**
+         * Create columns sessions
+         */
+        $userId = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $sessions['body']['$id'] . '/columns/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'userId',
+            'required' => false,
+        ]);
+        $this->assertEquals('userId', $userId['body']['key']);
+
+        sleep(2);
+
+        $abraham = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $users['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'username' => 'Abraham',
+                'age' => 50,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $abraham['headers']['status-code']);
+        $this->assertEquals('Abraham', $abraham['body']['username']);
+        $this->assertEquals(50, $abraham['body']['age']);
+        $this->assertEquals(1, $abraham['body']['$sequence']);
+
+        $bill = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $users['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'username' => 'Bill',
+                'age' => 40,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $bill['headers']['status-code']);
+        $this->assertEquals('Bill', $bill['body']['username']);
+        $this->assertEquals(40, $bill['body']['age']);
+        $this->assertEquals(2, $bill['body']['$sequence']);
+
+        $session1 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $sessions['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'userId' => $abraham['body']['$sequence'],
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals($abraham['body']['$sequence'], $session1['body']['userId']);
+        $this->assertEquals(201, $session1['headers']['status-code']);
+
+        $session2 = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $sessions['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'userId' => $bill['body']['$sequence'],
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+        $this->assertEquals(201, $session2['headers']['status-code']);
+        $this->assertEquals($bill['body']['$sequence'], $session2['body']['userId']);
+
+
+        $this->assertEquals('shmuel', 'fogel');
+
+    }
+
+
     public function testCreateTable(): array
     {
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', array_merge([

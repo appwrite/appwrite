@@ -4464,12 +4464,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "0a632aafd2a705b653b0d38e3b3a7b61152062ae"
+                "reference": "d115b61ddde14d4dcd52bfae7ad210273ddffbef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0a632aafd2a705b653b0d38e3b3a7b61152062ae",
-                "reference": "0a632aafd2a705b653b0d38e3b3a7b61152062ae",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/d115b61ddde14d4dcd52bfae7ad210273ddffbef",
+                "reference": "d115b61ddde14d4dcd52bfae7ad210273ddffbef",
                 "shasum": ""
             },
             "require": {
@@ -4512,7 +4512,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/joins"
             },
-            "time": "2026-02-08T12:25:25+00:00"
+            "time": "2026-02-08T12:53:41+00:00"
         },
         {
             "name": "utopia-php/mongo",
