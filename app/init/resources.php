@@ -198,15 +198,26 @@ Http::setResource('allowedHostnames', function (array $platform, Document $proje
     }
 
     $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
+    $refererHostname = parse_url($request->getReferer(), PHP_URL_HOST);
+
+    $hostname = $originHostname;
+    if (empty($hostname)) {
+        $hostname = $refererHostname;
+    }
 
     /* Add request hostname for preflight requests */
     if ($request->getMethod() === 'OPTIONS') {
-        $allowed[] = $originHostname;
+        $allowed[] = $hostname;
     }
 
-    /* Allow the request origin if a dev key or rule is found */
-    if ((!$rule->isEmpty() || !$devKey->isEmpty()) && !empty($originHostname)) {
-        $allowed[] = $originHostname;
+    /* Allow the request origin of rule */
+    if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', ''))) {
+        $allowed[] = $rule->getAttribute('domain', '');
+    }
+
+    /* Allow the request origin if a dev key is found */
+    if (!$devKey->isEmpty() && !empty($hostname)) {
+        $allowed[] = $hostname;
     }
 
     return array_unique($allowed);
@@ -236,68 +247,49 @@ Http::setResource('allowedSchemes', function (Document $project) {
  * Rule associated with a request origin.
  */
 Http::setResource('rule', function (Request $request, Database $dbForPlatform, Document $project, Authorization $authorization) {
-    $domains = [];
+    $domain = \parse_url($request->getOrigin(), PHP_URL_HOST);
 
-    $originDomain   = \parse_url($request->getOrigin(), PHP_URL_HOST);
-    if (!empty($originDomain)) {
-        $domains[] = $originDomain;
+    if (empty($domain)) {
+        $domain = \parse_url($request->getReferer(), PHP_URL_HOST);
     }
 
-    $refererDomain = \parse_url($request->getReferer(), PHP_URL_HOST);
-    if (!empty($refererDomain)) {
-        $domains[] = $refererDomain;
-    }
-
-    if (\count($domains) === 0) {
+    if (empty($domain)) {
         return new Document();
     }
 
-    $permittedRule = null;
-
-    foreach ($domains as $domain) {
-        // TODO: (@Meldiron) Remove after 1.7.x migration
-        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-        $rule = $authorization->skip(function () use ($dbForPlatform, $domain, $isMd5) {
-            if ($isMd5) {
-                return $dbForPlatform->getDocument('rules', md5($domain));
-            }
-
-            return $dbForPlatform->findOne('rules', [
-                Query::equal('domain', [$domain]),
-            ]) ?? new Document();
-        });
-
-        if ($rule->isEmpty()) {
-            continue;
+    $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+    $rule = $authorization->skip(function () use ($dbForPlatform, $domain, $isMd5) {
+        if ($isMd5) {
+            return $dbForPlatform->getDocument('rules', md5($domain));
         }
 
-        $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
+        return $dbForPlatform->findOne('rules', [
+            Query::equal('domain', [$domain]),
+        ]) ?? new Document();
+    });
 
-        // Temporary implementation until custom wildcard domains are an official feature
-        // Allow trusted projects; Used for Console (website) previews
-        if (!$permitsCurrentProject && !$rule->isEmpty() && !empty($rule->getAttribute('projectId', ''))) {
-            $trustedProjects = [];
-            foreach (\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')) as $trustedProject) {
-                if (empty($trustedProject)) {
-                    continue;
-                }
-                $trustedProjects[] = $trustedProject;
+    $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
+
+    // Temporary implementation until custom wildcard domains are an official feature
+    // Allow trusted projects; Used for Console (website) previews
+    if (!$permitsCurrentProject && !$rule->isEmpty() && !empty($rule->getAttribute('projectId', ''))) {
+        $trustedProjects = [];
+        foreach (\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')) as $trustedProject) {
+            if (empty($trustedProject)) {
+                continue;
             }
-            if (\in_array($rule->getAttribute('projectId', ''), $trustedProjects)) {
-                $permitsCurrentProject = true;
-            }
+            $trustedProjects[] = $trustedProject;
         }
-
-        if ($permitsCurrentProject) {
-            $permittedRule = $rule;
+        if (\in_array($rule->getAttribute('projectId', ''), $trustedProjects)) {
+            $permitsCurrentProject = true;
         }
     }
 
-    if (\is_null($permittedRule)) {
+    if (!$permitsCurrentProject) {
         return new Document();
     }
 
-    return $permittedRule;
+    return $rule;
 }, ['request', 'dbForPlatform', 'project', 'authorization']);
 
 /**
