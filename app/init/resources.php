@@ -236,45 +236,68 @@ Http::setResource('allowedSchemes', function (Document $project) {
  * Rule associated with a request origin.
  */
 Http::setResource('rule', function (Request $request, Database $dbForPlatform, Document $project, Authorization $authorization) {
-    $domain = \parse_url($request->getOrigin(), PHP_URL_HOST);
-    if (empty($domain)) {
+    $domains = [];
+
+    $originDomain   = \parse_url($request->getOrigin(), PHP_URL_HOST);
+    if (!empty($originDomain)) {
+        $domains[] = $originDomain;
+    }
+
+    $refererDomain = \parse_url($request->getReferer(), PHP_URL_HOST);
+    if (!empty($refererDomain)) {
+        $domains[] = $refererDomain;
+    }
+
+    if (\count($domains) === 0) {
         return new Document();
     }
 
-    // TODO: (@Meldiron) Remove after 1.7.x migration
-    $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
-    $rule = $authorization->skip(function () use ($dbForPlatform, $domain, $isMd5) {
-        if ($isMd5) {
-            return $dbForPlatform->getDocument('rules', md5($domain));
-        }
+    $permittedRule = null;
 
-        return $dbForPlatform->findOne('rules', [
-            Query::equal('domain', [$domain]),
-        ]) ?? new Document();
-    });
-
-    $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
-
-    // Temporary implementation until custom wildcard domains are an official feature
-    // Allow trusted projects; Used for Console (website) previews
-    if (!$permitsCurrentProject && !$rule->isEmpty() && !empty($rule->getAttribute('projectId', ''))) {
-        $trustedProjects = [];
-        foreach (\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')) as $trustedProject) {
-            if (empty($trustedProject)) {
-                continue;
+    foreach ($domains as $domain) {
+        // TODO: (@Meldiron) Remove after 1.7.x migration
+        $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
+        $rule = $authorization->skip(function () use ($dbForPlatform, $domain, $isMd5) {
+            if ($isMd5) {
+                return $dbForPlatform->getDocument('rules', md5($domain));
             }
-            $trustedProjects[] = $trustedProject;
+
+            return $dbForPlatform->findOne('rules', [
+                Query::equal('domain', [$domain]),
+            ]) ?? new Document();
+        });
+
+        if ($rule->isEmpty()) {
+            continue;
         }
-        if (\in_array($rule->getAttribute('projectId', ''), $trustedProjects)) {
-            $permitsCurrentProject = true;
+
+        $permitsCurrentProject = $rule->getAttribute('projectInternalId', '') === $project->getSequence();
+
+        // Temporary implementation until custom wildcard domains are an official feature
+        // Allow trusted projects; Used for Console (website) previews
+        if (!$permitsCurrentProject && !$rule->isEmpty() && !empty($rule->getAttribute('projectId', ''))) {
+            $trustedProjects = [];
+            foreach (\explode(',', System::getEnv('_APP_CONSOLE_TRUSTED_PROJECTS', '')) as $trustedProject) {
+                if (empty($trustedProject)) {
+                    continue;
+                }
+                $trustedProjects[] = $trustedProject;
+            }
+            if (\in_array($rule->getAttribute('projectId', ''), $trustedProjects)) {
+                $permitsCurrentProject = true;
+            }
+        }
+
+        if ($permitsCurrentProject) {
+            $permittedRule = $rule;
         }
     }
 
-    if (!$permitsCurrentProject) {
+    if (\is_null($permittedRule)) {
         return new Document();
     }
 
-    return $rule;
+    return $permittedRule;
 }, ['request', 'dbForPlatform', 'project', 'authorization']);
 
 /**
