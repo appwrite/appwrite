@@ -145,17 +145,14 @@ export function View({ activeTab: tabProp }: ViewProps) {
                     role="tab"
                     aria-selected={isActive}
                     className={cn(
-                      'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                      'relative flex shrink-0 items-center gap-1.5 px-3 py-2 mb-2 text-[13px] font-medium transition-colors rounded-md',
                       'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                       isActive
-                        ? 'text-foreground'
-                        : 'text-muted-foreground hover:text-foreground/80',
+                        ? 'text-foreground bg-muted'
+                        : 'text-muted-foreground hover:text-foreground/80 hover:bg-muted/50',
                     )}
                   >
                     {tab.label}
-                    {isActive && (
-                      <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
-                    )}
                   </Link>
                 )
               })}
