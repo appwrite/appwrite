@@ -177,7 +177,11 @@ class Certificates extends Action
             Console::success('Domain verification succeeded.');
         } catch (AppwriteException $err) {
             Console::warning('Domain verification failed: ' . $err->getMessage());
-            $rule->setAttribute('logs', $err->getMessage());
+            $date = \date('H:i:s');
+            $logs = "\033[90m[{$date}] \033[97m" . $err->getMessage() . "\033[0m\n";
+            $logs .= "\033[90m[{$date}] \033[97mVerify your DNS records are correct and retry.\033[0m\n";
+            $logs .= "\033[90m[{$date}] \033[97mAlternatively, we'll periodically retry verification and update the status.\033[0m\n";
+            $rule->setAttribute('logs', $logs);
         } finally {
             // Update rule and emit events
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
