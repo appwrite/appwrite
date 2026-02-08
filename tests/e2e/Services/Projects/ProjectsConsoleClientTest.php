@@ -5091,7 +5091,7 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://example.com'
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        
+
         /** Ensure any hostname is allowed */
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
             'content-type' => 'application/json',
@@ -5104,7 +5104,7 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://domain-without-rule.com'
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        
+
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
