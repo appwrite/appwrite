@@ -257,6 +257,7 @@ Http::setResource('rule', function (Request $request, Database $dbForPlatform, D
         return new Document();
     }
 
+    // TODO: (@Meldiron) Remove after 1.7.x migration
     $isMd5 = System::getEnv('_APP_RULES_FORMAT') === 'md5';
     $rule = $authorization->skip(function () use ($dbForPlatform, $domain, $isMd5) {
         if ($isMd5) {
