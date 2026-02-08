@@ -489,7 +489,7 @@ class Certificates extends Action
         } catch (AppwriteException $err) {
             $msg = $err->getMessage() . "\n";
             $msg .= "Verify your DNS records are correctly configured and try again.\n";
-            $msg .= "Alternatively, we'll periodically retry verification and update the status.\n";
+            $msg .= "If they're correct and it still fails, please retry after sometime. DNS records can take up to 48 hours to propagate.\n";
             throw new AppwriteException($err->getType(), $msg);
         }
     }
