@@ -2414,4 +2414,63 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $clientChannelsChannel->close();
     }
+
+    public function testTestsChannelWithQueries()
+    {
+        $projectId = 'console';
+
+        // Subscribe without queries - should receive all events
+        $clientNoQuery = $this->getWebsocket(['tests'], [
+            'origin' => 'http://localhost',
+        ], $projectId);
+
+        $response = json_decode($clientNoQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        // Subscribe with matching query - should receive events
+        $clientWithMatchingQuery = $this->getWebsocket(['tests'], [
+            'origin' => 'http://localhost',
+        ], $projectId, [
+            Query::equal('response', ['WS:/v1/realtime:passed'])->toString(),
+        ]);
+
+        $response = json_decode($clientWithMatchingQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        // Subscribe with non-matching query - should NOT receive events
+        $clientWithNonMatchingQuery = $this->getWebsocket(['tests'], [
+            'origin' => 'http://localhost',
+        ], $projectId, [
+            Query::equal('response', ['failed'])->toString(),
+        ]);
+
+        $response = json_decode($clientWithNonMatchingQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        sleep(6);
+
+        // Client without query should receive event
+        $eventNoQuery = json_decode($clientNoQuery->receive(), true);
+        $this->assertEquals('event', $eventNoQuery['type']);
+        $this->assertEquals('test.event', $eventNoQuery['data']['events'][0]);
+        $this->assertEquals('WS:/v1/realtime:passed', $eventNoQuery['data']['payload']['response']);
+
+        // Client with matching query should receive event
+        $eventMatching = json_decode($clientWithMatchingQuery->receive(), true);
+        $this->assertEquals('event', $eventMatching['type']);
+        $this->assertEquals('test.event', $eventMatching['data']['events'][0]);
+        $this->assertEquals('WS:/v1/realtime:passed', $eventMatching['data']['payload']['response']);
+
+        // Client with non-matching query should NOT receive event
+        try {
+            $clientWithNonMatchingQuery->receive();
+            $this->fail('Expected TimeoutException - client with non-matching query should not receive event');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $clientNoQuery->close();
+        $clientWithMatchingQuery->close();
+        $clientWithNonMatchingQuery->close();
+    }
 }
