@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\VCS\Http\Callback;
+namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Callback;
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Extend\Exception;
@@ -24,7 +24,7 @@ class Get extends Action
 
     public static function getName()
     {
-        return 'handleGitHubAppCallback';
+        return 'getVCSGitHubCallback';
     }
 
     public function __construct()

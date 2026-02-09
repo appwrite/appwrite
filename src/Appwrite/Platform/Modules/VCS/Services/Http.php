@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Modules\VCS\Services;
 
-use Appwrite\Platform\Modules\VCS\Http\Authorization\Get as GetAuthorization;
-use Appwrite\Platform\Modules\VCS\Http\Callback\Get as GetCallback;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize\Get as GetGitHubAuthorize;
+use Appwrite\Platform\Modules\VCS\Http\GitHub\Callback\Get as GetGitHubCallback;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Delete as DeleteInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Get as GetInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Branches\XList as ListRepositoryBranches;
@@ -21,9 +21,9 @@ class Http extends Service
     {
         $this->type = Service::TYPE_HTTP;
 
-        // Authorization & Callback
-        $this->addAction(GetAuthorization::getName(), new GetAuthorization());
-        $this->addAction(GetCallback::getName(), new GetCallback());
+        // GitHub Authorization & Callback
+        $this->addAction(GetGitHubAuthorize::getName(), new GetGitHubAuthorize());
+        $this->addAction(GetGitHubCallback::getName(), new GetGitHubCallback());
 
         // Installations
         $this->addAction(GetInstallation::getName(), new GetInstallation());

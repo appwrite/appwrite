@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\VCS\Http\Authorization;
+namespace Appwrite\Platform\Modules\VCS\Http\GitHub\Authorize;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action;
@@ -20,7 +20,7 @@ class Get extends Action
 
     public static function getName()
     {
-        return 'getGitHubAppAuthorization';
+        return 'getVCSGitHubAuthorize';
     }
 
     public function __construct()
