@@ -424,7 +424,7 @@ export function ConsoleHeader({
                 <Button
                   asChild
                   size="sm"
-                  className="h-8 shrink-0 bg-blue-600 px-3 text-[12px] font-semibold text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700 relative z-10 rounded-[calc(0.375rem-1px)]"
+                  className="h-8 shrink-0 bg-[#19191C] text-[13px] text-white hover:bg-[#19191C]/90 dark:bg-[#FAFAFB] dark:text-gray-900 dark:hover:bg-[#FAFAFB]/90 relative z-10"
                 >
                   <Link
                     to="/organizations/$orgId/change-plan"
