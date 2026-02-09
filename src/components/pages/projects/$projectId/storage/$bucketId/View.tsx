@@ -10,7 +10,6 @@ import {
   File,
   List,
   LayoutGrid,
-  MoreHorizontal,
   ArrowLeft,
   Trash2,
   AlertCircle,
@@ -45,12 +44,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -779,43 +772,6 @@ export function View() {
                                     {file.mimeType}
                                   </p>
                                 </div>
-                                {!pending && (
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-7 w-7 shrink-0 p-0 opacity-0 group-hover:opacity-100"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <MoreHorizontal className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem
-                                        onClick={() =>
-                                          navigate({
-                                            to: '/projects/$projectId/storage/$bucketId/files/$fileId',
-                                            params: {
-                                              projectId: projectId!,
-                                              bucketId: bucketId!,
-                                              fileId: file.$id,
-                                            },
-                                          })
-                                        }
-                                      >
-                                        Update
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() =>
-                                          handleDeleteFile(file.$id)
-                                        }
-                                      >
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                )}
                               </div>
                               <div className="mt-2 flex items-center gap-3 text-[12px] text-muted-foreground">
                                 <span>{formatBytes(file.sizeOriginal)}</span>

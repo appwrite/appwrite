@@ -756,10 +756,6 @@ export function View() {
                           ),
                         },
                       ]}
-                      onMenuClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                      }}
                     />
                   </Link>
                 ),

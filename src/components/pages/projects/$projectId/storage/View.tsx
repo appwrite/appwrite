@@ -4,7 +4,6 @@ import {
   FolderOpen,
   List,
   LayoutGrid,
-  MoreHorizontal,
   Lock,
   Trash2,
   Folder,
@@ -41,12 +40,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   Link,
   useNavigate,
@@ -593,10 +586,6 @@ export function View() {
                           (item) =>
                             item.value !== null && item.value !== undefined,
                         )}
-                        onMenuClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                        }}
                       />
                     </Link>
                   )
