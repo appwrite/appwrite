@@ -5190,7 +5190,7 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://domain-without-rule.com'
         ], followRedirects: false);
         $this->assertEquals(400, $response['headers']['status-code']);
-        
+
         // Also ensure final step blocks unknown redirect URL
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider . '/redirect', [
             'content-type' => 'application/json',
@@ -5221,7 +5221,7 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://' . $domain
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
-        
+
         // Also ensure final step allows redirect URL
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider . '/redirect', [
             'content-type' => 'application/json',
@@ -5232,8 +5232,8 @@ class ProjectsConsoleClientTest extends Scope
         ], [
             'code' => 'any-code',
             'state' => \json_encode([
-            'success' => 'https://' . $domain,
-            'failure' => 'https://' . $domain
+                'success' => 'https://' . $domain,
+                'failure' => 'https://' . $domain
             ]),
             'error' => '',
             'errorDescription' => '',
