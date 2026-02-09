@@ -216,16 +216,16 @@
         },
         {
             "name": "brick/math",
-            "version": "0.14.6",
+            "version": "0.14.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "32498d5e1897e7642c0b961ace2df6d7dc9a3bc3"
+                "reference": "07ff363b16ef8aca9692bba3be9e73fe63f34e50"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/32498d5e1897e7642c0b961ace2df6d7dc9a3bc3",
-                "reference": "32498d5e1897e7642c0b961ace2df6d7dc9a3bc3",
+                "url": "https://api.github.com/repos/brick/math/zipball/07ff363b16ef8aca9692bba3be9e73fe63f34e50",
+                "reference": "07ff363b16ef8aca9692bba3be9e73fe63f34e50",
                 "shasum": ""
             },
             "require": {
@@ -264,7 +264,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.14.6"
+                "source": "https://github.com/brick/math/tree/0.14.7"
             },
             "funding": [
                 {
@@ -272,7 +272,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-05T07:59:58+00:00"
+            "time": "2026-02-07T10:57:35+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -3795,16 +3795,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.0.1",
+            "version": "5.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "2783f07e74ddd86dda6e711d79212dd34158540d"
+                "reference": "aa80f86f5bf3f0d8c13abd3213bf1649f542d366"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/2783f07e74ddd86dda6e711d79212dd34158540d",
-                "reference": "2783f07e74ddd86dda6e711d79212dd34158540d",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/aa80f86f5bf3f0d8c13abd3213bf1649f542d366",
+                "reference": "aa80f86f5bf3f0d8c13abd3213bf1649f542d366",
                 "shasum": ""
             },
             "require": {
@@ -3847,9 +3847,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.0.1"
+                "source": "https://github.com/utopia-php/database/tree/5.0.2"
             },
-            "time": "2026-02-03T10:31:12+00:00"
+            "time": "2026-02-08T05:23:42+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4003,16 +4003,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "ecac82392e83d4a8ede76c3c94258d868d82f709"
+                "reference": "20b6a6868234d766fef35a47814dccc66906c2af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/ecac82392e83d4a8ede76c3c94258d868d82f709",
-                "reference": "ecac82392e83d4a8ede76c3c94258d868d82f709",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/20b6a6868234d766fef35a47814dccc66906c2af",
+                "reference": "20b6a6868234d766fef35a47814dccc66906c2af",
                 "shasum": ""
             },
             "require": {
@@ -4059,9 +4059,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/1.0.0"
+                "source": "https://github.com/utopia-php/domains/tree/1.0.1"
             },
-            "time": "2026-01-30T06:15:50+00:00"
+            "time": "2026-02-06T12:45:12+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -5488,16 +5488,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.25",
+            "version": "1.8.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "5c75fda3410fe97387ef8e1920b583ef48849d7d"
+                "reference": "ce65854069a1af8ef0757650da5848168cca5f02"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/5c75fda3410fe97387ef8e1920b583ef48849d7d",
-                "reference": "5c75fda3410fe97387ef8e1920b583ef48849d7d",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ce65854069a1af8ef0757650da5848168cca5f02",
+                "reference": "ce65854069a1af8ef0757650da5848168cca5f02",
                 "shasum": ""
             },
             "require": {
@@ -5533,9 +5533,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.25"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.26"
             },
-            "time": "2026-02-05T09:40:07+00:00"
+            "time": "2026-02-08T07:41:27+00:00"
         },
         {
             "name": "doctrine/annotations",

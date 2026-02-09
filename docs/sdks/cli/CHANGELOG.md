@@ -1,5 +1,9 @@
 # Change Log
 
+## 13.3.1
+
+- Fix generated TS imports to auto-detect ESM vs non-ESM
+
 ## 13.3.0
 
 - Support type generation for text/varchar/mediumtext/longtext attributes
