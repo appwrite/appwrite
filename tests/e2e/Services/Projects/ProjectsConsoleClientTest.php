@@ -3167,6 +3167,9 @@ class ProjectsConsoleClientTest extends Scope
             'scopes' => ['teams.read', 'teams.write'],
         ]);
 
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame($customKeyId, $response['body']['$id']);
+
         /**
          * Test for SUCCESS with magic string ID
          */
@@ -3181,6 +3184,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotSame('unique()', $response['body']['$id']);
 
         $data = array_merge($data, [
             'keyId' => $response['body']['$id'],
@@ -3219,7 +3223,7 @@ class ProjectsConsoleClientTest extends Scope
 
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(3, $response['body']['total']);
+        $this->assertEquals(4, $response['body']['total']);
 
         /**
          * Test for FAILURE
