@@ -5195,7 +5195,6 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider . '/redirect', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'referer' => 'https://' . $domain,
             'origin' => '',
             'referer' => 'https://mockserver.com',
         ], [
@@ -5226,7 +5225,6 @@ class ProjectsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider . '/redirect', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'referer' => 'https://' . $domain,
             'origin' => '',
             'referer' => 'https://mockserver.com',
         ], [
