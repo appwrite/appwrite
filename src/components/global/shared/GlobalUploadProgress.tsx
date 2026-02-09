@@ -32,7 +32,8 @@ export function GlobalUploadProgress() {
         previousStatus !== 'completed' &&
         !invalidatedUploadsRef.current.has(upload.id)
       ) {
-        queryClient.invalidateQueries({
+        // Refetch (not just invalidate) so the list updates without page reload (list uses refetchOnMount: false)
+        void queryClient.refetchQueries({
           queryKey: [
             'files',
             'project',
@@ -69,14 +70,14 @@ export function GlobalUploadProgress() {
         const unsubscribe = uploadManager.onProgress(
           upload.id,
           (progress: UploadProgressType) => {
-            // When upload completes, invalidate files query for that bucket
+            // When upload completes, refetch files list for that bucket so the UI updates (list uses refetchOnMount: false)
             if (
               progress.status === 'completed' &&
               !invalidatedUploadsRef.current.has(progress.id)
             ) {
               const item = uploadItemsRef.current.get(progress.id)
               if (item) {
-                queryClient.invalidateQueries({
+                void queryClient.refetchQueries({
                   queryKey: [
                     'files',
                     'project',

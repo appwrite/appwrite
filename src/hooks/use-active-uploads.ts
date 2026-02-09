@@ -3,13 +3,16 @@
  * Used for window close warnings and global upload status
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { uploadManager } from '@/lib/upload-queue/upload-manager'
 import type { UploadItem } from '@/lib/upload-queue/types'
+
+const POLL_INTERVAL_MS = 600
 
 export function useActiveUploads() {
   const [activeUploads, setActiveUploads] = useState<UploadItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const listenersRef = useRef<Map<string, () => void>>(new Map())
 
   const loadActiveUploads = useCallback(async () => {
     try {
@@ -22,105 +25,40 @@ export function useActiveUploads() {
     }
   }, [])
 
+  // Poll frequently so we discover new uploads quickly (e.g. right after user queues one)
   useEffect(() => {
-    let mounted = true
-    let interval: NodeJS.Timeout | null = null
-
-    // Initial load
     loadActiveUploads()
+    const interval = setInterval(loadActiveUploads, POLL_INTERVAL_MS)
+    return () => clearInterval(interval)
+  }, [loadActiveUploads])
 
-    // Set up progress listeners for all active uploads
-    const unsubscribes: (() => void)[] = []
+  // Register progress listeners for each active upload so we get smooth updates and completion events
+  useEffect(() => {
+    const currentIds = new Set(activeUploads.map((u) => u.id))
 
-    const setupListeners = async () => {
-      const uploads = await uploadManager.getActiveUploads()
-      if (!mounted) return
+    // Remove listeners for uploads no longer in the list (e.g. completed)
+    listenersRef.current.forEach((unsub, id) => {
+      if (!currentIds.has(id)) {
+        unsub()
+        listenersRef.current.delete(id)
+      }
+    })
 
-      uploads.forEach((item) => {
+    // Add listeners for new uploads
+    activeUploads.forEach((item) => {
+      if (!listenersRef.current.has(item.id)) {
         const unsubscribe = uploadManager.onProgress(item.id, () => {
-          if (!mounted) return
-
-          // Reload active uploads when status changes
           loadActiveUploads()
         })
-        unsubscribes.push(unsubscribe)
-      })
-    }
-
-    setupListeners()
-
-    // Only poll when there are active uploads
-    // Use a longer interval (5 seconds) to reduce CPU usage
-    const pollIfNeeded = async () => {
-      if (!mounted) return false
-
-      const uploads = await uploadManager.getActiveUploads()
-      if (!mounted) return false
-
-      const hasActive = uploads.some(
-        (u) => u.status === 'pending' || u.status === 'uploading',
-      )
-
-      if (hasActive && !interval) {
-        // Start polling
-        interval = setInterval(() => {
-          if (mounted) {
-            loadActiveUploads()
-          }
-        }, 5000) // 5 seconds instead of 2
-      } else if (!hasActive && interval) {
-        // Stop polling when no active uploads
-        clearInterval(interval)
-        interval = null
-      }
-
-      return hasActive
-    }
-
-    // Only check periodically if we have active uploads
-    // This prevents unnecessary checks when idle
-    let checkInterval: NodeJS.Timeout | null = null
-
-    const startCheckInterval = () => {
-      if (checkInterval || !mounted) return
-
-      checkInterval = setInterval(async () => {
-        if (!mounted) {
-          if (checkInterval) {
-            clearInterval(checkInterval)
-            checkInterval = null
-          }
-          return
-        }
-
-        const hasActive = await pollIfNeeded()
-
-        // If no active uploads, stop checking
-        if (!hasActive && checkInterval) {
-          clearInterval(checkInterval)
-          checkInterval = null
-        }
-      }, 30000) // Check every 30 seconds (less frequent)
-    }
-
-    // Initial check - start check interval only if we have active uploads
-    pollIfNeeded().then((hasActive) => {
-      if (hasActive && mounted) {
-        startCheckInterval()
+        listenersRef.current.set(item.id, unsubscribe)
       }
     })
 
     return () => {
-      mounted = false
-      if (interval) {
-        clearInterval(interval)
-      }
-      if (checkInterval) {
-        clearInterval(checkInterval)
-      }
-      unsubscribes.forEach((unsubscribe) => unsubscribe())
+      listenersRef.current.forEach((unsub) => unsub())
+      listenersRef.current.clear()
     }
-  }, [loadActiveUploads])
+  }, [activeUploads, loadActiveUploads])
 
   return {
     activeUploads,

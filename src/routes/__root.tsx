@@ -169,7 +169,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             <ClientOnly>
               <Toaster />
             </ClientOnly>
-            <GlobalUploadProgress />
+            <ClientOnly>
+              <GlobalUploadProgress />
+            </ClientOnly>
           </NavigationHistoryProvider>
           {/* <TanStackDevtools
             config={{
