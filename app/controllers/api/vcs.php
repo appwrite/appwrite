@@ -1,19 +1,15 @@
 <?php
 
-use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Appwrite\Event\Build;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
-use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
-use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
@@ -471,195 +467,6 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
         throw new Exception(Exception::GENERAL_UNKNOWN, \implode("\n", $errors));
     }
 };
-
-Http::get('/v1/vcs/github/authorize')
-    ->desc('Create GitHub app installation')
-    ->groups(['api', 'vcs'])
-    ->label('scope', 'vcs.read')
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
-    ->label('sdk', new Method(
-        namespace: 'vcs',
-        group: 'installations',
-        name: 'createGitHubInstallation',
-        description: '/docs/references/vcs/create-github-installation.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_MOVED_PERMANENTLY,
-                model: Response::MODEL_NONE,
-            )
-        ],
-        contentType: ContentType::HTML,
-        type: MethodType::WEBAUTH,
-        hide: true,
-    ))
-    ->param('success', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a successful installation attempt.', true, ['redirectValidator'])
-    ->param('failure', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect back to console after a failed installation attempt.', true, ['redirectValidator'])
-    ->inject('response')
-    ->inject('project')
-    ->inject('platform')
-    ->action(function (string $success, string $failure, Response $response, Document $project, array $platform) {
-        $state = \json_encode([
-            'projectId' => $project->getId(),
-            'success' => $success,
-            'failure' => $failure,
-        ]);
-
-        $appName = System::getEnv('_APP_VCS_GITHUB_APP_NAME');
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = $platform['consoleHostname'] ?? '';
-
-        if (empty($appName)) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GitHub App name is not configured. Please configure VCS (Version Control System) variables in .env file.');
-        }
-
-        $url = "https://github.com/apps/$appName/installations/new?" . \http_build_query([
-            'state' => $state,
-            'redirect_uri' => $protocol . '://' . $hostname . "/v1/vcs/github/callback"
-        ]);
-
-        $response
-            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->addHeader('Pragma', 'no-cache')
-            ->redirect($url);
-    });
-
-Http::get('/v1/vcs/github/callback')
-    ->desc('Get installation and authorization from GitHub app')
-    ->groups(['api', 'vcs'])
-    ->label('scope', 'public')
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
-    ->param('installation_id', '', new Text(256, 0), 'GitHub installation ID', true)
-    ->param('setup_action', '', new Text(256, 0), 'GitHub setup action type', true)
-    ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
-    ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
-    ->inject('gitHub')
-    ->inject('user')
-    ->inject('project')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->inject('platform')
-    ->action(function (string $providerInstallationId, string $setupAction, string $state, string $code, GitHub $github, Document $user, Document $project, Response $response, Database $dbForPlatform, array $platform) {
-        if (empty($state)) {
-            $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
-        }
-
-        $state = \json_decode($state, true);
-        $projectId = $state['projectId'] ?? '';
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            $error = 'Project with the ID from state could not be found.';
-
-            if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
-                return $response
-                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-            }
-
-            throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
-        }
-
-        $region = $project->getAttribute('region', 'default');
-        $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
-        $hostname = $platform['consoleHostname'] ?? '';
-
-        $defaultState = [
-            'success' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-            'failure' => $protocol . '://' . $hostname . "/console/project-$region-$projectId/settings/git-installations",
-        ];
-
-        $state = \array_merge($defaultState, $state ?? []);
-
-        $redirectSuccess = $state['success'] ?? '';
-        $redirectFailure = $state['failure'] ?? '';
-
-        // Create / Update installation
-        if (!empty($providerInstallationId)) {
-            $privateKey = System::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = System::getEnv('_APP_VCS_GITHUB_APP_ID');
-            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
-            $owner = $github->getOwnerName($providerInstallationId) ?? '';
-
-            $projectInternalId = $project->getSequence();
-
-            $installation = $dbForPlatform->findOne('installations', [
-                Query::equal('providerInstallationId', [$providerInstallationId]),
-                Query::equal('projectInternalId', [$projectInternalId])
-            ]);
-
-            $personal = false;
-            $refreshToken = null;
-            $accessToken = null;
-            $accessTokenExpiry = null;
-
-            if (!empty($code)) {
-                $oauth2 = new OAuth2Github(System::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), System::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
-
-                $accessToken = $oauth2->getAccessToken($code) ?? '';
-                $refreshToken = $oauth2->getRefreshToken($code) ?? '';
-                $accessTokenExpiry = DateTime::addSeconds(new \DateTime(), \intval($oauth2->getAccessTokenExpiry($code)));
-
-                $personalSlug = $oauth2->getUserSlug($accessToken) ?? '';
-                $personal = $personalSlug === $owner;
-            }
-
-            if ($installation->isEmpty()) {
-                $teamId = $project->getAttribute('teamId', '');
-
-                $installation = new Document([
-                    '$id' => ID::unique(),
-                    '$permissions' => [
-                        Permission::read(Role::team(ID::custom($teamId))),
-                        Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                        Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                        Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                        Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                    ],
-                    'providerInstallationId' => $providerInstallationId,
-                    'projectId' => $projectId,
-                    'projectInternalId' => $projectInternalId,
-                    'provider' => 'github',
-                    'organization' => $owner,
-                    'personal' => $personal,
-                    'personalRefreshToken' => $refreshToken,
-                    'personalAccessToken' => $accessToken,
-                    'personalAccessTokenExpiry' => $accessTokenExpiry,
-                ]);
-
-                $installation = $dbForPlatform->createDocument('installations', $installation);
-            } else {
-                $installation = $installation
-                    ->setAttribute('organization', $owner)
-                    ->setAttribute('personal', $personal)
-                    ->setAttribute('personalRefreshToken', $refreshToken)
-                    ->setAttribute('personalAccessToken', $accessToken)
-                    ->setAttribute('personalAccessTokenExpiry', $accessTokenExpiry);
-                $installation = $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
-            }
-        } else {
-            $error = 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite console.';
-
-            if (!empty($redirectFailure)) {
-                $separator = \str_contains($redirectFailure, '?') ? '&' : ':';
-                return $response
-                    ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-                    ->addHeader('Pragma', 'no-cache')
-                    ->redirect($redirectFailure . $separator . \http_build_query(['error' => $error]));
-            }
-
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
-        }
-
-        $response
-            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->addHeader('Pragma', 'no-cache')
-            ->redirect($redirectSuccess);
-    });
 
 Http::post('/v1/vcs/github/events')
     ->desc('Create event')

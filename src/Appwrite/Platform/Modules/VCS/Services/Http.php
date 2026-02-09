@@ -2,6 +2,8 @@
 
 namespace Appwrite\Platform\Modules\VCS\Services;
 
+use Appwrite\Platform\Modules\VCS\Http\Authorization\Get as GetAuthorization;
+use Appwrite\Platform\Modules\VCS\Http\Callback\Get as GetCallback;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Delete as DeleteInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Get as GetInstallation;
 use Appwrite\Platform\Modules\VCS\Http\Installations\Repositories\Branches\XList as ListRepositoryBranches;
@@ -18,6 +20,10 @@ class Http extends Service
     public function __construct()
     {
         $this->type = Service::TYPE_HTTP;
+
+        // Authorization & Callback
+        $this->addAction(GetAuthorization::getName(), new GetAuthorization());
+        $this->addAction(GetCallback::getName(), new GetCallback());
 
         // Installations
         $this->addAction(GetInstallation::getName(), new GetInstallation());
