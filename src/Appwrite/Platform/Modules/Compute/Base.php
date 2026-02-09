@@ -113,7 +113,7 @@ class Base extends Action
             // Fallback till we have tag support here
             // Goal is to set providerBranch, so build worker knows what to clone as base
             // Without this, clone command would be cloning empty branch, and failing
-            $providerBranch = empty($reference) ? $function->getAttribute('providerBranch', 'main') : $reference;
+            $providerBranch = $function->getAttribute('providerBranch', 'main');
             $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
         }
 
