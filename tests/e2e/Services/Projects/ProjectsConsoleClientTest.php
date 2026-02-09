@@ -5190,6 +5190,25 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://domain-without-rule.com'
         ], followRedirects: false);
         $this->assertEquals(400, $response['headers']['status-code']);
+        
+        // Also ensure final step blocks unknown redirect URL
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider . '/redirect', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'referer' => 'https://' . $domain,
+            'origin' => '',
+            'referer' => 'https://mockserver.com',
+        ], [
+            'code' => 'any-code',
+            'state' => \json_encode([
+                'success' => 'https://domain-without-rule.com',
+                'failure' => 'https://domain-without-rule.com'
+            ]),
+            'error' => '',
+            'errorDescription' => '',
+        ], followRedirects: false);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('project_invalid_success_url', $response['body']);
 
         // Ensure rule's domain can be redirect URL
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
@@ -5202,6 +5221,25 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://' . $domain
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
+        
+        // Also ensure final step allows redirect URL
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider . '/redirect', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'referer' => 'https://' . $domain,
+            'origin' => '',
+            'referer' => 'https://mockserver.com',
+        ], [
+            'code' => 'any-code',
+            'state' => \json_encode([
+            'success' => 'https://' . $domain,
+            'failure' => 'https://' . $domain
+            ]),
+            'error' => '',
+            'errorDescription' => '',
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('https://' . $domain, $response['headers']['location']);
 
         // Ensure unknown domain cannot be redirect URL
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [

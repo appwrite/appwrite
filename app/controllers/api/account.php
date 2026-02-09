@@ -1518,7 +1518,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                 parse_url($state['success'], PHP_URL_HOST),
                 parse_url($state['failure'], PHP_URL_HOST)
             ]),
-            Query::equal('projectIntenralId', [$project->getSequence()]),
+            Query::equal('projectInternalId', [$project->getSequence()]),
             Query::limit(2)
         ]));
 
