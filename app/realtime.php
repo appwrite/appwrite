@@ -690,11 +690,11 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             $code = 500;
         }
 
-
         $message = $th->getMessage();
 
         // sanitize 0 && 5xx errors
-        if (($code === 0 || $code >= 500) && !Http::isDevelopment()) {
+        $realtimeViolation = $th instanceof AppwriteException && $th->getType() === AppwriteException::REALTIME_POLICY_VIOLATION;
+        if (($code === 0 || $code >= 500) && !$realtimeViolation && !Http::isDevelopment()) {
             $message = 'Error: Server Error';
         }
 

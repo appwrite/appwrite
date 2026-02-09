@@ -2270,7 +2270,8 @@ class RealtimeCustomClientQueryTest extends Scope
         $projectId = $this->getProject()['$id'];
 
         // Test OLD SDK behavior: project=projectId (string) in query param
-        // The reserved param logic should treat string project param as project ID, not as subscription queries
+        // For reserved \"project\" param, string is treated as routing-only (project ID),
+        // and is not used as queries for the project channel. We should fall back to select(*).
         $clientOldSdk = $this->getWebsocket(['project'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
@@ -2315,7 +2316,8 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $clientNewSdk->close();
 
-        // Test edge case: project param is array but not a valid Query array (should still connect, use header)
+        // Test edge case: project param is array but not a valid Query array
+        // This should now fail with an invalid query error rather than silently falling back.
         $clientEdgeCase = $this->getWebsocketWithCustomQuery(
             [
                 'channels' => ['project'],
@@ -2329,11 +2331,8 @@ class RealtimeCustomClientQueryTest extends Scope
         );
 
         $response = json_decode($clientEdgeCase->receive(), true);
-        // Should connect successfully using header for project ID
-        $this->assertEquals('connected', $response['type']);
-        $this->assertContains('project', $response['data']['channels']);
-
-        $clientEdgeCase->close();
+        $this->assertEquals('error', $response['type']);
+        $this->assertStringContainsString('Invalid query', $response['data']['message']);
     }
 
     public function testProjectChannelWithHeaderOnly()
