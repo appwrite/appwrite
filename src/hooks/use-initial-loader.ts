@@ -198,6 +198,7 @@ export function useInitialLoader() {
         clearTimeout(maxTimeoutRef.current)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     effectiveShouldShowLoader,
     router.state.status,

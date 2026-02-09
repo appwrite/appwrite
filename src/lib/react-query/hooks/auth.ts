@@ -355,7 +355,7 @@ export function useUpdateAuthMethod(projectId: string | null | undefined) {
 
       return await sdk.forConsole.projects.updateAuthStatus({
         projectId,
-        method: method as any,
+        method: method as unknown,
         status,
       })
     },
@@ -393,7 +393,7 @@ export function useUpdateOAuth2Provider(projectId: string | null | undefined) {
 
       return await sdk.forConsole.projects.updateOAuth2({
         projectId,
-        provider: provider as any,
+        provider: provider as unknown,
         appId,
         secret,
         enabled,
@@ -534,7 +534,7 @@ export function useAccountSessions() {
 /**
  * Mutation function to update account preferences
  */
-export async function updateAccountPrefs(prefs: Record<string, any>) {
+export async function updateAccountPrefs(prefs: Record<string, unknown>) {
   return await sdk.forConsole.account.updatePrefs({ prefs })
 }
 
@@ -551,7 +551,7 @@ export function useToggleFeatureNotification() {
   return useMutation({
     mutationFn: async (featureId: string) => {
       // Get current account data from cache
-      const account = queryClient.getQueryData<any>(['account', 'console'])
+      const account = queryClient.getQueryData<unknown>(['account', 'console'])
 
       if (!account) {
         throw new Error('Account data not available')

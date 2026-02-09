@@ -55,13 +55,6 @@ const getNavItems = (projectId: string) => {
     path: `/projects/${projectId}`,
   }
 
-  const imagineItem: NavItem = {
-    id: 'imagine',
-    label: 'Imagine',
-    icon: 'imagine',
-    path: `/projects/${projectId}/imagine`,
-  }
-
   const navCategories: NavCategory[] = [
     {
       label: 'Connect',

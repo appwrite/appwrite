@@ -13,7 +13,7 @@ export const Route = createFileRoute(
       return
     }
 
-    const { projectId, siteId, domain } = params
+    const { projectId, siteId } = params
     const { queryClient } = context
 
     // Get ruleId from URL query parameter

@@ -70,8 +70,8 @@ interface TableNode {
   y: number
   width: number
   height: number
-  columns: any[]
-  indexes: any[]
+  columns: unknown[]
+  indexes: unknown[]
   enabled: boolean
 }
 
@@ -85,14 +85,12 @@ interface Relationship {
 const NODE_WIDTH = 300
 const NODE_HEADER_HEIGHT = 40
 const COLUMN_HEIGHT = 28
-const INDEX_HEIGHT = 24
 const NODE_PADDING = 12
 const MIN_ZOOM = 0.2
 const MAX_ZOOM = 2
 const ZOOM_STEP = 0.05 // 5% increments for smoother zooming
 const WHEEL_ZOOM_STEP = 0.02 // 2% increments for mouse wheel for even smoother control
 const MAX_VISIBLE_COLUMNS = 20
-const MAX_VISIBLE_INDEXES = 3
 const MIN_SPACING = 240 // Base spacing between nodes
 const MIN_NODE_GAP = 15 // Minimum gap between nodes
 
@@ -120,9 +118,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
   const [activeTableId, setActiveTableId] = useState<string | null>(null)
   const [hasAutoFocused, setHasAutoFocused] = useState(false)
   const [showMinimap, setShowMinimap] = useState(true)
-  const [contextMenuTableId, setContextMenuTableId] = useState<string | null>(
-    null,
-  )
+  const [, setContextMenuTableId] = useState<string | null>(null)
   const [copiedLink, setCopiedLink] = useState(false)
 
   // Store initial positions to maintain stability when expanding/collapsing
@@ -136,146 +132,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     return getComputedStyle(document.documentElement)
       .getPropertyValue(variable)
       .trim()
-  }
-
-  // Create SVG icon for column type
-  const createColumnIconSVG = (
-    type: string,
-    x: number,
-    y: number,
-    color: string,
-  ): SVGGElement => {
-    const iconGroup = document.createElementNS(
-      'http://www.w3.org/2000/svg',
-      'g',
-    )
-    iconGroup.setAttribute('transform', `translate(${x}, ${y})`)
-
-    // Simple geometric shapes based on column type
-    switch (type) {
-      case 'string':
-      case 'text':
-        // Type icon - simple "T" shape
-        const tPath = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'path',
-        )
-        tPath.setAttribute('d', 'M2 2 L6 2 M4 2 L4 6')
-        tPath.setAttribute('stroke', color)
-        tPath.setAttribute('stroke-width', '1.5')
-        tPath.setAttribute('stroke-linecap', 'round')
-        iconGroup.appendChild(tPath)
-        break
-      case 'integer':
-      case 'float':
-      case 'double':
-        // Hash icon - "#" shape
-        const hashPath = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'path',
-        )
-        hashPath.setAttribute('d', 'M2 1 L2 7 M6 1 L6 7 M0 3 L8 3 M0 5 L8 5')
-        hashPath.setAttribute('stroke', color)
-        hashPath.setAttribute('stroke-width', '1.5')
-        hashPath.setAttribute('stroke-linecap', 'round')
-        iconGroup.appendChild(hashPath)
-        break
-      case 'boolean':
-        // Toggle icon - circle with line
-        const boolCircle = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'circle',
-        )
-        boolCircle.setAttribute('cx', '4')
-        boolCircle.setAttribute('cy', '4')
-        boolCircle.setAttribute('r', '2.5')
-        boolCircle.setAttribute('fill', 'none')
-        boolCircle.setAttribute('stroke', color)
-        boolCircle.setAttribute('stroke-width', '1.5')
-        iconGroup.appendChild(boolCircle)
-        const boolLine = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'line',
-        )
-        boolLine.setAttribute('x1', '1.5')
-        boolLine.setAttribute('y1', '4')
-        boolLine.setAttribute('x2', '2.5')
-        boolLine.setAttribute('y2', '4')
-        boolLine.setAttribute('stroke', color)
-        boolLine.setAttribute('stroke-width', '1.5')
-        iconGroup.appendChild(boolLine)
-        break
-      case 'datetime':
-        // Calendar icon - rectangle with lines
-        const calRect = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'rect',
-        )
-        calRect.setAttribute('x', '1')
-        calRect.setAttribute('y', '2')
-        calRect.setAttribute('width', '6')
-        calRect.setAttribute('height', '5')
-        calRect.setAttribute('fill', 'none')
-        calRect.setAttribute('stroke', color)
-        calRect.setAttribute('stroke-width', '1.5')
-        iconGroup.appendChild(calRect)
-        const calLine1 = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'line',
-        )
-        calLine1.setAttribute('x1', '1')
-        calLine1.setAttribute('y1', '3.5')
-        calLine1.setAttribute('x2', '7')
-        calLine1.setAttribute('y2', '3.5')
-        calLine1.setAttribute('stroke', color)
-        calLine1.setAttribute('stroke-width', '1')
-        iconGroup.appendChild(calLine1)
-        break
-      case 'email':
-        // Mail icon - envelope shape
-        const mailPath = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'path',
-        )
-        mailPath.setAttribute('d', 'M1 2 L4 4.5 L7 2 M1 2 L1 6 L7 6 L7 2')
-        mailPath.setAttribute('fill', 'none')
-        mailPath.setAttribute('stroke', color)
-        mailPath.setAttribute('stroke-width', '1.5')
-        iconGroup.appendChild(mailPath)
-        break
-      case 'url':
-      case 'link':
-        // Link icon - chain links
-        const linkPath = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'path',
-        )
-        linkPath.setAttribute(
-          'd',
-          'M2 3 C2 2, 3 1, 4 1 C5 1, 6 2, 6 3 M6 5 C6 6, 5 7, 4 7 C3 7, 2 6, 2 5',
-        )
-        linkPath.setAttribute('fill', 'none')
-        linkPath.setAttribute('stroke', color)
-        linkPath.setAttribute('stroke-width', '1.5')
-        iconGroup.appendChild(linkPath)
-        break
-      default:
-        // Default - simple square
-        const defaultRect = document.createElementNS(
-          'http://www.w3.org/2000/svg',
-          'rect',
-        )
-        defaultRect.setAttribute('x', '2')
-        defaultRect.setAttribute('y', '2')
-        defaultRect.setAttribute('width', '4')
-        defaultRect.setAttribute('height', '4')
-        defaultRect.setAttribute('fill', 'none')
-        defaultRect.setAttribute('stroke', color)
-        defaultRect.setAttribute('stroke-width', '1.5')
-        iconGroup.appendChild(defaultRect)
-    }
-
-    return iconGroup
   }
 
   // Detect if dark mode is active (with state to trigger re-renders)
@@ -318,11 +174,8 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
   // Get theme colors for minimap with proper contrast
   const getThemeColors = () => {
-    const card = getCSSVariable('--card')
     const foreground = getCSSVariable('--foreground')
-    const border = getCSSVariable('--border')
     const primary = getCSSVariable('--primary')
-    const muted = getCSSVariable('--muted')
 
     // For light mode, use darker colors for better visibility and contrast
     if (!isDarkMode) {
@@ -362,7 +215,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     }> = []
 
     // Calculate all node dimensions first
-    const nodeDimensions = tables.map((table: any) => {
+    const nodeDimensions = tables.map((table: unknown) => {
       const columnCount = table.columns?.length || 0
 
       // Calculate maximum possible height (when fully expanded) for layout stability
@@ -413,7 +266,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     const startY = 100
 
     // Place nodes in a compact grid
-    tables.forEach((table: any, index: number) => {
+    tables.forEach((table: unknown, index: number) => {
       const row = Math.floor(index / cols)
       const col = index % cols
       const { width, layoutHeight, renderHeight } = nodeDimensions[index]
@@ -519,13 +372,12 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     if (!tables || tables.length === 0) return []
 
     const rels: Relationship[] = []
-    const tableMap = new Map(tables.map((t: any) => [t.$id, t]))
-    const tableNameMap = new Map(tables.map((t: any) => [t.name, t]))
+    const tableNameMap = new Map(tables.map((t: unknown) => [t.name, t]))
 
-    tables.forEach((table: any) => {
+    tables.forEach((table: unknown) => {
       if (!table.columns) return
 
-      table.columns.forEach((column: any) => {
+      table.columns.forEach((column: unknown) => {
         // Check if column name suggests a foreign key (e.g., "postId", "userId", etc.)
         const columnKey = column.key.toLowerCase()
 
@@ -538,7 +390,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
           const referencedTable =
             tableNameMap.get(referencedTableName) ||
             Array.from(tableNameMap.values()).find(
-              (t: any) => t.name.toLowerCase() === referencedTableName,
+              (t: unknown) => t.name.toLowerCase() === referencedTableName,
             )
 
           if (
@@ -547,14 +399,14 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             '$id' in referencedTable
           ) {
             // Check if referenced table has an $id column (primary key)
-            const hasIdColumn = (referencedTable as any).columns?.some(
-              (c: any) => c.key === '$id' || c.key === 'id',
+            const hasIdColumn = (referencedTable as unknown).columns?.some(
+              (c: unknown) => c.key === '$id' || c.key === 'id',
             )
 
             if (hasIdColumn) {
               rels.push({
                 from: table.$id,
-                to: (referencedTable as any).$id,
+                to: (referencedTable as unknown).$id,
                 fromColumn: column.key,
                 toColumn: '$id',
               })
@@ -704,7 +556,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
 
   // Get available tables for relationship columns
   const availableTables = useMemo(() => {
-    return tables.map((table: any) => ({
+    return tables.map((table: unknown) => ({
       $id: table.$id,
       name: table.name,
     }))
@@ -806,13 +658,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
     setIndexDialogOpen(true)
   }
 
-  // Export functions
-  const handleExportPNG = async () => {
-    // PNG export would require html2canvas or similar library
-    // For now, we'll show a message that SVG is available
-    toast.info('PNG export coming soon. Use SVG export for now.')
-  }
-
   const handleExportSVG = () => {
     if (!canvasRef.current) return
 
@@ -832,10 +677,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       const borderColor =
         getCSSVariable('--border') ||
         (isDark ? 'oklch(0.274 0.006 286.033)' : 'oklch(0.7 0.01 285)')
-      const mutedColor =
-        getCSSVariable('--muted') ||
-        (isDark ? 'oklch(0.274 0.006 286.033)' : 'oklch(0.967 0.001 286.375)')
-
       // Ensure we have proper contrast - if colors are too similar, use defaults
       const finalCardColor = cardColor || (isDark ? '#242424' : '#ffffff')
       const finalForegroundColor =
@@ -846,7 +687,6 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       const finalHeaderBgColor = isDark ? '#2a2a2a' : '#f0f0f0' // Softer grey for header
       const finalRowBgColor = isDark ? '#2a2a2a' : '#f5f5f5' // Soft grey for alternating rows
 
-      const canvas = canvasRef.current
       const bounds = nodes.reduce(
         (acc, node) => {
           return {
@@ -1072,7 +912,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
         let yOffset = NODE_HEADER_HEIGHT + NODE_PADDING
         const columnsToShow = node.columns.slice(0, visibleColumns)
 
-        columnsToShow.forEach((column: any, index: number) => {
+        columnsToShow.forEach((column: unknown, index: number) => {
           const columnGroup = document.createElementNS(
             'http://www.w3.org/2000/svg',
             'g',
@@ -1214,7 +1054,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       link.click()
       URL.revokeObjectURL(url)
       toast.success('Schema exported as SVG')
-    } catch (error) {
+    } catch {
       toast.error('Failed to export SVG')
     }
   }
@@ -1226,7 +1066,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       setCopiedLink(true)
       toast.success('Link copied to clipboard')
       setTimeout(() => setCopiedLink(false), 2000)
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy link')
     }
   }
@@ -1249,7 +1089,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       const json = formatSchemaAsJSON(databaseSchema)
       await navigator.clipboard.writeText(json)
       toast.success('Schema copied to clipboard')
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy schema')
     }
   }
@@ -1266,7 +1106,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       const markdown = formatSchemaAsMarkdown(databaseSchema)
       await navigator.clipboard.writeText(markdown)
       toast.success('Schema copied to clipboard')
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy schema')
     }
   }
@@ -1287,7 +1127,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       await navigator.clipboard.writeText(markdown)
       window.open(deepLink, '_blank')
       toast.success('Opening ChatGPT with schema context...')
-    } catch (error) {
+    } catch {
       toast.error('Failed to open ChatGPT')
     }
   }
@@ -1307,7 +1147,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       await navigator.clipboard.writeText(markdown)
       window.open(deepLink, '_blank')
       toast.success('Opening Claude with schema context...')
-    } catch (error) {
+    } catch {
       toast.error('Failed to open Claude')
     }
   }
@@ -1332,7 +1172,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       } catch {
         toast.success('Schema copied to clipboard. Paste it in Cursor.')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to open Cursor')
     }
   }
@@ -1352,7 +1192,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       await navigator.clipboard.writeText(json)
       window.open(deepLink, '_blank')
       toast.success('Opening Lovable with schema context...')
-    } catch (error) {
+    } catch {
       toast.error('Failed to open Lovable')
     }
   }
@@ -1852,11 +1692,12 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                             {(expandedColumns.has(node.id)
                               ? node.columns
                               : node.columns.slice(0, MAX_VISIBLE_COLUMNS)
-                            ).map((column: any) => {
+                            ).map((column: unknown) => {
                               const Icon = getColumnIcon(column.type)
                               // Find indexes that include this column
                               const columnIndexes = node.indexes.filter(
-                                (idx: any) => idx.columns?.includes(column.key),
+                                (idx: unknown) =>
+                                  idx.columns?.includes(column.key),
                               )
                               const hasIndex = columnIndexes.length > 0
 
@@ -1880,27 +1721,32 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
                                           className="max-w-xs"
                                         >
                                           <div className="space-y-1">
-                                            {columnIndexes.map((idx: any) => (
-                                              <div
-                                                key={idx.$id || idx.key}
-                                                className="text-[12px]"
-                                              >
-                                                <div className="font-medium">
-                                                  {idx.key}
+                                            {columnIndexes.map(
+                                              (idx: unknown) => (
+                                                <div
+                                                  key={idx.$id || idx.key}
+                                                  className="text-[12px]"
+                                                >
+                                                  <div className="font-medium">
+                                                    {idx.key}
+                                                  </div>
+                                                  <div className="text-muted-foreground text-[11px]">
+                                                    Type: {idx.type || 'key'}
+                                                    {idx.columns &&
+                                                      idx.columns.length >
+                                                        1 && (
+                                                        <span>
+                                                          {' '}
+                                                          • Columns:{' '}
+                                                          {idx.columns.join(
+                                                            ', ',
+                                                          )}
+                                                        </span>
+                                                      )}
+                                                  </div>
                                                 </div>
-                                                <div className="text-muted-foreground text-[11px]">
-                                                  Type: {idx.type || 'key'}
-                                                  {idx.columns &&
-                                                    idx.columns.length > 1 && (
-                                                      <span>
-                                                        {' '}
-                                                        • Columns:{' '}
-                                                        {idx.columns.join(', ')}
-                                                      </span>
-                                                    )}
-                                                </div>
-                                              </div>
-                                            ))}
+                                              ),
+                                            )}
                                           </div>
                                         </TooltipContent>
                                       </Tooltip>
@@ -2188,7 +2034,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
             await createIndexMutation.mutateAsync(data)
           }}
           availableColumns={activeTableColumns}
-          existingIndexes={activeTableIndexes.map((idx: any) => ({
+          existingIndexes={activeTableIndexes.map((idx: unknown) => ({
             key: idx.key,
           }))}
           isLoading={createIndexMutation.isPending}

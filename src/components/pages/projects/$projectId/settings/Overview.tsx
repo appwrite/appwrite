@@ -46,7 +46,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 
-
 import {
   Select,
   SelectContent,
@@ -63,6 +62,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import type { Models } from '@appwrite.io/console'
 import { ApiService } from '@appwrite.io/console'
 import {
   Table,
@@ -157,7 +157,7 @@ export function ProjectSettingsOverview({
   const { data: rawProjectData } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
-      const response = await sdk.forConsole.projects.get(projectId)
+      const response = await sdk.forConsole.projects.get({ projectId })
       return response
     },
     enabled: !!projectId,
@@ -170,7 +170,7 @@ export function ProjectSettingsOverview({
   const canWriteProjects = useMemo(() => {
     // TODO: Get actual permission from project or account
     return true // Placeholder - should check actual permissions
-  }, [project])
+  }, [])
 
   // State for name update
   const [projectName, setProjectName] = useState('')
@@ -206,7 +206,7 @@ export function ProjectSettingsOverview({
   // Initialize services from raw project data
   useEffect(() => {
     if (rawProjectData) {
-      const projectData = rawProjectData as any
+      const projectData = rawProjectData as Models.Project
       // Services are stored as serviceStatusFor{ServiceName} properties
       setServices({
         account:
@@ -251,25 +251,36 @@ export function ProjectSettingsOverview({
 
   // Handle URL query parameters for installation alerts
   useEffect(() => {
-    const alert = (search as any)?.alert
+    const searchParams = search as { alert?: string }
+    const alert = searchParams?.alert
     if (alert === 'installation-created') {
       toast.success('Git installation has imported to your project')
-      // Remove alert from URL
       navigate({
-        search: ((prev: any) => {
-          const { alert, ...rest } = prev || {}
-          return rest
-        }) as any,
+        search: ((prev: unknown) => {
+          const o: Record<string, string | undefined> =
+            prev && typeof prev === 'object'
+              ? { ...(prev as Record<string, string | undefined>) }
+              : {}
+          delete o.alert
+          return o
+        }) as (
+          prev: Record<string, string | undefined>,
+        ) => Record<string, string | undefined>,
         replace: true,
       })
     } else if (alert === 'installation-updated') {
       toast.success('Git installation has been successfully updated')
-      // Remove alert from URL
       navigate({
-        search: ((prev: any) => {
-          const { alert, ...rest } = prev || {}
-          return rest
-        }) as any,
+        search: ((prev: unknown) => {
+          const o: Record<string, string | undefined> =
+            prev && typeof prev === 'object'
+              ? { ...(prev as Record<string, string | undefined>) }
+              : {}
+          delete o.alert
+          return o
+        }) as (
+          prev: Record<string, string | undefined>,
+        ) => Record<string, string | undefined>,
         replace: true,
       })
     }
@@ -336,7 +347,7 @@ export function ProjectSettingsOverview({
       )
 
       // Update services state from response
-      const projectData = data.response as any
+      const projectData = data.response as Models.Project
       // Services are stored as serviceStatusFor{ServiceName} properties
       const servicePropertyMap: Record<string, string> = {
         account: 'serviceStatusForAccount',
@@ -350,10 +361,11 @@ export function ProjectSettingsOverview({
         users: 'serviceStatusForUsers',
       }
       const serviceProperty = servicePropertyMap[service]
-      if (serviceProperty && projectData[serviceProperty] !== undefined) {
+      const projectDataRecord = projectData as Record<string, unknown>
+      if (serviceProperty && projectDataRecord[serviceProperty] !== undefined) {
         setServices((prev) => ({
           ...prev,
-          [service]: projectData[serviceProperty],
+          [service]: projectDataRecord[serviceProperty] as boolean,
         }))
       } else {
         // Fallback to the status we just set
@@ -407,7 +419,7 @@ export function ProjectSettingsOverview({
       )
 
       // Update all services state from response
-      const projectData = data.response as any
+      const projectData = data.response as Models.Project
       // Services are stored as serviceStatusFor{ServiceName} properties
       setServices({
         account:
@@ -472,8 +484,8 @@ export function ProjectSettingsOverview({
       const orgsData = queryClient.getQueryData([
         'organizations',
         'console',
-      ]) as any
-      const org = orgsData?.teams?.find((t: any) => t.$id === teamId)
+      ]) as { teams?: Models.Team[] } | undefined
+      const org = orgsData?.teams?.find((t) => t.$id === teamId)
       const orgName = org?.name || 'Organization'
 
       toast.success(
@@ -515,7 +527,7 @@ export function ProjectSettingsOverview({
     mutationFn: async () => {
       // Must use SDK for project's region
       const regionSdk = sdk.forConsoleIn(project?.region || 'us')
-      await regionSdk.projects.delete(projectId)
+      await regionSdk.projects.delete({ projectId })
     },
     onSuccess: () => {
       toast.success(`${project?.name || 'Project'} has been deleted`)
@@ -852,7 +864,6 @@ export function ProjectSettingsOverview({
           {/* Git Configuration Section */}
           <GitConfigurationCard
             projectId={projectId}
-            projectEndpoint={projectEndpoint}
             page={installationsPage}
             limit={installationsLimit}
             onPageChange={setInstallationsPage}
@@ -1038,7 +1049,12 @@ function GlobalVariablesSection({
   const [showSecretModal, setShowSecretModal] = useState(false)
   const [showEditorModal, setShowEditorModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
-  const [selectedVar, setSelectedVar] = useState<any>(null)
+  const [selectedVar, setSelectedVar] = useState<{
+    $id: string
+    key: string
+    value: string
+    secret?: boolean
+  } | null>(null)
 
   // Create form state
   const [createPairs, setCreatePairs] = useState<
@@ -1092,7 +1108,9 @@ function GlobalVariablesSection({
   }
 
   // Convert variables to ENV format
-  const variablesToEnv = (vars: any[]): string => {
+  const variablesToEnv = (
+    vars: Array<{ key: string; value: string; secret?: boolean }>,
+  ): string => {
     return vars
       .filter((v) => !v.secret)
       .map((v) => `${v.key}=${v.value}`)
@@ -1100,7 +1118,9 @@ function GlobalVariablesSection({
   }
 
   // Convert variables to JSON format
-  const variablesToJson = (vars: any[]): string => {
+  const variablesToJson = (
+    vars: Array<{ key: string; value: string; secret?: boolean }>,
+  ): string => {
     const obj: Record<string, string> = {}
     vars
       .filter((v) => !v.secret)
@@ -1119,7 +1139,7 @@ function GlobalVariablesSection({
   const jsonToObject = (content: string): Record<string, string> => {
     try {
       return JSON.parse(content)
-    } catch (e) {
+    } catch {
       throw new Error('Invalid JSON format')
     }
   }
@@ -1174,7 +1194,7 @@ function GlobalVariablesSection({
       setShowCreateModal(false)
       setCreatePairs([{ key: '', value: '' }])
       setCreateSecret(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to create variable'))
     }
   }
@@ -1203,7 +1223,7 @@ function GlobalVariablesSection({
       setSelectedVar(null)
       setUpdateValue('')
       setUpdateSecret(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to update variable'))
     }
   }
@@ -1220,7 +1240,7 @@ function GlobalVariablesSection({
       )
       setShowDeleteModal(false)
       setSelectedVar(null)
-    } catch (error: any) {
+    } catch (error: unknown) {
       setDeleteError(getErrorMessage(error, 'Failed to delete variable'))
     }
   }
@@ -1242,7 +1262,7 @@ function GlobalVariablesSection({
       )
       setShowSecretModal(false)
       setSelectedVar(null)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to mark variable as secret'))
     }
   }
@@ -1276,7 +1296,7 @@ function GlobalVariablesSection({
 
       // Create or update variables
       const existingKeys = new Set(variables.map((v) => v.key))
-      const promises: Promise<any>[] = []
+      const promises: Promise<unknown>[] = []
 
       for (const [key, value] of Object.entries(parsed)) {
         if (existingKeys.has(key)) {
@@ -1307,7 +1327,7 @@ function GlobalVariablesSection({
       setShowImportModal(false)
       setImportFile(null)
       setImportSecret(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       setImportError(getErrorMessage(error, 'Failed to import variables'))
     }
   }
@@ -1341,8 +1361,8 @@ function GlobalVariablesSection({
       const secretKeys = new Set(secretVars.map((v) => v.key))
 
       // Update existing variables
-      const updatePromises: Promise<any>[] = []
-      const deletePromises: Promise<any>[] = []
+      const updatePromises: Promise<unknown>[] = []
+      const deletePromises: Promise<unknown>[] = []
 
       for (const variable of editableVars) {
         if (parsed[variable.key] === undefined) {
@@ -1362,7 +1382,7 @@ function GlobalVariablesSection({
       }
 
       // Create new variables
-      const createPromises: Promise<any>[] = []
+      const createPromises: Promise<unknown>[] = []
       for (const [key, value] of Object.entries(parsed)) {
         const existsInEditable = editableVars.some((v) => v.key === key)
         const existsInSecret = secretKeys.has(key)
@@ -1385,7 +1405,7 @@ function GlobalVariablesSection({
       toast.success('Variables have been updated.')
       setShowEditorModal(false)
       setEditorContent('')
-    } catch (error: any) {
+    } catch (error: unknown) {
       setEditorError(getErrorMessage(error, 'Failed to save variables'))
     }
   }
@@ -1418,7 +1438,7 @@ function GlobalVariablesSection({
     try {
       await navigator.clipboard.writeText(editorContent)
       toast.success('Copied to clipboard')
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy to clipboard')
     }
   }
@@ -1445,7 +1465,7 @@ function GlobalVariablesSection({
         setEditorContent(JSON.stringify(parsed, null, 2))
       }
       setEditorFormat(format)
-    } catch (error) {
+    } catch {
       // If conversion fails, just switch format and use current variables
       const editableVars = variables.filter((v) => !v.secret)
       if (format === 'env') {
@@ -2182,12 +2202,14 @@ function GlobalVariablesSection({
 
 // Change Organization Section Component
 interface ChangeOrganizationSectionProps {
-  project: any
+  project: Pick<Models.Project, 'name' | 'teamId' | '$id' | 'region'> & {
+    platforms?: unknown[]
+  }
   organizations: Array<{ value: string; label: string }>
   organizationsLoading: boolean
   selectedOrgId: string
   onOrgChange: (orgId: string) => void
-  onTransfer: ReturnType<typeof useMutation> | any
+  onTransfer: { isPending: boolean; mutate: (teamId: string) => void }
 }
 
 function ChangeOrganizationSection({
@@ -2199,7 +2221,6 @@ function ChangeOrganizationSection({
   onTransfer,
 }: ChangeOrganizationSectionProps) {
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
-  const selectedOrg = organizations.find((org) => org.value === selectedOrgId)
   const hasNoTargetOrgs = !organizationsLoading && organizations.length === 0
   const isMoveDisabled =
     hasNoTargetOrgs ||
@@ -2381,12 +2402,12 @@ function ChangeOrganizationSection({
 
 // Delete Project Section Component
 interface DeleteProjectSectionProps {
-  project: any
+  project: Pick<Models.Project, 'name' | 'teamId' | '$id' | 'region'>
   deleteConfirmation: string
   onDeleteConfirmationChange: (value: string) => void
   deleteDialogOpen: boolean
   onDeleteDialogOpenChange: (open: boolean) => void
-  onDelete: ReturnType<typeof useMutation> | any
+  onDelete: { isPending: boolean; mutate: (v?: void) => void }
 }
 
 function DeleteProjectSection({

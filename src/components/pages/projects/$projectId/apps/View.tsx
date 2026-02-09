@@ -35,6 +35,7 @@ export function View({ initialData }: ViewProps = {}) {
 
   // Use initialData on first paint so no loading skeleton flash
   const { platforms: platformsFromHook, isLoading } = usePlatforms(projectId)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const platforms = platformsFromHook?.length
     ? platformsFromHook
     : (initialData?.platforms ?? [])

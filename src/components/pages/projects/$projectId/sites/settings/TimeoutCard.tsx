@@ -49,7 +49,7 @@ export function TimeoutCard({ projectId, siteId, site }: TimeoutCardProps) {
         queryKey: ['sites', 'project', projectId],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(getErrorMessage(error, 'Failed to update timeout'))
     },
   })

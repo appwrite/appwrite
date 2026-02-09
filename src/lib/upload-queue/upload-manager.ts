@@ -243,7 +243,7 @@ class UploadManager {
       setTimeout(() => {
         db.deleteUploadItem(item.id)
       }, 5000)
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (error.name === 'AbortError' || error.message?.includes('aborted')) {
         // Upload was cancelled
         await db.updateUploadItem(item.id, {
@@ -320,7 +320,7 @@ class UploadManager {
   /**
    * Check if an error is retryable (network errors, connection reset, etc.)
    */
-  private isRetryableError(error: any): boolean {
+  private isRetryableError(error: unknown): boolean {
     const errorMessage = error.message?.toLowerCase() || ''
     const errorName = error.name?.toLowerCase() || ''
 

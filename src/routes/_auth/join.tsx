@@ -97,7 +97,7 @@ function AcceptInviteContent() {
             .listMemberships(search.teamId!, [])
             .then((membershipsResponse) => {
               const matchingMembership = membershipsResponse.memberships?.find(
-                (m: any) =>
+                (m: unknown) =>
                   m.$id === search.membershipId && m.userId === search.userId,
               )
               if (matchingMembership) {
@@ -140,7 +140,7 @@ function AcceptInviteContent() {
         }
       }, 2000)
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
       const errorMessage = err?.message || 'Failed to accept invitation'
       setError(errorMessage)
       toast.error(errorMessage)

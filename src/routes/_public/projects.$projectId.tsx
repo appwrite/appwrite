@@ -122,9 +122,9 @@ function ProjectLayout() {
   // Do this AFTER all hooks are called to avoid hooks order violation
   const errorMessage = projectError?.message || ''
   const lowerMessage = errorMessage.toLowerCase()
-  const errorCode = (projectError as any)?.code
+  const errorCode = (projectError as unknown)?.code
   const errorName =
-    (projectError as any)?.name ||
+    (projectError as unknown)?.name ||
     (projectError instanceof Error ? projectError.name : '')
 
   const isNotFound =

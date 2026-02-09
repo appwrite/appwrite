@@ -30,7 +30,7 @@ export function Webhooks({
   const [pageSize, setPageSize] = useState(25)
   const [createWebhookOpen, setCreateWebhookOpen] = useState(false)
 
-  const { webhooks, total, isLoading } = useProjectWebhooks(projectId)
+  const { webhooks, isLoading } = useProjectWebhooks(projectId)
 
   // Listen for create event from ServiceHeader
   useEffect(() => {

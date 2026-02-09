@@ -123,7 +123,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   return null
 }
 
-export function AnalyticsTab({ projectId }: AnalyticsTabProps) {
+export function AnalyticsTab({}: AnalyticsTabProps) {
   const [analytics, setAnalytics] = useState<FirewallAnalytics | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d'>('24h')

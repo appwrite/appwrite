@@ -45,7 +45,7 @@ export async function fetchOrganizationMemberships(
   // Try to use organizations.listMemberships if available
   try {
     const response = await (
-      sdk.forConsole.organizations as any
+      sdk.forConsole.organizations as unknown
     ).listMemberships(organizationId, {
       queries: [
         Query.orderAsc('$createdAt'),
@@ -60,7 +60,7 @@ export async function fetchOrganizationMemberships(
       memberships: response.memberships || response || [],
       total: response.total || 0,
     }
-  } catch (err) {
+  } catch {
     // Fallback: try teams.listMemberships if organizations method doesn't exist
     try {
       const response = await sdk.forConsole.teams.listMemberships(
@@ -76,7 +76,7 @@ export async function fetchOrganizationMemberships(
         memberships: response.memberships || [],
         total: response.total || 0,
       }
-    } catch (fallbackErr) {
+    } catch {
       return { memberships: [], total: 0 }
     }
   }
@@ -185,7 +185,7 @@ export function useOrganizationMemberships(
   const memberships = useMemo(() => {
     if (!membershipsData?.memberships) return []
 
-    return membershipsData.memberships.map((membership: any) => {
+    return membershipsData.memberships.map((membership: unknown) => {
       // Extract user info from membership attributes
       // The API provides userName and userEmail as attributes
       const name = membership.userName || membership.name || ''

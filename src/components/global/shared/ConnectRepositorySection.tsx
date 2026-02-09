@@ -29,8 +29,6 @@ import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
 import { cn } from '@/lib/utils'
 
-const REPO_PAGE_SIZE = 10
-
 function GitHubIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -180,7 +178,7 @@ export function ConnectRepositorySection({
         repositoryName: repo.name,
         repositoryOwner: repo.organization,
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error?.message ?? 'Failed to create repository')
     }
   }

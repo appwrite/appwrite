@@ -198,6 +198,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         setVariables(templateVars)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [template])
 
   // Generate domain when site name changes
@@ -205,6 +206,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
     if (siteName && !domain) {
       setDomain(generateDomain(siteName))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteName, generateDomain])
 
   // Get screenshot URL - templates include full URLs
@@ -341,7 +343,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           deploymentId: deployment?.$id ?? '',
         },
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to create site')
       setIsDeploying(false)
     }

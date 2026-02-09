@@ -49,7 +49,7 @@ export function LoggingCard({ projectId, siteId, site }: LoggingCardProps) {
         queryKey: ['sites', 'project', projectId],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(getErrorMessage(error, 'Failed to update logging'))
       // Revert to original value on error
       if (site) {

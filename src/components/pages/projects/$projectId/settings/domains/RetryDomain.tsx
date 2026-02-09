@@ -44,7 +44,7 @@ export function RetryDomainDialog({
         toast.success('Verification in progress')
         onRetrySuccess()
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to retry verification')
     }
   }

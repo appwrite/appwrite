@@ -35,7 +35,7 @@ interface LogsTabProps {
   searchValue: string
 }
 
-export function LogsTab({ projectId, searchValue }: LogsTabProps) {
+export function LogsTab({ searchValue }: LogsTabProps) {
   const [logs, setLogs] = useState<FirewallLog[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filterAction, setFilterAction] = useState<string>('all')
@@ -98,35 +98,6 @@ export function LogsTab({ projectId, searchValue }: LogsTabProps) {
         return <ShieldAlert className="h-4 w-4 text-amber-500" />
       default:
         return null
-    }
-  }
-
-  const getActionBadge = (action: string) => {
-    switch (action) {
-      case 'block':
-        return (
-          <Badge variant="destructive" className="text-[11px]">
-            Blocked
-          </Badge>
-        )
-      case 'allow':
-        return (
-          <Badge variant="default" className="bg-emerald-500 text-[11px]">
-            Allowed
-          </Badge>
-        )
-      case 'challenge':
-        return (
-          <Badge variant="secondary" className="bg-amber-500 text-[11px]">
-            Challenged
-          </Badge>
-        )
-      default:
-        return (
-          <Badge variant="outline" className="text-[11px]">
-            {action}
-          </Badge>
-        )
     }
   }
 

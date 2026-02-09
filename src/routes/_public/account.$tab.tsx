@@ -24,7 +24,7 @@ export const Route = createFileRoute('/_public/account/$tab')({
   ),
   loader: async ({ params, context }) => {
     // Redirect invalid tabs to overview
-    if (params.tab && !VALID_TABS.includes(params.tab as any)) {
+    if (params.tab && !VALID_TABS.includes(params.tab as unknown)) {
       throw redirect({
         to: '/account',
         replace: true,
@@ -70,9 +70,9 @@ export const Route = createFileRoute('/_public/account/$tab')({
         queryClient.prefetchQuery({
           queryKey: ['organizations', 'console', 'full'],
           queryFn: async () => {
-            const response = await sdk.forConsole.organizations.list([
-              Query.equal('platform', 'appwrite'),
-            ])
+            const response = await sdk.forConsole.organizations.list({
+              queries: [Query.equal('platform', 'appwrite')],
+            })
             return response.teams || []
           },
           staleTime: 30 * 1000,

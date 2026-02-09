@@ -194,15 +194,15 @@ export function SupportWizardFullscreen() {
         attachment: attachment ?? undefined,
       })
       const eventName = getSupportAnalyticsEvent()
-      if (typeof window !== 'undefined' && (window as any).track) {
-        ;(window as any).track(eventName, {})
+      if (typeof window !== 'undefined' && (window as unknown).track) {
+        ;(window as unknown).track(eventName, {})
       }
       toast.success('Support ticket submitted')
       setSubmitted(true)
     } catch (err) {
       const eventName = getSupportAnalyticsEvent()
-      if (typeof window !== 'undefined' && (window as any).track) {
-        ;(window as any).track(eventName, { error: String(err) })
+      if (typeof window !== 'undefined' && (window as unknown).track) {
+        ;(window as unknown).track(eventName, { error: String(err) })
       }
       toast.error('Failed to submit support ticket. Please try again.')
     } finally {

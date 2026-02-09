@@ -209,6 +209,7 @@ export function LightningCollectorGame() {
         cancelAnimationFrame(animationRef.current)
       }
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRunning])
 
@@ -234,6 +235,7 @@ export function LightningCollectorGame() {
     }
     window.addEventListener('keydown', listener)
     return () => window.removeEventListener('keydown', listener)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, status])
 
   return (

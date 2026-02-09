@@ -14,8 +14,8 @@ import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 
 interface PlanSummaryCardProps {
   selectedPlan: BillingPlan | null
-  billingPlans: Record<string, any>
-  estimation: any | null
+  billingPlans: Record<string, unknown>
+  estimation: unknown | null
   isLoading: boolean
   budgetEnabled: boolean
   onBudgetToggle: (enabled: boolean) => void
@@ -51,7 +51,7 @@ export function PlanSummaryCard({
     if (!estimation || !estimation.lineItems) return []
 
     // Filter out the base plan charge and get additional charges
-    return estimation.lineItems.filter((item: any) => {
+    return estimation.lineItems.filter((item: unknown) => {
       // Exclude the base plan charge
       const itemName = (item.name || item.description || '').toLowerCase()
       return !itemName.includes('plan') && item.amount > 0
@@ -65,7 +65,7 @@ export function PlanSummaryCard({
     }
     // Fallback calculation
     const additionalTotal = additionalCharges.reduce(
-      (sum: number, charge: any) => sum + (charge.amount || 0),
+      (sum: number, charge: unknown) => sum + (charge.amount || 0),
       0,
     )
     return planPrice + additionalTotal
@@ -118,7 +118,7 @@ export function PlanSummaryCard({
         {/* Additional Charges */}
         {additionalCharges.length > 0 && (
           <div className="space-y-2 pt-2 border-t border-border">
-            {additionalCharges.map((charge: any, index: number) => (
+            {additionalCharges.map((charge: unknown, index: number) => (
               <div
                 key={index}
                 className="flex items-center justify-between text-[13px]"

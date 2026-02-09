@@ -19,7 +19,7 @@ async function generateAppleIcons() {
     let sharp
     try {
       sharp = (await import('sharp')).default
-    } catch (e) {
+    } catch (_e) {
       console.error('\n❌ Error: sharp is not installed.')
       console.error('\nTo fix this, install sharp as a dev dependency:')
       console.error('  bun add -d sharp')

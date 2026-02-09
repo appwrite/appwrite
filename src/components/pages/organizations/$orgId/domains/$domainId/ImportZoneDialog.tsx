@@ -73,7 +73,7 @@ export function ImportZoneDialog({
     try {
       const content = await file.text()
       onImport(content)
-    } catch (err) {
+    } catch {
       setError('Failed to read file. Please try again.')
     }
   }

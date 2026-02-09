@@ -58,7 +58,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 
-
 import {
   Select,
   SelectContent,
@@ -131,7 +130,7 @@ function BrowserIcon({
           height: 64,
         })
         setIconUrl(url)
-      } catch (err) {
+      } catch {
         setError(true)
       }
     }
@@ -201,8 +200,6 @@ export function View() {
     data: user,
     isLoading: userLoading,
     error: userError,
-    isFetching,
-    isError,
   } = useUser(projectId ?? '', userId ?? '')
   const { data: mfaFactors } = useUserMFAFactors(projectId ?? '', userId ?? '')
 
@@ -519,7 +516,9 @@ export function View() {
 
 interface OverviewTabProps {
   user: Models.User
-  mfaFactors: { totp: boolean; authenticators: any[] } | undefined
+  mfaFactors:
+    | { totp: boolean; authenticators: Array<{ type: string; $id?: string }> }
+    | undefined
   projectId: string
   userId: string
   displayName: string
@@ -578,7 +577,7 @@ function UserStatusCard({
   userId: string
   displayName: string
 }) {
-  const [verifyMenuOpen, setVerifyMenuOpen] = useState(false)
+  const [, setVerifyMenuOpen] = useState(false)
   const updateEmailVerification = useUpdateUserEmailVerification(
     projectId,
     userId,
@@ -1436,7 +1435,9 @@ function UpdateMFASection({
   userId,
 }: {
   user: Models.User
-  mfaFactors: { totp: boolean; authenticators: any[] } | undefined
+  mfaFactors:
+    | { totp: boolean; authenticators: Array<{ type: string; $id?: string }> }
+    | undefined
   projectId: string
   userId: string
 }) {
@@ -1444,7 +1445,10 @@ function UpdateMFASection({
   const updateMFA = useUpdateUserMFA(projectId, userId)
   const deleteAuthenticator = useDeleteUserMFAAuthenticator(projectId, userId)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [authenticatorToDelete, setAuthenticatorToDelete] = useState<any>(null)
+  const [authenticatorToDelete, setAuthenticatorToDelete] = useState<{
+    type: string
+    $id?: string
+  } | null>(null)
 
   useEffect(() => {
     setUserMfa(!!user.mfa)
@@ -1466,7 +1470,10 @@ function UpdateMFASection({
     })
   }
 
-  const handleDeleteAuthenticator = (authenticator: any) => {
+  const handleDeleteAuthenticator = (authenticator: {
+    type: string
+    $id?: string
+  }) => {
     setAuthenticatorToDelete(authenticator)
     setDeleteDialogOpen(true)
   }
@@ -1804,7 +1811,6 @@ function MembershipsTab({
   const navigate = useNavigate()
 
   const memberships = data?.memberships || []
-  const total = data?.total || 0
 
   const handleDelete = (membership: Models.Membership) => {
     setMembershipToDelete(membership)
@@ -2021,7 +2027,7 @@ function IdentitiesTab({
   userId: string
 }) {
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
+  const [search] = useState('')
   const [selectedIdentities, setSelectedIdentities] = useState<Set<string>>(
     new Set(),
   )
@@ -2100,7 +2106,7 @@ function IdentitiesTab({
       )
       setSelectedIdentities(new Set())
       setDeleteDialogOpen(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to delete identities')
     }
   }
@@ -2357,7 +2363,7 @@ function TargetsTab({
       )
       setSelectedTargets(new Set())
       setDeleteDialogOpen(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to delete targets')
     }
   }
@@ -2612,7 +2618,7 @@ function CreateTargetDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const targetData: any = {
+    const targetData: unknown = {
       providerType,
       identifier,
     }
@@ -2783,7 +2789,6 @@ function CreateTargetDialog({
 function SessionsTab({
   projectId,
   userId,
-  displayName,
 }: {
   projectId: string
   userId: string
@@ -2797,7 +2802,6 @@ function SessionsTab({
   const deleteSession = useDeleteUserSession(projectId, userId)
 
   const sessions = data?.sessions || []
-  const total = data?.total || 0
 
   const handleDelete = (session: Models.Session) => {
     setSessionToDelete(session)

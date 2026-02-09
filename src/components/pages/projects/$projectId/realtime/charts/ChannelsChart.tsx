@@ -58,7 +58,6 @@ const CustomTooltip = ({
 
 export function RealtimeChannelsChart({
   data,
-  dateRange,
   projectId,
   description = 'Number of active channels over time',
 }: RealtimeChannelsChartProps) {

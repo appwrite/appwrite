@@ -1,5 +1,5 @@
 import { useLocation } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, RefreshCw, Home, Copy, Check } from 'lucide-react'
 import { captureExceptionWithContext } from '@/components/global/providers/SentryContext'
 import { formatError } from '@/lib/utils/error-formatting'
@@ -114,7 +114,7 @@ export function ErrorComponent({
   const isProjectRoute = location.pathname.startsWith('/projects/')
   const errorMessage = error.message || ''
   const lowerMessage = errorMessage.toLowerCase()
-  const errorCode = (error as any).code
+  const errorCode = (error as unknown).code
 
   const isProjectNotFound =
     isProjectRoute &&
@@ -152,17 +152,26 @@ export function ErrorComponent({
         }
       : formatError(error, 'An unexpected error occurred.')
 
-  const message = {
-    type: 'NOTIFY_ERROR',
-    data: {
-      errorId: randomErrorId.current,
-      href: location.href,
-      errorMessage: error.message,
-      errorStack: error.stack,
-      errorCause: error.cause,
-      errorComponentStack: info?.componentStack,
-    },
-  }
+  const message = useMemo(
+    () => ({
+      type: 'NOTIFY_ERROR',
+      data: {
+        errorId: randomErrorId.current,
+        href: location.href,
+        errorMessage: error.message,
+        errorStack: error.stack,
+        errorCause: error.cause,
+        errorComponentStack: info?.componentStack,
+      },
+    }),
+    [
+      location.href,
+      error.message,
+      error.stack,
+      error.cause,
+      info?.componentStack,
+    ],
+  )
 
   // Extract all available context from the current route
   const routeContext = extractRouteContext(location.pathname)
@@ -175,8 +184,8 @@ export function ErrorComponent({
       // Error metadata
       errorId: randomErrorId.current,
       errorName: error.name,
-      errorCode: (error as any).code,
-      errorType: (error as any).type,
+      errorCode: (error as unknown).code,
+      errorType: (error as unknown).type,
       // Component stack trace
       componentStack: info?.componentStack,
       // URL information
@@ -207,6 +216,7 @@ export function ErrorComponent({
     location.pathname,
     isProjectNotFound,
     isProjectAccessDenied,
+    routeContext,
   ])
 
   // Every 2 seconds, notify parent that an error exists
@@ -216,7 +226,7 @@ export function ErrorComponent({
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [message])
 
   const handleGoHome = () => {
     navigate({ to: '/' })

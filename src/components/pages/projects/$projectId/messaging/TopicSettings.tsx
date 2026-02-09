@@ -109,6 +109,7 @@ export function View() {
     }
 
     return 'subscribers'
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, topicId])
 
   const tabs: Tab[] = useMemo(

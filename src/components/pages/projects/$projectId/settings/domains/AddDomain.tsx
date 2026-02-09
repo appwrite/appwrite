@@ -22,15 +22,6 @@ interface AddDomainDialogProps {
   onCreateSuccess: (rule: Models.ProxyRule) => void
 }
 
-// Helper to extract apex domain
-function getApexDomain(domain: string): string {
-  const parts = domain.split('.')
-  if (parts.length >= 2) {
-    return `${parts[parts.length - 2]}.${parts[parts.length - 1]}`
-  }
-  return domain
-}
-
 export function AddDomainDialog({
   open,
   onOpenChange,
@@ -45,8 +36,9 @@ export function AddDomainDialog({
 
   // Pre-fill domain from URL query parameter
   useEffect(() => {
-    if (open && (search as any)?.domain) {
-      setDomainName((search as any).domain)
+    const searchParams = search as { domain?: string }
+    if (open && searchParams?.domain) {
+      setDomainName(searchParams.domain)
     }
   }, [open, search])
 
@@ -71,20 +63,11 @@ export function AddDomainDialog({
         domainName.trim().toLowerCase(),
       )
 
-      // Try to create apex domain if cloud (silently fail if it already exists)
-      const apexDomain = getApexDomain(domainName.trim().toLowerCase())
-      try {
-        // Get project to get teamId
-        const { useProject } = await import('@/lib/react-query/hooks')
-        // This would need to be done in a mutation, but for now we'll skip it
-        // as the guidelines say apex domain creation errors are silent
-      } catch (error) {
-        // Silently swallow apex domain creation errors
-      }
-
       onCreateSuccess(rule)
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add domain')
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to add domain',
+      )
       setIsSubmitting(false)
     }
   }

@@ -25,10 +25,7 @@ export function View() {
 
   const refreshContext = useRefreshOptional()
 
-  const { data: site, isLoading: siteLoading } = useProjectSite(
-    projectId,
-    siteId,
-  )
+  const { isLoading: siteLoading } = useProjectSite(projectId, siteId)
 
   // Sync requested page with URL when it changes externally (e.g., browser back/forward)
   useEffect(() => {
@@ -40,7 +37,6 @@ export function View() {
 
   // Fetch data for the requested page (this will fetch in background)
   const {
-    logs: requestedLogs,
     total,
     isLoading: logsLoading,
     isFetching: logsFetching,

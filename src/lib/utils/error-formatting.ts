@@ -9,9 +9,23 @@ export interface FormattedError {
   isUserFriendly: boolean
 }
 
+/** Error-like value with optional HTTP-style code (e.g. from API/Appwrite) */
+export interface ErrorWithCode extends Error {
+  code?: number
+  status?: number
+}
+
+function isErrorWithCode(error: unknown): error is ErrorWithCode {
+  return error instanceof Error && ('code' in error || 'status' in error)
+}
+
+function getErrorCode(error: ErrorWithCode): number | undefined {
+  return error.code ?? (error as ErrorWithCode & { status?: number }).status
+}
+
 /**
  * Formats an error into a user-friendly message
- * @param error - The error object (can be Error, any, or unknown)
+ * @param error - The error object (Error, ErrorWithCode, or unknown)
  * @param fallbackMessage - Optional fallback message if error cannot be parsed
  * @returns Formatted error with title and message
  */
@@ -32,11 +46,12 @@ export function formatError(
   if (error instanceof Error) {
     const message = error.message || ''
     const lowerMessage = message.toLowerCase()
+    const code = isErrorWithCode(error) ? getErrorCode(error) : undefined
 
     // Check for 404 / not found errors
     if (
       error.name === 'NotFoundError' ||
-      (error as any).code === 404 ||
+      code === 404 ||
       lowerMessage.includes('not found') ||
       lowerMessage.includes('404') ||
       lowerMessage.includes('does not exist')
@@ -52,7 +67,7 @@ export function formatError(
     // Check for permission/authorization errors
     if (
       error.name === 'UnauthorizedError' ||
-      (error as any).code === 401 ||
+      code === 401 ||
       lowerMessage.includes('unauthorized') ||
       lowerMessage.includes('permission denied') ||
       lowerMessage.includes('access denied')
@@ -66,7 +81,7 @@ export function formatError(
     }
 
     // Check for forbidden errors
-    if ((error as any).code === 403 || lowerMessage.includes('forbidden')) {
+    if (code === 403 || lowerMessage.includes('forbidden')) {
       return {
         title: 'Forbidden',
         message: 'You do not have permission to access this resource.',
@@ -76,7 +91,7 @@ export function formatError(
 
     // Check for validation errors
     if (
-      (error as any).code === 400 ||
+      code === 400 ||
       lowerMessage.includes('validation') ||
       lowerMessage.includes('invalid') ||
       lowerMessage.includes('bad request')
@@ -96,9 +111,9 @@ export function formatError(
 
     // Check for server errors
     if (
-      (error as any).code === 500 ||
-      (error as any).code === 502 ||
-      (error as any).code === 503 ||
+      code === 500 ||
+      code === 502 ||
+      code === 503 ||
       lowerMessage.includes('server error') ||
       lowerMessage.includes('internal error')
     ) {
@@ -161,8 +176,8 @@ export function formatError(
   }
 
   // Handle objects with message property
-  if (typeof error === 'object' && 'message' in error) {
-    const message = String((error as any).message || '')
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = String((error as { message?: unknown }).message || '')
     if (message) {
       return formatError(new Error(message), fallbackMessage)
     }

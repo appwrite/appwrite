@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import {
-  FolderOpen,
-  List,
-  LayoutGrid,
-  Lock,
-  Folder,
-} from 'lucide-react'
+import { FolderOpen, List, LayoutGrid, Lock, Folder } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
   useProjectBuckets,

@@ -1,9 +1,4 @@
-import {
-  CreditCard,
-  Plus,
-  MoreHorizontal,
-  Info,
-} from 'lucide-react'
+import { CreditCard, Plus, MoreHorizontal, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -158,13 +153,6 @@ export function PaymentMethods({
       )
     }
   }
-
-  // Check if any payment method has errors
-  const hasErrors =
-    primaryMethod?.failed ||
-    primaryMethod?.expired ||
-    backupMethod?.failed ||
-    backupMethod?.expired
 
   if (methodsLoading) {
     return (
@@ -351,7 +339,6 @@ interface PaymentMethodCardProps {
 function PaymentMethodCard({
   method,
   isPrimary,
-  orgId,
   onSetPrimary,
   onReplacePrimary,
   onReplaceBackup,

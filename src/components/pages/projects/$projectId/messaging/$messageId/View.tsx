@@ -62,7 +62,7 @@ export function View() {
     strict: false,
   })
   const navigate = useNavigate()
-  const location = useLocation()
+  useLocation()
   const queryClient = useQueryClient()
 
   // Fetch message (updated via realtime when backend emits message events)
@@ -102,7 +102,7 @@ export function View() {
       message.topics.map((topicId) => fetchTopic(projectId, topicId)),
     ).then((results) => {
       const topicsMap: Record<string, Models.Topic> = {}
-      results.forEach((result, index) => {
+      results.forEach((result) => {
         if (result.status === 'fulfilled') {
           const topic = result.value
           topicsMap[topic.$id] = topic
@@ -227,6 +227,7 @@ export function View() {
     if (message) {
       setSelectedTopicIds(new Set(message.topics || []))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [message?.topics])
 
   // Initialize selected targets separately to avoid infinite loop
@@ -235,6 +236,7 @@ export function View() {
     if (targetIds.length > 0) {
       setSelectedTargetIds(new Set(targetIds))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetIds.join(',')]) // Use join to create stable dependency
 
   const [topicsModalOpen, setTopicsModalOpen] = useState(false)
@@ -495,14 +497,6 @@ export function View() {
   }
 
   const TypeIcon = getMessageTypeIcon()
-
-  const canUpdate =
-    isDraft &&
-    (hasEmailChanges ||
-      hasSMSChanges ||
-      hasPushChanges ||
-      hasTopicsChanged ||
-      hasTargetsChanged)
 
   const handleUpdateMessage = () => {
     if (message.providerType === 'email') {
@@ -1586,7 +1580,7 @@ function TopicsSelectionModal({
   const [page, setPage] = useState(0)
   const pageSize = 25
 
-  const { topics, total, isLoading } = useProjectTopics(
+  const { topics, isLoading } = useProjectTopics(
     projectId || null,
     page,
     pageSize,
@@ -1747,8 +1741,6 @@ function TargetsSelectionModal({
   onOpenChange,
   onSelect,
   projectId,
-  providerType,
-  existingTargetIds,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -1764,7 +1756,7 @@ function TargetsSelectionModal({
 
   // For now, we'll use users - targets will be created from selected users
   // TODO: Implement proper target listing when API supports it
-  const { users, total, isLoading } = useProjectUsers(
+  const { users, isLoading } = useProjectUsers(
     projectId || null,
     page,
     pageSize,

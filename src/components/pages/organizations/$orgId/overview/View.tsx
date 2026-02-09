@@ -77,6 +77,7 @@ import {
 } from '@/components/ui/tooltip'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { toast } from 'sonner'
@@ -363,25 +364,33 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const organizations = useMemo(() => {
     if (!organizationsData?.teams) return []
 
-    return organizationsData.teams.map((org: any) => {
-      // Use plan filter utility to normalize plan name from tier or billingPlan
-      const planName = getPlanNameFromTier(
-        org.billingPlan || org.tier || 'free',
-      )
-      // Map 'custom' to 'enterprise' for compatibility with Organization type
-      const plan = (
-        planName === 'custom' ? 'enterprise' : planName
-      ) as Organization['plan']
+    return organizationsData.teams.map(
+      (org: {
+        $id: string
+        name: string
+        total?: number
+        billingPlan?: string
+        tier?: string
+        prefs?: Record<string, unknown>
+      }) => {
+        const planName = getPlanNameFromTier(
+          org.billingPlan ?? (org.prefs as { tier?: string })?.tier ?? 'free',
+        )
+        // Map 'custom' to 'enterprise' for compatibility with Organization type
+        const plan = (
+          planName === 'custom' ? 'enterprise' : planName
+        ) as Organization['plan']
 
-      return {
-        $id: org.$id,
-        name: org.name,
-        slug: org.name.toLowerCase().replace(/\s+/g, '-'),
-        avatar: undefined, // Organizations from SDK don't have avatar
-        plan,
-        members: org.total || 0,
-      }
-    })
+        return {
+          $id: org.$id,
+          name: org.name,
+          slug: org.name.toLowerCase().replace(/\s+/g, '-'),
+          avatar: undefined, // Organizations from SDK don't have avatar
+          plan,
+          members: org.total || 0,
+        }
+      },
+    )
   }, [organizationsData])
 
   // Get selected organization from URL param (orgId)
@@ -416,9 +425,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       // Remove the search param from URL
       navigate({
         to: location.pathname,
-        search: (prev: any) => {
+        search: (prev: Record<string, unknown>) => {
           if (!prev || typeof prev !== 'object') return {}
-          const newSearch = { ...prev }
+          const newSearch = { ...(prev as Record<string, unknown>) }
           delete newSearch.createOrg
           // Return empty object if no other params, otherwise return the cleaned object
           return Object.keys(newSearch).length === 0 ? {} : newSearch
@@ -448,9 +457,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       setCreateProjectDialogOpen(true)
       navigate({
         to: location.pathname,
-        search: (prev: any) => {
+        search: (prev: Record<string, unknown>) => {
           if (!prev || typeof prev !== 'object') return {}
-          const newSearch = { ...prev }
+          const newSearch = { ...(prev as Record<string, unknown>) }
           delete newSearch.create
           return Object.keys(newSearch).length === 0 ? {} : newSearch
         },
@@ -512,7 +521,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Mutation to update organization name
   const updateOrgNameMutation = useMutation({
     mutationFn: async ({ orgId, name }: { orgId: string; name: string }) => {
-      await sdk.forConsole.teams.updateName(orgId, name)
+      await sdk.forConsole.teams.updateName({ teamId: orgId, name })
     },
     onSuccess: () => {
       // Invalidate organizations query to refetch with updated name
@@ -527,7 +536,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   // Mutation to delete organization
   const deleteOrgMutation = useMutation({
     mutationFn: async (orgId: string) => {
-      await sdk.forConsole.organizations.delete(orgId)
+      await sdk.forConsole.organizations.delete({ organizationId: orgId })
     },
     onSuccess: () => {
       // Invalidate organizations query to refetch the list
@@ -627,7 +636,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   }, [searchQuery])
 
   // Track when projects are actually rendered in the DOM (for controlling full-screen loader)
-  const [projectsRendered, setProjectsRendered] = useState(false)
+  const [, setProjectsRendered] = useState(false)
   const projectsContainerRef = useRef<HTMLDivElement>(null)
 
   // Check if projects are rendered in the DOM and update state
@@ -686,7 +695,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   const activeProjects = useMemo(() => {
     if (!activeProjectsData?.projects) return []
 
-    return activeProjectsData.projects.map((project: any) => {
+    return activeProjectsData.projects.map((project: Models.Project) => {
       // Extract platforms count from raw project data
       // platforms is an array in the project document
       const platforms = project.platforms || []
@@ -763,7 +772,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     const seatsPlanIncluded = organizationPlan?.addons?.seats?.planIncluded
 
     // Then check plan.members field (base plan members)
-    const planMembers = (organizationPlan as any)?.members
+    const planMembers = organizationPlan?.members
 
     // Priority: seats addon limit > seats plan included > plan members
     let limitNum: number | null = null
@@ -839,6 +848,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
         to: '/organizations/$orgId/settings',
       },
     ]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOrg, orgId])
 
   const filteredProjectsByTeam = projectsByTeam
@@ -862,8 +872,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     const route = tabRoutes[tab]
     if (route) {
       navigate({
-        to: route as any,
-        params: { orgId: orgId! } as any,
+        to: route as unknown,
+        params: { orgId: orgId! } as unknown,
         replace: true,
       })
     }
@@ -885,8 +895,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
       (activeTab && tabRoutes[activeTab as keyof typeof tabRoutes]) ||
       '/organizations/$orgId'
     navigate({
-      to: route as any,
-      params: { orgId: org.$id } as any,
+      to: route as unknown,
+      params: { orgId: org.$id } as unknown,
       replace: true,
     })
 
@@ -1124,8 +1134,8 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               {orgTabs.map((tab) => (
                 <Link
                   key={tab.id}
-                  to={tab.to as any}
-                  params={{ orgId: orgId! } as any}
+                  to={tab.to as unknown}
+                  params={{ orgId: orgId! } as unknown}
                   replace
                   role="tab"
                   aria-selected={activeTab === tab.id}
@@ -1193,7 +1203,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   member{limit !== 1 ? 's' : ''}.{' '}
                                   <Link
                                     to="/organizations/$orgId/change-plan"
-                                    params={{ orgId: orgId! } as any}
+                                    params={{ orgId: orgId! } as unknown}
                                     className="font-medium underline hover:no-underline"
                                   >
                                     Upgrade
@@ -1207,7 +1217,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   {remaining} remaining.{' '}
                                   <Link
                                     to="/organizations/$orgId/change-plan"
-                                    params={{ orgId: orgId! } as any}
+                                    params={{ orgId: orgId! } as unknown}
                                     className="font-medium underline hover:no-underline"
                                   >
                                     Upgrade
@@ -1225,7 +1235,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         >
                           <Link
                             to="/organizations/$orgId/change-plan"
-                            params={{ orgId: orgId! } as any}
+                            params={{ orgId: orgId! } as unknown}
                           >
                             Upgrade
                           </Link>
@@ -1244,10 +1254,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
           (() => {
             if (!organizationPlan) return null
 
-            const projectLimit = (organizationPlan?.addons as any)?.projects
-              ?.limit
-            const planIncluded = (organizationPlan?.addons as any)?.projects
-              ?.planIncluded
+            const projectLimit = organizationPlan?.addons?.projects?.limit
+            const planIncluded =
+              organizationPlan?.addons?.projects?.planIncluded
             const limitNum = Number(projectLimit ?? planIncluded)
             const limit = isNaN(limitNum) ? null : limitNum
             const planName = organizationPlan?.name || 'plan'
@@ -1287,7 +1296,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   project{limit !== 1 ? 's' : ''}.{' '}
                                   <Link
                                     to="/organizations/$orgId/change-plan"
-                                    params={{ orgId: orgId! } as any}
+                                    params={{ orgId: orgId! } as unknown}
                                     className="font-medium underline hover:no-underline"
                                   >
                                     Upgrade
@@ -1301,7 +1310,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                   {remaining} remaining.{' '}
                                   <Link
                                     to="/organizations/$orgId/change-plan"
-                                    params={{ orgId: orgId! } as any}
+                                    params={{ orgId: orgId! } as unknown}
                                     className="font-medium underline hover:no-underline"
                                   >
                                     Upgrade
@@ -1319,7 +1328,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         >
                           <Link
                             to="/organizations/$orgId/change-plan"
-                            params={{ orgId: orgId! } as any}
+                            params={{ orgId: orgId! } as unknown}
                           >
                             Upgrade
                           </Link>
@@ -1391,12 +1400,10 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                               )
                             }
 
-                            const projectLimit = (
-                              organizationPlan?.addons as any
-                            )?.projects?.limit
-                            const planIncluded = (
-                              organizationPlan?.addons as any
-                            )?.projects?.planIncluded
+                            const projectLimit =
+                              organizationPlan?.addons?.projects?.limit
+                            const planIncluded =
+                              organizationPlan?.addons?.projects?.planIncluded
                             const limitNum = Number(
                               projectLimit ?? planIncluded,
                             )
@@ -1782,7 +1789,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                                                       toast.success(
                                                         'Invitation resent successfully',
                                                       )
-                                                    } catch (error: any) {
+                                                    } catch (error: unknown) {
                                                       toast.error(
                                                         error?.message ||
                                                           'Failed to resend invitation',
@@ -2454,7 +2461,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   toast.success('Role updated successfully')
                   setUpdateRoleDialogOpen(false)
                   setSelectedMember(null)
-                } catch (error: any) {
+                } catch (error: unknown) {
                   toast.error(error?.message || 'Failed to update role')
                 }
               }}
@@ -2533,7 +2540,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                   )
                   setRemoveMemberDialogOpen(false)
                   setSelectedMember(null)
-                } catch (error: any) {
+                } catch (error: unknown) {
                   toast.error(error?.message || 'Failed to remove member')
                 }
               }}
@@ -2561,7 +2568,7 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
               params: { orgId: newOrg.$id },
               replace: true,
             })
-          } catch (error: any) {
+          } catch (error: unknown) {
             toast.error(error?.message || 'Failed to create organization')
           }
         }}

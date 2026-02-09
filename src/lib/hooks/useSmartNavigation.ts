@@ -41,7 +41,7 @@ export function useSmartNavigation({
   const goBack = useCallback(() => {
     // Priority 1: If explicit path is provided, always use it
     if (fallbackPath) {
-      navigate({ to: fallbackPath as any })
+      navigate({ to: fallbackPath as unknown })
       return
     }
 
@@ -49,13 +49,13 @@ export function useSmartNavigation({
     if (navigationHistory) {
       const previousPath = navigationHistory.popHistory()
       if (previousPath) {
-        navigate({ to: previousPath as any })
+        navigate({ to: previousPath as unknown })
         return
       }
     }
 
     // Priority 3: No internal history, go to root
-    navigate({ to: '/' as any })
+    navigate({ to: '/' as unknown })
   }, [navigate, fallbackPath, navigationHistory])
 
   return goBack

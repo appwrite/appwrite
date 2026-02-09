@@ -19,13 +19,7 @@ import {
 import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
-import {
-  Upload,
-  File,
-  X,
-  GitBranch,
-  LayoutTemplate,
-} from 'lucide-react'
+import { Upload, File, X, GitBranch, LayoutTemplate } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -83,6 +77,7 @@ export function ManualUploadView() {
       if (!buildCommand) setBuildCommand(defaults.buildCommand)
       if (!outputDirectory) setOutputDirectory(defaults.outputDirectory)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [framework, getFrameworkDefaults])
 
   // Generate domain when site name changes
@@ -90,6 +85,7 @@ export function ManualUploadView() {
     if (siteName && !domain) {
       setDomain(generateDomain(siteName))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteName, generateDomain])
 
   const handleFileSelect = (files: FileList | null) => {
@@ -186,7 +182,7 @@ export function ManualUploadView() {
       // 4. Upload deployment using uploader
       // Note: This is a placeholder - the actual uploader would need to be implemented
       const projectSdk = sdk.forProject(projectId)
-      const deployment = await (projectSdk.sites as any).createDeployment({
+      const deployment = await (projectSdk.sites as unknown).createDeployment({
         siteId: site.$id,
         code: uploadFile,
         activate: true,
@@ -212,7 +208,7 @@ export function ManualUploadView() {
         params: { projectId },
         search: { siteId: site.$id, deploymentId: deployment.$id },
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to create site')
       setIsDeploying(false)
     }

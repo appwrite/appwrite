@@ -175,7 +175,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
             return (
               <Link
                 key={tab.id}
-                to={tab.to as any}
+                to={tab.to as unknown}
                 params={tab.params}
                 replace
                 role="tab"
@@ -280,7 +280,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                     return (
                       <Link
                         key={tab.id}
-                        to={tab.to as any}
+                        to={tab.to as unknown}
                         params={tab.params}
                         replace
                         role="tab"

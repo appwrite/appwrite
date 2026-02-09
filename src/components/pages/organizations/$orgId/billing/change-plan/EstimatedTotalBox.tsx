@@ -9,10 +9,10 @@ import { formatCurrency } from '../utils'
 import type { Models } from '@appwrite.io/console'
 
 interface EstimatedTotalBoxProps {
-  estimation: any | null
+  estimation: unknown | null
   isLoading: boolean
   selectedPlan: BillingPlan | null
-  billingPlans: Record<string, any>
+  billingPlans: Record<string, unknown>
   coupon: Models.Coupon | null
   onCouponRemove: () => void
   budget?: number
@@ -22,11 +22,8 @@ interface EstimatedTotalBoxProps {
 export function EstimatedTotalBox({
   estimation,
   isLoading,
-  selectedPlan,
-  billingPlans,
   coupon,
   onCouponRemove,
-  budget,
   onBudgetChange,
 }: EstimatedTotalBoxProps) {
   const [budgetEnabled, setBudgetEnabled] = useState(false)
@@ -78,7 +75,7 @@ export function EstimatedTotalBox({
   // API returns: { items: [{ label, value }], amount, grossAmount, discount, credits, discounts: [] }
   // Component expects: { lineItems: [{ name/description, amount }], totalDue, discounts: [], credits: [] }
   const items = estimation.items || []
-  const lineItems = items.map((item: any) => ({
+  const lineItems = items.map((item: unknown) => ({
     name: item.label,
     description: item.label,
     amount: item.value || 0,
@@ -90,7 +87,6 @@ export function EstimatedTotalBox({
   const creditsAmount = estimation.credits || 0
   const organizationCredits = estimation.organizationCredits || 0
   const totalDue = estimation.amount || 0
-  const grossAmount = estimation.grossAmount || 0
   const recurringCharge = estimation.recurringCharge || 0
 
   return (
@@ -107,7 +103,7 @@ export function EstimatedTotalBox({
         {/* Line Items */}
         {lineItems.length > 0 && (
           <div className="space-y-2">
-            {lineItems.map((item: any, index: number) => (
+            {lineItems.map((item: unknown, index: number) => (
               <div
                 key={index}
                 className="flex items-center justify-between text-[13px]"
@@ -126,7 +122,7 @@ export function EstimatedTotalBox({
         {/* Discounts */}
         {(discounts.length > 0 || discountAmount > 0) && (
           <div className="space-y-2 pt-2 border-t border-border">
-            {discounts.map((discount: any, index: number) => (
+            {discounts.map((discount: unknown, index: number) => (
               <div
                 key={index}
                 className="flex items-center justify-between text-[13px]"

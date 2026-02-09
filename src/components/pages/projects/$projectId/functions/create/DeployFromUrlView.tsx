@@ -16,8 +16,7 @@ import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { Loader2 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ID } from '@appwrite.io/console'
-import { TemplateReferenceType } from '@appwrite.io/console'
+import { ID, Runtime, TemplateReferenceType } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useProjectRuntimes } from '@/lib/react-query/hooks'
 import { useFunctionWizard } from './WizardContext'
@@ -50,7 +49,6 @@ export function DeployFromUrlView({
   entrypointFromSearch,
   installFromSearch,
   rootDirFromSearch,
-  envFromSearch,
 }: DeployFromUrlViewProps) {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
@@ -75,6 +73,7 @@ export function DeployFromUrlView({
 
   useEffect(() => {
     if (parsed?.name && !functionName) setFunctionName(parsed.name)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parsed])
 
   useEffect(() => {
@@ -82,6 +81,7 @@ export function DeployFromUrlView({
       setDomain(generateDomain(functionName))
       setDomainValid(true)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [functionName, generateDomain])
 
   const handleDeploy = async () => {
@@ -108,7 +108,7 @@ export function DeployFromUrlView({
       await projectSdk.functions.create({
         functionId: finalFunctionId,
         name: functionName.trim(),
-        runtime: runtime as any,
+        runtime: runtime as Runtime,
         execute: [],
         entrypoint: entrypoint.trim() || undefined,
         commands: commands.trim() || undefined,
@@ -149,8 +149,10 @@ export function DeployFromUrlView({
         to: '/projects/$projectId/functions/$functionId',
         params: { projectId, functionId: finalFunctionId },
       })
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to create function')
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create function',
+      )
       setIsDeploying(false)
     }
   }

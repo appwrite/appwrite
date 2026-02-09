@@ -104,7 +104,6 @@ export function SignIn({
   // Re-read when location changes (e.g., navigating back to sign-in page)
   useEffect(() => {
     updateLastLoginMethod()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname])
 
   const handleSubmit = (data: z.infer<typeof schema>) => {

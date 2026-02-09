@@ -15,17 +15,17 @@ import type { Models } from '@appwrite.io/console'
 
 interface OrganizationUsageLimitsProps {
   projects: Models.Project[]
-  orgUsage: any
-  members: any
-  organization: any
+  orgUsage: unknown
+  members: unknown
+  organization: unknown
   targetLimit: number
-  onRef: (ref: any) => void
+  onRef: (ref: unknown) => void
 }
 
 export const OrganizationUsageLimits = forwardRef<
   { getSelectedProjects: () => string[] },
   OrganizationUsageLimitsProps
->(({ projects, orgUsage, members, organization, targetLimit, onRef }, ref) => {
+>(({ projects, targetLimit, onRef }, ref) => {
   const [selectedProjects, setSelectedProjects] = useState<Set<string>>(
     new Set(),
   )

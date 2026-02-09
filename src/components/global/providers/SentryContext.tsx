@@ -192,7 +192,7 @@ export function captureExceptionWithContext(
     userId?: string
     siteId?: string
     componentStack?: string
-    [key: string]: any
+    [key: string]: unknown
   },
 ): string | undefined {
   if (!isSentryEnabled()) return undefined

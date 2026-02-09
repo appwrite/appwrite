@@ -107,7 +107,7 @@ export function View() {
       return await projectSdk.functions.update({
         functionId,
         name: func.name,
-        runtime: func.runtime as any,
+        runtime: func.runtime as unknown,
         execute: func.execute || undefined,
         events: func.events || undefined,
         schedule: func.schedule || undefined,
@@ -129,7 +129,7 @@ export function View() {
         queryKey: ['functions', 'project', projectId],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(error.message || 'Failed to update function')
     },
   })
@@ -177,7 +177,7 @@ export function View() {
       return await projectSdk.functions.update({
         functionId,
         name: func.name,
-        runtime: func.runtime as any,
+        runtime: func.runtime as unknown,
         execute: func.execute || undefined,
         events: func.events || undefined,
         schedule: func.schedule || undefined,
@@ -198,7 +198,7 @@ export function View() {
         queryKey: ['functions', 'project', projectId],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(getErrorMessage(error))
       // Revert to original value on error
       if (func) {
@@ -254,7 +254,7 @@ export function View() {
           params: { projectId: projectId! },
         })
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         toast.error(error.message || 'Failed to delete function')
       },
     })

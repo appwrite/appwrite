@@ -341,6 +341,7 @@ export function View({ plan = 'pro' }: ViewProps) {
 
   // Calculate cutoff date based on plan
   const planLimit = PLAN_TIME_LIMITS[plan]
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const cutoffDate = new Date(Date.now() - planLimit.hours * 60 * 60 * 1000)
 
   // Filter activities

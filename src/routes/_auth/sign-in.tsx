@@ -13,6 +13,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException, OAuthProvider } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -69,10 +70,9 @@ function SignInPage() {
         window.location.href = url
       }
       // If void, the SDK has already initiated the redirect, so we don't need to do anything
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsGitHubLoading(false)
-      const errorMessage = error?.message || 'Failed to initiate GitHub login'
-      toast.error(errorMessage)
+      toast.error(getErrorMessage(error, 'Failed to initiate GitHub login'))
       console.error('GitHub OAuth error:', error)
     }
   }
@@ -88,7 +88,7 @@ function SignInPage() {
         // After session creation, check if we can get account (MFA might be required)
         // This will throw if MFA is required
         await sdk.forConsole.account.get()
-      } catch (error: any) {
+      } catch (error: unknown) {
         // Check for MFA requirement - this is the key check
         if (
           error instanceof AppwriteException &&
@@ -107,15 +107,20 @@ function SignInPage() {
       setLastLoginMethod('email')
       await router.invalidate()
       if (search.redirect && isValidRelativeRedirect(search.redirect)) {
-        navigate({ to: search.redirect as any })
+        navigate({ to: search.redirect })
       } else {
         navigate({ to: '/' })
       }
     },
-    onError: async (error: any) => {
+    onError: async (error: unknown) => {
       // Handle MFA requirement - redirect to MFA page
+      const isMfaRequired =
+        typeof error === 'object' &&
+        error !== null &&
+        'isMfaRequired' in error &&
+        (error as { isMfaRequired?: boolean }).isMfaRequired === true
       if (
-        error?.isMfaRequired ||
+        isMfaRequired ||
         (error instanceof AppwriteException &&
           error.type === 'user_more_factors_required')
       ) {
@@ -131,8 +136,7 @@ function SignInPage() {
       }
 
       // Show error for other failures
-      const errorMessage = error?.message || 'Failed to sign in'
-      toast.error(errorMessage)
+      toast.error(getErrorMessage(error, 'Failed to sign in'))
       console.error('Sign in error:', error)
     },
   })

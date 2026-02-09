@@ -127,7 +127,7 @@ export function RepositoryConfigView({
   const [isDeploying, setIsDeploying] = useState(false)
 
   // Fetch repository details (use URL params so it works after refresh)
-  const { data: repository, isLoading: repositoryLoading } = useRepository(
+  const { data: repository } = useRepository(
     projectId,
     installationId || null,
     providerRepositoryId || null,
@@ -138,6 +138,7 @@ export function RepositoryConfigView({
   const repoOwner = repository?.organization ?? ''
   useEffect(() => {
     if (repoName && !siteName) setSiteName(repoName)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repoName])
 
   // Framework detection via VCS service (createRepositoryDetection type=framework)
@@ -205,6 +206,7 @@ export function RepositoryConfigView({
       providerRepositoryId,
       rootDirectory: rootDirectory || './',
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, installationId, providerRepositoryId, rootDirectory])
 
   // Prefill build settings from SDK framework defaults when framework changes
@@ -215,6 +217,7 @@ export function RepositoryConfigView({
       if (!buildCommand) setBuildCommand(defaults.buildCommand)
       if (!outputDirectory) setOutputDirectory(defaults.outputDirectory)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [framework, getFrameworkDefaults])
 
   // Generate domain when site name changes
@@ -222,6 +225,7 @@ export function RepositoryConfigView({
     if (siteName && !domain) {
       setDomain(generateDomain(siteName))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteName, generateDomain])
 
   // Create site mutation
@@ -311,7 +315,7 @@ export function RepositoryConfigView({
         params: { projectId },
         search: { siteId: site.$id, deploymentId: deployment.$id },
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to create site')
       setIsDeploying(false)
     }

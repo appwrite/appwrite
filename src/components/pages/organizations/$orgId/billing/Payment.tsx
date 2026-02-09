@@ -25,7 +25,6 @@ import {
 } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import type { Stripe, StripeElements, PaymentElement } from '@stripe/stripe-js'
 import {
   getStripeInstance,
@@ -133,18 +132,11 @@ export function PaymentModal({
   const { theme } = useTheme()
   const appearance = getStripeAppearanceFromTheme(theme)
 
-  // Check if Stripe is available (uses centralized SDK endpoint)
-  const isCloud = (() => {
-    try {
-      return getBaseEndpoint().includes('cloud.appwrite.io')
-    } catch {
-      return false
-    }
-  })()
   const stripePublishableKey =
     typeof window !== 'undefined'
       ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
-        (window as any).__STRIPE_PUBLISHABLE_KEY__
+        (window as Window & { __STRIPE_PUBLISHABLE_KEY__?: string })
+          .__STRIPE_PUBLISHABLE_KEY__
       : undefined
   // Allow Stripe in development or on cloud
   const hasStripePublicKey = !!stripePublishableKey
@@ -165,6 +157,7 @@ export function PaymentModal({
     let mounted = true
     let currentPaymentElement: PaymentElement | null = null
     let hasInitialized = false
+    let containerForCleanup: HTMLDivElement | null = null
 
     async function initializeStripe() {
       // Prevent multiple initializations
@@ -225,14 +218,18 @@ export function PaymentModal({
         // Use a small delay to ensure React has rendered the container
         await new Promise((resolve) => setTimeout(resolve, 50))
 
-        if (!mounted || !stripeContainerRef.current) {
+        const container = stripeContainerRef.current
+        if (!mounted || !container) {
           setIsStripeLoading(false)
           return
         }
 
+        // Capture for cleanup so we unmount from the same node we mounted to
+        containerForCleanup = container
+
         // Mount Payment Element
         try {
-          paymentElement.mount(stripeContainerRef.current)
+          paymentElement.mount(container)
           if (mounted) {
             setIsStripeLoading(false)
           }
@@ -270,27 +267,29 @@ export function PaymentModal({
       // Clean up Stripe Elements
       // Use requestAnimationFrame to ensure this happens in the right order
       requestAnimationFrame(() => {
-        if (currentPaymentElement) {
+        if (currentPaymentElement && containerForCleanup?.parentNode) {
           try {
-            const container = stripeContainerRef.current
-            // Only unmount if container exists and is still in DOM
-            if (container && container.parentNode) {
-              currentPaymentElement.unmount()
-            }
-          } catch (error) {
+            currentPaymentElement.unmount()
+          } catch {
             // Silently ignore - React may have already cleaned up
           }
         }
         currentPaymentElement = null
+        containerForCleanup = null
         paymentElementRef.current = null
         if (elementsRef.current) {
           elementsRef.current = null
         }
       })
     }
-    // Only run when modal opens/closes or Stripe key changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, hasStripePublicKey, stripePublishableKey])
+  }, [
+    open,
+    hasStripePublicKey,
+    stripePublishableKey,
+    allPaymentMethods,
+    appearance,
+    createPaymentMethodMutation,
+  ])
 
   // Reset form when modal closes
   useEffect(() => {

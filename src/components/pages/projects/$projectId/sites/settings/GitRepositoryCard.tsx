@@ -161,7 +161,7 @@ export function GitRepositoryCard({
         })
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(
         getErrorMessage(error, 'Failed to update repository settings'),
       )
@@ -197,7 +197,7 @@ export function GitRepositoryCard({
         queryKey: ['site', 'project', projectId, siteId],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(getErrorMessage(error, 'Failed to connect repository'))
     },
   })
@@ -228,7 +228,7 @@ export function GitRepositoryCard({
         queryKey: ['site', 'project', projectId, siteId],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(getErrorMessage(error, 'Failed to disconnect repository'))
     },
   })

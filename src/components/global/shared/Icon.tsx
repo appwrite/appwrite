@@ -202,13 +202,6 @@ export function PlatformIcon({
 
   const baseIcon = getBasePlatformIcon(normalized, size)
 
-  // Badge size based on main icon size
-  const badgeSize = {
-    sm: 'h-2.5 w-2.5',
-    md: 'h-3 w-3',
-    lg: 'h-4 w-4',
-  }[size]
-
   // Flutter and React Native badge size - bigger than other badges
   const frameworkBadgeSize = {
     sm: 'h-3.5 w-3.5',

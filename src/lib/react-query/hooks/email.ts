@@ -31,8 +31,8 @@ export async function fetchEmailTemplate(
 
   const response = await sdk.forConsole.projects.getEmailTemplate({
     projectId,
-    type: type as any,
-    locale: locale as any,
+    type: type as unknown,
+    locale: locale as unknown,
   })
 
   return response
@@ -54,7 +54,7 @@ export function useEmailTemplate(
   type: string | null | undefined,
   locale: string | null | undefined,
 ) {
-  const queryClient = useQueryClient()
+  useQueryClient()
 
   return useQuery({
     queryKey: ['emailTemplate', projectId, type, locale],
@@ -98,8 +98,8 @@ export function useUpdateEmailTemplate(projectId: string | null | undefined) {
 
       return await sdk.forConsole.projects.updateEmailTemplate({
         projectId,
-        type: type as any,
-        locale: locale as any,
+        type: type as unknown,
+        locale: locale as unknown,
         subject,
         message,
         senderName,
@@ -136,8 +136,8 @@ export function useDeleteEmailTemplate(projectId: string | null | undefined) {
 
       return await sdk.forConsole.projects.deleteEmailTemplate({
         projectId,
-        type: type as any,
-        locale: locale as any,
+        type: type as unknown,
+        locale: locale as unknown,
       })
     },
     onSuccess: (_, variables) => {

@@ -87,7 +87,7 @@ export function CreateWebhookDialog({
       })
       toast.success('Webhook has been created')
       onCreateSuccess(webhook.$id)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to create webhook')
     }
   }

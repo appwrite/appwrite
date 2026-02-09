@@ -22,7 +22,7 @@ export function getContext() {
 
   // Expose queryClient to window for debugging in development
   if (typeof window !== 'undefined' && import.meta.env.DEV) {
-    ;(window as any).__REACT_QUERY_CLIENT__ = queryClient
+    ;(window as unknown).__REACT_QUERY_CLIENT__ = queryClient
   }
 
   return {

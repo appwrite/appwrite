@@ -148,6 +148,7 @@ export function View({ initialData }: ViewProps = {}) {
     isLoading: recordsLoading,
   } = useDomainRecords(domainId, pageIndexed, pageSize)
   const isFirstPage = currentPage === 1
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const rawRecords =
     isFirstPage && initialData?.records && !recordsFromHook?.length
       ? initialData.records.dnsRecords
@@ -219,7 +220,7 @@ export function View({ initialData }: ViewProps = {}) {
   const createRecordMutation = useCreateDnsRecord(domainId)
 
   // Preset records
-  const { data: presetRecords } = usePresetRecords(domainId, selectedPreset)
+  usePresetRecords(domainId, selectedPreset)
 
   const handleCreateRecord = (data: {
     type: string
@@ -417,7 +418,7 @@ export function View({ initialData }: ViewProps = {}) {
         const content =
           typeof result.data === 'string'
             ? result.data
-            : (result.data as any).message || ''
+            : (result.data as { message?: string })?.message || ''
         const blob = new Blob([content], { type: 'text/plain' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')

@@ -135,7 +135,7 @@ export function View({ projectId }: ViewProps) {
   const [selectedKeyId, setSelectedKeyId] = useState<string | null>(null)
   const navigate = useNavigate()
 
-  const handleConnectPlatform = (platformType?: string) => {
+  const handleConnectPlatform = () => {
     // TODO: Implement platform connection logic
     // This will trigger the connect platform flow
   }
@@ -185,14 +185,18 @@ export function View({ projectId }: ViewProps) {
 
     const platforms = currentProject.platforms || []
 
-    return platforms.map((platform: any) => {
-      const platformType = platform.type || platform.platform || 'web'
-      const platformId = platform.$id || platform.id || platformType
+    return platforms.map((platform: Record<string, unknown>) => {
+      const platformType = (platform.type ??
+        platform.platform ??
+        'web') as string
+      const platformId = (platform.$id ?? platform.id ?? platformType) as string
       // Use platform name if available, otherwise fall back to display name from type
-      const platformName = platform.name || getPlatformDisplayName(platformType)
-      // For identifier, use hostname/key/identifier but not the name (since name is for display)
-      const identifier =
-        platform.hostname || platform.identifier || platform.key || ''
+      const platformName = (platform.name ??
+        getPlatformDisplayName(platformType)) as string
+      const identifier = (platform.hostname ??
+        platform.identifier ??
+        platform.key ??
+        '') as string
 
       // Determine if it's web or app based on platform type
       const type: 'web' | 'app' = platformType === 'web' ? 'web' : 'app'
@@ -329,7 +333,7 @@ export function View({ projectId }: ViewProps) {
             (k: Models.Key) => k.$id === selectedKeyId,
           )
           setUpdateKeyData(key || null)
-        } catch (error) {
+        } catch {
           setUpdateKeyData(null)
         }
       }

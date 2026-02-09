@@ -68,7 +68,7 @@ export function SchemaExportDialog({
       setCopied(true)
       toast.success('Schema copied to clipboard')
       setTimeout(() => setCopied(false), 2000)
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy to clipboard')
     }
   }
@@ -99,12 +99,6 @@ export function SchemaExportDialog({
     json: 'JSON',
     markdown: 'Markdown',
     typescript: 'TypeScript',
-  }
-
-  const formatIcons = {
-    json: FileJson,
-    markdown: FileText,
-    typescript: Code,
   }
 
   return (

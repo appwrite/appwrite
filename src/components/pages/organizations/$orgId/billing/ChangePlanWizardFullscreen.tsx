@@ -63,14 +63,15 @@ export function ChangePlanWizardFullscreen() {
   const handleCancel = useSmartNavigation()
 
   // Fetch data using hooks (data is already prefetched by route loader)
-  const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
-  const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
-  const {
-    memberships,
-    total: membersTotal,
-    isLoading: membersLoading,
-  } = useOrganizationMemberships(orgId, 0, 25, '')
-  const { organizations, isLoading: orgsLoading } = useOrganizations()
+  const { organization } = useOrganizationById(orgId)
+  const { plan } = useOrganizationPlan(orgId)
+  const { memberships, total: membersTotal } = useOrganizationMemberships(
+    orgId,
+    0,
+    25,
+    '',
+  )
+  const { organizations } = useOrganizations()
   const { plans: billingPlans, isLoading: plansLoading } = useBillingPlans()
 
   // Create members object for compatibility
@@ -121,7 +122,7 @@ export function ChangePlanWizardFullscreen() {
   const [couponModalOpen, setCouponModalOpen] = useState(false)
   const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [usageLimitsComponentRef, setUsageLimitsComponentRef] =
-    useState<any>(null)
+    useState<unknown>(null)
 
   // Fetch additional data
   const { paymentMethods } = usePaymentMethods()
@@ -169,12 +170,17 @@ export function ChangePlanWizardFullscreen() {
             to: '/organizations/$orgId/billing',
             params: { orgId: organizationId },
           })
-        } catch (error: any) {
-          toast.error(error.message || 'Failed to validate payment')
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : 'Failed to validate payment',
+          )
         }
       }
       handlePaymentConfirmation(orgId, invites)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search?.type, orgId, validateOrganizationMutation, navigate])
 
   // Initialize selected plan from URL or default (only once)
@@ -368,9 +374,9 @@ export function ChangePlanWizardFullscreen() {
         result &&
         typeof result === 'object' &&
         'status' in result &&
-        (result as any).status === 402
+        (result as { status?: number }).status === 402
       ) {
-        const clientSecret = (result as any).clientSecret
+        const clientSecret = (result as { clientSecret?: string }).clientSecret
         if (clientSecret) {
           toast.error(
             'Payment confirmation required. Please complete the payment process.',
@@ -382,8 +388,10 @@ export function ChangePlanWizardFullscreen() {
       // If successful, invalidate and navigate
       toast.success('Plan updated successfully')
       navigate({ to: '/organizations/$orgId/billing', params: { orgId } })
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update plan')
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update plan',
+      )
     }
   }
 
@@ -423,8 +431,10 @@ export function ChangePlanWizardFullscreen() {
 
       toast.success('Plan updated successfully')
       navigate({ to: '/organizations/$orgId/billing', params: { orgId } })
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update plan')
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update plan',
+      )
     }
   }
 

@@ -132,7 +132,7 @@ function BitbucketIcon({ className }: { className?: string }) {
 
 // Detect VCS provider from deployment
 function getVcsProvider(
-  deployment: any,
+  deployment: unknown,
 ): { name: string; icon: React.ReactNode } | null {
   // Check for providerRepositoryUrl which contains the provider domain
   if (deployment.providerRepositoryUrl) {
@@ -198,7 +198,7 @@ function getVcsProvider(
  * Get VCS provider type from deployment
  */
 function getVcsProviderType(
-  deployment: any,
+  deployment: unknown,
 ): 'github' | 'gitlab' | 'bitbucket' | null {
   // Check provider from URL or vcsProvider field
   if (deployment.providerRepositoryUrl) {
@@ -223,7 +223,7 @@ function getVcsProviderType(
 /**
  * Build repository URL from deployment VCS provider info
  */
-function getRepositoryUrl(deployment: any): string | null {
+function getRepositoryUrl(deployment: unknown): string | null {
   if (
     !deployment.providerRepositoryOwner ||
     !deployment.providerRepositoryName
@@ -253,7 +253,7 @@ function getRepositoryUrl(deployment: any): string | null {
 /**
  * Build commit URL from deployment VCS provider info
  */
-function getCommitUrl(deployment: any): string | null {
+function getCommitUrl(deployment: unknown): string | null {
   if (
     !deployment.providerCommitHash ||
     !deployment.providerRepositoryOwner ||
@@ -285,7 +285,7 @@ function getCommitUrl(deployment: any): string | null {
 /**
  * Build branch URL from deployment VCS provider info
  */
-function getBranchUrl(deployment: any): string | null {
+function getBranchUrl(deployment: unknown): string | null {
   if (
     !deployment.providerBranch ||
     !deployment.providerRepositoryOwner ||
@@ -588,7 +588,7 @@ export function DeploymentDetailView({
     try {
       await navigator.clipboard.writeText(aiFixPrompt)
       toast.success('Prompt copied to clipboard')
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy prompt')
     }
   }
@@ -630,8 +630,8 @@ export function DeploymentDetailView({
       setDeleteDialogOpen(false)
       // Navigate back to list
       navigate({
-        to: listRoute as any,
-        params: { projectId, [parentResourceParam]: resourceId } as any,
+        to: listRoute as unknown,
+        params: { projectId, [parentResourceParam]: resourceId } as unknown,
       })
     },
     onError: (error: Error) => {
@@ -705,7 +705,7 @@ export function DeploymentDetailView({
     try {
       await navigator.clipboard.writeText(buildLogs)
       toast.success('Logs copied to clipboard')
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy logs')
     }
   }
@@ -855,7 +855,7 @@ export function DeploymentDetailView({
       if (isSelected) {
         navigate({
           to: location.pathname,
-          search: (prev: any) => {
+          search: (prev: unknown) => {
             const newSearch = { ...(prev || {}) }
             delete newSearch.line
             return Object.keys(newSearch).length === 0 ? {} : newSearch
@@ -865,14 +865,14 @@ export function DeploymentDetailView({
       } else {
         navigate({
           to: location.pathname,
-          search: (prev: any) => ({ ...(prev || {}), line: lineNumber }),
+          search: (prev: unknown) => ({ ...(prev || {}), line: lineNumber }),
           replace: true,
         })
         const lineRef = `Line ${lineNumber}`
         try {
           await navigator.clipboard.writeText(lineRef)
           toast.success(`Copied "${lineRef}" to clipboard`)
-        } catch (error) {
+        } catch {
           // Ignore clipboard errors
         }
       }
@@ -940,8 +940,10 @@ export function DeploymentDetailView({
                 for
               </span>{' '}
               <Link
-                to={listRoute as any}
-                params={{ projectId, [parentResourceParam]: resourceId } as any}
+                to={listRoute as unknown}
+                params={
+                  { projectId, [parentResourceParam]: resourceId } as unknown
+                }
                 className="text-primary hover:underline font-medium"
               >
                 {parentResource.name}
@@ -974,11 +976,11 @@ export function DeploymentDetailView({
               onClick={() => {
                 if (previousDeployment) {
                   navigate({
-                    to: deploymentDetailRoute as any,
+                    to: deploymentDetailRoute as unknown,
                     params: {
                       ...routeParams,
                       deploymentId: previousDeployment.$id,
-                    } as any,
+                    } as unknown,
                   })
                 }
               }}
@@ -993,11 +995,11 @@ export function DeploymentDetailView({
               onClick={() => {
                 if (nextDeployment) {
                   navigate({
-                    to: deploymentDetailRoute as any,
+                    to: deploymentDetailRoute as unknown,
                     params: {
                       ...routeParams,
                       deploymentId: nextDeployment.$id,
-                    } as any,
+                    } as unknown,
                   })
                 }
               }}
@@ -1357,8 +1359,8 @@ export function DeploymentDetailView({
       contentPadding={false}
       onClose={() => {
         navigate({
-          to: listRoute as any,
-          params: { projectId, [parentResourceParam]: resourceId } as any,
+          to: listRoute as unknown,
+          params: { projectId, [parentResourceParam]: resourceId } as unknown,
         })
       }}
       contentClassName="flex flex-col h-full min-h-0 overflow-hidden -mx-6"

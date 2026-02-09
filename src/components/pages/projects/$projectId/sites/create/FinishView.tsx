@@ -46,7 +46,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { theme, resolvedTheme } = useTheme()
-  const { formData, frameworks, resetFormData } = useWizard()
+  const { formData, resetFormData } = useWizard()
 
   // Use provided IDs or fall back to form data
   const actualSiteId = siteId || formData.createdSiteId
@@ -83,8 +83,8 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
   const screenshotUrl = useMemo(() => {
     if (!deployment) return null
     const screenshotId = isDark
-      ? (deployment as any).screenshotDark
-      : (deployment as any).screenshotLight
+      ? (deployment as { screenshotDark?: string }).screenshotDark
+      : (deployment as { screenshotLight?: string }).screenshotLight
     if (!screenshotId) return null
     return sdk.forConsole.storage.getFileDownload({
       bucketId: SCREENSHOTS_BUCKET_ID,
@@ -107,10 +107,6 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
     if (!siteUrl) return null
     return sdk.forConsole.avatars.getQR({ text: siteUrl, size: 256 })
   }, [siteUrl])
-
-  const frameworkInfo = site
-    ? frameworks.find((f) => f.key === site.framework)
-    : null
 
   const handleGoToDashboard = () => {
     // Reset wizard state

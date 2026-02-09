@@ -30,7 +30,7 @@ function extractTextFromReactNode(node: React.ReactNode): string {
   if (typeof node === 'string') return node
   if (typeof node === 'number') return String(node)
   if (React.isValidElement(node)) {
-    const children = (node.props as any)?.children
+    const children = (node.props as unknown)?.children
     if (typeof children === 'string') return children
     if (Array.isArray(children)) {
       return children.map(extractTextFromReactNode).join('')
@@ -219,7 +219,7 @@ function parseAnsiLogs(text: string, searchTerm?: string): React.ReactNode[] {
       keyCounter += 1000
     } else if (React.isValidElement(segment) && segment.type === 'span') {
       const textContent = extractTextFromReactNode(segment)
-      const className = (segment.props as any)?.className || null
+      const className = (segment.props as unknown)?.className || null
       highlightedParts.push(
         ...highlightText(textContent, className, searchTerm, keyCounter),
       )

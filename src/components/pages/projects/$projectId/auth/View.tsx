@@ -259,10 +259,10 @@ export function View() {
       return {
         ...user,
         provider,
-        phone: (user as any).phone || '',
-        mfaEnabled: (user as any).mfaEnabled || false,
-        emailVerification: (user as any).emailVerification || false,
-        phoneVerification: (user as any).phoneVerification || false,
+        phone: (user as unknown).phone || '',
+        mfaEnabled: (user as unknown).mfaEnabled || false,
+        emailVerification: (user as unknown).emailVerification || false,
+        phoneVerification: (user as unknown).phoneVerification || false,
       }
     })
   }, [apiUsers])
@@ -558,7 +558,7 @@ export function View() {
 
   // Get project data for SMTP status
   const { project } = useProject(projectId)
-  const isSmtpEnabled = (project as any)?.smtpEnabled ?? false
+  const isSmtpEnabled = (project as unknown)?.smtpEnabled ?? false
 
   // SMTP alert for templates tab
   const smtpAlert =

@@ -92,7 +92,7 @@ export function ExecutionDetailsDrawer({
   func,
   onNavigate,
 }: ExecutionDetailsDrawerProps) {
-  const { projectId, functionId } = useParams({ strict: false })
+  useParams({ strict: false })
   const [copiedPath, setCopiedPath] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [requestTab, setRequestTab] = useState<'parameters' | 'headers'>(

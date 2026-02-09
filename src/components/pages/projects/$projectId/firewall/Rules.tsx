@@ -59,7 +59,7 @@ interface RulesTabProps {
   searchValue: string
 }
 
-export function RulesTab({ projectId, searchValue }: RulesTabProps) {
+export function RulesTab({ searchValue }: RulesTabProps) {
   const [rules, setRules] = useState<FirewallRule[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [creatingRule, setCreatingRule] = useState(false)

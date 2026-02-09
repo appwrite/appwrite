@@ -42,7 +42,7 @@ export function TeamMembers() {
   })
 
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
+  const [search] = useState('')
   const [selectedMemberships, setSelectedMemberships] = useState<Set<string>>(
     new Set(),
   )

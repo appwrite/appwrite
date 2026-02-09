@@ -87,17 +87,17 @@ export function View() {
     isLoading: domainsLoading,
   } = useSiteDomains(projectId, siteId, currentPage, pageSize, searchValue)
 
-  const handleRetry = (ruleId: string) => {
+  const handleRetry = () => {
     // TODO: Implement retry verification
     toast.info('Retry verification coming soon')
   }
 
-  const handleViewLogs = (ruleId: string) => {
+  const handleViewLogs = () => {
     // TODO: Open logs modal
     toast.info('View logs coming soon')
   }
 
-  const handleDelete = (ruleId: string) => {
+  const handleDelete = () => {
     // TODO: Implement delete with confirmation
     toast.info('Delete domain coming soon')
   }

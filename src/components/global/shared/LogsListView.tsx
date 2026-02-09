@@ -28,8 +28,6 @@ import {
 } from '@/components/pages/projects/$projectId/functions/Executions'
 import type { Models } from '@appwrite.io/console'
 
-const DEFAULT_PAGE_SIZE = 25
-
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${Math.round(ms)}ms`
   const seconds = ms / 1000
@@ -103,7 +101,7 @@ export function LogsListView({
       await navigator.clipboard.writeText(text)
       setCopiedField(fieldId)
       setTimeout(() => setCopiedField(null), 2000)
-    } catch (error) {
+    } catch {
       // Ignore copy errors
     }
   }

@@ -35,7 +35,7 @@ function extractRedirectFromSearch(
 
 // Helper function to get relative redirect URL from current location
 // If we're already on an auth page, extract the original redirect from search params
-function getRelativeRedirectUrl(location: any): string | null {
+function getRelativeRedirectUrl(location: unknown): string | null {
   // If we're already on an auth page, extract the original redirect from search params
   if (isAuthPage(location.pathname)) {
     // Handle TanStack Router's parsed search params
@@ -98,8 +98,8 @@ function isValidRelativeRedirect(url: string): boolean {
 }
 
 export interface AuthData {
-  currentUser: any
-  account: any
+  currentUser: unknown
+  account: unknown
   isLoading: boolean
   isAuthenticated: boolean
   signOut: (navigate?: (options: { to: string }) => void) => Promise<void>
@@ -208,7 +208,7 @@ export function RequireAuth({
           if (location.pathname === '/mfa') {
             throw err
           }
-          const redirectUrl = getRelativeRedirectUrl(location as any)
+          const redirectUrl = getRelativeRedirectUrl(location as unknown)
           if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
             navigate({ to: '/mfa', search: { redirect: redirectUrl } })
           } else {
@@ -224,7 +224,7 @@ export function RequireAuth({
           throw err
         }
 
-        const redirectUrl = getRelativeRedirectUrl(location as any)
+        const redirectUrl = getRelativeRedirectUrl(location as unknown)
         if (err instanceof AppwriteException && err.code === 401) {
           if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
             navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
@@ -234,7 +234,10 @@ export function RequireAuth({
           throw err
         }
         // Also check for status code in case it's not an AppwriteException
-        if ((err as any)?.code === 401 || (err as any)?.status === 401) {
+        if (
+          (err as unknown)?.code === 401 ||
+          (err as unknown)?.status === 401
+        ) {
           if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
             navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
           } else {
@@ -316,7 +319,7 @@ export function useAuth(): AuthData {
           if (location.pathname === '/mfa') {
             throw err
           }
-          const redirectUrl = getRelativeRedirectUrl(location as any)
+          const redirectUrl = getRelativeRedirectUrl(location as unknown)
           if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
             navigate({ to: '/mfa', search: { redirect: redirectUrl } })
           } else {
@@ -332,7 +335,7 @@ export function useAuth(): AuthData {
           throw err
         }
 
-        const redirectUrl = getRelativeRedirectUrl(location as any)
+        const redirectUrl = getRelativeRedirectUrl(location as unknown)
         if (err instanceof AppwriteException && err.code === 401) {
           if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
             navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
@@ -341,7 +344,10 @@ export function useAuth(): AuthData {
           }
           throw err
         }
-        if ((err as any)?.code === 401 || (err as any)?.status === 401) {
+        if (
+          (err as unknown)?.code === 401 ||
+          (err as unknown)?.status === 401
+        ) {
           if (redirectUrl && isValidRelativeRedirect(redirectUrl)) {
             navigate({ to: '/sign-in', search: { redirect: redirectUrl } })
           } else {

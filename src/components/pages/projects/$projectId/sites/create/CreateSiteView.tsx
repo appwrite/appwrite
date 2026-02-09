@@ -402,7 +402,7 @@ export function CreateSiteView() {
   const frameworkOptions = useMemo(() => {
     const options = [{ value: 'all', label: 'All frameworks' }]
     if (frameworks && frameworks.length > 0) {
-      frameworks.forEach((fw: any) => {
+      frameworks.forEach((fw: unknown) => {
         const key = typeof fw === 'string' ? fw : fw.key || fw.name || fw.id
         const name = typeof fw === 'string' ? fw : fw.name || fw.key || fw.id
         if (key && name) {
@@ -418,7 +418,7 @@ export function CreateSiteView() {
     (i) => i.$id === selectedInstallationId,
   )
 
-  const handleSelectRepository = (repo: any) => {
+  const handleSelectRepository = (repo: unknown) => {
     const installationId = selectedInstallationId!
     const providerRepositoryId = repo.id
     updateFormData({
@@ -586,7 +586,7 @@ export function CreateSiteView() {
                       reposFetching && 'opacity-60 pointer-events-none',
                     )}
                   >
-                    {repositories.map((repo: any) => (
+                    {repositories.map((repo: unknown) => (
                       <div
                         key={repo.id}
                         className="flex w-full items-center gap-3 px-4 py-3.5 hover:bg-accent/50 transition-colors"

@@ -71,7 +71,7 @@ interface ColumnDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: ColumnFormData) => Promise<void>
-  column?: any // Existing column for edit mode
+  column?: unknown // Existing column for edit mode
   availableTables?: Array<{ $id: string; name: string }>
   existingColumns?: Array<{ key: string }>
   isLoading?: boolean
@@ -199,6 +199,7 @@ export function ColumnDrawer({
         setFormData((prev) => ({ ...prev, key: camelCase }))
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.type, formData.relatedTableId, availableTables, isEditMode])
 
   // Auto-generate two-way key from current table name
@@ -212,6 +213,7 @@ export function ColumnDrawer({
       // We don't have current table name here, so we'll let user set it
       // This would need to be passed as a prop if needed
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.type, formData.twoWay, isEditMode])
 
   const handleOpenChange = (newOpen: boolean) => {
@@ -313,7 +315,7 @@ export function ColumnDrawer({
       await onSubmit(submitData)
       handleOpenChange(false)
       // Don't show toast for suggestions - parent handles it
-      if (!(column as any)?.isSuggestion) {
+      if (!(column as unknown)?.isSuggestion) {
         toast.success(
           isEditMode
             ? 'Column updated successfully'
@@ -830,7 +832,7 @@ export function ColumnDrawer({
                         onValueChange={(value) => {
                           setFormData((prev) => ({
                             ...prev,
-                            relationshipType: value as any,
+                            relationshipType: value as unknown,
                           }))
                         }}
                         disabled={isLoading || isEditMode}
@@ -871,7 +873,7 @@ export function ColumnDrawer({
                         onValueChange={(value) => {
                           setFormData((prev) => ({
                             ...prev,
-                            onDelete: value as any,
+                            onDelete: value as unknown,
                           }))
                         }}
                         disabled={isLoading}

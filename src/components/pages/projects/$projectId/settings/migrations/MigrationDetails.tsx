@@ -22,8 +22,6 @@ import { DateTooltip } from '@/components/global/shared/DateTooltip'
 interface MigrationDetailsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  projectId: string
-  region?: string
   migration: Models.Migration
 }
 
@@ -39,8 +37,6 @@ interface StatusCounters {
 export function MigrationDetailsDialog({
   open,
   onOpenChange,
-  projectId,
-  region,
   migration,
 }: MigrationDetailsDialogProps) {
   // Parse status counters
@@ -69,16 +65,6 @@ export function MigrationDetailsDialog({
 
   const hasErrors =
     errors.length > 0 || (statusCounters.error && statusCounters.error > 0)
-
-  const getStatusIcon = () => {
-    if (hasErrors) return <XCircle className="h-4 w-4 text-destructive" />
-    if (statusCounters.pending || statusCounters.processing) {
-      return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-    }
-    if (statusCounters.success)
-      return <CheckCircle2 className="h-4 w-4 text-green-600" />
-    return <Clock className="h-4 w-4 text-muted-foreground" />
-  }
 
   const getResourceStatus = (resource: string) => {
     const pending =

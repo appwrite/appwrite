@@ -46,7 +46,7 @@ function RecoveryPage() {
       setIsSuccess(true)
       toast.success('Recovery email sent')
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Recovery error:', error)
       toast.error(error.message || 'Failed to send recovery email')
     },

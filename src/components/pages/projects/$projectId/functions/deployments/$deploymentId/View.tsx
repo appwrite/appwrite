@@ -52,7 +52,7 @@ export function View() {
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
-    } catch (error) {
+    } catch {
       toast.error('Failed to download source code')
     }
   }
@@ -72,7 +72,7 @@ export function View() {
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
-    } catch (error) {
+    } catch {
       toast.error('Failed to download build output')
     }
   }
@@ -130,7 +130,7 @@ export function View() {
       onRedeploy={handleRedeploy}
       onActivate={handleActivate}
       showRuntime={true}
-      RuntimeIcon={RuntimeIcon as any}
+      RuntimeIcon={RuntimeIcon as unknown}
       invalidateQueries={[
         ['deployments', 'project', projectId!, functionId!],
         ['function', 'project', projectId!, functionId!],

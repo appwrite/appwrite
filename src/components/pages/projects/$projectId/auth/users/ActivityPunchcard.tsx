@@ -35,7 +35,7 @@ export function ActivityPunchcard({
 
     sessions.forEach((session) => {
       // Use $createdAt which is standard in Appwrite models
-      const dateString = (session as any).$createdAt
+      const dateString = (session as unknown).$createdAt
       if (dateString) {
         try {
           const date = new Date(dateString)
@@ -45,7 +45,7 @@ export function ActivityPunchcard({
             const count = map.get(dateKey) || 0
             map.set(dateKey, count + 1)
           }
-        } catch (error) {
+        } catch {
           // Skip invalid dates
         }
       }

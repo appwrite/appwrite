@@ -71,7 +71,7 @@ function BrowserIcon({
           height: 64,
         })
         setIconUrl(url)
-      } catch (err) {
+      } catch {
         setError(true)
       }
     }

@@ -124,11 +124,6 @@ interface DeviceData {
   color: string
 }
 
-interface ResolutionData {
-  resolution: string
-  visitors: number
-}
-
 interface EntryExitData {
   path: string
   visitors: number
@@ -391,17 +386,6 @@ const devices: DeviceData[] = [
   },
 ]
 
-const screenResolutions: ResolutionData[] = [
-  { resolution: '1920×1080', visitors: 45600 },
-  { resolution: '1366×768', visitors: 34200 },
-  { resolution: '1536×864', visitors: 28900 },
-  { resolution: '1440×900', visitors: 23400 },
-  { resolution: '1280×720', visitors: 19800 },
-  { resolution: '375×667', visitors: 15600 },
-  { resolution: '414×896', visitors: 14200 },
-  { resolution: '390×844', visitors: 12800 },
-]
-
 const entryPages: EntryExitData[] = [
   { path: '/', visitors: 12400, type: 'entry' },
   { path: '/page', visitors: 8900, type: 'entry' },
@@ -566,49 +550,6 @@ function MetricTab({
         <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-foreground" />
       )}
     </button>
-  )
-}
-
-// List Item Component - matches TopRequests pattern
-function ListItem({
-  label,
-  value,
-  maxValue,
-  icon,
-  prefix,
-}: {
-  label: string
-  value: number
-  maxValue: number
-  icon?: React.ReactNode
-  prefix?: React.ReactNode
-}) {
-  const percentage = (value / maxValue) * 100
-
-  return (
-    <div className="group relative flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-accent/50">
-      {/* Progress bar background */}
-      <div
-        className="absolute inset-y-0 left-0 rounded-md bg-accent/30 transition-all group-hover:bg-accent/50"
-        style={{ width: `${percentage}%` }}
-      />
-
-      {/* Content */}
-      <div className="relative flex flex-1 items-center gap-2">
-        {prefix && <span className="text-[14px]">{prefix}</span>}
-        {icon && (
-          <span className="flex h-5 w-5 items-center justify-center text-muted-foreground">
-            {icon}
-          </span>
-        )}
-        <span className="flex-1 truncate text-[13px] text-foreground/80">
-          {label}
-        </span>
-        <span className="text-[13px] font-medium text-muted-foreground">
-          {formatNumber(value)}
-        </span>
-      </div>
-    </div>
   )
 }
 
@@ -822,9 +763,7 @@ export function View({
     to: endOfDay(new Date()),
   })
   const [comparisonType, setComparisonType] = useState<ComparisonType>('none')
-  const [comparisonRange, setComparisonRange] = useState<
-    DateRange | undefined
-  >()
+  const [, setComparisonRange] = useState<DateRange | undefined>()
   const [locationView, setLocationView] = useState<
     'map' | 'countries' | 'regions' | 'cities'
   >('countries')
@@ -1168,7 +1107,7 @@ export function View({
                     >
                       <TabsContent value="channels" className="mt-0">
                         <div className="space-y-0.5">
-                          {channels.map((channel, index) => {
+                          {channels.map((channel) => {
                             const maxChannelVisitors = Math.max(
                               ...channels.map((c) => c.visitors),
                             )
@@ -1220,7 +1159,7 @@ export function View({
                       </TabsContent>
                       <TabsContent value="sources" className="mt-0">
                         <div className="space-y-0.5">
-                          {topSources.map((source, index) => {
+                          {topSources.map((source) => {
                             const percentage = Math.round(
                               (source.visitors / maxSourceVisitors) * 100,
                             )
@@ -1651,7 +1590,7 @@ export function View({
                             {(showAllCountries
                               ? locationData
                               : locationData.slice(0, 15)
-                            ).map((location, index) => {
+                            ).map((location) => {
                               const percentage = Math.round(
                                 (location.visitors / maxLocationVisitors) * 100,
                               )
@@ -1726,7 +1665,7 @@ export function View({
                             {(showAllRegions
                               ? regions
                               : regions.slice(0, 15)
-                            ).map((region, index) => {
+                            ).map((region) => {
                               const maxRegionVisitors = Math.max(
                                 ...regions.map((r) => r.visitors),
                               )
@@ -1801,7 +1740,7 @@ export function View({
                         <div className="h-full overflow-y-auto p-4">
                           <div className="space-y-0.5">
                             {(showAllCities ? cities : cities.slice(0, 15)).map(
-                              (city, index) => {
+                              (city) => {
                                 const maxCityVisitors = Math.max(
                                   ...cities.map((c) => c.visitors),
                                 )
@@ -1920,7 +1859,7 @@ export function View({
                           {(showAllBrowsers
                             ? browsers
                             : browsers.slice(0, 15)
-                          ).map((browser, index) => {
+                          ).map((browser) => {
                             const percentage = Math.round(
                               (browser.visitors / maxBrowserVisitors) * 100,
                             )
@@ -1991,7 +1930,7 @@ export function View({
                           {(showAllOS
                             ? operatingSystems
                             : operatingSystems.slice(0, 15)
-                          ).map((os, index) => {
+                          ).map((os) => {
                             const total = operatingSystems.reduce(
                               (sum, o) => sum + o.visitors,
                               0,

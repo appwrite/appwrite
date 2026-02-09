@@ -1,12 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import {
-  useProjectDomains,
-  useCreateDomain,
-  useVerifyDomain,
-  useDeleteDomain,
-  useProject,
-} from '@/lib/react-query/hooks'
+import { useProjectDomains, useProject } from '@/lib/react-query/hooks'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -72,7 +66,7 @@ export function Domains({
     null,
   )
 
-  const { rules, total, isLoading } = useProjectDomains(
+  const { rules, isLoading } = useProjectDomains(
     projectId,
     region,
     searchValueProp,
@@ -88,9 +82,6 @@ export function Domains({
       window.removeEventListener('settings-create-domain', handleCreate)
     }
   }, [])
-  const createDomainMutation = useCreateDomain(projectId, region)
-  const verifyDomainMutation = useVerifyDomain(projectId, region)
-  const deleteDomainMutation = useDeleteDomain(projectId, region)
 
   const getStatusBadge = (status: string) => {
     const variant = getDomainStatusVariant(status as DomainStatus)
@@ -117,11 +108,6 @@ export function Domains({
         {config.label}
       </Badge>
     )
-  }
-
-  const handleVerify = (rule: Models.ProxyRule) => {
-    setSelectedRule(rule)
-    setVerifyDomainOpen(true)
   }
 
   const handleRetry = (rule: Models.ProxyRule) => {

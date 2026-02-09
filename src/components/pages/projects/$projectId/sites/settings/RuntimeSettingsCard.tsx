@@ -84,7 +84,7 @@ export function RuntimeSettingsCard({
         queryKey: ['sites', 'project', projectId],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(getErrorMessage(error, 'Failed to update runtime settings'))
     },
   })
@@ -123,7 +123,7 @@ export function RuntimeSettingsCard({
               <SelectValue placeholder="Select runtime" />
             </SelectTrigger>
             <SelectContent>
-              {availableRuntimes.map((runtime: any) => {
+              {availableRuntimes.map((runtime: unknown) => {
                 const runtimeId = runtime.$id ?? runtime
                 return (
                   <SelectItem key={runtimeId} value={runtimeId}>

@@ -79,7 +79,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       pageLimit,
       pageOffset,
     )
-  const { credits, total: creditsTotal } = useOrganizationCredits(orgId, 0, 1)
+  const { credits } = useOrganizationCredits(orgId, 0, 1)
 
   // Calculate available credit
   const availableCredit = useMemo(() => {
@@ -185,9 +185,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
   // Get projects resource from aggregation API (resourceId: "projects")
   const projectsResource = useMemo(() => {
-    const resources = (aggregation as any)?.resources
+    const resources = (aggregation as unknown)?.resources
     if (!Array.isArray(resources)) return null
-    return resources.find((r: any) => r.resourceId === 'projects') ?? null
+    return resources.find((r: unknown) => r.resourceId === 'projects') ?? null
   }, [aggregation])
 
   // Additional projects count and cost from aggregation API when available
@@ -260,7 +260,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
       []
     if (!Array.isArray(projects) || projects.length === 0) return []
 
-    return projects.map((project: any) => {
+    return projects.map((project: unknown) => {
       const resources: ResourceItem[] = []
       let projectTotal = 0
 
@@ -338,7 +338,9 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
       // Helper to get resource from aggregation by resourceId
       const getResourceByResourceId = (resourceId: string) => {
-        return projectResources.find((r: any) => r.resourceId === resourceId)
+        return projectResources.find(
+          (r: unknown) => r.resourceId === resourceId,
+        )
       }
 
       // Get plan limits from the plan object
@@ -363,7 +365,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
         const planProperty = planPropertyMap[planKey] || planKey
 
         // Get the limit value directly from plan object
-        const limitValue = (plan as any)[planProperty]
+        const limitValue = (plan as unknown)[planProperty]
 
         if (limitValue === null || limitValue === undefined) {
           return null
@@ -384,7 +386,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
       // Process each resource type from the aggregation
       Object.entries(resourceIdMap).forEach(
-        ([resourceId, { key, name, format, planKey }]) => {
+        ([resourceId, { name, format, planKey }]) => {
           const resource = getResourceByResourceId(resourceId)
 
           // Get usage from resource.value (aggregation format)
@@ -729,7 +731,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                         disabled={currentPage === 1}
                         onClick={() => {
                           navigate({
-                            search: (prev: any) => ({
+                            search: (prev: unknown) => ({
                               ...prev,
                               page: currentPage - 1,
                             }),
@@ -748,7 +750,7 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
                         disabled={currentPage === totalPages}
                         onClick={() => {
                           navigate({
-                            search: (prev: any) => ({
+                            search: (prev: unknown) => ({
                               ...prev,
                               page: currentPage + 1,
                             }),

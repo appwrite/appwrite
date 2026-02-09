@@ -44,7 +44,7 @@ export function DangerZoneCard({
         setDeleteDialogOpen(false)
         onDelete?.()
       },
-      onError: (error: any) => {
+      onError: (error: unknown) => {
         toast.error(getErrorMessage(error, 'Failed to delete site'))
       },
     })

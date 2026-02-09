@@ -665,7 +665,7 @@ function MFASection() {
 function TOTPMethod({ factors }: { factors: Models.MfaFactors }) {
   const queryClient = useQueryClient()
   const [setupDialogOpen, setSetupDialogOpen] = useState(false)
-  const [verifyDialogOpen, setVerifyDialogOpen] = useState(false)
+  const [, setVerifyDialogOpen] = useState(false)
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null)
   const [secret, setSecret] = useState<string | null>(null)
   const [otp, setOtp] = useState('')
@@ -899,7 +899,7 @@ function EmailMFAMethod({
   factors: Models.MfaFactors
   account: Models.User | undefined
 }) {
-  const queryClient = useQueryClient()
+  useQueryClient()
 
   const createVerificationMutation = useMutation({
     mutationFn: async () => {
@@ -1040,7 +1040,7 @@ function RecoveryCodesMethod({
         ('codes' in data && Array.isArray(data.codes) ? data.codes : []) || [],
       )
       setCodesDialogOpen(true)
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If codes don't exist, create them
       if (error.code === 404 || error.message?.includes('not found')) {
         createRecoveryCodesMutation.mutate()

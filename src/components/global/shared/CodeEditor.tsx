@@ -77,13 +77,11 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(
       value,
       onChange,
       language = 'javascript',
-      fileName,
       height = 400,
       className,
       readOnly = false,
       minimap = false,
       lineNumbers = 'on',
-      entrypoint = 'index.js',
     },
     ref,
   ) => {

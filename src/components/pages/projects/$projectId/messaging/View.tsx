@@ -41,7 +41,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
-
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -198,11 +197,10 @@ export function View() {
   const showLoading = currentData.isLoading
 
   // Get project to get teamId for organization plan
-  const { project, isLoading: projectLoading } = useProject(projectId)
+  const { project } = useProject(projectId)
 
   // Get organization plan to check limits
-  const { plan: organizationPlan, isLoading: planLoading } =
-    useOrganizationPlan(project?.teamId)
+  useOrganizationPlan(project?.teamId)
 
   // Clear selection when navigating or searching
   useEffect(() => {
@@ -296,7 +294,9 @@ export function View() {
     if (selectedItems.size === currentData.items.length) {
       setSelectedItems(new Set())
     } else {
-      setSelectedItems(new Set(currentData.items.map((item: any) => item.$id)))
+      setSelectedItems(
+        new Set(currentData.items.map((item: { $id: string }) => item.$id)),
+      )
     }
   }
 
@@ -384,7 +384,10 @@ export function View() {
   }
 
   // Get message status badge
-  const getMessageStatusBadge = (status: string, deliveryErrors?: any) => {
+  const getMessageStatusBadge = (
+    status: string,
+    deliveryErrors?: Array<{ message?: string }> | Record<string, unknown>,
+  ) => {
     if (status === 'sent') {
       return <Badge variant="success">Sent</Badge>
     }

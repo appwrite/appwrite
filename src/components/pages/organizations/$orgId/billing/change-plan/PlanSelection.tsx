@@ -14,7 +14,7 @@ import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { cn } from '@/lib/utils'
 
 interface PlanSelectionProps {
-  plans: Record<string, any>
+  plans: Record<string, unknown>
   currentPlan: BillingPlan | string
   selectedPlan: BillingPlan | null
   onPlanSelect: (plan: BillingPlan) => void

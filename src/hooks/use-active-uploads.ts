@@ -37,7 +37,7 @@ export function useActiveUploads() {
       if (!mounted) return
 
       uploads.forEach((item) => {
-        const unsubscribe = uploadManager.onProgress(item.id, (progress) => {
+        const unsubscribe = uploadManager.onProgress(item.id, () => {
           if (!mounted) return
 
           // Reload active uploads when status changes

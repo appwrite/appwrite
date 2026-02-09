@@ -13,6 +13,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { AppwriteException, ID, OAuthProvider } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
+import { getErrorMessage } from '@/lib/utils/error-formatting'
 
 // Helper function to validate that a redirect URL is relative (prevents redirect hijacking)
 function isValidRelativeRedirect(url: string): boolean {
@@ -69,10 +70,9 @@ function SignUpPage() {
         window.location.href = url
       }
       // If void, the SDK has already initiated the redirect, so we don't need to do anything
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsGitHubLoading(false)
-      const errorMessage = error?.message || 'Failed to initiate GitHub login'
-      toast.error(errorMessage)
+      toast.error(getErrorMessage(error, 'Failed to initiate GitHub login'))
       console.error('GitHub OAuth error:', error)
     }
   }
@@ -109,14 +109,13 @@ function SignUpPage() {
       setLastLoginMethod('email')
       await router.invalidate()
       if (search.redirect && isValidRelativeRedirect(search.redirect)) {
-        navigate({ to: search.redirect as any })
+        navigate({ to: search.redirect })
       } else {
         navigate({ to: '/' })
       }
     },
-    onError: async (error: any) => {
-      const errorMessage = error?.message || 'Failed to sign up'
-      toast.error(errorMessage)
+    onError: async (error: unknown) => {
+      toast.error(getErrorMessage(error, 'Failed to sign up'))
       console.error('Sign up error:', error)
     },
   })

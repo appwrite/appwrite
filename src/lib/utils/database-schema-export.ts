@@ -68,17 +68,16 @@ export async function fetchDatabaseSchema(
   const projectSdk = sdk.forProject(projectId)
 
   // Fetch database
-  const db = await (projectSdk.tablesDB as any).get(databaseId)
+  const db = await projectSdk.tablesDB.get({ databaseId })
 
   // Fetch all tables
-  const tablesResponse = await (projectSdk.tablesDB as any).listTables(
+  const tablesResponse = await projectSdk.tablesDB.listTables({
     databaseId,
-    [],
-    undefined,
-  )
+    queries: [],
+  })
 
   const tables: TableSchema[] = await Promise.all(
-    (tablesResponse.tables || []).map(async (table: any) => {
+    (tablesResponse.tables || []).map(async (table: unknown) => {
       // Fetch columns and indexes for each table
       const [columnsResponse, indexesResponse] = await Promise.all([
         fetchProjectTableColumns(projectId, databaseId, table.$id),
@@ -86,7 +85,7 @@ export async function fetchDatabaseSchema(
       ])
 
       const columns: ColumnSchema[] = (columnsResponse.columns || []).map(
-        (col: any) => ({
+        (col: unknown) => ({
           key: col.key || col.$id,
           type: col.type || 'string',
           required: col.required === true,
@@ -104,7 +103,7 @@ export async function fetchDatabaseSchema(
       )
 
       const indexes: IndexSchema[] = (indexesResponse.indexes || []).map(
-        (idx: any) => ({
+        (idx: unknown) => ({
           key: idx.key || idx.$id,
           type: idx.type || 'key',
           attributes: idx.attributes || [],

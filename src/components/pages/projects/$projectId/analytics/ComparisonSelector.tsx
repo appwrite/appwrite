@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { format, subDays, subYears, startOfDay, endOfDay } from 'date-fns'
+import { subDays, subYears, startOfDay, endOfDay } from 'date-fns'
 import { DateRange } from 'react-day-picker'
 import { ChevronDown, TrendingUp } from 'lucide-react'
 
@@ -112,11 +112,6 @@ export function ComparisonSelector({
 
   const handleSelect = (type: ComparisonType) => {
     onComparisonTypeChange(type)
-  }
-
-  const formatComparisonRange = (range: DateRange | undefined): string => {
-    if (!range?.from || !range?.to) return ''
-    return `${format(range.from, 'MMM d')} - ${format(range.to, 'MMM d, yyyy')}`
   }
 
   return (

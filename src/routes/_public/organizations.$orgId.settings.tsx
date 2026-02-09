@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/settings')({
-  loader: async ({ params, context }) => {
+  loader: async ({ context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
       return

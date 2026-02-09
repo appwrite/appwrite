@@ -42,7 +42,7 @@ function ResetPage() {
       setIsSuccess(true)
       toast.success('Password reset successfully')
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Reset error:', error)
       toast.error(error.message || 'Failed to reset password')
     },

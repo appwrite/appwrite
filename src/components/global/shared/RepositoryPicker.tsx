@@ -103,7 +103,6 @@ export function RepositoryPicker({
   onRepositorySelect,
   mode,
   detectionType = 'framework',
-  showCreateNewSiteLink = false,
   onRefetch,
   isFetching: isFetchingProp,
   className,

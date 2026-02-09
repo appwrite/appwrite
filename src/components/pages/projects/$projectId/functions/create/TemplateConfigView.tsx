@@ -110,12 +110,14 @@ export function TemplateConfigView({
         setRuntime(resolved ?? defaultRuntimeName)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [template, runtimeFromSearch])
 
   useEffect(() => {
     if (functionName && !domain) {
       setDomain(generateDomain(functionName))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [functionName, generateDomain])
 
   const handleDeploy = async () => {
@@ -141,7 +143,7 @@ export function TemplateConfigView({
       await projectSdk.functions.create({
         functionId: finalFunctionId,
         name: functionName.trim(),
-        runtime: runtime as any,
+        runtime: runtime as unknown,
         execute: [],
         events: template.events?.length ? template.events : undefined,
         schedule: template.cron || undefined,
@@ -186,7 +188,7 @@ export function TemplateConfigView({
         to: '/projects/$projectId/functions/$functionId',
         params: { projectId, functionId: finalFunctionId },
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || 'Failed to create function')
       setIsDeploying(false)
     }

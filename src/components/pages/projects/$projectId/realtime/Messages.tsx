@@ -30,7 +30,7 @@ interface RealtimeMessagesProps {
 const MESSAGES_PER_PAGE = 25
 
 export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
-  const location = useLocation()
+  useLocation()
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     // Default to last 7 days
     const to = new Date()

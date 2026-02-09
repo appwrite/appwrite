@@ -35,7 +35,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 
-
 import {
   Table,
   TableBody,
@@ -138,7 +137,7 @@ export function FunctionVariablesCard({
   const [showSecretModal, setShowSecretModal] = useState(false)
   const [showEditorModal, setShowEditorModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
-  const [selectedVar, setSelectedVar] = useState<any>(null)
+  const [selectedVar, setSelectedVar] = useState<unknown>(null)
 
   // Create form state
   const [createPairs, setCreatePairs] = useState<
@@ -192,7 +191,7 @@ export function FunctionVariablesCard({
   }
 
   // Convert variables to ENV format
-  const variablesToEnv = (vars: any[]): string => {
+  const variablesToEnv = (vars: unknown[]): string => {
     return vars
       .filter((v) => !v.secret)
       .map((v) => `${v.key}=${v.value}`)
@@ -200,7 +199,7 @@ export function FunctionVariablesCard({
   }
 
   // Convert variables to JSON format
-  const variablesToJson = (vars: any[]): string => {
+  const variablesToJson = (vars: unknown[]): string => {
     const obj: Record<string, string> = {}
     vars
       .filter((v) => !v.secret)
@@ -219,7 +218,7 @@ export function FunctionVariablesCard({
   const jsonToObject = (content: string): Record<string, string> => {
     try {
       return JSON.parse(content)
-    } catch (e) {
+    } catch {
       throw new Error('Invalid JSON format')
     }
   }
@@ -272,7 +271,7 @@ export function FunctionVariablesCard({
       setShowCreateModal(false)
       setCreatePairs([{ key: '', value: '' }])
       setCreateSecret(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to create variable'))
     }
   }
@@ -299,7 +298,7 @@ export function FunctionVariablesCard({
       setSelectedVar(null)
       setUpdateValue('')
       setUpdateSecret(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to update variable'))
     }
   }
@@ -314,7 +313,7 @@ export function FunctionVariablesCard({
       toast.success('Function variable has been deleted.')
       setShowDeleteModal(false)
       setSelectedVar(null)
-    } catch (error: any) {
+    } catch (error: unknown) {
       setDeleteError(getErrorMessage(error, 'Failed to delete variable'))
     }
   }
@@ -334,7 +333,7 @@ export function FunctionVariablesCard({
       toast.success('Function variable has been marked as secret.')
       setShowSecretModal(false)
       setSelectedVar(null)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to mark variable as secret'))
     }
   }
@@ -368,7 +367,7 @@ export function FunctionVariablesCard({
 
       // Create or update variables
       const existingKeys = new Set(variables.map((v) => v.key))
-      const promises: Promise<any>[] = []
+      const promises: Promise<unknown>[] = []
 
       for (const [key, value] of Object.entries(parsed)) {
         if (existingKeys.has(key)) {
@@ -399,7 +398,7 @@ export function FunctionVariablesCard({
       setShowImportModal(false)
       setImportFile(null)
       setImportSecret(false)
-    } catch (error: any) {
+    } catch (error: unknown) {
       setImportError(getErrorMessage(error, 'Failed to import variables'))
     }
   }
@@ -433,8 +432,8 @@ export function FunctionVariablesCard({
       const secretKeys = new Set(secretVars.map((v) => v.key))
 
       // Update existing variables
-      const updatePromises: Promise<any>[] = []
-      const deletePromises: Promise<any>[] = []
+      const updatePromises: Promise<unknown>[] = []
+      const deletePromises: Promise<unknown>[] = []
 
       for (const variable of editableVars) {
         if (parsed[variable.key] === undefined) {
@@ -454,7 +453,7 @@ export function FunctionVariablesCard({
       }
 
       // Create new variables
-      const createPromises: Promise<any>[] = []
+      const createPromises: Promise<unknown>[] = []
       for (const [key, value] of Object.entries(parsed)) {
         const existsInEditable = editableVars.some((v) => v.key === key)
         const existsInSecret = secretKeys.has(key)
@@ -477,7 +476,7 @@ export function FunctionVariablesCard({
       toast.success('Variables have been updated.')
       setShowEditorModal(false)
       setEditorContent('')
-    } catch (error: any) {
+    } catch (error: unknown) {
       setEditorError(getErrorMessage(error, 'Failed to save variables'))
     }
   }
@@ -510,7 +509,7 @@ export function FunctionVariablesCard({
     try {
       await navigator.clipboard.writeText(editorContent)
       toast.success('Copied to clipboard')
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy to clipboard')
     }
   }
@@ -537,7 +536,7 @@ export function FunctionVariablesCard({
         setEditorContent(JSON.stringify(parsed, null, 2))
       }
       setEditorFormat(format)
-    } catch (error) {
+    } catch {
       // If conversion fails, just switch format and use current variables
       const editableVars = variables.filter((v) => !v.secret)
       if (format === 'env') {

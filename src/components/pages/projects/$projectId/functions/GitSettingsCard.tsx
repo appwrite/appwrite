@@ -171,7 +171,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
         })
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(error.message || 'Failed to update function')
     },
   })
@@ -216,7 +216,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
         queryKey: ['function', 'project', projectId, func.$id],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(error.message || 'Failed to connect repository')
     },
   })
@@ -257,7 +257,7 @@ export function GitSettingsCard({ func }: GitSettingsCardProps) {
         queryKey: ['function', 'project', projectId, func.$id],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(error.message || 'Failed to disconnect repository')
     },
   })

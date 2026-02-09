@@ -196,11 +196,7 @@ interface UserRoleDisplayProps {
   projectId?: string
 }
 
-function UserRoleDisplay({
-  userId,
-  roleName,
-  projectId,
-}: UserRoleDisplayProps) {
+function UserRoleDisplay({ userId, projectId }: UserRoleDisplayProps) {
   const { users } = useProjectUsers(projectId || null, 0, 100, '')
   const user = users.find((u) => u.$id === userId)
 
@@ -253,11 +249,7 @@ interface TeamRoleDisplayProps {
   projectId?: string
 }
 
-function TeamRoleDisplay({
-  teamId,
-  roleName,
-  projectId,
-}: TeamRoleDisplayProps) {
+function TeamRoleDisplay({ teamId, projectId }: TeamRoleDisplayProps) {
   const { teams } = useProjectTeams(projectId || null, 0, 100, '')
   const team = teams.find((t) => t.id === teamId)
 
@@ -341,7 +333,7 @@ function UserSelectionModal({
   const [page, setPage] = useState(0)
   const pageSize = 25
 
-  const { users, total, isLoading } = useProjectUsers(
+  const { users, isLoading } = useProjectUsers(
     projectId || null,
     page,
     pageSize,
@@ -516,7 +508,7 @@ function TeamSelectionModal({
   const [page, setPage] = useState(0)
   const pageSize = 25
 
-  const { teams, total, isLoading } = useProjectTeams(
+  const { teams, isLoading } = useProjectTeams(
     projectId || null,
     page,
     pageSize,
@@ -806,9 +798,7 @@ export function PermissionsEditor({
     Map<string, PermissionActions>
   >(new Map())
   // Track roles that have had at least one permission enabled (to prevent auto-removal of newly added roles)
-  const [rolesWithPermissions, setRolesWithPermissions] = useState<Set<string>>(
-    new Set(),
-  )
+  const [, setRolesWithPermissions] = useState<Set<string>>(new Set())
   // Track newly added roles that haven't had any permissions set yet (prevent removal until user interacts)
   // Use ref to avoid stale closure issues in state updaters
   const newlyAddedRolesRef = useRef<Set<string>>(new Set())

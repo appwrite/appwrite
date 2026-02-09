@@ -63,7 +63,7 @@ function getFileIcon(type: string) {
   return File
 }
 
-function getFileIconColor(type: string) {
+function getFileIconColor() {
   // Use muted colors per UI guidelines
   return 'bg-muted text-muted-foreground'
 }
@@ -109,10 +109,7 @@ export function View() {
   const { queueUpload } = useUploadQueue(projectId, bucketId)
 
   // Fetch bucket data
-  const { data: bucket, isLoading: bucketLoading } = useBucket(
-    projectId,
-    bucketId,
-  )
+  const { data: bucket } = useBucket(projectId, bucketId)
 
   // Fetch data for the requested page (triggers load when user changes page)
   const {
@@ -195,29 +192,6 @@ export function View() {
       // Files list will automatically reload when upload completes (handled by GlobalUploadProgress)
     } catch (error) {
       toast.error(getErrorMessage(error))
-    }
-  }
-
-  // Delete file mutation
-  const deleteFileMutation = useMutation({
-    mutationFn: async (fileId: string) => {
-      if (!projectId || !bucketId)
-        throw new Error('Project ID and Bucket ID are required')
-      const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.storage.deleteFile({ bucketId, fileId })
-    },
-    onSuccess: () => {
-      toast.success('File has been deleted')
-      queryClient.invalidateQueries({ queryKey: Dependencies.FILES })
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error))
-    },
-  })
-
-  const handleDeleteFile = (fileId: string) => {
-    if (confirm('Are you sure you want to delete this file?')) {
-      deleteFileMutation.mutate(fileId)
     }
   }
 

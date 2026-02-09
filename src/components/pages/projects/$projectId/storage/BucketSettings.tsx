@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { Compression } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   useBucket,
@@ -60,8 +61,7 @@ export function BucketSettings() {
   // Get max file size from plan object (fileSize is in MB, -1 means unlimited)
   const maxFileSizeByPlan = useMemo(() => {
     if (!organizationPlan) return null
-
-    const fileSize = (organizationPlan as any)?.fileSize
+    const fileSize = organizationPlan?.fileSize
 
     // -1 means unlimited
     if (fileSize === -1 || fileSize === null || fileSize === undefined) {
@@ -76,7 +76,6 @@ export function BucketSettings() {
   const [bucketName, setBucketName] = useState('')
   const [enabled, setEnabled] = useState(false)
   const [encryption, setEncryption] = useState(false)
-  const [antivirus, setAntivirus] = useState(false)
   const [compression, setCompression] = useState<'none' | 'gzip' | 'zstd'>(
     'none',
   )
@@ -98,7 +97,6 @@ export function BucketSettings() {
       setBucketName(bucket.name)
       setEnabled(bucket.enabled)
       setEncryption(bucket.encryption)
-      setAntivirus(bucket.antivirus)
       const bucketCompression =
         (bucket.compression as 'none' | 'gzip' | 'zstd') || 'none'
       setCompression(bucketCompression)
@@ -146,7 +144,7 @@ export function BucketSettings() {
         enabled: bucket.enabled ?? undefined,
         encryption: bucket.encryption ?? undefined,
         antivirus: bucket.antivirus ?? undefined,
-        compression: bucket.compression as any,
+        compression: bucket.compression as Compression,
         transformations: bucket.transformations ?? undefined,
         maximumFileSize: bucket.maximumFileSize ?? undefined,
         allowedFileExtensions: bucket.allowedFileExtensions ?? undefined,
@@ -176,7 +174,7 @@ export function BucketSettings() {
         enabled,
         encryption: bucket.encryption ?? undefined,
         antivirus: bucket.antivirus ?? undefined,
-        compression: bucket.compression as any,
+        compression: bucket.compression as Compression,
         transformations: bucket.transformations ?? undefined,
         maximumFileSize: bucket.maximumFileSize ?? undefined,
         allowedFileExtensions: bucket.allowedFileExtensions ?? undefined,
@@ -207,7 +205,8 @@ export function BucketSettings() {
       return await projectSdk.storage.updateBucket({
         bucketId,
         name: bucket.name, // Required parameter
-        compression: compression === 'none' ? undefined : (compression as any),
+        compression:
+          compression === 'none' ? undefined : (compression as Compression),
         enabled: bucket.enabled ?? undefined,
         encryption: bucket.encryption ?? undefined,
         antivirus: bucket.antivirus ?? undefined,
@@ -240,7 +239,7 @@ export function BucketSettings() {
         enabled: bucket.enabled ?? undefined,
         encryption: bucket.encryption ?? undefined,
         antivirus: bucket.antivirus ?? undefined,
-        compression: bucket.compression as any,
+        compression: bucket.compression as Compression,
         transformations: bucket.transformations ?? undefined,
         allowedFileExtensions: bucket.allowedFileExtensions ?? undefined,
       })
@@ -269,7 +268,7 @@ export function BucketSettings() {
         enabled: bucket.enabled ?? undefined,
         encryption: bucket.encryption ?? undefined,
         antivirus: bucket.antivirus ?? undefined,
-        compression: bucket.compression as any,
+        compression: bucket.compression as Compression,
         transformations: bucket.transformations ?? undefined,
         maximumFileSize: bucket.maximumFileSize ?? undefined,
       })
@@ -318,7 +317,7 @@ export function BucketSettings() {
         encryption,
         enabled: bucket.enabled ?? undefined,
         antivirus: bucket.antivirus ?? undefined,
-        compression: bucket.compression as any,
+        compression: bucket.compression as Compression,
         transformations: bucket.transformations ?? undefined,
         maximumFileSize: bucket.maximumFileSize ?? undefined,
         allowedFileExtensions: bucket.allowedFileExtensions ?? undefined,
@@ -339,35 +338,6 @@ export function BucketSettings() {
     },
   })
 
-  const updateAntivirusMutation = useMutation({
-    mutationFn: async (antivirus: boolean) => {
-      if (!projectId || !bucketId || !bucket)
-        throw new Error('Project ID, Bucket ID, and Bucket are required')
-      const projectSdk = sdk.forProject(projectId)
-      return await projectSdk.storage.updateBucket({
-        bucketId,
-        name: bucket.name, // Required parameter
-        antivirus,
-        enabled: bucket.enabled ?? undefined,
-        encryption: bucket.encryption ?? undefined,
-        compression: bucket.compression as any,
-        transformations: bucket.transformations ?? undefined,
-        maximumFileSize: bucket.maximumFileSize ?? undefined,
-        allowedFileExtensions: bucket.allowedFileExtensions ?? undefined,
-      })
-    },
-    onSuccess: () => {
-      toast.success('Antivirus setting has been updated')
-      queryClient.invalidateQueries({
-        queryKey: ['bucket', 'project', projectId, bucketId],
-      })
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error))
-      setAntivirus(!antivirus) // Revert on error
-    },
-  })
-
   const updateTransformationsMutation = useMutation({
     mutationFn: async (transformations: boolean) => {
       if (!projectId || !bucketId || !bucket)
@@ -380,7 +350,7 @@ export function BucketSettings() {
         enabled: bucket.enabled ?? undefined,
         encryption: bucket.encryption ?? undefined,
         antivirus: bucket.antivirus ?? undefined,
-        compression: bucket.compression as any,
+        compression: bucket.compression as Compression,
         maximumFileSize: bucket.maximumFileSize ?? undefined,
         allowedFileExtensions: bucket.allowedFileExtensions ?? undefined,
       })
@@ -412,10 +382,6 @@ export function BucketSettings() {
 
   const handleEncryptionToggle = (checked: boolean) => {
     setEncryption(checked)
-  }
-
-  const handleAntivirusToggle = (checked: boolean) => {
-    setAntivirus(checked)
   }
 
   const handleTransformationsToggle = (checked: boolean) => {

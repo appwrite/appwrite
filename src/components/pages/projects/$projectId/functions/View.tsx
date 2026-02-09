@@ -47,18 +47,11 @@ function getNextScheduledExecution(func: Models.Function): string | null {
   return null
 }
 
-/**
- * Extract runtime prefix from runtime string (e.g., "node-18.0" -> "node")
- */
-function getRuntimePrefix(runtime: string): string {
-  return runtime.split('-')[0] || 'unknown'
-}
-
 export function View() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const location = useLocation()
-  const queryClient = useQueryClient()
+  useQueryClient()
   const search = useSearch({ strict: false })
 
   // Derive active tab from pathname
@@ -452,9 +445,6 @@ export function View() {
               <>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {functions.map((func) => {
-                    const runtimePrefix = getRuntimePrefix(
-                      func.runtime || 'unknown',
-                    )
                     const nextExecution = func.schedule
                       ? getNextScheduledExecution(func as Models.Function)
                       : null

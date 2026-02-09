@@ -85,8 +85,8 @@ export function View() {
   // Helper function to get screenshot URL
   const getScreenshotUrl = (site: Models.Site) => {
     const screenshotId = isDark
-      ? (site as any).deploymentScreenshotDark
-      : (site as any).deploymentScreenshotLight
+      ? (site as unknown).deploymentScreenshotDark
+      : (site as unknown).deploymentScreenshotLight
     if (!screenshotId) return null
     return sdk.forConsole.storage.getFileDownload({
       bucketId: SCREENSHOTS_BUCKET_ID,
@@ -404,9 +404,9 @@ export function View() {
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                                   <FrameworkIcon
                                     framework={
-                                      (siteData as any).buildFramework ||
-                                      (siteData as any).buildFrameworkId ||
-                                      (siteData as any).framework
+                                      (siteData as unknown).buildFramework ||
+                                      (siteData as unknown).buildFrameworkId ||
+                                      (siteData as unknown).framework
                                     }
                                     size="sm"
                                   />
@@ -550,9 +550,9 @@ export function View() {
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                                 <FrameworkIcon
                                   framework={
-                                    (siteData as any).buildFramework ||
-                                    (siteData as any).buildFrameworkId ||
-                                    (siteData as any).framework
+                                    (siteData as unknown).buildFramework ||
+                                    (siteData as unknown).buildFrameworkId ||
+                                    (siteData as unknown).framework
                                   }
                                   size="md"
                                 />

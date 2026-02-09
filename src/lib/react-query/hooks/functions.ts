@@ -54,10 +54,10 @@ export async function fetchProjectFunctions(
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.functions.list(
+  const response = await projectSdk.functions.list({
     queries,
-    search?.trim() || undefined,
-  )
+    search: search?.trim() || undefined,
+  })
 
   return {
     functions: response.functions || [],
@@ -255,13 +255,13 @@ export async function fetchFunctionVariables(
     const response = await projectSdk.functions.listVariables({
       functionId,
       queries,
-    } as any)
+    } as unknown)
 
     return {
       variables: response.variables || [],
       total: response.total || 0,
     }
-  } catch (error) {
+  } catch {
     // If queries aren't supported, fall back to fetching all and paginating client-side
     const response = await projectSdk.functions.listVariables({ functionId })
     const allVariables = (response.variables || []).sort((a, b) => {

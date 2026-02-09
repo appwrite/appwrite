@@ -50,7 +50,7 @@ export function AvailableCreditsSection({
   orgId,
 }: AvailableCreditsSectionProps) {
   const [currentPage, setCurrentPage] = useState(0)
-  const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
+  const { isLoading: orgLoading } = useOrganizationById(orgId)
   const { plan, isLoading: planLoading } = useOrganizationPlan(orgId)
   const {
     credits,

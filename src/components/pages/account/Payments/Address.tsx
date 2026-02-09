@@ -64,7 +64,7 @@ export function AddressModal({
   const createAddressMutation = useCreateBillingAddress()
   const updateAddressMutation = useUpdateBillingAddress()
   const { data: countriesData, isLoading: countriesLoading } = useCountries()
-  const { data: localeData, isLoading: localeLoading } = useLocale()
+  const { data: localeData } = useLocale()
 
   const [countryPopoverOpen, setCountryPopoverOpen] = useState(false)
 

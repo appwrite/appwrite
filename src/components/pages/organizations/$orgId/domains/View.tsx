@@ -10,9 +10,7 @@ import {
   Search,
   Plus,
 } from 'lucide-react'
-import {
-  useOrganizationDomains,
-} from '@/lib/react-query/hooks'
+import { useOrganizationDomains } from '@/lib/react-query/hooks'
 import { ResourceCard } from '@/components/pages/projects/$projectId/shared/ResourceCard'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
@@ -206,19 +204,6 @@ export function View() {
           to: '/organizations/$orgId/domains/$domainId',
           params: { orgId: orgId!, domainId: createdDomain.$id },
         })
-      },
-      onError: (error) => {
-        toast.error(getErrorMessage(error))
-      },
-    })
-  }
-
-  const handleDeleteDomain = (domainId: string) => {
-    deleteDomainMutation.mutate(domainId, {
-      onSuccess: () => {
-        toast.success('Domain has been deleted')
-        setDeleteDialogOpen(false)
-        setSelectedDomains(new Set())
       },
       onError: (error) => {
         toast.error(getErrorMessage(error))
@@ -512,7 +497,6 @@ export function View() {
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {paginatedDomains.map((domain) => {
                     const verification = getVerificationStatus(domain)
-                    const VerificationIcon = verification.icon
                     return (
                       <Link
                         key={domain.$id}

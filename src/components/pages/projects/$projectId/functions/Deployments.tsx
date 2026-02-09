@@ -158,7 +158,7 @@ function BitbucketIcon({ className }: { className?: string }) {
 
 // Detect VCS provider from deployment
 function getVcsProvider(
-  deployment: any,
+  deployment: unknown,
 ): { name: string; icon: React.ReactNode } | null {
   // Check for providerRepositoryUrl which contains the provider domain
   if (deployment.providerRepositoryUrl) {
@@ -364,6 +364,7 @@ export function View() {
     func?.runtime ||
     'N/A'
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const specifications = specificationsData?.specifications || []
 
   // Get specification info
@@ -417,7 +418,7 @@ export function View() {
       })
       setRuntimeLimitsDialogOpen(false)
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(error.message || 'Failed to update runtime limits')
     },
   })
@@ -448,7 +449,7 @@ export function View() {
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
-    } catch (error) {
+    } catch {
       toast.error('Failed to download source code')
     }
   }
@@ -465,7 +466,7 @@ export function View() {
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
-    } catch (error) {
+    } catch {
       toast.error('Failed to download build output')
     }
   }
@@ -1454,7 +1455,7 @@ export function View() {
                                           toast.success(
                                             'Deployment activated successfully',
                                           )
-                                        } catch (error) {
+                                        } catch {
                                           toast.error(
                                             'Failed to activate deployment',
                                           )
@@ -1488,7 +1489,7 @@ export function View() {
                                           toast.success(
                                             'Deployment rebuild started',
                                           )
-                                        } catch (error) {
+                                        } catch {
                                           toast.error('Failed to redeploy')
                                         }
                                       }}

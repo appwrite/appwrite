@@ -46,17 +46,12 @@ interface SecurityProps {
   projectId: string
 }
 
-// Dependencies enum for query invalidation
-enum Dependencies {
-  PROJECT = 'project',
-}
-
 export function Security({ projectId }: SecurityProps) {
   // Get raw project data
   const { data: projectData, isLoading } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
-      const response = await sdk.forConsole.projects.get(projectId)
+      const response = await sdk.forConsole.projects.get({ projectId })
       return response
     },
     enabled: !!projectId,
@@ -73,27 +68,29 @@ export function Security({ projectId }: SecurityProps) {
     )
   }
 
-  const authLimit = (projectData as any)?.authLimit ?? 0
+  const authLimit = (projectData as unknown)?.authLimit ?? 0
   // Parse authDuration as number (in seconds) - ensure it's a valid number
   const authDuration =
-    typeof (projectData as any)?.authDuration === 'number'
-      ? (projectData as any).authDuration
-      : typeof (projectData as any)?.authDuration === 'string'
-        ? parseInt((projectData as any).authDuration, 10) || 0
+    typeof (projectData as unknown)?.authDuration === 'number'
+      ? (projectData as unknown).authDuration
+      : typeof (projectData as unknown)?.authDuration === 'string'
+        ? parseInt((projectData as unknown).authDuration, 10) || 0
         : 0
-  const authSessionsLimit = (projectData as any)?.authSessionsLimit ?? 10
-  const passwordHistoryLimit = (projectData as any)?.authPasswordHistory ?? 0
+  const authSessionsLimit = (projectData as unknown)?.authSessionsLimit ?? 10
+  const passwordHistoryLimit =
+    (projectData as unknown)?.authPasswordHistory ?? 0
   const passwordDictionary =
-    (projectData as any)?.authPasswordDictionary ?? false
-  const personalDataCheck = (projectData as any)?.authPersonalDataCheck ?? false
-  const sessionAlerts = (projectData as any)?.authSessionAlerts ?? false
+    (projectData as unknown)?.authPasswordDictionary ?? false
+  const personalDataCheck =
+    (projectData as unknown)?.authPersonalDataCheck ?? false
+  const sessionAlerts = (projectData as unknown)?.authSessionAlerts ?? false
   const sessionInvalidation =
-    (projectData as any)?.authInvalidateSessions ?? false
-  const mockNumbers = (projectData as any)?.authMockNumbers ?? []
+    (projectData as unknown)?.authInvalidateSessions ?? false
+  const mockNumbers = (projectData as unknown)?.authMockNumbers ?? []
   const membershipsPrivacy = {
-    userName: (projectData as any)?.authMembershipsUserName ?? true,
-    userEmail: (projectData as any)?.authMembershipsUserEmail ?? true,
-    mfa: (projectData as any)?.authMembershipsMfa ?? true,
+    userName: (projectData as unknown)?.authMembershipsUserName ?? true,
+    userEmail: (projectData as unknown)?.authMembershipsUserEmail ?? true,
+    mfa: (projectData as unknown)?.authMembershipsMfa ?? true,
   }
 
   return (

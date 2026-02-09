@@ -33,7 +33,7 @@ export function DeleteDomainDialog({
     try {
       await deleteDomainMutation.mutateAsync(rule.$id)
       onDeleteSuccess()
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to delete domain')
     }
   }

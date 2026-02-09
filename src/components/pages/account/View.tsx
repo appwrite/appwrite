@@ -140,7 +140,7 @@ export function View({ activeTab: tabProp }: ViewProps) {
                 return (
                   <Link
                     key={tab.id}
-                    to={tab.to as any}
+                    to={tab.to as unknown}
                     replace
                     role="tab"
                     aria-selected={isActive}

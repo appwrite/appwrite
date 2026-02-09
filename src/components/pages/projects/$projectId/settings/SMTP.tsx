@@ -31,7 +31,7 @@ export function SMTP({ projectId }: SMTPProps) {
   const rawProject = useMemo(() => {
     // We need to get the raw project data to access SMTP fields
     // This would ideally come from a hook that returns the full Models.Project
-    return projectData as any
+    return projectData as unknown
   }, [projectData])
 
   // Get project to access teamId (organization ID)
@@ -115,7 +115,7 @@ export function SMTP({ projectId }: SMTPProps) {
         secure: enabled ? (secure === 'none' ? '' : secure) : undefined,
       })
       toast.success(`SMTP server has been ${enabled ? 'enabled' : 'disabled'}.`)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to update SMTP settings')
     }
   }

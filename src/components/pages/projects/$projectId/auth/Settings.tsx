@@ -343,9 +343,9 @@ function getProviderConfig(providerKey: string) {
 }
 
 // Helper to get provider data from project's oAuthProviders array
-function getProviderData(projectData: any, providerKey: string) {
+function getProviderData(projectData: unknown, providerKey: string) {
   const oAuthProviders = projectData?.oAuthProviders || []
-  return oAuthProviders.find((p: any) => p.key === providerKey) || null
+  return oAuthProviders.find((p: unknown) => p.key === providerKey) || null
 }
 
 // Standard Provider Form Component
@@ -479,8 +479,8 @@ function SpecialProviderForm({
   error,
 }: {
   providerKey: string
-  formData: any
-  setFormData: (data: any) => void
+  formData: unknown
+  setFormData: (data: unknown) => void
   redirectUri: string
   providerName: string
   error: string
@@ -517,7 +517,7 @@ function SpecialProviderForm({
     )
   }
 
-  const updateField = (field: string, value: any) => {
+  const updateField = (field: string, value: unknown) => {
     setFormData({ ...formData, [field]: value })
   }
 
@@ -1281,7 +1281,7 @@ const SPECIAL_PROVIDERS = [
 ] as const
 
 function isSpecialProvider(providerKey: string): boolean {
-  return SPECIAL_PROVIDERS.includes(providerKey as any)
+  return SPECIAL_PROVIDERS.includes(providerKey as unknown)
 }
 
 export function AuthSettings({ projectId }: AuthSettingsProps) {
@@ -1292,7 +1292,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   const { data: rawProjectData } = useQuery({
     queryKey: ['project', projectId],
     queryFn: async () => {
-      const response = await sdk.forConsole.projects.get(projectId)
+      const response = await sdk.forConsole.projects.get({ projectId })
       return response
     },
     enabled: !!projectId,
@@ -1328,7 +1328,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   })
 
   // Special form data (for providers with custom forms)
-  const [specialFormData, setSpecialFormData] = useState<any>({})
+  const [specialFormData, setSpecialFormData] = useState<unknown>({})
 
   const [providerError, setProviderError] = useState('')
 
@@ -1345,7 +1345,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
         [AuthMethod.Jwt]: false,
       }
     }
-    const projectData = rawProjectData as any
+    const projectData = rawProjectData as unknown
     return {
       [AuthMethod.Emailpassword]: projectData.authEmailPassword ?? false,
       [AuthMethod.Phone]: projectData.authPhone ?? false,
@@ -1440,7 +1440,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
 
   // Handle provider card click
   const handleProviderClick = (providerKey: string) => {
-    const projectData = rawProjectData as any
+    const projectData = rawProjectData as unknown
     const providerData = getProviderData(projectData, providerKey)
 
     setSelectedProvider(providerKey)
@@ -1462,7 +1462,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   }
 
   // Load special form data based on provider type
-  const loadSpecialFormData = (providerKey: string, providerData: any) => {
+  const loadSpecialFormData = (providerKey: string, providerData: unknown) => {
     if (!providerData) {
       // Initialize empty form based on provider type
       switch (providerKey) {
@@ -1546,7 +1546,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
     const secret = providerData.secret || ''
 
     // Try to parse secret as JSON for special providers
-    let secretData: any = {}
+    let secretData: unknown = {}
     if (secret) {
       try {
         secretData = JSON.parse(secret)
@@ -1707,7 +1707,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   // Validate and serialize special provider data
   const validateAndSerializeSpecialProvider = (
     providerKey: string,
-    formData: any,
+    formData: unknown,
   ): { valid: boolean; appId: string; secret: string; error?: string } => {
     switch (providerKey) {
       case OAuthProvider.Apple:
@@ -1838,7 +1838,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             error: 'App Secret is required',
           }
         }
-        const gitlabSecret: any = {
+        const gitlabSecret: unknown = {
           clientSecret: formData.appSecret.trim(),
         }
         if (formData.endpoint?.trim()) {
@@ -1890,7 +1890,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
             error: 'Client Secret is required',
           }
         }
-        const microsoftSecret: any = {
+        const microsoftSecret: unknown = {
           clientSecret: formData.clientSecret.trim(),
         }
         if (formData.targetTenant?.trim()) {
@@ -1935,7 +1935,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
           }
         }
 
-        const oidcSecret: any = {
+        const oidcSecret: unknown = {
           clientSecret: formData.clientSecret.trim(),
         }
         if (hasWellKnown) {
@@ -2008,7 +2008,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
   // Check if provider form has changes
   const hasProviderChanges = useMemo(() => {
     if (!selectedProvider) return false
-    const projectData = rawProjectData as any
+    const projectData = rawProjectData as unknown
     const providerData = getProviderData(projectData, selectedProvider)
 
     if (!providerData) {
@@ -2035,7 +2035,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
       const secret = providerData.secret || ''
 
       // Parse secret
-      let secretData: any = {}
+      let secretData: unknown = {}
       if (secret) {
         try {
           secretData = JSON.parse(secret)
@@ -2130,7 +2130,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
 
   // Get OAuth providers filtered and sorted (popular first, then enabled, then others)
   const filteredAndSortedProviders = useMemo(() => {
-    const projectData = rawProjectData as any
+    const projectData = rawProjectData as unknown
 
     // Filter by search query
     const filtered = OAUTH_PROVIDERS.filter((provider) =>
@@ -2290,7 +2290,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
               </h4>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {popularProviders.map((provider) => {
-                  const projectData = rawProjectData as any
+                  const projectData = rawProjectData as unknown
                   const providerData = getProviderData(
                     projectData,
                     provider.key,
@@ -2351,7 +2351,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
               )}
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {otherProviders.map((provider) => {
-                  const projectData = rawProjectData as any
+                  const projectData = rawProjectData as unknown
                   const providerData = getProviderData(
                     projectData,
                     provider.key,

@@ -73,7 +73,6 @@ export function View() {
 
   // Fetch data for the requested page (this will fetch in background)
   const {
-    executions: requestedExecutions,
     total,
     isLoading: executionsLoading,
     isFetching: executionsFetching,

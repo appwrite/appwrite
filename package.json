@@ -97,6 +97,7 @@
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@vitejs/plugin-react": "^5.0.3",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-unused-imports": "^4.3.0",
     "jsdom": "^26.0.0",
     "prettier": "^3.5.3",

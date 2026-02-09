@@ -99,7 +99,6 @@ export function PaymentHistory() {
     invoices: apiInvoices,
     total: totalInvoices,
     data,
-    isLoading,
     isPending,
     error,
   } = useOrganizationInvoices(orgId, currentPage, ITEMS_PER_PAGE)
@@ -230,9 +229,9 @@ export function PaymentHistory() {
                     } else if (response && typeof response === 'object') {
                       // Check for common URL properties
                       url =
-                        (response as any).url ||
-                        (response as any).href ||
-                        (response as any).link
+                        (response as unknown).url ||
+                        (response as unknown).href ||
+                        (response as unknown).link
                       if (!url) {
                         // If no URL in response, construct it from endpoint
                         const endpoint = sdk.forConsole.client.config.endpoint
@@ -271,9 +270,9 @@ export function PaymentHistory() {
                     } else if (response && typeof response === 'object') {
                       // Check for common URL properties
                       url =
-                        (response as any).url ||
-                        (response as any).href ||
-                        (response as any).link
+                        (response as unknown).url ||
+                        (response as unknown).href ||
+                        (response as unknown).link
                       if (!url) {
                         // If no URL in response, construct it from endpoint
                         const endpoint = sdk.forConsole.client.config.endpoint

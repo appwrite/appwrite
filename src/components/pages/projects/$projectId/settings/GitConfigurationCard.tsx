@@ -61,7 +61,6 @@ function GitHubIcon({ className }: { className?: string }) {
 
 interface GitConfigurationCardProps {
   projectId: string
-  projectEndpoint: string
   page: number
   limit: number
   onPageChange: (page: number) => void
@@ -72,7 +71,6 @@ interface GitConfigurationCardProps {
 
 export function GitConfigurationCard({
   projectId,
-  projectEndpoint,
   page,
   limit,
   onPageChange,
@@ -113,7 +111,7 @@ export function GitConfigurationCard({
         Query.limit(100),
         Query.equal('installationId', selectedInstallation.$id),
       ]
-      const response = await projectSdk.functions.list(queries)
+      const response = await projectSdk.functions.list({ queries })
       return {
         functions: response.functions || [],
         total: response.total || 0,
@@ -139,7 +137,7 @@ export function GitConfigurationCard({
         Query.limit(100),
         Query.equal('installationId', selectedInstallation.$id),
       ]
-      const response = await projectSdk.sites.list(queries)
+      const response = await projectSdk.sites.list({ queries })
       return {
         sites: response.sites || [],
         total: response.total || 0,
@@ -158,7 +156,7 @@ export function GitConfigurationCard({
       )
       setDisconnectModalOpen(false)
       setSelectedInstallation(null)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(getErrorMessage(error, 'Failed to disconnect installation'))
     }
   }

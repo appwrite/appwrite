@@ -53,10 +53,10 @@ export async function fetchProjectSites(
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.sites.list(
+  const response = await projectSdk.sites.list({
     queries,
-    search?.trim() || undefined,
-  )
+    search: search?.trim() || undefined,
+  })
 
   return {
     sites: response.sites || [],
@@ -199,7 +199,7 @@ export async function fetchSiteLogs(
 
   // The API returns executions, not logs
   return {
-    logs: (response as any).executions || (response as any).logs || [],
+    logs: (response as unknown).executions || (response as unknown).logs || [],
     total: response.total || 0,
   }
 }
@@ -268,7 +268,7 @@ export async function fetchSitesUsage(
   try {
     const response = await projectSdk.sites.listUsage({ range })
     return response
-  } catch (error) {
+  } catch {
     return undefined
   }
 }
@@ -289,7 +289,7 @@ export async function fetchSiteUsage(
   try {
     const response = await projectSdk.sites.getUsage({ siteId, range })
     return response
-  } catch (error) {
+  } catch {
     return undefined
   }
 }
@@ -1216,7 +1216,7 @@ export function useCreateSite(projectId: string | null | undefined) {
       return await projectSdk.sites.create({
         ...params,
         siteId,
-      } as any)
+      } as unknown)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1367,7 +1367,7 @@ export function useCreateVcsDeployment(projectId: string | null | undefined) {
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.sites.createVcsDeployment({
         siteId: params.siteId,
-        type: params.type as any,
+        type: params.type as unknown,
         reference: params.reference,
         activate: params.activate,
       })
@@ -1415,7 +1415,7 @@ export function useCreateTemplateDeployment(
         repository: params.repository,
         owner: params.owner,
         rootDirectory: params.rootDirectory,
-        type: params.type as any,
+        type: params.type as unknown,
         reference: params.reference,
         activate: params.activate,
       })

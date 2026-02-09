@@ -58,7 +58,6 @@ const CustomTooltip = ({
 
 export function RealtimeConcurrencyChart({
   data,
-  dateRange,
   projectId,
   description = 'Real-time connection count over time',
 }: RealtimeConcurrencyChartProps) {

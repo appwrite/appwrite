@@ -45,7 +45,8 @@ export function ValidateCreditModal({
         toast.success('Coupon applied successfully')
       } else if (error) {
         // Error handling is done by the hook
-        const errorMessage = (error as any)?.message || 'Invalid coupon code'
+        const errorMessage =
+          error instanceof Error ? error.message : 'Invalid coupon code'
         if (errorMessage.includes('not_found')) {
           toast.error('Coupon not found')
         } else if (errorMessage.includes('already_used')) {
@@ -106,7 +107,9 @@ export function ValidateCreditModal({
                 <AlertDescription className="text-[13px] mt-2">
                   {(() => {
                     const errorMessage =
-                      (error as any)?.message || 'Invalid coupon code'
+                      error instanceof Error
+                        ? error.message
+                        : 'Invalid coupon code'
                     if (errorMessage.includes('not_found')) {
                       return 'Coupon not found. Please check the code and try again.'
                     }

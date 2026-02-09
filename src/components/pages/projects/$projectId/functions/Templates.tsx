@@ -68,19 +68,16 @@ type RuntimeKey = keyof typeof runtimesMap
 
 const runtimeKeys = Object.keys(runtimesMap) as RuntimeKey[]
 
-const categories = [
-  'Starter',
-  'Communication',
-  'Payments',
-  'Media',
-  'Data',
-  'Integration',
-  'Security',
-  'Analytics',
-  'Automation',
-] as const
-
-type Category = (typeof categories)[number]
+type Category =
+  | 'Starter'
+  | 'Communication'
+  | 'Payments'
+  | 'Media'
+  | 'Data'
+  | 'Integration'
+  | 'Security'
+  | 'Analytics'
+  | 'Automation'
 
 interface Template {
   id: string
@@ -712,7 +709,7 @@ const mockTemplates: Template[] = [
 
 export function TemplatesView() {
   const { projectId } = useParams({ strict: false })
-  const navigate = useNavigate()
+  useNavigate()
   const { project } = useProject(projectId)
 
   const [templateSearchValue, setTemplateSearchValue] = useState<string>('')
@@ -766,6 +763,7 @@ export function TemplatesView() {
   })
 
   // Use all templates for mapping when filters are active, otherwise use empty array
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const allApiTemplates = needsAllTemplates
     ? allApiTemplatesForMapping?.templates || []
     : []
@@ -1202,7 +1200,6 @@ export function TemplatesView() {
         >
           {selectedTemplate &&
             (() => {
-              const TemplateIcon = selectedTemplate.icon
               return (
                 <>
                   <SheetHeader className="px-6 pt-6 text-left shrink-0">

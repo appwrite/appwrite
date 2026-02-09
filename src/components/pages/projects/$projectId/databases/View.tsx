@@ -93,6 +93,16 @@ import {
   getChatGPTDeepLink,
   getClaudeDeepLink,
 } from '@/lib/utils/database-schema-export'
+import type { Models } from '@appwrite.io/console'
+
+/** Database list item: API may return extra backup/createdAt fields */
+type DatabaseWithBackup = Models.Database & {
+  hasBackupPolicy?: boolean
+  backupPolicyCount?: number
+  backupPolicy?: { name?: string }
+  createdAt?: string
+  updatedAt?: string
+}
 
 interface IndexColumnEntry {
   column: string
@@ -325,7 +335,7 @@ export function View() {
       // Delete all databases in parallel
       await Promise.all(
         databaseIds.map((databaseId) =>
-          (projectSdk.tablesDB as any).delete(databaseId),
+          projectSdk.tablesDB.delete({ databaseId }),
         ),
       )
     },
@@ -510,7 +520,7 @@ export function View() {
                           updatedAt?: string
                           enabled?: boolean
                           hasBackupPolicy?: boolean
-                          backupPolicy?: any
+                          backupPolicy?: unknown
                           backupPolicyCount?: number
                         },
                       ) => (
@@ -594,16 +604,17 @@ export function View() {
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <div className="flex items-center justify-center">
-                              {(db as any).hasBackupPolicy ? (
+                              {(db as DatabaseWithBackup).hasBackupPolicy ? (
                                 <Badge
                                   variant="success"
                                   className="gap-1.5 text-[11px] font-medium border px-2 py-0.5"
                                 >
                                   <CheckCircle2 className="h-3 w-3" />
-                                  {(db as any).backupPolicyCount > 0
-                                    ? `${(db as any).backupPolicyCount} ${(db as any).backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                    : (db as any).backupPolicy?.name ||
-                                      'Enabled'}
+                                  {(db as DatabaseWithBackup)
+                                    .backupPolicyCount > 0
+                                    ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
+                                    : (db as DatabaseWithBackup).backupPolicy
+                                        ?.name || 'Enabled'}
                                 </Badge>
                               ) : (
                                 <Badge
@@ -628,7 +639,10 @@ export function View() {
                             >
                               <DateTooltip
                                 date={
-                                  new Date((db as any).createdAt || new Date())
+                                  new Date(
+                                    (db as DatabaseWithBackup).createdAt ||
+                                      new Date(),
+                                  )
                                 }
                                 className="text-[12px] text-muted-foreground font-mono"
                               />
@@ -647,8 +661,8 @@ export function View() {
                               <DateTooltip
                                 date={
                                   new Date(
-                                    (db as any).updatedAt ||
-                                      (db as any).createdAt ||
+                                    (db as DatabaseWithBackup).updatedAt ||
+                                      (db as DatabaseWithBackup).createdAt ||
                                       new Date(),
                                   )
                                 }
@@ -691,7 +705,7 @@ export function View() {
                     createdAt?: string
                     updatedAt?: string
                     hasBackupPolicy?: boolean
-                    backupPolicy?: any
+                    backupPolicy?: unknown
                     backupPolicyCount?: number
                   },
                 ) => (
@@ -712,16 +726,16 @@ export function View() {
                       metadata={[
                         {
                           label: '',
-                          value: (db as any).hasBackupPolicy ? (
+                          value: (db as DatabaseWithBackup).hasBackupPolicy ? (
                             <Badge
                               variant="success"
                               className="gap-1.5 text-[11px] font-medium"
                             >
                               <CheckCircle2 className="h-3 w-3" />
-                              {(db as any).backupPolicyCount > 0
-                                ? `${(db as any).backupPolicyCount} ${(db as any).backupPolicyCount === 1 ? 'policy' : 'policies'}`
-                                : (db as any).backupPolicy?.name ||
-                                  'Backup Enabled'}
+                              {(db as DatabaseWithBackup).backupPolicyCount > 0
+                                ? `${(db as DatabaseWithBackup).backupPolicyCount} ${(db as DatabaseWithBackup).backupPolicyCount === 1 ? 'policy' : 'policies'}`
+                                : (db as DatabaseWithBackup).backupPolicy
+                                    ?.name || 'Backup Enabled'}
                             </Badge>
                           ) : (
                             <Badge
@@ -865,20 +879,6 @@ export function DatabaseDetailLayout({
     navigate({
       to: '/projects/$projectId/databases',
       params: { projectId },
-    })
-  }
-
-  const handleBackupsClick = () => {
-    navigate({
-      to: '/projects/$projectId/databases/$databaseId/backups',
-      params: { projectId, databaseId },
-    })
-  }
-
-  const handleSettingsClick = () => {
-    navigate({
-      to: '/projects/$projectId/databases/$databaseId/settings',
-      params: { projectId, databaseId },
     })
   }
 
@@ -1093,7 +1093,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
   const [searchValue, setSearchValue] = useState('')
   const [tablesExpanded, setTablesExpanded] = useState(true)
-  const rowsRefetchRef = useRef<(() => Promise<any>) | null>(null)
+  const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
   const openCreateRowDrawerRef = useRef<(() => void) | null>(null)
   const openCreateColumnDialogRef = useRef<(() => void) | null>(null)
   const openSuggestColumnsDialogRef = useRef<(() => void) | null>(null)
@@ -1103,7 +1103,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
   const refreshStartTimeRef = useRef<number | null>(null)
   const minAnimationDuration = 1000 // 1 second for at least one full rotation
   const [hasRows, setHasRows] = useState(true) // Track if table has rows
-  const [rowsTotal, setRowsTotal] = useState<number | undefined>(undefined) // Track total row count
+  const [, setRowsTotal] = useState<number | undefined>(undefined) // Track total row count
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
   const queryClient = useQueryClient()
 
@@ -1129,20 +1129,6 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
   const handleBackToDatabase = () => {
     navigate({
       to: '/projects/$projectId/databases/$databaseId/',
-      params: { projectId, databaseId },
-    })
-  }
-
-  const handleBackupsClick = () => {
-    navigate({
-      to: '/projects/$projectId/databases/$databaseId/backups',
-      params: { projectId, databaseId },
-    })
-  }
-
-  const handleSettingsClick = () => {
-    navigate({
-      to: '/projects/$projectId/databases/$databaseId/settings',
       params: { projectId, databaseId },
     })
   }
@@ -1174,11 +1160,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
   })
 
   // Fetch columns to get the count for tabs
-  const { columns: tableColumns } = useProjectTableColumns(
-    projectId,
-    databaseId,
-    tableId,
-  )
+  useProjectTableColumns(projectId, databaseId, tableId)
 
   // Fetch full table data to check enabled status
   const { table: tableDataForStatus } = useProjectTable(
@@ -1327,7 +1309,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
                       },
                     })
                   }
-                } catch (error) {
+                } catch {
                   // Fallback: navigate to database overview if prefetch fails
                   navigate({
                     to: '/projects/$projectId/databases/$databaseId/',
@@ -1528,7 +1510,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
                 const remaining = Math.max(0, minAnimationDuration - elapsed)
                 await new Promise((resolve) => setTimeout(resolve, remaining))
                 toast.success('Rows refreshed successfully')
-              } catch (error) {
+              } catch {
                 toast.error('Failed to refresh rows')
               } finally {
                 setIsRefreshingRows(false)
@@ -1576,7 +1558,7 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
           fullWidthBorder
           fullWidth
           contentAfterBorder={
-            database && (database as any).enabled === false ? (
+            database && (database as Models.Database).enabled === false ? (
               <div className="border-b border-border bg-amber-500/5">
                 <div className="px-4 py-3 sm:px-6">
                   <Alert
@@ -1720,20 +1702,6 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
     navigate({
       to: '/projects/$projectId/databases',
       params: { projectId },
-    })
-  }
-
-  const handleBackupsClick = () => {
-    navigate({
-      to: '/projects/$projectId/databases/$databaseId/backups',
-      params: { projectId, databaseId },
-    })
-  }
-
-  const handleSettingsClick = () => {
-    navigate({
-      to: '/projects/$projectId/databases/$databaseId/settings',
-      params: { projectId, databaseId },
     })
   }
 
@@ -1913,17 +1881,16 @@ export function DatabaseOverview({
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
 
   // Fetch database
-  const {
-    database,
-    isLoading: databaseLoading,
-    error: databaseError,
-  } = useProjectDatabase(projectId, databaseId)
+  const { database, isLoading: databaseLoading } = useProjectDatabase(
+    projectId,
+    databaseId,
+  )
 
   // Update databaseName and enabled when database changes
   useEffect(() => {
     if (database) {
       setDatabaseName(database.name)
-      setEnabled((database as any).enabled !== false) // Default to true if not specified
+      setEnabled((database as Models.Database).enabled !== false) // Default to true if not specified
       setDeleteConfirmation('')
     }
   }, [database])
@@ -1985,7 +1952,7 @@ export function DatabaseOverview({
       const json = formatSchemaAsJSON(databaseSchema)
       await navigator.clipboard.writeText(json)
       toast.success('Schema copied to clipboard')
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy schema')
     }
   }
@@ -1999,7 +1966,7 @@ export function DatabaseOverview({
       const markdown = formatSchemaAsMarkdown(databaseSchema)
       await navigator.clipboard.writeText(markdown)
       toast.success('Schema copied to clipboard')
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy schema')
     }
   }
@@ -2014,7 +1981,7 @@ export function DatabaseOverview({
       const filename = `database-schema-${databaseId}.svg`
       downloadAsFile(svg, filename, 'image/svg+xml')
       toast.success('Schema exported as SVG')
-    } catch (error) {
+    } catch {
       toast.error('Failed to export SVG')
     }
   }
@@ -2033,7 +2000,7 @@ export function DatabaseOverview({
       await navigator.clipboard.writeText(markdown)
       window.open(deepLink, '_blank')
       toast.success('Opening ChatGPT with schema context...')
-    } catch (error) {
+    } catch {
       toast.error('Failed to open ChatGPT')
     }
   }
@@ -2051,7 +2018,7 @@ export function DatabaseOverview({
       await navigator.clipboard.writeText(markdown)
       window.open(deepLink, '_blank')
       toast.success('Opening Claude with schema context...')
-    } catch (error) {
+    } catch {
       toast.error('Failed to open Claude')
     }
   }
@@ -2074,7 +2041,7 @@ export function DatabaseOverview({
       } catch {
         toast.success('Schema copied to clipboard. Paste it in Cursor.')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to open Cursor')
     }
   }
@@ -2092,7 +2059,7 @@ export function DatabaseOverview({
       await navigator.clipboard.writeText(json)
       window.open(deepLink, '_blank')
       toast.success('Opening Lovable with schema context...')
-    } catch (error) {
+    } catch {
       toast.error('Failed to open Lovable')
     }
   }
@@ -2125,7 +2092,7 @@ export function DatabaseOverview({
 
       const projectSdk = sdk.forProject(projectId)
       // Use object parameter format: update({ databaseId, name })
-      await (projectSdk.tablesDB as any).update({
+      await projectSdk.tablesDB.update({
         databaseId,
         name: trimmedName,
       })
@@ -2151,7 +2118,7 @@ export function DatabaseOverview({
       if (!projectId || !databaseId || !database)
         throw new Error('Project ID, Database ID, and Database are required')
       const projectSdk = sdk.forProject(projectId)
-      return await (projectSdk.tablesDB as any).update({
+      return await projectSdk.tablesDB.update({
         databaseId,
         name: database.name, // Required parameter
         enabled,
@@ -2170,7 +2137,7 @@ export function DatabaseOverview({
       toast.error(getErrorMessage(error))
       // Revert to original value on error
       if (database) {
-        setEnabled((database as any).enabled !== false)
+        setEnabled((database as Models.Database).enabled !== false)
       }
     },
   })
@@ -2183,7 +2150,7 @@ export function DatabaseOverview({
   const deleteDatabaseMutation = useMutation({
     mutationFn: async (databaseId: string) => {
       const projectSdk = sdk.forProject(projectId)
-      await (projectSdk.tablesDB as any).delete(databaseId)
+      await projectSdk.tablesDB.delete({ databaseId })
     },
     onSuccess: async () => {
       // Refetch databases list so the list view shows updated data (uses refetchOnMount: false)
@@ -2520,7 +2487,7 @@ export function DatabaseOverview({
         showFilters={false}
         fullWidthBorder
         contentAfterBorder={
-          database && (database as any).enabled === false ? (
+          database && (database as Models.Database).enabled === false ? (
             <div className="border-b border-border bg-amber-500/5">
               <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
                 <Alert
@@ -3008,11 +2975,15 @@ export function DatabaseOverview({
                     size="sm"
                     className="h-9 text-[13px]"
                     disabled={
-                      enabled === ((database as any).enabled !== false) ||
+                      enabled ===
+                        ((database as Models.Database).enabled !== false) ||
                       updateEnabledMutation.isPending
                     }
                     onClick={() => {
-                      if (enabled !== ((database as any).enabled !== false)) {
+                      if (
+                        enabled !==
+                        ((database as Models.Database).enabled !== false)
+                      ) {
                         updateEnabledMutation.mutate(enabled)
                       }
                     }}
@@ -3248,10 +3219,10 @@ interface RowEditDrawerProps {
   row: RowData | null
   tableName: string
   focusedField?: string | null
-  columns?: any[]
+  columns?: unknown[]
   onSave: (
     rowId: string | null,
-    data: Record<string, string | number | boolean | any[] | null>,
+    data: Record<string, string | number | boolean | unknown[] | null>,
     customId?: string | undefined,
     permissions?: string[],
   ) => void
@@ -3262,7 +3233,6 @@ function RowEditDrawer({
   open,
   onOpenChange,
   row,
-  tableName,
   focusedField,
   columns = [],
   onSave,
@@ -3273,7 +3243,7 @@ function RowEditDrawer({
   const isCreateMode = !row
 
   const [formData, setFormData] = useState<
-    Record<string, string | number | boolean | any[] | null>
+    Record<string, string | number | boolean | unknown[] | null>
   >({})
   const [customRowId, setCustomRowId] = useState<string | undefined>(undefined)
   const fieldRefs = useRef<
@@ -3311,7 +3281,7 @@ function RowEditDrawer({
       // Preserve null values explicitly - ensure null is not converted to undefined
       const initialData: Record<
         string,
-        string | number | boolean | any[] | null
+        string | number | boolean | unknown[] | null
       > = {}
       Object.entries(row.data).forEach(([key, value]) => {
         // Explicitly preserve null values
@@ -3325,9 +3295,9 @@ function RowEditDrawer({
       // Initialize form data from columns when creating a new row
       const initialData: Record<
         string,
-        string | number | boolean | any[] | null
+        string | number | boolean | unknown[] | null
       > = {}
-      columns.forEach((col: any) => {
+      columns.forEach((col: unknown) => {
         const colKey =
           col.key || col.name || col.$id || col.attribute || col.attributeId
         if (colKey && !colKey.startsWith('$')) {
@@ -3348,6 +3318,7 @@ function RowEditDrawer({
       // Reset custom row ID when creating new row
       setCustomRowId(undefined)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [row?.$id, columns]) // Re-run when row ID changes or columns change
 
   // Switch to data tab when a field is focused (cell clicked)
@@ -3403,7 +3374,7 @@ function RowEditDrawer({
 
   const handleFieldChange = (
     key: string,
-    value: string | number | boolean | any[] | null,
+    value: string | number | boolean | unknown[] | null,
   ) => {
     setFormData((prev) => ({ ...prev, [key]: value }))
   }
@@ -3420,7 +3391,7 @@ function RowEditDrawer({
 
   // Get column info for a field
   const getColumnInfo = (key: string) => {
-    return columns.find((col: any) => {
+    return columns.find((col: unknown) => {
       const colKey =
         col.key || col.name || col.$id || col.attribute || col.attributeId
       return colKey === key
@@ -3441,14 +3412,14 @@ function RowEditDrawer({
     index: number,
     value: string | number | boolean | null,
   ) => {
-    const currentArray = (formData[key] as any[]) || []
+    const currentArray = (formData[key] as unknown[]) || []
     const newArray = [...currentArray]
     newArray[index] = value
     handleFieldChange(key, newArray)
   }
 
   const handleAddArrayItem = (key: string) => {
-    const currentArray = (formData[key] as any[]) || []
+    const currentArray = (formData[key] as unknown[]) || []
     const newIndex = currentArray.length
     handleFieldChange(key, [...currentArray, ''])
     // Track the newly added item to focus it after render
@@ -3456,7 +3427,7 @@ function RowEditDrawer({
   }
 
   const handleRemoveArrayItem = (key: string, index: number) => {
-    const currentArray = (formData[key] as any[]) || []
+    const currentArray = (formData[key] as unknown[]) || []
     const newArray = currentArray.filter((_, i) => i !== index)
     handleFieldChange(key, newArray)
   }
@@ -3478,8 +3449,8 @@ function RowEditDrawer({
 
   const getFieldType = (
     key: string,
-    value: string | number | boolean | any[] | null,
-    columnInfo?: any,
+    value: string | number | boolean | unknown[] | null,
+    columnInfo?: unknown,
   ): string => {
     // Use column type from metadata if available
     if (columnInfo?.type) {
@@ -3492,7 +3463,7 @@ function RowEditDrawer({
     return 'string'
   }
 
-  const getEnumOptions = (columnInfo?: any): string[] => {
+  const getEnumOptions = (columnInfo?: unknown): string[] => {
     if (columnInfo?.elements && Array.isArray(columnInfo.elements)) {
       return columnInfo.elements
     }
@@ -3704,7 +3675,7 @@ function RowEditDrawer({
                         const columnInfo = getColumnInfo(key)
                         const fieldType = getFieldType(
                           key,
-                          value as string | number | boolean | any[] | null,
+                          value as string | number | boolean | unknown[] | null,
                           columnInfo,
                         )
                         // Use formData if it exists, otherwise fall back to original value
@@ -3723,7 +3694,7 @@ function RowEditDrawer({
 
                         const arrayLength =
                           fieldType === 'array'
-                            ? ((currentValue as any[]) || []).length
+                            ? ((currentValue as unknown[]) || []).length
                             : 0
                         const displayLabel =
                           fieldType === 'array' && arrayLength > 0
@@ -3834,9 +3805,10 @@ function RowEditDrawer({
                               </div>
                             ) : fieldType === 'array' ? (
                               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-                                {((currentValue as any[]) || []).length > 0 ? (
+                                {((currentValue as unknown[]) || []).length >
+                                0 ? (
                                   <div className="space-y-2">
-                                    {((currentValue as any[]) || []).map(
+                                    {((currentValue as unknown[]) || []).map(
                                       (item, index) => {
                                         const columnInfo = getColumnInfo(key)
                                         const size = columnInfo?.size || null
@@ -3966,7 +3938,7 @@ function RowEditDrawer({
                                                         checked,
                                                       ) => {
                                                         const newArray = [
-                                                          ...((currentValue as any[]) ||
+                                                          ...((currentValue as unknown[]) ||
                                                             []),
                                                         ]
                                                         newArray[index] =
@@ -4348,7 +4320,7 @@ function RowEditDrawer({
 // Spreadsheet-like view for Rows
 interface SpreadsheetProps {
   table: Collection
-  onRefetchReady?: (refetch: () => Promise<any>) => void
+  onRefetchReady?: (refetch: () => Promise<unknown>) => void
   onCreateRowReady?: (openCreateDrawer: () => void) => void
   onCreateColumnReady?: (() => void) | null
   onCreateReady?: (openDialog: () => void) => void
@@ -4382,7 +4354,7 @@ function RowsSpreadsheet({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [sampleDataModalOpen, setSampleDataModalOpen] = useState(false)
   const [columnDialogOpen, setColumnDialogOpen] = useState(false)
-  const [selectedColumn, setSelectedColumn] = useState<any>(null)
+  const [selectedColumn, setSelectedColumn] = useState<unknown>(null)
   const openCreateRowFnRef = useRef<(() => void) | null>(null)
   const openCreateColumnFnRef = useRef<(() => void) | null>(null)
 
@@ -4526,11 +4498,11 @@ function RowsSpreadsheet({
 
   // Check if table has relationship columns
   const hasRelationshipColumns = apiColumns.some(
-    (col: any) => col.type === 'relationship',
+    (col: unknown) => col.type === 'relationship',
   )
 
   // Map API rows to RowData format
-  const rows: RowData[] = apiRows.map((row: any, index: number) => {
+  const rows: RowData[] = apiRows.map((row: unknown, index: number) => {
     // Extract data from row, excluding system fields
     const data: Record<string, string | number | boolean> = {}
     Object.keys(row).forEach((key) => {
@@ -4553,7 +4525,7 @@ function RowsSpreadsheet({
   // Get column names from API columns or from first row
   const columns =
     apiColumns.length > 0
-      ? apiColumns.map((col: any) => col.key || col.name || col.$id)
+      ? apiColumns.map((col: unknown) => col.key || col.name || col.$id)
       : rows[0]
         ? Object.keys(rows[0].data)
         : []
@@ -4611,7 +4583,7 @@ function RowsSpreadsheet({
       permissions,
     }: {
       rowId: string | null
-      data: Record<string, string | number | boolean | any[] | null>
+      data: Record<string, string | number | boolean | unknown[] | null>
       customId?: string | undefined
       permissions?: string[]
     }) => {
@@ -4660,7 +4632,7 @@ function RowsSpreadsheet({
 
   const handleSaveRow = (
     rowId: string | null,
-    data: Record<string, string | number | boolean | any[] | null>,
+    data: Record<string, string | number | boolean | unknown[] | null>,
     customId?: string | undefined,
     permissions?: string[],
   ) => {
@@ -4708,12 +4680,12 @@ function RowsSpreadsheet({
     mutationFn: async (rowCount: number) => {
       // Filter out system columns (those starting with $) and map API columns to Column type
       const columns: Column[] = apiColumns
-        .filter((col: any) => {
+        .filter((col: unknown) => {
           const colKey = col.key || col.name || col.$id
           // Exclude system columns (starting with $)
           return colKey && !colKey.startsWith('$')
         })
-        .map((col: any) => ({
+        .map((col: unknown) => ({
           key: col.key || col.name || col.$id,
           type: col.type || 'string',
           size: col.size || null,
@@ -4727,7 +4699,7 @@ function RowsSpreadsheet({
           status: col.status || 'available',
         }))
 
-      let sampleRows: Record<string, any>[]
+      let sampleRows: Record<string, unknown>[]
 
       // If no custom columns, generate rows with just custom IDs
       if (columns.length === 0) {
@@ -4813,7 +4785,7 @@ function RowsSpreadsheet({
   }
 
   // Check if table has custom columns (non-system columns)
-  const hasCustomColumns = apiColumns.some((col: any) => {
+  const hasCustomColumns = apiColumns.some((col: unknown) => {
     const colKey = col.key || col.name || col.$id
     return colKey && !colKey.startsWith('$')
   })
@@ -5000,12 +4972,12 @@ function RowsSpreadsheet({
           onSubmit={handleColumnSubmit}
           column={selectedColumn}
           availableTables={
-            availableTablesForColumns?.map((t: any) => ({
+            availableTablesForColumns?.map((t: unknown) => ({
               $id: t.$id,
               name: t.name,
             })) || []
           }
-          existingColumns={apiColumns.map((c: any) => ({
+          existingColumns={apiColumns.map((c: unknown) => ({
             key: c.key || c.name || c.$id,
           }))}
           isLoading={createColumnMutationForEmptyState.isPending}
@@ -5066,9 +5038,9 @@ function RowsSpreadsheet({
                   <ArrowUpDown className="ml-auto h-3 w-3 text-muted-foreground" />
                 </div>
               </th>
-              {columns.map((col: string, colIndex: number) => {
+              {columns.map((col: string) => {
                 // Get column info to determine icon
-                const columnInfo = apiColumns.find((c: any) => {
+                const columnInfo = apiColumns.find((c: unknown) => {
                   const colKey =
                     c.key || c.name || c.$id || c.attribute || c.attributeId
                   return colKey === col
@@ -5176,7 +5148,7 @@ function RowsSpreadsheet({
                 >
                   <CopyableId id={row.$id} size="xs" />
                 </td>
-                {columns.map((col: string, colIndex: number) => (
+                {columns.map((col: string) => (
                   <td
                     key={col}
                     className={cn('px-3 py-1.5', bodyCellBorderClass)}
@@ -5398,12 +5370,12 @@ function RowsSpreadsheet({
         onSubmit={handleColumnSubmit}
         column={selectedColumn}
         availableTables={
-          availableTablesForColumns?.map((t: any) => ({
+          availableTablesForColumns?.map((t: unknown) => ({
             $id: t.$id,
             name: t.name,
           })) || []
         }
-        existingColumns={apiColumns.map((c: any) => ({
+        existingColumns={apiColumns.map((c: unknown) => ({
           key: c.key || c.name || c.$id,
         }))}
         isLoading={createColumnMutationForEmptyState.isPending}
@@ -5426,11 +5398,11 @@ function ColumnsSpreadsheet({
   const tableId = table.$id
 
   const [columnDialogOpen, setColumnDialogOpen] = useState(false)
-  const [selectedColumn, setSelectedColumn] = useState<any>(null)
+  const [selectedColumn, setSelectedColumn] = useState<unknown>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [columnToDelete, setColumnToDelete] = useState<string | null>(null)
   const [contextDialogOpen, setContextDialogOpen] = useState(false)
-  const [suggestedColumns, setSuggestedColumns] = useState<any[]>([])
+  const [suggestedColumns, setSuggestedColumns] = useState<unknown[]>([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
 
   const queryClient = useQueryClient()
@@ -5438,11 +5410,8 @@ function ColumnsSpreadsheet({
   const location = useLocation()
 
   // Fetch columns from the project SDK
-  const {
-    columns: apiColumns,
-    isLoading: columnsLoading,
-    refetch: refetchColumns,
-  } = useProjectTableColumns(projectId, databaseId, tableId)
+  const { columns: apiColumns, isLoading: columnsLoading } =
+    useProjectTableColumns(projectId, databaseId, tableId)
 
   // Fetch tables for relationship columns
   const { tables: availableTables } = useTablesForColumns(
@@ -5553,7 +5522,7 @@ function ColumnsSpreadsheet({
       })
 
       // Map API suggestions to display format with suggestion flag
-      const mapped = result.columns.map((col: any) => ({
+      const mapped = result.columns.map((col: unknown) => ({
         key: col.key || col.name || col.$id || 'unnamed',
         type: col.type || 'string',
         // String fields
@@ -5648,7 +5617,7 @@ function ColumnsSpreadsheet({
     setSuggestedColumns((prev) => prev.filter((s) => s.key !== key))
   }
 
-  const handleEditSuggestion = (suggestion: any) => {
+  const handleEditSuggestion = (suggestion: unknown) => {
     setSelectedColumn({ ...suggestion, isSuggestion: true })
     setColumnDialogOpen(true)
   }
@@ -5695,7 +5664,7 @@ function ColumnsSpreadsheet({
     }
   }, [location.search, location.pathname, navigate])
 
-  const handleEditColumn = (column: any) => {
+  const handleEditColumn = (column: unknown) => {
     setSelectedColumn(column)
     setColumnDialogOpen(true)
   }
@@ -5727,7 +5696,7 @@ function ColumnsSpreadsheet({
   }
 
   // Map API columns to the format expected by the component
-  const columns = apiColumns.map((col: any) => ({
+  const columns = apiColumns.map((col: unknown) => ({
     key: col.key || col.name || col.$id,
     type: col.type || 'string',
     // String fields
@@ -6307,7 +6276,7 @@ function ColumnsSpreadsheet({
             </tr>
           </thead>
           <tbody>
-            {allColumns.map((col: any) => {
+            {allColumns.map((col: unknown) => {
               const Icon = getColumnIcon(col.type)
               const isSystem = col.key ? col.key.startsWith('$') : false
               const isSuggestion = col.isSuggestion
@@ -6647,11 +6616,11 @@ function IndexesSpreadsheet({
   const tableId = table.$id
 
   const [indexDialogOpen, setIndexDialogOpen] = useState(false)
-  const [selectedIndex, setSelectedIndex] = useState<any>(null)
+  const [selectedIndex, setSelectedIndex] = useState<unknown>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [indexToDelete, setIndexToDelete] = useState<string | null>(null)
   const [contextDialogOpen, setContextDialogOpen] = useState(false)
-  const [suggestedIndexes, setSuggestedIndexes] = useState<any[]>([])
+  const [suggestedIndexes, setSuggestedIndexes] = useState<unknown[]>([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
 
   const queryClient = useQueryClient()
@@ -6674,7 +6643,7 @@ function IndexesSpreadsheet({
   const createIndexMutation = useMutation({
     mutationFn: async (data: IndexFormData) => {
       // Transform form data to API format - arrays must correspond to columns
-      const apiData: any = {
+      const apiData: unknown = {
         key: data.key,
         type: data.type,
         columns: data.columns.map((c: IndexColumnEntry) => c.column),
@@ -6753,10 +6722,6 @@ function IndexesSpreadsheet({
     setDeleteDialogOpen(true)
   }
 
-  const handleIndexSubmit = async (data: IndexFormData) => {
-    await createIndexMutation.mutateAsync(data)
-  }
-
   const handleConfirmDelete = () => {
     if (indexToDelete) {
       deleteIndexMutation.mutate(indexToDelete)
@@ -6764,7 +6729,7 @@ function IndexesSpreadsheet({
   }
 
   // AI Suggestion handlers
-  const handleGenerateSuggestions = async (context: string) => {
+  const handleGenerateSuggestions = async () => {
     setIsLoadingSuggestions(true)
     try {
       const projectSdk = sdk.forProject(projectId)
@@ -6776,7 +6741,7 @@ function IndexesSpreadsheet({
       })
 
       // Map API suggestions to display format with suggestion flag
-      const mapped = result.indexes.map((idx: any) => ({
+      const mapped = result.indexes.map((idx: unknown) => ({
         key: idx.key || 'unnamed',
         type: idx.type || 'key',
         columns: idx.columns || [],
@@ -6879,7 +6844,7 @@ function IndexesSpreadsheet({
     setSuggestedIndexes((prev) => prev.filter((s) => s.key !== suggestionKey))
   }
 
-  const handleEditSuggestion = (suggestion: any) => {
+  const handleEditSuggestion = (suggestion: unknown) => {
     // Pass suggestion as-is with isSuggestion flag
     // IndexDrawer will handle the conversion from columns array to IndexColumnEntry objects
     setSelectedIndex({
@@ -6939,7 +6904,7 @@ function IndexesSpreadsheet({
   }, [onSuggestReady])
 
   // Map API indexes to ensure all fields are present
-  const mappedIndexes = apiIndexes.map((idx: any) => ({
+  const mappedIndexes = apiIndexes.map((idx: unknown) => ({
     key: idx.key,
     type: idx.type,
     columns: idx.columns || [],
@@ -7082,7 +7047,7 @@ function IndexesSpreadsheet({
             </tr>
           </thead>
           <tbody>
-            {allIndexes.map((index: any) => {
+            {allIndexes.map((index: unknown) => {
               const isSystem = index.key?.startsWith('_key_')
               const isSuggestion = index.isSuggestion === true
               return (
@@ -7688,7 +7653,9 @@ function TableSettings({ table }: SpreadsheetProps) {
     if (organizationId && tableId) {
       const loadDisplayNames = async () => {
         try {
-          const team = await sdk.forConsole.teams.get(organizationId)
+          const team = await sdk.forConsole.teams.get({
+            teamId: organizationId,
+          })
           const prefs = team.prefs || {}
           const savedNames = prefs.displayNames?.[tableId] as
             | string[]
@@ -7696,7 +7663,7 @@ function TableSettings({ table }: SpreadsheetProps) {
           if (savedNames && savedNames.length > 0) {
             setDisplayNames(savedNames)
           }
-        } catch (err) {
+        } catch {
           // Silently handle display names loading error
         }
       }
@@ -7766,7 +7733,7 @@ function TableSettings({ table }: SpreadsheetProps) {
   const updateDisplayNamesMutation = useMutation({
     mutationFn: async (names: string[]) => {
       if (!organizationId) throw new Error('Organization ID not available')
-      const team = await sdk.forConsole.teams.get(organizationId)
+      const team = await sdk.forConsole.teams.get({ teamId: organizationId })
       const prefs = team.prefs || {}
       const updatedPrefs = {
         ...prefs,
@@ -7775,7 +7742,10 @@ function TableSettings({ table }: SpreadsheetProps) {
           [tableId]: names,
         },
       }
-      await sdk.forConsole.teams.updatePrefs(organizationId, updatedPrefs)
+      await sdk.forConsole.teams.updatePrefs({
+        teamId: organizationId,
+        prefs: updatedPrefs,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', 'console'] })
@@ -7795,29 +7765,40 @@ function TableSettings({ table }: SpreadsheetProps) {
       // Delete table preferences
       if (organizationId) {
         try {
-          const team = await sdk.forConsole.teams.get(organizationId)
+          const team = await sdk.forConsole.teams.get({
+            teamId: organizationId,
+          })
           const prefs = team.prefs || {}
           const updatedPrefs = { ...prefs }
           if (updatedPrefs.displayNames) {
-            delete (updatedPrefs.displayNames as Record<string, any>)[tableId]
+            delete (updatedPrefs.displayNames as Record<string, unknown>)[
+              tableId
+            ]
           }
           if (updatedPrefs.tables) {
-            delete (updatedPrefs.tables as Record<string, any>)[tableId]
+            delete (updatedPrefs.tables as Record<string, unknown>)[tableId]
           }
           if (updatedPrefs.columnOrder) {
-            delete (updatedPrefs.columnOrder as Record<string, any>)[tableId]
+            delete (updatedPrefs.columnOrder as Record<string, unknown>)[
+              tableId
+            ]
           }
           if (updatedPrefs.columnWidths) {
-            delete (updatedPrefs.columnWidths as Record<string, any>)[tableId]
-            delete (updatedPrefs.columnWidths as Record<string, any>)[
+            delete (updatedPrefs.columnWidths as Record<string, unknown>)[
+              tableId
+            ]
+            delete (updatedPrefs.columnWidths as Record<string, unknown>)[
               `${tableId}#columns`
             ]
-            delete (updatedPrefs.columnWidths as Record<string, any>)[
+            delete (updatedPrefs.columnWidths as Record<string, unknown>)[
               `${tableId}#indexes`
             ]
           }
-          await sdk.forConsole.teams.updatePrefs(organizationId, updatedPrefs)
-        } catch (err) {
+          await sdk.forConsole.teams.updatePrefs({
+            teamId: organizationId,
+            prefs: updatedPrefs,
+          })
+        } catch {
           // Silently handle preference deletion error
         }
       }
@@ -7851,18 +7832,18 @@ function TableSettings({ table }: SpreadsheetProps) {
 
   // Get valid string columns for display names
   const validStringColumns = tableColumns.filter(
-    (col: any) => col.type === 'string' && col.array === false,
+    (col: unknown) => col.type === 'string' && col.array === false,
   )
 
   // Filter display name options (exclude already selected except current)
   const getDisplayNameOptions = (index: number) => {
     return validStringColumns
-      .filter((col: any) => {
+      .filter((col: unknown) => {
         const key = col.key
         // Include if not selected elsewhere, or if it's the current selection
         return !displayNames.some((name, idx) => name === key && idx !== index)
       })
-      .map((col: any) => ({
+      .map((col: unknown) => ({
         value: col.key,
         label: col.key,
       }))
@@ -8073,7 +8054,7 @@ function TableSettings({ table }: SpreadsheetProps) {
               disabled={
                 (() => {
                   try {
-                    const saved = (account?.prefs as any)?.displayNames?.[
+                    const saved = (account?.prefs as unknown)?.displayNames?.[
                       tableId
                     ] as string[] | undefined
                     const savedNames =

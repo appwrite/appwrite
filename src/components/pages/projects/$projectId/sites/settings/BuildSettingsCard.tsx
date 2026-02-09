@@ -300,6 +300,7 @@ export function BuildSettingsCard({
     if (framework && !outputDirectory) {
       setOutputDirectory(frameworkDefaults.outputDirectory)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [framework, frameworkDefaults])
 
   // Update site mutation (use full site payload so other cards' values are preserved)
@@ -319,7 +320,7 @@ export function BuildSettingsCard({
         queryKey: ['sites', 'project', projectId],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(getErrorMessage(error, 'Failed to update build settings'))
     },
   })

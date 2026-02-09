@@ -123,7 +123,8 @@ export function InlinePaymentForm({
   const stripePublishableKey =
     typeof window !== 'undefined'
       ? import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
-        (window as any).__STRIPE_PUBLISHABLE_KEY__
+        (window as Window & { __STRIPE_PUBLISHABLE_KEY__?: string })
+          .__STRIPE_PUBLISHABLE_KEY__
       : undefined
   const hasStripePublicKey = !!stripePublishableKey
 
@@ -136,6 +137,7 @@ export function InlinePaymentForm({
     let mounted = true
     let currentPaymentElement: PaymentElement | null = null
     let hasInitialized = false
+    let containerForCleanup: HTMLDivElement | null = null
 
     async function initializeStripe() {
       if (hasInitialized) return
@@ -192,14 +194,16 @@ export function InlinePaymentForm({
         // Wait for container to be available
         await new Promise((resolve) => setTimeout(resolve, 50))
 
-        if (!mounted || !stripeContainerRef.current) {
+        const container = stripeContainerRef.current
+        if (!mounted || !container) {
           setIsStripeLoading(false)
           return
         }
+        containerForCleanup = container
 
         // Mount Payment Element
         try {
-          paymentElement.mount(stripeContainerRef.current)
+          paymentElement.mount(container)
           if (mounted) {
             setIsStripeLoading(false)
           }
@@ -233,25 +237,28 @@ export function InlinePaymentForm({
       mounted = false
 
       requestAnimationFrame(() => {
-        if (currentPaymentElement) {
+        if (currentPaymentElement && containerForCleanup?.parentNode) {
           try {
-            const container = stripeContainerRef.current
-            if (container && container.parentNode) {
-              currentPaymentElement.unmount()
-            }
-          } catch (error) {
+            currentPaymentElement.unmount()
+          } catch {
             // Silently ignore
           }
         }
         currentPaymentElement = null
+        containerForCleanup = null
         paymentElementRef.current = null
         if (elementsRef.current) {
           elementsRef.current = null
         }
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasStripePublicKey, stripePublishableKey])
+  }, [
+    hasStripePublicKey,
+    stripePublishableKey,
+    allPaymentMethods,
+    appearance,
+    createPaymentMethodMutation,
+  ])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

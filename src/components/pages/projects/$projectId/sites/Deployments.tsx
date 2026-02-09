@@ -91,7 +91,6 @@ import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 
 const DEPLOYMENTS_PER_PAGE = 25
-const DOMAINS_LIMIT = 20
 const SCREENSHOTS_BUCKET_ID = 'screenshots'
 
 function formatSize(bytes: number): string {
@@ -153,7 +152,7 @@ function BitbucketIcon({ className }: { className?: string }) {
 
 // Detect VCS provider from deployment
 function getVcsProvider(
-  deployment: any,
+  deployment: unknown,
 ): { name: string; icon: React.ReactNode } | null {
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
@@ -414,7 +413,7 @@ export function View() {
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
-    } catch (error) {
+    } catch {
       toast.error('Failed to download source code')
     }
   }
@@ -431,7 +430,7 @@ export function View() {
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
-    } catch (error) {
+    } catch {
       toast.error('Failed to download build output')
     }
   }
@@ -670,8 +669,8 @@ export function View() {
                           {(() => {
                             const screenshotId =
                               screenshotTheme === 'dark'
-                                ? (cardDeployment as any).screenshotDark
-                                : (cardDeployment as any).screenshotLight
+                                ? (cardDeployment as unknown).screenshotDark
+                                : (cardDeployment as unknown).screenshotLight
 
                             if (screenshotId) {
                               const screenshotUrl =
@@ -700,9 +699,10 @@ export function View() {
                                       <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
                                         <FrameworkIcon
                                           framework={
-                                            (site as any).buildFramework ||
-                                            (site as any).buildFrameworkId ||
-                                            (site as any).framework
+                                            (site as unknown).buildFramework ||
+                                            (site as unknown)
+                                              .buildFrameworkId ||
+                                            (site as unknown).framework
                                           }
                                           size="sm"
                                         />
@@ -760,9 +760,9 @@ export function View() {
                                     <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
                                       <FrameworkIcon
                                         framework={
-                                          (site as any).buildFramework ||
-                                          (site as any).buildFrameworkId ||
-                                          (site as any).framework
+                                          (site as unknown).buildFramework ||
+                                          (site as unknown).buildFrameworkId ||
+                                          (site as unknown).framework
                                         }
                                         size="sm"
                                       />
@@ -1528,7 +1528,7 @@ export function View() {
                                         toast.success(
                                           'Deployment activated successfully',
                                         )
-                                      } catch (error) {
+                                      } catch {
                                         toast.error(
                                           'Failed to activate deployment',
                                         )
@@ -1558,7 +1558,7 @@ export function View() {
                                       toast.success(
                                         'Deployment rebuild started',
                                       )
-                                    } catch (error) {
+                                    } catch {
                                       toast.error('Failed to redeploy')
                                     }
                                   }}

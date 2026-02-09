@@ -132,7 +132,7 @@ const CONNECTIONS: Connection[] = [
   { from: 'openai', to: 'func-notify', fromSide: 'top', toSide: 'bottom' },
 ]
 
-export function Browser({ databaseId }: BrowserProps) {
+export function Browser({}: BrowserProps) {
   const params = useParams({ strict: false })
   const projectId = params.projectId as string
   const navigate = useNavigate()
@@ -725,8 +725,8 @@ export function Browser({ databaseId }: BrowserProps) {
       // Double click to navigate
       const route = getResourceRoute(resource.type)
       navigate({
-        to: route as any,
-        params: { projectId } as any,
+        to: route as unknown,
+        params: { projectId } as unknown,
       })
     } else {
       // Single click to select
@@ -1031,8 +1031,8 @@ export function Browser({ databaseId }: BrowserProps) {
                         onClick={() => {
                           const route = getResourceRoute(resource.type)
                           navigate({
-                            to: route as any,
-                            params: { projectId } as any,
+                            to: route as unknown,
+                            params: { projectId } as unknown,
                           })
                         }}
                         title={`Open ${resource.type} page`}

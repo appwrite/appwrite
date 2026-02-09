@@ -27,7 +27,7 @@ interface TaxIdSectionProps {
   orgId?: string
 }
 
-export function TaxIdSection({ onEditTaxId, orgId }: TaxIdSectionProps) {
+export function TaxIdSection({ orgId }: TaxIdSectionProps) {
   const { organization, isLoading: orgLoading } = useOrganizationById(orgId)
   const updateTaxIdMutation = useUpdateOrganizationTaxId()
   const [taxId, setTaxId] = useState('')

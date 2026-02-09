@@ -58,9 +58,9 @@ function getBillingPlanEnum(planString: string): BillingPlanTierType {
  * @returns Organizations list response from the API
  */
 export async function fetchOrganizations() {
-  const response = await sdk.forConsole.organizations.list([
-    Query.equal('platform', 'appwrite'),
-  ])
+  const response = await sdk.forConsole.organizations.list({
+    queries: [Query.equal('platform', 'appwrite')],
+  })
   return response
 }
 
@@ -77,9 +77,9 @@ export async function fetchOrganizationById(orgId: string) {
     throw new Error('Organization ID is required')
   }
   // Use list with filter to get organization by ID
-  const response = await sdk.forConsole.organizations.list([
-    Query.equal('$id', orgId),
-  ])
+  const response = await sdk.forConsole.organizations.list({
+    queries: [Query.equal('$id', orgId)],
+  })
   return response.teams?.[0] || null
 }
 
@@ -168,7 +168,7 @@ export async function fetchOrganizationBillingAggregation(
       offset,
     })
     return response
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle 404 gracefully - new organizations might not have aggregation yet
     if (error?.code === 404 || error?.response?.code === 404) {
       return null
@@ -289,10 +289,10 @@ export async function fetchBillingPlans() {
     // Transform array response to object format keyed by plan $id
     // Response format: { total: number, plans: BillingPlan[] }
     // We need: { plans: { [planId]: planData } }
-    const plansObject: Record<string, any> = {}
+    const plansObject: Record<string, unknown> = {}
 
     if (response.plans && Array.isArray(response.plans)) {
-      response.plans.forEach((plan: any) => {
+      response.plans.forEach((plan: unknown) => {
         if (plan.$id) {
           plansObject[plan.$id] = plan
         }
@@ -303,7 +303,7 @@ export async function fetchBillingPlans() {
       plans: plansObject,
       total: response.total || 0,
     }
-  } catch (error) {
+  } catch {
     return { plans: {}, total: 0 }
   }
 }
@@ -320,17 +320,19 @@ export async function fetchCouponAccount(couponCode: string) {
   }
   try {
     // Try billing service first (if it exists)
-    if ((sdk.forConsole as any).billing?.getCouponAccount) {
-      return await (sdk.forConsole as any).billing.getCouponAccount(couponCode)
+    if ((sdk.forConsole as unknown).billing?.getCouponAccount) {
+      return await (sdk.forConsole as unknown).billing.getCouponAccount(
+        couponCode,
+      )
     }
     // Fallback to organizations service
-    if ((sdk.forConsole.organizations as any).getCouponAccount) {
-      return await (sdk.forConsole.organizations as any).getCouponAccount(
+    if ((sdk.forConsole.organizations as unknown).getCouponAccount) {
+      return await (sdk.forConsole.organizations as unknown).getCouponAccount(
         couponCode,
       )
     }
     return null
-  } catch (error) {
+  } catch {
     return null
   }
 }
@@ -347,17 +349,17 @@ export async function fetchOrganizationUsage(organizationId: string) {
   }
   try {
     // Try billing service first (if it exists)
-    if ((sdk.forConsole as any).billing?.listUsage) {
-      return await (sdk.forConsole as any).billing.listUsage(organizationId)
+    if ((sdk.forConsole as unknown).billing?.listUsage) {
+      return await (sdk.forConsole as unknown).billing.listUsage(organizationId)
     }
     // Fallback to organizations service
-    if ((sdk.forConsole.organizations as any).listUsage) {
-      return await (sdk.forConsole.organizations as any).listUsage(
+    if ((sdk.forConsole.organizations as unknown).listUsage) {
+      return await (sdk.forConsole.organizations as unknown).listUsage(
         organizationId,
       )
     }
     return null
-  } catch (error) {
+  } catch {
     return null
   }
 }
@@ -373,15 +375,14 @@ export async function fetchOrganizationProjects(organizationId: string) {
     return { projects: [] }
   }
   try {
-    const response = await sdk.forConsole.projects.list([
-      Query.equal('teamId', organizationId),
-      Query.limit(1000),
-    ])
+    const response = await sdk.forConsole.projects.list({
+      queries: [Query.equal('teamId', organizationId), Query.limit(1000)],
+    })
     return {
       projects: response.projects || [],
       total: response.total || 0,
     }
-  } catch (error) {
+  } catch {
     return { projects: [], total: 0 }
   }
 }
@@ -401,17 +402,21 @@ export async function fetchEstimationCreateOrganization(
 ) {
   try {
     // Try billing service first (if it exists)
-    if ((sdk.forConsole as any).billing?.estimationCreateOrganization) {
-      return await (sdk.forConsole as any).billing.estimationCreateOrganization(
+    if ((sdk.forConsole as unknown).billing?.estimationCreateOrganization) {
+      return await (
+        sdk.forConsole as unknown
+      ).billing.estimationCreateOrganization(
         billingPlan,
         couponId || undefined,
         collaborators,
       )
     }
     // Fallback to organizations service
-    if ((sdk.forConsole.organizations as any).estimationCreateOrganization) {
+    if (
+      (sdk.forConsole.organizations as unknown).estimationCreateOrganization
+    ) {
       return await (
-        sdk.forConsole.organizations as any
+        sdk.forConsole.organizations as unknown
       ).estimationCreateOrganization(
         billingPlan,
         couponId || undefined,
@@ -419,7 +424,7 @@ export async function fetchEstimationCreateOrganization(
       )
     }
     return null
-  } catch (error) {
+  } catch {
     return null
   }
 }
@@ -464,8 +469,8 @@ export async function fetchEstimationUpdatePlan(
     }
 
     // Try billing service first (if it exists)
-    if ((sdk.forConsole as any).billing?.estimationUpdatePlan) {
-      return await (sdk.forConsole as any).billing.estimationUpdatePlan({
+    if ((sdk.forConsole as unknown).billing?.estimationUpdatePlan) {
+      return await (sdk.forConsole as unknown).billing.estimationUpdatePlan({
         organizationId,
         billingPlan,
         invites: collaborators,
@@ -473,8 +478,8 @@ export async function fetchEstimationUpdatePlan(
       })
     }
     // Fallback to organizations service
-    if ((sdk.forConsole.organizations as any).estimationUpdatePlan) {
-      const orgService = sdk.forConsole.organizations as any
+    if ((sdk.forConsole.organizations as unknown).estimationUpdatePlan) {
+      const orgService = sdk.forConsole.organizations as unknown
       return await orgService.estimationUpdatePlan({
         organizationId,
         billingPlan,
@@ -483,7 +488,7 @@ export async function fetchEstimationUpdatePlan(
       })
     }
     return null
-  } catch (error) {
+  } catch {
     return null
   }
 }
@@ -640,8 +645,8 @@ export async function updateOrganizationPlan(params: {
 }) {
   try {
     // Try billing service first (if it exists)
-    if ((sdk.forConsole as any).billing?.updatePlan) {
-      return await (sdk.forConsole as any).billing.updatePlan(
+    if ((sdk.forConsole as unknown).billing?.updatePlan) {
+      return await (sdk.forConsole as unknown).billing.updatePlan(
         params.organizationId,
         params.billingPlan,
         params.paymentMethodId,
@@ -684,18 +689,17 @@ export async function updateSelectedProjects(
   }
   try {
     // Try billing service first (if it exists)
-    if ((sdk.forConsole as any).billing?.updateSelectedProjects) {
-      return await (sdk.forConsole as any).billing.updateSelectedProjects(
+    if ((sdk.forConsole as unknown).billing?.updateSelectedProjects) {
+      return await (sdk.forConsole as unknown).billing.updateSelectedProjects(
         organizationId,
         projectIds,
       )
     }
     // Fallback to organizations service
-    if ((sdk.forConsole.organizations as any).updateSelectedProjects) {
-      return await (sdk.forConsole.organizations as any).updateSelectedProjects(
-        organizationId,
-        projectIds,
-      )
+    if ((sdk.forConsole.organizations as unknown).updateSelectedProjects) {
+      return await (
+        sdk.forConsole.organizations as unknown
+      ).updateSelectedProjects(organizationId, projectIds)
     }
     throw new Error('updateSelectedProjects method not available')
   } catch (error) {
@@ -719,18 +723,17 @@ export async function validateOrganization(
   }
   try {
     // Try billing service first (if it exists)
-    if ((sdk.forConsole as any).billing?.validateOrganization) {
-      return await (sdk.forConsole as any).billing.validateOrganization(
+    if ((sdk.forConsole as unknown).billing?.validateOrganization) {
+      return await (sdk.forConsole as unknown).billing.validateOrganization(
         organizationId,
         invites,
       )
     }
     // Fallback to organizations service
-    if ((sdk.forConsole.organizations as any).validateOrganization) {
-      return await (sdk.forConsole.organizations as any).validateOrganization(
-        organizationId,
-        invites,
-      )
+    if ((sdk.forConsole.organizations as unknown).validateOrganization) {
+      return await (
+        sdk.forConsole.organizations as unknown
+      ).validateOrganization(organizationId, invites)
     }
     throw new Error('validateOrganization method not available')
   } catch (error) {
@@ -762,7 +765,7 @@ export async function createDowngradeFeedback(params: {
       fromPlanId: params.fromPlanId,
       toPlanId: params.toPlanId,
     })
-  } catch (error) {
+  } catch {
     // Don't throw - feedback is optional
   }
 }
@@ -1093,7 +1096,7 @@ export function useOrganizations() {
   const organizations = useMemo(() => {
     if (!organizationsData?.teams) return []
 
-    return organizationsData.teams.map((org: any) => {
+    return organizationsData.teams.map((org: unknown) => {
       // Map billingPlan to plan name using the filter
       const planName = getPlanNameFromTier(org.billingPlan)
       // Map 'custom' to 'enterprise' for compatibility with Organization type

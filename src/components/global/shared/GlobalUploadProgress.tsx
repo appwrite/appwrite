@@ -52,7 +52,7 @@ export function GlobalUploadProgress() {
 
       previousStatusRef.current.set(upload.id, upload.status)
     })
-  }, [activeUploads]) // queryClient is stable, no need to include in deps
+  }, [activeUploads, queryClient])
 
   // Set up progress listeners to catch completion events
   useEffect(() => {
@@ -105,7 +105,7 @@ export function GlobalUploadProgress() {
     return () => {
       unsubscribes.forEach((unsubscribe) => unsubscribe())
     }
-  }, [activeUploads.length]) // Re-setup when number of active uploads changes. queryClient is stable.
+  }, [activeUploads.length, queryClient])
 
   const handleCancel = async (uploadId: string) => {
     await uploadManager.cancelUpload(uploadId)

@@ -90,7 +90,7 @@ export function ExportDataDialog({
       const targetUrl = `${endpointUrl.replace(/\/$/, '')}/?migrate=${encodedData}`
 
       window.location.href = targetUrl
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to create migration key')
       setIsRedirecting(false)
     }

@@ -32,7 +32,7 @@ interface IndexDrawerProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: IndexFormData) => Promise<void>
-  index?: any // Existing index for edit mode
+  index?: unknown // Existing index for edit mode
   availableColumns?: Array<{
     key: string
     type: string
@@ -134,6 +134,7 @@ export function IndexDrawer({
         setFormData((prev) => ({ ...prev, key: suggested }))
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.columns, existingIndexes, isEditMode])
 
   // Initialize form data from index
@@ -167,6 +168,7 @@ export function IndexDrawer({
       setSuggestedKey('')
       setErrors({})
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, open])
 
   // Reset columns when type changes
@@ -272,7 +274,7 @@ export function IndexDrawer({
       await onSubmit(submitData)
       handleOpenChange(false)
       // Don't show toast for suggestions - parent handles it
-      if (!(index as any)?.isSuggestion) {
+      if (!(index as unknown)?.isSuggestion) {
         toast.success(
           isEditMode
             ? 'Index updated successfully'
@@ -318,7 +320,7 @@ export function IndexDrawer({
   const updateColumn = (
     index: number,
     field: keyof IndexColumnEntry,
-    value: any,
+    value: unknown,
   ) => {
     setFormData((prev) => {
       const newColumns = [...prev.columns]

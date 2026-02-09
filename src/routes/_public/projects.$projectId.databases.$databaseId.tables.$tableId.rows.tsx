@@ -87,7 +87,7 @@ export const Route = createFileRoute(
 
       // Check if the requested table exists in the tables list
       const tableExists = tablesData.tables.some(
-        (table: any) => table.$id === tableId,
+        (table: unknown) => table.$id === tableId,
       )
       if (!tableExists) {
         // Table not found, redirect to database index (tables view)

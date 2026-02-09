@@ -37,7 +37,7 @@ function RootRedirect() {
     if (isOAuthCallback && account) {
       // Check if account has GitHub identity
       const hasGitHubIdentity = account.identities?.some(
-        (identity: any) => identity.provider === 'github',
+        (identity: unknown) => identity.provider === 'github',
       )
       if (hasGitHubIdentity) {
         setLastLoginMethod('github')

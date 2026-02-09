@@ -25,16 +25,16 @@ const getConsoleVariables = () => {
   // For now, return defaults
   return {
     cname:
-      '_APP_DOMAIN_TARGET_CNAME' in (globalThis as any)
-        ? (globalThis as any)._APP_DOMAIN_TARGET_CNAME
+      '_APP_DOMAIN_TARGET_CNAME' in (globalThis as unknown)
+        ? (globalThis as unknown)._APP_DOMAIN_TARGET_CNAME
         : 'appwrite.example.com',
     a:
-      '_APP_DOMAIN_TARGET_A' in (globalThis as any)
-        ? (globalThis as any)._APP_DOMAIN_TARGET_A
+      '_APP_DOMAIN_TARGET_A' in (globalThis as unknown)
+        ? (globalThis as unknown)._APP_DOMAIN_TARGET_A
         : '1.2.3.4',
     aaaa:
-      '_APP_DOMAIN_TARGET_AAAA' in (globalThis as any)
-        ? (globalThis as any)._APP_DOMAIN_TARGET_AAAA
+      '_APP_DOMAIN_TARGET_AAAA' in (globalThis as unknown)
+        ? (globalThis as unknown)._APP_DOMAIN_TARGET_AAAA
         : '2001:db8::1',
   }
 }

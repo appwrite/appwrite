@@ -44,7 +44,7 @@ export function VerifyDomainDialog({
         toast.success('Verification in progress')
         onVerifySuccess()
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to verify domain')
     }
   }

@@ -175,7 +175,7 @@ export function Templates({ projectId }: TemplatesProps) {
   const [resetLocale, setResetLocale] = useState<string | null>(null)
   const [copiedVariable, setCopiedVariable] = useState<string | null>(null)
 
-  const isSmtpEnabled = (project as any)?.smtpEnabled ?? false
+  const isSmtpEnabled = (project as unknown)?.smtpEnabled ?? false
 
   // Prefetch all English templates when component mounts
   useEffect(() => {
@@ -205,14 +205,15 @@ export function Templates({ projectId }: TemplatesProps) {
     Promise.all(prefetchPromises).catch((error) => {
       console.error('Failed to prefetch some templates:', error)
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]) // queryClient is stable, no need to include in deps
 
   // Fetch template when type or locale changes
-  const {
-    data: template,
-    isLoading: isTemplateLoading,
-    isFetching: isTemplateFetching,
-  } = useEmailTemplate(projectId, selectedType, selectedLocale)
+  const { data: template, isLoading: isTemplateLoading } = useEmailTemplate(
+    projectId,
+    selectedType,
+    selectedLocale,
+  )
 
   // Keep previous template data visible when switching languages
   // This prevents the form from clearing while new data loads
@@ -237,6 +238,7 @@ export function Templates({ projectId }: TemplatesProps) {
       selectedType,
       selectedLocale,
     ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, selectedType, selectedLocale]) // queryClient is stable, no need to include in deps
 
   // Only show loading if we don't have cached data AND we don't have previous data to display
@@ -346,7 +348,7 @@ export function Templates({ projectId }: TemplatesProps) {
           message: formData.message,
         })
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to update template')
     }
   }
@@ -377,7 +379,7 @@ export function Templates({ projectId }: TemplatesProps) {
       setResetDialogOpen(false)
       setResetType(null)
       setResetLocale(null)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to reset template')
     }
   }
@@ -388,7 +390,7 @@ export function Templates({ projectId }: TemplatesProps) {
       await navigator.clipboard.writeText(variable)
       setCopiedVariable(variable)
       setTimeout(() => setCopiedVariable(null), 2000)
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy variable')
     }
   }
@@ -556,7 +558,6 @@ function TemplateEditor({
   locale,
   onLocaleChange,
   localeCodes,
-  template,
   isLoading,
   formData,
   onFieldChange,

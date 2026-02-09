@@ -60,7 +60,6 @@ const CustomTooltip = ({
 
 export function RealtimeMessagesChart({
   data,
-  dateRange,
   projectId,
   description = 'Messages per minute over time',
 }: RealtimeMessagesChartProps) {

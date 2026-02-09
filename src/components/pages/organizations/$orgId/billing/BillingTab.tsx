@@ -49,9 +49,7 @@ export function BillingTab() {
 
   // Fetch payment methods for alert checking
   const primaryPaymentMethod = usePaymentMethod(organization?.paymentMethodId)
-  const backupPaymentMethod = usePaymentMethod(
-    organization?.backupPaymentMethodId,
-  )
+  usePaymentMethod(organization?.backupPaymentMethodId)
 
   const retryPaymentMutation = useRetryInvoicePayment()
 
@@ -61,7 +59,6 @@ export function BillingTab() {
 
   // Check for expired payment method
   const primaryFailed = primaryPaymentMethod.paymentMethod?.failed === true
-  const backupFailed = backupPaymentMethod.paymentMethod?.failed === true
   const hasExpiredPaymentMethod =
     primaryFailed && !organization?.backupPaymentMethodId
 

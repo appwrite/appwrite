@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { ArrowLeft, Mail, Phone, Bell, Trash2, Settings } from 'lucide-react'
+import { ArrowLeft, Trash2 } from 'lucide-react'
 import { useProvider, useProject } from '@/lib/react-query/hooks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader } from '../../../shared/ServiceHeader'
@@ -20,7 +20,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { formatDateTime } from '@/lib/date-utils'
 import { MessagingProviderIcon } from '@/components/global/shared/MessagingProviderIcon'
-
 
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -101,14 +100,29 @@ export function View() {
 
   // Update settings mutation
   const updateSettingsMutation = useMutation({
-    mutationFn: async (settings: any) => {
+    mutationFn: async (
+      settings: Record<string, unknown> & {
+        credentials?: Record<string, unknown>
+        options?: Record<string, unknown>
+        fromEmail?: string
+        fromName?: string
+        replyToEmail?: string
+        replyToName?: string
+        serviceAccountJSON?: string | object
+        authKey?: string
+        authKeyId?: string
+        teamId?: string
+        bundleId?: string
+      },
+    ) => {
       if (!projectId || !providerId) {
         throw new Error('Project ID and Provider ID are required')
       }
       const projectSdk = sdk.forProject(projectId)
 
-      // Map provider-specific parameters based on provider type
-      const params: any = { providerId }
+      const params: Record<string, unknown> & { providerId: string } = {
+        providerId,
+      }
 
       if (provider?.type === 'sms') {
         // SMS Providers (Twilio, Msg91, Telesign, Textmagic, Vonage)
@@ -192,13 +206,6 @@ export function View() {
     })
   }
 
-  const getProviderTypeIcon = () => {
-    if (provider?.type === 'email') return Mail
-    if (provider?.type === 'sms') return Phone
-    if (provider?.type === 'push') return Bell
-    return Settings
-  }
-
   if (providerLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -223,11 +230,9 @@ export function View() {
     )
   }
 
-  const TypeIcon = getProviderTypeIcon()
-
   // Extract provider settings from credentials and options
   const getProviderSettings = () => {
-    const settings: any = {}
+    const settings: Record<string, unknown> = {}
 
     if (provider.type === 'sms') {
       // SMS providers

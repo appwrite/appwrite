@@ -36,9 +36,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import {
-  formatCardExpiry,
-} from '../../organizations/$orgId/billing/utils'
+import { formatCardExpiry } from '../../organizations/$orgId/billing/utils'
 import { cn } from '@/lib/utils'
 import {
   usePaymentMethods,
@@ -61,21 +59,22 @@ export function AccountPaymentMethods({
 }: AccountPaymentMethodsProps) {
   const { paymentMethods: allPaymentMethods, isLoading: methodsLoading } =
     usePaymentMethods()
-  const updatePaymentMethodMutation = useUpdatePaymentMethod()
-  const deletePaymentMethodMutation = useDeletePaymentMethod()
+  useUpdatePaymentMethod()
+  useDeletePaymentMethod()
 
   // Fetch organizations with full data (including paymentMethodId, backupPaymentMethodId)
   const { data: organizationsData } = useQuery({
     queryKey: ['organizations', 'console', 'full'],
     queryFn: async () => {
-      const response = await sdk.forConsole.organizations.list([
-        Query.equal('platform', 'appwrite'),
-      ])
+      const response = await sdk.forConsole.organizations.list({
+        queries: [Query.equal('platform', 'appwrite')],
+      })
       return response.teams || []
     },
     staleTime: 30 * 1000,
   })
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const organizations = organizationsData || []
 
   const [editModalOpen, setEditModalOpen] = useState(false)

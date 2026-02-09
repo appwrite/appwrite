@@ -48,7 +48,7 @@ export function NameCard({ projectId, siteId, site }: NameCardProps) {
         queryKey: ['sites', 'project', projectId],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(getErrorMessage(error, 'Failed to update site name'))
     },
   })

@@ -52,7 +52,7 @@ export function View() {
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
-    } catch (error) {
+    } catch {
       toast.error('Failed to download source code')
     }
   }
@@ -72,7 +72,7 @@ export function View() {
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
-    } catch (error) {
+    } catch {
       toast.error('Failed to download build output')
     }
   }

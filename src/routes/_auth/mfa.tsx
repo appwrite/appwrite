@@ -26,7 +26,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute('/_auth/mfa')({
   component: MFAPage,
   validateSearch: searchSchema,
-  loader: async ({ context, location }) => {
+  loader: async ({ location }) => {
     // Check if MFA is required by trying to get account
     // If we get 'user_more_factors_required' error, MFA is required
     let mfaRequired = false
@@ -38,9 +38,16 @@ export const Route = createFileRoute('/_auth/mfa')({
         to: '/',
         throw: true,
       })
-    } catch (error) {
+    } catch (error: unknown) {
       // Check if this is a redirect (from the success case above)
-      if ((error as any)?.status === 302 || (error as any)?.status === 303) {
+      const status =
+        typeof error === 'object' &&
+        error !== null &&
+        'status' in error &&
+        typeof (error as { status: number }).status === 'number'
+          ? (error as { status: number }).status
+          : undefined
+      if (status === 302 || status === 303) {
         throw error
       }
 

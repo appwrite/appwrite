@@ -43,10 +43,10 @@ export async function fetchProjectBuckets(
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.storage.listBuckets(
+  const response = await projectSdk.storage.listBuckets({
     queries,
-    search?.trim() || undefined,
-  )
+    search: search?.trim() || undefined,
+  })
 
   return {
     buckets: response.buckets || [],

@@ -47,7 +47,7 @@ export function RefreshProvider({ children }: { children: React.ReactNode }) {
       const remaining = Math.max(0, MIN_ANIMATION_DURATION - elapsed)
       await new Promise((resolve) => setTimeout(resolve, remaining))
       toast.success(`${refreshLabelRef.current} refreshed successfully`)
-    } catch (error) {
+    } catch {
       toast.error(`Failed to refresh ${refreshLabelRef.current.toLowerCase()}`)
     } finally {
       setIsRefreshing(false)

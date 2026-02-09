@@ -38,7 +38,7 @@ export function View() {
       return await projectSdk.functions.update({
         functionId,
         name: func.name,
-        runtime: func.runtime as any,
+        runtime: func.runtime as unknown,
         execute: func.execute || undefined,
         events: func.events || undefined,
         schedule: func.schedule || undefined,
@@ -57,7 +57,7 @@ export function View() {
         queryKey: ['function', 'project', projectId, functionId],
       })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       toast.error(error.message || 'Failed to update function')
     },
   })

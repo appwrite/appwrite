@@ -57,14 +57,14 @@ class PerformanceMonitor {
     if (typeof window === 'undefined') return
 
     // Monitor query fetches (silent - data available via generateReport)
-    const observer = new PerformanceObserver((list) => {
+    const observer = new PerformanceObserver(() => {
       // Silent monitoring - data stored but not logged
     })
 
     try {
       observer.observe({ entryTypes: ['measure'] })
       this.observers.push(observer)
-    } catch (e) {
+    } catch {
       // PerformanceObserver not supported
     }
   }
@@ -78,13 +78,14 @@ class PerformanceMonitor {
     try {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
+          void entry
           // Silent monitoring - long tasks data available via generateReport()
         }
       })
 
       observer.observe({ entryTypes: ['longtask'] })
       this.observers.push(observer)
-    } catch (e) {
+    } catch {
       // Long task observer not supported - silently fail
     }
   }
@@ -103,7 +104,7 @@ class PerformanceMonitor {
       const currentTime = performance.now()
 
       if (currentTime >= lastTime + intervalMs) {
-        const fps = Math.round((frames * 1000) / (currentTime - lastTime))
+        void Math.round((frames * 1000) / (currentTime - lastTime))
         // Silent monitoring - FPS data available via generateReport()
         frames = 0
         lastTime = currentTime
@@ -130,9 +131,9 @@ class PerformanceMonitor {
     >()
 
     window.setInterval = function (
-      callback: Function,
+      callback: (...args: unknown[]) => void,
       delay?: number,
-      ...args: any[]
+      ...args: unknown[]
     ): number {
       const id = originalSetInterval(callback, delay, ...args)
       activeIntervals.set(id, {
@@ -159,18 +160,18 @@ class PerformanceMonitor {
    * Monitor React Query queries
    * Automatically finds queryClient from React Query context
    */
-  monitorReactQueryQueries(queryClient?: any): void {
+  monitorReactQueryQueries(queryClient?: unknown): void {
     if (typeof window === 'undefined') return
 
     // Try to get queryClient from window if not provided
     let client = queryClient
-    if (!client && (window as any).__REACT_QUERY_CLIENT__) {
-      client = (window as any).__REACT_QUERY_CLIENT__
+    if (!client && (window as unknown).__REACT_QUERY_CLIENT__) {
+      client = (window as unknown).__REACT_QUERY_CLIENT__
     }
 
     // Try to get from React Query DevTools if available
-    if (!client && (window as any).__REACT_QUERY_DEVTOOLS_GLOBAL_HOOK__) {
-      const devtools = (window as any).__REACT_QUERY_DEVTOOLS_GLOBAL_HOOK__
+    if (!client && (window as unknown).__REACT_QUERY_DEVTOOLS_GLOBAL_HOOK__) {
+      const devtools = (window as unknown).__REACT_QUERY_DEVTOOLS_GLOBAL_HOOK__
       if (devtools.getClient) {
         client = devtools.getClient()
       }
@@ -185,10 +186,12 @@ class PerformanceMonitor {
       try {
         const queries = client.getQueryCache().getAll()
         const activeQueries = queries.filter(
-          (q: any) => q.state.status === 'pending',
+          (q: unknown) => q.state.status === 'pending',
         )
-        const staleQueries = queries.filter((q: any) => q.state.isStale)
-        const refetchingQueries = queries.filter((q: any) => q.state.isFetching)
+        const staleQueries = queries.filter((q: unknown) => q.state.isStale)
+        const refetchingQueries = queries.filter(
+          (q: unknown) => q.state.isFetching,
+        )
 
         console.group('📊 React Query Status')
         console.log(`Total queries: ${queries.length}`)
@@ -198,7 +201,7 @@ class PerformanceMonitor {
 
         if (activeQueries.length > 0) {
           console.group('Active Queries')
-          activeQueries.forEach((q: any) => {
+          activeQueries.forEach((q: unknown) => {
             console.log(q.queryKey, q.state)
           })
           console.groupEnd()
@@ -206,7 +209,7 @@ class PerformanceMonitor {
 
         if (refetchingQueries.length > 0) {
           console.group('Refetching Queries')
-          refetchingQueries.slice(0, 10).forEach((q: any) => {
+          refetchingQueries.slice(0, 10).forEach((q: unknown) => {
             console.log(q.queryKey, {
               isFetching: q.state.isFetching,
               fetchStatus: q.state.fetchStatus,
@@ -217,7 +220,7 @@ class PerformanceMonitor {
 
         if (staleQueries.length > 0) {
           console.group('Stale Queries (first 10)')
-          staleQueries.slice(0, 10).forEach((q: any) => {
+          staleQueries.slice(0, 10).forEach((q: unknown) => {
             console.log(q.queryKey, {
               isStale: q.state.isStale,
               dataUpdatedAt: new Date(
@@ -229,7 +232,7 @@ class PerformanceMonitor {
         }
 
         console.groupEnd()
-      } catch (error) {
+      } catch {
         // Silently handle errors
       }
     }
@@ -288,7 +291,7 @@ class PerformanceMonitor {
 
     // Log memory usage if available
     if ('memory' in performance) {
-      const memory = (performance as any).memory
+      const memory = (performance as unknown).memory
       console.log('💾 Memory Usage:', {
         used: `${(memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
         total: `${(memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
@@ -308,5 +311,5 @@ export const performanceMonitor = new PerformanceMonitor()
 // Or import and expose manually in console when needed
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
   // Only expose, don't auto-start or log
-  ;(window as any).performanceMonitor = performanceMonitor
+  ;(window as unknown).performanceMonitor = performanceMonitor
 }

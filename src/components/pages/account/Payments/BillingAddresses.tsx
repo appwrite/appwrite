@@ -46,15 +46,15 @@ export function AccountBillingAddresses() {
   const { addresses: allAddresses, isLoading: addressesLoading } =
     useBillingAddresses()
   const { data: countriesData } = useCountries()
-  const deleteAddressMutation = useDeleteBillingAddress()
+  useDeleteBillingAddress()
 
   // Fetch organizations with full data (including billingAddressId)
   const { data: organizationsData } = useQuery({
     queryKey: ['organizations', 'console', 'full'],
     queryFn: async () => {
-      const response = await sdk.forConsole.organizations.list([
-        Query.equal('platform', 'appwrite'),
-      ])
+      const response = await sdk.forConsole.organizations.list({
+        queries: [Query.equal('platform', 'appwrite')],
+      })
       return response.teams || []
     },
     staleTime: 30 * 1000,

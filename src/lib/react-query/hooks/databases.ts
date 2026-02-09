@@ -12,6 +12,7 @@ import {
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
+import type { Models } from '@appwrite.io/console'
 import type { Database, Collection } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DEFAULT_STALE_TIME, DEFAULT_PAGE_SIZE } from './constants'
@@ -49,19 +50,19 @@ export async function fetchProjectDatabases(
   ]
 
   // Use TablesDB API to list databases
-  let response: any
+  let response: Models.DatabaseList
   try {
-    response = await (projectSdk.tablesDB as any).list(
+    response = await projectSdk.tablesDB.list({
       queries,
-      search?.trim() || undefined,
-    )
-  } catch (err) {
+      search: search?.trim() || undefined,
+    })
+  } catch {
     response = { databases: [], total: 0 }
   }
 
   return {
-    databases: response?.databases || [],
-    total: response?.total || 0,
+    databases: response.databases ?? [],
+    total: response.total ?? 0,
   }
 }
 
@@ -84,7 +85,7 @@ export async function fetchProjectDatabase(
 
   const projectSdk = sdk.forProject(projectId)
   try {
-    const db = await (projectSdk.tablesDB as any).get(databaseId)
+    const db = await projectSdk.tablesDB.get({ databaseId })
 
     if (!db) {
       return null
@@ -121,10 +122,10 @@ export async function fetchProjectDatabase(
       createdAt: string
       updatedAt: string
       hasBackupPolicy: boolean
-      backupPolicy: any
+      backupPolicy: Record<string, unknown> | null
       backupPolicyCount: number
     }
-  } catch (err) {
+  } catch {
     return null
   }
 }
@@ -149,7 +150,7 @@ export async function createProjectDatabase(
     data.databaseId && data.databaseId.trim() !== ''
       ? data.databaseId.trim()
       : ID.unique()
-  return await (projectSdk.tablesDB as any).create({
+  return await projectSdk.tablesDB.create({
     databaseId,
     name: data.name.trim(),
   })
@@ -177,7 +178,7 @@ export async function createProjectTable(
       ? data.tableId.trim()
       : ID.unique()
 
-  return await (projectSdk.tablesDB as any).createTable({
+  return await projectSdk.tablesDB.createTable({
     databaseId,
     tableId,
     name: data.name.trim(),
@@ -215,20 +216,20 @@ export async function fetchProjectTables(
   ]
 
   // Use TablesDB API to list tables (collections)
-  let response: any
+  let response: Models.TableList
   try {
-    response = await (projectSdk.tablesDB as any).listTables(
+    response = await projectSdk.tablesDB.listTables({
       databaseId,
       queries,
-      search?.trim() || undefined,
-    )
-  } catch (err) {
+      search: search?.trim() || undefined,
+    })
+  } catch {
     response = { tables: [], total: 0 }
   }
 
   return {
-    tables: response?.tables ?? [],
-    total: response?.total || 0,
+    tables: response.tables ?? [],
+    total: response.total ?? 0,
   }
 }
 
@@ -256,19 +257,18 @@ export async function fetchAllProjectTablesForVisualizer(
   ]
 
   // Use TablesDB API to list tables (collections)
-  let response: any
+  let response: Models.TableList
   try {
-    response = await (projectSdk.tablesDB as any).listTables(
+    response = await projectSdk.tablesDB.listTables({
       databaseId,
       queries,
-      undefined,
-    )
-  } catch (err) {
+    })
+  } catch {
     response = { tables: [] }
   }
 
   return {
-    tables: response?.tables ?? [],
+    tables: response.tables ?? [],
   }
 }
 
@@ -305,11 +305,11 @@ export async function fetchProjectTableRows(
   ]
 
   // Use TablesDB API to list rows
-  let response: any
+  let response: unknown
   try {
     if (typeof projectSdk.tablesDB.listRows === 'function') {
       // Note: search might need to be passed differently depending on SDK version
-      const listRowsParams: any = {
+      const listRowsParams: unknown = {
         databaseId,
         tableId,
         queries,
@@ -323,7 +323,7 @@ export async function fetchProjectTableRows(
     } else {
       response = { rows: [], total: 0 }
     }
-  } catch (err) {
+  } catch {
     response = { rows: [], total: 0 }
   }
 
@@ -355,24 +355,21 @@ export async function fetchProjectTableColumns(
   const projectSdk = sdk.forProject(projectId)
 
   // Use TablesDB API to get table details which includes attributes/columns
-  let response: any
+  let response: unknown
   try {
-    if (typeof (projectSdk.tablesDB as any).getTable === 'function') {
-      response = await (projectSdk.tablesDB as any).getTable(
-        databaseId,
-        tableId,
-      )
+    if (typeof projectSdk.tablesDB.getTable === 'function') {
+      response = await projectSdk.tablesDB.getTable({ databaseId, tableId })
     } else if (
-      typeof (projectSdk.tablesDB as any).getCollection === 'function'
+      typeof (projectSdk.tablesDB as unknown).getCollection === 'function'
     ) {
-      response = await (projectSdk.tablesDB as any).getCollection(
+      response = await (projectSdk.tablesDB as unknown).getCollection({
         databaseId,
         tableId,
-      )
+      })
     } else {
       response = { attributes: [] }
     }
-  } catch (err) {
+  } catch {
     response = { attributes: [] }
   }
 
@@ -400,24 +397,21 @@ export async function fetchProjectTableIndexes(
 
   const projectSdk = sdk.forProject(projectId)
 
-  let response: any
+  let response: unknown
   try {
-    if (typeof (projectSdk.tablesDB as any).getTable === 'function') {
-      response = await (projectSdk.tablesDB as any).getTable(
-        databaseId,
-        tableId,
-      )
+    if (typeof projectSdk.tablesDB.getTable === 'function') {
+      response = await projectSdk.tablesDB.getTable({ databaseId, tableId })
     } else if (
-      typeof (projectSdk.tablesDB as any).getCollection === 'function'
+      typeof (projectSdk.tablesDB as unknown).getCollection === 'function'
     ) {
-      response = await (projectSdk.tablesDB as any).getCollection(
+      response = await (projectSdk.tablesDB as unknown).getCollection({
         databaseId,
         tableId,
-      )
+      })
     } else {
       response = { indexes: [] }
     }
-  } catch (err) {
+  } catch {
     response = { indexes: [] }
   }
 
@@ -447,19 +441,16 @@ export async function fetchProjectTable(
 
   const projectSdk = sdk.forProject(projectId)
   try {
-    let response: any
-    if (typeof (projectSdk.tablesDB as any).getTable === 'function') {
-      response = await (projectSdk.tablesDB as any).getTable(
-        databaseId,
-        tableId,
-      )
+    let response: unknown
+    if (typeof projectSdk.tablesDB.getTable === 'function') {
+      response = await projectSdk.tablesDB.getTable({ databaseId, tableId })
     } else if (
-      typeof (projectSdk.tablesDB as any).getCollection === 'function'
+      typeof (projectSdk.tablesDB as unknown).getCollection === 'function'
     ) {
-      response = await (projectSdk.tablesDB as any).getCollection(
+      response = await (projectSdk.tablesDB as unknown).getCollection({
         databaseId,
         tableId,
-      )
+      })
     } else {
       return null
     }
@@ -479,7 +470,7 @@ export async function fetchProjectTable(
       $updatedAt:
         response.$updatedAt || response.$createdAt || new Date().toISOString(),
     }
-  } catch (err) {
+  } catch {
     return null
   }
 }
@@ -532,7 +523,7 @@ export async function createProjectTableRow(
   projectId: string,
   databaseId: string,
   tableId: string,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   rowId?: string,
   permissions?: string[],
 ) {
@@ -544,7 +535,7 @@ export async function createProjectTableRow(
 
   if (typeof projectSdk.tablesDB.createRow === 'function') {
     const { ID } = await import('@appwrite.io/console')
-    const createParams: any = {
+    const createParams: unknown = {
       databaseId,
       tableId,
       rowId: rowId || data.$id || ID.unique(),
@@ -581,7 +572,7 @@ export async function updateProjectTableRow(
   databaseId: string,
   tableId: string,
   rowId: string,
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   permissions?: string[],
 ) {
   if (!projectId || !databaseId || !tableId || !rowId) {
@@ -591,7 +582,7 @@ export async function updateProjectTableRow(
   const projectSdk = sdk.forProject(projectId)
 
   if (typeof projectSdk.tablesDB.updateRow === 'function') {
-    const updateParams: any = {
+    const updateParams: unknown = {
       databaseId,
       tableId,
       rowId,
@@ -628,7 +619,7 @@ export async function createProjectTableRows(
   projectId: string,
   databaseId: string,
   tableId: string,
-  rows: Record<string, any>[],
+  rows: Record<string, unknown>[],
   hasRelationshipColumns: boolean = false,
 ) {
   if (!projectId || !databaseId || !tableId) {
@@ -646,7 +637,7 @@ export async function createProjectTableRows(
   // If no relationship columns, try bulk insert
   if (
     !hasRelationshipColumns &&
-    typeof (projectSdk.tablesDB as any).createRows === 'function'
+    typeof (projectSdk.tablesDB as unknown).createRows === 'function'
   ) {
     try {
       const { ID } = await import('@appwrite.io/console')
@@ -662,13 +653,13 @@ export async function createProjectTableRows(
         }
       })
 
-      await (projectSdk.tablesDB as any).createRows({
+      await (projectSdk.tablesDB as unknown).createRows({
         databaseId,
         tableId,
         rows: rowsToInsert,
       })
       created = rows.length
-    } catch (error) {
+    } catch {
       // If bulk insert fails, fall back to individual inserts
     }
   }
@@ -713,7 +704,7 @@ export async function createProjectTableColumn(
   projectId: string,
   databaseId: string,
   tableId: string,
-  columnData: any,
+  columnData: unknown,
 ) {
   if (!projectId || !databaseId || !tableId) {
     throw new Error('Missing required parameters')
@@ -849,7 +840,7 @@ export async function updateProjectTableColumn(
   databaseId: string,
   tableId: string,
   columnKey: string,
-  columnData: any,
+  columnData: unknown,
 ) {
   if (!projectId || !databaseId || !tableId || !columnKey) {
     throw new Error('Missing required parameters')
@@ -1017,14 +1008,16 @@ export async function deleteProjectTableColumn(
 
   const projectSdk = sdk.forProject(projectId)
 
-  if (typeof (projectSdk.tablesDB as any).deleteAttribute === 'function') {
-    return await (projectSdk.tablesDB as any).deleteAttribute({
+  if (typeof (projectSdk.tablesDB as unknown).deleteAttribute === 'function') {
+    return await (projectSdk.tablesDB as unknown).deleteAttribute({
       databaseId,
       tableId,
       key: columnKey,
     })
-  } else if (typeof (projectSdk.tablesDB as any).deleteColumn === 'function') {
-    return await (projectSdk.tablesDB as any).deleteColumn({
+  } else if (
+    typeof (projectSdk.tablesDB as unknown).deleteColumn === 'function'
+  ) {
+    return await (projectSdk.tablesDB as unknown).deleteColumn({
       databaseId,
       tableId,
       key: columnKey,
@@ -1046,7 +1039,7 @@ export async function createProjectTableIndex(
   projectId: string,
   databaseId: string,
   tableId: string,
-  indexData: any,
+  indexData: unknown,
 ) {
   if (!projectId || !databaseId || !tableId) {
     throw new Error('Missing required parameters')
@@ -1054,8 +1047,8 @@ export async function createProjectTableIndex(
 
   const projectSdk = sdk.forProject(projectId)
 
-  if (typeof (projectSdk.tablesDB as any).createIndex === 'function') {
-    return await (projectSdk.tablesDB as any).createIndex({
+  if (typeof (projectSdk.tablesDB as unknown).createIndex === 'function') {
+    return await (projectSdk.tablesDB as unknown).createIndex({
       databaseId,
       tableId,
       ...indexData,
@@ -1085,8 +1078,8 @@ export async function deleteProjectTableIndex(
 
   const projectSdk = sdk.forProject(projectId)
 
-  if (typeof (projectSdk.tablesDB as any).deleteIndex === 'function') {
-    return await (projectSdk.tablesDB as any).deleteIndex({
+  if (typeof (projectSdk.tablesDB as unknown).deleteIndex === 'function') {
+    return await (projectSdk.tablesDB as unknown).deleteIndex({
       databaseId,
       tableId,
       key: indexKey,
@@ -1121,16 +1114,16 @@ export async function updateProjectTable(
 
   const projectSdk = sdk.forProject(projectId)
 
-  if (typeof (projectSdk.tablesDB as any).updateTable === 'function') {
-    return await (projectSdk.tablesDB as any).updateTable({
+  if (typeof (projectSdk.tablesDB as unknown).updateTable === 'function') {
+    return await (projectSdk.tablesDB as unknown).updateTable({
       databaseId,
       tableId,
       ...data,
     })
   } else if (
-    typeof (projectSdk.tablesDB as any).updateCollection === 'function'
+    typeof (projectSdk.tablesDB as unknown).updateCollection === 'function'
   ) {
-    return await (projectSdk.tablesDB as any).updateCollection({
+    return await (projectSdk.tablesDB as unknown).updateCollection({
       databaseId,
       tableId,
       ...data,
@@ -1158,15 +1151,15 @@ export async function deleteProjectTable(
 
   const projectSdk = sdk.forProject(projectId)
 
-  if (typeof (projectSdk.tablesDB as any).deleteTable === 'function') {
-    return await (projectSdk.tablesDB as any).deleteTable({
+  if (typeof (projectSdk.tablesDB as unknown).deleteTable === 'function') {
+    return await (projectSdk.tablesDB as unknown).deleteTable({
       databaseId,
       tableId,
     })
   } else if (
-    typeof (projectSdk.tablesDB as any).deleteCollection === 'function'
+    typeof (projectSdk.tablesDB as unknown).deleteCollection === 'function'
   ) {
-    return await (projectSdk.tablesDB as any).deleteCollection({
+    return await (projectSdk.tablesDB as unknown).deleteCollection({
       databaseId,
       tableId,
     })
@@ -1444,7 +1437,7 @@ export function useProjectDatabases(
   const databases = useMemo(() => {
     if (!databasesData?.databases) return []
 
-    return databasesData.databases.map((db: any) => {
+    return databasesData.databases.map((db: unknown) => {
       // Get table count and row count if available
       // These might need to be fetched separately or calculated
       const tables = db.collections?.length || 0
@@ -1481,7 +1474,7 @@ export function useProjectDatabases(
         createdAt: string
         updatedAt: string
         hasBackupPolicy: boolean
-        backupPolicy: any
+        backupPolicy: unknown
         backupPolicyCount: number
       }
     })
@@ -1566,7 +1559,7 @@ export function useProjectTables(
   const tables = useMemo(() => {
     if (!tablesData?.tables) return []
 
-    return tablesData.tables.map((table: any) => ({
+    return tablesData.tables.map((table: unknown) => ({
       $id: table.$id,
       name: table.name || 'Unnamed Table',
       databaseId: databaseId || '',
@@ -1783,7 +1776,7 @@ export function useCreateProjectTableRow(
       rowId,
       permissions,
     }: {
-      data: Record<string, any>
+      data: Record<string, unknown>
       rowId?: string
       permissions?: string[]
     }) => {
@@ -1831,7 +1824,7 @@ export function useUpdateProjectTableRow(
       permissions,
     }: {
       rowId: string
-      data: Record<string, any>
+      data: Record<string, unknown>
       permissions?: string[]
     }) => {
       if (!projectId || !databaseId || !tableId || !rowId) {
@@ -1905,7 +1898,7 @@ export function useCreateProjectTableRows(
       rows,
       hasRelationshipColumns = false,
     }: {
-      rows: Record<string, any>[]
+      rows: Record<string, unknown>[]
       hasRelationshipColumns?: boolean
     }) => {
       if (!projectId || !databaseId || !tableId) {
@@ -1945,7 +1938,7 @@ export function useCreateProjectTableColumn(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (columnData: any) => {
+    mutationFn: async (columnData: unknown) => {
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }
@@ -1990,7 +1983,7 @@ export function useUpdateProjectTableColumn(
       columnData,
     }: {
       columnKey: string
-      columnData: any
+      columnData: unknown
     }) => {
       if (!projectId || !databaseId || !tableId || !columnKey) {
         throw new Error('Missing required parameters')
@@ -2072,7 +2065,7 @@ export function useCreateProjectTableIndex(
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (indexData: any) => {
+    mutationFn: async (indexData: unknown) => {
       if (!projectId || !databaseId || !tableId) {
         throw new Error('Missing required parameters')
       }

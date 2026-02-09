@@ -334,7 +334,7 @@ export function CommandCenter({
     }
 
     return items
-  }, [orgProjects, orgProjectsLoading, onOpenChange])
+  }, [orgProjects, orgProjectsLoading])
 
   // Project navigation commands
   const navigationCommands: CommandItemType[] = useMemo(
@@ -774,7 +774,7 @@ export function CommandCenter({
 
     // Databases
     if (searchScope === 'databases' && projectDatabases && !databasesLoading) {
-      projectDatabases.forEach((db: any) => {
+      projectDatabases.forEach((db: unknown) => {
         items.push({
           id: `db-${db.$id}`,
           label: db.name,

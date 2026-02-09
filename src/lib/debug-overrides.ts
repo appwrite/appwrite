@@ -8,10 +8,6 @@ export type DebugOverrides = {
   disableInitialLoader: boolean
 }
 
-const defaultOverrides: DebugOverrides = {
-  disableInitialLoader: false,
-}
-
 const isBrowser = typeof window !== 'undefined'
 
 function readBooleanFromStorage(key: string) {

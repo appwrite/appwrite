@@ -162,12 +162,14 @@ export function RepositoryConfigView({
     if (installationId && providerRepositoryId && !runtime) {
       detectRuntimeMutation.mutate()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [installationId, providerRepositoryId])
 
   useEffect(() => {
     if (functionName && !domain) {
       setDomain(generateDomain(functionName))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [functionName, generateDomain])
 
   const handleDeploy = async () => {
@@ -193,7 +195,7 @@ export function RepositoryConfigView({
       await projectSdk.functions.create({
         functionId: finalFunctionId,
         name: functionName.trim(),
-        runtime: runtime as any,
+        runtime: runtime as unknown,
         execute: [],
         enabled: true,
         entrypoint: entrypoint.trim() || undefined,
@@ -237,7 +239,7 @@ export function RepositoryConfigView({
         to: '/projects/$projectId/functions/$functionId',
         params: { projectId, functionId: finalFunctionId },
       })
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error(err?.message || 'Failed to create function')
       setIsDeploying(false)
     }

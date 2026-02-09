@@ -4,13 +4,12 @@ import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 interface PlanComparisonBoxProps {
   currentPlan: BillingPlan | string
   selectedPlan: BillingPlan | null
-  plans: Record<string, any>
+  plans: Record<string, unknown>
 }
 
 export function PlanComparisonBox({
   currentPlan,
   selectedPlan,
-  plans,
 }: PlanComparisonBoxProps) {
   const getPlanDisplayName = (planTier: string) => {
     const planName = getPlanNameFromTier(planTier)

@@ -132,8 +132,6 @@ export function Migrations({ projectId }: MigrationsProps) {
         <MigrationDetailsDialog
           open={detailsOpen}
           onOpenChange={setDetailsOpen}
-          projectId={projectId}
-          region={region}
           migration={selectedMigration}
         />
       )}

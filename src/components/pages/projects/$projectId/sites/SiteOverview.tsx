@@ -44,7 +44,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 
-
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
@@ -155,7 +154,7 @@ export function SiteOverviewView() {
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
-    } catch (error) {
+    } catch {
       toast.error('Failed to download source code')
     }
   }
@@ -172,7 +171,7 @@ export function SiteOverviewView() {
       const urlWithMode = url + (url.includes('?') ? '&' : '?') + 'mode=admin'
       window.open(urlWithMode, '_blank')
       toast.success('Download started')
-    } catch (error) {
+    } catch {
       toast.error('Failed to download build output')
     }
   }

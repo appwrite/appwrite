@@ -1,10 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { DateRange } from 'react-day-picker'
-import {
-  subMinutes,
-  eachMinuteOfInterval,
-  startOfMinute,
-} from 'date-fns'
+import { subMinutes, eachMinuteOfInterval, startOfMinute } from 'date-fns'
 
 // Mock data types
 export interface RealtimeStats {

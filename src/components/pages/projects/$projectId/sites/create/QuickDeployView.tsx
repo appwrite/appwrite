@@ -130,6 +130,7 @@ export function QuickDeployView({
     if (siteName && !domain) {
       setDomain(generateDomain(siteName))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteName, generateDomain])
 
   // Mutations
@@ -216,7 +217,7 @@ export function QuickDeployView({
         params: { projectId },
         search: { siteId: site.$id, deploymentId: deployment.$id },
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error.message || 'Failed to create site')
       setIsDeploying(false)
     }

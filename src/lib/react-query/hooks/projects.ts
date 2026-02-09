@@ -38,7 +38,7 @@ export async function fetchProject(projectId: string) {
   if (!projectId) {
     throw new Error('Project ID is required')
   }
-  const response = await sdk.forConsole.projects.get(projectId)
+  const response = await sdk.forConsole.projects.get({ projectId })
   if (response?.region) {
     setProjectRegion(projectId, response.region)
   }
@@ -102,9 +102,11 @@ export async function fetchApiKeys(projectId: string) {
 }
 
 /** Map raw API keys response to display format (for route initialData) */
-export function mapApiKeysFromResponse(apiKeysData: { keys?: any[] } | null) {
+export function mapApiKeysFromResponse(
+  apiKeysData: { keys?: unknown[] } | null,
+) {
   if (!apiKeysData?.keys) return []
-  return (apiKeysData.keys || []).map((key: any) => ({
+  return (apiKeysData.keys || []).map((key: unknown) => ({
     id: key.$id || key.id || '',
     name: key.name || 'Unnamed Key',
     key: key.secret || '',
@@ -173,7 +175,7 @@ export async function fetchProjectVariables(
       variables: response.variables || [],
       total: response.total || 0,
     }
-  } catch (error) {
+  } catch {
     return { variables: [], total: 0 }
   }
 }
@@ -276,7 +278,9 @@ export function useProject(projectId: string | undefined) {
 
     // Include platforms/clients from the raw API response
     const platforms =
-      (projectData as any).platforms || (projectData as any).clients || []
+      (projectData as unknown).platforms ||
+      (projectData as unknown).clients ||
+      []
 
     return {
       $id: projectData.$id,
@@ -289,7 +293,7 @@ export function useProject(projectId: string | undefined) {
       platforms,
       pingCount: (projectData as { pingCount?: number }).pingCount,
       pingedAt: (projectData as { pingedAt?: string }).pingedAt,
-    } as Project & { platforms: any[] }
+    } as Project & { platforms: unknown[] }
   }, [projectData])
 
   return {
@@ -338,7 +342,7 @@ export function useProjectsForTeam(
   const projects = useMemo(() => {
     if (!projectsData?.projects) return []
 
-    return projectsData.projects.map((project: any) => ({
+    return projectsData.projects.map((project: unknown) => ({
       $id: project.$id,
       name: project.name,
       teamId: project.teamId,
@@ -418,7 +422,7 @@ export function useProjectsForTeamInfinite(
 
     const allProjects = data.pages.flatMap((page) => page.projects || [])
 
-    return allProjects.map((project: any) => ({
+    return allProjects.map((project: unknown) => ({
       $id: project.$id,
       name: project.name,
       teamId: project.teamId,
@@ -472,7 +476,7 @@ export function useApiKeys(projectId: string | undefined) {
     // Use the keys array from KeyList response
     const keys = apiKeysData.keys || []
 
-    return keys.map((key: any) => ({
+    return keys.map((key: unknown) => ({
       id: key.$id || key.id || '',
       name: key.name || 'Unnamed Key',
       key: key.secret || '',
@@ -849,7 +853,7 @@ export function useCreateProject(teamId: string | null | undefined) {
         region,
       })
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       // Invalidate projects list for the team
       queryClient.invalidateQueries({
         queryKey: ['projects', 'team', teamId],

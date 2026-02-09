@@ -48,10 +48,10 @@ export async function fetchProjectUsers(
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.users.list(
+  const response = await projectSdk.users.list({
     queries,
-    search?.trim() || undefined,
-  )
+    search: search?.trim() || undefined,
+  })
 
   return {
     users: response.users || [],
@@ -87,10 +87,10 @@ export async function fetchProjectTeams(
     Query.offset(page * limit),
   ]
 
-  const response = await projectSdk.teams.list(
+  const response = await projectSdk.teams.list({
     queries,
-    search?.trim() || undefined,
-  )
+    search: search?.trim() || undefined,
+  })
 
   return {
     teams: response.teams || [],
@@ -266,7 +266,7 @@ export function useProjectUsers(
   const users = useMemo(() => {
     if (!usersData?.users) return []
 
-    return usersData.users.map((user: any) => {
+    return usersData.users.map((user: unknown) => {
       return {
         $id: user.$id,
         name: user.name || '',
@@ -370,7 +370,7 @@ export function useProjectTeams(
   const teams = useMemo(() => {
     if (!teamsData?.teams) return []
 
-    return teamsData.teams.map((team: any) => {
+    return teamsData.teams.map((team: unknown) => {
       // Get member counts from memberships if available
       // For now, use total as members count
       const members = team.total || 0
@@ -1333,7 +1333,7 @@ export function useDeleteUserMembership(projectId: string | null | undefined) {
       }
       return deleteUserMembership(projectId, teamId, membershipId)
     },
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       // Invalidate memberships for all users (since we don't know which user)
       queryClient.invalidateQueries({
         queryKey: ['user', 'memberships'],

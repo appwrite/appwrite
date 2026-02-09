@@ -182,7 +182,7 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
     try {
       await navigator.clipboard.writeText(buildLogs)
       toast.success('Logs copied to clipboard')
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy logs')
     }
   }, [buildLogs])
@@ -235,8 +235,8 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   const screenshotUrl = useMemo(() => {
     if (!deployment) return null
     const screenshotId = isDark
-      ? (deployment as any).screenshotDark
-      : (deployment as any).screenshotLight
+      ? (deployment as unknown).screenshotDark
+      : (deployment as unknown).screenshotLight
     if (!screenshotId) return null
     return sdk.forConsole.storage.getFileDownload({
       bucketId: SCREENSHOTS_BUCKET_ID,

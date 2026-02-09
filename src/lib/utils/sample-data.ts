@@ -164,7 +164,7 @@ function generatePolygonValue(): Array<[number, number]> {
 /**
  * Generate a value for an array column
  */
-function generateArrayValue(column: Column, baseType: string): any[] {
+function generateArrayValue(column: Column, baseType: string): unknown[] {
   const itemCount = faker.number.int({ min: 1, max: 5 })
   const baseColumn = { ...column, array: false }
 
@@ -196,8 +196,8 @@ function generateArrayValue(column: Column, baseType: string): any[] {
 /**
  * Generate a single row of sample data based on column definitions
  */
-export function generateSampleRow(columns: Column[]): Record<string, any> {
-  const row: Record<string, any> = {
+export function generateSampleRow(columns: Column[]): Record<string, unknown> {
+  const row: Record<string, unknown> = {
     $id: ID.unique(),
   }
 
@@ -217,7 +217,7 @@ export function generateSampleRow(columns: Column[]): Record<string, any> {
   })
 
   for (const column of validColumns) {
-    let value: any
+    let value: unknown
 
     if (column.array) {
       // Extract base type (remove 'array' prefix if present)
@@ -281,6 +281,6 @@ export function generateSampleRow(columns: Column[]): Record<string, any> {
 export function generateSampleRows(
   columns: Column[],
   count: number,
-): Record<string, any>[] {
+): Record<string, unknown>[] {
   return Array.from({ length: count }, () => generateSampleRow(columns))
 }

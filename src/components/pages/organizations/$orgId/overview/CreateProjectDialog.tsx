@@ -30,7 +30,7 @@ interface CreateProjectDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   teamId: string | null | undefined
-  organizationPlan?: any
+  organizationPlan?: unknown
   currentProjectsCount?: number
 }
 
@@ -55,7 +55,7 @@ export function CreateProjectDialog({
   } = useRegions()
 
   // Check if a region is coming soon (disabled/inactive)
-  const isRegionComingSoon = (region: any): boolean => {
+  const isRegionComingSoon = (region: unknown): boolean => {
     return (
       region.status === 'coming-soon' ||
       region.comingSoon === true ||
@@ -68,13 +68,13 @@ export function CreateProjectDialog({
 
   // Get available (non-coming-soon) regions
   const availableRegions = useMemo(() => {
-    return regions.filter((r: any) => !isRegionComingSoon(r))
+    return regions.filter((r: unknown) => !isRegionComingSoon(r))
   }, [regions])
 
   // Sort regions: available first, inactive/coming soon last
   const sortedRegions = useMemo(() => {
-    const available = regions.filter((r: any) => !isRegionComingSoon(r))
-    const inactive = regions.filter((r: any) => isRegionComingSoon(r))
+    const available = regions.filter((r: unknown) => !isRegionComingSoon(r))
+    const inactive = regions.filter((r: unknown) => isRegionComingSoon(r))
     return [...available, ...inactive]
   }, [regions])
 
@@ -83,7 +83,7 @@ export function CreateProjectDialog({
     if (availableRegions.length > 0 && !selectedRegion) {
       // Prefer Frankfurt (fra) or first available region
       const defaultRegion =
-        availableRegions.find((r: any) => r.$id === 'fra') ||
+        availableRegions.find((r: unknown) => r.$id === 'fra') ||
         availableRegions[0]
       if (defaultRegion) {
         setSelectedRegion(defaultRegion.$id)
@@ -95,8 +95,8 @@ export function CreateProjectDialog({
   const isAdditionalProject = useMemo(() => {
     if (!organizationPlan) return false
 
-    const projectLimit = (organizationPlan?.addons as any)?.projects?.limit
-    const planIncluded = (organizationPlan?.addons as any)?.projects
+    const projectLimit = (organizationPlan?.addons as unknown)?.projects?.limit
+    const planIncluded = (organizationPlan?.addons as unknown)?.projects
       ?.planIncluded
     const limitNum = Number(projectLimit ?? planIncluded)
     const limit = isNaN(limitNum) ? null : limitNum
@@ -110,8 +110,8 @@ export function CreateProjectDialog({
   const additionalProjectPrice = useMemo(() => {
     if (!isAdditionalProject || !organizationPlan) return null
     return (
-      (organizationPlan?.addons as any)?.projects?.price ||
-      (organizationPlan as any)?.additionalProjectPrice ||
+      (organizationPlan?.addons as unknown)?.projects?.price ||
+      (organizationPlan as unknown)?.additionalProjectPrice ||
       null
     )
   }, [isAdditionalProject, organizationPlan])
@@ -183,7 +183,7 @@ export function CreateProjectDialog({
           params: { projectId: result.$id },
         })
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error(error?.message || 'Failed to create project')
     }
   }
@@ -267,7 +267,7 @@ export function CreateProjectDialog({
                       {selectedRegion
                         ? (() => {
                             const region = regions.find(
-                              (r: any) => r.$id === selectedRegion,
+                              (r: unknown) => r.$id === selectedRegion,
                             )
                             if (!region) return 'Select a region'
                             const flagCode = region.flag || ''
@@ -303,7 +303,7 @@ export function CreateProjectDialog({
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {sortedRegions.map((region: any, index: number) => {
+                    {sortedRegions.map((region: unknown, index: number) => {
                       const flagCode = region.flag || ''
                       const regionName = region.name || region.$id || 'Unknown'
                       const flagUrl = flagCode

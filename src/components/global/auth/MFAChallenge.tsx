@@ -66,7 +66,7 @@ export async function verifyMFAChallenge(
       activeChallenge = await sdk.forConsole.account.createMFAChallenge({
         factor: challengeType,
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If challenge creation fails for TOTP/Recovery, try verification without challenge
       // Some SDKs might handle this differently
       throw new Error(
@@ -169,7 +169,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
       } else {
         setChallenge(null)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setError(error.message || 'Failed to create challenge')
       toast.error(error.message || 'Failed to create challenge')
     } finally {
@@ -195,7 +195,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
             factor: challengeType,
           })
           setChallenge(activeChallenge)
-        } catch (error: any) {
+        } catch (error: unknown) {
           // If challenge creation fails, try to verify anyway (SDK might handle it)
           console.warn(
             'Failed to create challenge for TOTP/Recovery, attempting verification:',
@@ -224,7 +224,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
       // This ensures all components and loaders start fresh with the authenticated state
       window.location.href = targetUrl
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const errorMessage = error.message || 'Failed to verify code'
       setError(errorMessage)
       setCode('')
@@ -249,7 +249,7 @@ export function MFAChallenge({ factors, redirect }: MFAChallengeProps) {
     try {
       // Delete current session to cancel MFA flow
       await sdk.forConsole.account.deleteSession({ sessionId: 'current' })
-    } catch (error) {
+    } catch {
       // Ignore errors - session might not exist
     }
     navigate({ to: '/sign-in' })

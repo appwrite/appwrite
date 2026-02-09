@@ -1,12 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
-import {
-  ArrowLeft,
-  Hash,
-  Mail,
-  Phone,
-  Bell,
-} from 'lucide-react'
+import { ArrowLeft, Hash, Mail, Phone, Bell } from 'lucide-react'
 import {
   useTopic,
   useTopicSubscribers,
@@ -27,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-
 
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -107,10 +100,8 @@ export function TopicDetailView() {
     })
   }, [projectId, subscribers])
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-
   // Delete topic mutation
-  const deleteTopicMutation = useMutation({
+  useMutation({
     mutationFn: async () => {
       if (!projectId || !topicId) {
         throw new Error('Project ID and Topic ID are required')
@@ -207,9 +198,6 @@ export function TopicDetailView() {
       </div>
     )
   }
-
-  const totalSubscribers =
-    (topic.emailTotal || 0) + (topic.smsTotal || 0) + (topic.pushTotal || 0)
 
   return (
     <div className="flex flex-col">
