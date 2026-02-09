@@ -61,7 +61,14 @@ class RealtimeConsoleClientTest extends Scope
         ]);
 
         // Wait for attribute to be available
-        sleep(5);
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $attribute = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actorsId . '/attributes/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(200, $attribute['headers']['status-code']);
+            $this->assertEquals('available', $attribute['body']['status']);
+        }, 120000, 500);
 
         return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
     }
@@ -109,7 +116,7 @@ class RealtimeConsoleClientTest extends Scope
             ], $this->getHeaders()));
             $this->assertEquals(200, $column['headers']['status-code']);
             $this->assertEquals('available', $column['body']['status']);
-        }, 30000, 500);
+        }, 120000, 500);
 
         return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
     }
@@ -131,7 +138,14 @@ class RealtimeConsoleClientTest extends Scope
         ]);
 
         // Wait for index to be available
-        sleep(5);
+        $this->assertEventually(function () use ($data) {
+            $index = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['actorsId'] . '/indexes/key_name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals('available', $index['body']['status']);
+        }, 120000, 500);
 
         return $data;
     }
@@ -160,7 +174,7 @@ class RealtimeConsoleClientTest extends Scope
             ], $this->getHeaders()));
             $this->assertEquals(200, $index['headers']['status-code']);
             $this->assertEquals('available', $index['body']['status']);
-        }, 60000, 500);
+        }, 120000, 500);
 
         return $data;
     }
