@@ -5092,6 +5092,31 @@ class ProjectsConsoleClientTest extends Scope
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
 
+        /** Ensure any hostname is allowed */
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-dev-key' => $devKey['secret'],
+            'origin' => '',
+            'referer' => 'https://domain-without-rule.com'
+        ], [
+            'success' => 'https://domain-without-rule.com',
+            'failure' => 'https://domain-without-rule.com'
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-dev-key' => $devKey['secret'],
+            'referer' => '',
+            'origin' => 'https://domain-without-rule.com'
+        ], [
+            'success' => 'https://domain-without-rule.com',
+            'failure' => 'https://domain-without-rule.com'
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+
         /** Test hostname in Magic URL */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
             'content-type' => 'application/json',
@@ -5112,6 +5137,95 @@ class ProjectsConsoleClientTest extends Scope
             'userId' => ID::unique(),
             'email' => 'user@appwrite.io',
             'url' => 'https://example.com',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+    }
+
+    public function testRuleOAuthRedirect(): void
+    {
+        // Prepare project
+        $projectId = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'testRuleOAuthRedirect',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $provider = 'mock';
+        $appId = '1';
+        $secret = '123456';
+
+        // Prepare OAuth provider
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Prepare rule. In reality this is site rule, but for testing, API rule is enough, and faster to prepare
+        $domain = \uniqid() . '-with-rule.custom.localhost';
+        $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/api', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+        ], $this->getHeaders()), [
+            'domain' => $domain
+        ]);
+
+        $this->assertEquals(201, $rule['headers']['status-code']);
+
+        // Ensure unknown domain cannot be redirect URL
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'referer' => 'https://' . $domain,
+            'origin' => '',
+        ], [
+            'success' => 'https://domain-without-rule.com',
+            'failure' => 'https://domain-without-rule.com'
+        ], followRedirects: false);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Ensure rule's domain can be redirect URL
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'referer' => 'https://' . $domain,
+            'origin' => '',
+        ], [
+            'success' => 'https://' . $domain,
+            'failure' => 'https://' . $domain
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+
+        // Ensure unknown domain cannot be redirect URL
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'referer' => 'https://' . $domain,
+            'origin' => '',
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'user@appwrite.io',
+            'url' => 'https://domain-without-rule.com',
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Ensure rule's domain can be redirect URL
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'referer' => 'https://' . $domain,
+            'origin' => '',
+        ], [
+            'userId' => ID::unique(),
+            'email' => 'user@appwrite.io',
+            'url' => 'https://' . $domain,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
     }
