@@ -358,14 +358,14 @@ class Realtime extends MessagingAdapter
 
             if (\array_key_exists($paramKey, $reservedParamExpectedTypes) && $params !== null) {
                 $expectedType = $reservedParamExpectedTypes[$paramKey];
-                $isRoutingType = match ($expectedType) {
+                $isExpectedType = match ($expectedType) {
                     'array' => \is_array($params),
                     'string' => \is_string($params),
                     default => false,
                 };
 
-                // If the value matches the expected routing type, do NOT use it as queries
-                if ($isRoutingType) {
+                // If the value matches the expected type dont use it the queries
+                if ($isExpectedType) {
                     $params = null;
                 }
             }
