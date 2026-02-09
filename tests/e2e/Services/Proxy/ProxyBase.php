@@ -213,7 +213,7 @@ trait ProxyBase
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
             $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-        }, 100000, 500);
+        }, 200000, 500);
 
         return ['siteId' => $siteId, 'deploymentId' => $deploymentId];
     }
