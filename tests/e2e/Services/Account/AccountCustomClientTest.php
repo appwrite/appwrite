@@ -3740,10 +3740,26 @@ class AccountCustomClientTest extends Scope
 
     public function testCreateSessionWithMagicUrl(): void
     {
-        $data = $this->setupMagicUrl();
-        $id = $data['id'];
-        $token = $data['token'];
-        $email = $data['email'];
+        $projectId = $this->getProject()['$id'];
+
+        // Get a fresh magic URL token - the cached one may have been consumed by setupMagicUrlSession
+        $email = \uniqid() . 'magicurl@localhost.test';
+
+        $tokenResponse = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+        ]);
+
+        $this->assertEquals(201, $tokenResponse['headers']['status-code']);
+        $id = $tokenResponse['body']['userId'];
+
+        $lastEmail = $this->getLastEmailByAddress($email);
+        $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
+        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
 
         /**
          * Test for SUCCESS
@@ -3751,7 +3767,7 @@ class AccountCustomClientTest extends Scope
         $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => $projectId,
         ]), [
             'userId' => $id,
             'secret' => $token,
