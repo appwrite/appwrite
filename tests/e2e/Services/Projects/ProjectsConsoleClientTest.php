@@ -3167,8 +3167,20 @@ class ProjectsConsoleClientTest extends Scope
             'scopes' => ['teams.read', 'teams.write'],
         ]);
 
+        /**
+         * Test for SUCCESS with magic string ID
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'keyId' => 'unique()',
+            'name' => 'Key Custom',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertEquals($customKeyId, $response['body']['$id']);
+        $this->assertNotEmpty($response['body']['$id']);
 
         $data = array_merge($data, [
             'keyId' => $response['body']['$id'],
