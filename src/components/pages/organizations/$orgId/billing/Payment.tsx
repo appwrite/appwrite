@@ -39,7 +39,6 @@ import {
   useSetOrganizationBackupPaymentMethod,
   usePaymentMethods,
 } from '@/lib/react-query/hooks'
-import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 
 interface PaymentModalProps {

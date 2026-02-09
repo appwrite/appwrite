@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  Key,
   Loader2,
   Plus,
   Code,
@@ -20,7 +19,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Textarea } from '@/components/ui/textarea'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { VariableEditor } from '@/components/global/shared/VariableEditor'
 import {
@@ -36,13 +34,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+
+
 import {
   Table,
   TableBody,

@@ -4,7 +4,6 @@ import {
   useNavigate,
   useLocation,
   useSearch,
-  Outlet,
   useMatches,
 } from '@tanstack/react-router'
 import {
@@ -13,19 +12,16 @@ import {
   Search,
   ChevronDown,
   Check,
-  Filter,
   UserPlus,
   Users,
   Shield,
   MoreHorizontal,
-  Download,
   FileText,
   ShieldCheck,
   Mail,
   Trash2,
   CheckCircle2,
   XCircle,
-  ExternalLink,
   Key,
   AlertTriangle,
   AlertCircle,
@@ -41,7 +37,6 @@ import { type Organization, type TeamMember } from '@/lib/utils/mock-data'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { PlatformIcon } from '@/components/global/shared/Icon'
 import {
   useOrganizationMemberships,
   organizationsQueryOptions,
@@ -70,7 +65,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -90,7 +84,6 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { CommandCenter } from '@/components/global/shared/CommandCenter'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import { cn } from '@/lib/utils'
-import { formatDate } from '@/lib/date-utils'
 import { getPlanBadgeColor } from '@/lib/utils/plan-badge'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { BillingTab } from '../billing/BillingTab'

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useParams, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import {
   useProjectDomains,
   useCreateDomain,

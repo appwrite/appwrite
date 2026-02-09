@@ -25,7 +25,6 @@ import {
   X,
   GitBranch,
   LayoutTemplate,
-  ArrowRight,
 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'

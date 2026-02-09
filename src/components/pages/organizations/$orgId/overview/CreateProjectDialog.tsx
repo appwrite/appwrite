@@ -4,7 +4,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -12,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Info, Globe, Check } from 'lucide-react'
+import { Info, Globe } from 'lucide-react'
 import { useCreateProject, useRegions } from '@/lib/react-query/hooks'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'

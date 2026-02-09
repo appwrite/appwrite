@@ -11,7 +11,6 @@ import {
   List,
   LayoutGrid,
   ArrowLeft,
-  Trash2,
   AlertCircle,
 } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
@@ -48,7 +47,6 @@ import { useNavigate, useParams } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import { ID } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { UploadFile } from '../_components/UploadFile'
 import { BucketSettings } from '../_components/BucketSettings'

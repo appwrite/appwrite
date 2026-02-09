@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Plus, Clock, Ticket, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Ticket, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatCurrency, formatDate } from './utils'
 import { cn } from '@/lib/utils'
@@ -18,7 +18,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import type { Models } from '@appwrite.io/console'
 
 /**
  * AvailableCreditsSection Component

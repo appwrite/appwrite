@@ -1,6 +1,5 @@
 import { BillingPlan } from '@appwrite.io/console'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
-import { cn } from '@/lib/utils'
 
 interface PlanComparisonBoxProps {
   currentPlan: BillingPlan | string

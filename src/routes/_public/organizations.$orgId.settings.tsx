@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { organizationsQueryOptions } from '@/lib/react-query/hooks'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/settings')({
   loader: async ({ params, context }) => {

@@ -17,7 +17,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
@@ -32,7 +31,6 @@ import {
   Monitor,
 } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { cn } from '@/lib/utils'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
 import { Browser } from '@appwrite.io/console'

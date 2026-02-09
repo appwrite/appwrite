@@ -8,22 +8,16 @@ import {
   List,
   LayoutGrid,
   MessageSquare,
-  Hash,
-  Settings,
 } from 'lucide-react'
 import {
   useProjectMessages,
   useProjectTopics,
   useProjectProviders,
-  fetchProjectMessages,
-  fetchProjectTopics,
-  fetchProjectProviders,
   useProject,
   useOrganizationPlan,
 } from '@/lib/react-query/hooks'
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { ResourceCard } from '../shared/ResourceCard'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -46,18 +40,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+
+
 import { Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
-import { PlanLimitWarning } from '../shared/PlanLimitWarning'
 import { MessagingProviderIcon } from '@/components/global/shared/MessagingProviderIcon'
 
 export function View() {

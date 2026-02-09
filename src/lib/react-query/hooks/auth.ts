@@ -11,7 +11,6 @@ import {
   queryOptions,
 } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
-import { Dependencies } from './dependencies'
 import { DEFAULT_STALE_TIME } from './constants'
 
 // ============================================================================

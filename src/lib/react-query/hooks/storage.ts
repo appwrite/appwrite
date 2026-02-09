@@ -4,7 +4,7 @@
  * Handles buckets, files, and file tokens.
  */
 
-import { useQuery, useQueryClient, queryOptions } from '@tanstack/react-query'
+import { useQuery, queryOptions } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'

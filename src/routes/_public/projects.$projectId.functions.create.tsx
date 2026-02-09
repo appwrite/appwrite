@@ -8,10 +8,7 @@
 import { createFileRoute, Outlet, useParams } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import {
-  fetchVcsInstallations,
-  fetchProjectRuntimes,
   fetchFunctionTemplates,
-  fetchFunctionSpecifications,
   fetchProject,
   vcsInstallationsQueryOptions,
   projectRuntimesQueryOptions,

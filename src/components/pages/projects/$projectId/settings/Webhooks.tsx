@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useParams, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useProjectWebhooks } from '@/lib/react-query/hooks'
-import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,

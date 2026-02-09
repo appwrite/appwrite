@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Key } from 'lucide-react'
 import { useParams } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { ApiKeysList } from '../shared/ApiKeysList'

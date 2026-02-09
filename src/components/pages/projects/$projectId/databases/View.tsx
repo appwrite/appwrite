@@ -32,7 +32,6 @@ import {
   Download,
   FileJson,
   FileText,
-  Code,
   Copy,
   Pencil,
 } from 'lucide-react'
@@ -80,7 +79,6 @@ import {
 import { BackupsView } from './Backups'
 import { CreateDatabase } from './CreateDatabase'
 import { CreateTable } from './CreateTable'
-import { ComingSoonView } from '../shared/ComingSoon'
 import { ComingSoonCurtain } from '@/components/ui/coming-soon-curtain'
 import { SchemaVisualizer } from './SchemaVisualizer'
 import { SchemaExportDialog } from './SchemaExport'
@@ -138,7 +136,6 @@ const getIndexTypeColor = (type: string) => {
 }
 
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
-import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { ResourceCard } from '../shared/ResourceCard'
 import { Card } from '@/components/ui/card'
@@ -164,10 +161,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
@@ -202,7 +195,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,

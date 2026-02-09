@@ -7,7 +7,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Ticket } from 'lucide-react'
-import { formatCardExpiry, maskCardNumber } from '../utils'
 import type { Models } from '@appwrite.io/console'
 
 interface PaymentMethodDropdownProps {

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Plus, Plug2 } from 'lucide-react'
+import { Plug2 } from 'lucide-react'
 import { useParams } from '@tanstack/react-router'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { PlatformIcon } from '@/components/global/shared/Icon'

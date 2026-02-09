@@ -6,7 +6,6 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { useFile, useBucket, Dependencies } from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { CopyableId } from '@/components/global/shared/CopyableId'
@@ -17,44 +16,26 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+
+
+
+
 import {
   ArrowLeft,
   Loader2,
-  Trash2,
   Download,
-  Copy,
-  MoreHorizontal,
-  Plus,
   ExternalLink,
   File,
   AlertCircle,
 } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
-import { formatDateTime } from '@/lib/date-utils'
 import { cn } from '@/lib/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Link } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
-import { ID } from '@appwrite.io/console'
 
 export function FileView() {
   const { projectId, bucketId, fileId } = useParams({

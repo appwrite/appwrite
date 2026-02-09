@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useParams } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { CopyableId } from '@/components/global/shared/CopyableId'
 import {
   RefreshControls,
   type RefreshInterval,

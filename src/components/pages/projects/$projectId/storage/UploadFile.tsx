@@ -4,11 +4,9 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { Alert, AlertDescription } from '@/components/ui/alert'

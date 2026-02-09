@@ -1,12 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
-import { cn } from '@/lib/utils'
 import {
   ArrowLeft,
   Hash,
-  Settings,
-  Plus,
-  Trash2,
   Mail,
   Phone,
   Bell,
@@ -16,14 +12,13 @@ import {
   useTopicSubscribers,
   fetchUser,
 } from '@/lib/react-query/hooks'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../../../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -32,18 +27,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+
+
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function View() {
   const { projectId, topicId } = useParams({

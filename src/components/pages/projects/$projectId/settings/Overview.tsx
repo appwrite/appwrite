@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useParams, useNavigate, useSearch } from '@tanstack/react-router'
+import { useNavigate, useSearch } from '@tanstack/react-router'
 import {
-  Key,
   Loader2,
   Plus,
   Code,
@@ -9,8 +8,6 @@ import {
   Eye,
   EyeOff,
   Globe,
-  Trash2,
-  Pencil,
   XCircle,
   MoreHorizontal,
   AlertTriangle,
@@ -25,8 +22,6 @@ import {
   Folder,
   Building2,
   UserCircle,
-  ArrowUp,
-  Download,
   Shield,
   CreditCard,
 } from 'lucide-react'
@@ -41,23 +36,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
-import { CopyableId } from '@/components/global/shared/CopyableId'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+
+
 import {
   Select,
   SelectContent,
@@ -73,7 +62,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Separator } from '@/components/ui/separator'
-import { formatDateTime } from '@/lib/date-utils'
 import { cn } from '@/lib/utils'
 import { ApiService } from '@appwrite.io/console'
 import {
@@ -90,9 +78,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { VariableEditor } from '@/components/global/shared/VariableEditor'
 import {

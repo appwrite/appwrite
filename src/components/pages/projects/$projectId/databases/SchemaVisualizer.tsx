@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
-import { useParams, useNavigate, Link } from '@tanstack/react-router'
+import { useParams, useNavigate } from '@tanstack/react-router'
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   useAllProjectTablesForVisualizer,
@@ -26,9 +26,7 @@ import {
   Check,
   FileJson,
   FileText,
-  Code,
   ExternalLink,
-  ChevronRight,
   Link2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -43,10 +41,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -62,7 +56,6 @@ import { toast } from 'sonner'
 import {
   fetchDatabaseSchema,
   formatSchemaAsJSON,
-  formatSchemaAsMarkdown,
 } from '@/lib/utils/database-schema-export'
 import { useQuery } from '@tanstack/react-query'
 
@@ -426,7 +419,7 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       const { width, layoutHeight, renderHeight } = nodeDimensions[index]
 
       // Try to use stored position first
-      let storedPosition = initialPositionsRef.current.get(table.$id)
+      const storedPosition = initialPositionsRef.current.get(table.$id)
       let x: number = startX + col * baseSpacing
       let y: number = startY + row * baseSpacing
       let useStoredPosition = false

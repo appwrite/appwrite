@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
-import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
-import { cn } from '@/lib/utils'
-import { ArrowLeft, Hash, Settings, Trash2 } from 'lucide-react'
+import { useParams, useNavigate } from '@tanstack/react-router'
+import { ArrowLeft, Hash, Trash2 } from 'lucide-react'
 import { useTopic } from '@/lib/react-query/hooks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
@@ -16,11 +15,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import type { Models } from '@appwrite.io/console'
 
 export function View() {
   const { projectId, topicId } = useParams({

@@ -13,9 +13,6 @@ import {
   Monitor,
   Smartphone,
   Tablet,
-  LogIn,
-  LogOut,
-  Clock,
   Users,
   UserPlus,
 } from 'lucide-react'
@@ -35,7 +32,6 @@ import {
   YAxis,
   BarChart,
   Bar,
-  Cell,
 } from 'recharts'
 import {
   Map,
@@ -47,13 +43,11 @@ import {
   useMap,
 } from '@/components/ui/map'
 import { sdk } from '@/lib/appwrite/sdk'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from '@/components/ui/chart'
 
 // Types

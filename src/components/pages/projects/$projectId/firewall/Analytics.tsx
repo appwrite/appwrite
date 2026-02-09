@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
 import {
-  Shield,
   ShieldCheck,
   ShieldX,
   TrendingUp,
@@ -8,24 +7,19 @@ import {
   Activity,
   AlertTriangle,
   Globe,
-  Clock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
-  Cell,
   Legend,
 } from 'recharts'
 import { format } from 'date-fns'
 import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   mockFirewallAnalytics,

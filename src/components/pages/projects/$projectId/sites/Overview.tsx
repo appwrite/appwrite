@@ -1,22 +1,16 @@
 import { useParams, Link } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import {
   useProjectSite,
   useSiteDeployments,
   useSiteDeployment,
   useDeploymentProxyRules,
-  deleteSiteDeployment,
   Dependencies,
 } from '@/lib/react-query/hooks'
 import {
-  CheckCircle2,
-  Clock,
-  AlertCircle,
   Globe,
   Download,
-  Trash2,
   RefreshCw,
-  Play,
   FileCode,
   Package,
   ChevronDown,
@@ -48,16 +42,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import {
-  TooltipProvider,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip'
-import * as TooltipPrimitive from '@radix-ui/react-tooltip'
+
+
 import { useQueryClient, useMutation } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
-import { cn } from '@/lib/utils'
 import { formatBytes } from '@/lib/utils/mock-data'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'

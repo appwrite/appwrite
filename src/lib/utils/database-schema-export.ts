@@ -4,7 +4,6 @@
  * Generates database schema in various formats for AI agents and IDEs
  */
 
-import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import {
   fetchProjectTableColumns,

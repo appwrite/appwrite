@@ -38,7 +38,6 @@ import {
 import { useQuery } from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import { AddressModal } from './Address'
 import { DeleteAddressModal } from './DeleteAddress'

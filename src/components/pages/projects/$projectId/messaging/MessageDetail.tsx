@@ -19,17 +19,15 @@ import {
 import {
   useMessage,
   useMessageTargets,
-  useTopic,
   fetchTopic,
   fetchUser,
   useProject,
   useProjectTopics,
   useProjectUsers,
 } from '@/lib/react-query/hooks'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ServiceHeader } from '../shared/ServiceHeader'
 import { CopyableId } from '@/components/global/shared/CopyableId'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
@@ -58,7 +56,6 @@ import { getErrorMessage } from '@/lib/utils/error-formatting'
 import type { Models } from '@appwrite.io/console'
 import { formatDateTime } from '@/lib/date-utils'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { Pagination } from '@/components/global/shared/Pagination'
 
 export function MessageDetailView() {
   const { projectId, messageId } = useParams({

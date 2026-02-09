@@ -157,7 +157,7 @@ export async function clearOldUploads(
     const cutoffTime = Date.now() - olderThanMs
     const statuses: UploadStatus[] = ['completed', 'failed', 'cancelled']
     let completed = 0
-    let total = statuses.length
+    const total = statuses.length
 
     if (total === 0) {
       resolve()

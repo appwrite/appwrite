@@ -1,4 +1,3 @@
-import { redirect } from '@tanstack/react-router'
 import { createFileRoute } from '@tanstack/react-router'
 
 // Helper function to check if we're on an auth page

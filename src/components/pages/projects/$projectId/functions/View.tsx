@@ -7,7 +7,7 @@ import {
   Link,
 } from '@tanstack/react-router'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
-import { Plus, Clock, Zap, Play, FileCode } from 'lucide-react'
+import { Plus, Clock, Play, FileCode } from 'lucide-react'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { ServiceHeader, type Tab } from '../shared/ServiceHeader'
 import { ResourceCard } from '../shared/ResourceCard'
@@ -16,12 +16,10 @@ import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import {
   useProjectFunctions,
-  Dependencies,
   useProject,
   useOrganizationPlan,
   fetchProjectFunctions,
 } from '@/lib/react-query/hooks'
-import { sdk } from '@/lib/appwrite/sdk'
 import type { Models } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import {

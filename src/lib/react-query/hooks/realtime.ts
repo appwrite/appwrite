@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { DateRange } from 'react-day-picker'
 import {
   subMinutes,
-  format,
   eachMinuteOfInterval,
   startOfMinute,
 } from 'date-fns'

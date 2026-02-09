@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { uploadManager } from './upload-manager'
-import type { UploadItem, UploadProgress } from './types'
+import type { UploadItem } from './types'
 
 export function useUploadQueue(projectId?: string, bucketId?: string) {
   const [uploads, setUploads] = useState<UploadItem[]>([])

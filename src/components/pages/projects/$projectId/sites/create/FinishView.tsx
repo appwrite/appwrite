@@ -19,7 +19,6 @@ import {
   GitBranch,
   Share2,
   Smartphone,
-  Plus,
   ArrowRight,
 } from 'lucide-react'
 import {
@@ -28,14 +27,12 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   useProjectSite,
   useSiteDeployment,
   useSiteDomains,
 } from '@/lib/react-query/hooks'
-import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 
 const SCREENSHOTS_BUCKET_ID = 'screenshots'

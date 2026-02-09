@@ -5,10 +5,9 @@ import {
   List,
   LayoutGrid,
   Lock,
-  Trash2,
   Folder,
 } from 'lucide-react'
-import { formatBytes, formatNumber } from '@/lib/utils/mock-data'
+import { formatBytes } from '@/lib/utils/mock-data'
 import {
   useProjectBuckets,
   Dependencies,

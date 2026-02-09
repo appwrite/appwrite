@@ -34,11 +34,8 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp'
-import { Separator } from '@/components/ui/separator'
 import { UpgradeCurtain } from '@/components/ui/upgrade-curtain'
-import { cn } from '@/lib/utils'
 import {
-  createTimeUnitPair,
   toSeconds,
   fromSeconds,
   type TimeUnit,

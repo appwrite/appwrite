@@ -16,7 +16,6 @@ import {
   Shield,
   CheckCircle2,
   HelpCircle,
-  AlertCircle,
   Download,
   Sun,
   Moon,
@@ -40,7 +39,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import {
   Popover,
   PopoverContent,
@@ -89,7 +87,6 @@ import {
 import { sdk } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
 import { toast } from 'sonner'
-import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 

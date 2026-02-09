@@ -10,10 +10,8 @@ import { getBaseEndpoint } from '@/lib/appwrite/sdk'
 import {
   ArrowLeft,
   CheckCircle2,
-  XCircle,
   X,
   Trash2,
-  MoreVertical,
   Mail,
   Phone,
   Smartphone,
@@ -24,9 +22,7 @@ import {
   Loader2,
   Plus,
   LogOut,
-  AlertCircle,
   Info,
-  Ghost,
   Globe,
   Tablet,
   Monitor,
@@ -61,12 +57,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+
+
 import {
   Select,
   SelectContent,
@@ -108,7 +100,7 @@ import {
   useDeleteProjectUser,
 } from '@/lib/react-query/hooks/users'
 import { useProject } from '@/lib/react-query/hooks'
-import { ID, Browser } from '@appwrite.io/console'
+import { Browser } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 
 const DEFAULT_PAGE_SIZE = 25

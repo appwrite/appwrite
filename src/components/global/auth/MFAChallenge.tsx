@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { useNavigate, useRouter } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { AuthenticationFactor } from '@appwrite.io/console'

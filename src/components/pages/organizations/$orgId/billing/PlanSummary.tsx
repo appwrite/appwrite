@@ -25,7 +25,6 @@ import {
 } from '@/lib/react-query/hooks'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'
 import { Link } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 
 /**
  * PlanSummary Component

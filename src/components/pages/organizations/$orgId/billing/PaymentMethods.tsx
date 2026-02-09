@@ -2,8 +2,6 @@ import {
   CreditCard,
   Plus,
   MoreHorizontal,
-  Building2,
-  AlertCircle,
   Info,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,7 +9,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,

@@ -1543,7 +1543,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
     // Parse existing provider data
     const enabled = providerData.enabled ?? false
     const appId = providerData.appId || ''
-    let secret = providerData.secret || ''
+    const secret = providerData.secret || ''
 
     // Try to parse secret as JSON for special providers
     let secretData: any = {}
@@ -2032,7 +2032,7 @@ export function AuthSettings({ projectId }: AuthSettingsProps) {
       // Compare special form data with existing provider data
       const enabled = providerData.enabled ?? false
       const appId = providerData.appId || ''
-      let secret = providerData.secret || ''
+      const secret = providerData.secret || ''
 
       // Parse secret
       let secretData: any = {}

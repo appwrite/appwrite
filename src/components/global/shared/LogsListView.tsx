@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { useState, useLayoutEffect, useRef } from 'react'
 import { useNavigate, useLocation } from '@tanstack/react-router'
 import { Zap, Clock, Copy, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'

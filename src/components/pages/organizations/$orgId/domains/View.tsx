@@ -1,23 +1,19 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
   Globe,
   List,
   LayoutGrid,
   MoreHorizontal,
-  RefreshCw,
   CheckCircle2,
-  XCircle,
   AlertCircle,
   Search,
   Plus,
 } from 'lucide-react'
 import {
   useOrganizationDomains,
-  fetchOrganizationDomains,
 } from '@/lib/react-query/hooks'
 import { ResourceCard } from '@/components/pages/projects/$projectId/shared/ResourceCard'
-import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -56,7 +52,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { CreateDomainDialog } from './CreateDomain'
-import { DeleteDomainDialog } from './DeleteDomain'
 import { RetryVerification } from './RetryVerification'
 import type { Models } from '@appwrite.io/console'
 import {

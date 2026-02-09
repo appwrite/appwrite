@@ -8,7 +8,6 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  Key,
   Loader2,
   Plus,
   Code,

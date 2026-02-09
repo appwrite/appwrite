@@ -10,7 +10,7 @@ import {
 import { usePresetRecords, useCreateDnsRecord } from '@/lib/react-query/hooks'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import { Loader2, List } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 interface AddPresetDialogProps {
   open: boolean

@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { useAccountIdentities, useMFAFactors } from '@/lib/react-query/hooks'
@@ -29,17 +29,14 @@ import {
   Trash2,
   Mail,
   Smartphone,
-  Lock,
   LockOpen,
   CheckCircle2,
   XCircle,
-  Plus,
   Copy,
   Check,
 } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { InitialsAvatar } from '@/components/global/shared/Avatar'
-import { cn } from '@/lib/utils'
 import { AuthenticatorType, AuthenticationFactor } from '@appwrite.io/console'
 import { Link } from '@tanstack/react-router'
 import type { Models } from '@appwrite.io/console'

@@ -20,7 +20,7 @@ import {
 import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
-import { Loader2, Key, Upload } from 'lucide-react'
+import { Loader2, Upload } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ID } from '@appwrite.io/console'

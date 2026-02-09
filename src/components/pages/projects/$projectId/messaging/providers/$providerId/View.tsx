@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
-import { cn } from '@/lib/utils'
 import { ArrowLeft, Mail, Phone, Bell, Trash2, Settings } from 'lucide-react'
 import { useProvider, useProject } from '@/lib/react-query/hooks'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -9,7 +8,6 @@ import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -22,17 +20,11 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { formatDateTime } from '@/lib/date-utils'
 import { MessagingProviderIcon } from '@/components/global/shared/MessagingProviderIcon'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+
+
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
-import type { Models } from '@appwrite.io/console'
 
 export function View() {
   const { projectId, providerId } = useParams({

@@ -8,8 +8,6 @@
 import { createFileRoute, Outlet, useParams } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import {
-  fetchVcsInstallations,
-  fetchSiteFrameworks,
   vcsInstallationsQueryOptions,
   siteFrameworksQueryOptions,
   siteTemplatesQueryOptions,

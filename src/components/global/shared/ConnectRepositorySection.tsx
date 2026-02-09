@@ -27,8 +27,6 @@ import { toast } from 'sonner'
 import { RepositoryPicker } from '@/components/global/shared/RepositoryPicker'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
-import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
-import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { cn } from '@/lib/utils'
 
 const REPO_PAGE_SIZE = 10

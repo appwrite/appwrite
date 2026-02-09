@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, Link } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
 import { MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Pagination } from '@/components/global/shared/Pagination'

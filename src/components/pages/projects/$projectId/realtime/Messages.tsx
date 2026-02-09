@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useLocation } from '@tanstack/react-router'
+import { useLocation } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'

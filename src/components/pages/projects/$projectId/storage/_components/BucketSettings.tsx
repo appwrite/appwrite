@@ -25,19 +25,17 @@ import {
 } from '@/components/ui/select'
 import { CopyableId } from '@/components/global/shared/CopyableId'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
-import { Loader2, FolderOpen, Trash2, X, Plus } from 'lucide-react'
+import { Loader2, FolderOpen, X, Plus } from 'lucide-react'
 import { formatBytes } from '@/lib/utils/mock-data'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { useNavigate } from '@tanstack/react-router'
-import type { Models } from '@appwrite.io/console'
 
 export function BucketSettings() {
   const { projectId, bucketId } = useParams({
