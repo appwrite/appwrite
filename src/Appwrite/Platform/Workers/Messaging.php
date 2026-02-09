@@ -201,8 +201,8 @@ class Messaging extends Action
                     $countryCodes[$countryCode] = ($countryCodes[$countryCode] ?? 0) + 1;
                 }
             }
-            if (!empty($countryCodes)) {
-                Span::add('countryCodes', \json_encode($countryCodes));
+            foreach ($countryCodes as $code => $count) {
+                Span::add('countryCode_' . $code, $count);
             }
         }
 
@@ -431,18 +431,12 @@ class Messaging extends Action
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Log $log): void
     {
-        Span::add('recipientsCount', \count($recipients));
+        Span::add('providerType', 'sms');
 
-        // Extract country codes from phone numbers
-        $countryCodes = [];
-        foreach ($recipients as $recipient) {
-            $countryCode = $this->extractCountryCode($recipient);
-            if ($countryCode !== null) {
-                $countryCodes[$countryCode] = ($countryCodes[$countryCode] ?? 0) + 1;
-            }
-        }
-        if (!empty($countryCodes)) {
-            Span::add('countryCodes', \json_encode($countryCodes));
+        // Extract country code from the single recipient phone number
+        $countryCode = $this->extractCountryCode($recipients[0] ?? '');
+        if ($countryCode !== null) {
+            Span::add('countryCode', $countryCode);
         }
 
         if ($this->adapter === null) {

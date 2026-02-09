@@ -14,7 +14,7 @@ $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
 ?>services:
   traefik:
-    image: traefik:2.11
+    image: traefik:3.6
     container_name: appwrite-traefik
     <<: *x-logging
     command:

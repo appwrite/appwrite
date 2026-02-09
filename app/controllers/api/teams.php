@@ -26,7 +26,6 @@ use Appwrite\Utopia\Response;
 use libphonenumber\NumberParseException;
 use libphonenumber\PhoneNumberUtil;
 use MaxMind\Db\Reader;
-use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
@@ -52,13 +51,13 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
+use Utopia\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
 if (!function_exists('getCustomTemplate')) {
     function getCustomTemplate(Document $project, string $type, Locale $locale, string $prefix = 'email'): array
@@ -146,7 +145,7 @@ if (!function_exists('translateEmailTemplate')) {
     }
 }
 
-App::post('/v1/teams')
+Http::post('/v1/teams')
     ->desc('Create team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].create')
@@ -242,7 +241,7 @@ App::post('/v1/teams')
             ->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::get('/v1/teams')
+Http::get('/v1/teams')
     ->desc('List teams')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -277,16 +276,10 @@ App::get('/v1/teams')
             $queries[] = Query::search('search', $search);
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
@@ -316,7 +309,7 @@ App::get('/v1/teams')
         ]), Response::MODEL_TEAM_LIST);
     });
 
-App::get('/v1/teams/:teamId')
+Http::get('/v1/teams/:teamId')
     ->desc('Get team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -347,7 +340,7 @@ App::get('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::get('/v1/teams/:teamId/prefs')
+Http::get('/v1/teams/:teamId/prefs')
     ->desc('Get team preferences')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -386,7 +379,7 @@ App::get('/v1/teams/:teamId/prefs')
         $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
-App::put('/v1/teams/:teamId')
+Http::put('/v1/teams/:teamId')
     ->desc('Update name')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update')
@@ -431,7 +424,7 @@ App::put('/v1/teams/:teamId')
         $response->dynamic($team, Response::MODEL_TEAM);
     });
 
-App::put('/v1/teams/:teamId/prefs')
+Http::put('/v1/teams/:teamId/prefs')
     ->desc('Update preferences')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update.prefs')
@@ -479,7 +472,7 @@ App::put('/v1/teams/:teamId/prefs')
         $response->dynamic($prefs, Response::MODEL_PREFERENCES);
     });
 
-App::delete('/v1/teams/:teamId')
+Http::delete('/v1/teams/:teamId')
     ->desc('Delete team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].delete')
@@ -543,7 +536,7 @@ App::delete('/v1/teams/:teamId')
         $response->noContent();
     });
 
-App::post('/v1/teams/:teamId/memberships')
+Http::post('/v1/teams/:teamId/memberships')
     ->desc('Create team membership')
     ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
@@ -570,16 +563,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
     ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('roles', [], function (Document $project) {
-        if ($project->getId() === 'console') {
-            $roles = array_keys(Config::getParam('roles', []));
-            $roles = array_filter($roles, function ($role) {
-                return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
-            });
-            return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
-        }
-        return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
-    }, 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
+    ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
     ->param('url', '', fn ($redirectValidator) => $redirectValidator, 'URL to redirect the user back to your app from the invitation email. This parameter is not required when an API key is supplied. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['redirectValidator']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
@@ -932,7 +916,7 @@ App::post('/v1/teams/:teamId/memberships')
             );
     });
 
-App::get('/v1/teams/:teamId/memberships')
+Http::get('/v1/teams/:teamId/memberships')
     ->desc('List team memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -977,21 +961,14 @@ App::get('/v1/teams/:teamId/memberships')
         // Set internal queries
         $queries[] = Query::equal('teamInternalId', [$team->getSequence()]);
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
             }
-
 
             $membershipId = $cursor->getValue();
             $cursorDocument = $dbForProject->getDocument('memberships', $membershipId);
@@ -1076,7 +1053,7 @@ App::get('/v1/teams/:teamId/memberships')
         ]), Response::MODEL_MEMBERSHIP_LIST);
     });
 
-App::get('/v1/teams/:teamId/memberships/:membershipId')
+Http::get('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Get team membership')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
@@ -1161,7 +1138,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
 
-App::patch('/v1/teams/:teamId/memberships/:membershipId')
+Http::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Update membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
@@ -1183,16 +1160,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ))
     ->param('teamId', '', new UID(), 'Team ID.')
     ->param('membershipId', '', new UID(), 'Membership ID.')
-    ->param('roles', [], function (Document $project) {
-        if ($project->getId() === 'console') {
-            $roles = array_keys(Config::getParam('roles', []));
-            $roles = array_filter($roles, function ($role) {
-                return !in_array($role, [User::ROLE_APPS, User::ROLE_GUESTS, User::ROLE_USERS]);
-            });
-            return new ArrayList(new WhiteList($roles), APP_LIMIT_ARRAY_PARAMS_SIZE);
-        }
-        return new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE);
-    }, 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
+    ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of strings. Use this param to set the user\'s roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.', false, ['project'])
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1271,7 +1239,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         );
     });
 
-App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
+Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->desc('Update team membership status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
@@ -1438,7 +1406,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         );
     });
 
-App::delete('/v1/teams/:teamId/memberships/:membershipId')
+Http::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->desc('Delete team membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
@@ -1538,7 +1506,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $response->noContent();
     });
 
-App::get('/v1/teams/:teamId/logs')
+Http::get('/v1/teams/:teamId/logs')
     ->desc('List team logs')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
