@@ -527,12 +527,12 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            $this->getRecordIdParam() => 'person10',
+            $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'fullName' => 'Stevie Wonder',
                 'libraries' => [
                     [
-                        '$id' => 'library10',
+                        '$id' => ID::unique(),
                         '$permissions' => [
                             Permission::read(Role::any()),
                             Permission::update(Role::any()),
@@ -541,7 +541,7 @@ trait DatabasesBase
                         'libraryName' => 'Library 10',
                     ],
                     [
-                        '$id' => 'library11',
+                        '$id' => ID::unique(),
                         '$permissions' => [
                             Permission::read(Role::any()),
                             Permission::update(Role::any()),
@@ -5659,6 +5659,7 @@ trait DatabasesBase
             'type' => Database::RELATION_ONE_TO_ONE,
             'key' => 'library',
             'twoWay' => true,
+            'twoWayKey' => 'person',
             'onDelete' => Database::RELATION_MUTATE_CASCADE,
         ]);
 
@@ -6300,7 +6301,7 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, count($response['body'][$this->getRecordResource()]));
-        $this->assertEquals('person10', $response['body'][$this->getRecordResource()][0]['$id']);
+        $this->assertNotEmpty($response['body'][$this->getRecordResource()][0]['$id']);
         $this->assertEquals('Stevie Wonder', $response['body'][$this->getRecordResource()][0]['fullName']);
         $this->assertEquals(2, count($response['body'][$this->getRecordResource()][0]['libraries']));
 

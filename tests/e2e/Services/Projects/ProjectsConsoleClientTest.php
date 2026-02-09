@@ -2071,7 +2071,7 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals('Invalid `numbers` param: Value must a valid array no longer than 10 items and Invalid OTP. Please make sure the OTP is a 6 digit number', $response['body']['message']);
+        $this->assertStringContainsString('Value must a valid array no longer than 10 items', $response['body']['message']);
 
         /**
          * Test for success

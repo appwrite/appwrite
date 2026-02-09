@@ -2013,7 +2013,10 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
-        $this->assertEquals($scheduledAt, $message['body']['scheduledAt']);
+        $this->assertEquals(
+            (new \DateTime($scheduledAt))->getTimestamp(),
+            (new \DateTime($message['body']['scheduledAt']))->getTimestamp()
+        );
     }
 
     public function testSendEmail(): array
