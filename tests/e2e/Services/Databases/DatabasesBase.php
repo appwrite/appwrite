@@ -694,12 +694,13 @@ trait DatabasesBase
 
     public function testConsoleProject(): void
     {
-        $data = $this->setupCollection();
         if ($this->getSide() === 'server') {
             // Server side can't get past the invalid key check anyway
             $this->expectNotToPerformAssertions();
             return;
         }
+
+        $data = $this->setupCollection();
 
         $response = $this->client->call(
             Client::METHOD_GET,
