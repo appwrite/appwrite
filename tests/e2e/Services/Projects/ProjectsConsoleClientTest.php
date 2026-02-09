@@ -3139,7 +3139,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEmpty($response['body']['sdks']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertEmpty($response['body']['accessedAt']);
-        
+
         /**
          * Test for SUCCESS without key ID
          */
