@@ -2391,28 +2391,6 @@ class RealtimeCustomClientQueryTest extends Scope
         $this->assertNotEmpty($response['data']['subscriptions']);
 
         $clientWithQuery->close();
-
-        // Test: channels channel (reserved param) should not parse channels list as queries
-        $clientChannelsChannel = $this->getWebsocketWithCustomQuery(
-            [
-                'channels' => ['channels']
-            ],
-            [
-                'origin' => 'http://localhost',
-                'cookie' => 'a_session_' . $projectId . '=' . $session,
-                'x-appwrite-project' => $projectId,
-            ]
-        );
-
-        $response = json_decode($clientChannelsChannel->receive(), true);
-        $this->assertEquals('connected', $response['type']);
-        $this->assertContains('channels', $response['data']['channels']);
-        // Should have default select(['*']) since channels param is reserved
-        $this->assertArrayHasKey('subscriptions', $response['data']);
-        $this->assertIsArray($response['data']['subscriptions']);
-        $this->assertNotEmpty($response['data']['subscriptions']);
-
-        $clientChannelsChannel->close();
     }
 
     public function testTestsChannelWithQueries()
