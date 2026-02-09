@@ -64,62 +64,71 @@ class DatabasesStringTypesTest extends Scope
         $this->assertEquals(201, $collection['headers']['status-code']);
         $collectionId = $collection['body']['$id'];
 
+        $base = '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes';
+
         // Create varchar attributes
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/varchar', $headers, [
             'key' => 'varchar_field', 'size' => 255, 'required' => false,
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/varchar', $headers, [
             'key' => 'varchar_with_default', 'size' => 100, 'required' => false, 'default' => 'hello world',
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/varchar', $headers, [
             'key' => 'varchar_required', 'size' => 50, 'required' => true,
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/varchar', $headers, [
             'key' => 'varchar_array', 'size' => 64, 'required' => false, 'array' => true,
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/varchar', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/varchar', $headers, [
             'key' => 'varchar_min', 'size' => 1, 'required' => false,
         ]);
 
+        // Small delay between batches to avoid overwhelming the worker
+        sleep(1);
+
         // Create text attributes
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/text', $headers, [
             'key' => 'text_field', 'required' => false,
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/text', $headers, [
             'key' => 'text_with_default', 'required' => false, 'default' => 'This is a longer default text value that can contain more content.',
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/text', $headers, [
             'key' => 'text_required', 'required' => true,
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/text', $headers, [
             'key' => 'text_array', 'required' => false, 'array' => true,
         ]);
 
+        sleep(1);
+
         // Create mediumtext attributes
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/mediumtext', $headers, [
             'key' => 'mediumtext_field', 'required' => false,
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/mediumtext', $headers, [
             'key' => 'mediumtext_with_default', 'required' => false, 'default' => 'Default mediumtext content',
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/mediumtext', $headers, [
             'key' => 'mediumtext_required', 'required' => true,
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/mediumtext', $headers, [
             'key' => 'mediumtext_array', 'required' => false, 'array' => true,
         ]);
 
+        sleep(1);
+
         // Create longtext attributes
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/longtext', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/longtext', $headers, [
             'key' => 'longtext_field', 'required' => false,
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/longtext', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/longtext', $headers, [
             'key' => 'longtext_with_default', 'required' => false, 'default' => 'Default longtext content for very large text storage',
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/longtext', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/longtext', $headers, [
             'key' => 'longtext_required', 'required' => true,
         ]);
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/longtext', $headers, [
+        $this->client->call(Client::METHOD_POST, $base . '/longtext', $headers, [
             'key' => 'longtext_array', 'required' => false, 'array' => true,
         ]);
 

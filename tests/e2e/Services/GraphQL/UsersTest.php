@@ -533,22 +533,26 @@ class UsersTest extends Scope
     public function testDeleteUserSession()
     {
         $projectId = $this->getProject()['$id'];
+
+        // Create a fresh user with a session specifically for this test
+        $user = $this->getUser(true);
+
         $query = $this->getQuery(self::DELETE_USER_SESSION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'userId' => $this->getUser()['$id'],
-                'sessionId' => $this->getUser()['sessionId'],
+                'userId' => $user['$id'],
+                'sessionId' => $user['sessionId'],
             ]
         ];
 
-        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $result = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertIsNotArray($user['body']);
-        $this->assertEquals(204, $user['headers']['status-code']);
+        $this->assertIsNotArray($result['body']);
+        $this->assertEquals(204, $result['headers']['status-code']);
 
         unset(self::$user[$this->getProject()['$id']]);
         $this->getUser();

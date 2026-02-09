@@ -81,6 +81,8 @@ class DatabasesStringTypesTest extends Scope
             'key' => 'varchar_min', 'size' => 1, 'required' => false,
         ]);
 
+        sleep(1);
+
         // Create text columns
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/text', $headers, [
             'key' => 'text_field', 'required' => false,
@@ -95,6 +97,8 @@ class DatabasesStringTypesTest extends Scope
             'key' => 'text_array', 'required' => false, 'array' => true,
         ]);
 
+        sleep(1);
+
         // Create mediumtext columns
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/mediumtext', $headers, [
             'key' => 'mediumtext_field', 'required' => false,
@@ -108,6 +112,8 @@ class DatabasesStringTypesTest extends Scope
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/mediumtext', $headers, [
             'key' => 'mediumtext_array', 'required' => false, 'array' => true,
         ]);
+
+        sleep(1);
 
         // Create longtext columns
         $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/longtext', $headers, [

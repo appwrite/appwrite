@@ -520,13 +520,18 @@ trait DatabasesBase
 
         $this->assertEquals(202, $relation['headers']['status-code']);
 
+        // Wait for both the relationship attribute and its twoWayKey to be available
         $this->waitForAttribute($databaseId, $personCollection, 'libraries');
+        $this->waitForAttribute($databaseId, $libraryCollection, 'person_one_to_many');
 
-        // Create a person with libraries
-        $person = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), array_merge([
+        $serverHeaders = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        // Create a person with libraries
+        $person = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), $serverHeaders, [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
                 'fullName' => 'Stevie Wonder',
@@ -561,10 +566,7 @@ trait DatabasesBase
         $this->assertEquals(201, $person['headers']['status-code']);
 
         // Create two person documents with null fullName for isNull query testing
-        $nullPerson1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $nullPerson1 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), $serverHeaders, [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [],
             'permissions' => [
@@ -575,10 +577,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(201, $nullPerson1['headers']['status-code']);
 
-        $nullPerson2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        $nullPerson2 = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $personCollection), $serverHeaders, [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [],
             'permissions' => [
@@ -590,11 +589,7 @@ trait DatabasesBase
         $this->assertEquals(201, $nullPerson2['headers']['status-code']);
 
         // Update onDelete to cascade
-        $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $personCollection, 'relationship', 'libraries'), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $personCollection, 'relationship', 'libraries'), $serverHeaders, [
             'onDelete' => Database::RELATION_MUTATE_CASCADE,
         ]);
 

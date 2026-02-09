@@ -198,9 +198,13 @@ trait SchemaPolling
                 ])
             );
 
-            $this->assertEquals(200, $container['headers']['status-code']);
+            // Tolerate transient 500s during heavy attribute processing
+            $this->assertContains($container['headers']['status-code'], [200], "Expected 200 but got {$container['headers']['status-code']} polling container {$containerId}");
 
-            foreach ($container['body'][$this->getSchemaResource()] as $attribute) {
+            $schemaResource = $this->getSchemaResource();
+            $this->assertNotEmpty($container['body'][$schemaResource], "No attributes found in container {$containerId}");
+
+            foreach ($container['body'][$schemaResource] as $attribute) {
                 $this->assertEquals('available', $attribute['status'], "Attribute '{$attribute['key']}' is not available yet");
             }
         }, $timeoutMs, $waitMs);

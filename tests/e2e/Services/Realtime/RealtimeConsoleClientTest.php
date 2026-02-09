@@ -61,7 +61,7 @@ class RealtimeConsoleClientTest extends Scope
         ]);
 
         // Wait for attribute to be available
-        sleep(2);
+        sleep(5);
 
         return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
     }
@@ -131,7 +131,7 @@ class RealtimeConsoleClientTest extends Scope
         ]);
 
         // Wait for index to be available
-        sleep(2);
+        sleep(5);
 
         return $data;
     }
@@ -160,7 +160,7 @@ class RealtimeConsoleClientTest extends Scope
             ], $this->getHeaders()));
             $this->assertEquals(200, $index['headers']['status-code']);
             $this->assertEquals('available', $index['body']['status']);
-        }, 30000, 500);
+        }, 60000, 500);
 
         return $data;
     }

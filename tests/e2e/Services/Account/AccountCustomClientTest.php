@@ -461,7 +461,12 @@ class AccountCustomClientTest extends Scope
 
         $data = $this->setupPhoneAccount();
         $id = $data['id'];
-        $token = explode(" ", $data['token'])[0] ?? '';
+        // Extract OTP token - try the raw message first, then first word
+        $rawMessage = $data['token'];
+        $token = \trim($rawMessage);
+        if (\str_contains($token, ' ')) {
+            $token = \explode(' ', $token)[0];
+        }
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
             'origin' => 'http://localhost',
@@ -472,7 +477,7 @@ class AccountCustomClientTest extends Scope
             'secret' => $token,
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(201, $response['headers']['status-code'], 'Phone session creation failed. Token: "' . $token . '", Raw message: "' . $rawMessage . '", UserId: ' . $id);
 
         $session = $response['cookies']['a_session_' . $projectId];
 
