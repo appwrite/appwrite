@@ -7,14 +7,11 @@ use Utopia\DNS\Validator\DNS as BaseDNS;
 
 class DNS extends BaseDNS
 {
-    protected array $dnsServers = [];
-
     /**
      * @param array<string> $dnsServers DNS server IP(s) or domain(s) to use for validation
      */
-    public function __construct(array $dnsServers = [])
+    public function __construct(protected array $dnsServers = [])
     {
-        $this->dnsServers = $dnsServers;
     }
 
     /**
