@@ -1,6 +1,7 @@
-import { useRef, useCallback, useState } from 'react'
+import { useRef, useCallback, useState, useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { useDebugMode } from '@/components/global/providers/DebugMode'
 import {
   LayoutDashboard,
   Database,
@@ -217,8 +218,21 @@ export function ConsoleSidebar({
 }: ConsoleSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const navRef = useRef<HTMLElement>(null)
+  const { isDebugModeOpen } = useDebugMode()
 
-  const { overviewItem, navCategories, settingsItem } = getNavItems(projectId)
+  const { overviewItem, settingsItem } = getNavItems(projectId)
+
+  const visibleCategories = useMemo(() => {
+    const { navCategories: categories } = getNavItems(projectId)
+    return categories
+      .map((cat) => ({
+        ...cat,
+        items: isDebugModeOpen
+          ? cat.items
+          : cat.items.filter((item) => !item.comingSoon),
+      }))
+      .filter((cat) => cat.items.length > 0)
+  }, [projectId, isDebugModeOpen])
 
   // Handle keyboard navigation within sidebar
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -408,11 +422,7 @@ export function ConsoleSidebar({
           {/* Overview */}
           <div className="space-y-0.5">{renderNavItem(overviewItem)}</div>
 
-          {/* Connect category */}
-          {renderCategory(navCategories[0])}
-
-          {/* Remaining Categories (Build, Deploy, Observe, Protect) */}
-          {navCategories.slice(1).map((category) => renderCategory(category))}
+          {visibleCategories.map((category) => renderCategory(category))}
         </nav>
 
         {/* Settings */}
@@ -466,13 +476,9 @@ export function ConsoleSidebar({
           {/* Overview */}
           <div className="space-y-0.5">{renderNavItem(overviewItem, true)}</div>
 
-          {/* Connect category */}
-          {renderCategory(navCategories[0], true)}
-
-          {/* Remaining Categories (Build, Deploy, Observe, Protect) */}
-          {navCategories
-            .slice(1)
-            .map((category) => renderCategory(category, true))}
+          {visibleCategories.map((category) =>
+            renderCategory(category, true),
+          )}
         </nav>
 
         {/* Settings */}
