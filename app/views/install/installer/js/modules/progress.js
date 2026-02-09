@@ -861,6 +861,14 @@
             const retryButton = event.target.closest('[data-install-retry]');
 
             if (consoleButton) {
+                fetch('/install/cleanup', {
+                    method: 'POST',
+                    headers: withCsrfHeader({
+                        'Content-Type': 'application/json'
+                    })
+                }).catch(() => {});
+
+                // Redirect immediately
                 redirectToApp();
                 return;
             }
