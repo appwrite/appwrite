@@ -206,8 +206,10 @@ export function View() {
   }
 
   const handleCreateFunction = () => {
-    // TODO: Open create function dialog
-    toast.info('Function creation coming soon')
+    navigate({
+      to: '/projects/$projectId/functions/create',
+      params: { projectId: projectId as string },
+    })
   }
 
   const hasFunctions = total > 0

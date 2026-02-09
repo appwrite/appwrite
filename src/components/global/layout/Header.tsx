@@ -306,9 +306,8 @@ export function ConsoleHeader({
                         <DropdownMenuItem
                           onClick={() => {
                             navigate({
-                              to: '/projects/$projectId/functions',
+                              to: '/projects/$projectId/functions/create',
                               params: { projectId },
-                              search: { create: 'function' } as Record<string, unknown>,
                             })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"

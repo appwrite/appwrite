@@ -8,17 +8,20 @@ export const Route = createFileRoute('/_public/projects/$projectId/functions')({
 function FunctionsPage() {
   const matches = useMatches()
 
-  // Check if we're on a child route (function detail, templates, editor, etc.)
+  // Check if we're on a child route (function detail, templates, editor, create, etc.)
   const isChildRoute = matches.some(
     (match) =>
       match.routeId.includes('/functions/$functionId') ||
       match.routeId.includes('/functions/templates') ||
       match.routeId.includes('/functions/editor') ||
+      match.routeId.includes('/functions/create') ||
       match.routeId.startsWith(
         '/_public/projects/$projectId/functions/$functionId',
       ) ||
       match.routeId === '/_public/projects/$projectId/functions/templates' ||
-      match.routeId === '/_public/projects/$projectId/functions/editor',
+      match.routeId === '/_public/projects/$projectId/functions/editor' ||
+      match.routeId === '/_public/projects/$projectId/functions/create' ||
+      match.routeId === '/_public/projects/$projectId/functions/create/',
   )
 
   // If we're on a child route, render the outlet (child route component).
