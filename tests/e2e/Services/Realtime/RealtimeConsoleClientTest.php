@@ -86,6 +86,7 @@ class RealtimeConsoleClientTest extends Scope
             'name' => 'Actors Tables DB',
         ]);
 
+        $this->assertEquals(201, $database['headers']['status-code'], 'Database creation failed: ' . json_encode($database['body']));
         $databaseId = $database['body']['$id'];
 
         $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
@@ -96,10 +97,11 @@ class RealtimeConsoleClientTest extends Scope
             'name' => 'Actors',
         ]);
 
+        $this->assertEquals(201, $actors['headers']['status-code'], 'Table creation failed: ' . json_encode($actors['body']));
         $actorsId = $actors['body']['$id'];
 
         // Create column and wait for it to be available
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
+        $column = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/string', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -107,6 +109,8 @@ class RealtimeConsoleClientTest extends Scope
             'size' => 256,
             'required' => true,
         ]);
+
+        $this->assertEquals(202, $column['headers']['status-code'], 'Column creation failed: ' . json_encode($column['body']));
 
         // Wait for column to be available
         $this->assertEventually(function () use ($databaseId, $actorsId) {
@@ -128,7 +132,7 @@ class RealtimeConsoleClientTest extends Scope
     {
         $data = $this->createCollectionWithAttribute();
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['actorsId'] . '/indexes', array_merge([
+        $indexResponse = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['actorsId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -137,13 +141,15 @@ class RealtimeConsoleClientTest extends Scope
             'attributes' => ['name'],
         ]);
 
+        $this->assertEquals(202, $indexResponse['headers']['status-code'], 'Index creation failed: ' . json_encode($indexResponse['body']));
+
         // Wait for index to be available
         $this->assertEventually(function () use ($data) {
             $index = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['actorsId'] . '/indexes/key_name', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
-            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals(200, $index['headers']['status-code'], 'Index polling returned ' . $index['headers']['status-code'] . ': ' . json_encode($index['body'] ?? ''));
             $this->assertEquals('available', $index['body']['status']);
         }, 120000, 500);
 
@@ -157,7 +163,7 @@ class RealtimeConsoleClientTest extends Scope
     {
         $data = $this->createTableWithAttribute();
 
-        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['actorsId'] . '/indexes', array_merge([
+        $indexResponse = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['actorsId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -166,13 +172,15 @@ class RealtimeConsoleClientTest extends Scope
             'attributes' => ['name'],
         ]);
 
+        $this->assertEquals(202, $indexResponse['headers']['status-code'], 'Index creation failed: ' . json_encode($indexResponse['body']));
+
         // Wait for index to be available
         $this->assertEventually(function () use ($data) {
             $index = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['actorsId'] . '/indexes/key_name', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
-            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals(200, $index['headers']['status-code'], 'Index polling returned ' . $index['headers']['status-code'] . ': ' . json_encode($index['body'] ?? ''));
             $this->assertEquals('available', $index['body']['status']);
         }, 120000, 500);
 
