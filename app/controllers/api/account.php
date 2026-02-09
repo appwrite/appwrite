@@ -1680,6 +1680,17 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             if ($user === false || $user->isEmpty()) { // Last option -> create the user
+                // If email is unverified, check if a user with this email already exists
+                // to prevent account enumeration through USER_ALREADY_EXISTS error
+                if (!$isVerified) {
+                    $existingUser = $dbForProject->findOne('users', [
+                        Query::equal('email', [$email]),
+                    ]);
+                    if (!$existingUser->isEmpty()) {
+                        $failureRedirect(Exception::GENERAL_BAD_REQUEST);
+                    }
+                }
+
                 $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
 
                 if ($limit !== 0) {
