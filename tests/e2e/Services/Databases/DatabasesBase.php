@@ -426,7 +426,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => 'person',
+            $this->getContainerIdParam() => ID::unique(),
             'name' => 'person',
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -444,7 +444,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getContainerIdParam() => 'library',
+            $this->getContainerIdParam() => ID::unique(),
             'name' => 'library',
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -506,17 +506,19 @@ trait DatabasesBase
         $libraryCollection = $data['libraryCollection'];
 
         // One person can own several libraries
-        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $personCollection) . '/relationship', array_merge([
+        $relation = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $personCollection) . '/relationship', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
-            $this->getRelatedIdParam() => 'library',
+            $this->getRelatedIdParam() => $libraryCollection,
             'type' => Database::RELATION_ONE_TO_MANY,
             'twoWay' => true,
             'key' => 'libraries',
             'twoWayKey' => 'person_one_to_many',
         ]);
+
+        $this->assertEquals(202, $relation['headers']['status-code']);
 
         $this->waitForAttribute($databaseId, $personCollection, 'libraries');
 
@@ -596,7 +598,7 @@ trait DatabasesBase
             'onDelete' => Database::RELATION_MUTATE_CASCADE,
         ]);
 
-        self::$oneToManyCache[$cacheKey] = ['databaseId' => $databaseId, 'personCollection' => $personCollection];
+        self::$oneToManyCache[$cacheKey] = ['databaseId' => $databaseId, 'personCollection' => $personCollection, 'libraryCollection' => $libraryCollection];
         return self::$oneToManyCache[$cacheKey];
     }
 
@@ -5689,7 +5691,7 @@ trait DatabasesBase
         $this->assertEquals(200, $attributes['headers']['status-code']);
         $this->assertEquals(2, $attributes['body']['total']);
         $attributes = $attributes['body'][$this->getSchemaResource()];
-        $this->assertEquals('library', $attributes[1][$this->getRelatedResourceKey()]);
+        $this->assertEquals($library['body']['$id'], $attributes[1][$this->getRelatedResourceKey()]);
         $this->assertEquals('oneToOne', $attributes[1]['relationType']);
         $this->assertEquals(true, $attributes[1]['twoWay']);
         $this->assertEquals('person', $attributes[1]['twoWayKey']);
@@ -5848,10 +5850,7 @@ trait DatabasesBase
         $data = $this->setupOneToManyRelationship();
         $databaseId = $data['databaseId'];
         $personCollection = $data['personCollection'];
-
-        // Also get the library collection ID from the one-to-one cache
-        $oneToOneData = $this->setupOneToOneRelationship();
-        $libraryCollection = $oneToOneData['libraryCollection'];
+        $libraryCollection = $data['libraryCollection'];
 
         $libraryAttributesResponse = $this->client->call(Client::METHOD_GET, $this->getSchemaUrl($databaseId, $libraryCollection), array_merge([
             'content-type' => 'application/json',

@@ -1912,7 +1912,7 @@ class DatabaseServerTest extends Scope
      */
     public function testGetColumn(): void
     {
-        $data = $this->setupTable();
+        $data = $this->setupStringColumn();
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::GET_COLUMN);
         $gqlPayload = [

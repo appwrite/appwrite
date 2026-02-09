@@ -33,17 +33,17 @@ class TablesDBPermissionsMemberTest extends Scope
     {
         return [
             [[Permission::read(Role::any())], 1, 1, 1],
-            [[Permission::read(Role::users())], 2, 2, 2],
-            [[Permission::read(Role::user(ID::custom('random')))], 3, 3, 2],
-            [[Permission::read(Role::user(ID::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))], 4, 4, 2],
-            [[Permission::read(Role::user(ID::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 5, 5, 2],
-            [[Permission::read(Role::user(ID::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 6, 6, 2],
-            [[Permission::update(Role::any()), Permission::delete(Role::any())], 7, 7, 2],
-            [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], 8, 8, 3],
-            [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())], 9, 9, 4],
-            [[Permission::read(Role::user(ID::custom('user1')))], 10, 10, 5],
-            [[Permission::read(Role::user(ID::custom('user1'))), Permission::read(Role::user(ID::custom('user1')))], 11, 11, 6],
-            [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())], 12, 12, 7],
+            [[Permission::read(Role::users())], 1, 1, 1],
+            [[Permission::read(Role::user(ID::custom('random')))], 1, 1, 0],
+            [[Permission::read(Role::user(ID::custom('lorem'))), Permission::update(Role::user('lorem')), Permission::delete(Role::user('lorem'))], 1, 1, 0],
+            [[Permission::read(Role::user(ID::custom('dolor'))), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 1, 1, 0],
+            [[Permission::read(Role::user(ID::custom('dolor'))), Permission::read(Role::user('lorem')), Permission::update(Role::user('dolor')), Permission::delete(Role::user('dolor'))], 1, 1, 0],
+            [[Permission::update(Role::any()), Permission::delete(Role::any())], 1, 1, 0],
+            [[Permission::read(Role::any()), Permission::update(Role::any()), Permission::delete(Role::any())], 1, 1, 1],
+            [[Permission::read(Role::any()), Permission::update(Role::users()), Permission::delete(Role::users())], 1, 1, 1],
+            [[Permission::read(Role::user(ID::custom('user1')))], 1, 1, 1],
+            [[Permission::read(Role::user(ID::custom('user1'))), Permission::read(Role::user(ID::custom('user1')))], 1, 1, 1],
+            [[Permission::read(Role::users()), Permission::update(Role::users()), Permission::delete(Role::users())], 1, 1, 1],
         ];
     }
 

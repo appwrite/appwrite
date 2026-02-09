@@ -403,8 +403,12 @@ class AccountCustomClientTest extends Scope
             return self::$phoneData[$cacheKey];
         }
 
-        // Use a unique phone number for parallel test safety
-        $number = '+1' . substr(str_replace('.', '', microtime(true)), -9);
+        // Ensure phone auth is enabled (may have been disabled by testPhoneVerification in parallel)
+        $this->ensurePhoneAuthEnabled();
+
+        // Use a truly unique phone number for parallel test safety
+        // Combine microtime, PID, and random digits to avoid collisions across parallel processes
+        $number = '+1' . substr(str_replace('.', '', microtime(true)) . getmypid() . random_int(100, 999), -9);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
@@ -543,8 +547,8 @@ class AccountCustomClientTest extends Scope
 
         $data = $this->setupPhoneConvertedToPassword();
         $session = $data['session'];
-        // Use a unique phone number to avoid target conflicts across parallel test runs
-        $newPhone = '+456' . substr(str_replace('.', '', microtime(true)), -8);
+        // Use a truly unique phone number to avoid target conflicts across parallel test runs
+        $newPhone = '+456' . substr(str_replace('.', '', microtime(true)) . getmypid() . random_int(100, 999), -8);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
             'origin' => 'http://localhost',
@@ -703,6 +707,54 @@ class AccountCustomClientTest extends Scope
         ]);
 
         return $response['cookies']['a_session_' . $projectId];
+    }
+
+    /**
+     * Helper to delete any existing user with the given email.
+     * Used to prevent parallel test conflicts when tests share
+     * hardcoded emails (e.g. from mock OAuth providers).
+     */
+    protected function deleteUserByEmail(string $email): void
+    {
+        $projectId = $this->getProject()['$id'];
+        $apiKey = $this->getProject()['apiKey'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'queries' => [
+                Query::equal('email', [$email])->toString(),
+            ],
+        ]);
+
+        if ($response['headers']['status-code'] === 200) {
+            foreach ($response['body']['users'] ?? [] as $user) {
+                $this->client->call(Client::METHOD_DELETE, '/users/' . $user['$id'], [
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $projectId,
+                    'x-appwrite-key' => $apiKey,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Helper to ensure phone auth is enabled for the project.
+     * Needed because testPhoneVerification disables it and other
+     * parallel tests may need it.
+     */
+    protected function ensurePhoneAuthEnabled(): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/auth/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'status' => true,
+        ]);
     }
 
     public function testCreateAccountSession(): void
@@ -2720,6 +2772,10 @@ class AccountCustomClientTest extends Scope
 
     public function testConvertAnonymousAccountOAuth2(): void
     {
+        // Clean up any existing user with the mock OAuth email to prevent
+        // conflicts with parallel tests that also use the mock provider
+        $this->deleteUserByEmail('useroauth@localhost.test');
+
         $session = $this->createAnonymousSession();
         $provider = 'mock';
         $appId = '1';
@@ -2752,6 +2808,10 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Delete any user with the mock OAuth email right before the OAuth call
+        // to minimize the race window with parallel tests
+        $this->deleteUserByEmail('useroauth@localhost.test');
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
             'origin' => 'http://localhost',
@@ -2837,6 +2897,9 @@ class AccountCustomClientTest extends Scope
         $email = 'useroauthunverified@localhost.test';
         $password = 'password';
 
+        // Clean up any existing user with this email from parallel tests
+        $this->deleteUserByEmail($email);
+
         $response = $this->client->call(Client::METHOD_POST, '/account', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -2895,6 +2958,9 @@ class AccountCustomClientTest extends Scope
         $appId = '1';
         $secret = '123456';
         $email = 'useroauth@localhost.test';
+
+        // Clean up any existing user with this email from parallel tests
+        $this->deleteUserByEmail($email);
 
         // Create a user with the same email that the verified OAuth will try to use
         $response = $this->client->call(Client::METHOD_POST, '/account', [
@@ -3264,7 +3330,7 @@ class AccountCustomClientTest extends Scope
     public function testUpdatePhone(): void
     {
         $data = $this->setupPhoneConvertedToPassword();
-        $newPhone = '+45632569856';
+        $newPhone = '+456' . substr(str_replace('.', '', microtime(true)) . getmypid() . random_int(100, 999), -8);
         $session = $data['session'];
 
         /**
@@ -3496,6 +3562,9 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(501, $response['headers']['status-code']);
         $this->assertEquals("Phone authentication is disabled for this project", $response['body']['message']);
+
+        // Re-enable phone auth so other parallel tests are not affected
+        $this->ensurePhoneAuthEnabled();
     }
 
     public function testUpdatePhoneVerification(): void

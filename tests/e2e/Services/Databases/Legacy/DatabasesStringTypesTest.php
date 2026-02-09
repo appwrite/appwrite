@@ -3,9 +3,12 @@
 namespace Tests\E2E\Services\Databases\Legacy;
 
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ApiLegacy;
 use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Tests\E2E\Traits\DatabasesUrlHelpers;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -14,6 +17,9 @@ class DatabasesStringTypesTest extends Scope
 {
     use ProjectCustom;
     use SideServer;
+    use ApiLegacy;
+    use DatabasesUrlHelpers;
+    use SchemaPolling;
 
     private static array $setupCache = [];
 
@@ -118,7 +124,7 @@ class DatabasesStringTypesTest extends Scope
         ]);
 
         // Wait for all attributes to be available
-        sleep(3);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
         static::$setupCache[$cacheKey] = [
             'databaseId' => $databaseId,
