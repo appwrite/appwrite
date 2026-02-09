@@ -231,8 +231,16 @@ export function RealtimeConcurrencyChart({
                   x2="0"
                   y2="1"
                 >
-                  <stop offset="0%" stopColor="var(--chart-brand)" stopOpacity={0.2} />
-                  <stop offset="100%" stopColor="var(--chart-brand)" stopOpacity={0} />
+                  <stop
+                    offset="0%"
+                    stopColor="var(--chart-brand)"
+                    stopOpacity={0.2}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--chart-brand)"
+                    stopOpacity={0}
+                  />
                 </linearGradient>
               </defs>
               <CartesianGrid

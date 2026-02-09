@@ -1,9 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/sites/VerifyDomain'
-import {
-  siteQueryOptions,
-  projectQueryOptions,
-} from '@/lib/react-query/hooks'
+import { siteQueryOptions, projectQueryOptions } from '@/lib/react-query/hooks'
 import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
 import { sdk } from '@/lib/appwrite/sdk'
 

@@ -30,10 +30,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
-import {
-  useCreateSite,
-  useCreateSiteDomain,
-} from '@/lib/react-query/hooks'
+import { useCreateSite, useCreateSiteDomain } from '@/lib/react-query/hooks'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
@@ -63,13 +60,19 @@ export function ManualUploadView() {
   const [siteName, setSiteName] = useState(formData.siteName || 'My website')
   const [siteId, setSiteId] = useState<string | undefined>(formData.siteId)
   const [framework, setFramework] = useState(formData.framework || '')
-  const [installCommand, setInstallCommand] = useState(formData.installCommand || '')
+  const [installCommand, setInstallCommand] = useState(
+    formData.installCommand || '',
+  )
   const [buildCommand, setBuildCommand] = useState(formData.buildCommand || '')
-  const [outputDirectory, setOutputDirectory] = useState(formData.outputDirectory || '')
+  const [outputDirectory, setOutputDirectory] = useState(
+    formData.outputDirectory || '',
+  )
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
-  const [uploadFile, setUploadFile] = useState<File | null>(formData.uploadFile || null)
+  const [uploadFile, setUploadFile] = useState<File | null>(
+    formData.uploadFile || null,
+  )
   const [isDragging, setIsDragging] = useState(false)
   const [isDeploying, setIsDeploying] = useState(false)
 
@@ -314,7 +317,7 @@ export function ManualUploadView() {
             onChange={(e) => handleFileSelect(e.target.files)}
             className="hidden"
           />
-          
+
           {!uploadFile ? (
             <div
               onDragOver={handleDragOver}
@@ -438,10 +441,7 @@ export function ManualUploadView() {
       />
 
       {/* Environment variables */}
-      <EnvironmentVariables
-        variables={variables}
-        onChange={setVariables}
-      />
+      <EnvironmentVariables variables={variables} onChange={setVariables} />
 
       {/* Domain section */}
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -461,7 +461,8 @@ export function ManualUploadView() {
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            Want to use your own domain? After deployment, you can connect a
+            custom domain via CNAME record or let Appwrite manage your DNS.{' '}
             <a
               href="https://appwrite.io/docs/products/sites/domains"
               target="_blank"

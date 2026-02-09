@@ -424,9 +424,7 @@ export function ConsoleSidebar({
 
         {/* Settings */}
         <div className="flex h-[54px] w-full items-center border-t border-border px-3">
-          <div className="w-full">
-            {renderNavItem(settingsItem)}
-          </div>
+          <div className="w-full">{renderNavItem(settingsItem)}</div>
         </div>
       </aside>
 

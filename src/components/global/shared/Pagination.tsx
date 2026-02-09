@@ -87,12 +87,7 @@ export function SimplePagination({
   }
 
   return (
-    <div
-      className={cn(
-        'flex items-center justify-center gap-0',
-        className,
-      )}
-    >
+    <div className={cn('flex items-center justify-center gap-0', className)}>
       <div className="inline-flex items-center rounded-md border border-border bg-muted/30 overflow-hidden">
         <Button
           variant="ghost"

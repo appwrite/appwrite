@@ -79,7 +79,10 @@ export function BuildSettings({
       type="single"
       collapsible
       defaultValue={defaultOpen ? 'build-settings' : undefined}
-      className={cn('rounded-xl border border-border bg-card/50 overflow-hidden', className)}
+      className={cn(
+        'rounded-xl border border-border bg-card/50 overflow-hidden',
+        className,
+      )}
     >
       <AccordionItem value="build-settings" className="border-none">
         <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">

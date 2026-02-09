@@ -51,10 +51,7 @@ export function getApiEndpoint(region?: string): string {
   }
 
   if (region && region.trim().toLowerCase() !== 'unknown') {
-    const normalizedRegion = region
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '')
+    const normalizedRegion = region.trim().toLowerCase().replace(/\s+/g, '')
     if (normalizedRegion) {
       return `https://${normalizedRegion}.cloud.appwrite.io/v1`
     }
@@ -76,9 +73,15 @@ const projectRegions = new Map<string, string>()
  * Register a project's region so SDK uses the correct region endpoint for that project.
  * Called automatically when project is fetched; can be called explicitly if needed.
  */
-export function setProjectRegion(projectId: string, region: string | undefined) {
+export function setProjectRegion(
+  projectId: string,
+  region: string | undefined,
+) {
   if (region && region.trim().toLowerCase() !== 'unknown') {
-    projectRegions.set(projectId, region.trim().toLowerCase().replace(/\s+/g, ''))
+    projectRegions.set(
+      projectId,
+      region.trim().toLowerCase().replace(/\s+/g, ''),
+    )
   }
 }
 

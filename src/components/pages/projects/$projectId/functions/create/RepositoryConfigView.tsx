@@ -32,7 +32,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { Loader2, GitBranch, Key, FolderOpen, Lock, Globe, ExternalLink } from 'lucide-react'
+import {
+  Loader2,
+  GitBranch,
+  Key,
+  FolderOpen,
+  Lock,
+  Globe,
+  ExternalLink,
+} from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ID, VCSDetectionType, VCSReferenceType } from '@appwrite.io/console'
@@ -69,12 +77,8 @@ export function RepositoryConfigView({
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const {
-    formData,
-    updateFormData,
-    generateDomain,
-    baseDomain,
-  } = useFunctionWizard()
+  const { formData, updateFormData, generateDomain, baseDomain } =
+    useFunctionWizard()
 
   const [repoOwner, repoName] = useMemo(() => {
     const decoded = decodeURIComponent(repositoryParam)
@@ -93,9 +97,17 @@ export function RepositoryConfigView({
     if (providerRepositoryIdFromSearch && !formData.providerRepositoryId) {
       updateFormData({ providerRepositoryId: providerRepositoryIdFromSearch })
     }
-  }, [installationIdFromSearch, providerRepositoryIdFromSearch, formData.installationId, formData.providerRepositoryId, updateFormData])
+  }, [
+    installationIdFromSearch,
+    providerRepositoryIdFromSearch,
+    formData.installationId,
+    formData.providerRepositoryId,
+    updateFormData,
+  ])
 
-  const [functionName, setFunctionName] = useState(formData.functionName || repoName)
+  const [functionName, setFunctionName] = useState(
+    formData.functionName || repoName,
+  )
   const [functionId, setFunctionId] = useState<string | undefined>()
   const [runtime, setRuntime] = useState(formData.runtime || '')
   const [entrypoint, setEntrypoint] = useState('')
@@ -135,7 +147,11 @@ export function RepositoryConfigView({
       }
     },
     onSuccess: (data) => {
-      const r = data as { runtime?: string; entrypoint?: string; commands?: string }
+      const r = data as {
+        runtime?: string
+        entrypoint?: string
+        commands?: string
+      }
       if (r.runtime) setRuntime(r.runtime)
       if (r.entrypoint != null) setEntrypoint(r.entrypoint)
       if (r.commands != null) setCommands(r.commands)
@@ -233,7 +249,10 @@ export function RepositoryConfigView({
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
-              <RuntimeIcon runtime={runtime} className="h-5 w-5 text-muted-foreground" />
+              <RuntimeIcon
+                runtime={runtime}
+                className="h-5 w-5 text-muted-foreground"
+              />
             </div>
             <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-2 ring-background">
               <GitHubIcon className="h-3 w-3 text-muted-foreground" />
@@ -244,13 +263,12 @@ export function RepositoryConfigView({
               <h3 className="text-[13px] font-semibold text-foreground truncate">
                 {repository?.name || repoName}
               </h3>
-              {repository?.private !== undefined && (
-                repository.private ? (
+              {repository?.private !== undefined &&
+                (repository.private ? (
                   <Lock className="h-3 w-3 text-muted-foreground shrink-0" />
                 ) : (
                   <Globe className="h-3 w-3 text-muted-foreground shrink-0" />
-                )
-              )}
+                ))}
             </div>
             <p className="text-[11px] text-muted-foreground truncate">
               {repository
@@ -259,7 +277,9 @@ export function RepositoryConfigView({
               {repository?.pushedAt && (
                 <>
                   <span className="mx-1.5">·</span>
-                  <span>Updated <DateTooltip date={repository.pushedAt} /></span>
+                  <span>
+                    Updated <DateTooltip date={repository.pushedAt} />
+                  </span>
                 </>
               )}
             </p>
@@ -312,14 +332,18 @@ export function RepositoryConfigView({
               <Key className="h-3.5 w-3.5" />
               Variables
             </span>
-            <span className="text-[12px] text-foreground">{variables.length} configured</span>
+            <span className="text-[12px] text-foreground">
+              {variables.length} configured
+            </span>
           </div>
         )}
       </div>
       <div className="px-5 py-3 bg-muted/20 border-t border-border/50">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[11px] text-muted-foreground">Ready to deploy</span>
+          <span className="text-[11px] text-muted-foreground">
+            Ready to deploy
+          </span>
         </div>
       </div>
     </div>
@@ -331,8 +355,18 @@ export function RepositoryConfigView({
       showBackButton
       backButtonLabel="Back"
       fallbackPath={`/projects/${projectId}/functions`}
-      onClose={() => navigate({ to: '/projects/$projectId/functions', params: { projectId: projectId! } })}
-      onBack={() => navigate({ to: '/projects/$projectId/functions/create', params: { projectId: projectId! } })}
+      onClose={() =>
+        navigate({
+          to: '/projects/$projectId/functions',
+          params: { projectId: projectId! },
+        })
+      }
+      onBack={() =>
+        navigate({
+          to: '/projects/$projectId/functions/create',
+          params: { projectId: projectId! },
+        })
+      }
       fullscreen
       maxWidth="max-w-[1400px]"
       footerAlign="right"
@@ -341,7 +375,12 @@ export function RepositoryConfigView({
         <>
           <Button
             variant="outline"
-            onClick={() => navigate({ to: '/projects/$projectId/functions', params: { projectId: projectId! } })}
+            onClick={() =>
+              navigate({
+                to: '/projects/$projectId/functions',
+                params: { projectId: projectId! },
+              })
+            }
             disabled={isDeploying}
           >
             Cancel
@@ -378,11 +417,21 @@ export function RepositoryConfigView({
               <p className="text-[13px] font-medium text-foreground">
                 {repoOwner}/{repoName}
               </p>
-              <p className="text-[11px] text-muted-foreground">Git repository</p>
+              <p className="text-[11px] text-muted-foreground">
+                Git repository
+              </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" asChild className="h-8 text-[12px]">
-            <Link to="/projects/$projectId/functions/create" params={{ projectId: projectId! }}>
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="h-8 text-[12px]"
+          >
+            <Link
+              to="/projects/$projectId/functions/create"
+              params={{ projectId: projectId! }}
+            >
               Change
             </Link>
           </Button>
@@ -465,7 +514,8 @@ export function RepositoryConfigView({
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            After deployment you can connect a custom domain via your function settings.{' '}
+            After deployment you can connect a custom domain via your function
+            settings.{' '}
             <a
               href="https://appwrite.io/docs/functions"
               target="_blank"
@@ -518,7 +568,11 @@ export function RepositoryConfigView({
       </div>
 
       {/* Build settings – accordion like sites */}
-      <Accordion type="single" collapsible className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
+      <Accordion
+        type="single"
+        collapsible
+        className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6"
+      >
         <AccordionItem value="build-settings" className="border-none">
           <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
             <span className="text-[15px] font-semibold text-foreground">
@@ -557,10 +611,7 @@ export function RepositoryConfigView({
       </Accordion>
 
       {/* Environment variables – shared card */}
-      <EnvironmentVariablesCard
-        variables={variables}
-        onChange={setVariables}
-      />
+      <EnvironmentVariablesCard variables={variables} onChange={setVariables} />
     </WizardLayout>
   )
 }

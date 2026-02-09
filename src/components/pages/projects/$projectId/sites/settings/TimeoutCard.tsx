@@ -21,11 +21,7 @@ interface TimeoutCardProps {
   site: Models.Site | null | undefined
 }
 
-export function TimeoutCard({
-  projectId,
-  siteId,
-  site,
-}: TimeoutCardProps) {
+export function TimeoutCard({ projectId, siteId, site }: TimeoutCardProps) {
   const queryClient = useQueryClient()
   const [timeout, setTimeout] = useState(15)
 
@@ -71,9 +67,7 @@ export function TimeoutCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Timeout
-        </h3>
+        <h3 className="text-[15px] font-semibold text-foreground">Timeout</h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Set the execution timeout limit for the site
         </p>

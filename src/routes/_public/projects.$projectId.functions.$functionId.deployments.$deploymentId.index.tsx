@@ -39,13 +39,9 @@ export const Route = createFileRoute(
       ),
       // Fetch executions count for this deployment - blocks navigation until ready
       queryClient.ensureQueryData(
-        functionExecutionsQueryOptions(
-          projectId,
-          functionId,
-          0,
-          1,
-          [Query.equal('deploymentId', deploymentId)],
-        ),
+        functionExecutionsQueryOptions(projectId, functionId, 0, 1, [
+          Query.equal('deploymentId', deploymentId),
+        ]),
       ),
     ])
   },

@@ -1,9 +1,6 @@
 import { View } from '@/components/pages/organizations/$orgId/domains/$domainId/View'
 import { createFileRoute } from '@tanstack/react-router'
-import {
-  fetchDomain,
-  fetchOrganizations,
-} from '@/lib/react-query/hooks'
+import { fetchDomain, fetchOrganizations } from '@/lib/react-query/hooks'
 
 const STALE_TIME = 30 * 1000
 

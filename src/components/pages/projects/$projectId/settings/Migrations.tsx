@@ -106,8 +106,12 @@ export function Migrations({ projectId }: MigrationsProps) {
                   <TableCell className="px-4 py-3">
                     <DateTooltip date={migration.$createdAt} />
                   </TableCell>
-                  <TableCell className="px-4 py-3">{migration.source}</TableCell>
-                  <TableCell className="px-4 py-3">{getStatusBadge(migration.status)}</TableCell>
+                  <TableCell className="px-4 py-3">
+                    {migration.source}
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    {getStatusBadge(migration.status)}
+                  </TableCell>
                   <TableCell className="px-4 py-3">
                     <Button
                       variant="outline"

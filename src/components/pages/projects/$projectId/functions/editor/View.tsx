@@ -56,13 +56,22 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { DEFAULT_FILES, EDITOR_TEMPLATES, type EditorTemplate } from './getting-started-template'
+import {
+  DEFAULT_FILES,
+  EDITOR_TEMPLATES,
+  type EditorTemplate,
+} from './getting-started-template'
 
 type Language = 'javascript' | 'typescript' | 'json'
 
 /** Tree node for explorer: folder (with children) or file (leaf). */
 type FileTreeNode =
-  | { type: 'folder'; name: string; pathPrefix: string; children: FileTreeNode[] }
+  | {
+      type: 'folder'
+      name: string
+      pathPrefix: string
+      children: FileTreeNode[]
+    }
   | { type: 'file'; name: string; path: string }
 
 function buildFileTree(paths: string[]): FileTreeNode[] {
@@ -157,8 +166,7 @@ function filterFileTree(nodes: FileTreeNode[], query: string): FileTreeNode[] {
       const filteredChildren = filterFileTree(node.children, query)
       const match =
         node.name.toLowerCase().includes(q) || filteredChildren.length > 0
-      if (match)
-        result.push({ ...node, children: filteredChildren })
+      if (match) result.push({ ...node, children: filteredChildren })
     }
   }
   return result
@@ -228,7 +236,9 @@ function FileTreeNodes({
                   )}
                 </span>
                 <Folder className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span className="min-w-0 truncate font-normal">{node.name}</span>
+                <span className="min-w-0 truncate font-normal">
+                  {node.name}
+                </span>
               </button>
               {isExpanded && (
                 <FileTreeNodes
@@ -268,7 +278,10 @@ function FileTreeNodes({
             }}
           >
             <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <span className="min-w-0 truncate flex-1 font-normal" title={node.path}>
+            <span
+              className="min-w-0 truncate flex-1 font-normal"
+              title={node.path}
+            >
               {node.name}
             </span>
             {canDelete && (
@@ -302,9 +315,9 @@ function getLanguageFromPath(path: string): Language {
  */
 async function gzipString(str: string): Promise<Uint8Array> {
   const bytes = new TextEncoder().encode(str)
-  const stream = new Blob([bytes]).stream().pipeThrough(
-    new CompressionStream('gzip'),
-  )
+  const stream = new Blob([bytes])
+    .stream()
+    .pipeThrough(new CompressionStream('gzip'))
   const blob = await new Response(stream).blob()
   return new Uint8Array(await blob.arrayBuffer())
 }
@@ -344,7 +357,10 @@ function resolveCssColorToHex(cssValue: string, fallback: string): string {
   const m = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
   if (m) {
     const [, r, g, b] = m
-    return '#' + [r, g, b].map((x) => Number(x).toString(16).padStart(2, '0')).join('')
+    return (
+      '#' +
+      [r, g, b].map((x) => Number(x).toString(16).padStart(2, '0')).join('')
+    )
   }
   return fallback
 }
@@ -365,15 +381,19 @@ function defineAppThemes(monaco: typeof import('monaco-editor')) {
   // Dark: use --editor-bg (#09090b) so Monaco --vscode-editor-background matches.
   const root = typeof document !== 'undefined' ? document.documentElement : null
   const isDark = root?.classList.contains('dark')
-  const editorBgVar = root ? getComputedStyle(root).getPropertyValue('--editor-bg').trim() : ''
+  const editorBgVar = root
+    ? getComputedStyle(root).getPropertyValue('--editor-bg').trim()
+    : ''
   const DARK_BG =
     editorBgVar && editorBgVar.startsWith('#') ? editorBgVar : '#09090b'
-  const darkFgVar = root ? getComputedStyle(root).getPropertyValue('--foreground').trim() : ''
+  const darkFgVar = root
+    ? getComputedStyle(root).getPropertyValue('--foreground').trim()
+    : ''
   const darkFg =
-    isDark && darkFgVar
-      ? resolveCssColorToHex(darkFgVar, '#fafafa')
-      : '#fafafa'
-  const darkMutedVar = root ? getComputedStyle(root).getPropertyValue('--muted-foreground').trim() : ''
+    isDark && darkFgVar ? resolveCssColorToHex(darkFgVar, '#fafafa') : '#fafafa'
+  const darkMutedVar = root
+    ? getComputedStyle(root).getPropertyValue('--muted-foreground').trim()
+    : ''
   const darkMuted =
     isDark && darkMutedVar
       ? resolveCssColorToHex(darkMutedVar, '#71717a')
@@ -408,27 +428,49 @@ export function View() {
   const [gzipSize, setGzipSize] = useState<number | null>(null)
   const [addFileOpen, setAddFileOpen] = useState(false)
   const [newFilePath, setNewFilePath] = useState('')
-  const [deleteConfirmPath, setDeleteConfirmPath] = useState<string | null>(null)
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => new Set(['src']))
+  const [deleteConfirmPath, setDeleteConfirmPath] = useState<string | null>(
+    null,
+  )
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+    () => new Set(['src']),
+  )
   const [fileSearchQuery, setFileSearchQuery] = useState('')
   const [explorerOpen, setExplorerOpen] = useState(true)
-  const [openFiles, setOpenFiles] = useState<string[]>([ENTRY_FILE, 'package.json'])
-  const [findPanelMode, setFindPanelMode] = useState<false | 'find' | 'replace'>(false)
+  const [openFiles, setOpenFiles] = useState<string[]>([
+    ENTRY_FILE,
+    'package.json',
+  ])
+  const [findPanelMode, setFindPanelMode] = useState<
+    false | 'find' | 'replace'
+  >(false)
   const [findInFileQuery, setFindInFileQuery] = useState('')
   const [replaceValue, setReplaceValue] = useState('')
   const [findMatchIndex, setFindMatchIndex] = useState(0)
-  const [findMatches, setFindMatches] = useState<{ lineNumber: number; column: number; endLineNumber: number; endColumn: number }[]>([])
-  const editorRef = useRef<import('monaco-editor').editor.IStandaloneCodeEditor | null>(null)
+  const [findMatches, setFindMatches] = useState<
+    {
+      lineNumber: number
+      column: number
+      endLineNumber: number
+      endColumn: number
+    }[]
+  >([])
+  const editorRef = useRef<
+    import('monaco-editor').editor.IStandaloneCodeEditor | null
+  >(null)
   const findDecorationIdsRef = useRef<string[]>([])
   const findInputRef = useRef<HTMLInputElement | null>(null)
-  const [currentTemplateLabel, setCurrentTemplateLabel] = useState<string | null>('Getting started')
+  const [currentTemplateLabel, setCurrentTemplateLabel] = useState<
+    string | null
+  >('Getting started')
   const [dirtyFiles, setDirtyFiles] = useState<Set<string>>(new Set())
   const [cursorPosition, setCursorPosition] = useState<{
     lineNumber: number
     column: number
   } | null>(null)
 
-  const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform)
+  const isMac =
+    typeof navigator !== 'undefined' &&
+    /Mac|iPod|iPhone|iPad/.test(navigator.platform)
   const shortcutFind = isMac ? '⌘F' : 'Ctrl+F'
   const shortcutReplace = isMac ? '⌘H' : 'Ctrl+H'
 
@@ -459,9 +501,7 @@ export function View() {
 
   const openFile = useCallback((path: string) => {
     setActiveFile(path)
-    setOpenFiles((prev) =>
-      prev.includes(path) ? prev : [...prev, path],
-    )
+    setOpenFiles((prev) => (prev.includes(path) ? prev : [...prev, path]))
   }, [])
 
   const closeTab = useCallback(
@@ -477,13 +517,23 @@ export function View() {
     [activeFile, openFiles],
   )
 
-  const reorderOpenFiles = useCallback((fromIndex: number, toIndex: number) => {
-    if (fromIndex < 0 || toIndex < 0 || fromIndex >= openFiles.length || toIndex >= openFiles.length || fromIndex === toIndex) return
-    const next = [...openFiles]
-    const [removed] = next.splice(fromIndex, 1)
-    next.splice(toIndex, 0, removed)
-    setOpenFiles(next)
-  }, [openFiles])
+  const reorderOpenFiles = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      if (
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= openFiles.length ||
+        toIndex >= openFiles.length ||
+        fromIndex === toIndex
+      )
+        return
+      const next = [...openFiles]
+      const [removed] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, removed)
+      setOpenFiles(next)
+    },
+    [openFiles],
+  )
 
   const applyTemplate = useCallback((template: EditorTemplate) => {
     const paths = Object.keys(template.files).sort((a, b) => a.localeCompare(b))
@@ -522,13 +572,18 @@ export function View() {
   }, [activeFile])
 
   const handleEditorMount = useCallback(
-    (editor: import('monaco-editor').editor.IStandaloneCodeEditor, monaco: typeof import('monaco-editor')) => {
+    (
+      editor: import('monaco-editor').editor.IStandaloneCodeEditor,
+      monaco: typeof import('monaco-editor'),
+    ) => {
       editorRef.current = editor
       // Re-define and apply theme so we use current DOM (--editor-bg, .dark) and theme actually applies
       defineAppThemes(monaco)
       monaco.editor.setTheme(isDark ? MONACO_THEME_DARK : MONACO_THEME_LIGHT)
       const pos = editor.getPosition()
-      setCursorPosition(pos ? { lineNumber: pos.lineNumber, column: pos.column } : null)
+      setCursorPosition(
+        pos ? { lineNumber: pos.lineNumber, column: pos.column } : null,
+      )
       const disposable = editor.onDidChangeCursorPosition((e) => {
         setCursorPosition({
           lineNumber: e.position.lineNumber,
@@ -557,7 +612,14 @@ export function View() {
       }
       return
     }
-    const findMatchesResult = model.findMatches(q, true, false, false, null, false)
+    const findMatchesResult = model.findMatches(
+      q,
+      true,
+      false,
+      false,
+      null,
+      false,
+    )
     const matches = findMatchesResult.map((m) => ({
       lineNumber: m.range.startLineNumber,
       column: m.range.startColumn,
@@ -566,8 +628,8 @@ export function View() {
     }))
     setFindMatches(matches)
     setFindMatchIndex(0)
-    const newDecorations: import('monaco-editor').editor.IModelDeltaDecoration[] = matches.map(
-      (m) => ({
+    const newDecorations: import('monaco-editor').editor.IModelDeltaDecoration[] =
+      matches.map((m) => ({
         range: {
           startLineNumber: m.lineNumber,
           startColumn: m.column,
@@ -578,9 +640,11 @@ export function View() {
           className: 'find-in-file-highlight',
           stickiness: 1,
         },
-      }),
+      }))
+    findDecorationIdsRef.current = editor.deltaDecorations(
+      findDecorationIdsRef.current,
+      newDecorations,
     )
-    findDecorationIdsRef.current = editor.deltaDecorations(findDecorationIdsRef.current, newDecorations)
     if (matches.length > 0) {
       const current = matches[0]
       editor.setSelection({
@@ -600,7 +664,8 @@ export function View() {
   const goToFindMatch = useCallback(
     (delta: number) => {
       if (findMatches.length === 0) return
-      const next = (findMatchIndex + delta + findMatches.length) % findMatches.length
+      const next =
+        (findMatchIndex + delta + findMatches.length) % findMatches.length
       setFindMatchIndex(next)
       const m = findMatches[next]
       const editor = editorRef.current
@@ -659,7 +724,9 @@ export function View() {
     setDirtyFiles((prev) => new Set(prev).add(activeFile))
     setGzipSize(null)
     runFindInFile()
-    toast.success(`Replaced ${findMatches.length} occurrence${findMatches.length === 1 ? '' : 's'}`)
+    toast.success(
+      `Replaced ${findMatches.length} occurrence${findMatches.length === 1 ? '' : 's'}`,
+    )
   }, [findMatches, replaceValue, activeFile, runFindInFile])
 
   const handleEditorChange = useCallback(
@@ -768,32 +835,35 @@ export function View() {
     }
   }, [bundleForExport])
 
-  const handleEditorAreaKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Escape' && findPanelMode !== false) {
-      e.preventDefault()
-      e.stopPropagation()
-      setFindPanelMode(false)
-      setFindInFileQuery('')
-      setReplaceValue('')
-      setFindMatches([])
-      setFindMatchIndex(0)
-      const editor = editorRef.current
-      if (editor) {
-        editor.deltaDecorations(findDecorationIdsRef.current, [])
-        findDecorationIdsRef.current = []
+  const handleEditorAreaKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape' && findPanelMode !== false) {
+        e.preventDefault()
+        e.stopPropagation()
+        setFindPanelMode(false)
+        setFindInFileQuery('')
+        setReplaceValue('')
+        setFindMatches([])
+        setFindMatchIndex(0)
+        const editor = editorRef.current
+        if (editor) {
+          editor.deltaDecorations(findDecorationIdsRef.current, [])
+          findDecorationIdsRef.current = []
+        }
+      } else if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        e.stopPropagation()
+        setFindPanelMode('find')
+        setTimeout(() => findInputRef.current?.focus(), 0)
+      } else if (e.key === 'h' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        e.stopPropagation()
+        setFindPanelMode('replace')
+        setTimeout(() => findInputRef.current?.focus(), 0)
       }
-    } else if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      e.stopPropagation()
-      setFindPanelMode('find')
-      setTimeout(() => findInputRef.current?.focus(), 0)
-    } else if (e.key === 'h' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      e.stopPropagation()
-      setFindPanelMode('replace')
-      setTimeout(() => findInputRef.current?.focus(), 0)
-    }
-  }, [findPanelMode])
+    },
+    [findPanelMode],
+  )
 
   const copyGzipBase64 = useCallback(async () => {
     if (typeof CompressionStream === 'undefined') {
@@ -824,7 +894,12 @@ export function View() {
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  asChild
+                >
                   <Link
                     to="/projects/$projectId/functions"
                     params={{ projectId: projectId! }}
@@ -839,7 +914,9 @@ export function View() {
             </Tooltip>
           </TooltipProvider>
           <span className="text-[13px] font-medium text-foreground truncate">
-            {currentTemplateLabel ? `Function editor – ${currentTemplateLabel}` : 'Function editor'}
+            {currentTemplateLabel
+              ? `Function editor – ${currentTemplateLabel}`
+              : 'Function editor'}
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -858,7 +935,9 @@ export function View() {
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <p>Compress all files to gzip for deploying as a new function</p>
+                <p>
+                  Compress all files to gzip for deploying as a new function
+                </p>
               </TooltipContent>
             </Tooltip>
             <Tooltip>
@@ -973,8 +1052,11 @@ export function View() {
 
       {gzipSize !== null && (
         <div className="shrink-0 border-b border-border bg-muted/20 px-3 py-1.5 text-[12px] text-muted-foreground sm:px-4">
-          Compressed: <span className="font-medium text-foreground tabular-nums">{gzipSize}</span> bytes
-          ({filePaths.length} file{filePaths.length === 1 ? '' : 's'})
+          Compressed:{' '}
+          <span className="font-medium text-foreground tabular-nums">
+            {gzipSize}
+          </span>{' '}
+          bytes ({filePaths.length} file{filePaths.length === 1 ? '' : 's'})
         </div>
       )}
 
@@ -1028,59 +1110,56 @@ export function View() {
                     </div>
                   </TooltipProvider>
                 </div>
-              <div className="flex h-[41px] shrink-0 items-center border-b border-border px-2">
-                <div className="relative w-full">
-                  <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  <Input
-                    type="search"
-                    placeholder="Search files..."
-                    value={fileSearchQuery}
-                    onChange={(e) => setFileSearchQuery(e.target.value)}
-                    className="h-7 pl-7 pr-2 text-[12px] font-normal"
-                    aria-label="Search files"
-                  />
-                </div>
-              </div>
-              <ScrollArea className="flex-1">
-                <nav
-                  className="py-1 pr-1 pl-0.5"
-                  aria-label="Project files"
-                >
-                  {fileTree.length === 0 ? (
-                    <div className="px-3 py-4 text-center">
-                      <p className="text-[12px] text-muted-foreground">
-                        No files yet
-                      </p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mt-2 h-7 text-[12px]"
-                        onClick={() => setAddFileOpen(true)}
-                      >
-                        <Plus className="h-3 w-3 mr-1.5" />
-                        New file
-                      </Button>
-                    </div>
-                  ) : filteredFileTree.length === 0 ? (
-                    <div className="px-3 py-4 text-center">
-                      <p className="text-[12px] text-muted-foreground">
-                        No matching files
-                      </p>
-                    </div>
-                  ) : (
-                    <FileTreeNodes
-                      nodes={filteredFileTree}
-                      activeFile={activeFile}
-                      expandedFolders={expandedForView}
-                      onToggleFolder={toggleFolder}
-                      onSelectFile={openFile}
-                      onDeleteFile={(path) => setDeleteConfirmPath(path)}
-                      canDelete={filePaths.length > 1}
-                      depth={0}
+                <div className="flex h-[41px] shrink-0 items-center border-b border-border px-2">
+                  <div className="relative w-full">
+                    <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <Input
+                      type="search"
+                      placeholder="Search files..."
+                      value={fileSearchQuery}
+                      onChange={(e) => setFileSearchQuery(e.target.value)}
+                      className="h-7 pl-7 pr-2 text-[12px] font-normal"
+                      aria-label="Search files"
                     />
-                  )}
-                </nav>
-              </ScrollArea>
+                  </div>
+                </div>
+                <ScrollArea className="flex-1">
+                  <nav className="py-1 pr-1 pl-0.5" aria-label="Project files">
+                    {fileTree.length === 0 ? (
+                      <div className="px-3 py-4 text-center">
+                        <p className="text-[12px] text-muted-foreground">
+                          No files yet
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-2 h-7 text-[12px]"
+                          onClick={() => setAddFileOpen(true)}
+                        >
+                          <Plus className="h-3 w-3 mr-1.5" />
+                          New file
+                        </Button>
+                      </div>
+                    ) : filteredFileTree.length === 0 ? (
+                      <div className="px-3 py-4 text-center">
+                        <p className="text-[12px] text-muted-foreground">
+                          No matching files
+                        </p>
+                      </div>
+                    ) : (
+                      <FileTreeNodes
+                        nodes={filteredFileTree}
+                        activeFile={activeFile}
+                        expandedFolders={expandedForView}
+                        onToggleFolder={toggleFolder}
+                        onSelectFile={openFile}
+                        onDeleteFile={(path) => setDeleteConfirmPath(path)}
+                        canDelete={filePaths.length > 1}
+                        depth={0}
+                      />
+                    )}
+                  </nav>
+                </ScrollArea>
               </div>
             </ResizablePanel>
             <ResizableHandle
@@ -1092,40 +1171,316 @@ export function View() {
               )}
             />
             <ResizablePanel defaultSize={78} minSize={50}>
-            <div
-              className="flex h-full flex-col min-h-0"
-              onKeyDown={(e) => e.stopPropagation()}
-              onKeyDownCapture={handleEditorAreaKeyDown}
-              onKeyUp={(e) => e.stopPropagation()}
-            >
-              {/* Tab bar – explorer toggle left of tabs, then VS Code style tabs */}
-              <div className="flex h-8 shrink-0 items-end border-b border-border bg-muted/50">
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
+              <div
+                className="flex h-full flex-col min-h-0"
+                onKeyDown={(e) => e.stopPropagation()}
+                onKeyDownCapture={handleEditorAreaKeyDown}
+                onKeyUp={(e) => e.stopPropagation()}
+              >
+                {/* Tab bar – explorer toggle left of tabs, then VS Code style tabs */}
+                <div className="flex h-8 shrink-0 items-end border-b border-border bg-muted/50">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex h-8 w-8 shrink-0 items-center justify-center border-r border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+                          onClick={() => setExplorerOpen(false)}
+                          aria-label="Close explorer"
+                        >
+                          <PanelLeftClose className="h-3.5 w-3.5" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        <p>Close explorer</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <div className="flex min-w-0 flex-1 items-end overflow-x-auto">
+                    {(() => {
+                      const visibleOpenFiles = openFiles.filter(
+                        (path) => path in files,
+                      )
+                      const canCloseTab = visibleOpenFiles.length > 1
+                      return visibleOpenFiles.map((path) => {
+                        const tabIndex = openFiles.indexOf(path)
+                        const isActive = activeFile === path
+                        const isDirty = dirtyFiles.has(path)
+                        const name = path.split('/').pop() ?? path
+                        return (
+                          <div
+                            key={path}
+                            role="tab"
+                            aria-selected={isActive}
+                            data-tab-index={tabIndex}
+                            draggable
+                            className={cn(
+                              'group flex shrink-0 cursor-grab active:cursor-grabbing items-center gap-1.5 border-b-2 px-3 py-1.5 font-mono text-[12px] transition-colors',
+                              isActive
+                                ? 'border-t-2 border-t-primary border-b-background bg-background text-foreground -mb-px'
+                                : 'border-t-2 border-t-transparent border-b-transparent bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                            )}
+                            onClick={() => setActiveFile(path)}
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData(
+                                'application/x-tab-index',
+                                String(tabIndex),
+                              )
+                              e.dataTransfer.effectAllowed = 'move'
+                              e.dataTransfer.dropEffect = 'move'
+                            }}
+                            onDragOver={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              e.dataTransfer.dropEffect = 'move'
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              const fromIndex = parseInt(
+                                e.dataTransfer.getData(
+                                  'application/x-tab-index',
+                                ),
+                                10,
+                              )
+                              const toIndex = tabIndex
+                              if (
+                                !Number.isNaN(fromIndex) &&
+                                fromIndex !== toIndex
+                              )
+                                reorderOpenFiles(fromIndex, toIndex)
+                            }}
+                          >
+                            <span
+                              className="min-w-0 max-w-[140px] truncate"
+                              title={path}
+                            >
+                              {name}
+                            </span>
+                            {isDirty && (
+                              <Circle
+                                className="h-1 w-1 shrink-0 fill-current text-amber-500"
+                                aria-label="Unsaved"
+                              />
+                            )}
+                            {canCloseTab && (
+                              <button
+                                type="button"
+                                className="rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-foreground focus:opacity-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring text-muted-foreground"
+                                onClick={(e) => closeTab(path, e)}
+                                onDragStart={(e) => e.stopPropagation()}
+                                aria-label={`Close ${name}`}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })
+                    })()}
+                  </div>
+                </div>
+                {/* Find / Find+replace – only when opened via shortcut or top bar buttons */}
+                {findPanelMode !== false && (
+                  <div className="flex h-[41px] shrink-0 items-center border-b border-border bg-muted/30 px-2 gap-2">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
+                      <label className="shrink-0 text-[11px] font-medium text-muted-foreground">
+                        Find
+                      </label>
+                      <Input
+                        ref={findInputRef}
+                        type="search"
+                        placeholder={`Search in file (${shortcutFind})`}
+                        value={findInFileQuery}
+                        onChange={(e) => setFindInFileQuery(e.target.value)}
+                        className="h-7 min-w-0 flex-1 max-w-[180px] text-[12px]"
+                        aria-label="Find in file"
+                      />
+                    </div>
+                    {findPanelMode === 'replace' && (
+                      <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
+                        <label className="shrink-0 text-[11px] font-medium text-muted-foreground">
+                          Replace
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="Replace with"
+                          value={replaceValue}
+                          onChange={(e) => setReplaceValue(e.target.value)}
+                          className="h-7 min-w-0 flex-1 max-w-[180px] text-[12px]"
+                          aria-label="Replace with"
+                        />
+                      </div>
+                    )}
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      {findMatches.length > 0 && (
+                        <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
+                          {findMatchIndex + 1}/{findMatches.length}
+                        </span>
+                      )}
+                      <Button
                         type="button"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center border-r border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
-                        onClick={() => setExplorerOpen(false)}
-                        aria-label="Close explorer"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={() => goToFindMatch(-1)}
+                        disabled={findMatches.length === 0}
+                        aria-label="Previous match"
                       >
-                        <PanelLeftClose className="h-3.5 w-3.5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>Close explorer</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <div className="flex min-w-0 flex-1 items-end overflow-x-auto">
-                  {(() => {
-                    const visibleOpenFiles = openFiles.filter((path) => path in files)
-                    const canCloseTab = visibleOpenFiles.length > 1
-                    return visibleOpenFiles.map((path) => {
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={() => goToFindMatch(1)}
+                        disabled={findMatches.length === 0}
+                        aria-label="Next match"
+                      >
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </Button>
+                      {findPanelMode === 'replace' && (
+                        <>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="h-7 shrink-0 text-[11px] px-2"
+                            onClick={replaceCurrent}
+                            disabled={findMatches.length === 0}
+                          >
+                            Replace
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="h-7 shrink-0 text-[11px] px-2"
+                            onClick={replaceAll}
+                            disabled={findMatches.length === 0}
+                          >
+                            All
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 shrink-0"
+                        onClick={() => {
+                          setFindPanelMode(false)
+                          setFindInFileQuery('')
+                          setReplaceValue('')
+                          setFindMatches([])
+                          setFindMatchIndex(0)
+                          const editor = editorRef.current
+                          if (editor) {
+                            editor.deltaDecorations(
+                              findDecorationIdsRef.current,
+                              [],
+                            )
+                            findDecorationIdsRef.current = []
+                          }
+                        }}
+                        aria-label="Close find"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <div className="min-h-0 flex-1">
+                  <Editor
+                    key={`${activeFile}-${isDark}`}
+                    height="100%"
+                    defaultLanguage={activeLang}
+                    language={activeLang}
+                    value={activeContent}
+                    onChange={handleEditorChange}
+                    onMount={handleEditorMount}
+                    theme={isDark ? MONACO_THEME_DARK : MONACO_THEME_LIGHT}
+                    beforeMount={defineAppThemes}
+                    options={{
+                      minimap: { enabled: true },
+                      fontSize: 13,
+                      lineNumbers: 'on',
+                      scrollBeyondLastLine: false,
+                      wordWrap: 'on',
+                      padding: { top: 16 },
+                    }}
+                    loading={
+                      <div className="flex h-full items-center justify-center bg-background text-muted-foreground">
+                        Loading editor...
+                      </div>
+                    }
+                    className={cn('rounded-b-lg')}
+                  />
+                </div>
+                {/* Footer */}
+                <div className="flex shrink-0 items-center justify-between gap-4 border-t border-border bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="truncate font-mono" title={activeFile}>
+                      {activeFile}
+                    </span>
+                    <span className="shrink-0 capitalize">{activeLang}</span>
+                    {dirtyFiles.has(activeFile) && (
+                      <span className="shrink-0 text-amber-600 dark:text-amber-500">
+                        Unsaved
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3 tabular-nums">
+                    {cursorPosition && (
+                      <span>
+                        Ln {cursorPosition.lineNumber}, Col{' '}
+                        {cursorPosition.column}
+                      </span>
+                    )}
+                    <span>{lineCount} lines</span>
+                    <span>{activeContent.length} chars</span>
+                  </div>
+                </div>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : (
+          <div
+            className="flex min-h-0 flex-1 flex-col min-w-0 bg-background"
+            onKeyDown={(e) => e.stopPropagation()}
+            onKeyDownCapture={handleEditorAreaKeyDown}
+            onKeyUp={(e) => e.stopPropagation()}
+          >
+            {/* Tab bar – explorer toggle left of tabs */}
+            <div className="flex h-8 shrink-0 items-end border-b border-border bg-muted/50">
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center border-r border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+                      onClick={() => setExplorerOpen(true)}
+                      aria-label="Open explorer"
+                    >
+                      <PanelLeft className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>Open explorer</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <div className="flex min-w-0 flex-1 items-end overflow-x-auto">
+                {openFiles
+                  .filter((path) => path in files)
+                  .map((path) => {
                     const tabIndex = openFiles.indexOf(path)
                     const isActive = activeFile === path
                     const isDirty = dirtyFiles.has(path)
                     const name = path.split('/').pop() ?? path
+                    const canCloseTab =
+                      openFiles.filter((p) => p in files).length > 1
                     return (
                       <div
                         key={path}
@@ -1141,7 +1496,10 @@ export function View() {
                         )}
                         onClick={() => setActiveFile(path)}
                         onDragStart={(e) => {
-                          e.dataTransfer.setData('application/x-tab-index', String(tabIndex))
+                          e.dataTransfer.setData(
+                            'application/x-tab-index',
+                            String(tabIndex),
+                          )
                           e.dataTransfer.effectAllowed = 'move'
                           e.dataTransfer.dropEffect = 'move'
                         }}
@@ -1153,16 +1511,26 @@ export function View() {
                         onDrop={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          const fromIndex = parseInt(e.dataTransfer.getData('application/x-tab-index'), 10)
+                          const fromIndex = parseInt(
+                            e.dataTransfer.getData('application/x-tab-index'),
+                            10,
+                          )
                           const toIndex = tabIndex
-                          if (!Number.isNaN(fromIndex) && fromIndex !== toIndex) reorderOpenFiles(fromIndex, toIndex)
+                          if (!Number.isNaN(fromIndex) && fromIndex !== toIndex)
+                            reorderOpenFiles(fromIndex, toIndex)
                         }}
                       >
-                        <span className="min-w-0 max-w-[140px] truncate" title={path}>
+                        <span
+                          className="min-w-0 max-w-[140px] truncate"
+                          title={path}
+                        >
                           {name}
                         </span>
                         {isDirty && (
-                          <Circle className="h-1 w-1 shrink-0 fill-current text-amber-500" aria-label="Unsaved" />
+                          <Circle
+                            className="h-1 w-1 shrink-0 fill-current text-amber-500"
+                            aria-label="Unsaved"
+                          />
                         )}
                         {canCloseTab && (
                           <button
@@ -1177,15 +1545,16 @@ export function View() {
                         )}
                       </div>
                     )
-                  });
-                  })()}
-                </div>
+                  })}
               </div>
-              {/* Find / Find+replace – only when opened via shortcut or top bar buttons */}
-              {findPanelMode !== false && (
+            </div>
+            {/* Find / Find+replace – only when opened via shortcut or top bar buttons */}
+            {findPanelMode !== false && (
               <div className="flex h-[41px] shrink-0 items-center border-b border-border bg-muted/30 px-2 gap-2">
                 <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
-                  <label className="shrink-0 text-[11px] font-medium text-muted-foreground">Find</label>
+                  <label className="shrink-0 text-[11px] font-medium text-muted-foreground">
+                    Find
+                  </label>
                   <Input
                     ref={findInputRef}
                     type="search"
@@ -1197,17 +1566,19 @@ export function View() {
                   />
                 </div>
                 {findPanelMode === 'replace' && (
-                <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
-                  <label className="shrink-0 text-[11px] font-medium text-muted-foreground">Replace</label>
-                  <Input
-                    type="text"
-                    placeholder="Replace with"
-                    value={replaceValue}
-                    onChange={(e) => setReplaceValue(e.target.value)}
-                    className="h-7 min-w-0 flex-1 max-w-[180px] text-[12px]"
-                    aria-label="Replace with"
-                  />
-                </div>
+                  <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
+                    <label className="shrink-0 text-[11px] font-medium text-muted-foreground">
+                      Replace
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="Replace with"
+                      value={replaceValue}
+                      onChange={(e) => setReplaceValue(e.target.value)}
+                      className="h-7 min-w-0 flex-1 max-w-[180px] text-[12px]"
+                      aria-label="Replace with"
+                    />
+                  </div>
                 )}
                 <div className="flex shrink-0 items-center gap-0.5">
                   {findMatches.length > 0 && (
@@ -1274,7 +1645,10 @@ export function View() {
                       setFindMatchIndex(0)
                       const editor = editorRef.current
                       if (editor) {
-                        editor.deltaDecorations(findDecorationIdsRef.current, [])
+                        editor.deltaDecorations(
+                          findDecorationIdsRef.current,
+                          [],
+                        )
                         findDecorationIdsRef.current = []
                       }
                     }}
@@ -1284,246 +1658,57 @@ export function View() {
                   </Button>
                 </div>
               </div>
-              )}
-              <div className="min-h-0 flex-1">
-                <Editor
-                  key={`${activeFile}-${isDark}`}
-                  height="100%"
-                  defaultLanguage={activeLang}
-                  language={activeLang}
-                  value={activeContent}
-                  onChange={handleEditorChange}
-                  onMount={handleEditorMount}
-                  theme={isDark ? MONACO_THEME_DARK : MONACO_THEME_LIGHT}
-                  beforeMount={defineAppThemes}
-                  options={{
-                    minimap: { enabled: true },
-                    fontSize: 13,
-                    lineNumbers: 'on',
-                    scrollBeyondLastLine: false,
-                    wordWrap: 'on',
-                    padding: { top: 16 },
-                  }}
-                  loading={
-                    <div className="flex h-full items-center justify-center bg-background text-muted-foreground">
-                      Loading editor...
-                    </div>
-                  }
-                  className={cn('rounded-b-lg')}
-                />
-              </div>
-              {/* Footer */}
-              <div className="flex shrink-0 items-center justify-between gap-4 border-t border-border bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="truncate font-mono" title={activeFile}>
-                    {activeFile}
+            )}
+            <div className="min-h-0 flex-1">
+              <Editor
+                key={`${activeFile}-${isDark}`}
+                height="100%"
+                defaultLanguage={activeLang}
+                language={activeLang}
+                value={activeContent}
+                onChange={handleEditorChange}
+                onMount={handleEditorMount}
+                theme={isDark ? MONACO_THEME_DARK : MONACO_THEME_LIGHT}
+                beforeMount={defineAppThemes}
+                options={{
+                  minimap: { enabled: true },
+                  fontSize: 13,
+                  lineNumbers: 'on',
+                  scrollBeyondLastLine: false,
+                  wordWrap: 'on',
+                  padding: { top: 16 },
+                }}
+                loading={
+                  <div className="flex h-full items-center justify-center bg-background text-muted-foreground">
+                    Loading editor...
+                  </div>
+                }
+                className={cn('rounded-b-lg')}
+              />
+            </div>
+            <div className="flex shrink-0 items-center justify-between gap-4 border-t border-border bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="truncate font-mono" title={activeFile}>
+                  {activeFile}
+                </span>
+                <span className="shrink-0 capitalize">{activeLang}</span>
+                {dirtyFiles.has(activeFile) && (
+                  <span className="shrink-0 text-amber-600 dark:text-amber-500">
+                    Unsaved
                   </span>
-                  <span className="shrink-0 capitalize">{activeLang}</span>
-                  {dirtyFiles.has(activeFile) && (
-                    <span className="shrink-0 text-amber-600 dark:text-amber-500">
-                      Unsaved
-                    </span>
-                  )}
-                </div>
-                <div className="flex shrink-0 items-center gap-3 tabular-nums">
-                  {cursorPosition && (
-                    <span>
-                      Ln {cursorPosition.lineNumber}, Col {cursorPosition.column}
-                    </span>
-                  )}
-                  <span>{lineCount} lines</span>
-                  <span>{activeContent.length} chars</span>
-                </div>
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-        ) : (
-            <div
-              className="flex min-h-0 flex-1 flex-col min-w-0 bg-background"
-              onKeyDown={(e) => e.stopPropagation()}
-              onKeyDownCapture={handleEditorAreaKeyDown}
-              onKeyUp={(e) => e.stopPropagation()}
-            >
-              {/* Tab bar – explorer toggle left of tabs */}
-              <div className="flex h-8 shrink-0 items-end border-b border-border bg-muted/50">
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        className="flex h-8 w-8 shrink-0 items-center justify-center border-r border-border text-muted-foreground hover:bg-muted/60 hover:text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
-                        onClick={() => setExplorerOpen(true)}
-                        aria-label="Open explorer"
-                      >
-                        <PanelLeft className="h-3.5 w-3.5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <p>Open explorer</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <div className="flex min-w-0 flex-1 items-end overflow-x-auto">
-                  {openFiles.filter((path) => path in files).map((path) => {
-                    const tabIndex = openFiles.indexOf(path)
-                    const isActive = activeFile === path
-                    const isDirty = dirtyFiles.has(path)
-                    const name = path.split('/').pop() ?? path
-                    const canCloseTab = openFiles.filter((p) => p in files).length > 1
-                    return (
-                      <div
-                        key={path}
-                        role="tab"
-                        aria-selected={isActive}
-                        data-tab-index={tabIndex}
-                        draggable
-                        className={cn(
-                          'group flex shrink-0 cursor-grab active:cursor-grabbing items-center gap-1.5 border-b-2 px-3 py-1.5 font-mono text-[12px] transition-colors',
-                          isActive
-                            ? 'border-t-2 border-t-primary border-b-background bg-background text-foreground -mb-px'
-                            : 'border-t-2 border-t-transparent border-b-transparent bg-muted/40 text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-                        )}
-                        onClick={() => setActiveFile(path)}
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('application/x-tab-index', String(tabIndex))
-                          e.dataTransfer.effectAllowed = 'move'
-                          e.dataTransfer.dropEffect = 'move'
-                        }}
-                        onDragOver={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          e.dataTransfer.dropEffect = 'move'
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          const fromIndex = parseInt(e.dataTransfer.getData('application/x-tab-index'), 10)
-                          const toIndex = tabIndex
-                          if (!Number.isNaN(fromIndex) && fromIndex !== toIndex) reorderOpenFiles(fromIndex, toIndex)
-                        }}
-                      >
-                        <span className="min-w-0 max-w-[140px] truncate" title={path}>{name}</span>
-                        {isDirty && <Circle className="h-1 w-1 shrink-0 fill-current text-amber-500" aria-label="Unsaved" />}
-                        {canCloseTab && (
-                          <button
-                            type="button"
-                            className="rounded p-0.5 opacity-0 group-hover:opacity-100 hover:bg-muted hover:text-foreground focus:opacity-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring text-muted-foreground"
-                            onClick={(e) => closeTab(path, e)}
-                            onDragStart={(e) => e.stopPropagation()}
-                            aria-label={`Close ${name}`}
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-              {/* Find / Find+replace – only when opened via shortcut or top bar buttons */}
-              {findPanelMode !== false && (
-              <div className="flex h-[41px] shrink-0 items-center border-b border-border bg-muted/30 px-2 gap-2">
-                <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
-                  <label className="shrink-0 text-[11px] font-medium text-muted-foreground">Find</label>
-                  <Input
-                    ref={findInputRef}
-                    type="search"
-                    placeholder={`Search in file (${shortcutFind})`}
-                    value={findInFileQuery}
-                    onChange={(e) => setFindInFileQuery(e.target.value)}
-                    className="h-7 min-w-0 flex-1 max-w-[180px] text-[12px]"
-                    aria-label="Find in file"
-                  />
-                </div>
-                {findPanelMode === 'replace' && (
-                <div className="flex min-w-0 flex-1 items-center gap-2 sm:min-w-[160px]">
-                  <label className="shrink-0 text-[11px] font-medium text-muted-foreground">Replace</label>
-                  <Input
-                    type="text"
-                    placeholder="Replace with"
-                    value={replaceValue}
-                    onChange={(e) => setReplaceValue(e.target.value)}
-                    className="h-7 min-w-0 flex-1 max-w-[180px] text-[12px]"
-                    aria-label="Replace with"
-                  />
-                </div>
                 )}
-                <div className="flex shrink-0 items-center gap-0.5">
-                  {findMatches.length > 0 && (
-                    <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
-                      {findMatchIndex + 1}/{findMatches.length}
-                    </span>
-                  )}
-                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => goToFindMatch(-1)} disabled={findMatches.length === 0} aria-label="Previous match">
-                    <ChevronUp className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => goToFindMatch(1)} disabled={findMatches.length === 0} aria-label="Next match">
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </Button>
-                  {findPanelMode === 'replace' && (
-                    <>
-                      <Button type="button" variant="secondary" size="sm" className="h-7 shrink-0 text-[11px] px-2" onClick={replaceCurrent} disabled={findMatches.length === 0}>
-                        Replace
-                      </Button>
-                      <Button type="button" variant="secondary" size="sm" className="h-7 shrink-0 text-[11px] px-2" onClick={replaceAll} disabled={findMatches.length === 0}>
-                        All
-                      </Button>
-                    </>
-                  )}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 shrink-0"
-                    onClick={() => {
-                      setFindPanelMode(false)
-                      setFindInFileQuery('')
-                      setReplaceValue('')
-                      setFindMatches([])
-                      setFindMatchIndex(0)
-                      const editor = editorRef.current
-                      if (editor) {
-                        editor.deltaDecorations(findDecorationIdsRef.current, [])
-                        findDecorationIdsRef.current = []
-                      }
-                    }}
-                    aria-label="Close find"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
               </div>
-              )}
-              <div className="min-h-0 flex-1">
-                <Editor
-                  key={`${activeFile}-${isDark}`}
-                  height="100%"
-                  defaultLanguage={activeLang}
-                  language={activeLang}
-                  value={activeContent}
-                  onChange={handleEditorChange}
-                  onMount={handleEditorMount}
-                  theme={isDark ? MONACO_THEME_DARK : MONACO_THEME_LIGHT}
-                  beforeMount={defineAppThemes}
-                  options={{ minimap: { enabled: true }, fontSize: 13, lineNumbers: 'on', scrollBeyondLastLine: false, wordWrap: 'on', padding: { top: 16 } }}
-                  loading={<div className="flex h-full items-center justify-center bg-background text-muted-foreground">Loading editor...</div>}
-                  className={cn('rounded-b-lg')}
-                />
-              </div>
-              <div className="flex shrink-0 items-center justify-between gap-4 border-t border-border bg-muted/20 px-3 py-1.5 text-[11px] text-muted-foreground">
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className="truncate font-mono" title={activeFile}>{activeFile}</span>
-                  <span className="shrink-0 capitalize">{activeLang}</span>
-                  {dirtyFiles.has(activeFile) && <span className="shrink-0 text-amber-600 dark:text-amber-500">Unsaved</span>}
-                </div>
-                <div className="flex shrink-0 items-center gap-3 tabular-nums">
-                  {cursorPosition && <span>Ln {cursorPosition.lineNumber}, Col {cursorPosition.column}</span>}
-                  <span>{lineCount} lines</span>
-                  <span>{activeContent.length} chars</span>
-                </div>
+              <div className="flex shrink-0 items-center gap-3 tabular-nums">
+                {cursorPosition && (
+                  <span>
+                    Ln {cursorPosition.lineNumber}, Col {cursorPosition.column}
+                  </span>
+                )}
+                <span>{lineCount} lines</span>
+                <span>{activeContent.length} chars</span>
               </div>
             </div>
+          </div>
         )}
       </div>
 
@@ -1570,12 +1755,16 @@ export function View() {
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Remove file</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Remove &quot;{deleteConfirmPath}&quot; from the project? This cannot be undone.
+              Remove &quot;{deleteConfirmPath}&quot; from the project? This
+              cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="border-t border-border" />
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" onClick={() => setDeleteConfirmPath(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmPath(null)}
+            >
               Cancel
             </Button>
             <Button

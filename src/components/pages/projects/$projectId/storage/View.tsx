@@ -95,24 +95,14 @@ export function View() {
     total: bucketsTotal,
     isLoading: bucketsLoading,
     isFetching: bucketsFetching,
-  } = useProjectBuckets(
-    projectId,
-    requestedPage - 1,
-    pageSize,
-    searchValue,
-  )
+  } = useProjectBuckets(projectId, requestedPage - 1, pageSize, searchValue)
 
   // Fetch data for the displayed page (what we show - stays until new page is ready)
   const {
     buckets: apiBuckets,
     total: displayedTotal,
     isLoading: displayedLoading,
-  } = useProjectBuckets(
-    projectId,
-    displayedPage - 1,
-    pageSize,
-    searchValue,
-  )
+  } = useProjectBuckets(projectId, displayedPage - 1, pageSize, searchValue)
 
   // Only show full loading when we have no data to display (initial load)
   const showLoading = displayedLoading && apiBuckets.length === 0
@@ -274,9 +264,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'list'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('list')}
       >
@@ -287,9 +275,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'grid'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('grid')}
       >

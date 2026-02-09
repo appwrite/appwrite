@@ -81,15 +81,8 @@ export function View() {
   } = useFunctionExecutions(projectId, functionId, requestedPage, pageSize)
 
   // Fetch data for the displayed page (this is what we show)
-  const {
-    executions: displayedExecutions,
-    total: displayedTotal,
-  } = useFunctionExecutions(
-    projectId,
-    functionId,
-    displayedPage,
-    pageSize,
-  )
+  const { executions: displayedExecutions, total: displayedTotal } =
+    useFunctionExecutions(projectId, functionId, displayedPage, pageSize)
 
   // Update displayed page only when requested page data is ready (not fetching)
   // This keeps the current page visible until the next page data is fully loaded

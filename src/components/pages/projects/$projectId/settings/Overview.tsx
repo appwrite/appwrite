@@ -954,9 +954,7 @@ export function ProjectSettingsOverview({
               <div className="mt-4">
                 <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
                   <div className="h-px flex-1 bg-border" />
-                  <span className="font-medium text-foreground/80">
-                    Apps
-                  </span>
+                  <span className="font-medium text-foreground/80">Apps</span>
                   <div className="h-px flex-1 bg-border" />
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2">
@@ -970,7 +968,11 @@ export function ProjectSettingsOverview({
                         className="h-9 text-[13px]"
                         asChild
                       >
-                        <a href={ide.mcpDocsUrl} target="_blank" rel="noreferrer">
+                        <a
+                          href={ide.mcpDocsUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           <img
                             src={ide.iconPath}
                             alt=""
@@ -2212,8 +2214,7 @@ function ChangeOrganizationSection({
 }: ChangeOrganizationSectionProps) {
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
   const selectedOrg = organizations.find((org) => org.value === selectedOrgId)
-  const hasNoTargetOrgs =
-    !organizationsLoading && organizations.length === 0
+  const hasNoTargetOrgs = !organizationsLoading && organizations.length === 0
   const isMoveDisabled =
     hasNoTargetOrgs ||
     !selectedOrgId ||

@@ -9,7 +9,9 @@ import { getPlatformDisplayName } from '@/lib/utils/platform'
 import type { Models } from '@appwrite.io/console'
 
 export type AppsInitialData = {
-  project?: Awaited<ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>>
+  project?: Awaited<
+    ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>
+  >
   platforms: Models.Platform[]
 }
 
@@ -33,8 +35,9 @@ export function View({ initialData }: ViewProps = {}) {
 
   // Use initialData on first paint so no loading skeleton flash
   const { platforms: platformsFromHook, isLoading } = usePlatforms(projectId)
-  const platforms =
-    platformsFromHook?.length ? platformsFromHook : (initialData?.platforms ?? [])
+  const platforms = platformsFromHook?.length
+    ? platformsFromHook
+    : (initialData?.platforms ?? [])
   const showLoading = isLoading && platforms.length === 0 && !initialData
 
   const filteredPlatforms = useMemo(() => {
@@ -45,7 +48,9 @@ export function View({ initialData }: ViewProps = {}) {
         (p.name || '').toLowerCase().includes(q) ||
         (p.hostname || '').toLowerCase().includes(q) ||
         (p.key || '').toLowerCase().includes(q) ||
-        getPlatformDisplayName(p.type || '').toLowerCase().includes(q),
+        getPlatformDisplayName(p.type || '')
+          .toLowerCase()
+          .includes(q),
     )
   }, [platforms, searchValue])
 
@@ -140,9 +145,9 @@ export function View({ initialData }: ViewProps = {}) {
                 platform.hostname || platform.key || platform.store || ''
               const initialIcon =
                 platformType === 'web'
-                  ? ((platform.$id?.charCodeAt(0) ?? 0) % 2 === 0
-                      ? 'ts'
-                      : 'js')
+                  ? (platform.$id?.charCodeAt(0) ?? 0) % 2 === 0
+                    ? 'ts'
+                    : 'js'
                   : undefined
 
               return (

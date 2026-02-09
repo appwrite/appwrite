@@ -37,7 +37,10 @@ import {
   CreateWizardLeftColumn,
   CreateWizardRightColumn,
 } from '@/components/global/shared/CreateWizardColumns'
-import { Pagination, SimplePagination } from '@/components/global/shared/Pagination'
+import {
+  Pagination,
+  SimplePagination,
+} from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import {
@@ -49,7 +52,11 @@ import {
   ChevronsUpDown,
 } from 'lucide-react'
 import { VCSDetectionType } from '@appwrite.io/console'
-import { useRepositories, useSiteTemplates, useProject } from '@/lib/react-query/hooks'
+import {
+  useRepositories,
+  useSiteTemplates,
+  useProject,
+} from '@/lib/react-query/hooks'
 import { getApiEndpoint } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
 import { useWizard } from './WizardContext'
@@ -80,7 +87,13 @@ function BitbucketIcon({ className }: { className?: string }) {
   )
 }
 
-function ProviderIcon({ provider, className }: { provider?: string; className?: string }) {
+function ProviderIcon({
+  provider,
+  className,
+}: {
+  provider?: string
+  className?: string
+}) {
   const normalizedProvider = provider?.toLowerCase() || 'github'
   switch (normalizedProvider) {
     case 'gitlab':
@@ -106,18 +119,28 @@ function getFrameworkString(framework: unknown): string {
 }
 
 // Repository skeleton - single line layout
-function RepositorySkeleton({ index = 0, provider }: { index?: number; provider?: string }) {
+function RepositorySkeleton({
+  index = 0,
+  provider,
+}: {
+  index?: number
+  provider?: string
+}) {
   const nameWidths = ['w-28', 'w-36', 'w-32', 'w-24', 'w-40']
   const dateWidths = ['w-14', 'w-16', 'w-12', 'w-18', 'w-14']
-  
+
   return (
     <div className="flex w-full items-center gap-3 px-4 py-3.5">
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
         <ProviderIcon provider={provider} className="h-3.5 w-3.5" />
       </div>
       <div className="flex-1 min-w-0 flex items-center gap-2">
-        <Skeleton className={cn('h-3.5', nameWidths[index % nameWidths.length])} />
-        <Skeleton className={cn('h-3 shrink-0', dateWidths[index % dateWidths.length])} />
+        <Skeleton
+          className={cn('h-3.5', nameWidths[index % nameWidths.length])}
+        />
+        <Skeleton
+          className={cn('h-3 shrink-0', dateWidths[index % dateWidths.length])}
+        />
       </div>
       <Skeleton className="h-7 w-[68px] shrink-0 rounded-md" />
     </div>
@@ -143,9 +166,17 @@ function TemplateSkeleton() {
 }
 
 // Fade-in image component
-function FadeImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+function FadeImage({
+  src,
+  alt,
+  className,
+}: {
+  src: string
+  alt: string
+  className?: string
+}) {
   const [loaded, setLoaded] = useState(false)
-  
+
   return (
     <img
       src={src}
@@ -153,7 +184,7 @@ function FadeImage({ src, alt, className }: { src: string; alt: string; classNam
       className={cn(
         className,
         'transition-opacity duration-300',
-        loaded ? 'opacity-100' : 'opacity-0'
+        loaded ? 'opacity-100' : 'opacity-0',
       )}
       onLoad={() => setLoaded(true)}
     />
@@ -178,12 +209,8 @@ export function CreateSiteView() {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const { theme, resolvedTheme } = useTheme()
-  const {
-    installations,
-    frameworks,
-    updateFormData,
-    setCurrentPath,
-  } = useWizard()
+  const { installations, frameworks, updateFormData, setCurrentPath } =
+    useWizard()
 
   // Get project for region/endpoint
   const { project } = useProject(projectId)
@@ -195,7 +222,8 @@ export function CreateSiteView() {
   )
 
   // Repository state
-  const [selectedInstallationId, setSelectedInstallationId] = useState<string>('')
+  const [selectedInstallationId, setSelectedInstallationId] =
+    useState<string>('')
 
   // Build GitHub authorization URL with proper redirect (includes current installation ID)
   const getGitHubAuthUrl = useMemo(() => {
@@ -220,7 +248,9 @@ export function CreateSiteView() {
   const [debouncedTemplateSearch, setDebouncedTemplateSearch] = useState('')
   const [templateRequestedPage, setTemplateRequestedPage] = useState(1)
   const [templateDisplayedPage, setTemplateDisplayedPage] = useState(1)
-  const [templatePageSize, setTemplatePageSize] = useState(DEFAULT_TEMPLATE_PAGE_SIZE)
+  const [templatePageSize, setTemplatePageSize] = useState(
+    DEFAULT_TEMPLATE_PAGE_SIZE,
+  )
   const [selectedFramework, setSelectedFramework] = useState<string>('all')
   const [selectedUseCase, setSelectedUseCase] = useState<string>('all')
   const [useCaseOpen, setUseCaseOpen] = useState(false)
@@ -240,23 +270,26 @@ export function CreateSiteView() {
         const createdAt = new Date(inst.$createdAt)
         return createdAt > twoMinutesAgo
       })
-      
+
       if (recentInstallation) {
         // Select the most recently created installation
         setSelectedInstallationId(recentInstallation.$id)
         return
       }
-      
+
       // Check URL for installation parameter (restored from GitHub auth redirect)
       if (typeof window !== 'undefined') {
         const urlParams = new URLSearchParams(window.location.search)
         const installationFromUrl = urlParams.get('installation')
-        if (installationFromUrl && installations.some((inst) => inst.$id === installationFromUrl)) {
+        if (
+          installationFromUrl &&
+          installations.some((inst) => inst.$id === installationFromUrl)
+        ) {
           setSelectedInstallationId(installationFromUrl)
           return
         }
       }
-      
+
       // Default to first installation
       setSelectedInstallationId(installations[0].$id)
     }
@@ -288,7 +321,12 @@ export function CreateSiteView() {
   }, [theme, resolvedTheme])
 
   // Fetch repositories
-  const { data: repositoriesData, isLoading: reposLoading, isFetching: reposFetching, refetch: refetchRepos } = useRepositories(
+  const {
+    data: repositoriesData,
+    isLoading: reposLoading,
+    isFetching: reposFetching,
+    refetch: refetchRepos,
+  } = useRepositories(
     projectId,
     selectedInstallationId || null,
     VCSDetectionType.Framework,
@@ -304,18 +342,18 @@ export function CreateSiteView() {
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
 
   // Fetch templates: requested page (triggers load) and displayed page (what we show until new page is ready)
-  const frameworkFilter = selectedFramework !== 'all' ? [selectedFramework] : undefined
-  const useCaseFilter = selectedUseCase !== 'all' ? [selectedUseCase] : undefined
-  const {
-    isLoading: templatesLoading,
-    isFetching: templatesFetching,
-  } = useSiteTemplates(
-    projectId,
-    frameworkFilter,
-    useCaseFilter,
-    templatePageSize,
-    (templateRequestedPage - 1) * templatePageSize,
-  )
+  const frameworkFilter =
+    selectedFramework !== 'all' ? [selectedFramework] : undefined
+  const useCaseFilter =
+    selectedUseCase !== 'all' ? [selectedUseCase] : undefined
+  const { isLoading: templatesLoading, isFetching: templatesFetching } =
+    useSiteTemplates(
+      projectId,
+      frameworkFilter,
+      useCaseFilter,
+      templatePageSize,
+      (templateRequestedPage - 1) * templatePageSize,
+    )
 
   const {
     templates: displayedTemplates,
@@ -338,10 +376,16 @@ export function CreateSiteView() {
     ) {
       setTemplateDisplayedPage(templateRequestedPage)
     }
-  }, [templatesFetching, templatesLoading, templateRequestedPage, templateDisplayedPage])
+  }, [
+    templatesFetching,
+    templatesLoading,
+    templateRequestedPage,
+    templateDisplayedPage,
+  ])
 
   // Only show full loading when we have no data to display (initial load)
-  const showTemplatesLoading = templatesDisplayedLoading && displayedTemplates.length === 0
+  const showTemplatesLoading =
+    templatesDisplayedLoading && displayedTemplates.length === 0
 
   // Filter templates by search (client-side since API may not support text search)
   const filteredTemplates = useMemo(() => {
@@ -370,7 +414,9 @@ export function CreateSiteView() {
   }, [frameworks])
 
   const hasInstallations = installations.length > 0
-  const selectedInstallation = installations.find(i => i.$id === selectedInstallationId)
+  const selectedInstallation = installations.find(
+    (i) => i.$id === selectedInstallationId,
+  )
 
   const handleSelectRepository = (repo: any) => {
     const installationId = selectedInstallationId!
@@ -464,14 +510,19 @@ export function CreateSiteView() {
                             provider={selectedInstallation.provider}
                             className="h-4 w-4 shrink-0"
                           />
-                          <span className="truncate">{selectedInstallation.organization}</span>
+                          <span className="truncate">
+                            {selectedInstallation.organization}
+                          </span>
                         </span>
                       )}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {installations.map((installation) => (
-                      <SelectItem key={installation.$id} value={installation.$id}>
+                      <SelectItem
+                        key={installation.$id}
+                        value={installation.$id}
+                      >
                         <span className="flex items-center gap-2">
                           <ProviderIcon
                             provider={installation.provider}
@@ -510,7 +561,9 @@ export function CreateSiteView() {
                   disabled={reposFetching}
                   className="h-9 w-9 p-0 shrink-0"
                 >
-                  <RefreshCw className={cn('h-4 w-4', reposFetching && 'animate-spin')} />
+                  <RefreshCw
+                    className={cn('h-4 w-4', reposFetching && 'animate-spin')}
+                  />
                 </Button>
               </div>
 
@@ -519,14 +572,20 @@ export function CreateSiteView() {
                 {reposLoading ? (
                   <div className="divide-y divide-border">
                     {Array.from({ length: REPO_PAGE_SIZE }).map((_, i) => (
-                      <RepositorySkeleton key={i} index={i} provider={selectedInstallation?.provider} />
+                      <RepositorySkeleton
+                        key={i}
+                        index={i}
+                        provider={selectedInstallation?.provider}
+                      />
                     ))}
                   </div>
                 ) : repositories.length > 0 ? (
-                  <div className={cn(
-                    'divide-y divide-border',
-                    reposFetching && 'opacity-60 pointer-events-none'
-                  )}>
+                  <div
+                    className={cn(
+                      'divide-y divide-border',
+                      reposFetching && 'opacity-60 pointer-events-none',
+                    )}
+                  >
                     {repositories.map((repo: any) => (
                       <div
                         key={repo.id}
@@ -534,9 +593,15 @@ export function CreateSiteView() {
                       >
                         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
                           {repo.framework ? (
-                            <FrameworkIcon framework={repo.framework} size="sm" />
+                            <FrameworkIcon
+                              framework={repo.framework}
+                              size="sm"
+                            />
                           ) : (
-                            <ProviderIcon provider={selectedInstallation?.provider} className="h-3.5 w-3.5" />
+                            <ProviderIcon
+                              provider={selectedInstallation?.provider}
+                              className="h-3.5 w-3.5"
+                            />
                           )}
                         </div>
                         <div className="flex-1 min-w-0 flex items-center gap-2">
@@ -566,7 +631,9 @@ export function CreateSiteView() {
                 ) : (
                   <div className="py-8 text-center">
                     <p className="text-[12px] text-muted-foreground">
-                      {repoSearch ? 'No repositories found' : 'No repositories available'}
+                      {repoSearch
+                        ? 'No repositories found'
+                        : 'No repositories available'}
                     </p>
                   </div>
                 )}
@@ -586,7 +653,9 @@ export function CreateSiteView() {
                   Can't find a repository?
                 </p>
                 <p className="text-[12px] text-muted-foreground leading-snug mb-3">
-                  If you selected specific repositories during setup, you may need to update your GitHub permissions to include additional ones.
+                  If you selected specific repositories during setup, you may
+                  need to update your GitHub permissions to include additional
+                  ones.
                 </p>
                 <a
                   href={getGitHubAuthUrl}
@@ -613,7 +682,11 @@ export function CreateSiteView() {
               />
             </div>
             {/* Use case filter */}
-            <Popover open={useCaseOpen} onOpenChange={setUseCaseOpen} modal={true}>
+            <Popover
+              open={useCaseOpen}
+              onOpenChange={setUseCaseOpen}
+              modal={true}
+            >
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -621,13 +694,21 @@ export function CreateSiteView() {
                   aria-expanded={useCaseOpen}
                   className="w-[150px] h-9 justify-between text-[13px] font-normal"
                 >
-                  {USE_CASE_OPTIONS.find((opt) => opt.value === selectedUseCase)?.label || 'All use cases'}
+                  {USE_CASE_OPTIONS.find((opt) => opt.value === selectedUseCase)
+                    ?.label || 'All use cases'}
                   <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0 z-[100]" align="start" sideOffset={4}>
+              <PopoverContent
+                className="w-[200px] p-0 z-[100]"
+                align="start"
+                sideOffset={4}
+              >
                 <Command>
-                  <CommandInput placeholder="Search use cases..." className="h-9" />
+                  <CommandInput
+                    placeholder="Search use cases..."
+                    className="h-9"
+                  />
                   <CommandList>
                     <CommandEmpty>No use case found.</CommandEmpty>
                     <CommandGroup>
@@ -652,7 +733,11 @@ export function CreateSiteView() {
             </Popover>
 
             {/* Framework filter */}
-            <Popover open={frameworkOpen} onOpenChange={setFrameworkOpen} modal={true}>
+            <Popover
+              open={frameworkOpen}
+              onOpenChange={setFrameworkOpen}
+              modal={true}
+            >
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -665,15 +750,24 @@ export function CreateSiteView() {
                       <FrameworkIcon framework={selectedFramework} size="sm" />
                     )}
                     <span className="capitalize truncate">
-                      {frameworkOptions.find((opt) => opt.value === selectedFramework)?.label || 'All frameworks'}
+                      {frameworkOptions.find(
+                        (opt) => opt.value === selectedFramework,
+                      )?.label || 'All frameworks'}
                     </span>
                   </span>
                   <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[220px] p-0 z-[100]" align="start" sideOffset={4}>
+              <PopoverContent
+                className="w-[220px] p-0 z-[100]"
+                align="start"
+                sideOffset={4}
+              >
                 <Command>
-                  <CommandInput placeholder="Search frameworks..." className="h-9" />
+                  <CommandInput
+                    placeholder="Search frameworks..."
+                    className="h-9"
+                  />
                   <CommandList>
                     <CommandEmpty>No framework found.</CommandEmpty>
                     <CommandGroup>
@@ -689,7 +783,11 @@ export function CreateSiteView() {
                           }}
                         >
                           {option.value !== 'all' && (
-                            <FrameworkIcon framework={option.value} size="sm" className="mr-2" />
+                            <FrameworkIcon
+                              framework={option.value}
+                              size="sm"
+                              className="mr-2"
+                            />
                           )}
                           <span className="capitalize">{option.label}</span>
                         </CommandItem>
@@ -709,10 +807,12 @@ export function CreateSiteView() {
               ))}
             </div>
           ) : filteredTemplates.length > 0 ? (
-            <div className={cn(
-              'grid gap-4 grid-cols-3',
-              templatesFetching && 'opacity-60 pointer-events-none'
-            )}>
+            <div
+              className={cn(
+                'grid gap-4 grid-cols-3',
+                templatesFetching && 'opacity-60 pointer-events-none',
+              )}
+            >
               {filteredTemplates.map((template) => {
                 const screenshotUrl = getScreenshotUrl(template)
                 return (
@@ -755,7 +855,9 @@ export function CreateSiteView() {
           ) : (
             <div className="py-8 text-center">
               <p className="text-[12px] text-muted-foreground">
-                {templateSearch ? 'No templates found' : 'No templates available'}
+                {templateSearch
+                  ? 'No templates found'
+                  : 'No templates available'}
               </p>
             </div>
           )}

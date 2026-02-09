@@ -375,10 +375,6 @@ export async function fetchDeploymentProxyRules(
   }
 }
 
-
-
-
-
 // ============================================================================
 // QUERY OPTIONS
 // ============================================================================
@@ -483,17 +479,8 @@ export function siteDomainsQueryOptions(
   search?: string,
 ) {
   return queryOptions({
-    queryKey: [
-      'proxy-rules',
-      'site',
-      projectId,
-      siteId,
-      page,
-      limit,
-      search,
-    ],
-    queryFn: () =>
-      fetchSiteDomains(projectId!, siteId!, page, limit, search),
+    queryKey: ['proxy-rules', 'site', projectId, siteId, page, limit, search],
+    queryFn: () => fetchSiteDomains(projectId!, siteId!, page, limit, search),
     enabled: !!projectId && !!siteId,
     staleTime: DEFAULT_STALE_TIME,
     retry: false,
@@ -513,13 +500,7 @@ export function deploymentProxyRulesQueryOptions(
   deploymentId: string | null | undefined,
 ) {
   return queryOptions({
-    queryKey: [
-      'proxy-rules',
-      'deployment',
-      projectId,
-      siteId,
-      deploymentId,
-    ],
+    queryKey: ['proxy-rules', 'deployment', projectId, siteId, deploymentId],
     queryFn: () =>
       fetchDeploymentProxyRules(projectId!, siteId!, deploymentId!),
     enabled: !!projectId && !!siteId && !!deploymentId,
@@ -766,9 +747,7 @@ export function useSiteDeployment(
   siteId: string | null | undefined,
   deploymentId: string | null | undefined,
 ) {
-  return useQuery(
-    siteDeploymentQueryOptions(projectId, siteId, deploymentId),
-  )
+  return useQuery(siteDeploymentQueryOptions(projectId, siteId, deploymentId))
 }
 
 /**
@@ -903,10 +882,6 @@ export function useDeploymentProxyRules(
     refetch,
   }
 }
-
-
-
-
 
 // ============================================================================
 // MUTATIONS
@@ -1085,7 +1060,9 @@ export function siteTemplatesQueryOptions(
 ) {
   // Serialize arrays for stable query keys
   const frameworksKey =
-    frameworks && frameworks.length > 0 ? [...frameworks].sort().join(',') : null
+    frameworks && frameworks.length > 0
+      ? [...frameworks].sort().join(',')
+      : null
   const useCasesKey =
     useCases && useCases.length > 0 ? [...useCases].sort().join(',') : null
 
@@ -1379,9 +1356,7 @@ export interface CreateVcsDeploymentParams {
 /**
  * Hook to create a VCS deployment
  */
-export function useCreateVcsDeployment(
-  projectId: string | null | undefined,
-) {
+export function useCreateVcsDeployment(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -1463,7 +1438,13 @@ export function useCreateSiteDomain(projectId: string | null | undefined) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ domain, siteId }: { domain: string; siteId: string }) => {
+    mutationFn: async ({
+      domain,
+      siteId,
+    }: {
+      domain: string
+      siteId: string
+    }) => {
       if (!projectId) {
         throw new Error('Project ID is required')
       }

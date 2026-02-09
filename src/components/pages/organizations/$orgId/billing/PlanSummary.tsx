@@ -193,7 +193,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
 
   // Additional projects count and cost from aggregation API when available
   const additionalProjectsCount = useMemo(() => {
-    if (projectsResource?.value !== undefined && projectsResource?.value !== null) {
+    if (
+      projectsResource?.value !== undefined &&
+      projectsResource?.value !== null
+    ) {
       return Number(projectsResource.value)
     }
     // Fallback: derive from breakdown count minus plan included
@@ -210,7 +213,10 @@ export function PlanSummary({ onChangePlan, orgId }: PlanSummaryProps) {
   }, [plan, aggregation, projectsResource])
 
   const additionalProjectsCost = useMemo(() => {
-    if (projectsResource?.amount !== undefined && projectsResource?.amount !== null) {
+    if (
+      projectsResource?.amount !== undefined &&
+      projectsResource?.amount !== null
+    ) {
       return Number(projectsResource.amount)
     }
     // Fallback: derive from count * plan addon price

@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router'
-import {
-  useProjectSite,
-  useSiteLogs,
-} from '@/lib/react-query/hooks'
+import { useProjectSite, useSiteLogs } from '@/lib/react-query/hooks'
 import { LogsListView } from '@/components/global/shared/LogsListView'
 import { Route } from '@/routes/_public/projects.$projectId.sites.$siteId.logs'
 import { useRefreshOptional } from '@/components/global/shared/RefreshContext'
@@ -51,10 +48,7 @@ export function View() {
   } = useSiteLogs(projectId, siteId, requestedPage, pageSize)
 
   // Fetch data for the displayed page (this is what we show)
-  const {
-    logs: displayedLogs,
-    total: displayedTotal,
-  } = useSiteLogs(
+  const { logs: displayedLogs, total: displayedTotal } = useSiteLogs(
     projectId,
     siteId,
     displayedPage,
@@ -64,11 +58,7 @@ export function View() {
   // Update displayed page only when requested page data is ready (not fetching)
   // This keeps the current page visible until the next page data is fully loaded
   useEffect(() => {
-    if (
-      !logsFetching &&
-      requestedPage !== displayedPage &&
-      !logsLoading
-    ) {
+    if (!logsFetching && requestedPage !== displayedPage && !logsLoading) {
       setDisplayedPage(requestedPage)
     }
   }, [logsFetching, logsLoading, requestedPage, displayedPage])

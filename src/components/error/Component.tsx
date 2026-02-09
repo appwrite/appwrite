@@ -109,13 +109,13 @@ export function ErrorComponent({
   )
   const location = useLocation()
   const navigate = useNavigate()
-  
+
   // Check if this is a project route and if the error is project-related
   const isProjectRoute = location.pathname.startsWith('/projects/')
   const errorMessage = error.message || ''
   const lowerMessage = errorMessage.toLowerCase()
   const errorCode = (error as any).code
-  
+
   const isProjectNotFound =
     isProjectRoute &&
     (error.name === 'NotFoundError' ||
@@ -123,7 +123,7 @@ export function ErrorComponent({
       lowerMessage.includes('not found') ||
       lowerMessage.includes('404') ||
       lowerMessage.includes('does not exist'))
-  
+
   const isProjectAccessDenied =
     isProjectRoute &&
     (error.name === 'UnauthorizedError' ||
@@ -134,7 +134,7 @@ export function ErrorComponent({
       lowerMessage.includes('forbidden') ||
       lowerMessage.includes('permission denied') ||
       lowerMessage.includes('access denied'))
-  
+
   // Use project-specific messages for project routes
   const formattedError = isProjectNotFound
     ? {
@@ -186,15 +186,28 @@ export function ErrorComponent({
       isProjectNotFound,
       isProjectAccessDenied,
       // Browser info
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-      language: typeof navigator !== 'undefined' ? navigator.language : undefined,
+      userAgent:
+        typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      language:
+        typeof navigator !== 'undefined' ? navigator.language : undefined,
       // Screen info
-      screenWidth: typeof window !== 'undefined' ? window.screen.width : undefined,
-      screenHeight: typeof window !== 'undefined' ? window.screen.height : undefined,
-      viewportWidth: typeof window !== 'undefined' ? window.innerWidth : undefined,
-      viewportHeight: typeof window !== 'undefined' ? window.innerHeight : undefined,
+      screenWidth:
+        typeof window !== 'undefined' ? window.screen.width : undefined,
+      screenHeight:
+        typeof window !== 'undefined' ? window.screen.height : undefined,
+      viewportWidth:
+        typeof window !== 'undefined' ? window.innerWidth : undefined,
+      viewportHeight:
+        typeof window !== 'undefined' ? window.innerHeight : undefined,
     })
-  }, [error, info, location.href, location.pathname, isProjectNotFound, isProjectAccessDenied])
+  }, [
+    error,
+    info,
+    location.href,
+    location.pathname,
+    isProjectNotFound,
+    isProjectAccessDenied,
+  ])
 
   // Every 2 seconds, notify parent that an error exists
   useEffect(() => {
@@ -260,28 +273,28 @@ export function ErrorComponent({
 
         {!(isProjectNotFound || isProjectAccessDenied) && (
           <div className="mt-2 relative w-full max-w-full rounded-lg border bg-card px-4 py-3">
-          <div className="flex items-start gap-2 pr-8 min-w-0 w-full">
-            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
-            <div
-              className="text-xs font-mono text-muted-foreground flex-1 min-w-0 overflow-hidden text-left"
-              style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}
-            >
-              {error.message || 'No error details available'}
+            <div className="flex items-start gap-2 pr-8 min-w-0 w-full">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
+              <div
+                className="text-xs font-mono text-muted-foreground flex-1 min-w-0 overflow-hidden text-left"
+                style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}
+              >
+                {error.message || 'No error details available'}
+              </div>
             </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute top-2 right-2 h-7 w-7 p-0 shrink-0"
-            onClick={handleCopy}
-            aria-label="Copy error details"
-          >
-            {copied ? (
-              <Check className="h-4 w-4 text-emerald-500" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2 h-7 w-7 p-0 shrink-0"
+              onClick={handleCopy}
+              aria-label="Copy error details"
+            >
+              {copied ? (
+                <Check className="h-4 w-4 text-emerald-500" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
           </div>
         )}
 

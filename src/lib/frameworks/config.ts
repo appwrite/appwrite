@@ -155,9 +155,7 @@ export const FRAMEWORK_CONFIGS: FrameworkConfig[] = [
 ]
 
 /** Normalize framework key for lookups (lowercase, trim). */
-export function normalizeFrameworkKey(
-  key: string | null | undefined,
-): string {
+export function normalizeFrameworkKey(key: string | null | undefined): string {
   return key?.toLowerCase().trim() ?? ''
 }
 

@@ -153,9 +153,7 @@ export function LogsListView({
       <div className="flex-1">
         <div className="flex h-full items-center justify-center py-16">
           <div className="text-center">
-            <p className="text-[13px] text-muted-foreground">
-              Loading logs...
-            </p>
+            <p className="text-[13px] text-muted-foreground">Loading logs...</p>
           </div>
         </div>
       </div>

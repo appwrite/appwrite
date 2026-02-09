@@ -225,9 +225,7 @@ export function SignIn({
                         <Link
                           to="/recovery"
                           search={
-                            emailValue
-                              ? { email: emailValue }
-                              : undefined
+                            emailValue ? { email: emailValue } : undefined
                           }
                           className="text-sm text-primary hover:underline"
                         >
@@ -238,8 +236,6 @@ export function SignIn({
                   )}
                 />
               </div>
-
-
 
               <div className="relative">
                 {lastLoginMethod === 'email' && (
@@ -277,6 +273,6 @@ export function SignIn({
           />
         </div>
       </div>
-    </Card >
+    </Card>
   )
 }

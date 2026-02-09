@@ -145,8 +145,7 @@ export function ConnectRepositorySection({
 
   const createRepositoryMutation = useCreateVcsRepository(projectId)
 
-  const hasRepository =
-    !!value.installationId && !!value.providerRepositoryId
+  const hasRepository = !!value.installationId && !!value.providerRepositoryId
   const hasInstallations = installations.length > 0
 
   // Sync default repo name when parent changes it (e.g. site name)
@@ -158,11 +157,7 @@ export function ConnectRepositorySection({
 
   // Initialize selected installation when installations load
   useEffect(() => {
-    if (
-      hasInstallations &&
-      !selectedInstallationId &&
-      installations[0]?.$id
-    ) {
+    if (hasInstallations && !selectedInstallationId && installations[0]?.$id) {
       setSelectedInstallationId(installations[0].$id)
     }
   }, [hasInstallations, installations, selectedInstallationId])
@@ -347,7 +342,11 @@ export function ConnectRepositorySection({
                 : 'border-border bg-card/50 hover:border-border/80',
             )}
           >
-            <RadioGroupItem value="new" id="repo-new" className="mt-1 shrink-0" />
+            <RadioGroupItem
+              value="new"
+              id="repo-new"
+              className="mt-1 shrink-0"
+            />
             <div>
               <span className="text-[14px] font-medium text-foreground">
                 Create new repository
@@ -472,9 +471,17 @@ export function ConnectRepositorySection({
             installations={installations}
             selectedInstallationId={selectedInstallationId}
             onInstallationChange={setSelectedInstallationId}
-            onRepositorySelect={handleConnectExisting as (repo: Models.ProviderRepositoryFramework) => void}
+            onRepositorySelect={
+              handleConnectExisting as (
+                repo: Models.ProviderRepositoryFramework,
+              ) => void
+            }
             mode="create"
-            detectionType={detectionType === VCSDetectionType.Runtime ? 'runtime' : 'framework'}
+            detectionType={
+              detectionType === VCSDetectionType.Runtime
+                ? 'runtime'
+                : 'framework'
+            }
             className="mt-0"
           />
         )}

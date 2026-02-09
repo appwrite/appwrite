@@ -24,7 +24,8 @@ interface NavigationHistoryContextType {
   popHistory: () => string | undefined
 }
 
-const NavigationHistoryContext = createContext<NavigationHistoryContextType | null>(null)
+const NavigationHistoryContext =
+  createContext<NavigationHistoryContextType | null>(null)
 
 interface NavigationHistoryProviderProps {
   children: ReactNode
@@ -51,12 +52,14 @@ interface NavigationHistoryProviderProps {
  * }
  * ```
  */
-export function NavigationHistoryProvider({ children }: NavigationHistoryProviderProps) {
+export function NavigationHistoryProvider({
+  children,
+}: NavigationHistoryProviderProps) {
   const location = useLocation()
-  
+
   // Use ref to store history stack to avoid re-renders on navigation
   const historyStackRef = useRef<string[]>([])
-  
+
   // Track the current path to avoid duplicates
   const currentPathRef = useRef<string>('')
 
@@ -66,19 +69,19 @@ export function NavigationHistoryProvider({ children }: NavigationHistoryProvide
     // location.search in TanStack Router is an object, not a string
     const searchString = location.searchStr || ''
     const currentPath = location.pathname + searchString
-    
+
     // Don't add duplicate consecutive entries
     if (currentPath !== currentPathRef.current) {
       // Add the previous path to history (not the current one)
       if (currentPathRef.current) {
         historyStackRef.current.push(currentPathRef.current)
-        
+
         // Limit history stack to prevent memory issues
         if (historyStackRef.current.length > 50) {
           historyStackRef.current.shift()
         }
       }
-      
+
       currentPathRef.current = currentPath
     }
   }, [location.pathname, location.searchStr])
@@ -116,13 +119,13 @@ export function NavigationHistoryProvider({ children }: NavigationHistoryProvide
  */
 export function useNavigationHistory(): NavigationHistoryContextType {
   const context = useContext(NavigationHistoryContext)
-  
+
   if (!context) {
     throw new Error(
-      'useNavigationHistory must be used within a NavigationHistoryProvider'
+      'useNavigationHistory must be used within a NavigationHistoryProvider',
     )
   }
-  
+
   return context
 }
 

@@ -75,7 +75,6 @@ function formatDuration(seconds: number): string {
   return `${minutes}m ${secs}s`
 }
 
-
 export function SiteOverviewView() {
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
@@ -364,7 +363,9 @@ export function SiteOverviewView() {
                           )}
                         </div>
                       ) : (
-                        <span className="text-muted-foreground">No domains</span>
+                        <span className="text-muted-foreground">
+                          No domains
+                        </span>
                       )}
                     </div>
                   </div>
@@ -412,7 +413,11 @@ export function SiteOverviewView() {
                     deploymentId: activeDeployment.$id,
                   }}
                 >
-                  <Button size="sm" variant="outline" className="h-9 text-[13px]">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-9 text-[13px]"
+                  >
                     Build logs
                   </Button>
                 </Link>
@@ -502,9 +507,7 @@ export function SiteOverviewView() {
                           <div className="flex items-center gap-2 min-w-0 flex-1">
                             <Badge
                               variant={
-                                isActive
-                                  ? 'active'
-                                  : statusBadge.badgeVariant
+                                isActive ? 'active' : statusBadge.badgeVariant
                               }
                               className="gap-1.5 text-[11px] font-medium shrink-0"
                             >
@@ -554,7 +557,8 @@ export function SiteOverviewView() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                Are you sure you want to delete this deployment? This action cannot be undone.
+                Are you sure you want to delete this deployment? This action
+                cannot be undone.
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>
@@ -596,7 +600,9 @@ export function SiteOverviewView() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will create a new build for this deployment using the current site configuration. The original deployment's code will be preserved and used for the new build.
+                This will create a new build for this deployment using the
+                current site configuration. The original deployment's code will
+                be preserved and used for the new build.
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>
@@ -639,7 +645,8 @@ export function SiteOverviewView() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.
+                This will switch the active deployment to this one. All traffic
+                will be routed to this deployment once activated.
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>

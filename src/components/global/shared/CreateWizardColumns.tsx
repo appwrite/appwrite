@@ -15,7 +15,9 @@ export function CreateWizardLeftColumn({
 }) {
   return (
     <div className="lg:col-span-2 flex flex-col">
-      <h2 className="text-[14px] font-semibold text-foreground mb-4">{title}</h2>
+      <h2 className="text-[14px] font-semibold text-foreground mb-4">
+        {title}
+      </h2>
       {children}
     </div>
   )

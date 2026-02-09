@@ -133,17 +133,9 @@ export function ConsoleLayout({
             fixedLayout ? 'overflow-hidden' : 'overflow-y-auto',
           )}
         >
-          <div
-            className={cn(
-              'flex-1',
-              fixedLayout && 'min-h-0',
-            )}
-          >
+          <div className={cn('flex-1', fixedLayout && 'min-h-0')}>
             <div
-              className={cn(
-                'h-full',
-                fixedLayout && 'min-h-0 flex flex-col',
-              )}
+              className={cn('h-full', fixedLayout && 'min-h-0 flex flex-col')}
             >
               {children}
             </div>

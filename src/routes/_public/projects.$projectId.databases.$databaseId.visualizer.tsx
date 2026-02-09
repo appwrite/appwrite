@@ -23,9 +23,7 @@ export const Route = createFileRoute(
     // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
     await Promise.all([
-      queryClient.ensureQueryData(
-        databaseQueryOptions(projectId, databaseId),
-      ),
+      queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId)),
       queryClient.ensureQueryData(
         allTablesForVisualizerQueryOptions(projectId, databaseId),
       ),

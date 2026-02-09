@@ -233,7 +233,7 @@ export function RepositoryPicker({
           </div>
         )}
 
-        {!selectedInstallationId && (installations.length > 0) && (
+        {!selectedInstallationId && installations.length > 0 && (
           <Select
             value={selectedInstallationId}
             onValueChange={(value) => {
@@ -275,117 +275,116 @@ export function RepositoryPicker({
         {selectedInstallationId && (
           <>
             <div className="rounded-lg border border-border overflow-hidden">
-                {reposLoading ? (
-                  <div className="divide-y divide-border">
-                    {Array.from({ length: REPO_PAGE_SIZE }).map((_, i) => (
-                      <RepositoryRowSkeleton
-                        key={i}
-                        provider={selectedInstallation?.provider}
-                      />
-                    ))}
-                  </div>
-                ) : (repositories.length > 0) ? (
-                  <div
-                    className={cn(
-                      'divide-y divide-border',
-                      isFetching && 'opacity-60 pointer-events-none',
-                    )}
-                  >
-                    {repositories.map(
-                      (repo: Models.ProviderRepositoryFramework) => {
-                        const isSelected = selectedRepositoryId === repo.id
-                        return (
-                          <div
-                            key={repo.id}
-                            className={cn(
-                              'flex w-full items-center gap-3 px-4 py-3.5 transition-colors',
-                              mode === 'connect'
-                                ? 'cursor-pointer hover:bg-accent/50'
-                                : '',
-                              mode === 'connect' && isSelected &&
-                                'bg-primary/5',
-                            )}
-                            onClick={() =>
-                              mode === 'connect' && onRepositorySelect(repo)
+              {reposLoading ? (
+                <div className="divide-y divide-border">
+                  {Array.from({ length: REPO_PAGE_SIZE }).map((_, i) => (
+                    <RepositoryRowSkeleton
+                      key={i}
+                      provider={selectedInstallation?.provider}
+                    />
+                  ))}
+                </div>
+              ) : repositories.length > 0 ? (
+                <div
+                  className={cn(
+                    'divide-y divide-border',
+                    isFetching && 'opacity-60 pointer-events-none',
+                  )}
+                >
+                  {repositories.map(
+                    (repo: Models.ProviderRepositoryFramework) => {
+                      const isSelected = selectedRepositoryId === repo.id
+                      return (
+                        <div
+                          key={repo.id}
+                          className={cn(
+                            'flex w-full items-center gap-3 px-4 py-3.5 transition-colors',
+                            mode === 'connect'
+                              ? 'cursor-pointer hover:bg-accent/50'
+                              : '',
+                            mode === 'connect' && isSelected && 'bg-primary/5',
+                          )}
+                          onClick={() =>
+                            mode === 'connect' && onRepositorySelect(repo)
+                          }
+                          onKeyDown={(e) => {
+                            if (
+                              mode === 'connect' &&
+                              (e.key === 'Enter' || e.key === ' ')
+                            ) {
+                              e.preventDefault()
+                              onRepositorySelect(repo)
                             }
-                            onKeyDown={(e) => {
-                              if (
-                                mode === 'connect' &&
-                                (e.key === 'Enter' || e.key === ' ')
-                              ) {
-                                e.preventDefault()
-                                onRepositorySelect(repo)
-                              }
-                            }}
-                            role={mode === 'connect' ? 'button' : undefined}
-                            tabIndex={mode === 'connect' ? 0 : undefined}
-                          >
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
-                              {repo.framework ? (
-                                <FrameworkIcon
-                                  framework={repo.framework}
-                                  size="sm"
-                                />
-                              ) : (
-                                <ProviderIcon
-                                  provider={selectedInstallation?.provider}
-                                  className="h-3.5 w-3.5"
-                                />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0 flex items-center gap-2">
-                              <span className="text-[13px] font-medium text-foreground truncate">
-                                {repo.organization}/{repo.name}
-                              </span>
-                              {repo.private && (
-                                <Lock className="h-3 w-3 shrink-0 text-muted-foreground/70" />
-                              )}
-                              {repo.pushedAt && (
-                                <span className="text-[11px] text-muted-foreground shrink-0">
-                                  <DateTooltip date={repo.pushedAt} />
-                                </span>
-                              )}
-                            </div>
-                            {mode === 'create' && (
-                              <Button
+                          }}
+                          role={mode === 'connect' ? 'button' : undefined}
+                          tabIndex={mode === 'connect' ? 0 : undefined}
+                        >
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
+                            {repo.framework ? (
+                              <FrameworkIcon
+                                framework={repo.framework}
                                 size="sm"
-                                variant="outline"
-                                className="h-7 text-[12px] shrink-0"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  onRepositorySelect(repo)
-                                }}
-                              >
-                                Connect
-                              </Button>
+                              />
+                            ) : (
+                              <ProviderIcon
+                                provider={selectedInstallation?.provider}
+                                className="h-3.5 w-3.5"
+                              />
                             )}
-                            {mode === 'connect' && isSelected && (
-                              <span className="text-[12px] font-medium text-primary shrink-0">
-                                Selected
+                          </div>
+                          <div className="flex-1 min-w-0 flex items-center gap-2">
+                            <span className="text-[13px] font-medium text-foreground truncate">
+                              {repo.organization}/{repo.name}
+                            </span>
+                            {repo.private && (
+                              <Lock className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                            )}
+                            {repo.pushedAt && (
+                              <span className="text-[11px] text-muted-foreground shrink-0">
+                                <DateTooltip date={repo.pushedAt} />
                               </span>
                             )}
                           </div>
-                        )
-                      },
-                    )}
-                  </div>
-                ) : (
-                  <div className="py-8 px-4 text-center">
-                    <EmptyState
-                      title="No repositories found"
-                      description={
-                        debouncedRepoSearch
-                          ? 'Try a different search term or installation'
-                          : 'No repositories available for this installation'
-                      }
-                      className="py-0"
-                    />
-                  </div>
-                )}
+                          {mode === 'create' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-[12px] shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onRepositorySelect(repo)
+                              }}
+                            >
+                              Connect
+                            </Button>
+                          )}
+                          {mode === 'connect' && isSelected && (
+                            <span className="text-[12px] font-medium text-primary shrink-0">
+                              Selected
+                            </span>
+                          )}
+                        </div>
+                      )
+                    },
+                  )}
+                </div>
+              ) : (
+                <div className="py-8 px-4 text-center">
+                  <EmptyState
+                    title="No repositories found"
+                    description={
+                      debouncedRepoSearch
+                        ? 'Try a different search term or installation'
+                        : 'No repositories available for this installation'
+                    }
+                    className="py-0"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="min-h-10 flex items-center justify-center">
-              {(repositories.length > 0) && (
+              {repositories.length > 0 && (
                 <SimplePagination
                   currentPage={repoPage}
                   hasMore={hasMoreRepos}

@@ -590,17 +590,15 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
   )
 
   // Fetch data for the displayed page (what we show - stays until new page is ready)
-  const {
-    data: activeProjectsData,
-    isLoading: displayedProjectsLoading,
-  } = useQuery(
-    activeProjectsQueryOptions(
-      orgTeamId,
-      displayedPage - 1,
-      PROJECTS_PER_PAGE,
-      searchQuery,
-    ),
-  )
+  const { data: activeProjectsData, isLoading: displayedProjectsLoading } =
+    useQuery(
+      activeProjectsQueryOptions(
+        orgTeamId,
+        displayedPage - 1,
+        PROJECTS_PER_PAGE,
+        searchQuery,
+      ),
+    )
 
   // Only show full loading when we have no data to display (initial load)
   const displayedProjects = activeProjectsData?.projects ?? []
@@ -616,7 +614,12 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
     ) {
       setDisplayedPage(requestedPage)
     }
-  }, [activeProjectsFetching, activeProjectsLoading, requestedPage, displayedPage])
+  }, [
+    activeProjectsFetching,
+    activeProjectsLoading,
+    requestedPage,
+    displayedPage,
+  ])
 
   // Get total count from the first page query (no search) - already fetched in route loader
   // This is used for limit checking and doesn't change when searching
@@ -1452,48 +1455,55 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                         ) : (
                           <>
                             {/* Projects by Team */}
-                            <div className="space-y-8" ref={projectsContainerRef}>
-                              {filteredProjectsByTeam.map(({ team, projects }) => (
-                            <div key={team.$id}>
-                              {/* Project Cards Grid */}
-                              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                {projects.map((project) => {
-                                  return (
-                                    <Link
-                                      key={project.$id}
-                                      to="/projects/$projectId"
-                                      params={{ projectId: project.$id }}
-                                      data-project-card
-                                      className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
-                                    >
-                                      <div>
-                                        <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
-                                          {project.name}
-                                        </h3>
-                                        {project.region && (
-                                          <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
-                                            <RegionFlag
-                                              region={project.region}
-                                            />
-                                            {project.region}
-                                          </div>
-                                        )}
-                                      </div>
+                            <div
+                              className="space-y-8"
+                              ref={projectsContainerRef}
+                            >
+                              {filteredProjectsByTeam.map(
+                                ({ team, projects }) => (
+                                  <div key={team.$id}>
+                                    {/* Project Cards Grid */}
+                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                      {projects.map((project) => {
+                                        return (
+                                          <Link
+                                            key={project.$id}
+                                            to="/projects/$projectId"
+                                            params={{ projectId: project.$id }}
+                                            data-project-card
+                                            className="group relative rounded-xl border border-border bg-card/50 p-4 transition-all hover:border-border hover:bg-card"
+                                          >
+                                            <div>
+                                              <h3 className="text-[14px] font-medium text-foreground group-hover:text-foreground">
+                                                {project.name}
+                                              </h3>
+                                              {project.region && (
+                                                <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                                                  <RegionFlag
+                                                    region={project.region}
+                                                  />
+                                                  {project.region}
+                                                </div>
+                                              )}
+                                            </div>
 
-                                      {/* Platforms and API Keys */}
-                                      <ProjectCardFooter
-                                        platformsCount={
-                                          project.platformsCount || 0
-                                        }
-                                        apiKeysCount={project.apiKeysCount || 0}
-                                      />
-                                    </Link>
-                                  )
-                                })}
-                              </div>
+                                            {/* Platforms and API Keys */}
+                                            <ProjectCardFooter
+                                              platformsCount={
+                                                project.platformsCount || 0
+                                              }
+                                              apiKeysCount={
+                                                project.apiKeysCount || 0
+                                              }
+                                            />
+                                          </Link>
+                                        )
+                                      })}
+                                    </div>
+                                  </div>
+                                ),
+                              )}
                             </div>
-                          ))}
-                        </div>
 
                             {/* Empty State */}
                             {filteredProjectsByTeam.length === 0 && (
@@ -1527,7 +1537,9 @@ export function OrgOverview({ tab: tabProp, children }: OrgOverviewProps) {
                             )}
 
                             {/* Enterprise Success Manager - Only show if plan supports it */}
-                            {supportsSuccessTeam && <EnterpriseSuccessManager />}
+                            {supportsSuccessTeam && (
+                              <EnterpriseSuccessManager />
+                            )}
                           </>
                         )}
                       </>

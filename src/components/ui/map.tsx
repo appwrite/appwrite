@@ -343,10 +343,8 @@ export function MarkerContent({ children, className }: MarkerContentProps) {
   return <div className={cn('relative', className)}>{children}</div>
 }
 
-interface MarkerPopupProps extends Omit<
-  maplibregl.PopupOptions,
-  'className' | 'closeButton'
-> {
+interface MarkerPopupProps
+  extends Omit<maplibregl.PopupOptions, 'className' | 'closeButton'> {
   children?: React.ReactNode
   className?: string
   closeButton?: boolean

@@ -5,9 +5,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { SupportWizardFullscreen } from '@/components/pages/organizations/$orgId/support/SupportWizardFullscreen'
 
-export const Route = createFileRoute(
-  '/_public/organizations/$orgId/support',
-)({
+export const Route = createFileRoute('/_public/organizations/$orgId/support')({
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') {
       return

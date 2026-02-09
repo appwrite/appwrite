@@ -88,7 +88,9 @@ export function DomainInput({
       if (localValue.startsWith('-') || localValue.endsWith('-')) {
         setError('Subdomain cannot start or end with a hyphen')
       } else {
-        setError('Subdomain can only contain lowercase letters, numbers, and hyphens')
+        setError(
+          'Subdomain can only contain lowercase letters, numbers, and hyphens',
+        )
       }
       onValidChange(false)
       return
@@ -114,7 +116,10 @@ export function DomainInput({
         const errorCode = error?.code || error?.response?.code
 
         if (errorCode === 409) {
-          if (!isUserEditedRef.current && hasTriedSuffixRef.current !== localValue) {
+          if (
+            !isUserEditedRef.current &&
+            hasTriedSuffixRef.current !== localValue
+          ) {
             hasTriedSuffixRef.current = localValue
             const newValue = `${localValue}-${generateRandomSuffix()}`
             setLocalValue(newValue)
@@ -162,7 +167,8 @@ export function DomainInput({
             className={cn(
               'h-9 pr-10 text-[13px]',
               status === 'available' && 'border-green-500/50',
-              (status === 'invalid' || status === 'taken') && 'border-destructive/50',
+              (status === 'invalid' || status === 'taken') &&
+                'border-destructive/50',
             )}
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -178,7 +184,9 @@ export function DomainInput({
           </div>
         </div>
         <div className="flex items-center rounded-md border border-border bg-muted px-3">
-          <span className="text-[13px] text-muted-foreground">.{baseDomain}</span>
+          <span className="text-[13px] text-muted-foreground">
+            .{baseDomain}
+          </span>
         </div>
       </div>
       <div className="h-[18px]">
@@ -187,9 +195,7 @@ export function DomainInput({
             Domain is available
           </p>
         )}
-        {error && (
-          <p className="text-[12px] text-destructive">{error}</p>
-        )}
+        {error && <p className="text-[12px] text-destructive">{error}</p>}
       </div>
     </div>
   )

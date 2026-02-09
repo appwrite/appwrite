@@ -90,24 +90,14 @@ export function View() {
     total: domainsTotal,
     isLoading: domainsLoading,
     isFetching: domainsFetching,
-  } = useOrganizationDomains(
-    orgId,
-    requestedPage - 1,
-    pageSize,
-    searchValue,
-  )
+  } = useOrganizationDomains(orgId, requestedPage - 1, pageSize, searchValue)
 
   // Fetch data for the displayed page (what we show - stays until new page is ready)
   const {
     domains: apiDomains,
     total: displayedTotal,
     isLoading: displayedLoading,
-  } = useOrganizationDomains(
-    orgId,
-    displayedPage - 1,
-    pageSize,
-    searchValue,
-  )
+  } = useOrganizationDomains(orgId, displayedPage - 1, pageSize, searchValue)
 
   // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
@@ -288,9 +278,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'list'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('list')}
       >
@@ -301,9 +289,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'grid'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('grid')}
       >

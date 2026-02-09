@@ -80,13 +80,7 @@ export function backupPoliciesQueryOptions(
   databaseId: string | null | undefined,
 ) {
   return queryOptions({
-    queryKey: [
-      'backup-policies',
-      'project',
-      projectId,
-      'database',
-      databaseId,
-    ],
+    queryKey: ['backup-policies', 'project', projectId, 'database', databaseId],
     queryFn: () => fetchBackupPolicies(projectId!, databaseId!),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
@@ -159,7 +153,12 @@ export function useBackupArchives(
   limit: number = TINY_PAGE_SIZE,
   options?: { enabled?: boolean },
 ) {
-  const queryOpts = backupArchivesQueryOptions(projectId, databaseId, page, limit)
+  const queryOpts = backupArchivesQueryOptions(
+    projectId,
+    databaseId,
+    page,
+    limit,
+  )
   return useQuery({
     ...queryOpts,
     enabled: queryOpts.enabled && (options?.enabled ?? true),

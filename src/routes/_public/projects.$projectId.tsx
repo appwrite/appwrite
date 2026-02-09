@@ -54,7 +54,8 @@ function ProjectLayout() {
   const { projectId } = Route.useParams()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { isLoading: isProjectLoading, error: projectError } = useProject(projectId)
+  const { isLoading: isProjectLoading, error: projectError } =
+    useProject(projectId)
 
   // Extract active section from pathname
   const pathParts = location.pathname.split('/')
@@ -122,7 +123,9 @@ function ProjectLayout() {
   const errorMessage = projectError?.message || ''
   const lowerMessage = errorMessage.toLowerCase()
   const errorCode = (projectError as any)?.code
-  const errorName = (projectError as any)?.name || (projectError instanceof Error ? projectError.name : '')
+  const errorName =
+    (projectError as any)?.name ||
+    (projectError instanceof Error ? projectError.name : '')
 
   const isNotFound =
     projectError &&
@@ -147,10 +150,11 @@ function ProjectLayout() {
   // Only show after loading is complete to avoid flashing
   if (!isProjectLoading && projectError && (isNotFound || isAccessDenied)) {
     // Ensure we have an Error object for the ErrorComponent
-    const errorObj = projectError instanceof Error 
-      ? projectError 
-      : new Error(errorMessage || 'Project error occurred')
-    
+    const errorObj =
+      projectError instanceof Error
+        ? projectError
+        : new Error(errorMessage || 'Project error occurred')
+
     return (
       <ErrorComponent
         error={errorObj}

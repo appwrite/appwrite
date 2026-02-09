@@ -190,13 +190,12 @@ function getVcsProvider(
   return null
 }
 
-
 export function View() {
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
-  
+
   // Parse page from URL: use validated search object when available (TanStack Router),
   // otherwise fall back to URL search string
   const urlPage = useMemo(() => {
@@ -223,7 +222,9 @@ export function View() {
   const [deleteActiveDialogOpen, setDeleteActiveDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
-  const [screenshotTheme, setScreenshotTheme] = useState<'dark' | 'light'>('dark')
+  const [screenshotTheme, setScreenshotTheme] = useState<'dark' | 'light'>(
+    'dark',
+  )
   const [screenshotLoaded, setScreenshotLoaded] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -231,7 +232,6 @@ export function View() {
     projectId,
     siteId,
   )
-
 
   // Sync requested page with URL when it changes externally (e.g., browser back/forward)
   useEffect(() => {
@@ -268,15 +268,8 @@ export function View() {
   ])
 
   // Fetch data for the displayed page (this is what we show)
-  const {
-    deployments: displayedDeployments,
-    total: displayedTotal,
-  } = useSiteDeployments(
-    projectId,
-    siteId,
-    displayedPage,
-    pageSize,
-    [
+  const { deployments: displayedDeployments, total: displayedTotal } =
+    useSiteDeployments(projectId, siteId, displayedPage, pageSize, [
       Query.select([
         'buildSize',
         'sourceSize',
@@ -295,8 +288,7 @@ export function View() {
         'providerCommitUrl',
         '$createdAt',
       ]),
-    ],
-  )
+    ])
 
   // Update displayed page only when requested page data is ready (not fetching)
   useEffect(() => {
@@ -660,446 +652,474 @@ export function View() {
           )}
 
           {/* Active Deployment Card */}
-          {activeDeploymentResolved && activeDeploymentResolved.status === 'ready' && (() => {
-            const cardDeployment = activeDeploymentForCard ?? activeDeploymentResolved
-            return (
-            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-              <div className="px-6 py-4">
-                <h3 className="text-[15px] font-semibold text-foreground">
-                  Active deployment
-                </h3>
-              </div>
-              <div className="border-t border-border" />
-              <div className="px-6 py-4">
-                <div className="flex flex-col lg:flex-row gap-6">
-                  {/* Screenshot - fixed aspect-video slot to prevent layout shift when deployment becomes active or image loads */}
-                  <div className="w-full lg:w-1/2 shrink-0 min-w-0">
-                    <div className="w-full aspect-video rounded-lg border border-border overflow-hidden bg-muted relative">
-                      {(() => {
-                        const screenshotId = screenshotTheme === 'dark'
-                          ? (cardDeployment as any).screenshotDark
-                          : (cardDeployment as any).screenshotLight
-
-                        if (screenshotId) {
-                          const screenshotUrl = sdk.forConsole.storage.getFileDownload({
-                            bucketId: SCREENSHOTS_BUCKET_ID,
-                            fileId: screenshotId,
-                          })
-
-                          return (
-                            <div className="absolute inset-0 group">
-                              <img
-                              key={screenshotId}
-                              src={screenshotUrl}
-                              alt="Deployment screenshot"
-                              onLoad={() => setScreenshotLoaded(true)}
-                              className={cn(
-                                'w-full h-full object-cover transition-opacity duration-500',
-                                screenshotLoaded ? 'opacity-100' : 'opacity-0',
-                              )}
-                            />
-                            {/* Framework Icon - Bottom Left */}
-                            {site && (
-                              <div className="absolute bottom-2 left-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
-                                  <FrameworkIcon
-                                    framework={
-                                      (site as any).buildFramework ||
-                                      (site as any).buildFrameworkId ||
-                                      (site as any).framework
-                                    }
-                                    size="sm"
-                                  />
-                                </div>
-                              </div>
-                            )}
-                            {/* Theme Toggle Overlay */}
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="flex items-center gap-1 rounded-lg border border-border bg-background/95 backdrop-blur-sm p-1">
-                              <button
-                                onClick={() => {
-                                  setScreenshotTheme('light')
-                                  setScreenshotLoaded(false)
-                                }}
-                                className={cn(
-                                  "p-1.5 rounded transition-colors",
-                                  screenshotTheme === 'light'
-                                    ? "bg-primary text-primary-foreground"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                )}
-                                title="Light screenshot"
-                              >
-                                <Sun className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setScreenshotTheme('dark')
-                                  setScreenshotLoaded(false)
-                                }}
-                                className={cn(
-                                  "p-1.5 rounded transition-colors",
-                                  screenshotTheme === 'dark'
-                                    ? "bg-primary text-primary-foreground"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                )}
-                                title="Dark screenshot"
-                              >
-                                <Moon className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </div>
-                            </div>
-                          )
-                        }
-
-                        // Placeholder when screenshot is not available yet - same slot, no layout shift
-                        return (
-                          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
-                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
-                            <p className="relative text-[12px] font-medium text-muted-foreground/60">
-                              Preview not available
-                            </p>
-                            {site && (
-                              <div className="absolute bottom-2 left-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
-                                  <FrameworkIcon
-                                    framework={
-                                      (site as any).buildFramework ||
-                                      (site as any).buildFrameworkId ||
-                                      (site as any).framework
-                                    }
-                                    size="sm"
-                                  />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })()}
-                    </div>
+          {activeDeploymentResolved &&
+            activeDeploymentResolved.status === 'ready' &&
+            (() => {
+              const cardDeployment =
+                activeDeploymentForCard ?? activeDeploymentResolved
+              return (
+                <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                  <div className="px-6 py-4">
+                    <h3 className="text-[15px] font-semibold text-foreground">
+                      Active deployment
+                    </h3>
                   </div>
-                  
-                  <div className="flex-1 lg:w-1/2">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Deployed */}
-                  <div>
-                    <div className="text-[12px] text-muted-foreground mb-1.5">
-                      Deployed
-                    </div>
-                    <div className="text-[13px] text-foreground">
-                      <DateTooltip date={cardDeployment.$createdAt} />
-                    </div>
-                  </div>
+                  <div className="border-t border-border" />
+                  <div className="px-6 py-4">
+                    <div className="flex flex-col lg:flex-row gap-6">
+                      {/* Screenshot - fixed aspect-video slot to prevent layout shift when deployment becomes active or image loads */}
+                      <div className="w-full lg:w-1/2 shrink-0 min-w-0">
+                        <div className="w-full aspect-video rounded-lg border border-border overflow-hidden bg-muted relative">
+                          {(() => {
+                            const screenshotId =
+                              screenshotTheme === 'dark'
+                                ? (cardDeployment as any).screenshotDark
+                                : (cardDeployment as any).screenshotLight
 
-                  {/* Build duration */}
-                  {(cardDeployment.buildDuration ||
-                    isDeploymentInProgress(cardDeployment.status)) &&
-                    !isDeploymentTimeout(
-                      cardDeployment.status,
-                      cardDeployment.$createdAt,
-                    ) && (
-                      <div>
-                        <div className="text-[12px] text-muted-foreground mb-1.5">
-                          Build duration
-                        </div>
-                        <div className="text-[13px] text-foreground">
-                          {isDeploymentInProgress(cardDeployment.status)
-                            ? formatDuration(
-                                Math.max(
-                                  0,
-                                  Math.floor(
-                                    (Date.now() -
-                                      new Date(
-                                        cardDeployment.$createdAt,
-                                      ).getTime()) /
-                                      1000,
-                                  ),
-                                ),
+                            if (screenshotId) {
+                              const screenshotUrl =
+                                sdk.forConsole.storage.getFileDownload({
+                                  bucketId: SCREENSHOTS_BUCKET_ID,
+                                  fileId: screenshotId,
+                                })
+
+                              return (
+                                <div className="absolute inset-0 group">
+                                  <img
+                                    key={screenshotId}
+                                    src={screenshotUrl}
+                                    alt="Deployment screenshot"
+                                    onLoad={() => setScreenshotLoaded(true)}
+                                    className={cn(
+                                      'w-full h-full object-cover transition-opacity duration-500',
+                                      screenshotLoaded
+                                        ? 'opacity-100'
+                                        : 'opacity-0',
+                                    )}
+                                  />
+                                  {/* Framework Icon - Bottom Left */}
+                                  {site && (
+                                    <div className="absolute bottom-2 left-2">
+                                      <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
+                                        <FrameworkIcon
+                                          framework={
+                                            (site as any).buildFramework ||
+                                            (site as any).buildFrameworkId ||
+                                            (site as any).framework
+                                          }
+                                          size="sm"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* Theme Toggle Overlay */}
+                                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center gap-1 rounded-lg border border-border bg-background/95 backdrop-blur-sm p-1">
+                                      <button
+                                        onClick={() => {
+                                          setScreenshotTheme('light')
+                                          setScreenshotLoaded(false)
+                                        }}
+                                        className={cn(
+                                          'p-1.5 rounded transition-colors',
+                                          screenshotTheme === 'light'
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                                        )}
+                                        title="Light screenshot"
+                                      >
+                                        <Sun className="h-3.5 w-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setScreenshotTheme('dark')
+                                          setScreenshotLoaded(false)
+                                        }}
+                                        className={cn(
+                                          'p-1.5 rounded transition-colors',
+                                          screenshotTheme === 'dark'
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                                        )}
+                                        title="Dark screenshot"
+                                      >
+                                        <Moon className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
                               )
-                            : formatDuration(cardDeployment.buildDuration)}
+                            }
+
+                            // Placeholder when screenshot is not available yet - same slot, no layout shift
+                            return (
+                              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20">
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02),transparent_70%)]" />
+                                <p className="relative text-[12px] font-medium text-muted-foreground/60">
+                                  Preview not available
+                                </p>
+                                {site && (
+                                  <div className="absolute bottom-2 left-2">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
+                                      <FrameworkIcon
+                                        framework={
+                                          (site as any).buildFramework ||
+                                          (site as any).buildFrameworkId ||
+                                          (site as any).framework
+                                        }
+                                        size="sm"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          })()}
                         </div>
                       </div>
-                    )}
 
-                  {/* Total size */}
-                  <div>
-                    <div className="text-[12px] text-muted-foreground mb-1.5">
-                      Total size
-                    </div>
-                    <div className="text-[13px] text-foreground">
-                      {formatSize(
-                        (cardDeployment.buildSize || 0) +
-                          (cardDeployment.sourceSize || 0),
-                      )}
-                    </div>
-                  </div>
+                      <div className="flex-1 lg:w-1/2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Deployed */}
+                          <div>
+                            <div className="text-[12px] text-muted-foreground mb-1.5">
+                              Deployed
+                            </div>
+                            <div className="text-[13px] text-foreground">
+                              <DateTooltip date={cardDeployment.$createdAt} />
+                            </div>
+                          </div>
 
-                  {/* Source */}
-                  {vcsProvider &&
-                    cardDeployment.providerRepositoryOwner &&
-                    cardDeployment.providerRepositoryName && (
-                      <div>
-                        <div className="text-[12px] text-muted-foreground mb-1.5">
-                          Source
+                          {/* Build duration */}
+                          {(cardDeployment.buildDuration ||
+                            isDeploymentInProgress(cardDeployment.status)) &&
+                            !isDeploymentTimeout(
+                              cardDeployment.status,
+                              cardDeployment.$createdAt,
+                            ) && (
+                              <div>
+                                <div className="text-[12px] text-muted-foreground mb-1.5">
+                                  Build duration
+                                </div>
+                                <div className="text-[13px] text-foreground">
+                                  {isDeploymentInProgress(cardDeployment.status)
+                                    ? formatDuration(
+                                        Math.max(
+                                          0,
+                                          Math.floor(
+                                            (Date.now() -
+                                              new Date(
+                                                cardDeployment.$createdAt,
+                                              ).getTime()) /
+                                              1000,
+                                          ),
+                                        ),
+                                      )
+                                    : formatDuration(
+                                        cardDeployment.buildDuration,
+                                      )}
+                                </div>
+                              </div>
+                            )}
+
+                          {/* Total size */}
+                          <div>
+                            <div className="text-[12px] text-muted-foreground mb-1.5">
+                              Total size
+                            </div>
+                            <div className="text-[13px] text-foreground">
+                              {formatSize(
+                                (cardDeployment.buildSize || 0) +
+                                  (cardDeployment.sourceSize || 0),
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Source */}
+                          {vcsProvider &&
+                            cardDeployment.providerRepositoryOwner &&
+                            cardDeployment.providerRepositoryName && (
+                              <div>
+                                <div className="text-[12px] text-muted-foreground mb-1.5">
+                                  Source
+                                </div>
+                                <div className="flex items-center gap-1.5 text-[13px] text-foreground">
+                                  {vcsProvider.icon}
+                                  <span>
+                                    {cardDeployment.providerRepositoryOwner}/
+                                    {cardDeployment.providerRepositoryName}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+
+                          {/* Global CDN */}
+                          <div>
+                            <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
+                              <span>Global CDN</span>
+                              <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center justify-center"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="right"
+                                    className="max-w-xs"
+                                  >
+                                    <p className="text-[12px] font-medium mb-1.5 text-background">
+                                      Content Delivery Network
+                                    </p>
+                                    <p className="text-[11px] text-background/90">
+                                      Appwrite's CDN provides global coverage
+                                      with 120+ points of presence worldwide,
+                                      reducing latency through edge caching and
+                                      content optimization. All content is
+                                      delivered over TLS for secure, encrypted
+                                      connections.
+                                    </p>
+                                    <a
+                                      href="https://appwrite.io/docs/products/network/cdn"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[11px] text-background hover:underline mt-1.5 inline-block font-medium"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      Learn more →
+                                    </a>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <CheckCircle2 className="h-4 w-4 text-green-500" />
+                              <span className="text-[13px] font-medium text-foreground">
+                                Connected
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* DDoS protection */}
+                          <div>
+                            <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
+                              <span>DDoS protection</span>
+                              <TooltipProvider delayDuration={0}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="inline-flex items-center justify-center"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent
+                                    side="right"
+                                    className="max-w-xs"
+                                  >
+                                    <p className="text-[12px] font-medium mb-1.5 text-background">
+                                      DDoS Mitigation
+                                    </p>
+                                    <p className="text-[11px] text-background/90">
+                                      Appwrite's network includes built-in DDoS
+                                      mitigation to protect against distributed
+                                      denial-of-service attacks, ensuring
+                                      uninterrupted access to your sites and
+                                      maintaining high availability even during
+                                      high traffic loads.
+                                    </p>
+                                    <a
+                                      href="https://appwrite.io/docs/products/network"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[11px] text-background hover:underline mt-1.5 inline-block font-medium"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      Learn more →
+                                    </a>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Shield className="h-4 w-4 text-green-500" />
+                              <span className="text-[13px] font-medium text-foreground">
+                                Active
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[13px] text-foreground">
-                          {vcsProvider.icon}
-                          <span>
-                            {cardDeployment.providerRepositoryOwner}/
-                            {cardDeployment.providerRepositoryName}
-                          </span>
+
+                        {/* Domains */}
+                        <div className="mt-4 pt-4 border-t border-border">
+                          <div className="text-[12px] text-muted-foreground mb-1.5">
+                            Domains
+                          </div>
+                          {activeDomains.length > 0 ? (
+                            <>
+                              <div className="space-y-1">
+                                {activeDomains.map((rule) => (
+                                  <a
+                                    key={rule.$id}
+                                    href={`https://${rule.domain}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[13px] font-mono text-foreground hover:underline"
+                                  >
+                                    {rule.domain}
+                                  </a>
+                                ))}
+                              </div>
+                              {hasMoreDomains && (
+                                <p className="text-[11px] text-muted-foreground mt-1.5">
+                                  +{totalActiveDomains - activeDomains.length}{' '}
+                                  more
+                                </p>
+                              )}
+                              <Link
+                                to="/projects/$projectId/sites/$siteId/domains"
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteId!,
+                                }}
+                                className="text-[11px] text-primary hover:underline mt-2 inline-block"
+                              >
+                                Add domain
+                              </Link>
+                            </>
+                          ) : (
+                            <Link
+                              to="/projects/$projectId/sites/$siteId/domains"
+                              params={{
+                                projectId: projectId!,
+                                siteId: siteId!,
+                              }}
+                              className="text-[11px] text-primary hover:underline"
+                            >
+                              Add domain
+                            </Link>
+                          )}
                         </div>
                       </div>
-                    )}
-
-                  {/* Global CDN */}
-                  <div>
-                    <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
-                      <span>Global CDN</span>
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex items-center justify-center"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-xs">
-                            <p className="text-[12px] font-medium mb-1.5 text-background">
-                              Content Delivery Network
-                            </p>
-                            <p className="text-[11px] text-background/90">
-                              Appwrite's CDN provides global coverage with 120+
-                              points of presence worldwide, reducing latency
-                              through edge caching and content optimization. All
-                              content is delivered over TLS for secure,
-                              encrypted connections.
-                            </p>
-                            <a
-                              href="https://appwrite.io/docs/products/network/cdn"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[11px] text-background hover:underline mt-1.5 inline-block font-medium"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Learn more →
-                            </a>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <span className="text-[13px] font-medium text-foreground">
-                        Connected
-                      </span>
                     </div>
                   </div>
 
-                  {/* DDoS protection */}
-                  <div>
-                    <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
-                      <span>DDoS protection</span>
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex items-center justify-center"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-xs">
-                            <p className="text-[12px] font-medium mb-1.5 text-background">
-                              DDoS Mitigation
-                            </p>
-                            <p className="text-[11px] text-background/90">
-                              Appwrite's network includes built-in DDoS
-                              mitigation to protect against distributed
-                              denial-of-service attacks, ensuring uninterrupted
-                              access to your sites and maintaining high
-                              availability even during high traffic loads.
-                            </p>
-                            <a
-                              href="https://appwrite.io/docs/products/network"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[11px] text-background hover:underline mt-1.5 inline-block font-medium"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Learn more →
-                            </a>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Shield className="h-4 w-4 text-green-500" />
-                      <span className="text-[13px] font-medium text-foreground">
-                        Active
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Domains */}
-                <div className="mt-4 pt-4 border-t border-border">
-                  <div className="text-[12px] text-muted-foreground mb-1.5">
-                    Domains
-                  </div>
-                  {activeDomains.length > 0 ? (
-                    <>
-                      <div className="space-y-1">
-                        {activeDomains.map((rule) => (
-                          <a
-                            key={rule.$id}
-                            href={`https://${rule.domain}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[13px] font-mono text-foreground hover:underline"
-                          >
-                            {rule.domain}
-                          </a>
-                        ))}
-                      </div>
-                      {hasMoreDomains && (
-                        <p className="text-[11px] text-muted-foreground mt-1.5">
-                          +{totalActiveDomains - activeDomains.length} more
-                        </p>
-                      )}
-                      <Link
-                        to="/projects/$projectId/sites/$siteId/domains"
-                        params={{
-                          projectId: projectId!,
-                          siteId: siteId!,
-                        }}
-                        className="text-[11px] text-primary hover:underline mt-2 inline-block"
-                      >
-                        Add domain
-                      </Link>
-                    </>
-                  ) : (
-                    <Link
-                      to="/projects/$projectId/sites/$siteId/domains"
-                      params={{
-                        projectId: projectId!,
-                        siteId: siteId!,
-                      }}
-                      className="text-[11px] text-primary hover:underline"
-                    >
-                      Add domain
-                    </Link>
-                  )}
-                </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                  <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 text-[13px]"
+                        >
+                          <Download className="mr-1.5 h-4 w-4" />
+                          Download
+                          <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="z-[200]">
+                        <DropdownMenuItem onClick={handleDownloadSource}>
+                          <FileCode className="mr-2 h-4 w-4" />
+                          Source code
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleDownloadBuild}>
+                          <Package className="mr-2 h-4 w-4" />
+                          Build output
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => setRedeployDialogOpen(true)}
+                      disabled={redeployMutation.isPending}
                       className="h-9 text-[13px]"
                     >
-                      <Download className="mr-1.5 h-4 w-4" />
-                      Download
-                      <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
+                      <RefreshCw className="mr-1.5 h-4 w-4" />
+                      Redeploy
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="z-[200]">
-                    <DropdownMenuItem onClick={handleDownloadSource}>
-                      <FileCode className="mr-2 h-4 w-4" />
-                      Source code
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleDownloadBuild}>
-                      <Package className="mr-2 h-4 w-4" />
-                      Build output
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setRedeployDialogOpen(true)}
-                  disabled={redeployMutation.isPending}
-                  className="h-9 text-[13px]"
-                >
-                  <RefreshCw className="mr-1.5 h-4 w-4" />
-                  Redeploy
-                </Button>
-                <Button asChild size="sm" variant="outline" className="h-9 text-[13px]">
-                  <Link
-                    to="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
-                    params={{
-                      projectId: projectId!,
-                      siteId: siteId!,
-                      deploymentId: activeDeploymentResolved.$id,
-                    }}
-                  >
-                    <ScrollText className="mr-1.5 h-4 w-4" />
-                    Build logs
-                  </Link>
-                </Button>
-                {activeDomains.length > 0 && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 text-[13px]"
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="h-9 text-[13px]"
+                    >
+                      <Link
+                        to="/projects/$projectId/sites/$siteId/deployments/$deploymentId"
+                        params={{
+                          projectId: projectId!,
+                          siteId: siteId!,
+                          deploymentId: activeDeploymentResolved.$id,
+                        }}
                       >
-                        <Globe className="mr-1.5 h-4 w-4" />
-                        Visit
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="z-[200] w-80">
-                      <div className="space-y-3">
-                        <div>
-                          <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                            Domains
-                          </h4>
-                          <div className="space-y-1.5">
-                            {activeDomains.map((rule) => (
-                              <a
-                                key={rule.$id}
-                                href={`https://${rule.domain}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
-                              >
-                                <Globe className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                <span className="text-[12px] font-mono text-foreground group-hover:text-primary flex-1 truncate">
-                                  {rule.domain}
-                                </span>
-                                <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-foreground shrink-0" />
-                              </a>
-                            ))}
-                            {hasMoreDomains && (
-                              <Link
-                                to="/projects/$projectId/sites/$siteId/domains"
-                                params={{ projectId: projectId!, siteId: siteId! }}
-                                className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors text-[12px] text-muted-foreground hover:text-foreground"
-                              >
-                                <span>View all {totalActiveDomains} domains</span>
-                              </Link>
-                            )}
+                        <ScrollText className="mr-1.5 h-4 w-4" />
+                        Build logs
+                      </Link>
+                    </Button>
+                    {activeDomains.length > 0 && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 text-[13px]"
+                          >
+                            <Globe className="mr-1.5 h-4 w-4" />
+                            Visit
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent align="end" className="z-[200] w-80">
+                          <div className="space-y-3">
+                            <div>
+                              <h4 className="text-[13px] font-semibold text-foreground mb-2">
+                                Domains
+                              </h4>
+                              <div className="space-y-1.5">
+                                {activeDomains.map((rule) => (
+                                  <a
+                                    key={rule.$id}
+                                    href={`https://${rule.domain}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
+                                  >
+                                    <Globe className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                    <span className="text-[12px] font-mono text-foreground group-hover:text-primary flex-1 truncate">
+                                      {rule.domain}
+                                    </span>
+                                    <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-foreground shrink-0" />
+                                  </a>
+                                ))}
+                                {hasMoreDomains && (
+                                  <Link
+                                    to="/projects/$projectId/sites/$siteId/domains"
+                                    params={{
+                                      projectId: projectId!,
+                                      siteId: siteId!,
+                                    }}
+                                    className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors text-[12px] text-muted-foreground hover:text-foreground"
+                                  >
+                                    <span>
+                                      View all {totalActiveDomains} domains
+                                    </span>
+                                  </Link>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                )}
-              </div>
-            </div>
-            )
-          })()}
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
 
           {/* Building State */}
           {isBuilding && (
@@ -1165,7 +1185,8 @@ export function View() {
                       <TableHead className="w-[40px] px-4 py-3">
                         <Checkbox
                           checked={(() => {
-                            const activeDeploymentId = activeDeploymentResolved?.$id
+                            const activeDeploymentId =
+                              activeDeploymentResolved?.$id
                             const selectableDeployments = deployments.filter(
                               (d) => d.$id !== activeDeploymentId,
                             )
@@ -1199,8 +1220,7 @@ export function View() {
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                         Created
                       </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]">
-                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1210,7 +1230,8 @@ export function View() {
                         deploymentData.status || 'unknown',
                         deploymentData.$createdAt,
                       )
-                      const isActive = deploymentData.$id === activeDeploymentResolved?.$id
+                      const isActive =
+                        deploymentData.$id === activeDeploymentResolved?.$id
                       return (
                         <TableRow
                           key={deploymentData.$id}
@@ -1231,9 +1252,14 @@ export function View() {
                             })
                           }}
                         >
-                          <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                          <TableCell
+                            className="px-4 py-3"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <Checkbox
-                              checked={selectedDeployments.has(deploymentData.$id)}
+                              checked={selectedDeployments.has(
+                                deploymentData.$id,
+                              )}
                               onCheckedChange={() =>
                                 toggleDeployment(deploymentData.$id)
                               }
@@ -1329,7 +1355,8 @@ export function View() {
 
                               const commitMessage =
                                 deploymentData.providerCommitMessage
-                              const commitHash = deploymentData.providerCommitHash
+                              const commitHash =
+                                deploymentData.providerCommitHash
                               const commitUrl = deploymentData.providerCommitUrl
                               const branch = deploymentData.providerBranch
 
@@ -1436,9 +1463,7 @@ export function View() {
                                       deploymentData.status,
                                       deploymentData.$createdAt,
                                     )
-                                  ? formatDuration(
-                                      deploymentData.buildDuration,
-                                    )
+                                  ? formatDuration(deploymentData.buildDuration)
                                   : '—'}
                             </code>
                           </TableCell>
@@ -1448,7 +1473,10 @@ export function View() {
                               className="text-[12px] font-medium text-muted-foreground"
                             />
                           </TableCell>
-                          <TableCell className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                          <TableCell
+                            className="px-4 py-3 text-right"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -1461,7 +1489,10 @@ export function View() {
                                   <span className="sr-only">Open menu</span>
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="z-[200]">
+                              <DropdownMenuContent
+                                align="end"
+                                className="z-[200]"
+                              >
                                 {!isActive && (
                                   <DropdownMenuItem
                                     disabled={deploymentData.status !== 'ready'}
@@ -1472,22 +1503,38 @@ export function View() {
                                     }
                                     onClick={async (e) => {
                                       e.stopPropagation()
-                                      if (deploymentData.status !== 'ready') return
+                                      if (deploymentData.status !== 'ready')
+                                        return
                                       try {
-                                        const projectSdk = sdk.forProject(projectId!)
-                                        await projectSdk.sites.updateSiteDeployment({
-                                          siteId: siteId!,
-                                          deploymentId: deploymentData.$id,
+                                        const projectSdk = sdk.forProject(
+                                          projectId!,
+                                        )
+                                        await projectSdk.sites.updateSiteDeployment(
+                                          {
+                                            siteId: siteId!,
+                                            deploymentId: deploymentData.$id,
+                                          },
+                                        )
+                                        queryClient.invalidateQueries({
+                                          queryKey: [
+                                            ...Dependencies.DEPLOYMENTS,
+                                          ],
                                         })
                                         queryClient.invalidateQueries({
-                                          queryKey: [...Dependencies.DEPLOYMENTS],
+                                          queryKey: [
+                                            'site',
+                                            'project',
+                                            projectId,
+                                            siteId,
+                                          ],
                                         })
-                                        queryClient.invalidateQueries({
-                                          queryKey: ['site', 'project', projectId, siteId],
-                                        })
-                                        toast.success('Deployment activated successfully')
+                                        toast.success(
+                                          'Deployment activated successfully',
+                                        )
                                       } catch (error) {
-                                        toast.error('Failed to activate deployment')
+                                        toast.error(
+                                          'Failed to activate deployment',
+                                        )
                                       }
                                     }}
                                   >
@@ -1499,15 +1546,21 @@ export function View() {
                                   onClick={async (e) => {
                                     e.stopPropagation()
                                     try {
-                                      const projectSdk = sdk.forProject(projectId!)
-                                      await projectSdk.sites.createDuplicateDeployment({
-                                        siteId: siteId!,
-                                        deploymentId: deploymentData.$id,
-                                      })
+                                      const projectSdk = sdk.forProject(
+                                        projectId!,
+                                      )
+                                      await projectSdk.sites.createDuplicateDeployment(
+                                        {
+                                          siteId: siteId!,
+                                          deploymentId: deploymentData.$id,
+                                        },
+                                      )
                                       queryClient.invalidateQueries({
                                         queryKey: [...Dependencies.DEPLOYMENTS],
                                       })
-                                      toast.success('Deployment rebuild started')
+                                      toast.success(
+                                        'Deployment rebuild started',
+                                      )
                                     } catch (error) {
                                       toast.error('Failed to redeploy')
                                     }
@@ -1527,12 +1580,21 @@ export function View() {
                                           deploymentData.$id,
                                         )
                                         queryClient.invalidateQueries({
-                                          queryKey: [...Dependencies.DEPLOYMENTS],
+                                          queryKey: [
+                                            ...Dependencies.DEPLOYMENTS,
+                                          ],
                                         })
                                         queryClient.invalidateQueries({
-                                          queryKey: ['site', 'project', projectId, siteId],
+                                          queryKey: [
+                                            'site',
+                                            'project',
+                                            projectId,
+                                            siteId,
+                                          ],
                                         })
-                                        toast.success('Deployment deleted successfully')
+                                        toast.success(
+                                          'Deployment deleted successfully',
+                                        )
                                       } catch (error) {
                                         toast.error(
                                           error instanceof Error
@@ -1658,7 +1720,10 @@ export function View() {
 
       {/* Delete Confirmation Dialog for Active Deployment */}
       {activeDeploymentResolved && (
-        <Dialog open={deleteActiveDialogOpen} onOpenChange={setDeleteActiveDialogOpen}>
+        <Dialog
+          open={deleteActiveDialogOpen}
+          onOpenChange={setDeleteActiveDialogOpen}
+        >
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
               <DialogTitle>Delete deployment</DialogTitle>
@@ -1666,9 +1731,15 @@ export function View() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                Are you sure you want to delete this deployment? This action cannot be undone.
+                Are you sure you want to delete this deployment? This action
+                cannot be undone.
               </DialogDescription>
-              <DeploymentInfo deployment={activeDeploymentForCard ?? activeDeploymentResolved!} showStatus={true} />
+              <DeploymentInfo
+                deployment={
+                  activeDeploymentForCard ?? activeDeploymentResolved!
+                }
+                showStatus={true}
+              />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
@@ -1701,9 +1772,16 @@ export function View() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will create a new build for this deployment using the current site configuration. The original deployment's code will be preserved and used for the new build.
+                This will create a new build for this deployment using the
+                current site configuration. The original deployment's code will
+                be preserved and used for the new build.
               </DialogDescription>
-              <DeploymentInfo deployment={activeDeploymentForCard ?? activeDeploymentResolved!} showStatus={true} />
+              <DeploymentInfo
+                deployment={
+                  activeDeploymentForCard ?? activeDeploymentResolved!
+                }
+                showStatus={true}
+              />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button
@@ -1737,9 +1815,15 @@ export function View() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.
+                This will switch the active deployment to this one. All traffic
+                will be routed to this deployment once activated.
               </DialogDescription>
-              <DeploymentInfo deployment={activeDeploymentForCard ?? activeDeploymentResolved!} showStatus={true} />
+              <DeploymentInfo
+                deployment={
+                  activeDeploymentForCard ?? activeDeploymentResolved!
+                }
+                showStatus={true}
+              />
             </div>
             <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button

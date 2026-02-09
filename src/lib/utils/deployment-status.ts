@@ -90,7 +90,11 @@ export function getDeploymentStatusBadge(
     }
   > = {
     ready: { label: 'Ready', badgeVariant: 'completed', icon: CheckCircle2 },
-    building: { label: 'Building', badgeVariant: 'processing', icon: CircleDashed },
+    building: {
+      label: 'Building',
+      badgeVariant: 'processing',
+      icon: CircleDashed,
+    },
     processing: {
       label: 'Processing',
       badgeVariant: 'processing',

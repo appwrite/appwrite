@@ -65,8 +65,7 @@ export async function submitFeedback(
     return false
   }
 
-  const firstname =
-    params.firstname.slice(0, FIRSTNAME_MAX_LENGTH) || 'Unknown'
+  const firstname = params.firstname.slice(0, FIRSTNAME_MAX_LENGTH) || 'Unknown'
 
   const body = {
     subject: params.subject,
@@ -77,13 +76,16 @@ export async function submitFeedback(
     metaFields: params.metaFields,
   }
 
-  const response = await fetch(`${GROWTH_ENDPOINT.replace(/\/$/, '')}/feedback`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
+  const response = await fetch(
+    `${GROWTH_ENDPOINT.replace(/\/$/, '')}/feedback`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  })
+  )
 
   if (response.status >= 400) {
     throw new Error('Failed to submit feedback')

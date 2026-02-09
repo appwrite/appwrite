@@ -19,7 +19,10 @@ interface RealtimeProviderProps {
   projectId: string
 }
 
-export function RealtimeProvider({ children, projectId }: RealtimeProviderProps) {
+export function RealtimeProvider({
+  children,
+  projectId,
+}: RealtimeProviderProps) {
   const queryClient = useQueryClient()
   const cleanupRef = useRef<(() => Promise<void>) | null>(null)
   const cleanupPromiseRef = useRef<Promise<void> | null>(null)

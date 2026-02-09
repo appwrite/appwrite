@@ -50,9 +50,7 @@ export function ConsoleBanner() {
   // Determine which logo to use based on theme
   // Default to dark mode if theme is not yet resolved
   const isDark = mounted ? (resolvedTheme ?? theme) === 'dark' : true
-  const logoSrc = isDark
-    ? '/imagine-logo-dark.svg'
-    : '/imagine-logo-light.svg'
+  const logoSrc = isDark ? '/imagine-logo-dark.svg' : '/imagine-logo-light.svg'
 
   if (isHidden) {
     return null
@@ -68,15 +66,12 @@ export function ConsoleBanner() {
           className="flex flex-1 min-h-0 items-center gap-3 text-left transition-opacity hover:opacity-80 py-1 sm:py-0"
         >
           <div className="flex items-center pl-2.5 py-1.5 shrink-0">
-            <img
-              src={logoSrc}
-              alt="Imagine"
-              className="h-5 w-auto shrink-0"
-            />
+            <img src={logoSrc} alt="Imagine" className="h-5 w-auto shrink-0" />
           </div>
           <span className="text-[13px] text-muted-foreground min-w-0">
-            <span className="font-medium text-foreground">Imagine.dev</span> &nbsp; Turn
-            your ideas into functional products. Vibe coding powered by{' '}
+            <span className="font-medium text-foreground">Imagine.dev</span>{' '}
+            &nbsp; Turn your ideas into functional products. Vibe coding powered
+            by{' '}
             <span className="font-medium text-foreground">Appwrite Cloud</span>
           </span>
           <ArrowRightCircle className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-50 hidden sm:block" />

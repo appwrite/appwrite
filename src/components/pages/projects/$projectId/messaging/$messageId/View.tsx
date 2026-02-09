@@ -69,10 +69,10 @@ export function View() {
   const queryClient = useQueryClient()
 
   // Fetch message (updated via realtime when backend emits message events)
-  const {
-    data: message,
-    isLoading: messageLoading,
-  } = useMessage(projectId, messageId)
+  const { data: message, isLoading: messageLoading } = useMessage(
+    projectId,
+    messageId,
+  )
 
   // Fetch project to get project name
   const { project } = useProject(projectId)

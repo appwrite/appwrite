@@ -57,19 +57,25 @@ const FunctionWizardContext = createContext<FunctionWizardContextValue | null>(
 export function useFunctionWizard() {
   const context = useContext(FunctionWizardContext)
   if (!context) {
-    throw new Error('useFunctionWizard must be used within FunctionWizardProvider')
+    throw new Error(
+      'useFunctionWizard must be used within FunctionWizardProvider',
+    )
   }
   return context
 }
 
 export function FunctionWizardProvider({ children }: { children: ReactNode }) {
-  const [formData, setFormData] = useState<FunctionWizardFormData>(defaultFormData)
+  const [formData, setFormData] =
+    useState<FunctionWizardFormData>(defaultFormData)
   const [installations, setInstallations] = useState<Models.Installation[]>([])
   const [baseDomain, setBaseDomain] = useState<string>('appwrite.network')
 
-  const updateFormData = useCallback((updates: Partial<FunctionWizardFormData>) => {
-    setFormData((prev) => ({ ...prev, ...updates }))
-  }, [])
+  const updateFormData = useCallback(
+    (updates: Partial<FunctionWizardFormData>) => {
+      setFormData((prev) => ({ ...prev, ...updates }))
+    },
+    [],
+  )
 
   const resetFormData = useCallback(() => {
     setFormData(defaultFormData)
@@ -99,7 +105,14 @@ export function FunctionWizardProvider({ children }: { children: ReactNode }) {
       setBaseDomain,
       generateDomain,
     }),
-    [formData, updateFormData, resetFormData, installations, baseDomain, generateDomain],
+    [
+      formData,
+      updateFormData,
+      resetFormData,
+      installations,
+      baseDomain,
+      generateDomain,
+    ],
   )
 
   return (

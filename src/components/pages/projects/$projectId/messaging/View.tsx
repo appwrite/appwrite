@@ -161,11 +161,7 @@ export function View() {
 
   // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (
-      !activeFetching &&
-      requestedPage !== displayedPage &&
-      !activeLoading
-    ) {
+    if (!activeFetching && requestedPage !== displayedPage && !activeLoading) {
       setDisplayedPage(requestedPage)
     }
   }, [activeFetching, activeLoading, requestedPage, displayedPage])
@@ -370,9 +366,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'list'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('list')}
       >
@@ -383,9 +377,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'grid'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('grid')}
       >

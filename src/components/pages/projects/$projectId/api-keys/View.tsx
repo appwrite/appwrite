@@ -43,7 +43,9 @@ const supportedLanguages = [
 ] as const
 
 export type ApiKeysInitialData = {
-  project?: Awaited<ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>>
+  project?: Awaited<
+    ReturnType<typeof import('@/lib/react-query/hooks').fetchProject>
+  >
   apiKeys: ApiKey[]
 }
 
@@ -64,8 +66,9 @@ export function View({ initialData }: ViewProps = {}) {
 
   // Fetch API keys (use initialData on first paint so no loading flash)
   const { apiKeys: apiKeysFromHook, isLoading } = useApiKeys(projectId)
-  const apiKeys =
-    apiKeysFromHook?.length ? apiKeysFromHook : (initialData?.apiKeys ?? [])
+  const apiKeys = apiKeysFromHook?.length
+    ? apiKeysFromHook
+    : (initialData?.apiKeys ?? [])
   const showLoading = isLoading && apiKeys.length === 0 && !initialData
 
   // Filter API keys based on search

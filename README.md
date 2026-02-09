@@ -9,11 +9,13 @@ The Appwrite Console provides a comprehensive interface for managing all aspects
 ## Features
 
 ### Core Management
+
 - **Project Management** - Create, configure, and manage Appwrite projects
 - **Organization Management** - Handle teams, billing, and organization settings
 - **Account Management** - User profiles, authentication, and security settings
 
 ### Service Management
+
 - **Authentication** - User management, sessions, OAuth providers, and security policies
 - **Databases** - Document and table-based database management, queries, indexes, and relationships
 - **Storage** - File uploads, bucket management, previews, and CDN configuration
@@ -22,6 +24,7 @@ The Appwrite Console provides a comprehensive interface for managing all aspects
 - **Sites** - Deploy and host web applications at the edge
 
 ### Developer Experience
+
 - **Command Center** - Quick navigation and search across all resources
 - **AI Chat** - Integrated AI assistant for help and guidance
 - **Performance Monitoring** - Built-in tools for debugging performance issues
@@ -49,17 +52,20 @@ The Appwrite Console provides a comprehensive interface for managing all aspects
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd vibes
 ```
 
 2. Install dependencies:
+
 ```bash
 bun install
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env
 ```
@@ -110,20 +116,20 @@ bun run serve
 
 ## Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `bun run dev` | Start development server on port 3000 |
-| `bun run start` | Start production server |
-| `bun run build` | Build for production |
-| `bun run build:node` | Build for Node.js deployment |
-| `bun run serve` | Preview production build |
-| `bun run test` | Run tests with Vitest |
-| `bun run lint` | Run ESLint |
-| `bun run format` | Format code with Prettier |
-| `bun run format:check` | Check code formatting |
-| `bun run generate:routes` | Generate route types |
-| `bun run generate:icons` | Generate Apple touch icons |
-| `bun run clean` | Clean build artifacts |
+| Script                    | Description                           |
+| ------------------------- | ------------------------------------- |
+| `bun run dev`             | Start development server on port 3000 |
+| `bun run start`           | Start production server               |
+| `bun run build`           | Build for production                  |
+| `bun run build:node`      | Build for Node.js deployment          |
+| `bun run serve`           | Preview production build              |
+| `bun run test`            | Run tests with Vitest                 |
+| `bun run lint`            | Run ESLint                            |
+| `bun run format`          | Format code with Prettier             |
+| `bun run format:check`    | Check code formatting                 |
+| `bun run generate:routes` | Generate route types                  |
+| `bun run generate:icons`  | Generate Apple touch icons            |
+| `bun run clean`           | Clean build artifacts                 |
 
 ## Project Structure
 
@@ -181,6 +187,7 @@ window.performanceMonitor.generateReport()
 ### When to Use
 
 Use the performance monitor when:
+
 - CPU usage is unexpectedly high
 - The app feels sluggish
 - You need to identify what's causing performance issues
@@ -221,14 +228,14 @@ bun run format:check
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `VITE_APPWRITE_ENDPOINT` | Yes | `https://cloud.appwrite.io/v1` | Appwrite API endpoint |
-| `VITE_INSTRUMENTATION_SCRIPT_SRC` | No | - | Analytics/instrumentation script URL |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | No | - | Stripe publishable key for billing |
-| `VITE_COMPANY_NAME` | No | `Appwrite` | Company name for branding |
-| `VITE_CONTACT_SALES_URL` | No | - | Contact sales page URL |
-| `VITE_LEGAL_EMAIL` | No | `legal@appwrite.io` | Legal contact email |
+| Variable                          | Required | Default                        | Description                          |
+| --------------------------------- | -------- | ------------------------------ | ------------------------------------ |
+| `VITE_APPWRITE_ENDPOINT`          | Yes      | `https://cloud.appwrite.io/v1` | Appwrite API endpoint                |
+| `VITE_INSTRUMENTATION_SCRIPT_SRC` | No       | -                              | Analytics/instrumentation script URL |
+| `VITE_STRIPE_PUBLISHABLE_KEY`     | No       | -                              | Stripe publishable key for billing   |
+| `VITE_COMPANY_NAME`               | No       | `Appwrite`                     | Company name for branding            |
+| `VITE_CONTACT_SALES_URL`          | No       | -                              | Contact sales page URL               |
+| `VITE_LEGAL_EMAIL`                | No       | `legal@appwrite.io`            | Legal contact email                  |
 
 ## License
 

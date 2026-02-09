@@ -75,7 +75,10 @@ export function EnvironmentVariablesCard({
       toast.error('Variable key already exists')
       return
     }
-    onChange([...variables, { key: newKey.trim(), value: newValue, secret: newSecret }])
+    onChange([
+      ...variables,
+      { key: newKey.trim(), value: newValue, secret: newSecret },
+    ])
     setNewKey('')
     setNewValue('')
     setNewSecret(false)
@@ -119,10 +122,16 @@ export function EnvironmentVariablesCard({
         if (eq > 0) {
           const key = trimmed.substring(0, eq).trim()
           let value = trimmed.substring(eq + 1).trim()
-          if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+          if (
+            (value.startsWith('"') && value.endsWith('"')) ||
+            (value.startsWith("'") && value.endsWith("'"))
+          ) {
             value = value.slice(1, -1)
           }
-          if (!variables.some((v) => v.key === key) && !newVars.some((v) => v.key === key)) {
+          if (
+            !variables.some((v) => v.key === key) &&
+            !newVars.some((v) => v.key === key)
+          ) {
             newVars.push({ key, value, secret: false })
           }
         }
@@ -144,7 +153,9 @@ export function EnvironmentVariablesCard({
       setEditorContent(nonSecret.map((v) => `${v.key}=${v.value}`).join('\n'))
     } else {
       const obj: Record<string, string> = {}
-      nonSecret.forEach((v) => { obj[v.key] = v.value })
+      nonSecret.forEach((v) => {
+        obj[v.key] = v.value
+      })
       setEditorContent(JSON.stringify(obj, null, 2))
     }
     setEditorError(undefined)
@@ -157,7 +168,9 @@ export function EnvironmentVariablesCard({
       setEditorContent(nonSecret.map((v) => `${v.key}=${v.value}`).join('\n'))
     } else {
       const obj: Record<string, string> = {}
-      nonSecret.forEach((v) => { obj[v.key] = v.value })
+      nonSecret.forEach((v) => {
+        obj[v.key] = v.value
+      })
       setEditorContent(JSON.stringify(obj, null, 2))
     }
     setEditorFormat(format)
@@ -174,14 +187,20 @@ export function EnvironmentVariablesCard({
           if (!t || t.startsWith('#')) continue
           const eq = t.indexOf('=')
           if (eq > 0) {
-            newVars.push({ key: t.substring(0, eq).trim(), value: t.substring(eq + 1).trim(), secret: false })
+            newVars.push({
+              key: t.substring(0, eq).trim(),
+              value: t.substring(eq + 1).trim(),
+              secret: false,
+            })
           }
         }
       } else {
         const parsed = JSON.parse(editorContent)
-        if (typeof parsed !== 'object' || parsed === null) throw new Error('JSON must be an object')
+        if (typeof parsed !== 'object' || parsed === null)
+          throw new Error('JSON must be an object')
         for (const [key, value] of Object.entries(parsed)) {
-          if (typeof value === 'string') newVars.push({ key, value, secret: false })
+          if (typeof value === 'string')
+            newVars.push({ key, value, secret: false })
         }
       }
       onChange([...secretVars, ...newVars])
@@ -213,14 +232,19 @@ export function EnvironmentVariablesCard({
         type="single"
         collapsible
         defaultValue={defaultOpen ? 'env-vars' : undefined}
-        className={cn('rounded-xl border border-border bg-card/50 overflow-hidden', className)}
+        className={cn(
+          'rounded-xl border border-border bg-card/50 overflow-hidden',
+          className,
+        )}
       >
         <AccordionItem value="env-vars" className="border-none">
           <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
             <span className="text-[15px] font-semibold text-foreground">
               Environment variables
               {variables.length > 0 && (
-                <span className="ml-2 font-normal text-muted-foreground">({variables.length})</span>
+                <span className="ml-2 font-normal text-muted-foreground">
+                  ({variables.length})
+                </span>
               )}
             </span>
           </AccordionTrigger>
@@ -234,11 +258,25 @@ export function EnvironmentVariablesCard({
                   onChange={handleFileImport}
                   className="hidden"
                 />
-                <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={disabled} className="h-8 text-[12px]">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={disabled}
+                  className="h-8 text-[12px]"
+                >
                   <Upload className="mr-1.5 h-3.5 w-3.5" />
                   Import .env
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={handleOpenEditor} disabled={disabled} className="h-8 text-[12px]">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenEditor}
+                  disabled={disabled}
+                  className="h-8 text-[12px]"
+                >
                   <Code className="mr-1.5 h-3.5 w-3.5" />
                   Editor
                 </Button>
@@ -248,32 +286,64 @@ export function EnvironmentVariablesCard({
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent border-b border-border">
-                        <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Key</TableHead>
-                        <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Value</TableHead>
-                        <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]">Secret</TableHead>
+                        <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          Key
+                        </TableHead>
+                        <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          Value
+                        </TableHead>
+                        <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[80px]">
+                          Secret
+                        </TableHead>
                         <TableHead className="px-4 py-2 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[50px] text-right" />
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {variables.map((variable, index) => (
-                        <TableRow key={`${variable.key}-${index}`} className="border-b border-border/50">
+                        <TableRow
+                          key={`${variable.key}-${index}`}
+                          className="border-b border-border/50"
+                        >
                           <TableCell className="px-4 py-2">
-                            <code className="text-[12px] font-mono">{variable.key}</code>
+                            <code className="text-[12px] font-mono">
+                              {variable.key}
+                            </code>
                           </TableCell>
                           <TableCell className="px-4 py-2">
                             <div className="flex items-center gap-2">
                               <code className="text-[12px] font-mono text-muted-foreground max-w-[200px] truncate">
-                                {variable.secret && !showSecrets.has(variable.key) ? '••••••••' : variable.value || '(empty)'}
+                                {variable.secret &&
+                                !showSecrets.has(variable.key)
+                                  ? '••••••••'
+                                  : variable.value || '(empty)'}
                               </code>
                               {variable.secret && (
-                                <Button type="button" variant="ghost" size="sm" onClick={() => handleToggleShowSecret(variable.key)} className="h-6 w-6 p-0">
-                                  {showSecrets.has(variable.key) ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleToggleShowSecret(variable.key)
+                                  }
+                                  className="h-6 w-6 p-0"
+                                >
+                                  {showSecrets.has(variable.key) ? (
+                                    <EyeOff className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <Eye className="h-3.5 w-3.5" />
+                                  )}
                                 </Button>
                               )}
                             </div>
                           </TableCell>
                           <TableCell className="px-4 py-2">
-                            <Checkbox checked={variable.secret} onCheckedChange={() => handleToggleSecret(variable.key)} disabled={disabled} />
+                            <Checkbox
+                              checked={variable.secret}
+                              onCheckedChange={() =>
+                                handleToggleSecret(variable.key)
+                              }
+                              disabled={disabled}
+                            />
                           </TableCell>
                           <TableCell className="px-4 py-2 text-right">
                             <TooltipProvider delayDuration={0}>
@@ -305,27 +375,60 @@ export function EnvironmentVariablesCard({
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="text-[12px] font-medium text-muted-foreground">Key</label>
+                    <label className="text-[12px] font-medium text-muted-foreground">
+                      Key
+                    </label>
                     <Input
                       ref={newKeyInputRef}
                       value={newKey}
-                      onChange={(e) => setNewKey(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, ''))}
+                      onChange={(e) =>
+                        setNewKey(
+                          e.target.value
+                            .toUpperCase()
+                            .replace(/[^A-Z0-9_]/g, ''),
+                        )
+                      }
                       placeholder="VARIABLE_NAME"
                       disabled={disabled}
                       className="h-9 font-mono text-[13px]"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[12px] font-medium text-muted-foreground">Value</label>
-                    <Input value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder="Enter value" disabled={disabled} className="h-9 text-[13px]" />
+                    <label className="text-[12px] font-medium text-muted-foreground">
+                      Value
+                    </label>
+                    <Input
+                      value={newValue}
+                      onChange={(e) => setNewValue(e.target.value)}
+                      placeholder="Enter value"
+                      disabled={disabled}
+                      className="h-9 text-[13px]"
+                    />
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Checkbox id="new-secret" checked={newSecret} onCheckedChange={(c) => setNewSecret(c === true)} disabled={disabled} />
-                    <label htmlFor="new-secret" className="text-[12px] text-muted-foreground cursor-pointer">Mark as secret</label>
+                    <Checkbox
+                      id="new-secret"
+                      checked={newSecret}
+                      onCheckedChange={(c) => setNewSecret(c === true)}
+                      disabled={disabled}
+                    />
+                    <label
+                      htmlFor="new-secret"
+                      className="text-[12px] text-muted-foreground cursor-pointer"
+                    >
+                      Mark as secret
+                    </label>
                   </div>
-                  <Button type="button" variant="outline" size="sm" onClick={handleAddVariable} disabled={disabled || !newKey.trim()} className="h-8 text-[12px]">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddVariable}
+                    disabled={disabled || !newKey.trim()}
+                    className="h-8 text-[12px]"
+                  >
                     <Plus className="mr-1.5 h-3.5 w-3.5" />
                     Add variable
                   </Button>

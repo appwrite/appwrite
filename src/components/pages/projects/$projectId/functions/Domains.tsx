@@ -149,10 +149,7 @@ export function View() {
                           {rule.domain}
                         </a>
                         {rule.status === 'verified' && (
-                          <Badge
-                            variant="default"
-                            className="h-5 text-[10px]"
-                          >
+                          <Badge variant="default" className="h-5 text-[10px]">
                             Verified
                           </Badge>
                         )}

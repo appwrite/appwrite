@@ -33,9 +33,7 @@ export const Route = createFileRoute(
       // Fetch project variables
       queryClient.ensureQueryData(projectVariablesQueryOptions(projectId)),
       // Fetch site variables
-      queryClient.ensureQueryData(
-        siteVariablesQueryOptions(projectId, siteId),
-      ),
+      queryClient.ensureQueryData(siteVariablesQueryOptions(projectId, siteId)),
       // Fetch frameworks
       queryClient.ensureQueryData(siteFrameworksQueryOptions(projectId)),
       // Fetch VCS installations

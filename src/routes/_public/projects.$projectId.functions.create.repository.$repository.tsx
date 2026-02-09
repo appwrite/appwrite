@@ -19,8 +19,12 @@ function RepositoryConfigPage() {
   return (
     <RepositoryConfigView
       repositoryParam={repository}
-      installationIdFromSearch={(search as { installationId?: string })?.installationId}
-      providerRepositoryIdFromSearch={(search as { providerRepositoryId?: string })?.providerRepositoryId}
+      installationIdFromSearch={
+        (search as { installationId?: string })?.installationId
+      }
+      providerRepositoryIdFromSearch={
+        (search as { providerRepositoryId?: string })?.providerRepositoryId
+      }
     />
   )
 }

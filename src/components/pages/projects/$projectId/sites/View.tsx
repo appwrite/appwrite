@@ -1,5 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate, useLocation, Link } from '@tanstack/react-router'
+import {
+  useParams,
+  useNavigate,
+  useLocation,
+  Link,
+} from '@tanstack/react-router'
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query'
 import { useTheme } from 'next-themes'
 import { Globe, List, LayoutGrid } from 'lucide-react'
@@ -58,7 +63,9 @@ export function View() {
   const [pageSize, setPageSize] = useState(SITES_PER_PAGE)
   const [selectedSites, setSelectedSites] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [loadedScreenshots, setLoadedScreenshots] = useState<Set<string>>(new Set())
+  const [loadedScreenshots, setLoadedScreenshots] = useState<Set<string>>(
+    new Set(),
+  )
 
   // Get theme for screenshot selection
   const isDark = useMemo(() => {
@@ -93,32 +100,18 @@ export function View() {
     total: sitesTotal,
     isLoading: sitesLoading,
     isFetching: sitesFetching,
-  } = useProjectSites(
-    projectId,
-    requestedPage - 1,
-    pageSize,
-    searchValue,
-  )
+  } = useProjectSites(projectId, requestedPage - 1, pageSize, searchValue)
 
   // Fetch data for the displayed page (what we show - stays until new page is ready)
   const {
     sites: apiSites,
     total: displayedTotal,
     isLoading: displayedLoading,
-  } = useProjectSites(
-    projectId,
-    displayedPage - 1,
-    pageSize,
-    searchValue,
-  )
+  } = useProjectSites(projectId, displayedPage - 1, pageSize, searchValue)
 
   // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (
-      !sitesFetching &&
-      requestedPage !== displayedPage &&
-      !sitesLoading
-    ) {
+    if (!sitesFetching && requestedPage !== displayedPage && !sitesLoading) {
       setDisplayedPage(requestedPage)
     }
   }, [sitesFetching, sitesLoading, requestedPage, displayedPage])
@@ -240,9 +233,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'list'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('list')}
       >
@@ -253,9 +244,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'grid'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('grid')}
       >
@@ -375,14 +364,17 @@ export function View() {
                             {(() => {
                               const screenshotUrl = getScreenshotUrl(siteData)
                               const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
-                              const isLoaded = loadedScreenshots.has(screenshotKey)
+                              const isLoaded =
+                                loadedScreenshots.has(screenshotKey)
                               if (screenshotUrl) {
                                 return (
                                   <img
                                     src={screenshotUrl}
                                     alt={`${siteData.name || 'Site'} preview`}
                                     onLoad={() => {
-                                      setLoadedScreenshots((prev) => new Set(prev).add(screenshotKey))
+                                      setLoadedScreenshots((prev) =>
+                                        new Set(prev).add(screenshotKey),
+                                      )
                                     }}
                                     className={cn(
                                       'h-12 w-20 rounded border border-border object-cover transition-opacity duration-500',
@@ -525,13 +517,16 @@ export function View() {
                           <div className="aspect-video w-full overflow-hidden bg-muted">
                             {(() => {
                               const screenshotKey = `${siteData.$id}-${isDark ? 'dark' : 'light'}`
-                              const isLoaded = loadedScreenshots.has(screenshotKey)
+                              const isLoaded =
+                                loadedScreenshots.has(screenshotKey)
                               return (
                                 <img
                                   src={screenshotUrl}
                                   alt={`${siteData.name || 'Site'} preview`}
                                   onLoad={() => {
-                                    setLoadedScreenshots((prev) => new Set(prev).add(screenshotKey))
+                                    setLoadedScreenshots((prev) =>
+                                      new Set(prev).add(screenshotKey),
+                                    )
                                   }}
                                   className={cn(
                                     'h-full w-full object-cover transition-opacity duration-500',

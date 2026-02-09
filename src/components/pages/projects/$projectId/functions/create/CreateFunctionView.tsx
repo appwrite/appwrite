@@ -85,10 +85,20 @@ const REPO_PAGE_SIZE = 7
 const QUICK_START_USE_CASE = 'starter'
 
 /** Language keys for the clone-by-runtime cards; order matches display. */
-const LANGUAGE_RUNTIMES = ['node', 'python', 'bun', 'php', 'dart', 'go', 'deno', 'ruby'] as const
+const LANGUAGE_RUNTIMES = [
+  'node',
+  'python',
+  'bun',
+  'php',
+  'dart',
+  'go',
+  'deno',
+  'ruby',
+] as const
 
 function getRuntimeBase(r: { name?: string; key?: string } | string): string {
-  const raw = typeof r === 'string' ? r : (r?.name ?? (r as { key?: string })?.key ?? '')
+  const raw =
+    typeof r === 'string' ? r : (r?.name ?? (r as { key?: string })?.key ?? '')
   return raw.toLowerCase().split('-')[0]
 }
 
@@ -102,7 +112,9 @@ function LanguageCard({
   template: Models.TemplateFunction | null
 }) {
   const label =
-    language === 'php' ? 'PHP' : language.charAt(0).toUpperCase() + language.slice(1)
+    language === 'php'
+      ? 'PHP'
+      : language.charAt(0).toUpperCase() + language.slice(1)
   const disabled = !template
   const content = (
     <div className="flex items-center justify-between gap-2">
@@ -249,15 +261,19 @@ export function CreateFunctionView() {
     return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
   }, [projectEndpoint, projectId, selectedInstallationId])
 
-  const { data: repositoriesData, isLoading: reposLoading, isFetching: reposFetching, refetch: refetchRepos } =
-    useRepositories(
-      projectId,
-      selectedInstallationId || null,
-      VCSDetectionType.Runtime,
-      repoPage - 1,
-      REPO_PAGE_SIZE,
-      debouncedRepoSearch || undefined,
-    )
+  const {
+    data: repositoriesData,
+    isLoading: reposLoading,
+    isFetching: reposFetching,
+    refetch: refetchRepos,
+  } = useRepositories(
+    projectId,
+    selectedInstallationId || null,
+    VCSDetectionType.Runtime,
+    repoPage - 1,
+    REPO_PAGE_SIZE,
+    debouncedRepoSearch || undefined,
+  )
 
   const repositories = useMemo(
     () => repositoriesData?.runtimeProviderRepositories || [],
@@ -290,7 +306,9 @@ export function CreateFunctionView() {
         combined.push(t)
       }
     }
-    const byLanguage: Partial<Record<(typeof LANGUAGE_RUNTIMES)[number], Models.TemplateFunction>> = {}
+    const byLanguage: Partial<
+      Record<(typeof LANGUAGE_RUNTIMES)[number], Models.TemplateFunction>
+    > = {}
     for (const lang of LANGUAGE_RUNTIMES) {
       if (byLanguage[lang]) continue
       const template = combined.find((t) =>
@@ -310,7 +328,13 @@ export function CreateFunctionView() {
     (i) => i.$id === selectedInstallationId,
   )
 
-  const handleSelectRepository = (repo: { id: string; organization?: string; name?: string; url?: string; pushedAt?: string }) => {
+  const handleSelectRepository = (repo: {
+    id: string
+    organization?: string
+    name?: string
+    url?: string
+    pushedAt?: string
+  }) => {
     updateFormData({
       installationId: selectedInstallationId,
       providerRepositoryId: repo.id,
@@ -319,7 +343,9 @@ export function CreateFunctionView() {
       repositoryUrl: repo.url,
       functionName: repo.name || '',
     })
-    const repositoryParam = encodeURIComponent(`${repo.organization || ''}/${repo.name || ''}`)
+    const repositoryParam = encodeURIComponent(
+      `${repo.organization || ''}/${repo.name || ''}`,
+    )
     navigate({
       to: '/projects/$projectId/functions/create/repository/$repository',
       params: { projectId: projectId!, repository: repositoryParam },
@@ -450,44 +476,54 @@ export function CreateFunctionView() {
                       reposFetching && 'opacity-60 pointer-events-none',
                     )}
                   >
-                    {repositories.map((repo: { id: string; name?: string; organization?: string; url?: string; pushedAt?: string; private?: boolean; runtime?: string }) => (
-                      <div
-                        key={repo.id}
-                        className="flex w-full items-center gap-3 px-4 py-3.5 hover:bg-accent/50 transition-colors"
-                      >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
-                          {repo.runtime ? (
-                            <RuntimeIcon runtime={repo.runtime} size="sm" />
-                          ) : (
-                            <ProviderIcon
-                              provider={selectedInstallation?.provider}
-                              className="h-3.5 w-3.5"
-                            />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0 flex items-center gap-2">
-                          <span className="text-[13px] font-medium text-foreground truncate">
-                            {repo.name}
-                          </span>
-                          {repo.private && (
-                            <Lock className="h-3 w-3 shrink-0 text-muted-foreground/70" />
-                          )}
-                          {repo.pushedAt && (
-                            <span className="text-[11px] text-muted-foreground shrink-0">
-                              <DateTooltip date={repo.pushedAt} />
-                            </span>
-                          )}
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-[12px] shrink-0"
-                          onClick={() => handleSelectRepository(repo)}
+                    {repositories.map(
+                      (repo: {
+                        id: string
+                        name?: string
+                        organization?: string
+                        url?: string
+                        pushedAt?: string
+                        private?: boolean
+                        runtime?: string
+                      }) => (
+                        <div
+                          key={repo.id}
+                          className="flex w-full items-center gap-3 px-4 py-3.5 hover:bg-accent/50 transition-colors"
                         >
-                          Connect
-                        </Button>
-                      </div>
-                    ))}
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
+                            {repo.runtime ? (
+                              <RuntimeIcon runtime={repo.runtime} size="sm" />
+                            ) : (
+                              <ProviderIcon
+                                provider={selectedInstallation?.provider}
+                                className="h-3.5 w-3.5"
+                              />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 flex items-center gap-2">
+                            <span className="text-[13px] font-medium text-foreground truncate">
+                              {repo.name}
+                            </span>
+                            {repo.private && (
+                              <Lock className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                            )}
+                            {repo.pushedAt && (
+                              <span className="text-[11px] text-muted-foreground shrink-0">
+                                <DateTooltip date={repo.pushedAt} />
+                              </span>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-[12px] shrink-0"
+                            onClick={() => handleSelectRepository(repo)}
+                          >
+                            Connect
+                          </Button>
+                        </div>
+                      ),
+                    )}
                   </div>
                 ) : (
                   <div className="py-8 text-center">

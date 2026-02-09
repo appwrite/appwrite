@@ -18,7 +18,10 @@ import { PromoBannerProvider } from '@/components/global/providers/PromoBanner'
 import { DebugModeProvider } from '@/components/global/providers/DebugMode'
 import { SentryContextProvider } from '@/components/global/providers/SentryContext'
 import { NavigationHistoryProvider } from '@/components/global/providers/NavigationHistoryProvider'
-import { FullscreenLoader, StaticFullscreenLoader } from '@/components/ui/loader'
+import {
+  FullscreenLoader,
+  StaticFullscreenLoader,
+} from '@/components/ui/loader'
 import { useInitialLoader } from '@/hooks/use-initial-loader'
 import { DynamicFavicon } from '@/components/global/shared/DynamicFavicon'
 import { UploadWarning } from '@/components/global/providers/UploadWarning'

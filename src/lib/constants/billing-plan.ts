@@ -7,7 +7,8 @@ export const BillingPlanTier = {
   Tier1: 'tier-1',
 } as const
 
-export type BillingPlanTier = (typeof BillingPlanTier)[keyof typeof BillingPlanTier]
+export type BillingPlanTier =
+  (typeof BillingPlanTier)[keyof typeof BillingPlanTier]
 
 /** All valid billing plan tier string values */
 export const BILLING_PLAN_TIER_VALUES: readonly string[] =

@@ -21,11 +21,7 @@ interface LoggingCardProps {
   site: Models.Site | null | undefined
 }
 
-export function LoggingCard({
-  projectId,
-  siteId,
-  site,
-}: LoggingCardProps) {
+export function LoggingCard({ projectId, siteId, site }: LoggingCardProps) {
   const queryClient = useQueryClient()
   const [logging, setLogging] = useState(true)
 
@@ -72,9 +68,7 @@ export function LoggingCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Logging
-        </h3>
+        <h3 className="text-[15px] font-semibold text-foreground">Logging</h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Enable or disable logging for the site
         </p>

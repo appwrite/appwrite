@@ -119,9 +119,7 @@ export function FullscreenLoader({
           </div>
           {showSpinner && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-              <div
-                className="w-4 h-4 border-2 rounded-full animate-spin border-[oklch(0.274_0.006_286.033)] border-t-[oklch(0.705_0.015_286.067)]"
-              />
+              <div className="w-4 h-4 border-2 rounded-full animate-spin border-[oklch(0.274_0.006_286.033)] border-t-[oklch(0.705_0.015_286.067)]" />
             </div>
           )}
         </motion.div>

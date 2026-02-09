@@ -20,11 +20,7 @@ interface NameCardProps {
   site: Models.Site | null | undefined
 }
 
-export function NameCard({
-  projectId,
-  siteId,
-  site,
-}: NameCardProps) {
+export function NameCard({ projectId, siteId, site }: NameCardProps) {
   const queryClient = useQueryClient()
   const [name, setName] = useState('')
 
@@ -70,9 +66,7 @@ export function NameCard({
   return (
     <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
       <div className="px-6 py-4">
-        <h3 className="text-[15px] font-semibold text-foreground">
-          Name
-        </h3>
+        <h3 className="text-[15px] font-semibold text-foreground">Name</h3>
         <p className="text-[13px] text-muted-foreground mt-2">
           Site name used for identification
         </p>
@@ -90,11 +84,7 @@ export function NameCard({
         <Button
           size="sm"
           className="h-9 text-[13px]"
-          disabled={
-            !hasChanges ||
-            !name.trim() ||
-            updateSiteMutation.isPending
-          }
+          disabled={!hasChanges || !name.trim() || updateSiteMutation.isPending}
           onClick={handleSave}
         >
           Update

@@ -594,9 +594,7 @@ export function View({ projectId }: ViewProps) {
         {/* Integrations Section */}
         <div className="mt-6">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[15px] font-semibold text-foreground">
-              Apps
-            </h2>
+            <h2 className="text-[15px] font-semibold text-foreground">Apps</h2>
             <Button
               onClick={() => handleConnectPlatform()}
               size="sm"
@@ -617,8 +615,8 @@ export function View({ projectId }: ViewProps) {
                   No apps connected
                 </h3>
                 <p className="mb-6 max-w-sm text-[13px] text-muted-foreground">
-                  Connect your first app to start building with Appwrite.
-                  Add web apps, mobile apps, or server SDKs to get started.
+                  Connect your first app to start building with Appwrite. Add
+                  web apps, mobile apps, or server SDKs to get started.
                 </p>
                 <div className="my-6 flex w-full items-center gap-3 text-[12px] text-muted-foreground">
                   <div className="h-px flex-1 bg-border" />

@@ -452,8 +452,7 @@ export function functionDeploymentQueryOptions(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    gcTime:
-      projectId && functionId && deploymentId ? 5 * 60 * 1000 : 0,
+    gcTime: projectId && functionId && deploymentId ? 5 * 60 * 1000 : 0,
   })
 }
 
@@ -732,7 +731,13 @@ export function useFunctionDeployments(
     error,
     refetch,
   } = useQuery(
-    functionDeploymentsQueryOptions(projectId, functionId, page, limit, queries),
+    functionDeploymentsQueryOptions(
+      projectId,
+      functionId,
+      page,
+      limit,
+      queries,
+    ),
   )
 
   return {
@@ -940,7 +945,11 @@ export function useFunctionDeploymentProxyRules(
   deploymentId: string | null | undefined,
 ) {
   const { data, isLoading, error, refetch } = useQuery(
-    functionDeploymentProxyRulesQueryOptions(projectId, functionId, deploymentId),
+    functionDeploymentProxyRulesQueryOptions(
+      projectId,
+      functionId,
+      deploymentId,
+    ),
   )
 
   return {

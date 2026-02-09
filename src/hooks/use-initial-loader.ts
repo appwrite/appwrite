@@ -27,7 +27,7 @@ export function useInitialLoader() {
       location.pathname === '/mfa' ||
       location.pathname === '/join' ||
       location.pathname === '/sign-out',
-    [location.pathname]
+    [location.pathname],
   )
 
   const shouldShowLoader = useMemo(
@@ -39,13 +39,13 @@ export function useInitialLoader() {
         location.pathname.startsWith('/projects') ||
         location.pathname.startsWith('/console') ||
         location.pathname.startsWith('/account')),
-    [location.pathname, isAuthRoute]
+    [location.pathname, isAuthRoute],
   )
 
   const [debugOverrides, setDebugOverrides] = useState(loadDebugOverrides)
   const effectiveShouldShowLoader = useMemo(
     () => shouldShowLoader && !debugOverrides.disableInitialLoader,
-    [shouldShowLoader, debugOverrides.disableInitialLoader]
+    [shouldShowLoader, debugOverrides.disableInitialLoader],
   )
 
   // Initialize loading state synchronously so the loader is visible on first paint
@@ -84,7 +84,11 @@ export function useInitialLoader() {
       // Auth pages and root route don't need loaders - mark as complete immediately
       if (isAuthRoute || location.pathname === '/') {
         hasCompletedInitialLoadRef.current = true
-      } else if (router.state.status === 'idle' && isFetching === 0 && isMutating === 0) {
+      } else if (
+        router.state.status === 'idle' &&
+        isFetching === 0 &&
+        isMutating === 0
+      ) {
         // For other public routes, mark complete when idle
         hasCompletedInitialLoadRef.current = true
       }
@@ -105,13 +109,19 @@ export function useInitialLoader() {
     // This means we're on a route that should show the loader
 
     // Only process if something actually changed
-    const routerStatusChanged = prevRouterStatusRef.current !== router.state.status
+    const routerStatusChanged =
+      prevRouterStatusRef.current !== router.state.status
     const pathnameChanged = prevPathnameRef.current !== location.pathname
     const fetchingChanged = prevIsFetchingRef.current !== isFetching
     const mutatingChanged = prevIsMutatingRef.current !== isMutating
 
     // If nothing relevant changed, skip processing
-    if (!routerStatusChanged && !pathnameChanged && !fetchingChanged && !mutatingChanged) {
+    if (
+      !routerStatusChanged &&
+      !pathnameChanged &&
+      !fetchingChanged &&
+      !mutatingChanged
+    ) {
       return
     }
 

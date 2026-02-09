@@ -26,10 +26,6 @@ function WebsiteAnalyticsPage() {
   }
 
   return (
-    <View
-      websiteId={websiteId}
-      websiteName={websiteName}
-      onBack={handleBack}
-    />
+    <View websiteId={websiteId} websiteName={websiteName} onBack={handleBack} />
   )
 }

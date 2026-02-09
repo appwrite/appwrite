@@ -27,15 +27,13 @@ export const Route = createFileRoute(
 
     // Fetch critical data before rendering to prevent layout shifts
     await Promise.all([
-        // Fetch database - blocks navigation until ready
-        queryClient.ensureQueryData(
-          databaseQueryOptions(projectId, databaseId),
-        ),
-        // Fetch first page of tables - blocks navigation until ready
-        queryClient.ensureQueryData(
-          tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE),
-        ),
-      ])
+      // Fetch database - blocks navigation until ready
+      queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId)),
+      // Fetch first page of tables - blocks navigation until ready
+      queryClient.ensureQueryData(
+        tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE),
+      ),
+    ])
   },
   component: DatabaseIndexPage,
 })

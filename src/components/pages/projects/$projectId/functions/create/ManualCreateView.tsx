@@ -144,8 +144,18 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
       showBackButton
       backButtonLabel="Back"
       fallbackPath={`/projects/${projectId}/functions`}
-      onClose={() => navigate({ to: '/projects/$projectId/functions', params: { projectId: projectId! } })}
-      onBack={() => navigate({ to: '/projects/$projectId/functions/create', params: { projectId: projectId! } })}
+      onClose={() =>
+        navigate({
+          to: '/projects/$projectId/functions',
+          params: { projectId: projectId! },
+        })
+      }
+      onBack={() =>
+        navigate({
+          to: '/projects/$projectId/functions/create',
+          params: { projectId: projectId! },
+        })
+      }
       fullscreen
       maxWidth="max-w-[1400px]"
       footerAlign="right"
@@ -153,7 +163,12 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
         <>
           <Button
             variant="outline"
-            onClick={() => navigate({ to: '/projects/$projectId/functions', params: { projectId: projectId! } })}
+            onClick={() =>
+              navigate({
+                to: '/projects/$projectId/functions',
+                params: { projectId: projectId! },
+              })
+            }
             disabled={isDeploying}
           >
             Cancel
@@ -201,7 +216,11 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
           </div>
           <div className="space-y-2">
             <Label className="text-[13px]">Function ID</Label>
-            <IdInput value={functionId} onChange={setFunctionId} placeholder="Auto-generated" />
+            <IdInput
+              value={functionId}
+              onChange={setFunctionId}
+              placeholder="Auto-generated"
+            />
           </div>
           <div className="space-y-2">
             <Label className="text-[13px]">Runtime</Label>
@@ -268,7 +287,9 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
 
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden mb-6">
         <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">Upload code</h3>
+          <h3 className="text-[15px] font-semibold text-foreground">
+            Upload code
+          </h3>
           <p className="text-[12px] text-muted-foreground mt-1">
             Upload a .tar.gz archive containing your function code
           </p>
@@ -309,7 +330,9 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
                 value={v.key}
                 onChange={(e) =>
                   setVariables((prev) =>
-                    prev.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)),
+                    prev.map((x, j) =>
+                      j === i ? { ...x, key: e.target.value } : x,
+                    ),
                   )
                 }
                 className="h-9 text-[13px] flex-1"
@@ -320,7 +343,9 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
                 value={v.value}
                 onChange={(e) =>
                   setVariables((prev) =>
-                    prev.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)),
+                    prev.map((x, j) =>
+                      j === i ? { ...x, value: e.target.value } : x,
+                    ),
                   )
                 }
                 className="h-9 text-[13px] flex-1"
@@ -330,7 +355,9 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
                 variant="ghost"
                 size="sm"
                 className="h-9 w-9 p-0"
-                onClick={() => setVariables((prev) => prev.filter((_, j) => j !== i))}
+                onClick={() =>
+                  setVariables((prev) => prev.filter((_, j) => j !== i))
+                }
               >
                 ×
               </Button>
@@ -342,7 +369,10 @@ export function ManualCreateView({ runtimeFromSearch }: ManualCreateViewProps) {
             size="sm"
             className="h-9 text-[12px]"
             onClick={() =>
-              setVariables((prev) => [...prev, { key: '', value: '', secret: false }])
+              setVariables((prev) => [
+                ...prev,
+                { key: '', value: '', secret: false },
+              ])
             }
           >
             Add variable

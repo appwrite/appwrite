@@ -6,7 +6,11 @@
 
 // Context
 export { WizardProvider, useWizard } from './WizardContext'
-export type { WizardFormData, WizardVariable, WizardPath } from './WizardContext'
+export type {
+  WizardFormData,
+  WizardVariable,
+  WizardPath,
+} from './WizardContext'
 
 // Shared components
 export { DomainInput } from './DomainInput'

@@ -134,16 +134,18 @@ export function WizardLayout({
         const target = event.target as HTMLElement
         const isInPopover = target.closest('[data-slot="popover-content"]')
         const isInCommand = target.closest('[data-slot="command"]')
-        
+
         // Also check if any Popover is currently open (Radix UI sets data-state="open")
-        const hasOpenPopover = document.querySelector('[data-slot="popover-content"][data-state="open"]')
-        
+        const hasOpenPopover = document.querySelector(
+          '[data-slot="popover-content"][data-state="open"]',
+        )
+
         // If ESC is pressed within a Popover/Command or if a Popover is open,
         // let it handle the event (it will close the Popover, not the wizard)
         if (isInPopover || isInCommand || hasOpenPopover) {
           return
         }
-        
+
         event.preventDefault()
         handleClose()
       }
@@ -172,12 +174,7 @@ export function WizardLayout({
     <div className={containerClasses}>
       {/* Header */}
       <div className={headerClasses}>
-        <div
-          className={cn(
-            'mx-auto w-full',
-            constrainWidth && maxWidth,
-          )}
-        >
+        <div className={cn('mx-auto w-full', constrainWidth && maxWidth)}>
           {/* Original header content with padding */}
           <div
             className={cn(
@@ -265,7 +262,11 @@ export function WizardLayout({
                 </div>
 
                 {/* Sidebar */}
-                {sidebar && <div className="lg:col-span-1 self-start sticky top-6">{sidebar}</div>}
+                {sidebar && (
+                  <div className="lg:col-span-1 self-start sticky top-6">
+                    {sidebar}
+                  </div>
+                )}
               </div>
             ) : (
               <div className={contentClassName}>{children}</div>
@@ -274,19 +275,30 @@ export function WizardLayout({
         )}
 
         {!fullscreen && useSidebar && (
-          <div className={cn('grid gap-6 lg:grid-cols-3', contentPadding && 'pt-6')}>
+          <div
+            className={cn(
+              'grid gap-6 lg:grid-cols-3',
+              contentPadding && 'pt-6',
+            )}
+          >
             {/* Main Content */}
             <div className={cn('lg:col-span-2 space-y-6', contentClassName)}>
               {children}
             </div>
 
             {/* Sidebar */}
-            {sidebar && <div className="lg:col-span-1 self-start sticky top-6">{sidebar}</div>}
+            {sidebar && (
+              <div className="lg:col-span-1 self-start sticky top-6">
+                {sidebar}
+              </div>
+            )}
           </div>
         )}
 
         {!fullscreen && !useSidebar && (
-          <div className={cn(contentPadding && 'pt-6', contentClassName)}>{children}</div>
+          <div className={cn(contentPadding && 'pt-6', contentClassName)}>
+            {children}
+          </div>
         )}
       </div>
 

@@ -31,41 +31,41 @@ export interface WizardFormData {
   // Site details
   siteName: string
   siteId: string | undefined
-  
+
   // Git configuration
   installationId: string | undefined
   providerRepositoryId: string | undefined
   providerBranch: string
   providerRootDirectory: string
   providerSilentMode: boolean
-  
+
   // Template configuration
   templateId: string | undefined
   template: Models.TemplateSite | undefined
-  
+
   // Framework and build settings
   framework: string
   buildRuntime: string | undefined
   installCommand: string
   buildCommand: string
   outputDirectory: string
-  
+
   // Environment variables
   variables: WizardVariable[]
-  
+
   // Domain configuration
   domain: string
   domainValid: boolean
-  
+
   // Repository info (for display)
   repositoryOwner: string | undefined
   repositoryName: string | undefined
   repositoryUrl: string | undefined
-  
+
   // Created resources (for deploying/finish screens)
   createdSiteId: string | undefined
   createdDeploymentId: string | undefined
-  
+
   // Upload file (for manual path)
   uploadFile: File | undefined
 }
@@ -112,22 +112,22 @@ interface WizardContextValue {
   formData: WizardFormData
   updateFormData: (updates: Partial<WizardFormData>) => void
   resetFormData: () => void
-  
+
   // Navigation
   currentPath: WizardPath | undefined
   setCurrentPath: (path: WizardPath | undefined) => void
-  
+
   // Installations (shared across wizard)
   installations: Models.Installation[]
   setInstallations: (installations: Models.Installation[]) => void
-  
+
   // Frameworks (shared across wizard)
   frameworks: Models.Framework[]
   setFrameworks: (frameworks: Models.Framework[]) => void
-  
+
   // Helper to get framework by key
   getFramework: (key: string) => Models.Framework | undefined
-  
+
   // Helper to get default build settings for a framework (from SDK listFrameworks: adapters + buildRuntime)
   getFrameworkDefaults: (frameworkKey: string) => {
     installCommand: string
@@ -137,7 +137,7 @@ interface WizardContextValue {
     adapter: string
     fallbackFile: string
   }
-  
+
   // Domain generation helper
   generateDomain: (name: string) => string
   baseDomain: string
@@ -162,7 +162,9 @@ export function useWizard() {
  */
 export function WizardProvider({ children }: { children: ReactNode }) {
   const [formData, setFormData] = useState<WizardFormData>(defaultFormData)
-  const [currentPath, setCurrentPath] = useState<WizardPath | undefined>(undefined)
+  const [currentPath, setCurrentPath] = useState<WizardPath | undefined>(
+    undefined,
+  )
   const [installations, setInstallations] = useState<Models.Installation[]>([])
   const [frameworks, setFrameworks] = useState<Models.Framework[]>([])
   const [baseDomain, setBaseDomain] = useState<string>('appwrite.network')
@@ -197,7 +199,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       }
       // Prefer "static" adapter when available (common for repo deploys), otherwise first adapter
       const adapter =
-        framework.adapters.find((a) => a.key === 'static') ?? framework.adapters[0]
+        framework.adapters.find((a) => a.key === 'static') ??
+        framework.adapters[0]
       return {
         installCommand: adapter.installCommand || 'npm install',
         buildCommand: adapter.buildCommand || 'npm run build',
@@ -219,7 +222,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '')
         .substring(0, 63) // Max subdomain length
-      
+
       return subdomain ? `${subdomain}.${baseDomain}` : ''
     },
     [baseDomain],

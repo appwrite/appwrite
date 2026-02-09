@@ -1,9 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/auth/View'
-import {
-  projectQueryOptions,
-  usersQueryOptions,
-} from '@/lib/react-query/hooks'
+import { projectQueryOptions, usersQueryOptions } from '@/lib/react-query/hooks'
 
 const USERS_PER_PAGE = 25
 

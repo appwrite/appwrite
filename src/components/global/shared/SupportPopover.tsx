@@ -138,10 +138,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
           {hasPremiumSupport ? (
             orgId ? (
               <Button className="mt-3 w-full" size="sm" asChild>
-                <Link
-                  to="/organizations/$orgId/support"
-                  params={{ orgId }}
-                >
+                <Link to="/organizations/$orgId/support" params={{ orgId }}>
                   <MessageCircle className="mr-1.5 h-4 w-4" />
                   Contact Support
                 </Link>
@@ -191,9 +188,7 @@ export function SupportPopover({ orgId }: SupportPopoverProps) {
                 <p className="font-medium text-foreground">
                   Enterprise & 24/7 support
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Contact sales
-                </p>
+                <p className="text-xs text-muted-foreground">Contact sales</p>
               </div>
               <ExternalLink className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             </a>

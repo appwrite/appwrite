@@ -29,10 +29,22 @@ export function ConsoleFooter() {
   ]
 
   const socialLinks = [
-    { label: 'GitHub', href: 'https://github.com/appwrite', icon: '/icons/github.svg' },
+    {
+      label: 'GitHub',
+      href: 'https://github.com/appwrite',
+      icon: '/icons/github.svg',
+    },
     { label: 'X', href: 'https://x.com/appwrite', icon: '/icons/x.svg' },
-    { label: 'YouTube', href: 'https://youtube.com/@appwrite', icon: '/icons/youtube.svg' },
-    { label: 'Discord', href: 'https://appwrite.io/discord', icon: '/icons/discord-simple.svg' },
+    {
+      label: 'YouTube',
+      href: 'https://youtube.com/@appwrite',
+      icon: '/icons/youtube.svg',
+    },
+    {
+      label: 'Discord',
+      href: 'https://appwrite.io/discord',
+      icon: '/icons/discord-simple.svg',
+    },
   ]
 
   return (
@@ -117,8 +129,13 @@ export function ConsoleFooter() {
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] text-muted-foreground transition-colors hover:bg-accent hover:text-foreground hidden lg:flex"
           >
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
-            <span className="whitespace-nowrap font-medium">SOC 2 Certified</span>
+            <ShieldCheck
+              className="h-3.5 w-3.5 shrink-0 opacity-70"
+              aria-hidden
+            />
+            <span className="whitespace-nowrap font-medium">
+              SOC 2 Certified
+            </span>
           </a>
 
           {/* Separator */}

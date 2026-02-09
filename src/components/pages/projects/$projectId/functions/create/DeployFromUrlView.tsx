@@ -27,7 +27,9 @@ function parseRepo(repo?: string): { owner: string; name: string } | null {
   if (!repo?.trim()) return null
   const s = repo.trim()
   if (s.includes('/')) {
-    const [owner, name] = s.split('/').map((x) => x.replace(/\.git$/, '').trim())
+    const [owner, name] = s
+      .split('/')
+      .map((x) => x.replace(/\.git$/, '').trim())
     if (owner && name) return { owner, name }
   }
   return null
@@ -159,8 +161,18 @@ export function DeployFromUrlView({
       showBackButton
       backButtonLabel="Back"
       fallbackPath={`/projects/${projectId}/functions`}
-      onClose={() => navigate({ to: '/projects/$projectId/functions', params: { projectId: projectId! } })}
-      onBack={() => navigate({ to: '/projects/$projectId/functions/create', params: { projectId: projectId! } })}
+      onClose={() =>
+        navigate({
+          to: '/projects/$projectId/functions',
+          params: { projectId: projectId! },
+        })
+      }
+      onBack={() =>
+        navigate({
+          to: '/projects/$projectId/functions/create',
+          params: { projectId: projectId! },
+        })
+      }
       fullscreen
       maxWidth="max-w-[1400px]"
       footerAlign="right"
@@ -168,7 +180,12 @@ export function DeployFromUrlView({
         <>
           <Button
             variant="outline"
-            onClick={() => navigate({ to: '/projects/$projectId/functions', params: { projectId: projectId! } })}
+            onClick={() =>
+              navigate({
+                to: '/projects/$projectId/functions',
+                params: { projectId: projectId! },
+              })
+            }
             disabled={isDeploying}
           >
             Cancel
@@ -200,10 +217,11 @@ export function DeployFromUrlView({
         <div className="rounded-xl border border-border bg-card/50 p-6 mb-6">
           <p className="text-[13px] text-muted-foreground">
             Add a repository URL or owner/name in the address bar, e.g.{' '}
+            <code className="bg-muted px-1 rounded">?repo=owner/repo</code> or{' '}
             <code className="bg-muted px-1 rounded">
-              ?repo=owner/repo
-            </code>{' '}
-            or <code className="bg-muted px-1 rounded">?repository=owner/repo</code>.
+              ?repository=owner/repo
+            </code>
+            .
           </p>
         </div>
       )}
@@ -228,7 +246,11 @@ export function DeployFromUrlView({
           </div>
           <div className="space-y-2">
             <Label className="text-[13px]">Function ID</Label>
-            <IdInput value={functionId} onChange={setFunctionId} placeholder="Auto-generated" />
+            <IdInput
+              value={functionId}
+              onChange={setFunctionId}
+              placeholder="Auto-generated"
+            />
           </div>
           <div className="space-y-2">
             <Label className="text-[13px]">Runtime</Label>
@@ -332,7 +354,9 @@ export function DeployFromUrlView({
                 value={v.key}
                 onChange={(e) =>
                   setVariables((prev) =>
-                    prev.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)),
+                    prev.map((x, j) =>
+                      j === i ? { ...x, key: e.target.value } : x,
+                    ),
                   )
                 }
                 className="h-9 text-[13px] flex-1"
@@ -343,7 +367,9 @@ export function DeployFromUrlView({
                 value={v.value}
                 onChange={(e) =>
                   setVariables((prev) =>
-                    prev.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)),
+                    prev.map((x, j) =>
+                      j === i ? { ...x, value: e.target.value } : x,
+                    ),
                   )
                 }
                 className="h-9 text-[13px] flex-1"
@@ -353,7 +379,9 @@ export function DeployFromUrlView({
                 variant="ghost"
                 size="sm"
                 className="h-9 w-9 p-0"
-                onClick={() => setVariables((prev) => prev.filter((_, j) => j !== i))}
+                onClick={() =>
+                  setVariables((prev) => prev.filter((_, j) => j !== i))
+                }
               >
                 ×
               </Button>
@@ -365,7 +393,10 @@ export function DeployFromUrlView({
             size="sm"
             className="h-9 text-[12px]"
             onClick={() =>
-              setVariables((prev) => [...prev, { key: '', value: '', secret: false }])
+              setVariables((prev) => [
+                ...prev,
+                { key: '', value: '', secret: false },
+              ])
             }
           >
             Add variable

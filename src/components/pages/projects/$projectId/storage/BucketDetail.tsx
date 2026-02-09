@@ -302,9 +302,7 @@ export function BucketDetailView() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'list'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('list')}
       >
@@ -315,9 +313,7 @@ export function BucketDetailView() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'grid'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('grid')}
       >

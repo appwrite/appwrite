@@ -30,10 +30,7 @@ import type { Models } from '@appwrite.io/console'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { RotateCcw } from 'lucide-react'
-import {
-  getAdapterCopy,
-  getAdapterDescriptionSegments,
-} from '@/lib/frameworks'
+import { getAdapterCopy, getAdapterDescriptionSegments } from '@/lib/frameworks'
 import {
   hasUnavailableSpecifications,
   isSpecificationAllowedInPlan,
@@ -156,11 +153,7 @@ function AdapterOptionCard({
           : 'border-border bg-card/50 hover:border-border hover:bg-muted/20',
       )}
     >
-      <RadioGroupItem
-        value={value}
-        id={id}
-        className="mt-1 shrink-0"
-      />
+      <RadioGroupItem value={value} id={id} className="mt-1 shrink-0" />
       <div className="ml-4 flex-1 min-w-0 pr-2">
         <span className="block text-[15px] font-semibold tracking-tight text-foreground">
           {label}
@@ -437,7 +430,9 @@ export function BuildSettingsCard({
             value={outputDirectory}
             placeholder={frameworkDefaults.outputDirectory}
             onChange={setOutputDirectory}
-            onReset={() => setOutputDirectory(frameworkDefaults.outputDirectory)}
+            onReset={() =>
+              setOutputDirectory(frameworkDefaults.outputDirectory)
+            }
             isModified={isOutputModified}
           />
 

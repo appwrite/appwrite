@@ -18,7 +18,10 @@ import {
   functionSpecificationsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { useQuery } from '@tanstack/react-query'
-import { FunctionWizardProvider, useFunctionWizard } from '@/components/pages/projects/$projectId/functions/create/WizardContext'
+import {
+  FunctionWizardProvider,
+  useFunctionWizard,
+} from '@/components/pages/projects/$projectId/functions/create/WizardContext'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/create',
@@ -42,9 +45,13 @@ export const Route = createFileRoute(
       })
 
       await Promise.all([
-        queryClient.ensureQueryData(vcsInstallationsQueryOptions(projectId, 0, 100)),
+        queryClient.ensureQueryData(
+          vcsInstallationsQueryOptions(projectId, 0, 100),
+        ),
         queryClient.ensureQueryData(projectRuntimesQueryOptions(projectId)),
-        queryClient.ensureQueryData(functionSpecificationsQueryOptions(projectId)),
+        queryClient.ensureQueryData(
+          functionSpecificationsQueryOptions(projectId),
+        ),
         queryClient.ensureQueryData({
           queryKey: [
             'function-templates',
@@ -57,7 +64,14 @@ export const Route = createFileRoute(
             null,
           ],
           queryFn: () =>
-            fetchFunctionTemplates(projectId, undefined, undefined, 100, 0, true),
+            fetchFunctionTemplates(
+              projectId,
+              undefined,
+              undefined,
+              100,
+              0,
+              true,
+            ),
           staleTime: 5 * 60 * 1000,
         }),
         queryClient.ensureQueryData({
@@ -72,7 +86,14 @@ export const Route = createFileRoute(
             'starter',
           ],
           queryFn: () =>
-            fetchFunctionTemplates(projectId, undefined, ['starter'], 6, 0, true),
+            fetchFunctionTemplates(
+              projectId,
+              undefined,
+              ['starter'],
+              6,
+              0,
+              true,
+            ),
           staleTime: 5 * 60 * 1000,
         }),
       ])

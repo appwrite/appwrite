@@ -1,9 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/sites/AddDomain'
-import {
-  siteQueryOptions,
-  projectQueryOptions,
-} from '@/lib/react-query/hooks'
+import { siteQueryOptions, projectQueryOptions } from '@/lib/react-query/hooks'
 import { fetchVcsInstallations } from '@/lib/react-query/hooks/vcs'
 import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
 import { Query } from '@appwrite.io/console'
@@ -81,11 +78,10 @@ export const Route = createFileRoute(
               ],
               queryFn: async () => {
                 const projectSdk = sdk.forProject(projectId)
-                const response =
-                  await projectSdk.vcs.listRepositoryBranches({
-                    installationId: site.installationId!,
-                    providerRepositoryId: site.providerRepositoryId!,
-                  })
+                const response = await projectSdk.vcs.listRepositoryBranches({
+                  installationId: site.installationId!,
+                  providerRepositoryId: site.providerRepositoryId!,
+                })
                 return {
                   branches: response.branches || [],
                   total: response.total || 0,

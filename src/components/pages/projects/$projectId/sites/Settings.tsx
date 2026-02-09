@@ -44,11 +44,7 @@ export function View() {
         <div className="space-y-6">
           {/* 1. Name */}
           {site && (
-            <NameCard
-              projectId={projectId}
-              siteId={siteId}
-              site={site}
-            />
+            <NameCard projectId={projectId} siteId={siteId} site={site} />
           )}
 
           {/* 2. Git Repository (conditional - only if repository connected) */}
@@ -80,10 +76,7 @@ export function View() {
           )}
 
           {/* 5. Environment Variables */}
-          <SiteVariablesCard
-            projectId={projectId}
-            siteId={siteId}
-          />
+          <SiteVariablesCard projectId={projectId} siteId={siteId} />
 
           {/* 6. Resource Limits (conditional - Cloud only) */}
           {site && (
@@ -97,20 +90,12 @@ export function View() {
 
           {/* 7. Timeout */}
           {site && (
-            <TimeoutCard
-              projectId={projectId}
-              siteId={siteId}
-              site={site}
-            />
+            <TimeoutCard projectId={projectId} siteId={siteId} site={site} />
           )}
 
           {/* 8. Logging */}
           {site && (
-            <LoggingCard
-              projectId={projectId}
-              siteId={siteId}
-              site={site}
-            />
+            <LoggingCard projectId={projectId} siteId={siteId} site={site} />
           )}
 
           {/* 9. Danger Zone */}

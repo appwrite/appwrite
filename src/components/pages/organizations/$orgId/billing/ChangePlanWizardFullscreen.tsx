@@ -102,7 +102,9 @@ export function ChangePlanWizardFullscreen() {
   const selfService = plan?.selfService !== false
 
   // State management
-  const [selectedPlan, setSelectedPlan] = useState<BillingPlanTierType | null>(null)
+  const [selectedPlan, setSelectedPlan] = useState<BillingPlanTierType | null>(
+    null,
+  )
   const [selectedCoupon, setSelectedCoupon] = useState<Models.Coupon | null>(
     null,
   )
@@ -189,7 +191,9 @@ export function ChangePlanWizardFullscreen() {
       setPlanInitialized(true)
     } else if (
       defaultPlan &&
-      Object.values(BillingPlanTier).includes(defaultPlan as BillingPlanTierType)
+      Object.values(BillingPlanTier).includes(
+        defaultPlan as BillingPlanTierType,
+      )
     ) {
       setSelectedPlan(defaultPlan as BillingPlanTierType)
       setPlanInitialized(true)

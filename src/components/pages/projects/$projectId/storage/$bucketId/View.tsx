@@ -130,24 +130,18 @@ export function View() {
   )
 
   // Fetch data for the displayed page (what we show - stays until new page is ready)
-  const {
-    data: displayedFilesData,
-    isLoading: displayedFilesLoading,
-  } = useBucketFiles(
-    projectId,
-    bucketId,
-    displayedPage - 1,
-    pageSize,
-    searchValue,
-  )
+  const { data: displayedFilesData, isLoading: displayedFilesLoading } =
+    useBucketFiles(
+      projectId,
+      bucketId,
+      displayedPage - 1,
+      pageSize,
+      searchValue,
+    )
 
   // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (
-      !filesFetching &&
-      requestedPage !== displayedPage &&
-      !filesLoading
-    ) {
+    if (!filesFetching && requestedPage !== displayedPage && !filesLoading) {
       setDisplayedPage(requestedPage)
     }
   }, [filesFetching, filesLoading, requestedPage, displayedPage])
@@ -331,9 +325,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'list'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('list')}
       >
@@ -344,9 +336,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'grid'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('grid')}
       >

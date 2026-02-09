@@ -42,14 +42,14 @@ function SiteLayoutContent() {
   const activeTab = useMemo(() => {
     const pathParts = location.pathname.split('/').filter(Boolean)
     const sitesIndex = pathParts.findIndex((part) => part === 'sites')
-    
+
     if (sitesIndex >= 0 && pathParts[sitesIndex + 2]) {
       const tab = pathParts[sitesIndex + 2]
       if (['deployments', 'logs', 'domains', 'settings'].includes(tab)) {
         return tab
       }
     }
-    
+
     // Default to deployments for index route
     return 'deployments'
   }, [location.pathname])

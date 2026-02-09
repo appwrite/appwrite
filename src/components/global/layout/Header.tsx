@@ -217,7 +217,10 @@ export function ConsoleHeader({
                           navigate({
                             to: '/organizations/$orgId',
                             params: { orgId },
-                            search: { create: 'project' } as Record<string, unknown>,
+                            search: { create: 'project' } as Record<
+                              string,
+                              unknown
+                            >,
                           })
                         }
                       }}
@@ -269,7 +272,10 @@ export function ConsoleHeader({
                             navigate({
                               to: '/projects/$projectId/databases',
                               params: { projectId },
-                              search: { create: 'database' } as Record<string, unknown>,
+                              search: { create: 'database' } as Record<
+                                string,
+                                unknown
+                              >,
                             })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
@@ -282,7 +288,10 @@ export function ConsoleHeader({
                             navigate({
                               to: '/projects/$projectId/auth',
                               params: { projectId },
-                              search: { create: 'user' } as Record<string, unknown>,
+                              search: { create: 'user' } as Record<
+                                string,
+                                unknown
+                              >,
                             })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
@@ -295,7 +304,10 @@ export function ConsoleHeader({
                             navigate({
                               to: '/projects/$projectId/storage',
                               params: { projectId },
-                              search: { create: 'bucket' } as Record<string, unknown>,
+                              search: { create: 'bucket' } as Record<
+                                string,
+                                unknown
+                              >,
                             })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
@@ -320,7 +332,10 @@ export function ConsoleHeader({
                             navigate({
                               to: '/projects/$projectId/messaging',
                               params: { projectId },
-                              search: { create: 'topic' } as Record<string, unknown>,
+                              search: { create: 'topic' } as Record<
+                                string,
+                                unknown
+                              >,
                             })
                           }}
                           className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
@@ -444,7 +459,11 @@ export function ConsoleHeader({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex shrink-0 items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent min-w-0">
-                <InitialsAvatar name={displayName} size="sm" className="shrink-0" />
+                <InitialsAvatar
+                  name={displayName}
+                  size="sm"
+                  className="shrink-0"
+                />
                 <div className="hidden text-left @[800px]:block min-w-0">
                   <p className="text-[13px] font-medium text-foreground truncate">
                     {displayName}

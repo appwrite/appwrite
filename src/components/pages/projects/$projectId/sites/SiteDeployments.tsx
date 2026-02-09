@@ -189,13 +189,12 @@ function getVcsProvider(
   return null
 }
 
-
 export function SiteDeploymentsView() {
   const { projectId, siteId } = useParams({ strict: false })
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
-  
+
   // Parse page from URL search params directly (safer than Route.useSearch during navigation)
   const urlPage = useMemo(() => {
     const searchParams = new URLSearchParams(
@@ -216,7 +215,9 @@ export function SiteDeploymentsView() {
   const [deleteActiveDialogOpen, setDeleteActiveDialogOpen] = useState(false)
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
-  const [screenshotTheme, setScreenshotTheme] = useState<'dark' | 'light'>('dark')
+  const [screenshotTheme, setScreenshotTheme] = useState<'dark' | 'light'>(
+    'dark',
+  )
   const [screenshotLoaded, setScreenshotLoaded] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -224,7 +225,6 @@ export function SiteDeploymentsView() {
     projectId,
     siteId,
   )
-
 
   // Sync requested page with URL when it changes externally (e.g., browser back/forward)
   useEffect(() => {
@@ -629,16 +629,18 @@ export function SiteDeploymentsView() {
                 <div className="flex flex-col lg:flex-row gap-6">
                   {/* Screenshot */}
                   {(() => {
-                    const screenshotId = screenshotTheme === 'dark'
-                      ? (activeDeployment as any).screenshotDark
-                      : (activeDeployment as any).screenshotLight
-                    
+                    const screenshotId =
+                      screenshotTheme === 'dark'
+                        ? (activeDeployment as any).screenshotDark
+                        : (activeDeployment as any).screenshotLight
+
                     if (screenshotId) {
-                      const screenshotUrl = sdk.forConsole.storage.getFileDownload({
-                        bucketId: SCREENSHOTS_BUCKET_ID,
-                        fileId: screenshotId,
-                      })
-                      
+                      const screenshotUrl =
+                        sdk.forConsole.storage.getFileDownload({
+                          bucketId: SCREENSHOTS_BUCKET_ID,
+                          fileId: screenshotId,
+                        })
+
                       return (
                         <div className="w-full lg:w-1/2 relative group">
                           <div className="w-full aspect-video rounded-lg border border-border overflow-hidden bg-muted relative">
@@ -669,44 +671,44 @@ export function SiteDeploymentsView() {
                             )}
                             {/* Theme Toggle Overlay */}
                             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="flex items-center gap-1 rounded-lg border border-border bg-background/95 backdrop-blur-sm p-1">
-                              <button
-                                onClick={() => {
-                                  setScreenshotTheme('light')
-                                  setScreenshotLoaded(false)
-                                }}
-                                className={cn(
-                                  "p-1.5 rounded transition-colors",
-                                  screenshotTheme === 'light'
-                                    ? "bg-primary text-primary-foreground"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                )}
-                                title="Light screenshot"
-                              >
-                                <Sun className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setScreenshotTheme('dark')
-                                  setScreenshotLoaded(false)
-                                }}
-                                className={cn(
-                                  "p-1.5 rounded transition-colors",
-                                  screenshotTheme === 'dark'
-                                    ? "bg-primary text-primary-foreground"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                )}
-                                title="Dark screenshot"
-                              >
-                                <Moon className="h-3.5 w-3.5" />
-                              </button>
+                              <div className="flex items-center gap-1 rounded-lg border border-border bg-background/95 backdrop-blur-sm p-1">
+                                <button
+                                  onClick={() => {
+                                    setScreenshotTheme('light')
+                                    setScreenshotLoaded(false)
+                                  }}
+                                  className={cn(
+                                    'p-1.5 rounded transition-colors',
+                                    screenshotTheme === 'light'
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                                  )}
+                                  title="Light screenshot"
+                                >
+                                  <Sun className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setScreenshotTheme('dark')
+                                    setScreenshotLoaded(false)
+                                  }}
+                                  className={cn(
+                                    'p-1.5 rounded transition-colors',
+                                    screenshotTheme === 'dark'
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                                  )}
+                                  title="Dark screenshot"
+                                >
+                                  <Moon className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
                             </div>
-                          </div>
                           </div>
                         </div>
                       )
                     }
-                    
+
                     // Placeholder when screenshot is not available
                     return (
                       <div className="w-full lg:w-1/2 flex h-64 lg:h-80 items-center justify-center rounded-lg border border-border/50 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/20 relative overflow-hidden">
@@ -717,7 +719,7 @@ export function SiteDeploymentsView() {
                         {/* Framework Icon - Bottom Left */}
                         {site && (
                           <div className="absolute bottom-2 left-2">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-background/95 backdrop-blur-sm">
                               <FrameworkIcon
                                 framework={
                                   (site as any).buildFramework ||
@@ -732,210 +734,211 @@ export function SiteDeploymentsView() {
                       </div>
                     )
                   })()}
-                  
+
                   <div className="flex-1 lg:w-1/2">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Deployed */}
-                  <div>
-                    <div className="text-[12px] text-muted-foreground mb-1.5">
-                      Deployed
-                    </div>
-                    <div className="text-[13px] text-foreground">
-                      <DateTooltip date={activeDeployment.$createdAt} />
-                    </div>
-                  </div>
-
-                  {/* Build duration */}
-                  {activeDeployment.buildDuration &&
-                    !isDeploymentTimeout(
-                      activeDeployment.status,
-                      activeDeployment.$createdAt,
-                    ) && (
+                      {/* Deployed */}
                       <div>
                         <div className="text-[12px] text-muted-foreground mb-1.5">
-                          Build duration
+                          Deployed
                         </div>
                         <div className="text-[13px] text-foreground">
-                          {formatDuration(activeDeployment.buildDuration)}
+                          <DateTooltip date={activeDeployment.$createdAt} />
                         </div>
                       </div>
-                    )}
 
-                  {/* Total size */}
-                  <div>
-                    <div className="text-[12px] text-muted-foreground mb-1.5">
-                      Total size
-                    </div>
-                    <div className="text-[13px] text-foreground">
-                      {formatSize(
-                        (activeDeployment.buildSize || 0) +
-                          (activeDeployment.sourceSize || 0),
-                      )}
-                    </div>
-                  </div>
+                      {/* Build duration */}
+                      {activeDeployment.buildDuration &&
+                        !isDeploymentTimeout(
+                          activeDeployment.status,
+                          activeDeployment.$createdAt,
+                        ) && (
+                          <div>
+                            <div className="text-[12px] text-muted-foreground mb-1.5">
+                              Build duration
+                            </div>
+                            <div className="text-[13px] text-foreground">
+                              {formatDuration(activeDeployment.buildDuration)}
+                            </div>
+                          </div>
+                        )}
 
-                  {/* Source */}
-                  {vcsProvider &&
-                    activeDeployment.providerRepositoryOwner &&
-                    activeDeployment.providerRepositoryName && (
+                      {/* Total size */}
                       <div>
                         <div className="text-[12px] text-muted-foreground mb-1.5">
-                          Source
+                          Total size
                         </div>
-                        <div className="flex items-center gap-1.5 text-[13px] text-foreground">
-                          {vcsProvider.icon}
-                          <span>
-                            {activeDeployment.providerRepositoryOwner}/
-                            {activeDeployment.providerRepositoryName}
+                        <div className="text-[13px] text-foreground">
+                          {formatSize(
+                            (activeDeployment.buildSize || 0) +
+                              (activeDeployment.sourceSize || 0),
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Source */}
+                      {vcsProvider &&
+                        activeDeployment.providerRepositoryOwner &&
+                        activeDeployment.providerRepositoryName && (
+                          <div>
+                            <div className="text-[12px] text-muted-foreground mb-1.5">
+                              Source
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[13px] text-foreground">
+                              {vcsProvider.icon}
+                              <span>
+                                {activeDeployment.providerRepositoryOwner}/
+                                {activeDeployment.providerRepositoryName}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                      {/* Global CDN */}
+                      <div>
+                        <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
+                          <span>Global CDN</span>
+                          <TooltipProvider delayDuration={0}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center justify-center"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="max-w-xs">
+                                <p className="text-[12px] font-medium mb-1.5 text-background">
+                                  Content Delivery Network
+                                </p>
+                                <p className="text-[11px] text-background/90">
+                                  Appwrite's CDN provides global coverage with
+                                  120+ points of presence worldwide, reducing
+                                  latency through edge caching and content
+                                  optimization. All content is delivered over
+                                  TLS for secure, encrypted connections.
+                                </p>
+                                <a
+                                  href="https://appwrite.io/docs/products/network/cdn"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[11px] text-background hover:underline mt-1.5 inline-block font-medium"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Learn more →
+                                </a>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          <span className="text-[13px] font-medium text-foreground">
+                            Connected
                           </span>
                         </div>
                       </div>
-                    )}
 
-                  {/* Global CDN */}
-                  <div>
-                    <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
-                      <span>Global CDN</span>
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex items-center justify-center"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-xs">
-                            <p className="text-[12px] font-medium mb-1.5 text-background">
-                              Content Delivery Network
-                            </p>
-                            <p className="text-[11px] text-background/90">
-                              Appwrite's CDN provides global coverage with 120+
-                              points of presence worldwide, reducing latency
-                              through edge caching and content optimization. All
-                              content is delivered over TLS for secure,
-                              encrypted connections.
-                            </p>
-                            <a
-                              href="https://appwrite.io/docs/products/network/cdn"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[11px] text-background hover:underline mt-1.5 inline-block font-medium"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Learn more →
-                            </a>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      <span className="text-[13px] font-medium text-foreground">
-                        Connected
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* DDoS protection */}
-                  <div>
-                    <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
-                      <span>DDoS protection</span>
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              type="button"
-                              className="inline-flex items-center justify-center"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-xs">
-                            <p className="text-[12px] font-medium mb-1.5 text-background">
-                              DDoS Mitigation
-                            </p>
-                            <p className="text-[11px] text-background/90">
-                              Appwrite's network includes built-in DDoS
-                              mitigation to protect against distributed
-                              denial-of-service attacks, ensuring uninterrupted
-                              access to your sites and maintaining high
-                              availability even during high traffic loads.
-                            </p>
-                            <a
-                              href="https://appwrite.io/docs/products/network"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[11px] text-background hover:underline mt-1.5 inline-block font-medium"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Learn more →
-                            </a>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Shield className="h-4 w-4 text-green-500" />
-                      <span className="text-[13px] font-medium text-foreground">
-                        Active
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Domains */}
-                <div className="mt-4 pt-4 border-t border-border">
-                  <div className="text-[12px] text-muted-foreground mb-1.5">
-                    Domains
-                  </div>
-                  {activeDomains.length > 0 ? (
-                    <>
-                      <div className="space-y-1">
-                        {activeDomains.map((rule) => (
-                          <a
-                            key={rule.$id}
-                            href={`https://${rule.domain}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[13px] font-mono text-foreground hover:underline"
-                          >
-                            {rule.domain}
-                          </a>
-                        ))}
+                      {/* DDoS protection */}
+                      <div>
+                        <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-1.5">
+                          <span>DDoS protection</span>
+                          <TooltipProvider delayDuration={0}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center justify-center"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <HelpCircle className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="right" className="max-w-xs">
+                                <p className="text-[12px] font-medium mb-1.5 text-background">
+                                  DDoS Mitigation
+                                </p>
+                                <p className="text-[11px] text-background/90">
+                                  Appwrite's network includes built-in DDoS
+                                  mitigation to protect against distributed
+                                  denial-of-service attacks, ensuring
+                                  uninterrupted access to your sites and
+                                  maintaining high availability even during high
+                                  traffic loads.
+                                </p>
+                                <a
+                                  href="https://appwrite.io/docs/products/network"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[11px] text-background hover:underline mt-1.5 inline-block font-medium"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Learn more →
+                                </a>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Shield className="h-4 w-4 text-green-500" />
+                          <span className="text-[13px] font-medium text-foreground">
+                            Active
+                          </span>
+                        </div>
                       </div>
-                      {hasMoreDomains && (
-                        <p className="text-[11px] text-muted-foreground mt-1.5">
-                          +{totalActiveDomains - activeDomains.length} more
-                        </p>
+                    </div>
+
+                    {/* Domains */}
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <div className="text-[12px] text-muted-foreground mb-1.5">
+                        Domains
+                      </div>
+                      {activeDomains.length > 0 ? (
+                        <>
+                          <div className="space-y-1">
+                            {activeDomains.map((rule) => (
+                              <a
+                                key={rule.$id}
+                                href={`https://${rule.domain}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[13px] font-mono text-foreground hover:underline"
+                              >
+                                {rule.domain}
+                              </a>
+                            ))}
+                          </div>
+                          {hasMoreDomains && (
+                            <p className="text-[11px] text-muted-foreground mt-1.5">
+                              +{totalActiveDomains - activeDomains.length} more
+                            </p>
+                          )}
+                          <Link
+                            to="/projects/$projectId/sites/$siteId/domains"
+                            params={{
+                              projectId: projectId!,
+                              siteId: siteId!,
+                            }}
+                            className="text-[11px] text-primary hover:underline mt-2 inline-block"
+                          >
+                            Add domain
+                          </Link>
+                        </>
+                      ) : (
+                        <Link
+                          to="/projects/$projectId/sites/$siteId/domains"
+                          params={{
+                            projectId: projectId!,
+                            siteId: siteId!,
+                          }}
+                          className="text-[11px] text-primary hover:underline"
+                        >
+                          Add domain
+                        </Link>
                       )}
-                      <Link
-                        to="/projects/$projectId/sites/$siteId/domains"
-                        params={{
-                          projectId: projectId!,
-                          siteId: siteId!,
-                        }}
-                        className="text-[11px] text-primary hover:underline mt-2 inline-block"
-                      >
-                        Add domain
-                      </Link>
-                    </>
-                  ) : (
-                    <Link
-                      to="/projects/$projectId/sites/$siteId/domains"
-                      params={{
-                        projectId: projectId!,
-                        siteId: siteId!,
-                      }}
-                      className="text-[11px] text-primary hover:underline"
-                    >
-                      Add domain
-                    </Link>
-                  )}
-                </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -982,7 +985,11 @@ export function SiteDeploymentsView() {
                     deploymentId: activeDeployment.$id,
                   }}
                 >
-                  <Button size="sm" variant="outline" className="h-9 text-[13px]">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-9 text-[13px]"
+                  >
                     Build logs
                   </Button>
                 </Link>
@@ -1023,10 +1030,15 @@ export function SiteDeploymentsView() {
                             {hasMoreDomains && (
                               <Link
                                 to="/projects/$projectId/sites/$siteId/domains"
-                                params={{ projectId: projectId!, siteId: siteId! }}
+                                params={{
+                                  projectId: projectId!,
+                                  siteId: siteId!,
+                                }}
                                 className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors text-[12px] text-muted-foreground hover:text-foreground"
                               >
-                                <span>View all {totalActiveDomains} domains</span>
+                                <span>
+                                  View all {totalActiveDomains} domains
+                                </span>
                               </Link>
                             )}
                           </div>
@@ -1137,8 +1149,7 @@ export function SiteDeploymentsView() {
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                         Created
                       </TableHead>
-                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]">
-                      </TableHead>
+                      <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[100px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1148,7 +1159,8 @@ export function SiteDeploymentsView() {
                         deploymentData.status || 'unknown',
                         deploymentData.$createdAt,
                       )
-                      const isActive = deploymentData.$id === activeDeployment?.$id
+                      const isActive =
+                        deploymentData.$id === activeDeployment?.$id
                       return (
                         <TableRow
                           key={deploymentData.$id}
@@ -1169,9 +1181,14 @@ export function SiteDeploymentsView() {
                             })
                           }}
                         >
-                          <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                          <TableCell
+                            className="px-4 py-3"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <Checkbox
-                              checked={selectedDeployments.has(deploymentData.$id)}
+                              checked={selectedDeployments.has(
+                                deploymentData.$id,
+                              )}
                               onCheckedChange={() =>
                                 toggleDeployment(deploymentData.$id)
                               }
@@ -1267,7 +1284,8 @@ export function SiteDeploymentsView() {
 
                               const commitMessage =
                                 deploymentData.providerCommitMessage
-                              const commitHash = deploymentData.providerCommitHash
+                              const commitHash =
+                                deploymentData.providerCommitHash
                               const commitUrl = deploymentData.providerCommitUrl
                               const branch = deploymentData.providerBranch
 
@@ -1367,7 +1385,10 @@ export function SiteDeploymentsView() {
                               className="text-[12px] font-medium text-muted-foreground"
                             />
                           </TableCell>
-                          <TableCell className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                          <TableCell
+                            className="px-4 py-3 text-right"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -1381,27 +1402,45 @@ export function SiteDeploymentsView() {
                                   <span className="sr-only">Open menu</span>
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="z-[200]">
+                              <DropdownMenuContent
+                                align="end"
+                                className="z-[200]"
+                              >
                                 {!isActive && (
                                   <>
                                     <DropdownMenuItem
                                       onClick={async (e) => {
                                         e.stopPropagation()
                                         try {
-                                          const projectSdk = sdk.forProject(projectId!)
-                                          await projectSdk.sites.updateSiteDeployment({
-                                            siteId: siteId!,
-                                            deploymentId: deploymentData.$id,
+                                          const projectSdk = sdk.forProject(
+                                            projectId!,
+                                          )
+                                          await projectSdk.sites.updateSiteDeployment(
+                                            {
+                                              siteId: siteId!,
+                                              deploymentId: deploymentData.$id,
+                                            },
+                                          )
+                                          queryClient.invalidateQueries({
+                                            queryKey: [
+                                              ...Dependencies.DEPLOYMENTS,
+                                            ],
                                           })
                                           queryClient.invalidateQueries({
-                                            queryKey: [...Dependencies.DEPLOYMENTS],
+                                            queryKey: [
+                                              'site',
+                                              'project',
+                                              projectId,
+                                              siteId,
+                                            ],
                                           })
-                                          queryClient.invalidateQueries({
-                                            queryKey: ['site', 'project', projectId, siteId],
-                                          })
-                                          toast.success('Deployment activated successfully')
+                                          toast.success(
+                                            'Deployment activated successfully',
+                                          )
                                         } catch (error) {
-                                          toast.error('Failed to activate deployment')
+                                          toast.error(
+                                            'Failed to activate deployment',
+                                          )
                                         }
                                       }}
                                     >
@@ -1412,15 +1451,23 @@ export function SiteDeploymentsView() {
                                       onClick={async (e) => {
                                         e.stopPropagation()
                                         try {
-                                          const projectSdk = sdk.forProject(projectId!)
-                                          await projectSdk.sites.createDuplicateDeployment({
-                                            siteId: siteId!,
-                                            deploymentId: deploymentData.$id,
-                                          })
+                                          const projectSdk = sdk.forProject(
+                                            projectId!,
+                                          )
+                                          await projectSdk.sites.createDuplicateDeployment(
+                                            {
+                                              siteId: siteId!,
+                                              deploymentId: deploymentData.$id,
+                                            },
+                                          )
                                           queryClient.invalidateQueries({
-                                            queryKey: [...Dependencies.DEPLOYMENTS],
+                                            queryKey: [
+                                              ...Dependencies.DEPLOYMENTS,
+                                            ],
                                           })
-                                          toast.success('Deployment rebuild started')
+                                          toast.success(
+                                            'Deployment rebuild started',
+                                          )
                                         } catch (error) {
                                           toast.error('Failed to redeploy')
                                         }
@@ -1442,12 +1489,21 @@ export function SiteDeploymentsView() {
                                           deploymentData.$id,
                                         )
                                         queryClient.invalidateQueries({
-                                          queryKey: [...Dependencies.DEPLOYMENTS],
+                                          queryKey: [
+                                            ...Dependencies.DEPLOYMENTS,
+                                          ],
                                         })
                                         queryClient.invalidateQueries({
-                                          queryKey: ['site', 'project', projectId, siteId],
+                                          queryKey: [
+                                            'site',
+                                            'project',
+                                            projectId,
+                                            siteId,
+                                          ],
                                         })
-                                        toast.success('Deployment deleted successfully')
+                                        toast.success(
+                                          'Deployment deleted successfully',
+                                        )
                                       } catch (error) {
                                         toast.error(
                                           error instanceof Error
@@ -1573,7 +1629,10 @@ export function SiteDeploymentsView() {
 
       {/* Delete Confirmation Dialog for Active Deployment */}
       {activeDeployment && (
-        <Dialog open={deleteActiveDialogOpen} onOpenChange={setDeleteActiveDialogOpen}>
+        <Dialog
+          open={deleteActiveDialogOpen}
+          onOpenChange={setDeleteActiveDialogOpen}
+        >
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
               <DialogTitle>Delete deployment</DialogTitle>
@@ -1581,7 +1640,8 @@ export function SiteDeploymentsView() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                Are you sure you want to delete this deployment? This action cannot be undone.
+                Are you sure you want to delete this deployment? This action
+                cannot be undone.
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>
@@ -1623,7 +1683,9 @@ export function SiteDeploymentsView() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will create a new build for this deployment using the current site configuration. The original deployment's code will be preserved and used for the new build.
+                This will create a new build for this deployment using the
+                current site configuration. The original deployment's code will
+                be preserved and used for the new build.
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>
@@ -1666,7 +1728,8 @@ export function SiteDeploymentsView() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.
+                This will switch the active deployment to this one. All traffic
+                will be routed to this deployment once activated.
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>

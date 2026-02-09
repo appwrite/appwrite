@@ -151,7 +151,7 @@ export function View({ initialData }: ViewProps = {}) {
   const rawRecords =
     isFirstPage && initialData?.records && !recordsFromHook?.length
       ? initialData.records.dnsRecords
-      : recordsFromHook ?? []
+      : (recordsFromHook ?? [])
   const dnsRecords = useMemo(() => {
     if (!rawRecords.length) return []
     return [...rawRecords].sort((a, b) => {
@@ -162,8 +162,8 @@ export function View({ initialData }: ViewProps = {}) {
   }, [rawRecords])
   const recordsTotal =
     isFirstPage && initialData?.records
-      ? recordsTotalFromHook ?? initialData.records.total
-      : recordsTotalFromHook ?? 0
+      ? (recordsTotalFromHook ?? initialData.records.total)
+      : (recordsTotalFromHook ?? 0)
 
   // Get verification status
   const verificationStatus = useMemo(() => {

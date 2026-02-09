@@ -14,10 +14,7 @@ import {
 import { MessageSquarePlus, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/components/global/auth/RequireAuth'
-import {
-  submitFeedback,
-  FEEDBACK_CUSTOM_FIELDS,
-} from '@/lib/feedback'
+import { submitFeedback, FEEDBACK_CUSTOM_FIELDS } from '@/lib/feedback'
 
 export interface FeedbackPopoverContext {
   /** Where the form was opened (e.g. navbar, sidebar). Default "n/a". */

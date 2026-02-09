@@ -13,7 +13,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
-import { useOrganizationPlan, useOrganizationProjects } from '@/lib/react-query/hooks'
+import {
+  useOrganizationPlan,
+  useOrganizationProjects,
+} from '@/lib/react-query/hooks'
 import { useSmartNavigation } from '@/lib/hooks/useSmartNavigation'
 import {
   submitSupportTicket,
@@ -57,7 +60,7 @@ function getMessagePlaceholder(category: SupportCategory | ''): string {
     case 'technical':
       return 'Describe your issue in detail. Include: SDK/language & version, environment (e.g. Node 20), steps to reproduce, and any error messages or logs.'
     case 'billing':
-      return 'Describe your billing question. Include: plan name, invoice or transaction details if relevant, and what you\'re trying to accomplish.'
+      return "Describe your billing question. Include: plan name, invoice or transaction details if relevant, and what you're trying to accomplish."
     case 'general':
       return 'Describe your question or request. Include any relevant context (e.g. account, project, region) so we can help faster.'
     default:
@@ -145,7 +148,9 @@ export function SupportWizardFullscreen() {
     setAttachment(file)
   }
 
-  const handleAttachmentInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAttachmentInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const file = e.target.files?.[0]
     if (file) handleAttachmentSelect(file)
   }
@@ -253,12 +258,7 @@ export function SupportWizardFullscreen() {
           <p className="text-[13px] text-muted-foreground mt-2 leading-relaxed">
             Get dedicated support and SLAs for your organization.
           </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-4 w-full"
-            asChild
-          >
+          <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
             <a
               href={CONTACT_SALES_URL}
               target="_blank"
@@ -277,7 +277,8 @@ export function SupportWizardFullscreen() {
             What happens next
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2 leading-relaxed">
-            Confirmation email with ticket ID. Typically within 24h during support hours.
+            Confirmation email with ticket ID. Typically within 24h during
+            support hours.
           </p>
         </div>
       </div>
@@ -361,22 +362,22 @@ export function SupportWizardFullscreen() {
         fullscreen
         useSidebar={false}
         footerAlign="right"
-        footer={
-          <Button onClick={handleCancel}>
-            Done
-          </Button>
-        }
+        footer={<Button onClick={handleCancel}>Done</Button>}
       >
         <div className="flex min-h-[70vh] flex-col items-center justify-center py-12 px-4">
           <div className="w-full max-w-xl flex flex-col items-center text-center">
             <div className="mb-6 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-              <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" aria-hidden />
+              <CheckCircle2
+                className="h-8 w-8 text-emerald-600 dark:text-emerald-400"
+                aria-hidden
+              />
             </div>
             <h2 className="text-[18px] font-semibold text-foreground tracking-tight">
               Your support ticket has been submitted
             </h2>
             <p className="mt-3 max-w-md text-[13px] text-muted-foreground leading-relaxed">
-              We've received your request and will get back to you as soon as we can.
+              We've received your request and will get back to you as soon as we
+              can.
             </p>
           </div>
           <div className="mt-10 w-full max-w-xl">
@@ -389,19 +390,22 @@ export function SupportWizardFullscreen() {
                   <li className="flex gap-3 text-left">
                     <span className="text-muted-foreground/60 shrink-0">•</span>
                     <span>
-                      Check <strong className="text-foreground">{email}</strong> for a confirmation email with your ticket reference.
+                      Check <strong className="text-foreground">{email}</strong>{' '}
+                      for a confirmation email with your ticket reference.
                     </span>
                   </li>
                   <li className="flex gap-3 text-left">
                     <span className="text-muted-foreground/60 shrink-0">•</span>
                     <span>
-                      We typically respond within 24 hours during support hours (Mon–Fri).
+                      We typically respond within 24 hours during support hours
+                      (Mon–Fri).
                     </span>
                   </li>
                   <li className="flex gap-3 text-left">
                     <span className="text-muted-foreground/60 shrink-0">•</span>
                     <span>
-                      Reply to the confirmation email to add more context or attachments.
+                      Reply to the confirmation email to add more context or
+                      attachments.
                     </span>
                   </li>
                 </ul>
@@ -435,7 +439,11 @@ export function SupportWizardFullscreen() {
       footerAlign="right"
       footer={
         <>
-          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+          <Button
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting}>
@@ -456,7 +464,10 @@ export function SupportWizardFullscreen() {
           </div>
           <div className="border-t border-border px-6 py-4 space-y-4">
             <div>
-              <Label htmlFor="support-category" className="text-[13px] font-medium">
+              <Label
+                htmlFor="support-category"
+                className="text-[13px] font-medium"
+              >
                 Category
               </Label>
               <Select
@@ -466,7 +477,10 @@ export function SupportWizardFullscreen() {
                   setTopic('')
                 }}
               >
-                <SelectTrigger id="support-category" className="mt-2 h-9 w-full">
+                <SelectTrigger
+                  id="support-category"
+                  className="mt-2 h-9 w-full"
+                >
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -478,7 +492,10 @@ export function SupportWizardFullscreen() {
             </div>
             {category && (
               <div>
-                <Label htmlFor="support-topic" className="text-[13px] font-medium">
+                <Label
+                  htmlFor="support-topic"
+                  className="text-[13px] font-medium"
+                >
                   Topic
                 </Label>
                 <Select value={topic} onValueChange={setTopic}>
@@ -496,11 +513,20 @@ export function SupportWizardFullscreen() {
               </div>
             )}
             <div>
-              <Label htmlFor="support-severity" className="text-[13px] font-medium">
+              <Label
+                htmlFor="support-severity"
+                className="text-[13px] font-medium"
+              >
                 Severity
               </Label>
-              <Select value={severity} onValueChange={(v) => setSeverity(v as SupportSeverity)}>
-                <SelectTrigger id="support-severity" className="mt-2 h-9 w-full">
+              <Select
+                value={severity}
+                onValueChange={(v) => setSeverity(v as SupportSeverity)}
+              >
+                <SelectTrigger
+                  id="support-severity"
+                  className="mt-2 h-9 w-full"
+                >
                   <SelectValue placeholder="Select severity" />
                 </SelectTrigger>
                 <SelectContent>
@@ -516,7 +542,10 @@ export function SupportWizardFullscreen() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="support-project" className="text-[13px] font-medium">
+              <Label
+                htmlFor="support-project"
+                className="text-[13px] font-medium"
+              >
                 Project (optional)
               </Label>
               <Select value={projectId} onValueChange={setProjectId}>
@@ -547,13 +576,18 @@ export function SupportWizardFullscreen() {
           </div>
           <div className="border-t border-border px-6 py-4 space-y-4">
             <div>
-              <Label htmlFor="support-subject" className="text-[13px] font-medium">
+              <Label
+                htmlFor="support-subject"
+                className="text-[13px] font-medium"
+              >
                 Subject
               </Label>
               <Input
                 id="support-subject"
                 value={subject}
-                onChange={(e) => setSubject(e.target.value.slice(0, SUBJECT_MAX))}
+                onChange={(e) =>
+                  setSubject(e.target.value.slice(0, SUBJECT_MAX))
+                }
                 placeholder={getSubjectPlaceholder(category)}
                 className="mt-2 h-9"
                 maxLength={SUBJECT_MAX}
@@ -563,7 +597,10 @@ export function SupportWizardFullscreen() {
               </p>
             </div>
             <div>
-              <Label htmlFor="support-message" className="text-[13px] font-medium">
+              <Label
+                htmlFor="support-message"
+                className="text-[13px] font-medium"
+              >
                 Message
               </Label>
               <Textarea
@@ -581,7 +618,10 @@ export function SupportWizardFullscreen() {
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="support-attachment" className="text-[13px] font-medium">
+              <Label
+                htmlFor="support-attachment"
+                className="text-[13px] font-medium"
+              >
                 Attachment (optional)
               </Label>
               <div
@@ -609,7 +649,9 @@ export function SupportWizardFullscreen() {
                 >
                   <Upload className="h-8 w-8 text-muted-foreground" />
                   <span className="text-[13px] text-foreground">
-                    {attachment ? attachment.name : 'Click to upload or drag and drop'}
+                    {attachment
+                      ? attachment.name
+                      : 'Click to upload or drag and drop'}
                   </span>
                   <span className="text-[12px] text-muted-foreground">
                     Max size: {ATTACHMENT_MAX_MB} MB

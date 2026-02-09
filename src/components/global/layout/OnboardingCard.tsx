@@ -18,9 +18,8 @@ export function OnboardingCard({
   projectId,
   collapsed = false,
 }: OnboardingCardProps) {
-  const { progress, completedSteps, totalSteps } = useOnboardingProgress(
-    projectId,
-  )
+  const { progress, completedSteps, totalSteps } =
+    useOnboardingProgress(projectId)
 
   // Don't show if onboarding is complete
   if (progress === 100) {
@@ -51,27 +50,27 @@ export function OnboardingCard({
 
   return (
     <div className="rounded-md border border-border bg-card/50 overflow-hidden">
-        <Link
-          to="/onboarding"
-          className="group flex w-full flex-col transition-colors"
-        >
-          <div className="px-3 pt-2 pb-2.5">
-            <h3 className="text-[13px] font-semibold text-foreground mb-1.5">
-              Get started
-            </h3>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-muted-foreground">
-                  Onboarding progress
-                </span>
-                <span className="text-[11px] font-medium text-muted-foreground">
-                  {completedSteps}/{totalSteps}
-                </span>
-              </div>
-              <Progress value={progress} className="h-1.5" />
+      <Link
+        to="/onboarding"
+        className="group flex w-full flex-col transition-colors"
+      >
+        <div className="px-3 pt-2 pb-2.5">
+          <h3 className="text-[13px] font-semibold text-foreground mb-1.5">
+            Get started
+          </h3>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-muted-foreground">
+                Onboarding progress
+              </span>
+              <span className="text-[11px] font-medium text-muted-foreground">
+                {completedSteps}/{totalSteps}
+              </span>
             </div>
+            <Progress value={progress} className="h-1.5" />
           </div>
-        </Link>
+        </div>
+      </Link>
     </div>
   )
 }

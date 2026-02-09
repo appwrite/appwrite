@@ -34,11 +34,7 @@ const MESSAGE_MAX_LENGTH = 4096
 const ATTACHMENT_MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 
 export type SupportCategory = 'general' | 'billing' | 'technical'
-export type SupportSeverity =
-  | 'critical'
-  | 'high'
-  | 'medium'
-  | 'low'
+export type SupportSeverity = 'critical' | 'high' | 'medium' | 'low'
 
 /** Topic slugs per category (lowercase, for tag) */
 export const SUPPORT_TOPICS: Record<
@@ -112,8 +108,7 @@ export async function submitSupportTicket(
     return false
   }
 
-  const firstName =
-    params.firstName.slice(0, FIRSTNAME_MAX_LENGTH) || 'Unknown'
+  const firstName = params.firstName.slice(0, FIRSTNAME_MAX_LENGTH) || 'Unknown'
   const subject = params.subject.slice(0, SUBJECT_MAX_LENGTH)
   const message = params.message.slice(0, MESSAGE_MAX_LENGTH)
 
@@ -229,9 +224,25 @@ export function getSupportHoursInLocalTime(): {
   }
 }
 
-export const SEVERITY_OPTIONS: { value: SupportSeverity; label: string; description: string }[] = [
+export const SEVERITY_OPTIONS: {
+  value: SupportSeverity
+  label: string
+  description: string
+}[] = [
   { value: 'low', label: 'Low', description: 'Minor issue' },
-  { value: 'medium', label: 'Medium', description: 'Significant issue with partial workaround' },
-  { value: 'high', label: 'High', description: 'Major functionality impaired, workaround available' },
-  { value: 'critical', label: 'Critical', description: 'System down or major outage' },
+  {
+    value: 'medium',
+    label: 'Medium',
+    description: 'Significant issue with partial workaround',
+  },
+  {
+    value: 'high',
+    label: 'High',
+    description: 'Major functionality impaired, workaround available',
+  },
+  {
+    value: 'critical',
+    label: 'Critical',
+    description: 'System down or major outage',
+  },
 ]

@@ -220,15 +220,9 @@ All tables must use consistent styling matching the users table pattern for visu
 <TableBody>
   {items.map((item) => (
     <TableRow key={item.$id}>
-      <TableCell className="px-4 py-3">
-        {/* Content */}
-      </TableCell>
-      <TableCell className="px-4 py-3">
-        {/* Content */}
-      </TableCell>
-      <TableCell className="px-4 py-3 text-right">
-        {/* Actions */}
-      </TableCell>
+      <TableCell className="px-4 py-3">{/* Content */}</TableCell>
+      <TableCell className="px-4 py-3">{/* Content */}</TableCell>
+      <TableCell className="px-4 py-3 text-right">{/* Actions */}</TableCell>
     </TableRow>
   ))}
 </TableBody>
@@ -240,7 +234,7 @@ All tables must use consistent styling matching the users table pattern for visu
 - **TableHead**: Always include `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider`
 - **Column Names**: Use uppercase/capitalized text (e.g., "User ID", "Created At", "Actions")
 - **TableCell**: Always use `px-4 py-3` for consistent padding
-- **Special Cases**: 
+- **Special Cases**:
   - First column with checkbox: Keep `w-[40px] px-4` on `TableHead`, add `py-3` to `TableCell`
   - Columns with `pl-6 sm:pl-8`: Add `py-3` to maintain vertical consistency
   - Right-aligned columns: Add `text-right` to both `TableHead` and `TableCell` if needed
@@ -253,10 +247,7 @@ All tables must use consistent styling matching the users table pattern for visu
   <TableHeader>
     <TableRow className="hover:bg-transparent border-b border-border">
       <TableHead className="w-[40px] px-4">
-        <Checkbox
-          checked={allSelected}
-          onCheckedChange={toggleAll}
-        />
+        <Checkbox checked={allSelected} onCheckedChange={toggleAll} />
       </TableHead>
       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
         Name
@@ -898,23 +889,23 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 
 ## Quick Reference
 
-| Task                 | Pattern                                            |
-| -------------------- | -------------------------------------------------- |
-| Fetch data           | Extract query function, use in hook + route loader |
-| Pagination           | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads |
-| Delete resource      | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload |
-| Create resource      | Form resets and closes dialog on success           |
-| Update resource      | Use "Update" terminology, not "Edit"               |
-| Button during action | Keep text, use `disabled` state                    |
-| Unavailable action   | Disable button with tooltip, don't hide            |
-| Service avatar       | `bg-muted text-muted-foreground` (never colored)   |
-| Icon spacing         | `mr-1.5` or `gap-1.5`                              |
-| Date display         | Always include DateTooltip                         |
-| Route prefetch       | All crucial data at route level                    |
-| Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash") |
-| Models types         | Always `Models.*` from `@appwrite.io/console`      |
-| Table header         | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head |
-| Table cells          | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed) |
+| Task                   | Pattern                                                                                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fetch data             | Extract query function, use in hook + route loader                                                                                                 |
+| Pagination             | requestedPage + displayedPage; use displayed data/total for list and Pagination until new page loads                                               |
+| Delete resource        | Use `refetchQueries` (not `invalidateQueries`) in onSuccess so list updates without reload                                                         |
+| Create resource        | Form resets and closes dialog on success                                                                                                           |
+| Update resource        | Use "Update" terminology, not "Edit"                                                                                                               |
+| Button during action   | Keep text, use `disabled` state                                                                                                                    |
+| Unavailable action     | Disable button with tooltip, don't hide                                                                                                            |
+| Service avatar         | `bg-muted text-muted-foreground` (never colored)                                                                                                   |
+| Icon spacing           | `mr-1.5` or `gap-1.5`                                                                                                                              |
+| Date display           | Always include DateTooltip                                                                                                                         |
+| Route prefetch         | All crucial data at route level                                                                                                                    |
+| Detail page (no flash) | Loader returns data; route passes `initialData` to View; View uses `initialData` for first paint (see "Detail page: no loading flash")             |
+| Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                      |
+| Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head |
+| Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                               |
 
 ---
 

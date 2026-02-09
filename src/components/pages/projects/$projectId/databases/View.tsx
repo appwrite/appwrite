@@ -260,24 +260,14 @@ export function View() {
     total: databasesTotal,
     isLoading: databasesLoading,
     isFetching: databasesFetching,
-  } = useProjectDatabases(
-    projectId,
-    requestedPage - 1,
-    pageSize,
-    searchValue,
-  )
+  } = useProjectDatabases(projectId, requestedPage - 1, pageSize, searchValue)
 
   // Fetch data for the displayed page (what we show - stays until new page is ready)
   const {
     databases: apiDatabases,
     total: displayedDatabasesTotal,
     isLoading: displayedLoading,
-  } = useProjectDatabases(
-    projectId,
-    displayedPage - 1,
-    pageSize,
-    searchValue,
-  )
+  } = useProjectDatabases(projectId, displayedPage - 1, pageSize, searchValue)
 
   // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
@@ -432,9 +422,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'list'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'list' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('list')}
       >
@@ -445,9 +433,7 @@ export function View() {
         size="sm"
         className={cn(
           'h-7 w-7 p-0',
-          viewMode === 'grid'
-            ? 'bg-background'
-            : 'hover:bg-transparent',
+          viewMode === 'grid' ? 'bg-background' : 'hover:bg-transparent',
         )}
         onClick={() => setViewMode('grid')}
       >
@@ -1884,7 +1870,10 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
               isEmpty={true}
               iconSize="md"
             />
-            <Button onClick={() => setCreateTableDialogOpen(true)} className="mt-4">
+            <Button
+              onClick={() => setCreateTableDialogOpen(true)}
+              className="mt-4"
+            >
               <Plus className="mr-1.5 h-4 w-4" />
               Create table
             </Button>
@@ -1975,11 +1964,7 @@ export function DatabaseOverview({
 
   // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (
-      !tablesFetching &&
-      requestedPage !== displayedPage &&
-      !tablesLoading
-    ) {
+    if (!tablesFetching && requestedPage !== displayedPage && !tablesLoading) {
       setDisplayedPage(requestedPage)
     }
   }, [tablesFetching, tablesLoading, requestedPage, displayedPage])
@@ -2824,7 +2809,10 @@ export function DatabaseOverview({
                   iconSize="md"
                 />
                 {!searchValue && (
-                  <Button onClick={() => setCreateTableDialogOpen(true)} className="mt-4">
+                  <Button
+                    onClick={() => setCreateTableDialogOpen(true)}
+                    className="mt-4"
+                  >
                     <Plus className="mr-1.5 h-4 w-4" />
                     Create table
                   </Button>
@@ -3620,7 +3608,10 @@ function RowEditDrawer({
             </button>
           </div>
 
-          <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0">
+          <div
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto min-h-0"
+          >
             {activeTab === 'overview' && !isCreateMode && (
               <div className="px-6 py-6">
                 <div className="space-y-5">
@@ -4446,11 +4437,7 @@ function RowsSpreadsheet({
 
   // Update displayed page only when requested page data is ready (no flash)
   useEffect(() => {
-    if (
-      !rowsFetching &&
-      requestedPage !== displayedPage &&
-      !rowsLoading
-    ) {
+    if (!rowsFetching && requestedPage !== displayedPage && !rowsLoading) {
       setDisplayedPage(requestedPage)
     }
   }, [rowsFetching, rowsLoading, requestedPage, displayedPage])
@@ -4825,10 +4812,7 @@ function RowsSpreadsheet({
   // This component fills available space and handles its own scrolling
   // Only show loading if we don't have data yet (data is prefetched in route loader)
   // This prevents showing loading when switching tables since data is already cached
-  if (
-    showRowsLoading ||
-    (columnsLoading && apiColumns.length === 0)
-  ) {
+  if (showRowsLoading || (columnsLoading && apiColumns.length === 0)) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-muted-foreground">Loading rows...</div>

@@ -1368,9 +1368,7 @@ export function TemplatesView() {
                             <div className="space-y-4">
                               {requiredVariables.map((variable, index) => (
                                 <div key={variable.name}>
-                                  {index > 0 && (
-                                    <Separator className="my-4" />
-                                  )}
+                                  {index > 0 && <Separator className="my-4" />}
                                   <div className="space-y-2">
                                     <div className="flex items-center gap-2 flex-wrap">
                                       <code className="text-[13px] font-mono font-semibold text-foreground">
@@ -1436,8 +1434,7 @@ export function TemplatesView() {
                           {optionalVariables.length > 0 && (
                             <div className="mt-4 border-t border-border pt-4">
                               <h4 className="text-[13px] font-medium text-muted-foreground mb-3">
-                                Optional variables (
-                                {optionalVariables.length})
+                                Optional variables ({optionalVariables.length})
                               </h4>
                               <div className="space-y-4 pt-0">
                                 {optionalVariables.map((variable, index) => (

@@ -11,7 +11,6 @@ import { DeploymentDownloadType } from '@appwrite.io/console'
 import { DeploymentDetailView } from '@/components/global/shared/DeploymentDetailView'
 import { toast } from 'sonner'
 
-
 export function View() {
   const { projectId, siteId, deploymentId } = useParams({ strict: false })
 
@@ -129,7 +128,10 @@ export function View() {
       onDownloadBuild={handleDownloadBuild}
       onRedeploy={handleRedeploy}
       onActivate={handleActivate}
-      invalidateQueries={[[...Dependencies.DEPLOYMENTS], [...Dependencies.SITE]]}
+      invalidateQueries={[
+        [...Dependencies.DEPLOYMENTS],
+        [...Dependencies.SITE],
+      ]}
       fallbackPath={`/projects/${projectId}/sites/${siteId}`}
     />
   )

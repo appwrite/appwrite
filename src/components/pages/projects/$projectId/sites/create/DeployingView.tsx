@@ -267,107 +267,107 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
       <div className="border-t border-border px-4 sm:px-6 py-3">
         <TooltipProvider>
           <div className="flex items-center gap-2">
-          <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search logs..."
-              value={logsSearch}
-              onChange={(e) => setLogsSearch(e.target.value)}
-              className="pl-9 h-9 text-[13px]"
-            />
-          </div>
-          <TooltipPrimitive.Root>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadLogs}
-                disabled={!buildLogs}
-                className="h-9 w-9 p-0 shrink-0"
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Download logs</p>
-            </TooltipContent>
-          </TooltipPrimitive.Root>
-          <TooltipPrimitive.Root>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopyLogs}
-                disabled={!buildLogs}
-                className="h-9 w-9 p-0 shrink-0"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Copy logs</p>
-            </TooltipContent>
-          </TooltipPrimitive.Root>
-        </div>
-      </TooltipProvider>
-    </div>
-    <div className="border-t border-border" />
-    <div className="relative">
-      <div
-        ref={logsContainerRef}
-        className="h-[400px] overflow-y-auto overflow-x-auto"
-      >
-        <BuildLogsView
-          buildLogs={buildLogs}
-          searchTerm={logsSearch}
-          highlightLineOnHover
-          emptyMessage={
-            <div className="flex items-center gap-2">
-              <CircleDashed className="h-3.5 w-3.5 shrink-0" />
-              Waiting for build logs...
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search logs..."
+                value={logsSearch}
+                onChange={(e) => setLogsSearch(e.target.value)}
+                className="pl-9 h-9 text-[13px]"
+              />
             </div>
-          }
-        />
+            <TooltipPrimitive.Root>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadLogs}
+                  disabled={!buildLogs}
+                  className="h-9 w-9 p-0 shrink-0"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Download logs</p>
+              </TooltipContent>
+            </TooltipPrimitive.Root>
+            <TooltipPrimitive.Root>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyLogs}
+                  disabled={!buildLogs}
+                  className="h-9 w-9 p-0 shrink-0"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Copy logs</p>
+              </TooltipContent>
+            </TooltipPrimitive.Root>
+          </div>
+        </TooltipProvider>
       </div>
-      {buildLogs && (
-        <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
-          <TooltipProvider>
-            <TooltipPrimitive.Root>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleScrollToTop}
-                  disabled={isAtTop}
-                  className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
-                >
-                  <ArrowUp className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>Scroll to top</p>
-              </TooltipContent>
-            </TooltipPrimitive.Root>
-            <TooltipPrimitive.Root>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleScrollToBottom}
-                  disabled={isAtBottom}
-                  className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
-                >
-                  <ArrowDown className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <p>Scroll to bottom</p>
-              </TooltipContent>
-            </TooltipPrimitive.Root>
-          </TooltipProvider>
+      <div className="border-t border-border" />
+      <div className="relative">
+        <div
+          ref={logsContainerRef}
+          className="h-[400px] overflow-y-auto overflow-x-auto"
+        >
+          <BuildLogsView
+            buildLogs={buildLogs}
+            searchTerm={logsSearch}
+            highlightLineOnHover
+            emptyMessage={
+              <div className="flex items-center gap-2">
+                <CircleDashed className="h-3.5 w-3.5 shrink-0" />
+                Waiting for build logs...
+              </div>
+            }
+          />
         </div>
-      )}
-    </div>
+        {buildLogs && (
+          <div className="absolute bottom-3 right-3 flex flex-col gap-2 z-10">
+            <TooltipProvider>
+              <TooltipPrimitive.Root>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleScrollToTop}
+                    disabled={isAtTop}
+                    className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Scroll to top</p>
+                </TooltipContent>
+              </TooltipPrimitive.Root>
+              <TooltipPrimitive.Root>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleScrollToBottom}
+                    disabled={isAtBottom}
+                    className="h-8 w-8 p-0 bg-card/95 backdrop-blur-sm"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Scroll to bottom</p>
+                </TooltipContent>
+              </TooltipPrimitive.Root>
+            </TooltipProvider>
+          </div>
+        )}
+      </div>
     </>
   )
 
@@ -396,150 +396,166 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
   // Duration to show on build logs card: for any status – buildDuration when done, else elapsed (including 0s)
   const buildDurationDisplay = useMemo(() => {
     if (!deployment?.$createdAt) return null
-    const isDone = deployment.status === 'ready' || deployment.status === 'failed'
-    if (isDone && deployment.buildDuration != null && deployment.buildDuration >= 0) {
+    const isDone =
+      deployment.status === 'ready' || deployment.status === 'failed'
+    if (
+      isDone &&
+      deployment.buildDuration != null &&
+      deployment.buildDuration >= 0
+    ) {
       return formatDuration(deployment.buildDuration)
     }
-    const elapsed = (deployment.status === 'building' || deployment.status === 'processing' || deployment.status === 'waiting')
-      ? elapsedSeconds
-      : Math.floor((Date.now() - new Date(deployment.$createdAt).getTime()) / 1000)
+    const elapsed =
+      deployment.status === 'building' ||
+      deployment.status === 'processing' ||
+      deployment.status === 'waiting'
+        ? elapsedSeconds
+        : Math.floor(
+            (Date.now() - new Date(deployment.$createdAt).getTime()) / 1000,
+          )
     return formatDuration(Math.max(0, elapsed))
   }, [deployment, elapsedSeconds])
 
-  const sidebarContent = (site || deployment) ? (
-    <div className="space-y-4">
-      {/* QR code dialog (used when status === 'ready') */}
-      {status === 'ready' && (
-        <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
-          <DialogContent className="sm:max-w-md p-0">
-            <DialogHeader className="px-6 pt-6 text-left">
-              <DialogTitle>View on mobile</DialogTitle>
-              <DialogDescription className="text-[13px] mt-2">
-                Scan this QR code to open your site on a mobile device
-              </DialogDescription>
-            </DialogHeader>
-            <div className="border-t border-border" />
-            <div className="px-6 py-6 flex items-center justify-center">
-              {qrImageUrl && (
-                <div className="p-4 bg-white rounded-lg">
-                  <img
-                    src={qrImageUrl}
-                    alt="QR code to open site on mobile"
-                    className="h-48 w-48 rounded"
-                  />
-                </div>
-              )}
-            </div>
-            <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
-              <Button variant="outline" onClick={() => setQrDialogOpen(false)}>
-                Close
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        {/* Header: icon + site name + status */}
-        <div className="px-5 py-4">
-          <div className="flex items-start gap-3">
-            {site && (
-              <div className="relative shrink-0">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
-                  <FrameworkIcon framework={site.framework} size="md" />
-                </div>
-                <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-2 ring-background">
-                  <GitHubIcon className="h-3 w-3 text-muted-foreground" />
-                </div>
+  const sidebarContent =
+    site || deployment ? (
+      <div className="space-y-4">
+        {/* QR code dialog (used when status === 'ready') */}
+        {status === 'ready' && (
+          <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+            <DialogContent className="sm:max-w-md p-0">
+              <DialogHeader className="px-6 pt-6 text-left">
+                <DialogTitle>View on mobile</DialogTitle>
+                <DialogDescription className="text-[13px] mt-2">
+                  Scan this QR code to open your site on a mobile device
+                </DialogDescription>
+              </DialogHeader>
+              <div className="border-t border-border" />
+              <div className="px-6 py-6 flex items-center justify-center">
+                {qrImageUrl && (
+                  <div className="p-4 bg-white rounded-lg">
+                    <img
+                      src={qrImageUrl}
+                      alt="QR code to open site on mobile"
+                      className="h-48 w-48 rounded"
+                    />
+                  </div>
+                )}
               </div>
-            )}
-            <div className="flex-1 min-w-0">
+              <div className="px-6 py-4 border-t border-border bg-muted/30 flex justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setQrDialogOpen(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+          {/* Header: icon + site name + status */}
+          <div className="px-5 py-4">
+            <div className="flex items-start gap-3">
               {site && (
-                <>
-                  <h3 className="text-[15px] font-semibold text-foreground truncate">
-                    {site.name}
-                  </h3>
-                  <CopyableId id={site.$id} size="xs" className="mt-0.5" />
-                </>
+                <div className="relative shrink-0">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
+                    <FrameworkIcon framework={site.framework} size="md" />
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background ring-2 ring-background">
+                    <GitHubIcon className="h-3 w-3 text-muted-foreground" />
+                  </div>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                {site && (
+                  <>
+                    <h3 className="text-[15px] font-semibold text-foreground truncate">
+                      {site.name}
+                    </h3>
+                    <CopyableId id={site.$id} size="xs" className="mt-0.5" />
+                  </>
+                )}
+              </div>
+              {statusBadge && (
+                <Badge
+                  variant={statusBadge.badgeVariant}
+                  className="gap-1.5 text-[11px] font-medium shrink-0 h-6 px-2.5"
+                >
+                  {(() => {
+                    const StatusIcon = statusBadge.icon
+                    return <StatusIcon className="h-3.5 w-3.5" />
+                  })()}
+                  {statusBadge.label}
+                </Badge>
               )}
             </div>
-            {statusBadge && (
-              <Badge
-                variant={statusBadge.badgeVariant}
-                className="gap-1.5 text-[11px] font-medium shrink-0 h-6 px-2.5"
-              >
-                {(() => {
-                  const StatusIcon = statusBadge.icon
-                  return <StatusIcon className="h-3.5 w-3.5" />
-                })()}
-                {statusBadge.label}
-              </Badge>
-            )}
           </div>
-        </div>
 
-      {/* Metadata: key-value rows, tech style */}
-      <div className="border-t border-border px-5 py-3.5 bg-muted/10">
-        <dl className="space-y-2.5">
-          {frameworkInfo && (
-            <div className="flex justify-between gap-3 items-center">
-              <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
-                Framework
-              </dt>
-              <dd className="text-[12px] font-medium text-foreground truncate text-right">
-                {frameworkInfo.name}
-              </dd>
-            </div>
-          )}
-          {repository && (
-            <div className="flex justify-between gap-3 items-center">
-              <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
-                Source
-              </dt>
-              <dd className="text-[12px] font-mono text-foreground truncate text-right">
-                {repository.organization}/{repository.name}
-              </dd>
-            </div>
-          )}
-          {site?.providerBranch && (
-            <div className="flex justify-between gap-3 items-center">
-              <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
-                Branch
-              </dt>
-              <dd className="text-[12px] font-mono text-foreground truncate text-right">
-                {site.providerBranch}
-              </dd>
-            </div>
-          )}
-          {deployment && (
-            <>
-              <div className="flex justify-between gap-3 items-center">
-                <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
-                  Deployed
-                </dt>
-                <dd className="text-[12px] font-medium text-foreground text-right">
-                  <DateTooltip date={deployment.$createdAt} />
-                </dd>
-              </div>
-              {((deployment.buildSize ?? 0) + (deployment.sourceSize ?? 0)) > 0 && (
+          {/* Metadata: key-value rows, tech style */}
+          <div className="border-t border-border px-5 py-3.5 bg-muted/10">
+            <dl className="space-y-2.5">
+              {frameworkInfo && (
                 <div className="flex justify-between gap-3 items-center">
                   <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
-                    Size
+                    Framework
                   </dt>
-                  <dd className="text-[12px] font-medium text-foreground text-right">
-                    {formatSize(
-                      (deployment.buildSize ?? 0) + (deployment.sourceSize ?? 0),
-                    )}
+                  <dd className="text-[12px] font-medium text-foreground truncate text-right">
+                    {frameworkInfo.name}
                   </dd>
                 </div>
               )}
-            </>
-          )}
-        </dl>
+              {repository && (
+                <div className="flex justify-between gap-3 items-center">
+                  <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
+                    Source
+                  </dt>
+                  <dd className="text-[12px] font-mono text-foreground truncate text-right">
+                    {repository.organization}/{repository.name}
+                  </dd>
+                </div>
+              )}
+              {site?.providerBranch && (
+                <div className="flex justify-between gap-3 items-center">
+                  <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
+                    Branch
+                  </dt>
+                  <dd className="text-[12px] font-mono text-foreground truncate text-right">
+                    {site.providerBranch}
+                  </dd>
+                </div>
+              )}
+              {deployment && (
+                <>
+                  <div className="flex justify-between gap-3 items-center">
+                    <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
+                      Deployed
+                    </dt>
+                    <dd className="text-[12px] font-medium text-foreground text-right">
+                      <DateTooltip date={deployment.$createdAt} />
+                    </dd>
+                  </div>
+                  {(deployment.buildSize ?? 0) + (deployment.sourceSize ?? 0) >
+                    0 && (
+                    <div className="flex justify-between gap-3 items-center">
+                      <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground shrink-0">
+                        Size
+                      </dt>
+                      <dd className="text-[12px] font-medium text-foreground text-right">
+                        {formatSize(
+                          (deployment.buildSize ?? 0) +
+                            (deployment.sourceSize ?? 0),
+                        )}
+                      </dd>
+                    </div>
+                  )}
+                </>
+              )}
+            </dl>
+          </div>
+        </div>
       </div>
-      </div>
-    </div>
-  ) : null
+    ) : null
 
   return (
     <WizardLayout
@@ -568,7 +584,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
               </h3>
               {buildDurationDisplay && (
                 <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
-                  Duration: <span className="font-medium text-foreground">{buildDurationDisplay}</span>
+                  Duration:{' '}
+                  <span className="font-medium text-foreground">
+                    {buildDurationDisplay}
+                  </span>
                 </span>
               )}
             </div>
@@ -580,7 +599,10 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
         {status === 'ready' && site && (
           <div
             className="space-y-4 transition-all duration-300 ease-out animate-in fade-in-0 slide-in-from-bottom-4"
-            style={{ animationDuration: '400ms', animationFillMode: 'backwards' }}
+            style={{
+              animationDuration: '400ms',
+              animationFillMode: 'backwards',
+            }}
           >
             {/* Site preview card */}
             <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
@@ -610,7 +632,11 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                   <p className="text-[12px] text-muted-foreground/80">
                     Screenshot may take a few moments after build completes
                   </p>
-                  <FrameworkIcon framework={site.framework} size="lg" className="mt-2 opacity-50" />
+                  <FrameworkIcon
+                    framework={site.framework}
+                    size="lg"
+                    className="mt-2 opacity-50"
+                  />
                 </div>
               )}
               <div className="p-6">
@@ -639,7 +665,11 @@ export function DeployingView({ siteId, deploymentId }: DeployingViewProps) {
                   </div>
                   {siteUrl && (
                     <Button asChild>
-                      <a href={siteUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={siteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <ExternalLink className="mr-1.5 h-4 w-4" />
                         Visit site
                       </a>

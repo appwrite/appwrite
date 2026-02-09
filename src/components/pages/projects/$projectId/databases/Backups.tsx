@@ -919,7 +919,10 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
       )}
 
       {/* Bulk Delete Confirmation Dialog */}
-      <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+      <Dialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+      >
         <DialogContent className="sm:max-w-md p-0">
           <DialogHeader className="px-6 pt-6 text-left">
             <DialogTitle>Delete backups</DialogTitle>

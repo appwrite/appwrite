@@ -457,7 +457,9 @@ export function RulesTab({ projectId, searchValue }: RulesTabProps) {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="px-4 py-3">{getActionBadge(rule.action)}</TableCell>
+                  <TableCell className="px-4 py-3">
+                    {getActionBadge(rule.action)}
+                  </TableCell>
                   <TableCell className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <span className="text-[12px] font-mono text-muted-foreground">

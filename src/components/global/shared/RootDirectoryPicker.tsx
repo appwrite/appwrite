@@ -75,10 +75,7 @@ export function RootDirectoryPicker({
               <Info className="h-3.5 w-3.5" />
             </button>
           </TooltipTrigger>
-          <TooltipContent
-            side="top"
-            className="max-w-[240px] z-[200]"
-          >
+          <TooltipContent side="top" className="max-w-[240px] z-[200]">
             {labelTooltip}
           </TooltipContent>
         </Tooltip>
@@ -332,10 +329,7 @@ export function RootDirectoryPicker({
                 )}
               </div>
               <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                <Button
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button onClick={handleSelect} disabled={!selectedDir}>

@@ -45,6 +45,8 @@ export function hasUnavailableSpecifications<T extends SpecificationWithPlan>(
 /**
  * Returns true if the given specification is allowed in the current plan.
  */
-export function isSpecificationAllowedInPlan(spec: SpecificationWithPlan): boolean {
+export function isSpecificationAllowedInPlan(
+  spec: SpecificationWithPlan,
+): boolean {
   return spec.enabled !== false
 }

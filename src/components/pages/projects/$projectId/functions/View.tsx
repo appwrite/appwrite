@@ -268,7 +268,12 @@ export function View() {
               <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9 gap-1.5 text-[13px]" asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 gap-1.5 text-[13px]"
+                      asChild
+                    >
                       <Link
                         to="/projects/$projectId/functions/editor"
                         params={{ projectId: projectId as string }}
@@ -319,7 +324,12 @@ export function View() {
             <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-9 gap-1.5 text-[13px]" asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 gap-1.5 text-[13px]"
+                    asChild
+                  >
                     <Link
                       to="/projects/$projectId/functions/editor"
                       params={{ projectId: projectId as string }}
@@ -420,7 +430,8 @@ export function View() {
                     No functions yet
                   </p>
                   <p className="mb-4 text-[13px] text-muted-foreground">
-                    Deploy and manage serverless functions with Appwrite Functions
+                    Deploy and manage serverless functions with Appwrite
+                    Functions
                   </p>
                   <div className="flex items-center justify-center gap-2">
                     <Button variant="outline" asChild className="gap-1.5">

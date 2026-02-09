@@ -117,7 +117,13 @@ export function QuickDeployView({
       setBuildCommand(defaults.buildCommand)
       setOutputDirectory(defaults.outputDirectory)
     }
-  }, [framework, getFrameworkDefaults, initialInstall, initialBuild, initialOutput])
+  }, [
+    framework,
+    getFrameworkDefaults,
+    initialInstall,
+    initialBuild,
+    initialOutput,
+  ])
 
   // Generate domain when site name changes
   useEffect(() => {
@@ -484,7 +490,8 @@ export function QuickDeployView({
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            Want to use your own domain? After deployment, you can connect a
+            custom domain via CNAME record or let Appwrite manage your DNS.{' '}
             <a
               href="https://appwrite.io/docs/products/sites/domains"
               target="_blank"

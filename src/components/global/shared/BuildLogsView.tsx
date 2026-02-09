@@ -99,7 +99,11 @@ function parseAnsiLogsWithoutHighlight(text: string): React.ReactNode[] {
     if (match.index > lastIndex) {
       const textBefore = text.substring(lastIndex, match.index)
       if (textBefore) {
-        const processedText = replaceVercelTriangle(textBefore, currentColor, keyCounter)
+        const processedText = replaceVercelTriangle(
+          textBefore,
+          currentColor,
+          keyCounter,
+        )
         parts.push(...processedText)
         keyCounter += processedText.length
       }
@@ -122,7 +126,11 @@ function parseAnsiLogsWithoutHighlight(text: string): React.ReactNode[] {
   if (lastIndex < text.length) {
     const remainingText = text.substring(lastIndex)
     if (remainingText) {
-      const processedText = replaceVercelTriangle(remainingText, currentColor, keyCounter)
+      const processedText = replaceVercelTriangle(
+        remainingText,
+        currentColor,
+        keyCounter,
+      )
       parts.push(...processedText)
     }
   }
@@ -148,7 +156,11 @@ function highlightText(
       if (lastIndex < text.length) {
         const remaining = text.substring(lastIndex)
         if (remaining) {
-          const processedText = replaceVercelTriangle(remaining, color, keyCounter)
+          const processedText = replaceVercelTriangle(
+            remaining,
+            color,
+            keyCounter,
+          )
           parts.push(...processedText)
           keyCounter += processedText.length
         }
@@ -159,13 +171,20 @@ function highlightText(
     if (searchIndex > lastIndex) {
       const beforeMatch = text.substring(lastIndex, searchIndex)
       if (beforeMatch) {
-        const processedText = replaceVercelTriangle(beforeMatch, color, keyCounter)
+        const processedText = replaceVercelTriangle(
+          beforeMatch,
+          color,
+          keyCounter,
+        )
         parts.push(...processedText)
         keyCounter += processedText.length
       }
     }
 
-    const matchText = text.substring(searchIndex, searchIndex + searchTerm.length)
+    const matchText = text.substring(
+      searchIndex,
+      searchIndex + searchTerm.length,
+    )
     const processedMatch = replaceVercelTriangle(matchText, color, keyCounter)
     parts.push(
       <mark
@@ -194,12 +213,16 @@ function parseAnsiLogs(text: string, searchTerm?: string): React.ReactNode[] {
 
   coloredSegments.forEach((segment) => {
     if (typeof segment === 'string') {
-      highlightedParts.push(...highlightText(segment, null, searchTerm, keyCounter))
+      highlightedParts.push(
+        ...highlightText(segment, null, searchTerm, keyCounter),
+      )
       keyCounter += 1000
     } else if (React.isValidElement(segment) && segment.type === 'span') {
       const textContent = extractTextFromReactNode(segment)
       const className = (segment.props as any)?.className || null
-      highlightedParts.push(...highlightText(textContent, className, searchTerm, keyCounter))
+      highlightedParts.push(
+        ...highlightText(textContent, className, searchTerm, keyCounter),
+      )
       keyCounter += 1000
     } else {
       highlightedParts.push(segment)
@@ -303,7 +326,11 @@ export function BuildLogsView({
                 : ''
           }`}
           title={
-            isClickable ? `Click to highlight and copy "Line ${originalLineNumber}"` : highlightLineOnHover ? `Line ${originalLineNumber}` : undefined
+            isClickable
+              ? `Click to highlight and copy "Line ${originalLineNumber}"`
+              : highlightLineOnHover
+                ? `Line ${originalLineNumber}`
+                : undefined
           }
         >
           <span
@@ -320,11 +347,21 @@ export function BuildLogsView({
         </div>
       )
     })
-  }, [buildLogs, searchTerm, selectedLine, onLineClick, lineRefs, fontSizeClass, highlightLineOnHover])
+  }, [
+    buildLogs,
+    searchTerm,
+    selectedLine,
+    onLineClick,
+    lineRefs,
+    fontSizeClass,
+    highlightLineOnHover,
+  ])
 
   if (!buildLogs) {
     return (
-      <div className={`px-4 sm:px-6 py-4 text-[12px] sm:text-[13px] text-muted-foreground ${className}`}>
+      <div
+        className={`px-4 sm:px-6 py-4 text-[12px] sm:text-[13px] text-muted-foreground ${className}`}
+      >
         {emptyMessage}
       </div>
     )

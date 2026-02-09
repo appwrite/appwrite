@@ -122,10 +122,11 @@ export function SiteVariablesCard({
   projectId,
   siteId,
 }: SiteVariablesCardProps) {
-  const { variables: siteVariables, total, isLoading } = useSiteVariables(
-    projectId,
-    siteId,
-  )
+  const {
+    variables: siteVariables,
+    total,
+    isLoading,
+  } = useSiteVariables(projectId, siteId)
 
   // Fetch global project variables (first page only for reference)
   const { data: projectVariablesData } = useProjectVariables(projectId, 0, 1)
@@ -616,7 +617,8 @@ export function SiteVariablesCard({
             Environment Variables
           </h3>
           <p className="text-[13px] text-muted-foreground mt-2">
-            Configure environment variables for your site deployments. Site-specific variables override global project variables.
+            Configure environment variables for your site deployments.
+            Site-specific variables override global project variables.
           </p>
         </div>
         <div className="border-t border-border" />
@@ -778,7 +780,6 @@ export function SiteVariablesCard({
                       </TableBody>
                     </Table>
                   </div>
-
                 </>
               )}
             </div>

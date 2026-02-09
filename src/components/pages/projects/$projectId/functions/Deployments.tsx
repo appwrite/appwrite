@@ -220,7 +220,6 @@ function getVcsProvider(
   return null
 }
 
-
 export function View() {
   const { projectId, functionId } = useParams({ strict: false })
   const queryClient = useQueryClient()
@@ -265,15 +264,8 @@ export function View() {
   } = useFunctionDeployments(projectId, functionId, requestedPage, pageSize)
 
   // Fetch data for the displayed page (this is what we show)
-  const {
-    deployments: displayedDeployments,
-    total: displayedTotal,
-  } = useFunctionDeployments(
-    projectId,
-    functionId,
-    displayedPage,
-    pageSize,
-  )
+  const { deployments: displayedDeployments, total: displayedTotal } =
+    useFunctionDeployments(projectId, functionId, displayedPage, pageSize)
 
   // Update displayed page only when requested page data is ready (not fetching)
   // This keeps the current page visible until the next page data is fully loaded
@@ -482,7 +474,9 @@ export function View() {
   const redeployMutation = useMutation({
     mutationFn: async () => {
       if (!projectId || !functionId || !activeDeployment) {
-        throw new Error('Project ID, Function ID, and Deployment ID are required')
+        throw new Error(
+          'Project ID, Function ID, and Deployment ID are required',
+        )
       }
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.createDuplicateDeployment({
@@ -509,7 +503,9 @@ export function View() {
   const activateMutation = useMutation({
     mutationFn: async () => {
       if (!projectId || !functionId || !activeDeployment) {
-        throw new Error('Project ID, Function ID, and Deployment ID are required')
+        throw new Error(
+          'Project ID, Function ID, and Deployment ID are required',
+        )
       }
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.functions.updateFunctionDeployment({
@@ -536,7 +532,9 @@ export function View() {
   const deleteActiveMutation = useMutation({
     mutationFn: async () => {
       if (!projectId || !functionId || !activeDeployment) {
-        throw new Error('Project ID, Function ID, and Deployment ID are required')
+        throw new Error(
+          'Project ID, Function ID, and Deployment ID are required',
+        )
       }
       throw new Error(
         'Cannot delete the active deployment. Please activate another deployment first.',
@@ -557,7 +555,6 @@ export function View() {
       toast.error(error.message || 'Failed to delete deployment')
     },
   })
-
 
   // Bulk delete mutation
   const bulkDeleteMutation = useMutation({
@@ -1144,8 +1141,7 @@ export function View() {
                       <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                         Created
                       </TableHead>
-                      <TableHead className="px-4 py-3 text-right w-[100px]">
-                      </TableHead>
+                      <TableHead className="px-4 py-3 text-right w-[100px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1175,7 +1171,10 @@ export function View() {
                             })
                           }}
                         >
-                          <TableCell className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                          <TableCell
+                            className="px-4 py-3"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <Checkbox
                               checked={selectedDeployments.has(deployment.$id)}
                               onCheckedChange={() =>
@@ -1392,7 +1391,10 @@ export function View() {
                               className="text-[12px] font-medium text-muted-foreground"
                             />
                           </TableCell>
-                          <TableCell className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                          <TableCell
+                            className="px-4 py-3 text-right"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
@@ -1406,7 +1408,10 @@ export function View() {
                                   <span className="sr-only">Open menu</span>
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="z-[200]">
+                              <DropdownMenuContent
+                                align="end"
+                                className="z-[200]"
+                              >
                                 {!isActive && (
                                   <>
                                     <DropdownMenuItem
@@ -1418,22 +1423,41 @@ export function View() {
                                       }
                                       onClick={async (e) => {
                                         e.stopPropagation()
-                                        if (deployment.status !== 'ready') return
+                                        if (deployment.status !== 'ready')
+                                          return
                                         try {
-                                          const projectSdk = sdk.forProject(projectId!)
-                                          await projectSdk.functions.updateFunctionDeployment({
-                                            functionId: functionId!,
-                                            deploymentId: deployment.$id,
+                                          const projectSdk = sdk.forProject(
+                                            projectId!,
+                                          )
+                                          await projectSdk.functions.updateFunctionDeployment(
+                                            {
+                                              functionId: functionId!,
+                                              deploymentId: deployment.$id,
+                                            },
+                                          )
+                                          queryClient.invalidateQueries({
+                                            queryKey: [
+                                              'deployments',
+                                              'project',
+                                              projectId,
+                                              functionId,
+                                            ],
                                           })
                                           queryClient.invalidateQueries({
-                                            queryKey: ['deployments', 'project', projectId, functionId],
+                                            queryKey: [
+                                              'function',
+                                              'project',
+                                              projectId,
+                                              functionId,
+                                            ],
                                           })
-                                          queryClient.invalidateQueries({
-                                            queryKey: ['function', 'project', projectId, functionId],
-                                          })
-                                          toast.success('Deployment activated successfully')
+                                          toast.success(
+                                            'Deployment activated successfully',
+                                          )
                                         } catch (error) {
-                                          toast.error('Failed to activate deployment')
+                                          toast.error(
+                                            'Failed to activate deployment',
+                                          )
                                         }
                                       }}
                                     >
@@ -1444,15 +1468,26 @@ export function View() {
                                       onClick={async (e) => {
                                         e.stopPropagation()
                                         try {
-                                          const projectSdk = sdk.forProject(projectId!)
-                                          await projectSdk.functions.createDuplicateDeployment({
-                                            functionId: functionId!,
-                                            deploymentId: deployment.$id,
-                                          })
+                                          const projectSdk = sdk.forProject(
+                                            projectId!,
+                                          )
+                                          await projectSdk.functions.createDuplicateDeployment(
+                                            {
+                                              functionId: functionId!,
+                                              deploymentId: deployment.$id,
+                                            },
+                                          )
                                           queryClient.invalidateQueries({
-                                            queryKey: ['deployments', 'project', projectId, functionId],
+                                            queryKey: [
+                                              'deployments',
+                                              'project',
+                                              projectId,
+                                              functionId,
+                                            ],
                                           })
-                                          toast.success('Deployment rebuild started')
+                                          toast.success(
+                                            'Deployment rebuild started',
+                                          )
                                         } catch (error) {
                                           toast.error('Failed to redeploy')
                                         }
@@ -1474,12 +1509,24 @@ export function View() {
                                           deployment.$id,
                                         )
                                         await queryClient.refetchQueries({
-                                          queryKey: ['deployments', 'project', projectId, functionId],
+                                          queryKey: [
+                                            'deployments',
+                                            'project',
+                                            projectId,
+                                            functionId,
+                                          ],
                                         })
                                         await queryClient.refetchQueries({
-                                          queryKey: ['function', 'project', projectId, functionId],
+                                          queryKey: [
+                                            'function',
+                                            'project',
+                                            projectId,
+                                            functionId,
+                                          ],
                                         })
-                                        toast.success('Deployment deleted successfully')
+                                        toast.success(
+                                          'Deployment deleted successfully',
+                                        )
                                       } catch (error) {
                                         toast.error(
                                           error instanceof Error
@@ -1750,7 +1797,10 @@ export function View() {
 
       {/* Delete Confirmation Dialog for Active Deployment */}
       {activeDeployment && (
-        <Dialog open={deleteActiveDialogOpen} onOpenChange={setDeleteActiveDialogOpen}>
+        <Dialog
+          open={deleteActiveDialogOpen}
+          onOpenChange={setDeleteActiveDialogOpen}
+        >
           <DialogContent className="sm:max-w-md p-0">
             <DialogHeader className="px-6 pt-6 pb-4 text-left">
               <DialogTitle>Delete deployment</DialogTitle>
@@ -1758,7 +1808,8 @@ export function View() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                Are you sure you want to delete this deployment? This action cannot be undone.
+                Are you sure you want to delete this deployment? This action
+                cannot be undone.
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>
@@ -1793,7 +1844,9 @@ export function View() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will create a new build for this deployment using the current function configuration. The original deployment's code will be preserved and used for the new build.
+                This will create a new build for this deployment using the
+                current function configuration. The original deployment's code
+                will be preserved and used for the new build.
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>
@@ -1829,7 +1882,8 @@ export function View() {
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.
+                This will switch the active deployment to this one. All traffic
+                will be routed to this deployment once activated.
               </DialogDescription>
               <DeploymentInfo deployment={activeDeployment} showStatus={true} />
             </div>

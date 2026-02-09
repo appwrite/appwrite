@@ -27,7 +27,12 @@ export const Route = createFileRoute('/_public/organizations/$orgId/')({
               activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
             ),
             queryClient.ensureQueryData(
-              organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+              organizationMembershipsQueryOptions(
+                orgId,
+                0,
+                DEFAULT_PAGE_SIZE,
+                '',
+              ),
             ),
           ]
         : []),

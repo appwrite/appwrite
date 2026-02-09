@@ -81,13 +81,11 @@ export function View() {
 
   const searchValue = search?.search || ''
 
-  const { rules, total, isLoading: domainsLoading } = useSiteDomains(
-    projectId,
-    siteId,
-    currentPage,
-    pageSize,
-    searchValue,
-  )
+  const {
+    rules,
+    total,
+    isLoading: domainsLoading,
+  } = useSiteDomains(projectId, siteId, currentPage, pageSize, searchValue)
 
   const handleRetry = (ruleId: string) => {
     // TODO: Implement retry verification
@@ -160,7 +158,8 @@ export function View() {
                             <span>Redirect to {ruleData.redirectUrl}</span>
                           ) : ruleData.deploymentVcsProviderBranch ? (
                             <span>
-                              Deployed from {ruleData.deploymentVcsProviderBranch}
+                              Deployed from{' '}
+                              {ruleData.deploymentVcsProviderBranch}
                             </span>
                           ) : (
                             <span>Active deployment</span>

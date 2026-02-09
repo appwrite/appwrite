@@ -71,7 +71,9 @@ export function GitRepositoryCard({
   const [selectedDir, setSelectedDir] = useState(
     site?.providerRootDirectory || '',
   )
-  const [silentMode, setSilentMode] = useState(site?.providerSilentMode ?? false)
+  const [silentMode, setSilentMode] = useState(
+    site?.providerSilentMode ?? false,
+  )
 
   // Connect repository modal state
   const [selectedInstallationId, setSelectedInstallationId] =
@@ -160,7 +162,9 @@ export function GitRepositoryCard({
       }
     },
     onError: (error: any) => {
-      toast.error(getErrorMessage(error, 'Failed to update repository settings'))
+      toast.error(
+        getErrorMessage(error, 'Failed to update repository settings'),
+      )
     },
   })
 
@@ -310,8 +314,8 @@ export function GitRepositoryCard({
                   <DialogTitle>Connect repository</DialogTitle>
                   <DialogDescription className="text-[13px] mt-2">
                     Select a GitHub installation and repository to connect to
-                    this site. You can connect an existing repository or create a
-                    new site from a template.
+                    this site. You can connect an existing repository or create
+                    a new site from a template.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="border-t border-border" />
@@ -378,8 +382,7 @@ export function GitRepositoryCard({
                   </div>
                   {'pushedAt' in repository && repository.pushedAt && (
                     <p className="text-[12px] text-muted-foreground">
-                      Last updated{' '}
-                      <DateTooltip date={repository.pushedAt} />
+                      Last updated <DateTooltip date={repository.pushedAt} />
                     </p>
                   )}
                 </div>

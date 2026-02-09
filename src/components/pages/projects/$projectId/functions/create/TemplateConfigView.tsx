@@ -72,16 +72,24 @@ export function TemplateConfigView({
           (() => {
             const base = runtimeFromSearch.toLowerCase().split('-')[0]
             const matching = (template.runtimes ?? []).filter((t) => {
-              const n = (t as { name?: string }).name ?? (t as { key?: string }).key ?? ''
+              const n =
+                (t as { name?: string }).name ??
+                (t as { key?: string }).key ??
+                ''
               return n.toLowerCase().split('-')[0] === base
             })
             if (matching.length === 0) return runtimeFromSearch
             if (matching.length === 1) {
               const r = matching[0]
-              return (r as { name?: string }).name ?? (r as { key?: string }).key
+              return (
+                (r as { name?: string }).name ?? (r as { key?: string }).key
+              )
             }
             const getVersion = (r: unknown) => {
-              const name = (r as { name?: string }).name ?? (r as { key?: string }).key ?? ''
+              const name =
+                (r as { name?: string }).name ??
+                (r as { key?: string }).key ??
+                ''
               const afterBase = name.split('-').slice(1).join('-')
               return afterBase.split('.').map((s) => parseInt(s, 10) || 0)
             }
@@ -95,7 +103,10 @@ export function TemplateConfigView({
               }
               return b
             })
-            return (latest as { name?: string }).name ?? (latest as { key?: string }).key
+            return (
+              (latest as { name?: string }).name ??
+              (latest as { key?: string }).key
+            )
           })()
         setRuntime(resolved ?? defaultRuntimeName)
       }
@@ -189,16 +200,20 @@ export function TemplateConfigView({
       <div className="px-5 py-4 border-b border-border/50">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
-            <RuntimeIcon runtime={runtime} className="h-5 w-5 text-muted-foreground" />
+            <RuntimeIcon
+              runtime={runtime}
+              className="h-5 w-5 text-muted-foreground"
+            />
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="text-[13px] font-semibold text-foreground truncate">
               {template.name}
             </h3>
             <p className="text-[11px] text-muted-foreground truncate">
-              {template.tagline || (template.providerOwner && template.providerRepositoryId
-                ? `${template.providerOwner}/${template.providerRepositoryId}`
-                : 'Template')}
+              {template.tagline ||
+                (template.providerOwner && template.providerRepositoryId
+                  ? `${template.providerOwner}/${template.providerRepositoryId}`
+                  : 'Template')}
             </p>
           </div>
         </div>
@@ -234,7 +249,9 @@ export function TemplateConfigView({
             </span>
             <span className="text-[12px] text-foreground">
               {variables.length} configured
-              {template.variables?.length ? ` · ${template.variables.length} in template` : ''}
+              {template.variables?.length
+                ? ` · ${template.variables.length} in template`
+                : ''}
             </span>
           </div>
         )}
@@ -261,7 +278,9 @@ export function TemplateConfigView({
       <div className="px-5 py-3 bg-muted/20 border-t border-border/50">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[11px] text-muted-foreground">Ready to deploy</span>
+          <span className="text-[11px] text-muted-foreground">
+            Ready to deploy
+          </span>
         </div>
       </div>
     </div>
@@ -288,8 +307,18 @@ export function TemplateConfigView({
       showBackButton
       backButtonLabel="Back"
       fallbackPath={`/projects/${projectId}/functions`}
-      onClose={() => navigate({ to: '/projects/$projectId/functions', params: { projectId: projectId! } })}
-      onBack={() => navigate({ to: '/projects/$projectId/functions/create', params: { projectId: projectId! } })}
+      onClose={() =>
+        navigate({
+          to: '/projects/$projectId/functions',
+          params: { projectId: projectId! },
+        })
+      }
+      onBack={() =>
+        navigate({
+          to: '/projects/$projectId/functions/create',
+          params: { projectId: projectId! },
+        })
+      }
       fullscreen
       maxWidth="max-w-[1400px]"
       footerAlign="right"
@@ -298,7 +327,12 @@ export function TemplateConfigView({
         <>
           <Button
             variant="outline"
-            onClick={() => navigate({ to: '/projects/$projectId/functions', params: { projectId: projectId! } })}
+            onClick={() =>
+              navigate({
+                to: '/projects/$projectId/functions',
+                params: { projectId: projectId! },
+              })
+            }
             disabled={isDeploying}
           >
             Cancel
@@ -306,7 +340,11 @@ export function TemplateConfigView({
           <Button
             onClick={handleDeploy}
             disabled={
-              isDeploying || !functionName || !runtime || !domain.trim() || !domainValid
+              isDeploying ||
+              !functionName ||
+              !runtime ||
+              !domain.trim() ||
+              !domainValid
             }
           >
             {isDeploying ? (
@@ -391,7 +429,8 @@ export function TemplateConfigView({
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            After deployment you can connect a custom domain via your function settings.{' '}
+            After deployment you can connect a custom domain via your function
+            settings.{' '}
             <a
               href="https://appwrite.io/docs/functions"
               target="_blank"
@@ -405,10 +444,7 @@ export function TemplateConfigView({
       </div>
 
       {/* Environment variables – shared card */}
-      <EnvironmentVariablesCard
-        variables={variables}
-        onChange={setVariables}
-      />
+      <EnvironmentVariablesCard variables={variables} onChange={setVariables} />
     </WizardLayout>
   )
 }

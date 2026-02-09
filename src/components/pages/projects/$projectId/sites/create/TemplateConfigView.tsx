@@ -54,9 +54,17 @@ import {
 import { VCSDetectionType } from '@appwrite.io/console'
 
 // Fade-in image component
-function FadeImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+function FadeImage({
+  src,
+  alt,
+  className,
+}: {
+  src: string
+  alt: string
+  className?: string
+}) {
   const [loaded, setLoaded] = useState(false)
-  
+
   return (
     <img
       src={src}
@@ -64,7 +72,7 @@ function FadeImage({ src, alt, className }: { src: string; alt: string; classNam
       className={cn(
         className,
         'transition-opacity duration-300',
-        loaded ? 'opacity-100' : 'opacity-0'
+        loaded ? 'opacity-100' : 'opacity-0',
       )}
       onLoad={() => setLoaded(true)}
     />
@@ -208,7 +216,8 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   // Mutations
   const createSiteMutation = useCreateSite(projectId)
   const createDomainMutation = useCreateSiteDomain(projectId)
-  const createTemplateDeploymentMutation = useCreateTemplateDeployment(projectId)
+  const createTemplateDeploymentMutation =
+    useCreateTemplateDeployment(projectId)
 
   const handleConnectRepoValueChange = (next: ConnectRepositoryValue) => {
     updateFormData({
@@ -231,10 +240,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
     }
 
     if (gitConnection === 'now') {
-      if (
-        !formData.installationId ||
-        !formData.providerRepositoryId
-      ) {
+      if (!formData.installationId || !formData.providerRepositoryId) {
         toast.error('Please select a repository')
         return
       }
@@ -367,7 +373,8 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
               {template.name}
             </h3>
             <p className="text-[11px] text-muted-foreground truncate">
-              {template.tagline || `${template.providerOwner}/${template.providerRepositoryId}`}
+              {template.tagline ||
+                `${template.providerOwner}/${template.providerRepositoryId}`}
             </p>
           </div>
         </div>
@@ -417,17 +424,18 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             </code>
           </div>
         )}
-        {template.providerRootDirectory && template.providerRootDirectory !== './' && (
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
-              <FolderOpen className="h-3.5 w-3.5" />
-              Root directory
-            </span>
-            <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded max-w-[120px] truncate">
-              {template.providerRootDirectory}
-            </code>
-          </div>
-        )}
+        {template.providerRootDirectory &&
+          template.providerRootDirectory !== './' && (
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
+                <FolderOpen className="h-3.5 w-3.5" />
+                Root directory
+              </span>
+              <code className="text-[12px] font-mono text-foreground bg-muted/50 px-2 py-0.5 rounded max-w-[120px] truncate">
+                {template.providerRootDirectory}
+              </code>
+            </div>
+          )}
         {template.variables && template.variables.length > 0 && (
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
@@ -485,7 +493,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       <div className="px-5 py-3 bg-muted/20 border-t border-border/50">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[11px] text-muted-foreground">Ready to deploy</span>
+          <span className="text-[11px] text-muted-foreground">
+            Ready to deploy
+          </span>
         </div>
       </div>
     </div>
@@ -516,11 +526,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       >
         <div className="text-center py-16">
           <p className="text-muted-foreground">Template not found</p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            asChild
-          >
+          <Button variant="outline" className="mt-4" asChild>
             <Link
               to="/projects/$projectId/sites/create/templates"
               params={{ projectId: projectId! }}
@@ -648,7 +654,8 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            Want to use your own domain? After deployment, you can connect a
+            custom domain via CNAME record or let Appwrite manage your DNS.{' '}
             <a
               href="https://appwrite.io/docs/products/sites/domains"
               target="_blank"
@@ -673,7 +680,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
             gitConnection === 'now'
               ? 'border-foreground bg-card/80'
-              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60'
+              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
           )}
         >
           <RadioGroupItem value="now" id="git-now" className="mt-1 shrink-0" />
@@ -682,7 +689,8 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
               Connect your repository
             </span>
             <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-              Clone this template into a new Git repository or link it to an existing one.
+              Clone this template into a new Git repository or link it to an
+              existing one.
             </p>
           </div>
         </Label>
@@ -692,16 +700,21 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             'relative flex items-start cursor-pointer rounded-xl border p-5 transition-all',
             gitConnection === 'later'
               ? 'border-foreground bg-card/80'
-              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60'
+              : 'border-border bg-card/50 hover:border-border/80 hover:bg-card/60',
           )}
         >
-          <RadioGroupItem value="later" id="git-later" className="mt-1 shrink-0" />
+          <RadioGroupItem
+            value="later"
+            id="git-later"
+            className="mt-1 shrink-0"
+          />
           <div className="ml-3 flex-1">
             <span className="text-[14px] font-medium text-foreground">
               Connect later
             </span>
             <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-              Deploy now and connect your version control later via CLI or Git integration in your settings.
+              Deploy now and connect your version control later via CLI or Git
+              integration in your settings.
             </p>
           </div>
         </Label>
@@ -717,7 +730,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           detectionType={VCSDetectionType.Framework}
           value={connectRepoValue}
           onValueChange={handleConnectRepoValueChange}
-          showBranchAndRoot={!!(formData.providerRepositoryId && formData.installationId)}
+          showBranchAndRoot={
+            !!(formData.providerRepositoryId && formData.installationId)
+          }
           branch={connectBranch}
           onBranchChange={(b) => {
             setConnectBranch(b)
@@ -734,106 +749,107 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       )}
 
       {/* Template variables section */}
-      {template.variables && template.variables.length > 0 && (() => {
-        const requiredKeys = new Set(
-          template.variables.filter((v) => v.required).map((v) => v.name),
-        )
-        const optionalKeys = new Set(
-          template.variables.filter((v) => !v.required).map((v) => v.name),
-        )
-        const requiredVars = variables.filter((v) => requiredKeys.has(v.key))
-        const optionalVars = variables.filter((v) => optionalKeys.has(v.key))
-
-        const renderVariable = (
-          variable: { key: string; value: string; secret: boolean },
-          indexInFull: number,
-        ) => {
-          const templateVar = template.variables?.find(
-            (v) => v.name === variable.key,
+      {template.variables &&
+        template.variables.length > 0 &&
+        (() => {
+          const requiredKeys = new Set(
+            template.variables.filter((v) => v.required).map((v) => v.name),
           )
-          return (
-            <div key={variable.key} className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-[13px] font-mono">
-                  {variable.key}
-                  {templateVar?.required && (
-                    <span className="text-destructive ml-1">*</span>
+          const optionalKeys = new Set(
+            template.variables.filter((v) => !v.required).map((v) => v.name),
+          )
+          const requiredVars = variables.filter((v) => requiredKeys.has(v.key))
+          const optionalVars = variables.filter((v) => optionalKeys.has(v.key))
+
+          const renderVariable = (
+            variable: { key: string; value: string; secret: boolean },
+            indexInFull: number,
+          ) => {
+            const templateVar = template.variables?.find(
+              (v) => v.name === variable.key,
+            )
+            return (
+              <div key={variable.key} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-[13px] font-mono">
+                    {variable.key}
+                    {templateVar?.required && (
+                      <span className="text-destructive ml-1">*</span>
+                    )}
+                  </Label>
+                  {templateVar?.secret && (
+                    <span className="text-[10px] text-muted-foreground">
+                      Secret
+                    </span>
                   )}
-                </Label>
-                {templateVar?.secret && (
-                  <span className="text-[10px] text-muted-foreground">
-                    Secret
-                  </span>
+                </div>
+                {templateVar?.description && (
+                  <p
+                    className="text-[11px] text-muted-foreground"
+                    dangerouslySetInnerHTML={{
+                      __html: templateVar.description,
+                    }}
+                  />
+                )}
+                <Input
+                  value={variable.value}
+                  onChange={(e) => {
+                    const newVars = [...variables]
+                    newVars[indexInFull] = {
+                      ...variable,
+                      value: e.target.value,
+                    }
+                    setVariables(newVars)
+                  }}
+                  placeholder={
+                    templateVar?.placeholder || `Enter ${variable.key}`
+                  }
+                  type={templateVar?.secret ? 'password' : 'text'}
+                  className="h-9 text-[13px] font-mono"
+                />
+              </div>
+            )
+          }
+
+          return (
+            <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-[15px] font-semibold text-foreground">
+                  Template variables
+                </h3>
+                <p className="text-[12px] text-muted-foreground mt-1">
+                  Configure the environment variables for this template
+                </p>
+              </div>
+              <div className="border-t border-border" />
+              <div className="px-6 py-4">
+                <div className="space-y-3">
+                  {requiredVars.map((variable) => {
+                    const indexInFull = variables.findIndex(
+                      (v) => v.key === variable.key,
+                    )
+                    return renderVariable(variable, indexInFull)
+                  })}
+                </div>
+                {optionalVars.length > 0 && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <h4 className="text-[13px] font-medium text-muted-foreground mb-3">
+                      Optional variables ({optionalVars.length})
+                    </h4>
+                    <div className="space-y-3">
+                      {optionalVars.map((variable) => {
+                        const indexInFull = variables.findIndex(
+                          (v) => v.key === variable.key,
+                        )
+                        return renderVariable(variable, indexInFull)
+                      })}
+                    </div>
+                  </div>
                 )}
               </div>
-              {templateVar?.description && (
-                <p
-                  className="text-[11px] text-muted-foreground"
-                  dangerouslySetInnerHTML={{
-                    __html: templateVar.description,
-                  }}
-                />
-              )}
-              <Input
-                value={variable.value}
-                onChange={(e) => {
-                  const newVars = [...variables]
-                  newVars[indexInFull] = {
-                    ...variable,
-                    value: e.target.value,
-                  }
-                  setVariables(newVars)
-                }}
-                placeholder={
-                  templateVar?.placeholder || `Enter ${variable.key}`
-                }
-                type={templateVar?.secret ? 'password' : 'text'}
-                className="h-9 text-[13px] font-mono"
-              />
             </div>
           )
-        }
-
-        return (
-          <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-            <div className="px-6 py-4">
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Template variables
-              </h3>
-              <p className="text-[12px] text-muted-foreground mt-1">
-                Configure the environment variables for this template
-              </p>
-            </div>
-            <div className="border-t border-border" />
-            <div className="px-6 py-4">
-              <div className="space-y-3">
-                {requiredVars.map((variable) => {
-                  const indexInFull = variables.findIndex(
-                    (v) => v.key === variable.key,
-                  )
-                  return renderVariable(variable, indexInFull)
-                })}
-              </div>
-              {optionalVars.length > 0 && (
-                <div className="mt-4 border-t border-border pt-4">
-                  <h4 className="text-[13px] font-medium text-muted-foreground mb-3">
-                    Optional variables ({optionalVars.length})
-                  </h4>
-                  <div className="space-y-3">
-                    {optionalVars.map((variable) => {
-                      const indexInFull = variables.findIndex(
-                        (v) => v.key === variable.key,
-                      )
-                      return renderVariable(variable, indexInFull)
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )
-      })()}
-
+        })()}
     </WizardLayout>
   )
 }

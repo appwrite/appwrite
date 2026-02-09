@@ -18,7 +18,11 @@ function eventMatches(events: string[], prefix: string): boolean {
 /** Check if the event list includes an exact or wildcard match */
 function hasEvent(events: string[], name: string): boolean {
   if (events.includes(name)) return true
-  if (name.endsWith('.*') && events.some((e) => e.startsWith(name.slice(0, -2)))) return true
+  if (
+    name.endsWith('.*') &&
+    events.some((e) => e.startsWith(name.slice(0, -2)))
+  )
+    return true
   return false
 }
 
@@ -36,7 +40,8 @@ function handleRealtimeEvent(
   // Project-scoped filter: only react if this event is for our project
   const projectChannel = `projects.${projectId}`
   const isForThisProject =
-    channels.includes(projectChannel) || channels.some((c) => c.startsWith('projects.') && c.includes(projectId))
+    channels.includes(projectChannel) ||
+    channels.some((c) => c.startsWith('projects.') && c.includes(projectId))
 
   // Console-level events (sites, functions deployments/executions) - no project filter
   if (hasEvent(events, REALTIME_EVENTS.SITES_ANY)) {
@@ -48,8 +53,12 @@ function handleRealtimeEvent(
     hasEvent(events, REALTIME_EVENTS.SITES_DEPLOYMENT_DELETE) ||
     eventMatches(events, REALTIME_EVENTS.SITES_DEPLOYMENTS_ANY)
   ) {
-    queryClient.invalidateQueries({ queryKey: ['deployments', 'site', projectId] })
-    queryClient.invalidateQueries({ queryKey: ['deployment', 'site', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['deployments', 'site', projectId],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['deployment', 'site', projectId],
+    })
     queryClient.invalidateQueries({ queryKey: ['site', 'project', projectId] })
   }
   if (hasEvent(events, REALTIME_EVENTS.SITES_EXECUTIONS_ANY)) {
@@ -62,13 +71,23 @@ function handleRealtimeEvent(
     hasEvent(events, REALTIME_EVENTS.FUNCTIONS_DEPLOYMENT_DELETE) ||
     eventMatches(events, REALTIME_EVENTS.FUNCTIONS_DEPLOYMENTS_ANY)
   ) {
-    queryClient.invalidateQueries({ queryKey: ['functions', 'project', projectId] })
-    queryClient.invalidateQueries({ queryKey: ['function', 'project', projectId] })
-    queryClient.invalidateQueries({ queryKey: ['deployment', 'function', projectId] })
-    queryClient.invalidateQueries({ queryKey: ['deployments', 'function', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['functions', 'project', projectId],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['function', 'project', projectId],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['deployment', 'function', projectId],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['deployments', 'function', projectId],
+    })
   }
   if (hasEvent(events, REALTIME_EVENTS.FUNCTIONS_EXECUTIONS_ANY)) {
-    queryClient.invalidateQueries({ queryKey: ['executions', 'function', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['executions', 'function', projectId],
+    })
   }
 
   // Project-scoped events: only invalidate if the event is for this project
@@ -80,31 +99,49 @@ function handleRealtimeEvent(
     hasEvent(events, REALTIME_EVENTS.DATABASES_TABLES_COLUMNS_UPDATE) ||
     hasEvent(events, REALTIME_EVENTS.DATABASES_TABLES_COLUMNS_DELETE)
   ) {
-    queryClient.invalidateQueries({ queryKey: ['columns', 'project', projectId] })
-    queryClient.invalidateQueries({ queryKey: ['tables', 'project', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['columns', 'project', projectId],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['tables', 'project', projectId],
+    })
     queryClient.invalidateQueries({ queryKey: ['table', 'project', projectId] })
   }
   if (hasEvent(events, REALTIME_EVENTS.DATABASES_TABLES_INDEXES_ANY)) {
-    queryClient.invalidateQueries({ queryKey: ['indexes', 'project', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['indexes', 'project', projectId],
+    })
     queryClient.invalidateQueries({ queryKey: ['table', 'project', projectId] })
   }
   if (hasEvent(events, REALTIME_EVENTS.DATABASES_TABLES_COLUMNS_ANY)) {
-    queryClient.invalidateQueries({ queryKey: ['databases', 'project', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['databases', 'project', projectId],
+    })
   }
 
   if (hasEvent(events, REALTIME_EVENTS.ARCHIVES_ANY)) {
-    queryClient.invalidateQueries({ queryKey: ['backup-archives', 'project', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['backup-archives', 'project', projectId],
+    })
   }
   if (hasEvent(events, REALTIME_EVENTS.RESTORATIONS_ANY)) {
-    queryClient.invalidateQueries({ queryKey: ['restorations', 'project', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['restorations', 'project', projectId],
+    })
   }
   if (hasEvent(events, REALTIME_EVENTS.POLICIES_ANY)) {
-    queryClient.invalidateQueries({ queryKey: ['backup-policies', 'project', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['backup-policies', 'project', projectId],
+    })
   }
 
   if (hasEvent(events, REALTIME_EVENTS.MIGRATIONS_ANY)) {
-    queryClient.invalidateQueries({ queryKey: ['migrations', 'project', projectId] })
-    queryClient.invalidateQueries({ queryKey: ['migration', 'project', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['migrations', 'project', projectId],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['migration', 'project', projectId],
+    })
   }
 
   if (events.includes(`projects.${projectId}.ping`)) {
@@ -116,8 +153,12 @@ function handleRealtimeEvent(
   }
 
   if (hasEvent(events, REALTIME_EVENTS.RULES_UPDATE)) {
-    queryClient.invalidateQueries({ queryKey: ['proxy-rules', 'project', projectId] })
-    queryClient.invalidateQueries({ queryKey: ['proxy-rule', 'project', projectId] })
+    queryClient.invalidateQueries({
+      queryKey: ['proxy-rules', 'project', projectId],
+    })
+    queryClient.invalidateQueries({
+      queryKey: ['proxy-rule', 'project', projectId],
+    })
   }
 }
 
@@ -158,7 +199,11 @@ export async function subscribeProjectRealtime(
   const consoleRealtime = sdk.getConsoleRealtime()
   const sub = await consoleRealtime.subscribe(
     [...PROJECT_CHANNELS],
-    handler as (event: { events: string[]; channels: string[]; payload: unknown }) => void,
+    handler as (event: {
+      events: string[]
+      channels: string[]
+      payload: unknown
+    }) => void,
   )
 
   return async function cleanup() {

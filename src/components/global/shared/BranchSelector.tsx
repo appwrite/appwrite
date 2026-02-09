@@ -63,10 +63,7 @@ export function BranchSelector({
               <Info className="h-3.5 w-3.5" />
             </button>
           </TooltipTrigger>
-          <TooltipContent
-            side="top"
-            className="max-w-[240px] z-[200]"
-          >
+          <TooltipContent side="top" className="max-w-[240px] z-[200]">
             {labelTooltip}
           </TooltipContent>
         </Tooltip>
@@ -75,11 +72,12 @@ export function BranchSelector({
   )
 
   // Fetch branches
-  const { data: branchesData, isLoading: branchesLoading } = useRepositoryBranches(
-    projectId,
-    installationId || null,
-    providerRepositoryId || null,
-  )
+  const { data: branchesData, isLoading: branchesLoading } =
+    useRepositoryBranches(
+      projectId,
+      installationId || null,
+      providerRepositoryId || null,
+    )
 
   // Sort branches: main/master first, then alphabetically
   const sortedBranches = useMemo(() => {

@@ -35,11 +35,7 @@ export function FrameworkIcon({
       <img
         src={`/icons/${iconFile}`}
         alt={framework}
-        className={cn(
-          sizeClass,
-          'brightness-0 dark:brightness-100',
-          className,
-        )}
+        className={cn(sizeClass, 'brightness-0 dark:brightness-100', className)}
       />
     )
   }

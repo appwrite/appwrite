@@ -3,7 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { useNavigationHistorySafe } from '@/components/global/providers/NavigationHistoryProvider'
 
 interface UseSmartNavigationOptions {
-  /** 
+  /**
    * Explicit path to navigate to when closing.
    * If provided, this path will always be used instead of internal history.
    */

@@ -32,7 +32,10 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
     if (orgId) {
       try {
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Organization data fetch timeout')), 10000)
+          setTimeout(
+            () => reject(new Error('Organization data fetch timeout')),
+            10000,
+          )
         })
 
         await Promise.race([
@@ -43,7 +46,12 @@ export const Route = createFileRoute('/_public/organizations/$orgId')({
               activeProjectsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
             ),
             queryClient.ensureQueryData(
-              organizationMembershipsQueryOptions(orgId, 0, DEFAULT_PAGE_SIZE, ''),
+              organizationMembershipsQueryOptions(
+                orgId,
+                0,
+                DEFAULT_PAGE_SIZE,
+                '',
+              ),
             ),
           ]),
           timeoutPromise,

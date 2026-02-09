@@ -1267,8 +1267,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return
     }
     try {
-      const { formatSchemaAsMarkdown } =
-        await import('@/lib/utils/database-schema-export')
+      const { formatSchemaAsMarkdown } = await import(
+        '@/lib/utils/database-schema-export'
+      )
       const markdown = formatSchemaAsMarkdown(databaseSchema)
       await navigator.clipboard.writeText(markdown)
       toast.success('Schema copied to clipboard')
@@ -1284,8 +1285,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return
     }
     try {
-      const { getChatGPTDeepLink, formatSchemaAsMarkdown } =
-        await import('@/lib/utils/database-schema-export')
+      const { getChatGPTDeepLink, formatSchemaAsMarkdown } = await import(
+        '@/lib/utils/database-schema-export'
+      )
       const deepLink = getChatGPTDeepLink(databaseSchema)
       // Also copy to clipboard as fallback
       const markdown = formatSchemaAsMarkdown(databaseSchema)
@@ -1303,8 +1305,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return
     }
     try {
-      const { getClaudeDeepLink, formatSchemaAsMarkdown } =
-        await import('@/lib/utils/database-schema-export')
+      const { getClaudeDeepLink, formatSchemaAsMarkdown } = await import(
+        '@/lib/utils/database-schema-export'
+      )
       const deepLink = getClaudeDeepLink(databaseSchema)
       // Also copy to clipboard as fallback
       const markdown = formatSchemaAsMarkdown(databaseSchema)
@@ -1322,8 +1325,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return
     }
     try {
-      const { getCursorDeepLink, formatSchemaAsJSON } =
-        await import('@/lib/utils/database-schema-export')
+      const { getCursorDeepLink, formatSchemaAsJSON } = await import(
+        '@/lib/utils/database-schema-export'
+      )
       const deepLink = getCursorDeepLink(databaseSchema)
       // Also copy to clipboard as fallback
       const json = formatSchemaAsJSON(databaseSchema)
@@ -1346,8 +1350,9 @@ export function SchemaVisualizer({ databaseId }: SchemaVisualizerProps) {
       return
     }
     try {
-      const { getLovableDeepLink, formatSchemaAsJSON } =
-        await import('@/lib/utils/database-schema-export')
+      const { getLovableDeepLink, formatSchemaAsJSON } = await import(
+        '@/lib/utils/database-schema-export'
+      )
       const deepLink = getLovableDeepLink(databaseSchema)
       // Also copy to clipboard as fallback
       const json = formatSchemaAsJSON(databaseSchema)

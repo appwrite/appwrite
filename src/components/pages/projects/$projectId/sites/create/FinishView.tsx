@@ -188,11 +188,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
       maxWidth="max-w-[1400px]"
       footerAlign="right"
       sidebar={sidebarContent}
-      footer={
-        <Button onClick={handleGoToDashboard}>
-          Go to dashboard
-        </Button>
-      }
+      footer={<Button onClick={handleGoToDashboard}>Go to dashboard</Button>}
     >
       {/* Site preview card */}
       {site && (

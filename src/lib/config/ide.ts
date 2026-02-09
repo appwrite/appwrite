@@ -122,7 +122,10 @@ export function getIDEById(id: string): IDEConfig | undefined {
  * @param prompt - The prompt to pass to the AI chat
  * @returns The deeplink URL or null if not supported
  */
-export function generateAIChatDeeplink(ide: IDEConfig, prompt: string): string | null {
+export function generateAIChatDeeplink(
+  ide: IDEConfig,
+  prompt: string,
+): string | null {
   if (!ide.supportsAIChat || !ide.aiChatDeeplink) {
     return null
   }

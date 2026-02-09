@@ -16,7 +16,10 @@ import {
   fetchProject,
 } from '@/lib/react-query/hooks'
 import { useQuery } from '@tanstack/react-query'
-import { WizardProvider, useWizard } from '@/components/pages/projects/$projectId/sites/create/WizardContext'
+import {
+  WizardProvider,
+  useWizard,
+} from '@/components/pages/projects/$projectId/sites/create/WizardContext'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/create',

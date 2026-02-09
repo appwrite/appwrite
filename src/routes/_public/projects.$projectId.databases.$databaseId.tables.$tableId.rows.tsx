@@ -140,7 +140,9 @@ export const Route = createFileRoute(
 
         // Prefetch indexes (optional data, not critical for rows tab) - doesn't block
         queryClient
-          .prefetchQuery(tableIndexesQueryOptions(projectId, databaseId, tableId))
+          .prefetchQuery(
+            tableIndexesQueryOptions(projectId, databaseId, tableId),
+          )
           .catch(() => {
             // Don't block on optional data errors
           }),

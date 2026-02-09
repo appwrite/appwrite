@@ -30,7 +30,16 @@ import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { BranchSelector } from '@/components/global/shared/BranchSelector'
 import { RootDirectoryPicker } from '@/components/global/shared/RootDirectoryPicker'
-import { ExternalLink, Loader2, Lock, Globe, GitBranch, Key, FolderOpen, Layers } from 'lucide-react'
+import {
+  ExternalLink,
+  Loader2,
+  Lock,
+  Globe,
+  GitBranch,
+  Key,
+  FolderOpen,
+  Layers,
+} from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -99,11 +108,19 @@ export function RepositoryConfigView({
   const [siteId, setSiteId] = useState<string | undefined>(formData.siteId)
   const [framework, setFramework] = useState(formData.framework || '')
   const [branch, setBranch] = useState(formData.providerBranch || 'main')
-  const [rootDirectory, setRootDirectory] = useState(formData.providerRootDirectory || './')
-  const [silentMode, setSilentMode] = useState(formData.providerSilentMode || false)
-  const [installCommand, setInstallCommand] = useState(formData.installCommand || '')
+  const [rootDirectory, setRootDirectory] = useState(
+    formData.providerRootDirectory || './',
+  )
+  const [silentMode, setSilentMode] = useState(
+    formData.providerSilentMode || false,
+  )
+  const [installCommand, setInstallCommand] = useState(
+    formData.installCommand || '',
+  )
   const [buildCommand, setBuildCommand] = useState(formData.buildCommand || '')
-  const [outputDirectory, setOutputDirectory] = useState(formData.outputDirectory || '')
+  const [outputDirectory, setOutputDirectory] = useState(
+    formData.outputDirectory || '',
+  )
   const [variables, setVariables] = useState(formData.variables || [])
   const [domain, setDomain] = useState(formData.domain || '')
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
@@ -335,11 +352,15 @@ export function RepositoryConfigView({
               )}
             </div>
             <p className="text-[11px] text-muted-foreground truncate">
-              {repository ? `${repository.organization}/${repository.name}` : repoName}
+              {repository
+                ? `${repository.organization}/${repository.name}`
+                : repoName}
               {repository?.pushedAt && (
                 <>
                   <span className="mx-1.5">·</span>
-                  <span>Updated <DateTooltip date={repository.pushedAt} /></span>
+                  <span>
+                    Updated <DateTooltip date={repository.pushedAt} />
+                  </span>
                 </>
               )}
             </p>
@@ -385,7 +406,9 @@ export function RepositoryConfigView({
             </span>
             <span className="flex items-center gap-1.5 text-[12px] text-foreground">
               <FrameworkIcon framework={framework} size="sm" />
-              <span className="capitalize">{frameworkInfo?.name || framework}</span>
+              <span className="capitalize">
+                {frameworkInfo?.name || framework}
+              </span>
             </span>
           </div>
         )}
@@ -395,7 +418,9 @@ export function RepositoryConfigView({
               <Key className="h-3.5 w-3.5" />
               Variables
             </span>
-            <span className="text-[12px] text-foreground">{variables.length} configured</span>
+            <span className="text-[12px] text-foreground">
+              {variables.length} configured
+            </span>
           </div>
         )}
       </div>
@@ -404,7 +429,9 @@ export function RepositoryConfigView({
       <div className="px-5 py-3 bg-muted/20 border-t border-border/50">
         <div className="flex items-center gap-2">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[11px] text-muted-foreground">Ready to deploy</span>
+          <span className="text-[11px] text-muted-foreground">
+            Ready to deploy
+          </span>
         </div>
       </div>
     </div>
@@ -585,7 +612,8 @@ export function RepositoryConfigView({
         </div>
         <div className="px-6 py-4 border-t border-border bg-muted/20">
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Want to use your own domain? After deployment, you can connect a custom domain via CNAME record or let Appwrite manage your DNS.{' '}
+            Want to use your own domain? After deployment, you can connect a
+            custom domain via CNAME record or let Appwrite manage your DNS.{' '}
             <a
               href="https://appwrite.io/docs/products/sites/domains"
               target="_blank"
@@ -669,11 +697,7 @@ export function RepositoryConfigView({
       />
 
       {/* Environment variables */}
-      <EnvironmentVariables
-        variables={variables}
-        onChange={setVariables}
-      />
-
+      <EnvironmentVariables variables={variables} onChange={setVariables} />
     </WizardLayout>
   )
 }

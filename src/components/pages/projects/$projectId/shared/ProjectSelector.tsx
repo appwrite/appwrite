@@ -121,7 +121,14 @@ export function ProjectSelector({
 
       // Prefetch the first page of projects for this team
       queryClient.prefetchInfiniteQuery({
-        queryKey: ['projects', 'team', 'infinite', teamId, projectsPageSize, ''],
+        queryKey: [
+          'projects',
+          'team',
+          'infinite',
+          teamId,
+          projectsPageSize,
+          '',
+        ],
         queryFn: ({ pageParam = 0 }) =>
           fetchActiveProjects(teamId, pageParam, projectsPageSize, ''),
         initialPageParam: 0,
@@ -138,7 +145,14 @@ export function ProjectSelector({
       if (team.$id === selectedTeam?.$id) return
 
       // Check if we already have cached data for this team
-      const queryKey = ['projects', 'team', 'infinite', team.$id, projectsPageSize, '']
+      const queryKey = [
+        'projects',
+        'team',
+        'infinite',
+        team.$id,
+        projectsPageSize,
+        '',
+      ]
       const cachedData = queryClient.getQueryData(queryKey)
 
       if (cachedData) {

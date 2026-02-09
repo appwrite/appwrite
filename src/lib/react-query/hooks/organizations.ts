@@ -12,7 +12,10 @@ import {
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { Query, ID } from '@appwrite.io/console'
-import { BillingPlanTier, type BillingPlanTier as BillingPlanTierType } from '@/lib/constants/billing-plan'
+import {
+  BillingPlanTier,
+  type BillingPlanTier as BillingPlanTierType,
+} from '@/lib/constants/billing-plan'
 import type { Organization } from '@/lib/utils/mock-data'
 import { sdk } from '@/lib/appwrite/sdk'
 import { getPlanNameFromTier } from '@/lib/utils/plan-filter'

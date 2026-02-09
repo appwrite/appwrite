@@ -197,13 +197,16 @@ function getVcsProvider(
 /**
  * Get VCS provider type from deployment
  */
-function getVcsProviderType(deployment: any): 'github' | 'gitlab' | 'bitbucket' | null {
+function getVcsProviderType(
+  deployment: any,
+): 'github' | 'gitlab' | 'bitbucket' | null {
   // Check provider from URL or vcsProvider field
   if (deployment.providerRepositoryUrl) {
     const url = deployment.providerRepositoryUrl.toLowerCase()
     if (url.includes('github.com')) return 'github'
     if (url.includes('gitlab.com')) return 'gitlab'
-    if (url.includes('bitbucket.org') || url.includes('bitbucket.com')) return 'bitbucket'
+    if (url.includes('bitbucket.org') || url.includes('bitbucket.com'))
+      return 'bitbucket'
   }
 
   // Fallback to vcsProvider field
@@ -221,7 +224,10 @@ function getVcsProviderType(deployment: any): 'github' | 'gitlab' | 'bitbucket' 
  * Build repository URL from deployment VCS provider info
  */
 function getRepositoryUrl(deployment: any): string | null {
-  if (!deployment.providerRepositoryOwner || !deployment.providerRepositoryName) {
+  if (
+    !deployment.providerRepositoryOwner ||
+    !deployment.providerRepositoryName
+  ) {
     return null
   }
 
@@ -248,7 +254,11 @@ function getRepositoryUrl(deployment: any): string | null {
  * Build commit URL from deployment VCS provider info
  */
 function getCommitUrl(deployment: any): string | null {
-  if (!deployment.providerCommitHash || !deployment.providerRepositoryOwner || !deployment.providerRepositoryName) {
+  if (
+    !deployment.providerCommitHash ||
+    !deployment.providerRepositoryOwner ||
+    !deployment.providerRepositoryName
+  ) {
     return null
   }
 
@@ -276,7 +286,11 @@ function getCommitUrl(deployment: any): string | null {
  * Build branch URL from deployment VCS provider info
  */
 function getBranchUrl(deployment: any): string | null {
-  if (!deployment.providerBranch || !deployment.providerRepositoryOwner || !deployment.providerRepositoryName) {
+  if (
+    !deployment.providerBranch ||
+    !deployment.providerRepositoryOwner ||
+    !deployment.providerRepositoryName
+  ) {
     return null
   }
 
@@ -311,14 +325,14 @@ function generateAIFixPrompt(
 ): string {
   const resourceType = isSite ? 'Site' : 'Function'
   const buildLogs = deployment.buildLogs || ''
-  
+
   // Get the last 100 lines of logs to avoid overly long prompts
   const logLines = buildLogs.split('\n')
   const lastLogs = logLines.slice(-100).join('\n')
-  
+
   // Strip ANSI codes from logs for clean markdown
   const cleanLogs = lastLogs.replace(/\x1b\[(\d+(?:;\d+)*)?m/g, '')
-  
+
   let prompt = `# Fix Appwrite ${resourceType} Deployment Failure
 
 ## Context
@@ -327,24 +341,24 @@ function generateAIFixPrompt(
   if (resourceName) {
     prompt += `- **${resourceType} Name**: ${resourceName}\n`
   }
-  
+
   prompt += `- **Deployment ID**: ${deployment.$id}\n`
-  
+
   if (runtime) {
     prompt += `- **Runtime**: ${runtime}\n`
   }
-  
+
   prompt += `- **Status**: Failed\n`
   prompt += `- **Created**: ${new Date(deployment.$createdAt).toISOString()}\n`
-  
+
   if (deployment.providerBranch) {
     prompt += `- **Branch**: ${deployment.providerBranch}\n`
   }
-  
+
   if (deployment.providerCommitHash) {
     prompt += `- **Commit**: ${deployment.providerCommitHash.slice(0, 7)}\n`
   }
-  
+
   if (deployment.providerCommitMessage) {
     prompt += `- **Commit Message**: ${deployment.providerCommitMessage}\n`
   }
@@ -375,31 +389,53 @@ export interface DeploymentDetailViewConfig {
   deploymentId: string
   deployment: Models.Deployment | undefined
   isLoading: boolean
-  parentResource: { name?: string; deploymentId?: string; runtime?: string } | undefined // site or function
+  parentResource:
+    | { name?: string; deploymentId?: string; runtime?: string }
+    | undefined // site or function
   deployments: Models.Deployment[]
   relatedData?: { total?: number } // logs or executions count
-  
+
   // Navigation
   deploymentDetailRoute: string // Route pattern for deployment detail
   listRoute: string // Route pattern for parent resource list
   relatedRoute?: string // Route pattern for related data (logs/executions)
-  
+
   // Actions
   onDelete: (deploymentId: string) => Promise<void>
-  onDownloadSource: (projectId: string, resourceId: string, deploymentId: string) => void
-  onDownloadBuild: (projectId: string, resourceId: string, deploymentId: string) => void
-  onRedeploy?: (projectId: string, resourceId: string, deploymentId: string) => Promise<void>
-  onActivate?: (projectId: string, resourceId: string, deploymentId: string) => Promise<void>
+  onDownloadSource: (
+    projectId: string,
+    resourceId: string,
+    deploymentId: string,
+  ) => void
+  onDownloadBuild: (
+    projectId: string,
+    resourceId: string,
+    deploymentId: string,
+  ) => void
+  onRedeploy?: (
+    projectId: string,
+    resourceId: string,
+    deploymentId: string,
+  ) => Promise<void>
+  onActivate?: (
+    projectId: string,
+    resourceId: string,
+    deploymentId: string,
+  ) => Promise<void>
   onNavigateToRelated?: (deploymentId: string) => void
-  
+
   // UI
   relatedDataLabel?: string // "Logs" or "Executions"
   showRuntime?: boolean // Show runtime metadata (for functions)
-  RuntimeIcon?: React.ComponentType<{ runtime: string; size?: string; className?: string }>
-  
+  RuntimeIcon?: React.ComponentType<{
+    runtime: string
+    size?: string
+    className?: string
+  }>
+
   // Query invalidation
   invalidateQueries: Array<string | string[]>
-  
+
   // Fallback path
   fallbackPath: string
 }
@@ -442,7 +478,8 @@ export function DeploymentDetailView({
   // Live elapsed seconds when deployment is processing/building (updates every second)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   useEffect(() => {
-    if (!deployment?.$createdAt || !isDeploymentInProgress(deployment.status)) return
+    if (!deployment?.$createdAt || !isDeploymentInProgress(deployment.status))
+      return
     const tick = () => {
       const created = new Date(deployment.$createdAt).getTime()
       setElapsedSeconds(Math.floor((Date.now() - created) / 1000))
@@ -466,7 +503,7 @@ export function DeploymentDetailView({
       }
       return null
     }
-    
+
     // Fallback to string parsing
     const searchParams = new URLSearchParams(
       typeof location.search === 'string' ? location.search : '',
@@ -476,7 +513,8 @@ export function DeploymentDetailView({
   }, [search, location.search])
 
   // Determine if this is a site or function deployment (needed for navigation)
-  const isSiteDeployment = resourceId.includes('site') || deploymentDetailRoute.includes('sites')
+  const isSiteDeployment =
+    resourceId.includes('site') || deploymentDetailRoute.includes('sites')
   const parentResourceParam = isSiteDeployment ? 'siteId' : 'functionId'
 
   // Get current deployment index and find previous/next
@@ -512,7 +550,8 @@ export function DeploymentDetailView({
 
   // Check if deployment failed (including timeout)
   const isDeploymentFailed = deployment
-    ? deployment.status === 'failed' || isDeploymentTimeout(deployment.status, deployment.$createdAt)
+    ? deployment.status === 'failed' ||
+      isDeploymentTimeout(deployment.status, deployment.$createdAt)
     : false
 
   // Generate AI fix prompt
@@ -524,7 +563,13 @@ export function DeploymentDetailView({
       parentResource?.name,
       isSiteDeployment,
     )
-  }, [deployment, isDeploymentFailed, parentResource?.runtime, parentResource?.name, isSiteDeployment])
+  }, [
+    deployment,
+    isDeploymentFailed,
+    parentResource?.runtime,
+    parentResource?.name,
+    isSiteDeployment,
+  ])
 
   // IDE configurations (only those that support AI chat)
   const aiChatIDEs = useMemo(() => getAIChatIDEs(), [])
@@ -576,7 +621,9 @@ export function DeploymentDetailView({
     onSuccess: async () => {
       // Refetch lists so the UI updates (lists use refetchOnMount: false)
       for (const queryKey of invalidateQueries) {
-        const normalizedKey: readonly unknown[] = Array.isArray(queryKey) ? queryKey : [queryKey]
+        const normalizedKey: readonly unknown[] = Array.isArray(queryKey)
+          ? queryKey
+          : [queryKey]
         await queryClient.refetchQueries({ queryKey: normalizedKey })
       }
       toast.success('Deployment deleted successfully')
@@ -602,7 +649,9 @@ export function DeploymentDetailView({
     },
     onSuccess: () => {
       invalidateQueries.forEach((queryKey) => {
-        const normalizedKey: readonly unknown[] = Array.isArray(queryKey) ? queryKey : [queryKey]
+        const normalizedKey: readonly unknown[] = Array.isArray(queryKey)
+          ? queryKey
+          : [queryKey]
         queryClient.invalidateQueries({ queryKey: normalizedKey })
       })
       toast.success('Deployment rebuild started')
@@ -623,7 +672,9 @@ export function DeploymentDetailView({
     },
     onSuccess: () => {
       invalidateQueries.forEach((queryKey) => {
-        const normalizedKey: readonly unknown[] = Array.isArray(queryKey) ? queryKey : [queryKey]
+        const normalizedKey: readonly unknown[] = Array.isArray(queryKey)
+          ? queryKey
+          : [queryKey]
         queryClient.invalidateQueries({ queryKey: normalizedKey })
       })
       toast.success('Deployment activated successfully')
@@ -717,7 +768,7 @@ export function DeploymentDetailView({
 
     // Listen for scroll events
     scrollContainer.addEventListener('scroll', updateScrollPosition)
-    
+
     // Also listen for resize to recalculate
     window.addEventListener('resize', updateScrollPosition)
 
@@ -745,7 +796,7 @@ export function DeploymentDetailView({
     // Retry mechanism to ensure DOM has updated with refs
     let retryCount = 0
     const maxRetries = 10
-    
+
     const tryScroll = () => {
       const lineElement = lineRefs.current.get(selectedLine)
       if (!lineElement) {
@@ -763,7 +814,8 @@ export function DeploymentDetailView({
       // Calculate position relative to scroll container
       const containerRect = scrollContainer.getBoundingClientRect()
       const elementRect = lineElement.getBoundingClientRect()
-      const relativeTop = elementRect.top - containerRect.top + scrollContainer.scrollTop
+      const relativeTop =
+        elementRect.top - containerRect.top + scrollContainer.scrollTop
 
       // Scroll to line with some padding from top
       scrollContainer.scrollTo({
@@ -884,7 +936,9 @@ export function DeploymentDetailView({
           {parentResource?.name && (
             <>
               {' '}
-              <span className="text-muted-foreground hidden sm:inline">for</span>{' '}
+              <span className="text-muted-foreground hidden sm:inline">
+                for
+              </span>{' '}
               <Link
                 to={listRoute as any}
                 params={{ projectId, [parentResourceParam]: resourceId } as any}
@@ -894,8 +948,18 @@ export function DeploymentDetailView({
               </Link>
             </>
           )}
-          <CopyableId id={deployment.$id} size="sm" maxWidth={300} className="hidden sm:inline-flex" />
-          <CopyableId id={deployment.$id} size="sm" maxWidth={200} className="sm:hidden" />
+          <CopyableId
+            id={deployment.$id}
+            size="sm"
+            maxWidth={300}
+            className="hidden sm:inline-flex"
+          />
+          <CopyableId
+            id={deployment.$id}
+            size="sm"
+            maxWidth={200}
+            className="sm:hidden"
+          />
         </>
       }
       headerActions={
@@ -911,7 +975,10 @@ export function DeploymentDetailView({
                 if (previousDeployment) {
                   navigate({
                     to: deploymentDetailRoute as any,
-                    params: { ...routeParams, deploymentId: previousDeployment.$id } as any,
+                    params: {
+                      ...routeParams,
+                      deploymentId: previousDeployment.$id,
+                    } as any,
                   })
                 }
               }}
@@ -927,7 +994,10 @@ export function DeploymentDetailView({
                 if (nextDeployment) {
                   navigate({
                     to: deploymentDetailRoute as any,
-                    params: { ...routeParams, deploymentId: nextDeployment.$id } as any,
+                    params: {
+                      ...routeParams,
+                      deploymentId: nextDeployment.$id,
+                    } as any,
                   })
                 }
               }}
@@ -945,7 +1015,9 @@ export function DeploymentDetailView({
               <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
                 {/* Deployed */}
                 <div className="flex items-center gap-2">
-                  <span className="text-[12px] sm:text-[13px] text-muted-foreground">Deployed</span>
+                  <span className="text-[12px] sm:text-[13px] text-muted-foreground">
+                    Deployed
+                  </span>
                   <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
                     <DateTooltip date={deployment.$createdAt} />
                   </span>
@@ -953,10 +1025,13 @@ export function DeploymentDetailView({
 
                 {/* Total size */}
                 <div className="flex items-center gap-2">
-                  <span className="text-[12px] sm:text-[13px] text-muted-foreground">Size</span>
+                  <span className="text-[12px] sm:text-[13px] text-muted-foreground">
+                    Size
+                  </span>
                   <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
                     {formatSize(
-                      (deployment.buildSize || 0) + (deployment.sourceSize || 0),
+                      (deployment.buildSize || 0) +
+                        (deployment.sourceSize || 0),
                     )}
                   </span>
                 </div>
@@ -966,9 +1041,13 @@ export function DeploymentDetailView({
                   deployment.providerRepositoryOwner &&
                   deployment.providerRepositoryName && (
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">Source</span>
+                      <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
+                        Source
+                      </span>
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="text-muted-foreground shrink-0">{vcsProvider.icon}</span>
+                        <span className="text-muted-foreground shrink-0">
+                          {vcsProvider.icon}
+                        </span>
                         {repositoryUrl ? (
                           <a
                             href={repositoryUrl}
@@ -1024,8 +1103,8 @@ export function DeploymentDetailView({
                             {deployment.providerCommitHash.slice(0, 7)}
                           </button>
                         </PopoverTrigger>
-                        <PopoverContent 
-                          side="bottom" 
+                        <PopoverContent
+                          side="bottom"
                           align="start"
                           className="max-w-sm z-[200]"
                           sideOffset={4}
@@ -1072,9 +1151,15 @@ export function DeploymentDetailView({
                 {/* Runtime - Only for functions */}
                 {showRuntime && parentResource?.runtime && RuntimeIcon && (
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">Runtime</span>
+                    <span className="text-[12px] sm:text-[13px] text-muted-foreground shrink-0">
+                      Runtime
+                    </span>
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <RuntimeIcon runtime={parentResource.runtime} size="sm" className="h-3.5 w-3.5 shrink-0" />
+                      <RuntimeIcon
+                        runtime={parentResource.runtime}
+                        size="sm"
+                        className="h-3.5 w-3.5 shrink-0"
+                      />
                       <span className="text-[12px] sm:text-[13px] font-mono font-medium text-foreground truncate">
                         {parentResource.runtime}
                       </span>
@@ -1084,7 +1169,9 @@ export function DeploymentDetailView({
 
                 {/* Type */}
                 <div className="flex items-center gap-2">
-                  <span className="text-[13px] text-muted-foreground">Type</span>
+                  <span className="text-[13px] text-muted-foreground">
+                    Type
+                  </span>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[13px] font-medium text-foreground">
                       {deployment.type === 'cli'
@@ -1105,7 +1192,11 @@ export function DeploymentDetailView({
                             <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help hover:text-foreground transition-colors" />
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent side="top" sideOffset={4} className="max-w-xs z-[200]">
+                        <TooltipContent
+                          side="top"
+                          sideOffset={4}
+                          className="max-w-xs z-[200]"
+                        >
                           <p className="text-[12px]">
                             {deployment.type === 'vcs'
                               ? 'VCS (Version Control System) deployments are triggered from a connected Git repository and enable automatic deployments on code pushes.'
@@ -1137,15 +1228,17 @@ export function DeploymentDetailView({
                           deployment.status,
                           deployment.$createdAt,
                         )) && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-[12px] sm:text-[13px] text-muted-foreground">Duration</span>
-                          <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
-                            {isDeploymentInProgress(deployment.status)
-                              ? formatDuration(Math.max(0, elapsedSeconds))
-                              : formatDuration(deployment.buildDuration)}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[12px] sm:text-[13px] text-muted-foreground">
+                          Duration
+                        </span>
+                        <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
+                          {isDeploymentInProgress(deployment.status)
+                            ? formatDuration(Math.max(0, elapsedSeconds))
+                            : formatDuration(deployment.buildDuration)}
+                        </span>
+                      </div>
+                    )}
                     {statusBadge && (
                       <Badge
                         variant={statusBadge.badgeVariant}
@@ -1168,14 +1261,26 @@ export function DeploymentDetailView({
                             className="h-6 text-[12px] px-2.5 gap-1"
                           >
                             <BrainCircuit className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">Fix with AI</span>
+                            <span className="hidden sm:inline">
+                              Fix with AI
+                            </span>
                             <ChevronDown className="h-3 w-3" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="z-[200] min-w-[180px]">
+                        <DropdownMenuContent
+                          align="end"
+                          className="z-[200] min-w-[180px]"
+                        >
                           {aiChatIDEs.map((ide) => (
-                            <DropdownMenuItem key={ide.id} onClick={() => handleOpenInIDE(ide)}>
-                              <img src={ide.iconPath} alt={ide.name} className="h-4 w-4" />
+                            <DropdownMenuItem
+                              key={ide.id}
+                              onClick={() => handleOpenInIDE(ide)}
+                            >
+                              <img
+                                src={ide.iconPath}
+                                alt={ide.name}
+                                className="h-4 w-4"
+                              />
                               <span className="ml-2">Prompt {ide.name}</span>
                               <ExternalLink className="ml-auto h-3.5 w-3.5 text-muted-foreground" />
                             </DropdownMenuItem>
@@ -1279,22 +1384,21 @@ export function DeploymentDetailView({
                 </TooltipTrigger>
                 {isActiveDeployment && (
                   <TooltipContent sideOffset={4} className="z-[200]">
-                    <p>Cannot delete the active deployment. Please activate another deployment first.</p>
+                    <p>
+                      Cannot delete the active deployment. Please activate
+                      another deployment first.
+                    </p>
                   </TooltipContent>
                 )}
               </TooltipPrimitive.Root>
             </TooltipProvider>
           </div>
-          
+
           {/* Right side - Individual buttons */}
           <div className="flex items-center gap-2 ml-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 text-[13px]"
-                >
+                <Button variant="outline" size="sm" className="h-9 text-[13px]">
                   <Download className="mr-1.5 h-4 w-4" />
                   Download
                   <ChevronDown className="ml-1.5 h-3.5 w-3.5" />
@@ -1334,7 +1438,9 @@ export function DeploymentDetailView({
                         if (onActivate) {
                           setActivateDialogOpen(true)
                         } else {
-                          toast.info('Activate deployment functionality coming soon')
+                          toast.info(
+                            'Activate deployment functionality coming soon',
+                          )
                         }
                       }}
                       disabled={
@@ -1404,7 +1510,10 @@ export function DeploymentDetailView({
         </div>
       }
     >
-      <div ref={logsContainerRef} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <div
+        ref={logsContainerRef}
+        className="flex flex-col flex-1 min-h-0 overflow-hidden"
+      >
         {/* Build Logs */}
         <BuildLogsView
           buildLogs={buildLogs}
@@ -1414,7 +1523,7 @@ export function DeploymentDetailView({
           lineRefs={lineRefs}
           emptyMessage="No build logs available."
         />
-        
+
         {/* Scroll Control Buttons - Fixed position in viewport */}
         {buildLogs && (
           <div className="fixed bottom-24 right-8 flex flex-col gap-2 z-[101]">
@@ -1465,7 +1574,8 @@ export function DeploymentDetailView({
           <div className="border-t border-border" />
           <div className="px-6 pb-4 pt-4">
             <DialogDescription className="text-[13px] mb-4">
-              Are you sure you want to delete this deployment? This action cannot be undone.
+              Are you sure you want to delete this deployment? This action
+              cannot be undone.
             </DialogDescription>
             <DeploymentInfo deployment={deployment} showStatus={true} />
           </div>
@@ -1499,7 +1609,9 @@ export function DeploymentDetailView({
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will create a new build for this deployment using the current function configuration. The original deployment's code will be preserved and used for the new build.
+                This will create a new build for this deployment using the
+                current function configuration. The original deployment's code
+                will be preserved and used for the new build.
               </DialogDescription>
               <DeploymentInfo deployment={deployment} showStatus={true} />
             </div>
@@ -1535,7 +1647,8 @@ export function DeploymentDetailView({
             <div className="border-t border-border" />
             <div className="px-6 pb-4 pt-4">
               <DialogDescription className="text-[13px] mb-4">
-                This will switch the active deployment to this one. All traffic will be routed to this deployment once activated.
+                This will switch the active deployment to this one. All traffic
+                will be routed to this deployment once activated.
               </DialogDescription>
               <DeploymentInfo deployment={deployment} showStatus={true} />
             </div>

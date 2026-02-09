@@ -146,7 +146,8 @@ export function SiteDomainsView() {
                             <span>Redirect to {ruleData.redirectUrl}</span>
                           ) : ruleData.deploymentVcsProviderBranch ? (
                             <span>
-                              Deployed from {ruleData.deploymentVcsProviderBranch}
+                              Deployed from{' '}
+                              {ruleData.deploymentVcsProviderBranch}
                             </span>
                           ) : (
                             <span>Active deployment</span>
