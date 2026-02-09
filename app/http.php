@@ -181,7 +181,7 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
 
 include __DIR__ . '/controllers/general.php';
 
-function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, callable $extraSetup = null): void
+function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
     $max = 10;
     $sleep = 1;

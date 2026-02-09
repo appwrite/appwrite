@@ -198,15 +198,26 @@ Http::setResource('allowedHostnames', function (array $platform, Document $proje
     }
 
     $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
+    $refererHostname = parse_url($request->getReferer(), PHP_URL_HOST);
+
+    $hostname = $originHostname;
+    if (empty($hostname)) {
+        $hostname = $refererHostname;
+    }
 
     /* Add request hostname for preflight requests */
     if ($request->getMethod() === 'OPTIONS') {
-        $allowed[] = $originHostname;
+        $allowed[] = $hostname;
     }
 
-    /* Allow the request origin if a dev key or rule is found */
-    if ((!$rule->isEmpty() || !$devKey->isEmpty()) && !empty($originHostname)) {
-        $allowed[] = $originHostname;
+    /* Allow the request origin of rule */
+    if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', ''))) {
+        $allowed[] = $rule->getAttribute('domain', '');
+    }
+
+    /* Allow the request origin if a dev key is found */
+    if (!$devKey->isEmpty() && !empty($hostname)) {
+        $allowed[] = $hostname;
     }
 
     return array_unique($allowed);
@@ -237,6 +248,11 @@ Http::setResource('allowedSchemes', function (Document $project) {
  */
 Http::setResource('rule', function (Request $request, Database $dbForPlatform, Document $project, Authorization $authorization) {
     $domain = \parse_url($request->getOrigin(), PHP_URL_HOST);
+
+    if (empty($domain)) {
+        $domain = \parse_url($request->getReferer(), PHP_URL_HOST);
+    }
+
     if (empty($domain)) {
         return new Document();
     }

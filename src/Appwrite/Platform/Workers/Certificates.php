@@ -153,11 +153,11 @@ class Certificates extends Action
     ): void {
         // Get rule
         $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
-            : $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+            ? $dbForPlatform->getDocument('rules', md5($domain->get()))
+            : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
                 Query::limit(1),
-            ]));
+            ]);
 
         // Skip if rule is not desired state (created but not verified yet).
         if ($rule->getAttribute('status', '') !== RULE_STATUS_CREATED) {
@@ -177,7 +177,10 @@ class Certificates extends Action
             Console::success('Domain verification succeeded.');
         } catch (AppwriteException $err) {
             Console::warning('Domain verification failed: ' . $err->getMessage());
-            $rule->setAttribute('logs', $err->getMessage());
+            $date = \date('H:i:s');
+            $logs = "\033[90m[{$date}] \033[31mDNS verification failed: \033[0m\n";
+            $logs .= \mb_strcut($err->getMessage(), 0, 500000); // Limit to 500kb
+            $rule->setAttribute('logs', $logs);
         } finally {
             // Update rule and emit events
             $this->updateRuleAndSendEvents($rule, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime);
@@ -269,11 +272,11 @@ class Certificates extends Action
         // Get rule document for domain
         // TODO: (@Meldiron) Remove after 1.7.x migration
         $rule = System::getEnv('_APP_RULES_FORMAT') === 'md5'
-            ? $authorization->skip(fn () => $dbForPlatform->getDocument('rules', md5($domain->get())))
-            : $authorization->skip(fn () => $dbForPlatform->findOne('rules', [
+            ? $dbForPlatform->getDocument('rules', md5($domain->get()))
+            : $dbForPlatform->findOne('rules', [
                 Query::equal('domain', [$domain->get()]),
                 Query::limit(1),
-            ]));
+            ]);
 
         // Rule not found (or) not in the expected state
         if ($rule->isEmpty() || !\in_array($rule->getAttribute('status'), [RULE_STATUS_CERTIFICATE_GENERATING, RULE_STATUS_VERIFIED])) {
@@ -474,11 +477,20 @@ class Certificates extends Action
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
-        if (!$isMainDomain) {
-            $this->verifyRule($rule, $log);
-        } else {
+
+        if ($isMainDomain) {
             // Main domain validation
             // TODO: Would be awesome to check A/AAAA record here. Maybe dry run?
+            return;
+        }
+
+        try {
+            $this->verifyRule($rule, $log);
+        } catch (AppwriteException $err) {
+            $msg = $err->getMessage() . "\n";
+            $msg .= "Verify your DNS records are correctly configured and try again.\n";
+            $msg .= "If they're correct and it still fails, please retry after sometime. DNS records can take up to 48 hours to propagate.\n";
+            throw new AppwriteException($err->getType(), $msg);
         }
     }
 
