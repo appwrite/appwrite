@@ -116,7 +116,7 @@ class Certificates extends Action
                 break;
 
             case Certificate::ACTION_GENERATION:
-                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $authorization, $skipRenewCheck, $plan, $validationDomain);
+                $this->handleCertificateGenerationAction($domain, $domainType, $dbForPlatform, $queueForMails, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $log, $certificates, $authorization, $dnsValidator, $skipRenewCheck, $plan, $validationDomain);
                 break;
 
             default:
@@ -239,6 +239,7 @@ class Certificates extends Action
         Log $log,
         CertificatesAdapter $certificates,
         ValidatorAuthorization $authorization,
+        DNSValidator $dnsValidator,
         bool $skipRenewCheck = false,
         array $plan = [],
         ?string $validationDomain = null
@@ -309,7 +310,7 @@ class Certificates extends Action
 
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
-                $this->validateDomain($rule, $domain, $log, $validationDomain);
+                $this->validateDomain($rule, $domain, $dnsValidator, $log, $validationDomain);
 
                 // If certificate exists already, double-check expiry date. Skip if job is forced
                 if (!$certificates->isRenewRequired($domain->get(), $domainType, $log)) {
