@@ -3261,6 +3261,109 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertCount(1, $response['body']['keys']);
         $this->assertEquals('Key Test 2', $response['body']['keys'][0]['name']);
 
+        /** List keys filtering by name (equal — exact match) */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('name', ['Key Test'])->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['keys']);
+        $this->assertEquals('Key Test', $response['body']['keys'][0]['name']);
+
+        /** List keys filtering by name (equal — multiple values) */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('name', ['Key Test', 'Key Test 2'])->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+        $this->assertCount(2, $response['body']['keys']);
+
+        /** List keys filtering by name (equal — no match) */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('name', ['Non Existent Key'])->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertCount(0, $response['body']['keys']);
+
+        /** List keys filtering by scopes (contains — match key with teams.read) */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('scopes', ['teams.read'])->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['keys']);
+        $this->assertEquals('Key Test', $response['body']['keys'][0]['name']);
+
+        /** List keys filtering by scopes (contains — match key with users.read) */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('scopes', ['users.read'])->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['keys']);
+        $this->assertEquals('Key Test 2', $response['body']['keys'][0]['name']);
+
+        /** List keys filtering by scopes (contains — no match) */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('scopes', ['databases.read'])->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+        $this->assertCount(0, $response['body']['keys']);
+
+        /** List keys filtering by name and scopes combined */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('name', ['Key Test'])->toString(),
+                Query::contains('scopes', ['teams.read'])->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['keys']);
+        $this->assertEquals('Key Test', $response['body']['keys'][0]['name']);
+
         /** List keys with orderDesc */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
             'content-type' => 'application/json',

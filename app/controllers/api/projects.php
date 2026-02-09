@@ -14,23 +14,24 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Database\Validator\Queries\Keys;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
-use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -1154,12 +1155,11 @@ Http::get('/v1/projects/:projectId/keys')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('queries', [], new \Appwrite\Utopia\Database\Validator\Queries\Keys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', \Appwrite\Utopia\Database\Validator\Queries\Keys::ALLOWED_ATTRIBUTES), true)
-    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
+    ->param('queries', [], new Keys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Keys::ALLOWED_ATTRIBUTES), true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, array $queries, string $search, bool $includeTotal, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, array $queries, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1171,10 +1171,6 @@ Http::get('/v1/projects/:projectId/keys')
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
-        }
-
-        if (!empty($search)) {
-            $queries[] = Query::search('search', $search);
         }
 
         $queries[] = Query::equal('resourceType', ['projects']);
