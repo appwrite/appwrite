@@ -64,6 +64,7 @@ use Utopia\Http;
 use Utopia\Locale\Locale;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
+use Utopia\Validator;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
@@ -1475,7 +1476,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('proofForPassword')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Redirect $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) use ($oauthDefaultSuccess) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1513,19 +1514,22 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Allow redirect to rule URL if related to project
-        $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', [
-            Query::equal('domain', [
-                parse_url($state['success'], PHP_URL_HOST),
-                parse_url($state['failure'], PHP_URL_HOST)
-            ]),
-            Query::equal('projectInternalId', [$project->getSequence()]),
-            Query::limit(2)
-        ]));
+        //Check if $redirectValidator is instance of Redirect class
+        if ($redirectValidator instanceof Redirect) {
+            $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', [
+                Query::equal('domain', [
+                    parse_url($state['success'], PHP_URL_HOST),
+                    parse_url($state['failure'], PHP_URL_HOST)
+                ]),
+                Query::equal('projectInternalId', [$project->getSequence()]),
+                Query::limit(2)
+            ]));
 
-        foreach ($rules as $rule) {
-            $allowedHostnames = $redirectValidator->getAllowedHostnames();
-            $allowedHostnames[] = $rule['domain'];
-            $redirectValidator->setAllowedHostnames($allowedHostnames);
+            foreach ($rules as $rule) {
+                $allowedHostnames = $redirectValidator->getAllowedHostnames();
+                $allowedHostnames[] = $rule['domain'];
+                $redirectValidator->setAllowedHostnames($allowedHostnames);
+            }
         }
 
         if ($devKey->isEmpty() && !$redirectValidator->isValid($state['success'])) {
