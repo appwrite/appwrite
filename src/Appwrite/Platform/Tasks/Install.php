@@ -713,7 +713,7 @@ class Install extends Action
     {
         $client = new Client();
         $client
-            ->setTimeout(30)
+            ->setTimeout(LOCAL_API_TIMEOUT)
             ->addHeader('Content-Type', 'application/json')
             ->addHeader('X-Appwrite-Project', 'console');
 
