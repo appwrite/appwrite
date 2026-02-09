@@ -29,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import {
   useBillingAddresses,
   useCountries,
@@ -131,19 +132,20 @@ export function AccountBillingAddresses() {
   if (addressesLoading) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-4 pt-4">
+        <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
                 Billing Addresses
               </h3>
-              <p className="text-[13px] text-muted-foreground mt-0.5">
+              <p className="text-[13px] text-muted-foreground mt-1">
                 Manage your billing addresses for invoices and payments.
               </p>
             </div>
           </div>
         </div>
-        <div className="px-4 pt-3 pb-4 text-center">
+        <div className="border-t border-border -mx-6" />
+        <div className="px-6 py-12 text-center">
           <p className="text-[13px] text-muted-foreground">
             Loading addresses...
           </p>
@@ -155,22 +157,35 @@ export function AccountBillingAddresses() {
   if (allAddresses.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-4 py-16">
-          <div className="flex flex-col items-center justify-center">
-            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-muted/50 mb-4">
-              <MapPin className="w-5 h-5 text-muted-foreground/70" />
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-[15px] font-semibold text-foreground">
+                Billing Addresses
+              </h3>
+              <p className="text-[13px] text-muted-foreground mt-1">
+                Manage your billing addresses for invoices and payments.
+              </p>
             </div>
-            <h3 className="text-[15px] font-semibold text-foreground mb-2">
-              No billing addresses
-            </h3>
-            <p className="text-[13px] text-muted-foreground text-center max-w-sm mb-6">
-              Add a billing address to use for invoices and payments. You can link it to multiple organizations.
-            </p>
-            <Button size="sm" className="h-8 text-[13px]" onClick={handleAdd}>
-              <Plus className="mr-1.5 h-4 w-4" />
-              Add billing address
-            </Button>
           </div>
+        </div>
+        <div className="border-t border-border -mx-6" />
+        <div className="px-6 py-8 text-center">
+          <EmptyState
+            icon={MapPin}
+            title="No billing addresses"
+            description="Add a billing address to get started"
+            isEmpty={true}
+            hasFilters={false}
+            variant="default"
+          >
+            <div className="mt-4">
+              <Button size="sm" className="h-9 text-[13px]" onClick={handleAdd}>
+                <Plus className="mr-1.5 h-4 w-4" />
+                Add billing address
+              </Button>
+            </div>
+          </EmptyState>
         </div>
       </div>
     )
@@ -179,34 +194,35 @@ export function AccountBillingAddresses() {
   return (
     <>
       <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-4 pt-4">
+        <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-[15px] font-semibold text-foreground">
                 Billing Addresses
               </h3>
-              <p className="text-[13px] text-muted-foreground mt-0.5">
+              <p className="text-[13px] text-muted-foreground mt-1">
                 Manage your billing addresses for invoices and payments.
               </p>
             </div>
-            <Button size="sm" className="h-8 text-[13px]" onClick={handleAdd}>
+            <Button size="sm" className="h-9 text-[13px]" onClick={handleAdd}>
               <Plus className="mr-1.5 h-4 w-4" />
               Add billing address
             </Button>
           </div>
         </div>
-        <div className="px-4 pt-3 pb-4">
+        <div className="border-t border-border -mx-6" />
+        <div className="px-6 py-4">
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Address
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                     Linked To
                   </TableHead>
-                  <TableHead className="px-4 py-3 text-[13px] font-medium text-muted-foreground text-right w-[60px]">
+                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[60px]">
                     Actions
                   </TableHead>
                 </TableRow>
