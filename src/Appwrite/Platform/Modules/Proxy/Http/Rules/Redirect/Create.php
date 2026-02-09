@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Redirect;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\DNS as DNSValidator;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -31,10 +32,8 @@ class Create extends Action
         return 'createRedirectRule';
     }
 
-    public function __construct(...$params)
+    public function __construct()
     {
-        parent::__construct(...$params);
-
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/proxy/rules/redirect')
@@ -75,10 +74,11 @@ class Create extends Action
             ->inject('dbForProject')
             ->inject('platform')
             ->inject('log')
+            ->inject('dnsValidator')
             ->callback($this->action(...));
     }
 
-    public function action(string $domain, string $url, int $statusCode, string $resourceId, string $resourceType, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log)
+    public function action(string $domain, string $url, int $statusCode, string $resourceId, string $resourceType, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForPlatform, Database $dbForProject, array $platform, Log $log, DNSValidator $dnsValidator)
     {
         $this->validateDomainRestrictions($domain, $platform);
 
@@ -122,7 +122,7 @@ class Create extends Action
 
         if ($rule->getAttribute('status', '') === RULE_STATUS_CREATED) {
             try {
-                $this->verifyRule($rule, $log);
+                $this->verifyRule($rule, $dnsValidator, $log);
                 $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
             } catch (Exception $err) {
                 $rule->setAttribute('logs', $err->getMessage());

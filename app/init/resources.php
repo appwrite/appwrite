@@ -24,6 +24,7 @@ use Appwrite\Functions\EventProcessor;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Cors;
 use Appwrite\Network\Platform;
+use Appwrite\Network\Validator\DNS as DNSValidator;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Network\Validator\Redirect;
 use Appwrite\Utopia\Database\Documents\User;
@@ -1461,3 +1462,11 @@ Http::setResource('executionsRetentionCount', function (Document $project, array
 
     return (int) ($plan['executionsRetentionCount'] ?? 100);
 }, ['project', 'plan']);
+
+Http::setResource('dnsValidator', function () {
+    $dnsEnv = System::getEnv('_APP_DNS', '8.8.8.8');
+    $servers = \array_map('trim', \explode(',', $dnsEnv));
+    $dnsServers = \array_filter($servers, fn ($server) => !empty($server));
+
+    return new DNSValidator($dnsServers);
+});

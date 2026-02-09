@@ -10,6 +10,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\Webhook;
 use Appwrite\Extend\Exception as AppwriteException;
+use Appwrite\Network\Validator\DNS as DNSValidator;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
@@ -42,10 +43,8 @@ class Certificates extends Action
     /**
      * @throws Exception
      */
-    public function __construct(...$params)
+    public function __construct()
     {
-        parent::__construct(...$params);
-
         $this
             ->desc('Certificates worker')
             ->inject('message')
@@ -60,6 +59,7 @@ class Certificates extends Action
             ->inject('certificates')
             ->inject('plan')
             ->inject('authorization')
+            ->inject('dnsValidator')
             ->callback($this->action(...));
     }
 
@@ -93,6 +93,7 @@ class Certificates extends Action
         CertificatesAdapter $certificates,
         array $plan,
         ValidatorAuthorization $authorization,
+        DNSValidator $dnsValidator,
     ): void {
         $payload = $message->getPayload() ?? [];
 
@@ -111,7 +112,7 @@ class Certificates extends Action
 
         switch ($action) {
             case Certificate::ACTION_DOMAIN_VERIFICATION:
-                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForCertificates, $log, $authorization, $validationDomain);
+                $this->handleDomainVerificationAction($domain, $dbForPlatform, $queueForEvents, $queueForWebhooks, $queueForFunctions, $queueForRealtime, $queueForCertificates, $log, $authorization, $dnsValidator, $validationDomain);
                 break;
 
             case Certificate::ACTION_GENERATION:
@@ -133,6 +134,7 @@ class Certificates extends Action
      * @param Certificate $queueForCertificates
      * @param Log $log
      * @param ValidatorAuthorization $authorization
+     * @param DNSValidator $dnsValidator
      * @param string|null $validationDomain
      * @return void
      * @throws \Utopia\Database\Exception
@@ -149,6 +151,7 @@ class Certificates extends Action
         Certificate $queueForCertificates,
         Log $log,
         ValidatorAuthorization $authorization,
+        DNSValidator $dnsValidator,
         ?string $validationDomain = null
     ): void {
         // Get rule
@@ -169,7 +172,7 @@ class Certificates extends Action
 
         try {
             // Verify DNS records
-            $this->validateDomain($rule, $domain, $log, $validationDomain);
+            $this->validateDomain($rule, $domain, $dnsValidator, $log, $validationDomain);
             // Reset logs and status for the rule
             $rule->setAttribute('logs', '');
             $rule->setAttribute('status', RULE_STATUS_CERTIFICATE_GENERATING);
@@ -473,7 +476,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Document $rule, Domain $domain, Log $log, ?string $validationDomain = null): void
+    private function validateDomain(Document $rule, Domain $domain, DNSValidator $dnsValidator, Log $log, ?string $validationDomain = null): void
     {
         $mainDomain = $validationDomain ?? $this->getMainDomain();
         $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
@@ -485,7 +488,7 @@ class Certificates extends Action
         }
 
         try {
-            $this->verifyRule($rule, $log);
+            $this->verifyRule($rule, $dnsValidator, $log);
         } catch (AppwriteException $err) {
             $msg = $err->getMessage() . "\n";
             $msg .= "Verify your DNS records are correctly configured and try again.\n";

@@ -27,10 +27,8 @@ class XList extends Action
         return 'listRules';
     }
 
-    public function __construct(...$params)
+    public function __construct()
     {
-        parent::__construct(...$params);
-
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
             ->setHttpPath('/v1/proxy/rules')

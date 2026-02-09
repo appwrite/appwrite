@@ -17,6 +17,7 @@ use Appwrite\Event\Realtime;
 use Appwrite\Event\Screenshot;
 use Appwrite\Event\StatsUsage;
 use Appwrite\Event\Webhook;
+use Appwrite\Network\Validator\DNS as DNSValidator;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Utopia\Database\Documents\User;
 use Executor\Executor;
@@ -503,6 +504,14 @@ Server::setResource('executionsRetentionCount', function (Document $project, arr
 
     return (int) ($plan['executionsRetentionCount'] ?? 100);
 }, ['project', 'plan']);
+
+Server::setResource('dnsValidator', function () {
+    $dnsEnv = System::getEnv('_APP_DNS', '8.8.8.8');
+    $servers = \array_map('trim', \explode(',', $dnsEnv));
+    $dnsServers = \array_filter($servers, fn ($server) => !empty($server));
+
+    return new DNSValidator($dnsServers);
+});
 
 $pools = $register->get('pools');
 $platform = new Appwrite();

@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Verification;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\DNS as DNSValidator;
 use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -26,10 +27,8 @@ class Update extends Action
         return 'updateRuleVerification';
     }
 
-    public function __construct(...$params)
+    public function __construct()
     {
-        parent::__construct(...$params);
-
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_PATCH)
             ->setHttpPath('/v1/proxy/rules/:ruleId/verification')
@@ -61,6 +60,7 @@ class Update extends Action
             ->inject('project')
             ->inject('dbForPlatform')
             ->inject('log')
+            ->inject('dnsValidator')
             ->callback($this->action(...));
     }
 
@@ -71,7 +71,8 @@ class Update extends Action
         Event $queueForEvents,
         Document $project,
         Database $dbForPlatform,
-        Log $log
+        Log $log,
+        DNSValidator $dnsValidator,
     ) {
         $rule = $dbForPlatform->getDocument('rules', $ruleId);
 
@@ -87,7 +88,7 @@ class Update extends Action
         }
 
         try {
-            $this->verifyRule($rule, $log);
+            $this->verifyRule($rule, $dnsValidator, $log);
             // Reset logs and status for the rule
             $rule = $dbForPlatform->updateDocument('rules', $rule->getId(), new Document([
                 'logs' => '',
