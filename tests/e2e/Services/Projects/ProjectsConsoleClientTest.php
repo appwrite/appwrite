@@ -3167,18 +3167,154 @@ class ProjectsConsoleClientTest extends Scope
     {
         $id = $data['projectId'] ?? '';
 
+        /** Create a second key with an expiry for query testing */
+        $expireDate = DateTime::addSeconds(new \DateTime(), 3600);
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Test 2',
+            'scopes' => ['users.read'],
+            'expire' => $expireDate,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $key2Id = $response['body']['$id'];
+
+        /** List all keys (no queries) */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
 
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, $response['body']['total']);
+        $this->assertCount(2, $response['body']['keys']);
+
+        /** List keys with limit */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::limit(1)->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['keys']);
+        $this->assertEquals(2, $response['body']['total']);
+
+        /** List keys with offset */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::offset(1)->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['keys']);
+        $this->assertEquals(2, $response['body']['total']);
+
+        /** List keys with cursor after */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $data['keyId']]))->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(1, $response['body']['keys']);
+        $this->assertEquals($key2Id, $response['body']['keys'][0]['$id']);
+
+        /** List keys filtering by expire (lessThan now — should match none) */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::lessThan('expire', (new \DateTime())->format('Y-m-d H:i:s'))->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
+        /** List keys filtering by expire (greaterThan now — should match the key with expiry) */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::greaterThan('expire', (new \DateTime())->format('Y-m-d H:i:s'))->toString(),
+            ]
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
+        $this->assertCount(1, $response['body']['keys']);
+        $this->assertEquals('Key Test 2', $response['body']['keys'][0]['name']);
+
+        /** List keys with orderDesc */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::orderDesc('')->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(2, $response['body']['keys']);
+        $this->assertEquals('Key Test 2', $response['body']['keys'][0]['name']);
+        $this->assertEquals('Key Test', $response['body']['keys'][1]['name']);
+
+        /** List keys with total disabled */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'total' => false,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertCount(2, $response['body']['keys']);
+        $this->assertEquals(0, $response['body']['total']);
 
         /**
          * Test for FAILURE
          */
+
+        /** Test invalid query attribute */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('secret', ['test'])->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /** Test invalid cursor */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => 'invalid']))->toString(),
+            ]
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
