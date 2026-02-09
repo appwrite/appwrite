@@ -2262,4 +2262,156 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $client->close();
     }
+
+    public function testProjectChannelWithQuery()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Test OLD SDK behavior: project=projectId (string) in query param
+        // The reserved param logic should treat string project param as project ID, not as subscription queries
+        $clientOldSdk = $this->getWebsocket(['project'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], $projectId, null);
+
+        $response = json_decode($clientOldSdk->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        // Should have default select(['*']) subscription since project param was treated as project ID, not queries
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $clientOldSdk->close();
+
+        // Test NEW SDK behavior: project=Query array in query param, project ID in header
+        // The reserved param logic should use Query array as subscription queries for project channel
+        $queryArray = [Query::select(['*'])->toString()];
+        $clientNewSdk = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project'],
+                'project' => [
+                    0 => [
+                        0 => $queryArray[0]
+                    ]
+                ]
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($clientNewSdk->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        // Should have subscription with the provided query
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $clientNewSdk->close();
+
+        // Test edge case: project param is array but not a valid Query array (should still connect, use header)
+        $clientEdgeCase = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project'],
+                'project' => ['invalid', 'array']
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($clientEdgeCase->receive(), true);
+        // Should connect successfully using header for project ID
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+
+        $clientEdgeCase->close();
+    }
+
+    public function testProjectChannelWithHeaderOnly()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Test: project ID only in header, no project query param
+        // This simulates a client that only uses x-appwrite-project header
+        $client = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project']
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        // Should have default select(['*']) subscription since no project query param
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $client->close();
+
+        // Test: project channel with queries, project ID only in header
+        $queryArray = [Query::select(['*'])->toString()];
+        $clientWithQuery = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project'],
+                'project' => [
+                    0 => [
+                        0 => $queryArray[0]
+                    ]
+                ]
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($clientWithQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $clientWithQuery->close();
+
+        // Test: channels channel (reserved param) should not parse channels list as queries
+        $clientChannelsChannel = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['channels']
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($clientChannelsChannel->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('channels', $response['data']['channels']);
+        // Should have default select(['*']) since channels param is reserved
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $clientChannelsChannel->close();
+    }
 }

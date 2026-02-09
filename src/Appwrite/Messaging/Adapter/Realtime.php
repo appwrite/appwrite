@@ -344,8 +344,18 @@ class Realtime extends MessagingAdapter
     {
         $subscriptions = [];
 
+        // Param names that must not be treated as subscription queries for same-named channels if string:
+        $reservedParamNames = ['project'];
+
         foreach ($channelNames as $channel) {
-            $params = $getQueryParam(\str_replace('.', '_', $channel));
+            $paramKey = \str_replace('.', '_', $channel);
+            $params = $getQueryParam($paramKey);
+
+            if (\in_array($paramKey, $reservedParamNames, true)) {
+                if (\is_string($paramKey)) {
+                    $params = null;
+                }
+            }
 
             if ($params === null) {
                 if (!isset($subscriptions[0])) {

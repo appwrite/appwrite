@@ -717,7 +717,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
     }
 });
 
-$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId) {
+$server->onMessage(function (int $connection, string $message) use ($server, $register, $realtime, $containerId, $logError) {
     try {
         $response = new Response(new SwooleResponse());
         $projectId = $realtime->connections[$connection]['projectId'] ?? null;
@@ -840,6 +840,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                 throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Message type is not valid.');
         }
     } catch (Throwable $th) {
+        $logError($th, "realtimeMessage");
         $code = $th->getCode();
         if (!is_int($code)) {
             $code = 500;
