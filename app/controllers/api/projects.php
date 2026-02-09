@@ -1186,10 +1186,7 @@ Http::get('/v1/projects/:projectId/keys')
             }
 
             $keyId = $cursor->getValue();
-            $cursorDocument = $dbForPlatform->getDocument('keys', $keyId, [
-                Query::equal('resourceType', ['projects']),
-                Query::equal('resourceInternalId', [$project->getSequence()]),
-            ]);
+            $cursorDocument = $dbForPlatform->getDocument('keys', $keyId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Key '{$keyId}' for the 'cursor' value not found.");
