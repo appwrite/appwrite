@@ -23,6 +23,7 @@ class Event
 
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
+    public const FUNCTIONS_QUEUE_TTL = 60 * 60 * 24 * 7; // 7 days
 
     public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
     public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
@@ -64,6 +65,8 @@ class Event
 
     /** @var bool Non-critical events will not throw an exception when enqueuing of the event fails. */
     protected bool $critical = true;
+
+    protected int $ttl = 0;
 
     /**
      * @param Publisher $publisher
@@ -112,6 +115,29 @@ class Event
     public function getQueue(): string
     {
         return $this->queue;
+    }
+
+    /**
+     * Set TTL (time-to-live) for jobs in this queue.
+     *
+     * @param int $ttl TTL in seconds
+     * @return static
+     */
+    public function setTTL(int $ttl): static
+    {
+        $this->ttl = $ttl;
+
+        return $this;
+    }
+
+    /**
+     * Get TTL (time-to-live) for jobs in this queue.
+     *
+     * @return int
+     */
+    public function getTTL(): int
+    {
+        return $this->ttl;
     }
 
     /**
@@ -369,7 +395,7 @@ class Event
         }
 
         /** The getter is required since events like Databases need to override the queue name depending on the project */
-        $queue = new Queue($this->getQueue());
+        $queue = new Queue($this->getQueue(), 'utopia-queue', $this->getTTL());
 
         // Merge the base payload with any trimmed values
         $payload = array_merge($this->preparePayload(), $this->trimPayload());

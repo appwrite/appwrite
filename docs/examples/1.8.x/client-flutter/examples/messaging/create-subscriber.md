@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -11,3 +12,4 @@ Subscriber result = await messaging.createSubscriber(
     subscriberId: '<SUBSCRIBER_ID>',
     targetId: '<TARGET_ID>',
 );
+```

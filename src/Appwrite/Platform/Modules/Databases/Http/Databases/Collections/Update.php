@@ -119,6 +119,8 @@ class Update extends Action
             ->setParam('databaseId', $databaseId)
             ->setParam($this->getEventsParamKey(), $collection->getId());
 
+        $this->addRowBytesInfo($collection, $dbForProject);
+
         $response->dynamic($collection, $this->getResponseModel());
     }
 }

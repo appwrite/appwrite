@@ -1,3 +1,4 @@
+```http
 PATCH /v1/messaging/providers/mailgun/{providerId} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -16,3 +17,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "replyToName": "<REPLY_TO_NAME>",
   "replyToEmail": "<REPLY_TO_EMAIL>"
 }
+```

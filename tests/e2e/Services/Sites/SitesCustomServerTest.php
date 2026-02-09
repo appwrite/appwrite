@@ -1810,11 +1810,12 @@ class SitesCustomServerTest extends Scope
 
         $siteId2 = $site2['body']['$id'];
 
+        $sitesDomain = \explode(',', System::getEnv('_APP_DOMAIN_SITES', ''))[0];
         $rule = $this->client->call(Client::METHOD_POST, '/proxy/rules/site', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'domain' => $subdomain . '.' . System::getEnv('_APP_DOMAIN_SITES', ''),
+            'domain' => $subdomain . '.' . $sitesDomain,
             'siteId' => $siteId2,
         ]);
 
@@ -2409,7 +2410,8 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertArrayHasKey('set-cookie', $response['headers']);
         $this->assertStringContainsString('a_jwt_console=', $response['headers']['set-cookie']);
-        $this->assertStringContainsString('httponly', $response['headers']['set-cookie']);
+        // due to swoole update; no more httponly
+        $this->assertStringContainsString('HttpOnly', $response['headers']['set-cookie']);
         $this->assertStringContainsString('domain=' . $domain, $response['headers']['set-cookie']);
         $this->assertStringContainsString('path=/', $response['headers']['set-cookie']);
         $this->assertNotEmpty($response['cookies']['a_jwt_console']);

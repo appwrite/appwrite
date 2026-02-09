@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -17,3 +18,4 @@ AttributeInteger result = await databases.updateIntegerAttribute(
     max: 0, // (optional)
     newKey: '', // (optional)
 );
+```

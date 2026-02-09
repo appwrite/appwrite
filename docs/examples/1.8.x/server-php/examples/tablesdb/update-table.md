@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,8 +16,8 @@ $tablesDB = new TablesDB($client);
 $result = $tablesDB->updateTable(
     databaseId: '<DATABASE_ID>',
     tableId: '<TABLE_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // optional
     permissions: [Permission::read(Role::any())], // optional
     rowSecurity: false, // optional
     enabled: false // optional
-);
+);```

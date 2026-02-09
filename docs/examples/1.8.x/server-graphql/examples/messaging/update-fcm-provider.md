@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingUpdateFCMProvider(
         providerId: "<PROVIDER_ID>",
@@ -16,3 +17,4 @@ mutation {
         options
     }
 }
+```

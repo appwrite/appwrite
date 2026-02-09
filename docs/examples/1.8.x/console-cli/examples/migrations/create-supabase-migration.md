@@ -1,3 +1,4 @@
+```bash
 appwrite migrations create-supabase-migration \
     --resources one two three \
     --endpoint https://example.com \
@@ -5,3 +6,4 @@ appwrite migrations create-supabase-migration \
     --database-host <DATABASE_HOST> \
     --username <USERNAME> \
     --password <PASSWORD>
+```

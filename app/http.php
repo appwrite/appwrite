@@ -11,7 +11,6 @@ use Swoole\Http\Server;
 use Swoole\Process;
 use Swoole\Table;
 use Swoole\Timer;
-use Utopia\App;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
 use Utopia\Audit\Audit;
@@ -27,6 +26,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Http;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
@@ -100,11 +100,19 @@ function dispatch(Server $server, int $fd, int $type, $data = null): int
         $risky = false;
         if (str_starts_with($request, 'POST') && str_contains($request, '/executions')) {
             $risky = true;
-        } elseif (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS'))) {
-            $risky = true;
         } elseif ($domains->get(md5($domain), 'value') === 1) {
             // executions request coming from custom domain
             $risky = true;
+        } else {
+            foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS')) as $riskyDomain) {
+                if (empty($riskyDomain)) {
+                    continue;
+                }
+                if (str_ends_with($domain, $riskyDomain)) {
+                    $risky = true;
+                    break;
+                }
+            }
         }
 
         if ($risky) {
@@ -173,7 +181,7 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
 
 include __DIR__ . '/controllers/general.php';
 
-function createDatabase(App $app, string $resourceKey, string $dbName, array $collections, mixed $pools, callable $extraSetup = null): void
+function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
     $max = 15;
     $sleep = 2;
@@ -260,12 +268,12 @@ function createDatabase(App $app, string $resourceKey, string $dbName, array $co
 }
 
 $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {
-    $app = new App('UTC');
+    $app = new Http('UTC');
 
     go(function () use ($register, $app) {
         $pools = $register->get('pools');
         /** @var Group $pools */
-        App::setResource('pools', fn () => $pools);
+        Http::setResource('pools', fn () => $pools);
 
         /** @var array $collections */
         $collections = Config::getParam('collections', []);
@@ -477,9 +485,8 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
 });
 
 $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
-
-    App::setResource('swooleRequest', fn () => $swooleRequest);
-    App::setResource('swooleResponse', fn () => $swooleResponse);
+    Http::setResource('swooleRequest', fn () => $swooleRequest);
+    Http::setResource('swooleResponse', fn () => $swooleResponse);
 
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
@@ -496,12 +503,12 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
         return;
     }
 
-    $app = new App('UTC');
+    $app = new Http('UTC');
     $app->setCompression(System::getEnv('_APP_COMPRESSION_ENABLED', 'enabled') === 'enabled');
     $app->setCompressionMinSize(intval(System::getEnv('_APP_COMPRESSION_MIN_SIZE_BYTES', '1024'))); // 1KB
 
     $pools = $register->get('pools');
-    App::setResource('pools', fn () => $pools);
+    Http::setResource('pools', fn () => $pools);
 
     try {
         $authorization = $app->getResource('authorization');
@@ -583,7 +590,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 
         $swooleResponse->setStatusCode(500);
 
-        $output = ((App::isDevelopment())) ? [
+        $output = ((Http::isDevelopment())) ? [
             'message' => 'Error: ' . $th->getMessage(),
             'code' => 500,
             'file' => $th->getFile(),
@@ -604,8 +611,8 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
 $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
     $lastSyncUpdate = null;
     $pools = $register->get('pools');
-    App::setResource('pools', fn () => $pools);
-    $app = new App('UTC');
+    Http::setResource('pools', fn () => $pools);
+    $app = new Http('UTC');
 
     /** @var Utopia\Database\Database $dbForPlatform */
     $dbForPlatform = $app->getResource('dbForPlatform');
@@ -636,9 +643,33 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 $sum = count($results);
                 foreach ($results as $document) {
                     $domain = $document->getAttribute('domain');
-                    if (str_ends_with($domain, System::getEnv('_APP_DOMAIN_FUNCTIONS')) || str_ends_with($domain, System::getEnv('_APP_DOMAIN_SITES'))) {
+
+                    $denyDomains = [];
+                    $denyEnvVars = [
+                        System::getEnv('_APP_DOMAIN_FUNCTIONS_FALLBACK', ''),
+                        System::getEnv('_APP_DOMAIN_FUNCTIONS', ''),
+                        System::getEnv('_APP_DOMAIN_SITES', ''),
+                    ];
+                    foreach ($denyEnvVars as $denyEnvVar) {
+                        foreach (\explode(',', $denyEnvVar) as $denyDomain) {
+                            if (empty($denyDomain)) {
+                                continue;
+                            }
+                            $denyDomains[] = $denyDomain;
+                        }
+                    }
+
+                    $isDenyDomain = false;
+                    foreach ($denyDomains as $denyDomain) {
+                        if (str_ends_with($domain, $denyDomain)) {
+                            $isDenyDomain = true;
+                        }
+                    }
+
+                    if ($isDenyDomain) {
                         continue;
                     }
+
                     $domains->set(md5($domain), ['value' => 1]);
                 }
                 $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -26,3 +27,4 @@ result = storage.get_file_preview(
     output: ImageFormat::JPG, # optional
     token: '<TOKEN>' # optional
 )
+```

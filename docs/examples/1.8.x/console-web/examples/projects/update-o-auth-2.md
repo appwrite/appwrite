@@ -1,3 +1,4 @@
+```javascript
 import { Client, Projects, OAuthProvider } from "@appwrite.io/console";
 
 const client = new Client()
@@ -15,3 +16,4 @@ const result = await projects.updateOAuth2({
 });
 
 console.log(result);
+```

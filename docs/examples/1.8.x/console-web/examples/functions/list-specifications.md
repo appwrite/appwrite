@@ -1,3 +1,4 @@
+```javascript
 import { Client, Functions } from "@appwrite.io/console";
 
 const client = new Client()
@@ -9,3 +10,4 @@ const functions = new Functions(client);
 const result = await functions.listSpecifications();
 
 console.log(result);
+```

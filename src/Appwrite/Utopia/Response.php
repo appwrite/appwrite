@@ -83,6 +83,10 @@ class Response extends SwooleResponse
     public const MODEL_ATTRIBUTE_POINT = 'attributePoint';
     public const MODEL_ATTRIBUTE_LINE = 'attributeLine';
     public const MODEL_ATTRIBUTE_POLYGON = 'attributePolygon';
+    public const MODEL_ATTRIBUTE_VARCHAR = 'attributeVarchar';
+    public const MODEL_ATTRIBUTE_TEXT = 'attributeText';
+    public const MODEL_ATTRIBUTE_MEDIUMTEXT = 'attributeMediumtext';
+    public const MODEL_ATTRIBUTE_LONGTEXT = 'attributeLongtext';
     public const MODEL_ATTRIBUTE_OBJECT = 'attributeObject';
     public const MODEL_ATTRIBUTE_VECTOR = 'attributeVector';
 
@@ -102,6 +106,10 @@ class Response extends SwooleResponse
     public const MODEL_COLUMN_POINT = 'columnPoint';
     public const MODEL_COLUMN_LINE = 'columnLine';
     public const MODEL_COLUMN_POLYGON = 'columnPolygon';
+    public const MODEL_COLUMN_VARCHAR = 'columnVarchar';
+    public const MODEL_COLUMN_TEXT = 'columnText';
+    public const MODEL_COLUMN_MEDIUMTEXT = 'columnMediumtext';
+    public const MODEL_COLUMN_LONGTEXT = 'columnLongtext';
 
     // Transactions
     public const MODEL_TRANSACTION = 'transaction';

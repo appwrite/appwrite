@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Users
@@ -14,3 +15,4 @@ val response = users.createToken(
     length = 4, // optional
     expire = 60 // optional
 )
+```

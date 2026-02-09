@@ -6,7 +6,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Platform;
 use Appwrite\Network\Validator\Email;
 use Appwrite\SDK\AuthType;
@@ -19,16 +18,9 @@ use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\App;
-use Utopia\Audit\Adapter\Database as AdapterDatabase;
-use Utopia\Audit\Audit;
-use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -36,9 +28,8 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
-use Utopia\DSN\DSN;
+use Utopia\Http;
 use Utopia\Locale\Locale;
-use Utopia\Pools\Group;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -51,7 +42,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
-App::init()
+Http::init()
     ->groups(['projects'])
     ->inject('project')
     ->action(function (Document $project) {
@@ -60,323 +51,7 @@ App::init()
         }
     });
 
-App::post('/v1/projects')
-    ->desc('Create project')
-    ->groups(['api', 'projects'])
-    ->label('audits.event', 'projects.create')
-    ->label('audits.resource', 'project/{response.$id}')
-    ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'create',
-        description: '/docs/references/projects/create.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_CREATED,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
-    ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
-    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team unique ID.', false, ['dbForProject'])
-    ->param('region', System::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
-    ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
-    ->param('logo', '', new Text(1024), 'Project logo.', true)
-    ->param('url', '', new URL(), 'Project URL.', true)
-    ->param('legalName', '', new Text(256), 'Project legal Name. Max length: 256 chars.', true)
-    ->param('legalCountry', '', new Text(256), 'Project legal Country. Max length: 256 chars.', true)
-    ->param('legalState', '', new Text(256), 'Project legal State. Max length: 256 chars.', true)
-    ->param('legalCity', '', new Text(256), 'Project legal City. Max length: 256 chars.', true)
-    ->param('legalAddress', '', new Text(256), 'Project legal Address. Max length: 256 chars.', true)
-    ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
-    ->inject('request')
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->inject('cache')
-    ->inject('pools')
-    ->inject('hooks')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForPlatform, Cache $cache, Group $pools, Hooks $hooks) {
-
-        // for returning dsn of multitype dbs with type optionally based on input dsn
-        $getDatabaseDSN = function (string $databasetype, $region, ?string $dsn = null): string {
-            $isSharedTablesV1 = false;
-            $isSharedTablesV2 = false;
-            if (!empty($dsn)) {
-                try {
-                    $parsedDsn = new DSN($dsn);
-                    $dsnHost = $parsedDsn->getHost();
-                } catch (\InvalidArgumentException) {
-                    $dsnHost = $dsn;
-                }
-
-                $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-                $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-                $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
-                $isSharedTablesV1 = \in_array($dsnHost, $sharedTablesV1);
-                $isSharedTablesV2 = \in_array($dsnHost, $sharedTablesV2);
-            }
-
-            $databases = [];
-            $databaseKeys = [];
-            /**
-             * @var string|null $databaseOverride
-            */
-            $databaseOverride = '';
-            $dbScheme = '';
-            $sharedTables = [];
-            $sharedTablesV1 = [];
-            $sharedTablesV2 = [];
-
-            switch ($databasetype) {
-                case 'documentsDatabase':
-                    $databases = Config::getParam('pools-documentsdb', []);
-                    $databaseKeys = System::getEnv('_APP_DATABASE_DOCUMENTSDB_KEYS', '');
-                    $databaseOverride = System::getEnv('_APP_DATABASE_DOCUMENTSDB_OVERRIDE');
-                    $dbScheme = System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb');
-                    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES', ''));
-                    $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_DOCUMENTSDB_SHARED_TABLES_V1', ''));
-                    break;
-                case 'vectorDatabase':
-                    $databases = Config::getParam('pools-vectordb', []);
-                    $databaseKeys = System::getEnv('_APP_DATABASE_VECTORDB_KEYS', '');
-                    $databaseOverride = System::getEnv('_APP_DATABASE_VECTORDB_OVERRIDE');
-                    $dbScheme = System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql');
-                    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES', ''));
-                    $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_VECTORDB_SHARED_TABLES_V1', ''));
-                    break;
-                default:
-                    // legacy/tablesdb
-                    $databases = Config::getParam('pools-database', []);
-                    $databaseKeys = System::getEnv('_APP_DATABASE_KEYS', '');
-                    $databaseOverride = System::getEnv('_APP_DATABASE_OVERRIDE');
-                    $dbScheme = System::getEnv('_APP_DB_HOST', 'mysql');
-                    $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-                    $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-                    break;
-            }
-
-            if ($region !== 'default') {
-                $keys = explode(',', $databaseKeys);
-                $databases = array_filter($keys, function ($value) use ($region) {
-                    return str_contains($value, $region);
-                });
-            }
-            $sharedTablesV2 = \array_diff($sharedTables, $sharedTablesV1);
-
-            $index = \array_search($databaseOverride, $databases);
-            if ($index !== false) {
-                $selectedDsn = $databases[$index];
-            } else {
-                if (!empty($dsn)) {
-                    if ($isSharedTablesV1) {
-                        $databases = array_filter($databases, fn ($value) => \in_array($value, $sharedTablesV1));
-                    } elseif ($isSharedTablesV2) {
-                        $databases = array_filter($databases, fn ($value) => \in_array($value, $sharedTablesV2));
-                    } else {
-                        $databases = array_filter($databases, fn ($value) => !\in_array($value, $sharedTables));
-                    }
-                }
-                $selectedDsn = !empty($databases) ? $databases[array_rand($databases)] : '';
-            }
-
-            if (\in_array($selectedDsn, $sharedTables)) {
-                $schema = 'appwrite';
-                $database = 'appwrite';
-                $namespace = System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', '');
-                $selectedDsn = $schema . '://' . $selectedDsn . '?database=' . $database;
-
-                if (!empty($namespace)) {
-                    $selectedDsn .= '&namespace=' . $namespace;
-                }
-            }
-            try {
-                new DSN($selectedDsn);
-            } catch (\InvalidArgumentException) {
-                $selectedDsn = $dbScheme.'://' . $selectedDsn;
-            }
-            return $selectedDsn;
-        };
-        $team = $dbForPlatform->getDocument('teams', $teamId);
-
-        if ($team->isEmpty()) {
-            throw new Exception(Exception::TEAM_NOT_FOUND);
-        }
-
-        $allowList = \array_filter(\explode(',', System::getEnv('_APP_PROJECT_REGIONS', '')));
-
-        if (!empty($allowList) && !\in_array($region, $allowList)) {
-            throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "' . $region . '" is not supported');
-        }
-
-        $auth = Config::getParam('auth', []);
-        $auths = [
-            'limit' => 0,
-            'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
-            'passwordHistory' => 0,
-            'passwordDictionary' => false,
-            'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
-            'personalDataCheck' => false,
-            'mockNumbers' => [],
-            'sessionAlerts' => false,
-            'membershipsUserName' => false,
-            'membershipsUserEmail' => false,
-            'membershipsMfa' => false,
-            'invalidateSessions' => true
-        ];
-
-        foreach ($auth as $method) {
-            $auths[$method['key'] ?? ''] = true;
-        }
-
-        $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
-
-        if ($projectId === 'console') {
-            throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
-        }
-
-        $dsn = $getDatabaseDSN('databases', $region);
-
-        try {
-            $project = $dbForPlatform->createDocument('projects', new Document([
-                '$id' => $projectId,
-                '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ],
-                'name' => $name,
-                'teamInternalId' => $team->getSequence(),
-                'teamId' => $team->getId(),
-                'region' => $region,
-                'description' => $description,
-                'logo' => $logo,
-                'url' => $url,
-                'version' => APP_VERSION_STABLE,
-                'legalName' => $legalName,
-                'legalCountry' => $legalCountry,
-                'legalState' => $legalState,
-                'legalCity' => $legalCity,
-                'legalAddress' => $legalAddress,
-                'legalTaxId' => ID::custom($legalTaxId),
-                'services' => new stdClass(),
-                'platforms' => null,
-                'oAuthProviders' => [],
-                'webhooks' => null,
-                'keys' => null,
-                'auths' => $auths,
-                'accessedAt' => DateTime::now(),
-                'search' => implode(' ', [$projectId, $name]),
-                'database' => $dsn,
-                'labels' => [],
-                'documentsDatabase' => $getDatabaseDSN('documentsDatabase', $region, $dsn),
-                'vectorDatabase' => $getDatabaseDSN('vectorDatabase', $region, $dsn)
-            ]));
-        } catch (Duplicate) {
-            throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
-        }
-
-        try {
-            $dsn = new DSN($dsn);
-        } catch (\InvalidArgumentException) {
-            // TODO: Temporary until all projects are using shared tables
-            $dsn = new DSN('mysql://' . $dsn);
-        }
-
-        $sharedTables = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', ''));
-        $sharedTablesV1 = \explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES_V1', ''));
-        $projectTables = !\in_array($dsn->getHost(), $sharedTables);
-        $sharedTablesV1 = \in_array($dsn->getHost(), $sharedTablesV1);
-        $sharedTablesV2 = !$projectTables && !$sharedTablesV1;
-        $sharedTables = $sharedTablesV1 || $sharedTablesV2;
-
-        if (!$sharedTablesV2) {
-            $adapter = new DatabasePool($pools->get($dsn->getHost()));
-            $dbForProject = new Database($adapter, $cache);
-            $dbForProject->setDatabase(APP_DATABASE);
-
-            if ($sharedTables) {
-                $dbForProject
-                    ->setSharedTables(true)
-                    ->setTenant($sharedTablesV1 ? (int)$project->getSequence() : null)
-                    ->setNamespace($dsn->getParam('namespace'));
-            } else {
-                $dbForProject
-                    ->setSharedTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getSequence());
-            }
-
-            $create = true;
-
-            try {
-                $dbForProject->create();
-            } catch (Duplicate) {
-                $create = false;
-            }
-
-            if ($create || $projectTables) {
-                $adapter = new AdapterDatabase($dbForProject);
-                $audit = new Audit($adapter);
-                $audit->setup();
-            }
-
-            if (!$create && $sharedTablesV1) {
-                $adapter = new AdapterDatabase($dbForProject);
-                $attributes = $adapter->getAttributeDocuments();
-                $indexes = $adapter->getIndexDocuments();
-                $dbForProject->createDocument(Database::METADATA, new Document([
-                    '$id' => ID::custom('audit'),
-                    '$permissions' => [Permission::create(Role::any())],
-                    'name' => 'audit',
-                    'attributes' => $attributes,
-                    'indexes' => $indexes,
-                    'documentSecurity' => true
-                ]));
-            }
-
-            if ($create || $sharedTablesV1) {
-                /** @var array $collections */
-                $collections = Config::getParam('collections', [])['projects'] ?? [];
-
-                foreach ($collections as $key => $collection) {
-                    if (($collection['$collection'] ?? '') !== Database::METADATA) {
-                        continue;
-                    }
-
-                    $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-                    $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
-
-                    try {
-                        $dbForProject->createCollection($key, $attributes, $indexes);
-                    } catch (Duplicate) {
-                        $dbForProject->createDocument(Database::METADATA, new Document([
-                            '$id' => ID::custom($key),
-                            '$permissions' => [Permission::create(Role::any())],
-                            'name' => $key,
-                            'attributes' => $attributes,
-                            'indexes' => $indexes,
-                            'documentSecurity' => true
-                        ]));
-                    }
-                }
-            }
-        }
-
-        // Hook allowing instant project mirroring during migration
-        // Outside of migration, hook is not registered and has no effect
-        $hooks->trigger('afterProjectCreation', [$project, $pools, $cache]);
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-App::get('/v1/projects/:projectId')
+Http::get('/v1/projects/:projectId')
     ->desc('Get project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -407,138 +82,7 @@ App::get('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId')
-    ->desc('Update project')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('audits.event', 'projects.update')
-    ->label('audits.resource', 'project/{request.projectId}')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'update',
-        description: '/docs/references/projects/update.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
-    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
-    ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
-    ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
-    ->param('logo', '', new Text(1024), 'Project logo.', true)
-    ->param('url', '', new URL(), 'Project URL.', true)
-    ->param('legalName', '', new Text(256), 'Project legal name. Max length: 256 chars.', true)
-    ->param('legalCountry', '', new Text(256), 'Project legal country. Max length: 256 chars.', true)
-    ->param('legalState', '', new Text(256), 'Project legal state. Max length: 256 chars.', true)
-    ->param('legalCity', '', new Text(256), 'Project legal city. Max length: 256 chars.', true)
-    ->param('legalAddress', '', new Text(256), 'Project legal address. Max length: 256 chars.', true)
-    ->param('legalTaxId', '', new Text(256), 'Project legal tax ID. Max length: 256 chars.', true)
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $name, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForPlatform) {
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project
-            ->setAttribute('name', $name)
-            ->setAttribute('description', $description)
-            ->setAttribute('logo', $logo)
-            ->setAttribute('url', $url)
-            ->setAttribute('legalName', $legalName)
-            ->setAttribute('legalCountry', $legalCountry)
-            ->setAttribute('legalState', $legalState)
-            ->setAttribute('legalCity', $legalCity)
-            ->setAttribute('legalAddress', $legalAddress)
-            ->setAttribute('legalTaxId', $legalTaxId)
-            ->setAttribute('search', implode(' ', [$projectId, $name])));
-
-        $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-App::patch('/v1/projects/:projectId/team')
-    ->desc('Update project team')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk', new Method(
-        namespace: 'projects',
-        group: 'projects',
-        name: 'updateTeam',
-        description: '/docs/references/projects/update-team.md',
-        auth: [AuthType::ADMIN],
-        responses: [
-            new SDKResponse(
-                code: Response::STATUS_CODE_OK,
-                model: Response::MODEL_PROJECT,
-            )
-        ]
-    ))
-    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
-    ->param('teamId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Team ID of the team to transfer project to.', false, ['dbForProject'])
-    ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $teamId, Response $response, Database $dbForPlatform) {
-
-        $project = $dbForPlatform->getDocument('projects', $projectId);
-        $team = $dbForPlatform->getDocument('teams', $teamId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        if ($team->isEmpty()) {
-            throw new Exception(Exception::TEAM_NOT_FOUND);
-        }
-
-        $permissions = [
-            Permission::read(Role::team(ID::custom($teamId))),
-            Permission::update(Role::team(ID::custom($teamId), 'owner')),
-            Permission::update(Role::team(ID::custom($teamId), 'developer')),
-            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-        ];
-
-        $project
-            ->setAttribute('teamId', $teamId)
-            ->setAttribute('teamInternalId', $team->getSequence())
-            ->setAttribute('$permissions', $permissions);
-        $project = $dbForPlatform->updateDocument('projects', $project->getId(), $project);
-
-        $installations = $dbForPlatform->find('installations', [
-            Query::equal('projectInternalId', [$project->getSequence()]),
-        ]);
-        foreach ($installations as $installation) {
-            $installation->getAttribute('$permissions', $permissions);
-            $dbForPlatform->updateDocument('installations', $installation->getId(), $installation);
-        }
-
-        $repositories = $dbForPlatform->find('repositories', [
-            Query::equal('projectInternalId', [$project->getSequence()]),
-        ]);
-        foreach ($repositories as $repository) {
-            $repository->getAttribute('$permissions', $permissions);
-            $dbForPlatform->updateDocument('repositories', $repository->getId(), $repository);
-        }
-
-        $vcsComments = $dbForPlatform->find('vcsComments', [
-            Query::equal('projectInternalId', [$project->getSequence()]),
-        ]);
-        foreach ($vcsComments as $vcsComment) {
-            $vcsComment->getAttribute('$permissions', $permissions);
-            $dbForPlatform->updateDocument('vcsComments', $vcsComment->getId(), $vcsComment);
-        }
-
-        $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-App::patch('/v1/projects/:projectId/service')
+Http::patch('/v1/projects/:projectId/service')
     ->desc('Update service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -576,7 +120,7 @@ App::patch('/v1/projects/:projectId/service')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/service/all')
+Http::patch('/v1/projects/:projectId/service/all')
     ->desc('Update all service status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -617,7 +161,7 @@ App::patch('/v1/projects/:projectId/service/all')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/api')
+Http::patch('/v1/projects/:projectId/api')
     ->desc('Update API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -675,7 +219,7 @@ App::patch('/v1/projects/:projectId/api')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/api/all')
+Http::patch('/v1/projects/:projectId/api/all')
     ->desc('Update all API status')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -736,7 +280,7 @@ App::patch('/v1/projects/:projectId/api/all')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/oauth2')
+Http::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update project OAuth2')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -787,7 +331,7 @@ App::patch('/v1/projects/:projectId/oauth2')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/session-alerts')
+Http::patch('/v1/projects/:projectId/auth/session-alerts')
     ->desc('Update project sessions emails')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -825,7 +369,7 @@ App::patch('/v1/projects/:projectId/auth/session-alerts')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/memberships-privacy')
+Http::patch('/v1/projects/:projectId/auth/memberships-privacy')
     ->desc('Update project memberships privacy attributes')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -867,7 +411,7 @@ App::patch('/v1/projects/:projectId/auth/memberships-privacy')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/limit')
+Http::patch('/v1/projects/:projectId/auth/limit')
     ->desc('Update project users limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -905,7 +449,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/duration')
+Http::patch('/v1/projects/:projectId/auth/duration')
     ->desc('Update project authentication duration')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -943,7 +487,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/:method')
+Http::patch('/v1/projects/:projectId/auth/:method')
     ->desc('Update project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -984,7 +528,7 @@ App::patch('/v1/projects/:projectId/auth/:method')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/password-history')
+Http::patch('/v1/projects/:projectId/auth/password-history')
     ->desc('Update authentication password history. Use this endpoint to set the number of password history to save and 0 to disable password history.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1022,7 +566,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/password-dictionary')
+Http::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dicitonary check for user password')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1060,7 +604,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/personal-data')
+Http::patch('/v1/projects/:projectId/auth/personal-data')
     ->desc('Update personal data check')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1098,7 +642,7 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/max-sessions')
+Http::patch('/v1/projects/:projectId/auth/max-sessions')
     ->desc('Update project user sessions limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1136,7 +680,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::patch('/v1/projects/:projectId/auth/mock-numbers')
+Http::patch('/v1/projects/:projectId/auth/mock-numbers')
     ->desc('Update the mock numbers for the project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1182,7 +726,7 @@ App::patch('/v1/projects/:projectId/auth/mock-numbers')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::delete('/v1/projects/:projectId')
+Http::delete('/v1/projects/:projectId')
     ->desc('Delete project')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'projects.delete')
@@ -1228,7 +772,7 @@ App::delete('/v1/projects/:projectId')
 
 // Webhooks
 
-App::post('/v1/projects/:projectId/webhooks')
+Http::post('/v1/projects/:projectId/webhooks')
     ->desc('Create webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1293,7 +837,7 @@ App::post('/v1/projects/:projectId/webhooks')
             ->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::get('/v1/projects/:projectId/webhooks')
+Http::get('/v1/projects/:projectId/webhooks')
     ->desc('List webhooks')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1333,7 +877,7 @@ App::get('/v1/projects/:projectId/webhooks')
         ]), Response::MODEL_WEBHOOK_LIST);
     });
 
-App::get('/v1/projects/:projectId/webhooks/:webhookId')
+Http::get('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Get webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
@@ -1374,7 +918,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::put('/v1/projects/:projectId/webhooks/:webhookId')
+Http::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Update webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1440,7 +984,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
+Http::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     ->desc('Update webhook signature key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1486,7 +1030,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
 
-App::delete('/v1/projects/:projectId/webhooks/:webhookId')
+Http::delete('/v1/projects/:projectId/webhooks/:webhookId')
     ->desc('Delete webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -1534,7 +1078,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
 // Keys
 
-App::post('/v1/projects/:projectId/keys')
+Http::post('/v1/projects/:projectId/keys')
     ->desc('Create key')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.write')
@@ -1553,7 +1097,7 @@ App::post('/v1/projects/:projectId/keys')
     ))
     ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
+    ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->param('expire', null, new Nullable(new DatetimeValidator()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1572,9 +1116,6 @@ App::post('/v1/projects/:projectId/keys')
                 Permission::update(Role::any()),
                 Permission::delete(Role::any()),
             ],
-            // TODO: @hmacr Remove `projectInternalId` and `projectId` column writes before deleting the column.
-            'projectInternalId' => $project->getSequence(),
-            'projectId' => $project->getId(),
             'resourceInternalId' => $project->getSequence(),
             'resourceId' => $project->getId(),
             'resourceType' => 'projects',
@@ -1595,7 +1136,7 @@ App::post('/v1/projects/:projectId/keys')
             ->dynamic($key, Response::MODEL_KEY);
     });
 
-App::get('/v1/projects/:projectId/keys')
+Http::get('/v1/projects/:projectId/keys')
     ->desc('List keys')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.read')
@@ -1636,7 +1177,7 @@ App::get('/v1/projects/:projectId/keys')
         ]), Response::MODEL_KEY_LIST);
     });
 
-App::get('/v1/projects/:projectId/keys/:keyId')
+Http::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get key')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.read')
@@ -1678,7 +1219,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-App::put('/v1/projects/:projectId/keys/:keyId')
+Http::put('/v1/projects/:projectId/keys/:keyId')
     ->desc('Update key')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.write')
@@ -1698,7 +1239,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
     ->param('keyId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Key unique ID.', false, ['dbForProject'])
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
-    ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
+    ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('expire', null, new Nullable(new DatetimeValidator()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1732,7 +1273,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $response->dynamic($key, Response::MODEL_KEY);
     });
 
-App::delete('/v1/projects/:projectId/keys/:keyId')
+Http::delete('/v1/projects/:projectId/keys/:keyId')
     ->desc('Delete key')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.write')
@@ -1781,7 +1322,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
 // JWT Keys
 
-App::post('/v1/projects/:projectId/jwts')
+Http::post('/v1/projects/:projectId/jwts')
     ->groups(['api', 'projects'])
     ->desc('Create JWT')
     ->label('scope', 'projects.write')
@@ -1798,8 +1339,8 @@ App::post('/v1/projects/:projectId/jwts')
             )
         ]
     ))
-    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
-    ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for JWT key. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('scopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for JWT key. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->param('duration', 900, new Range(0, 3600), 'Time in seconds before JWT expires. Default duration is 900 seconds, and maximum is 3600 seconds.', true)
     ->inject('response')
     ->inject('dbForPlatform')
@@ -1823,7 +1364,7 @@ App::post('/v1/projects/:projectId/jwts')
 
 // Platforms
 
-App::post('/v1/projects/:projectId/platforms')
+Http::post('/v1/projects/:projectId/platforms')
     ->desc('Create platform')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'platforms.create')
@@ -1903,7 +1444,7 @@ App::post('/v1/projects/:projectId/platforms')
             ->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::get('/v1/projects/:projectId/platforms')
+Http::get('/v1/projects/:projectId/platforms')
     ->desc('List platforms')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.read')
@@ -1943,7 +1484,7 @@ App::get('/v1/projects/:projectId/platforms')
         ]), Response::MODEL_PLATFORM_LIST);
     });
 
-App::get('/v1/projects/:projectId/platforms/:platformId')
+Http::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.read')
@@ -1984,7 +1525,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::put('/v1/projects/:projectId/platforms/:platformId')
+Http::put('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Update platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.write')
@@ -2038,7 +1579,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
 
-App::delete('/v1/projects/:projectId/platforms/:platformId')
+Http::delete('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Delete platform')
     ->groups(['api', 'projects'])
     ->label('audits.event', 'platforms.delete')
@@ -2088,7 +1629,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
 
 // CUSTOM SMTP and Templates
-App::patch('/v1/projects/:projectId/smtp')
+Http::patch('/v1/projects/:projectId/smtp')
     ->desc('Update SMTP')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -2206,7 +1747,7 @@ App::patch('/v1/projects/:projectId/smtp')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
-App::post('/v1/projects/:projectId/smtp/tests')
+Http::post('/v1/projects/:projectId/smtp/tests')
     ->desc('Create SMTP test')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -2301,7 +1842,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
         return $response->noContent();
     });
 
-App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
+Http::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Get custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -2369,7 +1910,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     });
 
 
-App::get('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Get custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -2468,7 +2009,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $response->dynamic(new Document($template), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
+Http::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Update custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -2535,7 +2076,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
-App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Update custom email templates')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -2592,7 +2133,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
+Http::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Reset custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -2664,7 +2205,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
         ]), Response::MODEL_SMS_TEMPLATE);
     });
 
-App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
+Http::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Delete custom email template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
@@ -2717,7 +2258,7 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
         ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-App::patch('/v1/projects/:projectId/auth/session-invalidation')
+Http::patch('/v1/projects/:projectId/auth/session-invalidation')
     ->desc('Update invalidate session option of the project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')

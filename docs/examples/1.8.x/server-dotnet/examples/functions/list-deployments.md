@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ DeploymentList result = await functions.ListDeployments(
     queries: new List<string>(), // optional
     search: "<SEARCH>", // optional
     total: false // optional
-);
+);```

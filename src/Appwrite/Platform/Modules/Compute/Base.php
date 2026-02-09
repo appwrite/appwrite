@@ -23,6 +23,24 @@ use Utopia\VCS\Exception\RepositoryNotFound;
 class Base extends Action
 {
     /**
+     * Permissions for resources in this project.
+     *
+     * @param string $teamId
+     * @param string $projectId
+     * @return string[]
+     */
+    protected function getPermissions(string $teamId, string $projectId): array
+    {
+        return [
+            Permission::read(Role::team(ID::custom($teamId))),
+            Permission::update(Role::team(ID::custom($teamId), 'owner')),
+            Permission::update(Role::team(ID::custom($teamId), 'developer')),
+            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+        ];
+    }
+
+    /**
      * Get default specification based on plan and available specifications.
      *
      * @param array $plan The billing plan configuration
@@ -144,7 +162,7 @@ class Base extends Action
         return $deployment;
     }
 
-    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, string $referenceType = 'branch', string $reference = ''): Document
+    public function redeployVcsSite(Request $request, Document $site, Document $project, Document $installation, Database $dbForProject, Database $dbForPlatform, Build $queueForBuilds, Document $template, GitHub $github, bool $activate, Authorization $authorization, array $platform, string $referenceType = 'branch', string $reference = ''): Document
     {
         $deploymentId = ID::unique();
         $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -235,7 +253,7 @@ class Base extends Action
             ->setAttribute('latestDeploymentStatus', $deployment->getAttribute('status', ''));
         $dbForProject->updateDocument('sites', $site->getId(), $site);
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration

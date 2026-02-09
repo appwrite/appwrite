@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -12,3 +13,4 @@ Deployment result = await functions.createDuplicateDeployment(
     deploymentId: '<DEPLOYMENT_ID>',
     buildId: '<BUILD_ID>', // (optional)
 );
+```

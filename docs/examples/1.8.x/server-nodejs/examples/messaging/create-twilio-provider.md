@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -15,3 +16,4 @@ const result = await messaging.createTwilioProvider({
     authToken: '<AUTH_TOKEN>', // optional
     enabled: false // optional
 });
+```

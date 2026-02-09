@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tokens import Tokens
 
@@ -12,3 +13,4 @@ result = tokens.update(
     token_id = '<TOKEN_ID>',
     expire = '' # optional
 )
+```

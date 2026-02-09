@@ -1,3 +1,4 @@
+```javascript
 import { Client, Databases } from "@appwrite.io/console";
 
 const client = new Client()
@@ -8,8 +9,9 @@ const databases = new Databases(client);
 
 const result = await databases.update({
     databaseId: '<DATABASE_ID>',
-    name: '<NAME>',
+    name: '<NAME>', // optional
     enabled: false // optional
 });
 
 console.log(result);
+```

@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 import 'package:dart_appwrite/permission.dart';
 import 'package:dart_appwrite/role.dart';
@@ -23,3 +24,4 @@ Row result = await tablesDB.createRow(
     permissions: [Permission.read(Role.any())], // (optional)
     transactionId: '<TRANSACTION_ID>', // (optional)
 );
+```

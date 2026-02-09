@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Messaging
@@ -17,7 +18,7 @@ val response = messaging.updateSMTPProvider(
     port = 1, // optional
     username = "<USERNAME>", // optional
     password = "<PASSWORD>", // optional
-    encryption = "none", // optional
+    encryption = SmtpEncryption.NONE, // optional
     autoTLS = false, // optional
     mailer = "<MAILER>", // optional
     fromName = "<FROM_NAME>", // optional
@@ -26,3 +27,4 @@ val response = messaging.updateSMTPProvider(
     replyToEmail = "<REPLY_TO_EMAIL>", // optional
     enabled = false // optional
 )
+```

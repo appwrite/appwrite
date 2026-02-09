@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -17,4 +18,4 @@ $result = $storage->updateFile(
     fileId: '<FILE_ID>',
     name: '<NAME>', // optional
     permissions: [Permission::read(Role::any())] // optional
-);
+);```

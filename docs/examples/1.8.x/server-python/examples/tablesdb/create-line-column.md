@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 
@@ -15,3 +16,4 @@ result = tables_db.create_line_column(
     required = False,
     default = [[1, 2], [3, 4], [5, 6]] # optional
 )
+```

@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -17,3 +18,4 @@ ColumnFloat result = await tablesDB.createFloatColumn(
     xdefault: 0, // (optional)
     array: false, // (optional)
 );
+```

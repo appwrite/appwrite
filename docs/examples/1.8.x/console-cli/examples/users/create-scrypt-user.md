@@ -1,3 +1,4 @@
+```bash
 appwrite users create-scrypt-user \
     --user-id <USER_ID> \
     --email email@example.com \
@@ -7,3 +8,4 @@ appwrite users create-scrypt-user \
     --password-memory null \
     --password-parallel null \
     --password-length null
+```

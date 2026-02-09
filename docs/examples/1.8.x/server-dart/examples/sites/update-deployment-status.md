@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -11,3 +12,4 @@ Deployment result = await sites.updateDeploymentStatus(
     siteId: '<SITE_ID>',
     deploymentId: '<DEPLOYMENT_ID>',
 );
+```

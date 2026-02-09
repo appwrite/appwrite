@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -16,4 +17,4 @@ $result = $sites->updateVariable(
     key: '<KEY>',
     value: '<VALUE>', // optional
     secret: false // optional
-);
+);```

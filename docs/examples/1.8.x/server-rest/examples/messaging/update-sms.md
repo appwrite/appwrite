@@ -1,3 +1,4 @@
+```http
 PATCH /v1/messaging/messages/sms/{messageId} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -13,3 +14,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "draft": false,
   "scheduledAt": ""
 }
+```

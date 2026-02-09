@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Account
@@ -13,3 +14,4 @@ val response = account.updateMFAChallenge(
     challengeId = "<CHALLENGE_ID>",
     otp = "<OTP>"
 )
+```

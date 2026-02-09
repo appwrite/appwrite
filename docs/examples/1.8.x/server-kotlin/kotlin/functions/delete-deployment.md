@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Functions
@@ -13,3 +14,4 @@ val response = functions.deleteDeployment(
     functionId = "<FUNCTION_ID>",
     deploymentId = "<DEPLOYMENT_ID>"
 )
+```

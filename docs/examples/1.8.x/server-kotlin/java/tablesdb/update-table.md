@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.Permission;
@@ -14,7 +15,7 @@ TablesDB tablesDB = new TablesDB(client);
 tablesDB.updateTable(
     "<DATABASE_ID>", // databaseId
     "<TABLE_ID>", // tableId
-    "<NAME>", // name
+    "<NAME>", // name (optional)
     List.of(Permission.read(Role.any())), // permissions (optional)
     false, // rowSecurity (optional)
     false, // enabled (optional)
@@ -28,3 +29,4 @@ tablesDB.updateTable(
     })
 );
 
+```

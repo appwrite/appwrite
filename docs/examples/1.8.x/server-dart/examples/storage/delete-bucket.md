@@ -1,3 +1,4 @@
+```dart
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
@@ -10,3 +11,4 @@ Storage storage = Storage(client);
 await storage.deleteBucket(
     bucketId: '<BUCKET_ID>',
 );
+```

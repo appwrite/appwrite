@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 
@@ -17,3 +18,4 @@ result = tables_db.decrement_row_column(
     min = None, # optional
     transaction_id = '<TRANSACTION_ID>' # optional
 )
+```

@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -15,3 +16,4 @@ Document result = await databases.decrementDocumentAttribute(
     min: 0, // optional
     transactionId: '<TRANSACTION_ID>', // optional
 );
+```

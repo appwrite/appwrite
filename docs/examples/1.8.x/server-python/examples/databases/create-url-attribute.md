@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -16,3 +17,4 @@ result = databases.create_url_attribute(
     default = 'https://example.com', # optional
     array = False # optional
 )
+```

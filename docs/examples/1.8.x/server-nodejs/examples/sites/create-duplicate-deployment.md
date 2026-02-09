@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -11,3 +12,4 @@ const result = await sites.createDuplicateDeployment({
     siteId: '<SITE_ID>',
     deploymentId: '<DEPLOYMENT_ID>'
 });
+```

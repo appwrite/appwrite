@@ -12,7 +12,7 @@ x-logging: &x-logging
 
 services:
   traefik:
-    image: traefik:2.11
+    image: traefik:3.6
     <<: *x-logging
     container_name: appwrite-traefik
     command:
@@ -98,8 +98,7 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
-      
-
+      # - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
     depends_on:
       - ${_APP_DB_HOST:-mongodb}
       - postgresql
@@ -115,6 +114,7 @@ services:
       - _APP_ENV
       - _APP_EDITION
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_LOCALE
       - _APP_COMPRESSION_ENABLED
       - _APP_COMPRESSION_MIN_SIZE_BYTES
@@ -135,6 +135,7 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
       - _APP_DOMAIN_TARGET_A
@@ -237,6 +238,7 @@ services:
       - _APP_FUNCTIONS_CREATION_ABUSE_LIMIT
       - _APP_CUSTOM_DOMAIN_DENY_LIST
       - _APP_TRUSTED_HEADERS
+      - _APP_MIGRATION_HOST
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -340,6 +342,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -374,6 +377,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
       - _APP_DB_ADAPTER
@@ -415,6 +419,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -476,6 +481,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -519,6 +525,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -546,6 +553,7 @@ services:
       - _APP_OPTIONS_ROUTER_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
+      - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -593,6 +601,7 @@ services:
       # Basic
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_LOGGING_CONFIG
       # Database
       - _APP_OPENSSL_KEY_V1
@@ -652,6 +661,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
@@ -694,6 +704,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_OPTIONS_FORCE_HTTPS
@@ -738,6 +749,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
@@ -772,6 +784,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -833,6 +846,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
@@ -856,6 +870,7 @@ services:
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
       - _APP_DATABASE_SHARED_TABLES
       - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_MIGRATION_HOST
 
   appwrite-task-maintenance:
     entrypoint: maintenance
@@ -873,6 +888,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -918,6 +934,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -958,6 +975,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
@@ -992,6 +1010,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
@@ -1026,6 +1045,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
@@ -1060,6 +1080,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -1091,6 +1112,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -1121,6 +1143,7 @@ services:
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
+      - _APP_POOL_ADAPTER
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT

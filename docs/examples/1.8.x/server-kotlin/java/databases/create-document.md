@@ -1,3 +1,4 @@
+```java
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.Permission;
@@ -34,3 +35,4 @@ databases.createDocument(
     })
 );
 
+```

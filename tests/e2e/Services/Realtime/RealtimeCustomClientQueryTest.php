@@ -86,7 +86,7 @@ class RealtimeCustomClientQueryTest extends Scope
 
         // Should timeout - no event should be received
         try {
-            $client->receive();
+            $data = $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered');
         } catch (TimeoutException $e) {
             $this->assertTrue(true);
@@ -1234,6 +1234,183 @@ class RealtimeCustomClientQueryTest extends Scope
         $client->close();
     }
 
+    public function testCollectionScopedDocumentsChannelReceivesEvents()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Scoped Channel DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Scoped Channel Collection',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        // Subscribe only to the fully-qualified documents channel for this collection
+        $scopedChannel = 'databases.' . $databaseId . '.collections.' . $collectionId . '.documents';
+        $client = $this->getWebsocket([$scopedChannel], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains($scopedChannel, $response['data']['channels']);
+
+        // Create document in that collection - should receive event on the scoped channel
+        $documentId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $documentId,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $event = json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEquals($documentId, $event['data']['payload']['$id']);
+
+        $client->close();
+    }
+
+    public function testCollectionScopedDocumentsChannelWithQuery()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Scoped Channel Query DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Scoped Channel Query Collection',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        $targetDocumentId = ID::unique();
+
+        // Subscribe with query for specific document ID on the fully-qualified documents channel
+        $scopedChannel = 'databases.' . $databaseId . '.collections.' . $collectionId . '.documents';
+        $client = $this->getWebsocket([$scopedChannel], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            Query::equal('$id', [$targetDocumentId])->toString(),
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains($scopedChannel, $response['data']['channels']);
+
+        // Create document with matching ID - should receive event
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $targetDocumentId,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $event = json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEquals($targetDocumentId, $event['data']['payload']['$id']);
+
+        // Create document with different ID - should NOT receive event
+        $otherDocumentId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $otherDocumentId,
+            'data' => [
+                'status' => 'inactive'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        try {
+            $client->receive();
+            $this->fail('Expected TimeoutException - event should be filtered for scoped channel query');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $client->close();
+    }
+
     public function testFilesChannelWithQuery()
     {
         $user = $this->getUser();
@@ -1352,7 +1529,7 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $targetDocId = ID::unique();
 
-        // Subscribe with multiple queries (AND logic - ALL queries must match for event to be received)
+        // Subscribe with multiple 'queries' (AND logic - ALL 'queries' must match for event to be received)
         $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
@@ -1364,7 +1541,7 @@ class RealtimeCustomClientQueryTest extends Scope
         $response = json_decode($client->receive(), true);
         $this->assertEquals('connected', $response['type']);
 
-        // Create document matching BOTH queries - should receive event
+        // Create document matching BOTH 'queries' - should receive event
         $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -1383,50 +1560,9 @@ class RealtimeCustomClientQueryTest extends Scope
         $this->assertEquals($targetDocId, $event['data']['payload']['$id']);
         $this->assertEquals('active', $event['data']['payload']['status']);
 
-        // Create document with matching ID but wrong status - should NOT receive event (only one query matches)
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), [
-            'documentId' => $targetDocId,
-            'data' => [
-                'status' => 'inactive'
-            ],
-            'permissions' => [
-                Permission::read(Role::any()),
-            ],
-        ]);
-
-        try {
-            $client->receive();
-            $this->fail('Expected TimeoutException - event should be filtered (ID matches but status does not)');
-        } catch (TimeoutException $e) {
-            $this->assertTrue(true);
-        }
-
-        // Create document with matching status but wrong ID - should NOT receive event (only one query matches)
-        $otherDocId = ID::unique();
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), [
-            'documentId' => $otherDocId,
-            'data' => [
-                'status' => 'active'
-            ],
-            'permissions' => [
-                Permission::read(Role::any()),
-            ],
-        ]);
-
-        try {
-            $client->receive();
-            $this->fail('Expected TimeoutException - event should be filtered (status matches but ID does not)');
-        } catch (TimeoutException $e) {
-            $this->assertTrue(true);
-        }
-
-        // Create document matching NEITHER query - should NOT receive event
+        // Create document matching NEITHER query - should not receive event
+        // keeping it here as below are the documents created with status=>active
+        // so it will also receive it but the querykey can be used to distinction
         $anotherDocId = ID::unique();
         $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -1444,6 +1580,27 @@ class RealtimeCustomClientQueryTest extends Scope
         try {
             $client->receive();
             $this->fail('Expected TimeoutException - event should be filtered (neither query matches)');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // Create document with matching ID but wrong status - should NOT receive event (only one query matches)
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $targetDocId,
+            'data' => [
+                'status' => 'inactive'
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        try {
+            $client->receive();
+            $this->fail('Expected TimeoutException - event should be filtered (ID matches but status does not)');
         } catch (TimeoutException $e) {
             $this->assertTrue(true);
         }
@@ -1521,7 +1678,7 @@ class RealtimeCustomClientQueryTest extends Scope
         $this->assertStringContainsString('not supported in Realtime queries', $response['data']['message']);
         $this->assertStringContainsString('startsWith', $response['data']['message']);
 
-        // Test 5: Multiple invalid queries in nested structure
+        // Test 5: Multiple invalid 'queries' in nested structure
         $client = $this->getWebsocket(['documents'], [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session,
@@ -1543,5 +1700,566 @@ class RealtimeCustomClientQueryTest extends Scope
             str_contains($response['data']['message'], 'contains') ||
             str_contains($response['data']['message'], 'endsWith')
         );
+    }
+
+    public function testQueryKeys()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Query Keys Test DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Query Keys Collection',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        // Attributes used by 'queries'
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'category',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        $queryStatusActive = Query::equal('status', ['active'])->toString();
+        $queryStatusPending = Query::equal('status', ['pending'])->toString();
+        $queryComplex = Query::and([
+            Query::equal('status', ['active']),
+            Query::equal('category', ['gold']),
+        ])->toString();
+
+        // Subscribe with no 'queries' -> should receive all events (has select("*") subscription)
+        $clientAll = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ]);
+
+        // Subscribe with query1 (status == active)
+        $clientQ1 = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            $queryStatusActive,
+        ]);
+
+        // Subscribe with query2 (status == pending)
+        $clientQ2 = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            $queryStatusPending,
+        ]);
+
+        // Subscribe with complex query (status == active AND category == gold)
+        $clientComplex = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            $queryComplex,
+        ]);
+
+        // All clients should be connected
+        foreach ([$clientAll, $clientQ1, $clientQ2, $clientComplex] as $client) {
+            $response = json_decode($client->receive(), true);
+            $this->assertEquals('connected', $response['type']);
+        }
+
+        // 1) Create active/gold document -> should match Q1 and complex, and be seen by all
+        $docActiveGoldId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $docActiveGoldId,
+            'data' => [
+                'status' => 'active',
+                'category' => 'gold',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        // clientAll: should receive event, subscriptions should not be empty (has select("*") subscription that matches)
+        $eventAll = json_decode($clientAll->receive(), true);
+        $this->assertEquals('event', $eventAll['type']);
+        $this->assertEquals($docActiveGoldId, $eventAll['data']['payload']['$id']);
+        $this->assertArrayHasKey('subscriptions', $eventAll['data']);
+        $this->assertIsArray($eventAll['data']['subscriptions']);
+        // clientAll has select("*") subscription that matches all events, so subscriptions should not be empty
+        $this->assertNotEmpty($eventAll['data']['subscriptions']);
+
+        // clientQ1: should receive event, subscriptions should not be empty (query matched)
+        $eventQ1 = json_decode($clientQ1->receive(), true);
+        $this->assertEquals('event', $eventQ1['type']);
+        $this->assertEquals($docActiveGoldId, $eventQ1['data']['payload']['$id']);
+        $this->assertArrayHasKey('subscriptions', $eventQ1['data']);
+        $this->assertIsArray($eventQ1['data']['subscriptions']);
+        // clientQ1 has a query that matches, so subscriptions should not be empty
+        $this->assertNotEmpty($eventQ1['data']['subscriptions']);
+
+        // clientQ2: should NOT receive event (status is active, not pending)
+        try {
+            $clientQ2->receive();
+            $this->fail('Expected TimeoutException - event should be filtered for clientQ2 (active document)');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // clientComplex: should receive event, subscriptions should not be empty (query matched)
+        $eventComplex = json_decode($clientComplex->receive(), true);
+        $this->assertEquals('event', $eventComplex['type']);
+        $this->assertEquals($docActiveGoldId, $eventComplex['data']['payload']['$id']);
+        $this->assertArrayHasKey('subscriptions', $eventComplex['data']);
+        $this->assertIsArray($eventComplex['data']['subscriptions']);
+        // clientComplex has a query that matches, so subscriptions should not be empty
+        $this->assertNotEmpty($eventComplex['data']['subscriptions']);
+
+        // 2) Create pending/silver document -> should match Q2 only, and be seen by all
+        $docPendingSilverId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $docPendingSilverId,
+            'data' => [
+                'status' => 'pending',
+                'category' => 'silver',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        // clientAll: should receive event, subscriptions should not be empty (has select("*") subscription that matches)
+        $eventAll2 = json_decode($clientAll->receive(), true);
+        $this->assertEquals('event', $eventAll2['type']);
+        $this->assertEquals($docPendingSilverId, $eventAll2['data']['payload']['$id']);
+        $this->assertArrayHasKey('subscriptions', $eventAll2['data']);
+        $this->assertIsArray($eventAll2['data']['subscriptions']);
+        // clientAll has select("*") subscription that matches all events, so subscriptions should not be empty
+        $this->assertNotEmpty($eventAll2['data']['subscriptions']);
+
+        // clientQ1: should NOT receive event (status is pending)
+        try {
+            $clientQ1->receive();
+            $this->fail('Expected TimeoutException - event should be filtered for clientQ1 (pending document)');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // clientQ2: should receive event, subscriptions should not be empty (query matched)
+        $eventQ2 = json_decode($clientQ2->receive(), true);
+        $this->assertEquals('event', $eventQ2['type']);
+        $this->assertEquals($docPendingSilverId, $eventQ2['data']['payload']['$id']);
+        $this->assertArrayHasKey('subscriptions', $eventQ2['data']);
+        $this->assertIsArray($eventQ2['data']['subscriptions']);
+        // clientQ2 has a query that matches, so subscriptions should not be empty
+        $this->assertNotEmpty($eventQ2['data']['subscriptions']);
+
+        // clientComplex: should NOT receive event (status is pending, category silver)
+        try {
+            $clientComplex->receive();
+            $this->fail('Expected TimeoutException - event should be filtered for complex subscription (pending document)');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $clientAll->close();
+        $clientQ1->close();
+        $clientQ2->close();
+        $clientComplex->close();
+    }
+
+    /**
+     * Ensure two separate subscriptions with different query keys
+     * only see their own matching events and expose the correct
+     * queryKey in queryKeys.
+     */
+    public function testMultipleSubscriptionsDifferentQueryKeys()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Multiple Query Keys Test DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Multiple Query Keys Collection',
+            'permissions' => [
+                Permission::create(Role::user($user['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        // Attribute used by 'queries'
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        $queryStatusActive = Query::equal('status', ['active'])->toString();
+        $queryStatusPending = Query::equal('status', ['pending'])->toString();
+
+        // Two subscriptions on the same channel with different query keys
+        $clientQ1 = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            $queryStatusActive,
+        ]);
+
+        $clientQ2 = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            $queryStatusPending,
+        ]);
+
+        // Both should connect
+        $response = json_decode($clientQ1->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $response = json_decode($clientQ2->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        // 1) active document -> only queryStatusActive subscription should see it
+        $docActiveId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $docActiveId,
+            'data' => [
+                'status' => 'active',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $eventQ1 = json_decode($clientQ1->receive(), true);
+        $this->assertEquals('event', $eventQ1['type']);
+        $this->assertEquals($docActiveId, $eventQ1['data']['payload']['$id']);
+        $this->assertArrayHasKey('subscriptions', $eventQ1['data']);
+        $this->assertIsArray($eventQ1['data']['subscriptions']);
+        // clientQ1 has a query that matches, so subscriptions should not be empty
+        $this->assertNotEmpty($eventQ1['data']['subscriptions']);
+
+        try {
+            $clientQ2->receive();
+            $this->fail('Expected TimeoutException - clientQ2 should not receive active document');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // 2) pending document -> only queryStatusPending subscription should see it
+        $docPendingId = ID::unique();
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $docPendingId,
+            'data' => [
+                'status' => 'pending',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $eventQ2 = json_decode($clientQ2->receive(), true);
+        $this->assertEquals('event', $eventQ2['type']);
+        $this->assertEquals($docPendingId, $eventQ2['data']['payload']['$id']);
+        $this->assertArrayHasKey('subscriptions', $eventQ2['data']);
+        $this->assertIsArray($eventQ2['data']['subscriptions']);
+        // clientQ2 has a query that matches, so subscriptions should not be empty
+        $this->assertNotEmpty($eventQ2['data']['subscriptions']);
+
+        try {
+            $clientQ1->receive();
+            $this->fail('Expected TimeoutException - clientQ1 should not receive pending document');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $clientQ1->close();
+        $clientQ2->close();
+    }
+
+    public function testSubscriptionPreservedAfterPermissionChange()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+        $userId = $user['$id'] ?? '';
+
+        // Setup database and collection
+        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'databaseId' => ID::unique(),
+            'name' => 'Permission Change Test DB',
+        ]);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Permission Change Collection',
+            'permissions' => [
+                Permission::create(Role::user($userId)),
+                Permission::read(Role::user($userId)),
+            ],
+            'documentSecurity' => true,
+        ]);
+        $collectionId = $collection['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'status',
+            'size' => 256,
+            'required' => false,
+        ]);
+
+        sleep(2);
+
+        $targetDocumentId = ID::unique();
+
+        // Subscribe with query for specific document ID
+        $client = $this->getWebsocket(['documents'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], null, [
+            Query::equal('$id', [$targetDocumentId])->toString(),
+        ]);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+
+        // Store the original subscription mapping (index => subscriptionId)
+        $originalSubscriptionMapping = $response['data']['subscriptions'];
+        $this->assertNotEmpty($originalSubscriptionMapping);
+        // Get the first subscription ID and its index
+        $originalIndex = array_key_first($originalSubscriptionMapping);
+        $originalSubscriptionId = $originalSubscriptionMapping[$originalIndex];
+
+        // Create document with matching ID - should receive event
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $targetDocumentId,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+            ],
+        ]);
+
+        $event = json_decode($client->receive(), true);
+        $this->assertEquals('event', $event['type']);
+        $this->assertEquals($targetDocumentId, $event['data']['payload']['$id']);
+        $this->assertArrayHasKey('subscriptions', $event['data']);
+        $this->assertContains($originalSubscriptionId, $event['data']['subscriptions']);
+
+        // Trigger permission change by creating a team owned by a DIFFERENT user,
+        $teamOwnerEmail = uniqid() . 'owner@localhost.test';
+        $teamOwnerPassword = 'password';
+
+        $teamOwner = $this->client->call(Client::METHOD_POST, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'userId' => ID::unique(),
+            'email' => $teamOwnerEmail,
+            'password' => $teamOwnerPassword,
+            'name' => 'Team Owner',
+        ]);
+
+        $this->assertEquals(201, $teamOwner['headers']['status-code']);
+
+        $teamOwnerSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], [
+            'email' => $teamOwnerEmail,
+            'password' => $teamOwnerPassword,
+        ]);
+
+        $teamOwnerSession = $teamOwnerSession['cookies']['a_session_' . $projectId] ?? '';
+
+        $team = $this->client->call(Client::METHOD_POST, '/teams', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $teamOwnerSession,
+        ], [
+            'teamId' => ID::unique(),
+            'name' => 'Test Team',
+        ]);
+        $teamId = $team['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, '/teams/' . $teamId . '/memberships', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'email' => $user['email'],
+            'roles' => ['member'],
+            'url' => 'http://localhost',
+        ]);
+
+        sleep(3);
+
+        // Verify subscription is still working after permission change
+        $nonMatchingDocumentId = ID::unique();
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $nonMatchingDocumentId,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+            ],
+        ]);
+
+        // This document doesn't match the query, so we shouldn't receive it
+        try {
+            $data = $client->receive();
+            $this->fail('Expected TimeoutException - document does not match query after permission change');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // Create a NEW document with a different ID - should NOT receive event
+        $targetDocumentId2 = ID::unique();
+        $document3 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'documentId' => $targetDocumentId2,
+            'data' => [
+                'status' => 'active'
+            ],
+            'permissions' => [
+                Permission::read(Role::user($userId)),
+                Permission::update(Role::user($userId)),
+            ],
+        ]);
+
+        sleep(2);
+
+        // This should NOT receive event because the query is for $targetDocumentId, not $targetDocumentId2
+        // This verifies the query is preserved after permission change
+        try {
+            $data = $client->receive();
+            $this->fail('Expected TimeoutException - new document does not match original query after permission change');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        // Create a document with the ORIGINAL matching ID - should receive event
+        $document4 = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $targetDocumentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), [
+            'data' => [
+                'status' => 'updated-after-permission-change'
+            ],
+        ]);
+
+        // Wait a bit for the event to be processed
+        sleep(3);
+
+        // Verify the event is received with the preserved subscription
+        $event2 = json_decode($client->receive(), true);
+        $this->assertEquals('event', $event2['type']);
+        $this->assertEquals($targetDocumentId, $event2['data']['payload']['$id']);
+        $this->assertEquals('updated-after-permission-change', $event2['data']['payload']['status']);
+        $this->assertArrayHasKey('subscriptions', $event2['data']);
+        $this->assertIsArray($event2['data']['subscriptions']);
+        $this->assertNotEmpty($event2['data']['subscriptions']);
+        // Subscription ID should remain stable after permission change
+        $this->assertContains($originalSubscriptionId, $event2['data']['subscriptions']);
+
+        $client->close();
     }
 }

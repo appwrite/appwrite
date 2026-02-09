@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $databases->createDocuments(
     collectionId: '<COLLECTION_ID>',
     documents: [],
     transactionId: '<TRANSACTION_ID>' // optional
-);
+);```

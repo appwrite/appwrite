@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -12,4 +13,4 @@ $graphql = new Graphql($client);
 
 $result = $graphql->query(
     query: []
-);
+);```

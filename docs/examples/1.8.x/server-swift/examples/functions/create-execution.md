@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -18,3 +19,4 @@ let execution = try await functions.createExecution(
     scheduledAt: "<SCHEDULED_AT>" // optional
 )
 
+```

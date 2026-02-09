@@ -1726,6 +1726,7 @@ class UsageTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
+        $functionsDomain = \explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', ''))[0];
         $rule = $this->client->call(
             Client::METHOD_POST,
             '/proxy/rules/function',
@@ -1734,7 +1735,7 @@ class UsageTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
-                'domain' => 'test-' . ID::unique() . '.' . System::getEnv('_APP_DOMAIN_FUNCTIONS'),
+                'domain' => 'test-' . ID::unique() . '.' . $functionsDomain,
                 'functionId' => $functionId,
             ],
         );

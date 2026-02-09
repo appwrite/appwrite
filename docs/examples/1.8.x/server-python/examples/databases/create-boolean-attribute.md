@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -16,3 +17,4 @@ result = databases.create_boolean_attribute(
     default = False, # optional
     array = False # optional
 )
+```

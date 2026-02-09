@@ -587,7 +587,7 @@ class Databases extends Action
      * @return void
      * @throws Exception
      */
-    protected function deleteByGroup(string $collectionId, array $queries, Database $database, callable $callback = null): void
+    protected function deleteByGroup(string $collectionId, array $queries, Database $database, ?callable $callback = null): void
     {
         $start = \microtime(true);
 

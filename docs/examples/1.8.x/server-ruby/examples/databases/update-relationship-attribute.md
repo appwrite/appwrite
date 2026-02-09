@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -17,3 +18,4 @@ result = databases.update_relationship_attribute(
     on_delete: RelationMutate::CASCADE, # optional
     new_key: '' # optional
 )
+```

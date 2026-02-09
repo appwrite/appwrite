@@ -1,3 +1,4 @@
+```javascript
 import { Client, Console, ConsoleResourceType } from "@appwrite.io/console";
 
 const client = new Client()
@@ -12,3 +13,4 @@ const result = await console.getResource({
 });
 
 console.log(result);
+```

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingCreateTopic(
         topicId: "<TOPIC_ID>",
@@ -14,3 +15,4 @@ mutation {
         subscribe
     }
 }
+```

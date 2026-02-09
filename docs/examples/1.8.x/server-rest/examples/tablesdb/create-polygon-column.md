@@ -1,3 +1,4 @@
+```http
 POST /v1/tablesdb/{databaseId}/tables/{tableId}/columns/polygon HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -10,3 +11,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "required": false,
   "default": [[[1, 2], [3, 4], [5, 6], [1, 2]]]
 }
+```

@@ -74,6 +74,7 @@ class Create extends Base
             ->inject('queueForBuilds')
             ->inject('gitHub')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -90,7 +91,8 @@ class Create extends Base
         Event $queueForEvents,
         Build $queueForBuilds,
         GitHub $github,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -115,7 +117,8 @@ class Create extends Base
             activate: $activate,
             authorization: $authorization,
             reference: $reference,
-            referenceType: $type
+            referenceType: $type,
+            platform: $platform
         );
 
         $queueForEvents

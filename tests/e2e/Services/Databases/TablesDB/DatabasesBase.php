@@ -62,6 +62,12 @@ trait DatabasesBase
 
         $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
+        $this->assertArrayHasKey('bytesMax', $movies['body']);
+        $this->assertArrayHasKey('bytesUsed', $movies['body']);
+        $this->assertIsInt($movies['body']['bytesMax']);
+        $this->assertIsInt($movies['body']['bytesUsed']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesMax']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesUsed']);
 
         $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
@@ -143,6 +149,8 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertFalse($response['body']['enabled']);
+        $this->assertArrayHasKey('bytesMax', $response['body']);
+        $this->assertArrayHasKey('bytesUsed', $response['body']);
 
         if ($this->getSide() === 'client') {
             $responseCreateRow = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows', array_merge([
@@ -383,6 +391,9 @@ trait DatabasesBase
 
         $this->assertIsArray($movies['body']['columns']);
         $this->assertCount(10, $movies['body']['columns']);
+        $this->assertArrayHasKey('bytesMax', $movies['body']);
+        $this->assertArrayHasKey('bytesUsed', $movies['body']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesUsed']);
         $this->assertEquals($movies['body']['columns'][0]['key'], $title['body']['key']);
         $this->assertEquals($movies['body']['columns'][1]['key'], $description['body']['key']);
         $this->assertEquals($movies['body']['columns'][2]['key'], $tagline['body']['key']);
@@ -7696,6 +7707,267 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $update['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testInvalidRelationshipDocumentId(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        // Create parent table
+        $parentTable = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'ParentTable',
+        ]);
+        $this->assertEquals(201, $parentTable['headers']['status-code']);
+        $parentTableId = $parentTable['body']['$id'];
+
+        // Create child table
+        $childTable = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'tableId' => ID::unique(),
+            'name' => 'ChildTable',
+        ]);
+        $this->assertEquals(201, $childTable['headers']['status-code']);
+        $childTableId = $childTable['body']['$id'];
+
+        // Add string column to parent
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'name',
+            'size' => 255,
+            'required' => false,
+        ]);
+
+        // Add string column to child
+        $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $childTableId . '/columns/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'title',
+            'size' => 255,
+            'required' => false,
+        ]);
+
+        // Create one-to-many relationship
+        $relationship = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/columns/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedTableId' => $childTableId,
+            'type' => Database::RELATION_ONE_TO_MANY,
+            'twoWay' => false,
+            'key' => 'children',
+        ]);
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+
+        // Wait for relationship column to be available
+        $this->assertEventually(function () use ($databaseId, $parentTableId) {
+            $columns = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/columns', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]));
+            $columnKeys = array_column($columns['body']['columns'], 'key');
+            $this->assertContains('children', $columnKeys, "Relationship column 'children' not found in table {$parentTableId} of database {$databaseId}");
+        }, 2000, 200);
+
+        // ID too long (>36 chars) should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 1',
+                'children' => [
+                    [
+                        '$id' => 'this_id_is_way_too_long_and_should_fail_validation_check',
+                        'title' => 'Child 1',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // ID with invalid characters should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 2',
+                'children' => [
+                    [
+                        '$id' => 'invalid@id#with$special%chars',
+                        'title' => 'Child 2',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // ID starting with underscore should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 3',
+                'children' => [
+                    [
+                        '$id' => '_startsWithUnderscore',
+                        'title' => 'Child 3',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Valid ID should succeed
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 4',
+                'children' => [
+                    [
+                        '$id' => 'valid-id-123',
+                        'title' => 'Child 4',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $parentRowId = $response['body']['$id'];
+
+        // Update with invalid relationship ID should fail
+        $response = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows/' . $parentRowId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'data' => [
+                'children' => [
+                    [
+                        '$id' => 'another@invalid#id',
+                        'title' => 'Child 5',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Invalid string relation ID should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 6',
+                'children' => [
+                    'invalid@string#id',
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Integer as relation value should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 7',
+                'children' => [
+                    12345,
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // unique() as $id should succeed
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 8',
+                'children' => [
+                    [
+                        '$id' => 'unique()',
+                        'title' => 'Child 8',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Empty string as $id should fail
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 9',
+                'children' => [
+                    [
+                        '$id' => '',
+                        'title' => 'Child 9',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Valid ID with allowed special chars (hyphen, period) should succeed
+        $response = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $parentTableId . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'rowId' => ID::unique(),
+            'data' => [
+                'name' => 'Parent 10',
+                'children' => [
+                    [
+                        '$id' => 'valid.id-with_chars',
+                        'title' => 'Child 10',
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
     }
 
     /**

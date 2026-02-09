@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,3 +16,4 @@ result = account.create_magic_url_token(
     url: 'https://example.com', # optional
     phrase: false # optional
 )
+```

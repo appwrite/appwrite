@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.databases import Databases
 
@@ -11,3 +12,4 @@ databases = Databases(client)
 result = databases.create_transaction(
     ttl = 60 # optional
 )
+```

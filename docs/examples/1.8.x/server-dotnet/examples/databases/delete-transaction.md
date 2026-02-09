@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Databases databases = new Databases(client);
 
 await databases.DeleteTransaction(
     transactionId: "<TRANSACTION_ID>"
-);
+);```

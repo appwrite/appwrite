@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ File result = await storage.CreateFile(
     fileId: "<FILE_ID>",
     file: InputFile.FromPath("./path-to-files/image.jpg"),
     permissions: new List<string> { Permission.Read(Role.Any()) } // optional
-);
+);```

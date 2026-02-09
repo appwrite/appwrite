@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -12,3 +13,4 @@ graphql = Graphql.new(client)
 result = graphql.mutation(
     query: {}
 )
+```

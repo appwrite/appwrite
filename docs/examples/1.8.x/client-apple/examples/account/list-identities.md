@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -11,3 +12,4 @@ let identityList = try await account.listIdentities(
     total: false // optional
 )
 
+```

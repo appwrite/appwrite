@@ -66,6 +66,7 @@ class Create extends Action
             ->inject('queueForBuilds')
             ->inject('deviceForSites')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -80,7 +81,8 @@ class Create extends Action
         Event $queueForEvents,
         Build $queueForBuilds,
         Device $deviceForSites,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -143,7 +145,7 @@ class Create extends Action
         $dbForProject->updateDocument('sites', $site->getId(), $site);
 
         // Preview deployments for sites
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
+        $sitesDomain = $platform['sitesDomain'];
         $domain = ID::unique() . "." . $sitesDomain;
 
         // TODO: (@Meldiron) Remove after 1.7.x migration

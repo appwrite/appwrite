@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -14,4 +15,4 @@ Variable result = await functions.CreateVariable(
     key: "<KEY>",
     value: "<VALUE>",
     secret: false // optional
-);
+);```

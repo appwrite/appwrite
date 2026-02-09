@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -12,3 +13,4 @@ const result = await account.createEmailToken({
     email: 'email@example.com',
     phrase: false // optional
 });
+```

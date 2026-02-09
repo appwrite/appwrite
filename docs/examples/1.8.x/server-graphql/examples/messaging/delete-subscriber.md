@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingDeleteSubscriber(
         topicId: "<TOPIC_ID>",
@@ -6,3 +7,4 @@ mutation {
         status
     }
 }
+```

@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -15,4 +16,4 @@ $result = $tablesDB->listIndexes(
     tableId: '<TABLE_ID>',
     queries: [], // optional
     total: false // optional
-);
+);```

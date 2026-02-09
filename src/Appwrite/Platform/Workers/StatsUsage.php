@@ -572,13 +572,11 @@ class StatsUsage extends Action
                 $this->statDocuments
             );
             Console::success('Usage logs pushed to Logs DB');
-
-            /**
-             * todo: Do we need to unset $this->statDocuments?
-             */
-
         } catch (Throwable $th) {
             Console::error($th->getMessage());
+        } finally {
+            // Clear statDocuments to prevent memory accumulation across batches
+            $this->statDocuments = [];
         }
     }
 }

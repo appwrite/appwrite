@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -13,4 +14,4 @@ IdentityList result = await users.ListIdentities(
     queries: new List<string>(), // optional
     search: "<SEARCH>", // optional
     total: false // optional
-);
+);```

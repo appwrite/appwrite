@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 
 let client = Client()
@@ -11,3 +12,4 @@ let mfaFactors = try await users.listMFAFactors(
     userId: "<USER_ID>"
 )
 
+```

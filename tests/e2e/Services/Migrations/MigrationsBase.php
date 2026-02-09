@@ -110,7 +110,7 @@ trait MigrationsBase
     {
         $response = $this->performMigrationSync([
             'resources' => Appwrite::getSupportedResources(),
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -147,7 +147,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_USER,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -209,7 +209,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_USER,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -298,7 +298,7 @@ trait MigrationsBase
                 Resource::TYPE_TEAM,
                 Resource::TYPE_MEMBERSHIP,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -414,7 +414,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_DATABASE,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -505,7 +505,7 @@ trait MigrationsBase
                 Resource::TYPE_TABLE,
                 Resource::TYPE_COLUMN,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -592,7 +592,7 @@ trait MigrationsBase
                 Resource::TYPE_COLUMN,
                 Resource::TYPE_ROW,
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -672,7 +672,7 @@ trait MigrationsBase
             'resources' => [
                 Resource::TYPE_BUCKET
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -768,7 +768,7 @@ trait MigrationsBase
                 Resource::TYPE_BUCKET,
                 Resource::TYPE_FILE
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -839,7 +839,7 @@ trait MigrationsBase
                 Resource::TYPE_FUNCTION,
                 Resource::TYPE_DEPLOYMENT
             ],
-            'endpoint' => $this->endpoint,
+            'endpoint' => $this->webEndpoint,
             'projectId' => $this->getProject()['$id'],
             'apiKey' => $this->getProject()['apiKey'],
         ]);
@@ -1140,7 +1140,7 @@ trait MigrationsBase
         // all data exists, pass.
         $migration = $this->performCsvMigration(
             [
-                'endpoint' => $this->endpoint,
+                'endpoint' => $this->webEndpoint,
                 'fileId' => $fileIds['default'],
                 'bucketId' => $bucketIds['default'],
                 'resourceId' => $databaseId . ':' . $tableId,
@@ -1182,7 +1182,7 @@ trait MigrationsBase
         // all data exists and includes internals, pass.
         $migration = $this->performCsvMigration(
             [
-                'endpoint' => $this->endpoint,
+                'endpoint' => $this->webEndpoint,
                 'fileId' => $fileIds['documents-internals'],
                 'bucketId' => $bucketIds['documents-internals'],
                 'resourceId' => $databaseId . ':' . $tableId,

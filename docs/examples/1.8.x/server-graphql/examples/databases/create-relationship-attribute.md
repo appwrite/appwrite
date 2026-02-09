@@ -1,3 +1,4 @@
+```graphql
 mutation {
     databasesCreateRelationshipAttribute(
         databaseId: "<DATABASE_ID>",
@@ -25,3 +26,4 @@ mutation {
         side
     }
 }
+```

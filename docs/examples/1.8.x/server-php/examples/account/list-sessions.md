@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -11,3 +12,4 @@ $client = (new Client())
 $account = new Account($client);
 
 $result = $account->listSessions();
+```

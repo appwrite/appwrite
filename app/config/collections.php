@@ -28,8 +28,8 @@ $collections = [
     'buckets' => $buckets,
     'databases' => $databases,
     'vectordb' => $vectordb,
-    'projects' => array_merge($projects, $common),
-    'console' => array_merge($platform, $common),
+    'projects' => array_merge_recursive($projects, $common),
+    'console' => array_merge_recursive($platform, $common),
     'logs' => $logs,
 ];
 

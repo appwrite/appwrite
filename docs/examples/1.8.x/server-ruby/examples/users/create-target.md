@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -18,3 +19,4 @@ result = users.create_target(
     provider_id: '<PROVIDER_ID>', # optional
     name: '<NAME>' # optional
 )
+```
