@@ -1941,10 +1941,6 @@ Http::get('/v1/projects/:projectId/templates/email/:type/:locale')
         $templates = $project->getAttribute('templates', []);
         $templateKey = 'email.' . $type . '-' . $locale;
         $template = $templates[$templateKey] ?? null;
-        if (is_null($template)) {
-            $templateLowerKey = 'email.' . strtolower($type) . '-' . $locale;
-            $template = $templates[$templateLowerKey] ?? null;
-        }
 
         $localeObj = new Locale($locale);
         $localeObj->setFallback(System::getEnv('_APP_LOCALE', 'en'));
@@ -2123,7 +2119,12 @@ Http::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $templates = $project->getAttribute('templates', []);
-        $templates['email.' . $type . '-' . $locale] = [
+        $templateKey = 'email.' . $type . '-' . $locale;
+        $templateLowerKey = 'email.' . strtolower($type) . '-' . $locale;
+        if ($templateLowerKey !== $templateKey) {
+            unset($templates[$templateLowerKey]);
+        }
+        $templates[$templateKey] = [
             'senderName' => $senderName,
             'senderEmail' => $senderEmail,
             'subject' => $subject,

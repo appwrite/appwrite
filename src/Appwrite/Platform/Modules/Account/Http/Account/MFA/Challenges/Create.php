@@ -14,6 +14,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Template\EmailTemplate;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -42,85 +43,6 @@ class Create extends Action
         return 'createMFAChallenge';
     }
 
-    protected function getCustomTemplate(Document $project, string $type, Locale $locale, string $prefix = 'email'): array
-    {
-        $templates = $project->getAttribute('templates', []);
-        $templateKey = $prefix . '.' . $type . '-' . $locale->default;
-        if (!empty($templates[$templateKey])) {
-            return $templates[$templateKey];
-        }
-
-        $templateLowerKey = $prefix . '.' . strtolower($type) . '-' . $locale->default;
-        return $templates[$templateLowerKey] ?? [];
-    }
-
-    protected function normalizeEmailLocaleKey(string $key): string
-    {
-        if (!str_starts_with($key, 'emails.')) {
-            return $key;
-        }
-
-        $parts = explode('.', $key);
-        if (count($parts) < 3) {
-            return $key;
-        }
-
-        $type = strtolower($parts[1]);
-        $typeMap = [
-            'magicsession' => 'magicSession',
-            'otpsession' => 'otpSession',
-            'mfachallenge' => 'mfaChallenge',
-            'sessionalert' => 'sessionAlert',
-        ];
-
-        if (isset($typeMap[$type])) {
-            $parts[1] = $typeMap[$type];
-
-            if (isset($parts[2]) && $type === 'magicsession') {
-                $fieldMap = [
-                    'body' => 'optionButton',
-                    'footer' => 'optionUrl',
-                ];
-                $field = strtolower($parts[2]);
-                if (isset($fieldMap[$field])) {
-                    $parts[2] = $fieldMap[$field];
-                }
-            }
-
-            return implode('.', $parts);
-        }
-
-        return $key;
-    }
-
-    protected function translateEmailTemplate(string $content, Locale $locale): string
-    {
-        return preg_replace_callback('/\{\{\s*(emails\.[^}]+)\s*\}\}/i', function ($matches) use ($locale) {
-            $missing = '__missing_translation__';
-            $rawKey = trim($matches[1]);
-            $keyLower = strtolower($rawKey);
-
-            $candidates = [];
-            $candidates[] = $this->normalizeEmailLocaleKey($rawKey);
-
-            if ($keyLower === 'emails.magicsession.body' || $keyLower === 'emails.magicsession.footer') {
-                $candidates[] = 'emails.magicSession.' . ($keyLower === 'emails.magicsession.body' ? 'optionButton' : 'optionUrl');
-            }
-
-            if ($keyLower === 'emails.magicsession.footer') {
-                $candidates[] = 'emails.magicSession.clientInfo';
-            }
-
-            foreach ($candidates as $key) {
-                $value = $locale->getText($key, $missing);
-                if ($value !== $missing) {
-                    return $value;
-                }
-            }
-
-            return $matches[0];
-        }, $content) ?? $content;
-    }
 
     public function __construct()
     {
@@ -250,9 +172,9 @@ class Create extends Action
 
                 $message = Template::fromFile($templatesPath . '/sms-base.tpl');
 
-                $customTemplate = $this->getCustomTemplate($project, 'mfaChallenge', $locale, 'sms');
-                if (!empty($customTemplate)) {
-                    $message = $customTemplate['message'] ?? $message;
+                $customTemplate = $project->getAttribute('templates', [])['sms.mfaChallenge-' . $locale->default] ?? [];
+                if (!empty($customTemplate['message'])) {
+                    $message = Template::fromString($customTemplate['message']);
                 }
 
                 $messageContent = Template::fromString($locale->getText("sms.verification.body"));
@@ -307,7 +229,7 @@ class Create extends Action
                 $preview = $locale->getText("emails.mfaChallenge.preview");
                 $heading = $locale->getText("emails.mfaChallenge.heading");
 
-                $customTemplate = $this->getCustomTemplate($project, 'mfaChallenge', $locale, 'email');
+                $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
                 $smtpBaseTemplate = $project->getAttribute('smtpBaseTemplate', 'email-base');
 
                 $validator = new FileName();
@@ -333,8 +255,8 @@ class Create extends Action
                 $body = $message->render();
 
                 if (!empty($customTemplate)) {
-                    $body = $this->translateEmailTemplate($customTemplate['message'] ?? $body, $locale);
-                    $subject = $this->translateEmailTemplate($customTemplate['subject'] ?? $subject, $locale);
+                    $body = EmailTemplate::translateTokens($customTemplate['message'] ?? $body, $locale);
+                    $subject = EmailTemplate::translateTokens($customTemplate['subject'] ?? $subject, $locale);
                 }
 
                 $smtp = $project->getAttribute('smtp', []);

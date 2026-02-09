@@ -16,6 +16,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Template\EmailTemplate;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -59,91 +60,6 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
-if (!function_exists('getCustomTemplate')) {
-    function getCustomTemplate(Document $project, string $type, Locale $locale, string $prefix = 'email'): array
-    {
-        $templates = $project->getAttribute('templates', []);
-        $templateKey = $prefix . '.' . $type . '-' . $locale->default;
-        if (!empty($templates[$templateKey])) {
-            return $templates[$templateKey];
-        }
-
-        $templateLowerKey = $prefix . '.' . strtolower($type) . '-' . $locale->default;
-        return $templates[$templateLowerKey] ?? [];
-    }
-}
-
-if (!function_exists('normalizeEmailLocaleKey')) {
-    function normalizeEmailLocaleKey(string $key): string
-    {
-        if (!str_starts_with($key, 'emails.')) {
-            return $key;
-        }
-
-        $parts = explode('.', $key);
-        if (count($parts) < 3) {
-            return $key;
-        }
-
-        $type = strtolower($parts[1]);
-        $typeMap = [
-            'magicsession' => 'magicSession',
-            'otpsession' => 'otpSession',
-            'mfachallenge' => 'mfaChallenge',
-            'sessionalert' => 'sessionAlert',
-        ];
-
-        if (isset($typeMap[$type])) {
-            $parts[1] = $typeMap[$type];
-
-            if (isset($parts[2]) && $type === 'magicsession') {
-                $fieldMap = [
-                    'body' => 'optionButton',
-                    'footer' => 'optionUrl',
-                ];
-                $field = strtolower($parts[2]);
-                if (isset($fieldMap[$field])) {
-                    $parts[2] = $fieldMap[$field];
-                }
-            }
-
-            return implode('.', $parts);
-        }
-
-        return $key;
-    }
-}
-
-if (!function_exists('translateEmailTemplate')) {
-    function translateEmailTemplate(string $content, Locale $locale): string
-    {
-        return preg_replace_callback('/\{\{\s*(emails\.[^}]+)\s*\}\}/i', function ($matches) use ($locale) {
-            $missing = '__missing_translation__';
-            $rawKey = trim($matches[1]);
-            $keyLower = strtolower($rawKey);
-
-            $candidates = [];
-            $candidates[] = normalizeEmailLocaleKey($rawKey);
-
-            if ($keyLower === 'emails.magicsession.body' || $keyLower === 'emails.magicsession.footer') {
-                $candidates[] = 'emails.magicSession.' . ($keyLower === 'emails.magicsession.body' ? 'optionButton' : 'optionUrl');
-            }
-
-            if ($keyLower === 'emails.magicsession.footer') {
-                $candidates[] = 'emails.magicSession.clientInfo';
-            }
-
-            foreach ($candidates as $key) {
-                $value = $locale->getText($key, $missing);
-                if ($value !== $missing) {
-                    return $value;
-                }
-            }
-
-            return $matches[0];
-        }, $content) ?? $content;
-    }
-}
 
 Http::post('/v1/teams')
     ->desc('Create team')
@@ -775,7 +691,7 @@ Http::post('/v1/teams/:teamId/memberships')
                 $body = $locale->getText("emails.invitation.body");
                 $preview = $locale->getText("emails.invitation.preview");
                 $subject = $locale->getText("emails.invitation.subject");
-                $customTemplate = getCustomTemplate($project, 'invitation', $locale, 'email');
+                $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
                 $message
@@ -788,8 +704,8 @@ Http::post('/v1/teams/:teamId/memberships')
                 $body = $message->render();
 
                 if (!empty($customTemplate)) {
-                    $body = translateEmailTemplate($customTemplate['message'] ?? $body, $locale);
-                    $subject = translateEmailTemplate($customTemplate['subject'] ?? $subject, $locale);
+                    $body = EmailTemplate::translateTokens($customTemplate['message'] ?? $body, $locale);
+                    $subject = EmailTemplate::translateTokens($customTemplate['subject'] ?? $subject, $locale);
                 }
 
                 $smtp = $project->getAttribute('smtp', []);
@@ -860,9 +776,9 @@ Http::post('/v1/teams/:teamId/memberships')
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-                $customTemplate = getCustomTemplate($project, 'invitation', $locale, 'sms');
-                if (!empty($customTemplate)) {
-                    $message = $customTemplate['message'];
+                $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
+                if (!empty($customTemplate['message'])) {
+                    $message = Template::fromString($customTemplate['message']);
                 }
 
                 $message = $message->setParam('{{token}}', $url);
