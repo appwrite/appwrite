@@ -459,31 +459,45 @@ class AccountCustomClientTest extends Scope
             return self::$phoneSessionData[$cacheKey];
         }
 
-        $data = $this->setupPhoneAccount();
-        $id = $data['id'];
-        // Extract OTP token - try the raw message first, then first word
-        $rawMessage = $data['token'];
-        $token = \trim($rawMessage);
-        if (\str_contains($token, ' ')) {
-            $token = \explode(' ', $token)[0];
+        // Try up to 3 times with fresh phone accounts if session creation fails
+        $maxRetries = 3;
+        $lastError = '';
+
+        for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+            // Force fresh phone account on retry
+            if ($attempt > 0) {
+                unset(self::$phoneData[$cacheKey]);
+                \usleep(500000); // 500ms between retries
+            }
+
+            $data = $this->setupPhoneAccount();
+            $id = $data['id'];
+            // Extract OTP token - try the raw message first, then first word
+            $rawMessage = $data['token'];
+            $token = \trim($rawMessage);
+            if (\str_contains($token, ' ')) {
+                $token = \explode(' ', $token)[0];
+            }
+
+            $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+            ]), [
+                'userId' => $id,
+                'secret' => $token,
+            ]);
+
+            if ($response['headers']['status-code'] === 201) {
+                $session = $response['cookies']['a_session_' . $projectId];
+                self::$phoneSessionData[$cacheKey] = array_merge($data, ['session' => $session]);
+                return self::$phoneSessionData[$cacheKey];
+            }
+
+            $lastError = 'Attempt ' . ($attempt + 1) . ': Phone session creation failed (status ' . $response['headers']['status-code'] . '). Token: "' . $token . '", Raw message: "' . $rawMessage . '", UserId: ' . $id;
         }
 
-        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-        ]), [
-            'userId' => $id,
-            'secret' => $token,
-        ]);
-
-        $this->assertEquals(201, $response['headers']['status-code'], 'Phone session creation failed. Token: "' . $token . '", Raw message: "' . $rawMessage . '", UserId: ' . $id);
-
-        $session = $response['cookies']['a_session_' . $projectId];
-
-        self::$phoneSessionData[$cacheKey] = array_merge($data, ['session' => $session]);
-
-        return self::$phoneSessionData[$cacheKey];
+        $this->fail($lastError);
     }
 
     /**

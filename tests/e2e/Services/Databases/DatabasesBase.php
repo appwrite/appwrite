@@ -5294,13 +5294,68 @@ trait DatabasesBase
 
     public function testUniqueIndexDuplicate(): void
     {
-        $data = $this->setupDocuments();
+        // Use a dedicated collection for this test to avoid interference from other tests
+        // that may add duplicate titles to the shared movies collection in the same process
+        $data = $this->setupDatabase();
         $databaseId = $data['databaseId'];
-        $uniqueIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $data['moviesId']), array_merge([
+
+        $serverHeaders = array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
+        ]);
+
+        // Create a dedicated collection for unique index testing
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $serverHeaders, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'uniqueIndexTest',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        // Add a title attribute
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/string', $serverHeaders, [
+            'key' => 'title',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->waitForAttribute($databaseId, $collectionId, 'title');
+
+        // Add two documents with unique titles
+        $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'Unique Title A'],
+            'permissions' => [
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+            ]
+        ]);
+        $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'Unique Title B'],
+            'permissions' => [
+                Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::update(Role::user(ID::custom($this->getUser()['$id']))),
+                Permission::delete(Role::user(ID::custom($this->getUser()['$id']))),
+            ]
+        ]);
+
+        // Create unique index on title
+        $uniqueIndex = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), $serverHeaders, [
             'key' => 'unique_title',
             'type' => 'unique',
             $this->getIndexAttributesParam() => ['title'],
@@ -5308,21 +5363,16 @@ trait DatabasesBase
 
         $this->assertEquals(202, $uniqueIndex['headers']['status-code']);
 
-        $this->waitForIndex($databaseId, $data['moviesId'], 'unique_title');
+        $this->waitForIndex($databaseId, $collectionId, 'unique_title');
 
-        // test for failure
-        $duplicate = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+        // test for failure - inserting duplicate title
+        $duplicate = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
-                'title' => 'Captain America',
-                'releaseYear' => 1944,
-                'actors' => [
-                    'Chris Evans',
-                    'Samuel Jackson',
-                ]
+                'title' => 'Unique Title A',
             ],
             'permissions' => [
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
@@ -5333,19 +5383,14 @@ trait DatabasesBase
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
 
-        // Test for exception when updating document to conflict
-        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $data['moviesId']), array_merge([
+        // Test for exception when inserting new doc and then updating to conflict
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
-                'title' => 'Captain America 5',
-                'releaseYear' => 1944,
-                'actors' => [
-                    'Chris Evans',
-                    'Samuel Jackson',
-                ]
+                'title' => 'Unique Title C',
             ],
             'permissions' => [
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),
@@ -5357,18 +5402,13 @@ trait DatabasesBase
         $this->assertEquals(201, $document['headers']['status-code']);
 
         // Test for exception when updating document to conflict
-        $duplicate = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $data['moviesId']) . '/' . $this->getRecordResource() . '/' . $document['body']['$id'], array_merge([
+        $duplicate = $this->client->call(Client::METHOD_PATCH, $this->getContainerUrl($databaseId, $collectionId) . '/' . $this->getRecordResource() . '/' . $document['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             $this->getRecordIdParam() => ID::unique(),
             'data' => [
-                'title' => 'Captain America',
-                'releaseYear' => 1944,
-                'actors' => [
-                    'Chris Evans',
-                    'Samuel Jackson',
-                ]
+                'title' => 'Unique Title A',
             ],
             'permissions' => [
                 Permission::read(Role::user(ID::custom($this->getUser()['$id']))),

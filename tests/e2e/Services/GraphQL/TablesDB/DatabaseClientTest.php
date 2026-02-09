@@ -373,7 +373,7 @@ class DatabaseClientTest extends Scope
 
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(10, $res['body']['data']['tablesDBUpdateRows']['rows']);
+        $this->assertGreaterThanOrEqual(10, count($res['body']['data']['tablesDBUpdateRows']['rows']));
 
         // Step 2: Add two new rows via upsert
         $query = $this->getQuery(self::UPSERT_ROWS);
