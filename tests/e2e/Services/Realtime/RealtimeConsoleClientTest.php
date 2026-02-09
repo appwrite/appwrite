@@ -102,7 +102,14 @@ class RealtimeConsoleClientTest extends Scope
         ]);
 
         // Wait for column to be available
-        sleep(2);
+        $this->assertEventually(function () use ($databaseId, $actorsId) {
+            $column = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $actorsId . '/columns/name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(200, $column['headers']['status-code']);
+            $this->assertEquals('available', $column['body']['status']);
+        }, 10000, 500);
 
         return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
     }
@@ -146,7 +153,14 @@ class RealtimeConsoleClientTest extends Scope
         ]);
 
         // Wait for index to be available
-        sleep(2);
+        $this->assertEventually(function () use ($data) {
+            $index = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $data['databaseId'] . '/tables/' . $data['actorsId'] . '/indexes/key_name', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()));
+            $this->assertEquals(200, $index['headers']['status-code']);
+            $this->assertEquals('available', $index['body']['status']);
+        }, 10000, 500);
 
         return $data;
     }

@@ -3014,6 +3014,8 @@ trait DatabasesBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
+        return $data;
     }
 
     public function testGetDocument(): void

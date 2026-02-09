@@ -42,8 +42,9 @@ class DatabaseClientTest extends Scope
      */
     protected function setupDatabase(): array
     {
-        if (!empty(static::$database)) {
-            return static::$database;
+        $cacheKey = $this->getProject()['$id'] ?? 'default';
+        if (!empty(static::$database[$cacheKey])) {
+            return static::$database[$cacheKey];
         }
 
         $projectId = $this->getProject()['$id'];
@@ -70,9 +71,9 @@ class DatabaseClientTest extends Scope
         }
 
         $this->assertIsArray($database['body']['data']);
-        static::$database = $database['body']['data']['databasesCreate'];
+        static::$database[$cacheKey] = $database['body']['data']['databasesCreate'];
 
-        return static::$database;
+        return static::$database[$cacheKey];
     }
 
     /**
@@ -80,8 +81,9 @@ class DatabaseClientTest extends Scope
      */
     protected function setupCollection(): array
     {
-        if (!empty(static::$collection)) {
-            return static::$collection;
+        $cacheKey = $this->getProject()['$id'] ?? 'default';
+        if (!empty(static::$collection[$cacheKey])) {
+            return static::$collection[$cacheKey];
         }
 
         $database = $this->setupDatabase();
@@ -119,12 +121,12 @@ class DatabaseClientTest extends Scope
 
         $this->assertIsArray($collection['body']['data']);
 
-        static::$collection = [
+        static::$collection[$cacheKey] = [
             'database' => $database,
             'collection' => $collection['body']['data']['databasesCreateCollection'],
         ];
 
-        return static::$collection;
+        return static::$collection[$cacheKey];
     }
 
     /**
@@ -134,9 +136,10 @@ class DatabaseClientTest extends Scope
     {
         $data = $this->setupCollection();
 
-        // Use a static flag to track if attributes have been created
-        static $attributesCreated = false;
-        if ($attributesCreated) {
+        // Use a static flag to track if attributes have been created, keyed by project
+        static $attributesCreated = [];
+        $cacheKey = $this->getProject()['$id'] ?? 'default';
+        if (!empty($attributesCreated[$cacheKey])) {
             return $data;
         }
 
@@ -182,7 +185,7 @@ class DatabaseClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
 
-        $attributesCreated = true;
+        $attributesCreated[$cacheKey] = true;
 
         return $data;
     }
@@ -192,8 +195,9 @@ class DatabaseClientTest extends Scope
      */
     protected function setupDocument(): array
     {
-        if (!empty(static::$document)) {
-            return static::$document;
+        $cacheKey = $this->getProject()['$id'] ?? 'default';
+        if (!empty(static::$document[$cacheKey])) {
+            return static::$document[$cacheKey];
         }
 
         $data = $this->setupAttributes();
@@ -227,13 +231,13 @@ class DatabaseClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $document['body']);
         $this->assertIsArray($document['body']['data']);
 
-        static::$document = [
+        static::$document[$cacheKey] = [
             'database' => $data['database'],
             'collection' => $data['collection'],
             'document' => $document['body']['data']['databasesCreateDocument'],
         ];
 
-        return static::$document;
+        return static::$document[$cacheKey];
     }
 
     /**
@@ -241,8 +245,9 @@ class DatabaseClientTest extends Scope
      */
     protected function setupBulkData(): array
     {
-        if (!empty(static::$bulkData)) {
-            return static::$bulkData;
+        $cacheKey = $this->getProject()['$id'] ?? 'default';
+        if (!empty(static::$bulkData[$cacheKey])) {
+            return static::$bulkData[$cacheKey];
         }
 
         $project = $this->getProject();
@@ -258,7 +263,7 @@ class DatabaseClientTest extends Scope
         $payload = [
             'query' => $query,
             'variables' => [
-                'databaseId' => 'bulk',
+                'databaseId' => ID::unique(),
                 'name' => 'Bulk',
             ],
         ];
@@ -271,7 +276,7 @@ class DatabaseClientTest extends Scope
         $payload['query'] = $query;
         $payload['variables'] = [
             'databaseId' => $databaseId,
-            'collectionId' => 'operations',
+            'collectionId' => ID::unique(),
             'name' => 'Operations',
             'documentSecurity' => false,
             'permissions' => [
@@ -302,7 +307,7 @@ class DatabaseClientTest extends Scope
         $query = $this->getQuery(self::CREATE_DOCUMENTS);
         $documents = [];
         for ($i = 1; $i <= 10; $i++) {
-            $documents[] = ['$id' => 'doc' . $i, 'name' => 'Doc #' . $i];
+            $documents[] = ['$id' => ID::unique(), 'name' => 'Doc #' . $i];
         }
 
         $payload['query'] = $query;
@@ -315,13 +320,13 @@ class DatabaseClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $res['body']);
         $this->assertCount(10, $res['body']['data']['databasesCreateDocuments']['documents']);
 
-        static::$bulkData = [
+        static::$bulkData[$cacheKey] = [
             'databaseId' => $databaseId,
             'collectionId' => $collectionId,
             'projectId' => $projectId,
         ];
 
-        return static::$bulkData;
+        return static::$bulkData[$cacheKey];
     }
 
     /**
@@ -331,8 +336,9 @@ class DatabaseClientTest extends Scope
     {
         $data = $this->setupBulkData();
 
-        static $bulkUpdated = false;
-        if ($bulkUpdated) {
+        static $bulkUpdated = [];
+        $cacheKey = $this->getProject()['$id'] ?? 'default';
+        if (!empty($bulkUpdated[$cacheKey])) {
             return $data;
         }
 
@@ -365,7 +371,7 @@ class DatabaseClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $res['body']);
         $this->assertCount(10, $res['body']['data']['databasesUpdateDocuments']['documents']);
 
-        $bulkUpdated = true;
+        $bulkUpdated[$cacheKey] = true;
 
         return $data;
     }
@@ -377,8 +383,9 @@ class DatabaseClientTest extends Scope
     {
         $data = $this->setupBulkUpdatedData();
 
-        static $bulkUpserted = false;
-        if ($bulkUpserted) {
+        static $bulkUpserted = [];
+        $cacheKey = $this->getProject()['$id'] ?? 'default';
+        if (!empty($bulkUpserted[$cacheKey])) {
             return $data;
         }
 
@@ -396,7 +403,7 @@ class DatabaseClientTest extends Scope
                 'databaseId' => $data['databaseId'],
                 'collectionId' => $data['collectionId'],
                 'documents' => [
-                    ['$id' => 'doc10', 'name' => 'Doc #1000'],
+                    ['$id' => ID::unique(), 'name' => 'Doc #1000'],
                     ['name' => 'Doc #11'],
                 ],
             ],
@@ -405,7 +412,7 @@ class DatabaseClientTest extends Scope
         $this->assertArrayNotHasKey('errors', $res['body']);
         $this->assertCount(2, $res['body']['data']['databasesUpsertDocuments']['documents']);
 
-        $bulkUpserted = true;
+        $bulkUpserted[$cacheKey] = true;
 
         return $data;
     }
@@ -686,6 +693,6 @@ class DatabaseClientTest extends Scope
         ];
         $res = $this->client->call(Client::METHOD_POST, '/graphql', $headers, $payload);
         $this->assertArrayNotHasKey('errors', $res['body']);
-        $this->assertCount(11, $res['body']['data']['databasesDeleteDocuments']['documents']);
+        $this->assertCount(12, $res['body']['data']['databasesDeleteDocuments']['documents']);
     }
 }

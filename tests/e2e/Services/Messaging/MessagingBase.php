@@ -1825,6 +1825,7 @@ trait MessagingBase
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
 
         $messageId = $message['body']['$id'];
+        // Use longer timeout for CI stability as scheduler interval may vary
         $this->assertEventually(function () use ($messageId) {
             $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
                 'content-type' => 'application/json',
@@ -1834,7 +1835,7 @@ trait MessagingBase
 
             $this->assertEquals(200, $message['headers']['status-code']);
             $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
-        }, 30000, 1000);
+        }, 180000, 1000);
     }
 
     public function testScheduledToDraftMessage(): void

@@ -2189,6 +2189,17 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(500, $response['headers']['status-code']);
+
+        // Clean up - disable the OIDC provider to avoid polluting other parallel tests
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'enabled' => false,
+        ]);
     }
 
     public function testBlockedAccount(): void

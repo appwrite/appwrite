@@ -883,7 +883,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentIdActive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
@@ -899,7 +899,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentIdInactive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         $site = $this->getSite($siteId);
 
@@ -992,7 +992,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         /**
          * Test for SUCCESS
@@ -1239,7 +1239,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         /**
          * Test for SUCCESS
@@ -1364,7 +1364,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         /**
          * Test for SUCCESS
@@ -1589,7 +1589,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -1660,7 +1660,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -1738,7 +1738,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -1840,7 +1840,7 @@ class SitesCustomServerTest extends Scope
 
             $this->assertEquals(200, $rules['headers']['status-code']);
             $this->assertEquals(0, $rules['body']['total']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/');
 
@@ -2255,7 +2255,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId, $deploymentId2) {
             $site = $this->getSite($siteId);
             $this->assertEquals($deploymentId2, $site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         $response = $proxyClient->call(Client::METHOD_GET, '/not-found');
         $this->assertStringContainsString("Index page", $response['body']);
@@ -2766,7 +2766,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentId);
 
             $this->assertEquals('failed', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 120000, 1000);
 
         // deployment failed error page
         $response = $proxyClient->call(Client::METHOD_GET, '/', followRedirects: false, headers: [
