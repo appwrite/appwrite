@@ -5204,7 +5204,7 @@ class ProjectsConsoleClientTest extends Scope
                 'failure' => 'https://domain-without-rule.com'
             ]),
             'error' => '',
-            'errorDescription' => '',
+            'error_description' => '',
         ], followRedirects: false);
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertStringContainsString('project_invalid_success_url', $response['body']);
@@ -5234,7 +5234,7 @@ class ProjectsConsoleClientTest extends Scope
                 'failure' => 'https://' . $domain
             ]),
             'error' => '',
-            'errorDescription' => '',
+            'error_deescription' => '',
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
         $this->assertStringContainsString('https://' . $domain, $response['headers']['location']);

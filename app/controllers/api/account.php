@@ -1527,7 +1527,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
 
             foreach ($rules as $rule) {
                 $allowedHostnames = $redirectValidator->getAllowedHostnames();
-                $allowedHostnames[] = $rule['domain'];
+                $allowedHostnames[] = $rule->getAttribute('domain', '');
                 $redirectValidator->setAllowedHostnames($allowedHostnames);
             }
         }
