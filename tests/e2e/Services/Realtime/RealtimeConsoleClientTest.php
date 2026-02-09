@@ -169,7 +169,7 @@ class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'key' => 'key_name',
             'type' => 'key',
-            'attributes' => ['name'],
+            'columns' => ['name'],
         ]);
 
         $this->assertEquals(202, $indexResponse['headers']['status-code'], 'Index creation failed: ' . json_encode($indexResponse['body']));
