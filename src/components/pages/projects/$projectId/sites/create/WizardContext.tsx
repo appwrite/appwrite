@@ -128,11 +128,14 @@ interface WizardContextValue {
   // Helper to get framework by key
   getFramework: (key: string) => Models.Framework | undefined
   
-  // Helper to get default build commands for a framework
+  // Helper to get default build settings for a framework (from SDK listFrameworks: adapters + buildRuntime)
   getFrameworkDefaults: (frameworkKey: string) => {
     installCommand: string
     buildCommand: string
     outputDirectory: string
+    buildRuntime: string
+    adapter: string
+    fallbackFile: string
   }
   
   // Domain generation helper
@@ -182,17 +185,26 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const getFrameworkDefaults = useCallback(
     (frameworkKey: string) => {
       const framework = getFramework(frameworkKey)
-      if (!framework) {
+      if (!framework?.adapters?.length) {
         return {
           installCommand: 'npm install',
           buildCommand: 'npm run build',
           outputDirectory: '.output',
+          buildRuntime: 'node-22',
+          adapter: 'static',
+          fallbackFile: '',
         }
       }
+      // Prefer "static" adapter when available (common for repo deploys), otherwise first adapter
+      const adapter =
+        framework.adapters.find((a) => a.key === 'static') ?? framework.adapters[0]
       return {
-        installCommand: framework.installCommand || 'npm install',
-        buildCommand: framework.buildCommand || 'npm run build',
-        outputDirectory: framework.outputDirectory || '.output',
+        installCommand: adapter.installCommand || 'npm install',
+        buildCommand: adapter.buildCommand || 'npm run build',
+        outputDirectory: adapter.outputDirectory || '.output',
+        buildRuntime: framework.buildRuntime || 'node-22',
+        adapter: adapter.key,
+        fallbackFile: adapter.fallbackFile ?? '',
       }
     },
     [getFramework],

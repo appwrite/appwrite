@@ -342,7 +342,7 @@ export function generateMockUsageData(
     {
       id: 'storage',
       label: 'Storage',
-      icon: 'HardDrive',
+      icon: 'Folder',
       description:
         'File storage usage and operations for your storage buckets.',
       metrics: [

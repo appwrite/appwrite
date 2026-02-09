@@ -4,7 +4,6 @@ import {
   ZoomOut,
   Maximize2,
   Database,
-  HardDrive,
   Zap,
   Users,
   ExternalLink,
@@ -677,7 +676,7 @@ export function Browser({ databaseId }: BrowserProps) {
       case 'database':
         return Database
       case 'storage':
-        return HardDrive
+        return Folder
       case 'function':
         return Zap
       case 'auth':

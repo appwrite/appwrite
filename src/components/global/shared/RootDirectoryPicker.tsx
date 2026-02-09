@@ -18,7 +18,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { FolderOpen, ChevronRight, Loader2 } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { FolderOpen, Info, ChevronRight, Loader2 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { sdk } from '@/lib/appwrite/sdk'
 import { cn } from '@/lib/utils'
@@ -32,6 +37,8 @@ interface RootDirectoryPickerProps {
   value: string
   onChange: (directory: string) => void
   label?: string
+  /** Optional tooltip text shown next to the label (e.g. for sites: path to site code) */
+  labelTooltip?: string
   placeholder?: string
   description?: string
   disabled?: boolean
@@ -46,12 +53,38 @@ export function RootDirectoryPicker({
   value,
   onChange,
   label = 'Root directory',
+  labelTooltip,
   placeholder = './',
   description = 'Choose the directory containing your code',
   disabled = false,
   className,
 }: RootDirectoryPickerProps) {
   const queryClient = useQueryClient()
+
+  const labelContent = (
+    <>
+      {label}
+      {labelTooltip && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex ml-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              aria-label="More info"
+            >
+              <Info className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            className="max-w-[240px] z-[200]"
+          >
+            {labelTooltip}
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </>
+  )
   const [dialogOpen, setDialogOpen] = useState(false)
   const [selectedDir, setSelectedDir] = useState(value || './')
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set())
@@ -248,7 +281,7 @@ export function RootDirectoryPicker({
     <div className={className}>
       {label && (
         <Label htmlFor="root-directory" className="text-[13px] mb-2 block">
-          {label}
+          {labelContent}
         </Label>
       )}
       <div className="flex gap-2">

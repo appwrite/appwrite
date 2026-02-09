@@ -5,12 +5,18 @@
  * Handles site details, branch selection, build settings, and domain configuration.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, Link } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import {
   Select,
   SelectContent,
@@ -55,10 +61,14 @@ function GitHubIcon({ className }: { className?: string }) {
 }
 
 interface RepositoryConfigViewProps {
-  repositoryParam: string
+  installationId: string
+  providerRepositoryId: string
 }
 
-export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewProps) {
+export function RepositoryConfigView({
+  installationId: installationIdFromUrl,
+  providerRepositoryId: providerRepositoryIdFromUrl,
+}: RepositoryConfigViewProps) {
   const { projectId } = useParams({ strict: false })
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -70,15 +80,22 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
     generateDomain,
   } = useWizard()
 
-  // Parse repository param
-  const [repoOwner, repoName] = useMemo(() => {
-    const decoded = decodeURIComponent(repositoryParam)
-    const parts = decoded.split('/')
-    return [parts[0] || '', parts[1] || '']
-  }, [repositoryParam])
+  // Use URL params as source of truth so detection works after refresh
+  const installationId = installationIdFromUrl
+  const providerRepositoryId = providerRepositoryIdFromUrl
+
+  // Sync URL params to formData on mount so rest of flow has them
+  useEffect(() => {
+    if (installationId && providerRepositoryId) {
+      updateFormData({
+        installationId,
+        providerRepositoryId,
+      })
+    }
+  }, [installationId, providerRepositoryId, updateFormData])
 
   // Local form state
-  const [siteName, setSiteName] = useState(formData.siteName || repoName)
+  const [siteName, setSiteName] = useState(formData.siteName || '')
   const [siteId, setSiteId] = useState<string | undefined>(formData.siteId)
   const [framework, setFramework] = useState(formData.framework || '')
   const [branch, setBranch] = useState(formData.providerBranch || 'main')
@@ -92,46 +109,88 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
   const [isDeploying, setIsDeploying] = useState(false)
 
-  // Fetch repository details
+  // Fetch repository details (use URL params so it works after refresh)
   const { data: repository, isLoading: repositoryLoading } = useRepository(
     projectId,
-    formData.installationId || null,
-    formData.providerRepositoryId || null,
+    installationId || null,
+    providerRepositoryId || null,
   )
 
-  // Framework detection mutation
+  // Default site name from repo when loaded
+  const repoName = repository?.name ?? ''
+  const repoOwner = repository?.organization ?? ''
+  useEffect(() => {
+    if (repoName && !siteName) setSiteName(repoName)
+  }, [repoName])
+
+  // Framework detection via VCS service (createRepositoryDetection type=framework)
   const detectFrameworkMutation = useMutation({
-    mutationFn: async () => {
-      if (!projectId || !formData.installationId || !formData.providerRepositoryId) {
-        throw new Error('Missing required parameters')
-      }
+    mutationFn: async (params: {
+      installationId: string
+      providerRepositoryId: string
+      rootDirectory: string
+    }) => {
+      if (!projectId) throw new Error('Missing project')
       const projectSdk = sdk.forProject(projectId)
       return await projectSdk.vcs.createRepositoryDetection({
-        installationId: formData.installationId,
-        providerRepositoryId: formData.providerRepositoryId,
+        installationId: params.installationId,
+        providerRepositoryId: params.providerRepositoryId,
         type: VCSDetectionType.Framework,
-        providerRootDirectory: rootDirectory,
+        providerRootDirectory: params.rootDirectory || './',
       })
     },
     onSuccess: (data) => {
-      if (data.framework) {
-        setFramework(data.framework)
-        const defaults = getFrameworkDefaults(data.framework)
-        setInstallCommand(defaults.installCommand)
-        setBuildCommand(defaults.buildCommand)
-        setOutputDirectory(defaults.outputDirectory)
+      // Use detection API response: framework key + install/build/output from backend
+      const detectedFramework = data.framework ?? ''
+      if (detectedFramework) {
+        setFramework(detectedFramework)
+        const defaults = getFrameworkDefaults(detectedFramework)
+        setInstallCommand(data.installCommand ?? defaults.installCommand)
+        setBuildCommand(data.buildCommand ?? defaults.buildCommand)
+        setOutputDirectory(data.outputDirectory ?? defaults.outputDirectory)
+        updateFormData({
+          framework: detectedFramework,
+          buildRuntime: defaults.buildRuntime,
+          installCommand: data.installCommand ?? defaults.installCommand,
+          buildCommand: data.buildCommand ?? defaults.buildCommand,
+          outputDirectory: data.outputDirectory ?? defaults.outputDirectory,
+        })
       }
+    },
+    onError: () => {
+      toast.error('Could not detect framework. Select one manually.')
     },
   })
 
-  // Detect framework on mount
-  useEffect(() => {
-    if (formData.installationId && formData.providerRepositoryId && !framework) {
-      detectFrameworkMutation.mutate()
+  const runFrameworkDetection = useCallback(() => {
+    if (!projectId || !installationId || !providerRepositoryId) {
+      toast.error('Repository not connected. Go back and select a repository.')
+      return
     }
-  }, [formData.installationId, formData.providerRepositoryId])
+    detectFrameworkMutation.mutate({
+      installationId,
+      providerRepositoryId,
+      rootDirectory: rootDirectory || './',
+    })
+  }, [
+    projectId,
+    installationId,
+    providerRepositoryId,
+    rootDirectory,
+    detectFrameworkMutation,
+  ])
 
-  // Update build commands when framework changes
+  // Run VCS framework detection when we have URL params (repo selected) or root directory changes
+  useEffect(() => {
+    if (!installationId || !providerRepositoryId || !projectId) return
+    detectFrameworkMutation.mutate({
+      installationId,
+      providerRepositoryId,
+      rootDirectory: rootDirectory || './',
+    })
+  }, [projectId, installationId, providerRepositoryId, rootDirectory])
+
+  // Prefill build settings from SDK framework defaults when framework changes
   useEffect(() => {
     if (framework) {
       const defaults = getFrameworkDefaults(framework)
@@ -167,16 +226,21 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
     setIsDeploying(true)
 
     try {
+      // Use framework defaults from SDK (buildRuntime, adapter, fallbackFile) for create
+      const defaults = getFrameworkDefaults(framework)
       // 1. Create the site
       const site = await createSiteMutation.mutateAsync({
         siteId: siteId || undefined,
         name: siteName,
         framework,
+        buildRuntime: defaults.buildRuntime,
         installCommand: installCommand || undefined,
         buildCommand: buildCommand || undefined,
         outputDirectory: outputDirectory || undefined,
-        installationId: formData.installationId,
-        providerRepositoryId: formData.providerRepositoryId,
+        adapter: defaults.adapter || undefined,
+        fallbackFile: defaults.fallbackFile || undefined,
+        installationId,
+        providerRepositoryId,
         providerBranch: branch,
         providerSilentMode: silentMode,
         providerRootDirectory: rootDirectory || undefined,
@@ -384,8 +448,12 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
       <div className="rounded-xl border border-border bg-card/50 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-              <GitHubIcon className="h-5 w-5" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 ring-1 ring-border/50">
+              {frameworkInfo ? (
+                <FrameworkIcon framework={framework} size="md" />
+              ) : (
+                <GitHubIcon className="h-5 w-5 text-muted-foreground" />
+              )}
             </div>
             <div>
               <p className="text-[13px] font-medium text-foreground">
@@ -456,30 +524,44 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
                 </span>
               </div>
             ) : (
-              <Select
-                value={framework}
-                onValueChange={(value) => {
-                  setFramework(value)
-                  const defaults = getFrameworkDefaults(value)
-                  setInstallCommand(defaults.installCommand)
-                  setBuildCommand(defaults.buildCommand)
-                  setOutputDirectory(defaults.outputDirectory)
-                }}
-              >
-                <SelectTrigger className="h-9 text-[13px]">
-                  <SelectValue placeholder="Select framework" />
-                </SelectTrigger>
-                <SelectContent>
-                  {frameworks.map((f) => (
-                    <SelectItem key={f.key} value={f.key}>
-                      <div className="flex items-center gap-2">
-                        <FrameworkIcon framework={f.key} size="sm" />
-                        {f.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={framework}
+                  onValueChange={(value) => {
+                    setFramework(value)
+                    const defaults = getFrameworkDefaults(value)
+                    setInstallCommand(defaults.installCommand)
+                    setBuildCommand(defaults.buildCommand)
+                    setOutputDirectory(defaults.outputDirectory)
+                  }}
+                >
+                  <SelectTrigger className="h-9 text-[13px] flex-1 min-w-0">
+                    <SelectValue placeholder="Select framework" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {frameworks.map((f) => (
+                      <SelectItem key={f.key} value={f.key}>
+                        <div className="flex items-center gap-2">
+                          <FrameworkIcon framework={f.key} size="sm" />
+                          {f.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!framework && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 shrink-0"
+                    onClick={runFrameworkDetection}
+                    disabled={detectFrameworkMutation.isPending}
+                  >
+                    Detect
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -516,55 +598,64 @@ export function RepositoryConfigView({ repositoryParam }: RepositoryConfigViewPr
         </div>
       </div>
 
-      {/* Production branch section */}
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <h3 className="text-[15px] font-semibold text-foreground">
-            Production branch
-          </h3>
-        </div>
-        <div className="border-t border-border" />
-        <div className="px-6 py-4 space-y-4">
-          {/* Branch selector */}
-          <BranchSelector
-            projectId={projectId}
-            installationId={formData.installationId}
-            providerRepositoryId={formData.providerRepositoryId}
-            value={branch}
-            onChange={setBranch}
-            label="Branch"
-          />
+      {/* Repository section (collapsible like Build) */}
+      <Accordion
+        type="single"
+        collapsible
+        className="rounded-xl border border-border bg-card/50 overflow-hidden"
+      >
+        <AccordionItem value="repository" className="border-none">
+          <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
+            <span className="text-[15px] font-semibold text-foreground">
+              Repository
+            </span>
+          </AccordionTrigger>
+          <AccordionContent className="px-6 pb-4 pt-0 border-t border-border">
+            <div className="space-y-4 pt-4">
+              {/* Branch selector */}
+              <BranchSelector
+                projectId={projectId}
+                installationId={installationId}
+                providerRepositoryId={providerRepositoryId}
+                value={branch}
+                onChange={setBranch}
+                label="Branch"
+                labelTooltip="Production branch for the repo linked to the site. Successful deployments from this branch get activated automatically."
+              />
 
-          {/* Root directory */}
-          <RootDirectoryPicker
-            projectId={projectId}
-            installationId={formData.installationId}
-            providerRepositoryId={formData.providerRepositoryId}
-            branch={branch || 'main'}
-            value={rootDirectory}
-            onChange={setRootDirectory}
-            label="Root directory"
-            description="Choose the directory containing your site code"
-          />
+              {/* Root directory */}
+              <RootDirectoryPicker
+                projectId={projectId}
+                installationId={installationId}
+                providerRepositoryId={providerRepositoryId}
+                branch={branch || 'main'}
+                value={rootDirectory}
+                onChange={setRootDirectory}
+                label="Root directory"
+                labelTooltip="Path to site code in the linked repo. Use the repository root (./) or a subdirectory that contains your app (e.g. ./apps/web)."
+                description="Choose the directory containing your site code"
+              />
 
-          {/* Silent mode */}
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor="silent-mode" className="text-[13px]">
-                Silent mode
-              </Label>
-              <p className="text-[11px] text-muted-foreground">
-                Disable automated comments on repository commits
-              </p>
+              {/* Silent mode */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="silent-mode" className="text-[13px]">
+                    Silent mode
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Disable automated comments on repository commits
+                  </p>
+                </div>
+                <Switch
+                  id="silent-mode"
+                  checked={silentMode}
+                  onCheckedChange={setSilentMode}
+                />
+              </div>
             </div>
-            <Switch
-              id="silent-mode"
-              checked={silentMode}
-              onCheckedChange={setSilentMode}
-            />
-          </div>
-        </div>
-      </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {/* Build settings */}
       <BuildSettings

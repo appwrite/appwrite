@@ -51,6 +51,14 @@ export interface IndexSchema {
   orders?: string[]
 }
 
+/** Normalize API values (including BigInt) to number | null for schema fields */
+function toSchemaNumber(v: unknown): number | null {
+  if (v == null) return null
+  if (typeof v === 'bigint') return Number(v)
+  if (typeof v === 'number' && !Number.isNaN(v)) return v
+  return null
+}
+
 /**
  * Fetches complete database schema including all tables, columns, and indexes
  */
@@ -84,12 +92,12 @@ export async function fetchDatabaseSchema(
           type: col.type || 'string',
           required: col.required === true,
           array: col.array === true,
-          size: col.size ?? null,
+          size: toSchemaNumber(col.size) ?? null,
           default: col.default ?? null,
           format: col.format || undefined,
           elements: col.elements || undefined,
-          min: col.min ?? null,
-          max: col.max ?? null,
+          min: toSchemaNumber(col.min) ?? null,
+          max: toSchemaNumber(col.max) ?? null,
           relatedTable: col.relatedTable || col.relatedCollection || undefined,
           relatedColumn: col.relatedColumn || col.relatedAttribute || undefined,
           relationType: col.relationType || col.relation || undefined,
@@ -126,10 +134,20 @@ export async function fetchDatabaseSchema(
 }
 
 /**
+ * JSON replacer that converts BigInt to string (JSON.stringify does not support BigInt)
+ */
+function jsonReplacer(_key: string, value: unknown): unknown {
+  if (typeof value === 'bigint') {
+    return value.toString()
+  }
+  return value
+}
+
+/**
  * Formats schema as JSON
  */
 export function formatSchemaAsJSON(schema: DatabaseSchema): string {
-  return JSON.stringify(schema, null, 2)
+  return JSON.stringify(schema, jsonReplacer, 2)
 }
 
 /**

@@ -5,7 +5,7 @@ import {
   LayoutDashboard,
   Database,
   Users,
-  HardDrive,
+  Folder,
   Zap,
   MessageSquare,
   Settings,
@@ -98,7 +98,7 @@ const getNavItems = (projectId: string) => {
         {
           id: 'storage',
           label: 'Storage',
-          icon: HardDrive,
+          icon: Folder,
           path: `/projects/${projectId}/storage`,
         },
         {

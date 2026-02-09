@@ -15,7 +15,7 @@ import {
   Users,
   Database,
   Zap,
-  HardDrive,
+  Folder,
   MessageSquare,
   Globe,
   MoreHorizontal,
@@ -204,27 +204,27 @@ const SCOPE_CATALOG: ScopeDefinition[] = [
     description:
       "Access to read your project's storage files and preview images",
     category: 'Storage',
-    icon: HardDrive,
+    icon: Folder,
   },
   {
     scope: 'files.write',
     description:
       "Access to create, update, and delete your project's storage files",
     category: 'Storage',
-    icon: HardDrive,
+    icon: Folder,
   },
   {
     scope: 'buckets.read',
     description: "Access to read your project's storage buckets",
     category: 'Storage',
-    icon: HardDrive,
+    icon: Folder,
   },
   {
     scope: 'buckets.write',
     description:
       "Access to create, update, and delete your project's storage buckets",
     category: 'Storage',
-    icon: HardDrive,
+    icon: Folder,
   },
   // Messaging
   {

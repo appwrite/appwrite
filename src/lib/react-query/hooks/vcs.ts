@@ -196,6 +196,37 @@ export function useDeleteVcsInstallation(projectId: string | null | undefined) {
 }
 
 /**
+ * Hook to create a new GitHub repository via VCS installation
+ */
+export function useCreateVcsRepository(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (params: {
+      installationId: string
+      name: string
+      xprivate: boolean
+    }): Promise<Models.ProviderRepository> => {
+      if (!projectId) {
+        throw new Error('Project ID is required')
+      }
+
+      const projectSdk = sdk.forProject(projectId)
+      return await projectSdk.vcs.createRepository({
+        installationId: params.installationId,
+        name: params.name,
+        xprivate: params.xprivate,
+      })
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['vcs', 'repositories', projectId, variables.installationId],
+      })
+    },
+  })
+}
+
+/**
  * Hook to fetch repository details
  */
 export function useRepository(

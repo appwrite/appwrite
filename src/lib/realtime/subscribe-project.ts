@@ -1,8 +1,8 @@
 /**
  * Unified project-level realtime subscriptions.
  *
- * Subscribes to console and project channels, filters events by current project
- * where needed, and invalidates React Query cache so the UI updates.
+ * Subscribes to the console channel only (project=console), filters events by
+ * current project where needed, and invalidates React Query cache so the UI updates.
  */
 
 import type { QueryClient } from '@tanstack/react-query'
@@ -130,8 +130,8 @@ let tail: Promise<void> = Promise.resolve()
 
 /**
  * Subscribe to realtime events for the given project.
- * Uses the console client (project=console) with channels ['project', 'console'],
- * matching the backend expectation. Events are filtered by projectId in the handler.
+ * Uses the console client (project=console) with channel ['console'] only.
+ * Events are filtered by projectId in the handler.
  *
  * Call the returned cleanup when the component unmounts or projectId changes.
  * Only one subscription is active at a time; overlapping calls wait for the
@@ -154,7 +154,7 @@ export async function subscribeProjectRealtime(
   tail = previousTail.then(() => releasePromise)
   await previousTail
 
-  // Single connection: console client (project=console) with ['project', 'console']
+  // Single connection: console client (project=console) with ['console'] only
   const consoleRealtime = sdk.getConsoleRealtime()
   const sub = await consoleRealtime.subscribe(
     [...PROJECT_CHANNELS],

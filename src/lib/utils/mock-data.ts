@@ -1535,7 +1535,7 @@ export const navItems = [
   { id: 'overview', label: 'Overview', icon: 'LayoutDashboard' },
   { id: 'databases', label: 'Databases', icon: 'Database' },
   { id: 'auth', label: 'Auth', icon: 'Users' },
-  { id: 'storage', label: 'Storage', icon: 'HardDrive' },
+  { id: 'storage', label: 'Storage', icon: 'Folder' },
   { id: 'functions', label: 'Functions', icon: 'Zap' },
   { id: 'messaging', label: 'Messaging', icon: 'MessageSquare' },
   { id: 'realtime', label: 'Realtime', icon: 'Radio' },

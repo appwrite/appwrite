@@ -1,7 +1,7 @@
 /**
  * RealtimeProvider
  *
- * Subscribes to console and project realtime channels for the current project
+ * Subscribes to the console realtime channel for the current project
  * and invalidates React Query cache when events are received so the UI updates.
  * Unsubscribes on unmount or when projectId changes.
  *

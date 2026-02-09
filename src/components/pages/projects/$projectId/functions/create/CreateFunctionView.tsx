@@ -1,0 +1,604 @@
+/**
+ * Create Function View Component
+ *
+ * Two-column wizard:
+ * - Left: Connect Git repository
+ * - Right: Clone template (quick start + highlighted templates from API)
+ */
+
+import { useState, useEffect, useMemo } from 'react'
+import { useParams, useNavigate, Link } from '@tanstack/react-router'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import {
+  CreateWizardLeftColumn,
+  CreateWizardRightColumn,
+} from '@/components/global/shared/CreateWizardColumns'
+import { SimplePagination } from '@/components/global/shared/Pagination'
+import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
+import { Search, Plus, RefreshCw, Lock, ArrowRight } from 'lucide-react'
+import { VCSDetectionType } from '@appwrite.io/console'
+import {
+  useRepositories,
+  useFunctionTemplates,
+  useProject,
+} from '@/lib/react-query/hooks'
+import { getApiEndpoint } from '@/lib/appwrite/sdk'
+import { cn } from '@/lib/utils'
+import { useFunctionWizard } from './WizardContext'
+import type { Models } from '@appwrite.io/console'
+
+function GitHubIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+    </svg>
+  )
+}
+
+function GitLabIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z" />
+    </svg>
+  )
+}
+
+function BitbucketIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M.778 1.213a.768.768 0 0 0-.768.892l3.263 19.81c.084.5.515.868 1.022.873H19.95a.772.772 0 0 0 .77-.646l3.27-20.03a.768.768 0 0 0-.768-.891zM14.52 15.53H9.522L8.17 8.466h7.561z" />
+    </svg>
+  )
+}
+
+function ProviderIcon({
+  provider,
+  className,
+}: {
+  provider?: string
+  className?: string
+}) {
+  const normalizedProvider = provider?.toLowerCase() || 'github'
+  switch (normalizedProvider) {
+    case 'gitlab':
+      return <GitLabIcon className={className} />
+    case 'bitbucket':
+      return <BitbucketIcon className={className} />
+    default:
+      return <GitHubIcon className={className} />
+  }
+}
+
+const REPO_PAGE_SIZE = 7
+
+const QUICK_START_USE_CASE = 'starter'
+
+/** Language keys for the clone-by-runtime cards; order matches display. */
+const LANGUAGE_RUNTIMES = ['node', 'python', 'bun', 'php', 'dart', 'go', 'deno', 'ruby'] as const
+
+function getRuntimeBase(r: { name?: string; key?: string } | string): string {
+  const raw = typeof r === 'string' ? r : (r?.name ?? (r as { key?: string })?.key ?? '')
+  return raw.toLowerCase().split('-')[0]
+}
+
+function LanguageCard({
+  projectId,
+  language,
+  template,
+}: {
+  projectId: string
+  language: string
+  template: Models.TemplateFunction | null
+}) {
+  const label =
+    language === 'php' ? 'PHP' : language.charAt(0).toUpperCase() + language.slice(1)
+  const disabled = !template
+  const content = (
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-3 min-w-0">
+        <RuntimeIcon runtime={language} size="md" className="shrink-0" />
+        <span className="text-[14px] font-semibold text-foreground">
+          {label}
+        </span>
+      </div>
+      {!disabled && (
+        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
+      )}
+    </div>
+  )
+  if (disabled) {
+    return (
+      <div
+        className={cn(
+          'rounded-xl border border-border bg-card/50 p-4 text-left opacity-60 cursor-not-allowed',
+        )}
+      >
+        {content}
+      </div>
+    )
+  }
+  return (
+    <Link
+      to="/projects/$projectId/functions/create/template/$templateId"
+      params={{ projectId, templateId: template!.id }}
+      search={{ runtime: language }}
+      className="group block rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card"
+    >
+      {content}
+    </Link>
+  )
+}
+
+function TemplateCard({
+  projectId,
+  template,
+}: {
+  projectId: string
+  template: Models.TemplateFunction
+}) {
+  return (
+    <Link
+      to="/projects/$projectId/functions/create/template/$templateId"
+      params={{ projectId, templateId: template.id }}
+      className="group block rounded-xl border border-border bg-card/50 p-4 text-left transition-all hover:border-border/80 hover:bg-card"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[14px] font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">
+            {template.name}
+          </h3>
+          {template.tagline && (
+            <p className="text-[12px] text-muted-foreground mt-1 line-clamp-2">
+              {template.tagline}
+            </p>
+          )}
+        </div>
+        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
+      </div>
+    </Link>
+  )
+}
+
+function RepositorySkeleton({
+  index = 0,
+  provider,
+}: {
+  index?: number
+  provider?: string
+}) {
+  const nameWidths = ['w-28', 'w-36', 'w-32', 'w-24', 'w-40']
+  const dateWidths = ['w-14', 'w-16', 'w-12', 'w-18', 'w-14']
+  return (
+    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
+        <ProviderIcon provider={provider} className="h-3.5 w-3.5" />
+      </div>
+      <div className="flex-1 min-w-0 flex items-center gap-2">
+        <Skeleton
+          className={cn('h-3.5', nameWidths[index % nameWidths.length])}
+        />
+        <Skeleton
+          className={cn('h-3 shrink-0', dateWidths[index % dateWidths.length])}
+        />
+      </div>
+      <Skeleton className="h-7 w-[68px] shrink-0 rounded-md" />
+    </div>
+  )
+}
+
+export function CreateFunctionView() {
+  const { projectId } = useParams({ strict: false })
+  const navigate = useNavigate()
+  const { installations, updateFormData } = useFunctionWizard()
+  const { project } = useProject(projectId)
+  const projectEndpoint = useMemo(
+    () => getApiEndpoint(project?.region),
+    [project?.region],
+  )
+
+  const [selectedInstallationId, setSelectedInstallationId] = useState('')
+  const [repoSearch, setRepoSearch] = useState('')
+  const [debouncedRepoSearch, setDebouncedRepoSearch] = useState('')
+  const [repoPage, setRepoPage] = useState(1)
+
+  useEffect(() => {
+    if (installations.length > 0 && !selectedInstallationId) {
+      const urlParams =
+        typeof window !== 'undefined'
+          ? new URLSearchParams(window.location.search)
+          : null
+      const fromUrl =
+        urlParams?.get('installation') &&
+        installations.some((i) => i.$id === urlParams.get('installation'))
+      if (fromUrl && urlParams) {
+        setSelectedInstallationId(urlParams.get('installation')!)
+        return
+      }
+      setSelectedInstallationId(installations[0].$id)
+    }
+  }, [installations, selectedInstallationId])
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedRepoSearch(repoSearch)
+      setRepoPage(1)
+    }, 300)
+    return () => clearTimeout(t)
+  }, [repoSearch])
+
+  const getGitHubAuthUrl = useMemo(() => {
+    if (typeof window === 'undefined' || !projectId) return '#'
+    const origin = window.location.origin
+    let redirectUrl = `${origin}/projects/${projectId}/functions/create`
+    if (selectedInstallationId) {
+      redirectUrl += `?installation=${selectedInstallationId}`
+    }
+    const successUrl = encodeURIComponent(redirectUrl)
+    const failureUrl = encodeURIComponent(redirectUrl)
+    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
+  }, [projectEndpoint, projectId, selectedInstallationId])
+
+  const { data: repositoriesData, isLoading: reposLoading, isFetching: reposFetching, refetch: refetchRepos } =
+    useRepositories(
+      projectId,
+      selectedInstallationId || null,
+      VCSDetectionType.Runtime,
+      repoPage - 1,
+      REPO_PAGE_SIZE,
+      debouncedRepoSearch || undefined,
+    )
+
+  const repositories = useMemo(
+    () => repositoriesData?.runtimeProviderRepositories || [],
+    [repositoriesData],
+  )
+  const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
+
+  const { templates: quickStartTemplates } = useFunctionTemplates(
+    projectId,
+    0,
+    6,
+    undefined,
+    [QUICK_START_USE_CASE],
+  )
+
+  const { templates: allTemplatesForHighlighted } = useFunctionTemplates(
+    projectId,
+    0,
+    20,
+    undefined,
+    undefined,
+  )
+
+  const { templateByLanguage, highlighted } = useMemo(() => {
+    const combined = [...quickStartTemplates]
+    const seen = new Set(quickStartTemplates.map((t) => t.id))
+    for (const t of allTemplatesForHighlighted) {
+      if (!seen.has(t.id)) {
+        seen.add(t.id)
+        combined.push(t)
+      }
+    }
+    const byLanguage: Partial<Record<(typeof LANGUAGE_RUNTIMES)[number], Models.TemplateFunction>> = {}
+    for (const lang of LANGUAGE_RUNTIMES) {
+      if (byLanguage[lang]) continue
+      const template = combined.find((t) =>
+        (t.runtimes ?? []).some((r) => getRuntimeBase(r) === lang),
+      )
+      if (template) byLanguage[lang] = template
+    }
+    const starterIds = new Set(quickStartTemplates.map((t) => t.id))
+    const rest = allTemplatesForHighlighted
+      .filter((t) => !starterIds.has(t.id))
+      .slice(0, 6)
+    return { templateByLanguage: byLanguage, highlighted: rest }
+  }, [quickStartTemplates, allTemplatesForHighlighted])
+
+  const hasInstallations = installations.length > 0
+  const selectedInstallation = installations.find(
+    (i) => i.$id === selectedInstallationId,
+  )
+
+  const handleSelectRepository = (repo: { id: string; organization?: string; name?: string; url?: string; pushedAt?: string }) => {
+    updateFormData({
+      installationId: selectedInstallationId,
+      providerRepositoryId: repo.id,
+      repositoryOwner: repo.organization,
+      repositoryName: repo.name,
+      repositoryUrl: repo.url,
+      functionName: repo.name || '',
+    })
+    const repositoryParam = encodeURIComponent(`${repo.organization || ''}/${repo.name || ''}`)
+    navigate({
+      to: '/projects/$projectId/functions/create/repository/$repository',
+      params: { projectId: projectId!, repository: repositoryParam },
+      search: {
+        installationId: selectedInstallationId,
+        providerRepositoryId: repo.id,
+      },
+    })
+  }
+
+  return (
+    <WizardLayout
+      title="Create function"
+      fallbackPath={`/projects/${projectId}/functions`}
+      fullscreen
+      useSidebar={false}
+      maxWidth="max-w-[1400px]"
+    >
+      <div className="grid gap-12 lg:grid-cols-5">
+        <CreateWizardLeftColumn title="Connect Git repository">
+          {!hasInstallations ? (
+            <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
+              <div className="flex justify-center mb-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                  <GitHubIcon className="h-5 w-5 text-muted-foreground" />
+                </div>
+              </div>
+              <h3 className="text-[13px] font-medium text-foreground mb-1">
+                Connect Git provider
+              </h3>
+              <p className="text-[11px] text-muted-foreground mb-3">
+                Connect a repository to deploy functions from your codebase
+              </p>
+              <Button size="sm" asChild>
+                <a href={getGitHubAuthUrl}>
+                  <GitHubIcon className="mr-1.5 h-3.5 w-3.5" />
+                  Connect GitHub
+                </a>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-1 flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <Select
+                  value={selectedInstallationId}
+                  onValueChange={(v) => {
+                    setSelectedInstallationId(v)
+                    setRepoPage(1)
+                  }}
+                >
+                  <SelectTrigger className="w-[180px] h-9 text-[13px]">
+                    <SelectValue placeholder="Select organization">
+                      {selectedInstallation && (
+                        <span className="flex items-center gap-2">
+                          <ProviderIcon
+                            provider={selectedInstallation.provider}
+                            className="h-4 w-4 shrink-0"
+                          />
+                          <span className="truncate">
+                            {selectedInstallation.organization}
+                          </span>
+                        </span>
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {installations.map((inst) => (
+                      <SelectItem key={inst.$id} value={inst.$id}>
+                        <span className="flex items-center gap-2">
+                          <ProviderIcon
+                            provider={inst.provider}
+                            className="h-4 w-4 shrink-0"
+                          />
+                          <span>{inst.organization}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                    <div className="border-t border-border mt-1 pt-1">
+                      <a
+                        href={getGitHubAuthUrl}
+                        className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Add account
+                      </a>
+                    </div>
+                  </SelectContent>
+                </Select>
+
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={repoSearch}
+                    onChange={(e) => setRepoSearch(e.target.value)}
+                    placeholder="Search repositories"
+                    className="h-9 pl-9 text-[13px]"
+                  />
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => refetchRepos()}
+                  disabled={reposFetching}
+                  className="h-9 w-9 p-0 shrink-0"
+                >
+                  <RefreshCw
+                    className={cn('h-4 w-4', reposFetching && 'animate-spin')}
+                  />
+                </Button>
+              </div>
+
+              <div className="rounded-lg border border-border overflow-hidden mb-4">
+                {reposLoading ? (
+                  <div className="divide-y divide-border">
+                    {Array.from({ length: REPO_PAGE_SIZE }).map((_, i) => (
+                      <RepositorySkeleton
+                        key={i}
+                        index={i}
+                        provider={selectedInstallation?.provider}
+                      />
+                    ))}
+                  </div>
+                ) : repositories.length > 0 ? (
+                  <div
+                    className={cn(
+                      'divide-y divide-border',
+                      reposFetching && 'opacity-60 pointer-events-none',
+                    )}
+                  >
+                    {repositories.map((repo: { id: string; name?: string; organization?: string; url?: string; pushedAt?: string; private?: boolean; runtime?: string }) => (
+                      <div
+                        key={repo.id}
+                        className="flex w-full items-center gap-3 px-4 py-3.5 hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-muted/50 text-muted-foreground">
+                          {repo.runtime ? (
+                            <RuntimeIcon runtime={repo.runtime} size="sm" />
+                          ) : (
+                            <ProviderIcon
+                              provider={selectedInstallation?.provider}
+                              className="h-3.5 w-3.5"
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 flex items-center gap-2">
+                          <span className="text-[13px] font-medium text-foreground truncate">
+                            {repo.name}
+                          </span>
+                          {repo.private && (
+                            <Lock className="h-3 w-3 shrink-0 text-muted-foreground/70" />
+                          )}
+                          {repo.pushedAt && (
+                            <span className="text-[11px] text-muted-foreground shrink-0">
+                              <DateTooltip date={repo.pushedAt} />
+                            </span>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-[12px] shrink-0"
+                          onClick={() => handleSelectRepository(repo)}
+                        >
+                          Connect
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center">
+                    <p className="text-[12px] text-muted-foreground">
+                      {repoSearch
+                        ? 'No repositories found'
+                        : 'No repositories available'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <SimplePagination
+                currentPage={repoPage}
+                hasMore={hasMoreRepos}
+                onPageChange={setRepoPage}
+                disabled={reposFetching}
+              />
+
+              <div className="mt-8 rounded-lg border border-border bg-muted/30 px-4 py-4">
+                <p className="text-[12px] text-muted-foreground">
+                  Missing a repository?{' '}
+                  <a
+                    href={getGitHubAuthUrl}
+                    className="inline-flex items-center gap-1 text-foreground font-medium hover:underline"
+                  >
+                    Check your permissions
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </a>
+                </p>
+              </div>
+            </div>
+          )}
+        </CreateWizardLeftColumn>
+
+        <CreateWizardRightColumn title="Clone template">
+          {/* Language cards: one per runtime, link to template with runtime pre-selected */}
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
+            {LANGUAGE_RUNTIMES.map((lang) => (
+              <LanguageCard
+                key={lang}
+                projectId={projectId!}
+                language={lang}
+                template={templateByLanguage[lang] ?? null}
+              />
+            ))}
+          </div>
+
+          {/* Other highlighted templates from API */}
+          <div>
+            <p className="text-[12px] text-muted-foreground mb-3">
+              More templates
+            </p>
+            {highlighted.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {highlighted.map((template) => (
+                  <TemplateCard
+                    key={template.id}
+                    projectId={projectId!}
+                    template={template}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-border bg-card/50 p-6 text-center">
+                <p className="text-[12px] text-muted-foreground">
+                  No additional templates
+                </p>
+              </div>
+            )}
+            <Link
+              to="/projects/$projectId/functions/templates"
+              params={{ projectId: projectId! }}
+              className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium text-primary hover:underline"
+            >
+              Browse all templates
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </CreateWizardRightColumn>
+      </div>
+
+      <div className="mt-6 pt-6 border-t border-border">
+        <p className="text-[12px] text-muted-foreground">
+          You can also{' '}
+          <Link
+            to="/projects/$projectId/functions/create/manual"
+            params={{ projectId: projectId! }}
+            className="text-foreground hover:underline"
+          >
+            create a function manually
+          </Link>
+          ,{' '}
+          <Link
+            to="/projects/$projectId/functions/create/deploy"
+            params={{ projectId: projectId! }}
+            className="text-foreground hover:underline"
+          >
+            deploy from URL
+          </Link>
+          , or using the CLI.{' '}
+          <a
+            href="https://appwrite.io/docs/functions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground hover:underline"
+          >
+            Learn more
+          </a>
+        </p>
+      </div>
+    </WizardLayout>
+  )
+}

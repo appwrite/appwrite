@@ -84,7 +84,7 @@ export function BuildSettings({
       <AccordionItem value="build-settings" className="border-none">
         <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-transparent cursor-pointer">
           <span className="text-[15px] font-semibold text-foreground">
-            Build settings
+            Build
           </span>
         </AccordionTrigger>
         <AccordionContent className="px-6 pb-4 pt-0 border-t border-border">

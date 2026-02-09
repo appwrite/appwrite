@@ -4,7 +4,7 @@ import {
   Globe,
   Users,
   Database,
-  HardDrive,
+  Folder,
   Zap,
   Compass,
   ArrowRight,
@@ -16,7 +16,7 @@ const intentIcons: Record<OnboardingIntent, typeof Globe> = {
   'deploy-site': Globe,
   'add-auth': Users,
   'create-database': Database,
-  'manage-files': HardDrive,
+  'manage-files': Folder,
   'run-functions': Zap,
   explore: Compass,
 }

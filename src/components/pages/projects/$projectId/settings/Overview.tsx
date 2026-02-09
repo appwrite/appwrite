@@ -22,7 +22,7 @@ import {
   Database,
   Zap,
   MessageSquare,
-  HardDrive,
+  Folder,
   Building2,
   UserCircle,
   ArrowUp,
@@ -815,7 +815,7 @@ export function ProjectSettingsOverview({
                       functions: Zap,
                       locale: Globe,
                       messaging: MessageSquare,
-                      storage: HardDrive,
+                      storage: Folder,
                       teams: Building2,
                       users: Users,
                     }

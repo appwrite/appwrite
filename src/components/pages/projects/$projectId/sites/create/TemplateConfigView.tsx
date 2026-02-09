@@ -33,7 +33,7 @@ import {
   Key,
   LayoutTemplate,
 } from 'lucide-react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -47,6 +47,11 @@ import { sdk, getApiEndpoint } from '@/lib/appwrite/sdk'
 import { resolveTemplatePlaceholder } from '@/lib/template-placeholders'
 import { useWizard } from './WizardContext'
 import { DomainInput } from './DomainInput'
+import {
+  ConnectRepositorySection,
+  type ConnectRepositoryValue,
+} from '@/components/global/shared/ConnectRepositorySection'
+import { VCSDetectionType } from '@appwrite.io/console'
 
 // Fade-in image component
 function FadeImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
@@ -97,6 +102,7 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
     frameworks,
     getFrameworkDefaults,
     generateDomain,
+    installations,
   } = useWizard()
 
   const templateId = decodeURIComponent(templateParam)
@@ -117,6 +123,38 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   const [domain, setDomain] = useState(formData.domain || '')
   const [domainValid, setDomainValid] = useState(formData.domainValid || false)
   const [isDeploying, setIsDeploying] = useState(false)
+
+  // Connect-now repo selection (synced to formData for deploy)
+  const connectRepoValue: ConnectRepositoryValue = useMemo(
+    () => ({
+      installationId: formData.installationId,
+      providerRepositoryId: formData.providerRepositoryId,
+      repositoryName: formData.repositoryName,
+      repositoryOwner: formData.repositoryOwner,
+    }),
+    [
+      formData.installationId,
+      formData.providerRepositoryId,
+      formData.repositoryName,
+      formData.repositoryOwner,
+    ],
+  )
+  const [connectBranch, setConnectBranch] = useState(
+    formData.providerBranch || 'main',
+  )
+  const [connectRootDir, setConnectRootDir] = useState(
+    formData.providerRootDirectory || './',
+  )
+
+  const getGitHubAuthUrl = useMemo(() => {
+    if (typeof window === 'undefined' || !projectId) return '#'
+    const origin = window.location.origin
+    const redirectUrl = `${origin}/projects/${projectId}/sites/create`
+    const successUrl = encodeURIComponent(redirectUrl)
+    const failureUrl = encodeURIComponent(redirectUrl)
+    const projectEndpoint = getApiEndpoint(project?.region)
+    return `${projectEndpoint}/vcs/github/authorize?project=${projectId}&success=${successUrl}&failure=${failureUrl}&mode=admin`
+  }, [projectId, project?.region])
 
   // Determine theme for screenshots
   const isDark = useMemo(() => {
@@ -170,7 +208,16 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
   // Mutations
   const createSiteMutation = useCreateSite(projectId)
   const createDomainMutation = useCreateSiteDomain(projectId)
-  const createDeploymentMutation = useCreateTemplateDeployment(projectId)
+  const createTemplateDeploymentMutation = useCreateTemplateDeployment(projectId)
+
+  const handleConnectRepoValueChange = (next: ConnectRepositoryValue) => {
+    updateFormData({
+      installationId: next.installationId,
+      providerRepositoryId: next.providerRepositoryId,
+      repositoryName: next.repositoryName,
+      repositoryOwner: next.repositoryOwner,
+    })
+  }
 
   const handleDeploy = async () => {
     if (!projectId || !template || !siteName || !framework) {
@@ -183,10 +230,20 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       return
     }
 
+    if (gitConnection === 'now') {
+      if (
+        !formData.installationId ||
+        !formData.providerRepositoryId
+      ) {
+        toast.error('Please select a repository')
+        return
+      }
+    }
+
     setIsDeploying(true)
 
     try {
-      // Use template framework when available (buildRuntime, adapter, fallbackFile required by API)
+      // Use template framework when available, otherwise SDK framework defaults (buildRuntime, adapter, fallbackFile)
       const defaults = templateFramework
         ? {
             installCommand: templateFramework.installCommand,
@@ -196,9 +253,14 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
             adapter: templateFramework.adapter,
             fallbackFile: templateFramework.fallbackFile,
           }
-        : { ...getFrameworkDefaults(framework), buildRuntime: undefined, adapter: undefined, fallbackFile: undefined }
+        : getFrameworkDefaults(framework)
 
-      // 1. Create the site (buildRuntime required by API; default when not from template)
+      const connectNow =
+        gitConnection === 'now' &&
+        formData.installationId &&
+        formData.providerRepositoryId
+
+      // 1. Create the site (with or without VCS connection)
       const site = await createSiteMutation.mutateAsync({
         siteId: siteId || undefined,
         name: siteName,
@@ -209,6 +271,13 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         buildRuntime: defaults.buildRuntime ?? 'node-22',
         adapter: defaults.adapter ?? '',
         fallbackFile: defaults.fallbackFile ?? '',
+        ...(connectNow && {
+          installationId: formData.installationId,
+          providerRepositoryId: formData.providerRepositoryId,
+          providerBranch: connectBranch,
+          providerRootDirectory: connectRootDir || undefined,
+          providerSilentMode: false,
+        }),
       })
 
       // 2. Create domain rule
@@ -236,8 +305,10 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         )
       }
 
-      // 4. Create template deployment (rootDirectory from selected template framework)
-      const deployment = await createDeploymentMutation.mutateAsync({
+      // 4. Create deployment: always use template deployment so the build has source code.
+      // (When connect now, the site is linked to the user's repo for future VCS deployments,
+      // but the initial deploy uses the template repo so new/empty user repos don't fail.)
+      const deployment = await createTemplateDeploymentMutation.mutateAsync({
         siteId: site.$id,
         repository: template.providerRepositoryId || template.key,
         owner: template.providerOwner || 'appwrite',
@@ -247,22 +318,22 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         activate: true,
       })
 
-      // Update form data
       updateFormData({
         createdSiteId: site.$id,
-        createdDeploymentId: deployment.$id,
+        createdDeploymentId: deployment?.$id,
       })
 
-      // Refetch sites list so cache is updated (list has refetchOnMount: false)
       await queryClient.refetchQueries({
         queryKey: ['sites', 'project', projectId],
       })
 
-      // Navigate to deploying screen
       navigate({
         to: '/projects/$projectId/sites/create/deploying',
         params: { projectId },
-        search: { siteId: site.$id, deploymentId: deployment.$id },
+        search: {
+          siteId: site.$id,
+          deploymentId: deployment?.$id ?? '',
+        },
       })
     } catch (error: any) {
       toast.error(error.message || 'Failed to create site')
@@ -488,7 +559,9 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
               !siteName ||
               !framework ||
               !domainValid ||
-              createSiteMutation.isPending
+              createSiteMutation.isPending ||
+              (gitConnection === 'now' &&
+                (!formData.providerRepositoryId || !formData.installationId))
             }
           >
             Deploy
@@ -633,6 +706,32 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
           </div>
         </Label>
       </RadioGroup>
+
+      {/* Git repository section (only when Connect your repository is selected) */}
+      {gitConnection === 'now' && (
+        <ConnectRepositorySection
+          projectId={projectId}
+          installations={installations}
+          getGitHubAuthUrl={getGitHubAuthUrl}
+          defaultRepositoryName={siteName || template?.name || ''}
+          detectionType={VCSDetectionType.Framework}
+          value={connectRepoValue}
+          onValueChange={handleConnectRepoValueChange}
+          showBranchAndRoot={!!(formData.providerRepositoryId && formData.installationId)}
+          branch={connectBranch}
+          onBranchChange={(b) => {
+            setConnectBranch(b)
+            updateFormData({ providerBranch: b })
+          }}
+          rootDirectory={connectRootDir}
+          onRootDirectoryChange={(r) => {
+            setConnectRootDir(r)
+            updateFormData({ providerRootDirectory: r })
+          }}
+          emptyStateTitle="Connect Git repository"
+          emptyStateDescription="Create and deploy a Site with a connected git repository."
+        />
+      )}
 
       {/* Template variables section */}
       {template.variables && template.variables.length > 0 && (() => {

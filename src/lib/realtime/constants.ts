@@ -8,10 +8,10 @@
 export const CONSOLE_CHANNELS = ['console'] as const
 
 /**
- * Channels for project-level subscriptions.
- * Backend may send on both 'project' and 'console' for project-scoped events.
+ * Channels for project-level subscriptions (console client, project=console).
+ * Use only 'console'; the 'project' channel causes server errors when used with console.
  */
-export const PROJECT_CHANNELS = ['project', 'console'] as const
+export const PROJECT_CHANNELS = ['console'] as const
 
 /** Event name patterns we listen to (for branching in the handler) */
 export const REALTIME_EVENTS = {

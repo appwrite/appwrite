@@ -7,7 +7,7 @@ import {
   MoreHorizontal,
   Lock,
   Trash2,
-  HardDrive,
+  Folder,
 } from 'lucide-react'
 import { formatBytes, formatNumber } from '@/lib/utils/mock-data'
 import {
@@ -544,7 +544,7 @@ export function View() {
                       <ResourceCard
                         title={bucketData.name}
                         resourceId={bucketData.$id}
-                        icon={HardDrive}
+                        icon={Folder}
                         iconColor="bg-muted text-muted-foreground"
                         status={isDisabled ? 'error' : undefined}
                         statusLabel={isDisabled ? 'Disabled' : undefined}
@@ -604,7 +604,7 @@ export function View() {
               </div>
             ) : (
               <EmptyState
-                icon={HardDrive}
+                icon={Folder}
                 title="No buckets yet"
                 description="Create your first bucket to start storing files"
                 isEmpty={!searchValue}

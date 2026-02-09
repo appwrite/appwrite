@@ -7,7 +7,7 @@ import {
   ArrowRight,
   Check,
   Copy,
-  HardDrive,
+  Folder,
   SkipForward,
   Upload,
 } from 'lucide-react'
@@ -338,7 +338,7 @@ export function ManageFilesPath() {
         </button>
         <div className="h-4 w-px bg-border" />
         <div className="flex items-center gap-2">
-          <HardDrive className="h-4 w-4 text-[#f02e65]" />
+          <Folder className="h-4 w-4 text-[#f02e65]" />
           <span className="text-sm font-medium">Upload and manage files</span>
         </div>
       </div>

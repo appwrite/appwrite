@@ -253,7 +253,7 @@ export const onboardingPaths: OnboardingPath[] = [
     id: 'manage-files',
     title: 'Upload and manage files',
     description: 'Store and serve files at scale',
-    icon: 'hard-drive',
+    icon: 'folder',
     steps: [
       {
         id: 'create-bucket',

@@ -174,6 +174,20 @@ export async function fetchFunctionTemplates(
 }
 
 /**
+ * Query function to fetch a single function template by ID
+ */
+export async function fetchFunctionTemplate(
+  projectId: string,
+  templateId: string,
+): Promise<Models.TemplateFunction> {
+  if (!projectId || !templateId) {
+    throw new Error('Project ID and Template ID are required')
+  }
+  const projectSdk = sdk.forProject(projectId)
+  return await projectSdk.functions.getTemplate({ templateId })
+}
+
+/**
  * Query function to fetch function executions
  */
 export async function fetchFunctionExecutions(
@@ -816,6 +830,31 @@ export function useFunctionTemplates(
     error,
     refetch,
   }
+}
+
+/**
+ * Query options for a single function template
+ */
+export function functionTemplateQueryOptions(
+  projectId: string | null | undefined,
+  templateId: string | null | undefined,
+) {
+  return queryOptions({
+    queryKey: ['function-template', 'project', projectId, templateId],
+    queryFn: () => fetchFunctionTemplate(projectId!, templateId!),
+    enabled: !!projectId && !!templateId,
+    staleTime: DEFAULT_STALE_TIME,
+  })
+}
+
+/**
+ * Hook to fetch a single function template by ID
+ */
+export function useFunctionTemplate(
+  projectId: string | null | undefined,
+  templateId: string | null | undefined,
+) {
+  return useQuery(functionTemplateQueryOptions(projectId, templateId))
 }
 
 /**

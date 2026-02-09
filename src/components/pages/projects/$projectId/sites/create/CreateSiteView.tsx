@@ -33,6 +33,10 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
+import {
+  CreateWizardLeftColumn,
+  CreateWizardRightColumn,
+} from '@/components/global/shared/CreateWizardColumns'
 import { Pagination, SimplePagination } from '@/components/global/shared/Pagination'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { FrameworkIcon } from '@/components/global/shared/FrameworkIcon'
@@ -369,9 +373,11 @@ export function CreateSiteView() {
   const selectedInstallation = installations.find(i => i.$id === selectedInstallationId)
 
   const handleSelectRepository = (repo: any) => {
+    const installationId = selectedInstallationId!
+    const providerRepositoryId = repo.id
     updateFormData({
-      installationId: selectedInstallationId,
-      providerRepositoryId: repo.id,
+      installationId,
+      providerRepositoryId,
       repositoryOwner: repo.organization,
       repositoryName: repo.name,
       repositoryUrl: repo.url,
@@ -379,10 +385,11 @@ export function CreateSiteView() {
     })
 
     navigate({
-      to: '/projects/$projectId/sites/create/repositories/$repository',
+      to: '/projects/$projectId/sites/create/repositories/$installationId/$repositoryId',
       params: {
         projectId: projectId!,
-        repository: encodeURIComponent(`${repo.organization}/${repo.name}`),
+        installationId,
+        repositoryId: providerRepositoryId,
       },
     })
   }
@@ -417,12 +424,7 @@ export function CreateSiteView() {
       maxWidth="max-w-[1400px]"
     >
       <div className="grid gap-12 lg:grid-cols-5">
-        {/* Left: Repositories (2/5 width) */}
-        <div className="lg:col-span-2 flex flex-col">
-          <h2 className="text-[14px] font-semibold text-foreground mb-4">
-            Import repository
-          </h2>
-
+        <CreateWizardLeftColumn title="Import repository">
           {!hasInstallations ? (
             <div className="rounded-lg border border-border bg-card/50 p-6 text-center">
               <div className="flex justify-center mb-3">
@@ -596,17 +598,12 @@ export function CreateSiteView() {
               </div>
             </div>
           )}
-        </div>
+        </CreateWizardLeftColumn>
 
-        {/* Right: Templates (3/5 width) */}
-        <div className="lg:col-span-3 space-y-4">
-          <h2 className="text-[14px] font-semibold text-foreground">
-            Clone template
-          </h2>
-
-          {/* Template search and filters */}
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
+        <CreateWizardRightColumn title="Clone template">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[140px]">
               <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <Input
                 value={templateSearch}
@@ -778,7 +775,7 @@ export function CreateSiteView() {
               }}
             />
           )}
-        </div>
+        </CreateWizardRightColumn>
       </div>
 
       {/* Manual upload footnote */}

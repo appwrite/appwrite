@@ -15,7 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { GitBranch, Loader2 } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import { GitBranch, Info, Loader2 } from 'lucide-react'
 import { useRepositoryBranches } from '@/lib/react-query/hooks'
 
 interface BranchSelectorProps {
@@ -25,6 +30,8 @@ interface BranchSelectorProps {
   value: string
   onChange: (branch: string) => void
   label?: string
+  /** Optional tooltip text shown next to the label (e.g. for sites: production branch explanation) */
+  labelTooltip?: string
   placeholder?: string
   disabled?: boolean
   className?: string
@@ -37,10 +44,36 @@ export function BranchSelector({
   value,
   onChange,
   label = 'Branch',
+  labelTooltip,
   placeholder = 'Select branch',
   disabled = false,
   className,
 }: BranchSelectorProps) {
+  const labelContent = (
+    <>
+      {label}
+      {labelTooltip && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="inline-flex ml-1.5 align-middle text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+              aria-label="More info"
+            >
+              <Info className="h-3.5 w-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent
+            side="top"
+            className="max-w-[240px] z-[200]"
+          >
+            {labelTooltip}
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </>
+  )
+
   // Fetch branches
   const { data: branchesData, isLoading: branchesLoading } = useRepositoryBranches(
     projectId,
@@ -74,7 +107,7 @@ export function BranchSelector({
     return (
       <div className={className}>
         {label && (
-          <Label className="text-[13px] mb-2 block">{label}</Label>
+          <Label className="text-[13px] mb-2 block">{labelContent}</Label>
         )}
         <div className="flex items-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -91,7 +124,7 @@ export function BranchSelector({
       <div className={className}>
         {label && (
           <Label htmlFor="branch-selector" className="text-[13px] mb-2 block">
-            {label}
+            {labelContent}
           </Label>
         )}
         <Select value={value} onValueChange={onChange} disabled={disabled}>
@@ -118,7 +151,7 @@ export function BranchSelector({
     <div className={className}>
       {label && (
         <Label htmlFor="branch-input" className="text-[13px] mb-2 block">
-          {label}
+          {labelContent}
         </Label>
       )}
       <Input

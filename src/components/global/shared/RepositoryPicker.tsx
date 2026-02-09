@@ -83,6 +83,8 @@ export interface RepositoryPickerProps {
   onRepositorySelect: (repo: Models.ProviderRepositoryFramework) => void
   /** create = wizard (Connect button per row); connect = modal (select one then Confirm) */
   mode: 'create' | 'connect'
+  /** Framework for sites, Runtime for functions. Default Framework. */
+  detectionType?: 'framework' | 'runtime'
   /** Show "Or create a new site" link (e.g. in connect modal) */
   showCreateNewSiteLink?: boolean
   /** Optional refetch for refresh button */
@@ -100,6 +102,7 @@ export function RepositoryPicker({
   selectedRepositoryId,
   onRepositorySelect,
   mode,
+  detectionType = 'framework',
   showCreateNewSiteLink = false,
   onRefetch,
   isFetching: isFetchingProp,
@@ -108,6 +111,11 @@ export function RepositoryPicker({
   const [repoSearch, setRepoSearch] = useState('')
   const [debouncedRepoSearch, setDebouncedRepoSearch] = useState('')
   const [repoPage, setRepoPage] = useState(1)
+
+  const vcsType =
+    detectionType === 'runtime'
+      ? VCSDetectionType.Runtime
+      : VCSDetectionType.Framework
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -125,16 +133,18 @@ export function RepositoryPicker({
   } = useRepositories(
     projectId,
     selectedInstallationId || null,
-    VCSDetectionType.Framework,
+    vcsType,
     repoPage - 1,
     REPO_PAGE_SIZE,
     debouncedRepoSearch || undefined,
   )
 
-  const repositories = useMemo(
-    () => repositoriesData?.frameworkProviderRepositories || [],
-    [repositoriesData],
-  )
+  const repositories = useMemo(() => {
+    if (vcsType === VCSDetectionType.Runtime) {
+      return repositoriesData?.runtimeProviderRepositories || []
+    }
+    return repositoriesData?.frameworkProviderRepositories || []
+  }, [repositoriesData, vcsType])
   const hasMoreRepos = repositories.length === REPO_PAGE_SIZE
   const selectedInstallation = installations.find(
     (i) => i.$id === selectedInstallationId,
