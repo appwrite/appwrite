@@ -453,6 +453,9 @@ class DatabaseServerTest extends Scope
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', $headers, $gqlPayload);
 
+        // Wait for all attributes to become available before returning
+        sleep(5);
+
         self::$allAttributesCache[$cacheKey] = $data;
         return self::$allAttributesCache[$cacheKey];
     }
@@ -489,6 +492,19 @@ class DatabaseServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
+
+        // Handle 409 conflict - index may already exist from testCreateIndex
+        if (isset($index['body']['errors'])) {
+            $errorMessage = $index['body']['errors'][0]['message'] ?? '';
+            if (strpos($errorMessage, 'already exists') !== false || strpos($errorMessage, 'Document with the requested ID already exists') !== false) {
+                self::$indexCache[$cacheKey] = [
+                    'database' => $data['database'],
+                    'collection' => $data['collection'],
+                    'index' => ['key' => 'index'],
+                ];
+                return self::$indexCache[$cacheKey];
+            }
+        }
 
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
@@ -590,6 +606,15 @@ class DatabaseServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
+
+        // Handle 409 conflict - relationship may already exist from testCreateRelationshipAttribute
+        if (isset($attribute['body']['errors'])) {
+            $errorMessage = $attribute['body']['errors'][0]['message'] ?? '';
+            if (strpos($errorMessage, 'already exists') !== false || strpos($errorMessage, 'Document with the requested ID already exists') !== false) {
+                self::$relationshipCache[$cacheKey] = $data;
+                return self::$relationshipCache[$cacheKey];
+            }
+        }
 
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
@@ -1318,6 +1343,10 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $attribute['body']);
         $this->assertIsArray($attribute['body']['data']);
         $this->assertIsArray($attribute['body']['data']['databasesCreateRelationshipAttribute']);
+
+        // Store for caching so setupRelationship() doesn't try to recreate
+        $cacheKey = $this->getProject()['$id'] ?? 'default';
+        self::$relationshipCache[$cacheKey] = $data;
     }
 
     public function testUpdateRelationshipAttribute(): void
@@ -1541,6 +1570,14 @@ class DatabaseServerTest extends Scope
         $this->assertArrayNotHasKey('errors', $index['body']);
         $this->assertIsArray($index['body']['data']);
         $this->assertIsArray($index['body']['data']['databasesCreateIndex']);
+
+        // Store for caching so setupIndex() doesn't try to recreate
+        $cacheKey = $this->getProject()['$id'] ?? 'default';
+        self::$indexCache[$cacheKey] = [
+            'database' => $data['database'],
+            'collection' => $data['collection'],
+            'index' => $index['body']['data']['databasesCreateIndex'],
+        ];
     }
 
     /**
@@ -1585,6 +1622,14 @@ class DatabaseServerTest extends Scope
 
         $document = $document['body']['data']['databasesCreateDocument'];
         $this->assertIsArray($document);
+
+        // Store for caching so setupDocument() doesn't try to recreate
+        $cacheKey = $this->getProject()['$id'] ?? 'default';
+        self::$documentCache[$cacheKey] = [
+            'database' => $data['database'],
+            'collection' => $data['collection'],
+            'document' => $document,
+        ];
     }
 
     //    /**

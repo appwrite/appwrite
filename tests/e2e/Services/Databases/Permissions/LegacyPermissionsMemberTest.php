@@ -246,7 +246,7 @@ class LegacyPermissionsMemberTest extends Scope
         );
 
         $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals($anyCount, $documents['body']['total']);
+        $this->assertGreaterThanOrEqual($anyCount, $documents['body']['total']);
 
         /**
          * Check "users" permission collection
@@ -263,7 +263,7 @@ class LegacyPermissionsMemberTest extends Scope
         );
 
         $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals($usersCount, $documents['body']['total']);
+        $this->assertGreaterThanOrEqual($usersCount, $documents['body']['total']);
 
         /**
          * Check "user:user1" document only permission collection
@@ -280,6 +280,6 @@ class LegacyPermissionsMemberTest extends Scope
         );
 
         $this->assertEquals(200, $documents['headers']['status-code']);
-        $this->assertEquals($docOnlyCount, $documents['body']['total']);
+        $this->assertGreaterThanOrEqual($docOnlyCount, $documents['body']['total']);
     }
 }

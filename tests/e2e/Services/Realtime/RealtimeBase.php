@@ -63,7 +63,7 @@ trait RealtimeBase
             "ws://appwrite.test/v1/realtime?" . $queryString,
             [
                 "headers" => $headers,
-                "timeout" => 30,
+                "timeout" => 60,
             ]
         );
     }

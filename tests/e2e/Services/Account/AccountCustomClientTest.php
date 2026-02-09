@@ -415,6 +415,8 @@ class AccountCustomClientTest extends Scope
             'phone' => $number,
         ]);
 
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $userId = $response['body']['userId'];
 
         $smsRequest = $this->getLastRequestForProject(
@@ -429,6 +431,8 @@ class AccountCustomClientTest extends Scope
                 $this->assertEquals($number, $request['data']['to'] ?? null);
             }
         );
+
+        $this->assertNotEmpty($smsRequest, 'SMS request not found for phone number: ' . $number);
 
         self::$phoneData[$cacheKey] = [
             'token' => $smsRequest['data']['message'],
@@ -464,6 +468,8 @@ class AccountCustomClientTest extends Scope
             'secret' => $token,
         ]);
 
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $session = $response['cookies']['a_session_' . $projectId];
 
         self::$phoneSessionData[$cacheKey] = array_merge($data, ['session' => $session]);
@@ -488,7 +494,7 @@ class AccountCustomClientTest extends Scope
         $email = uniqid() . 'new@localhost.test';
         $password = 'new-password';
 
-        $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -498,9 +504,26 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Re-login with email to get a fresh session after credential change
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $session = $response['cookies']['a_session_' . $projectId];
+
         self::$phonePasswordData[$cacheKey] = array_merge($data, [
             'email' => $email,
             'password' => $password,
+            'session' => $session,
         ]);
 
         return self::$phonePasswordData[$cacheKey];
@@ -520,9 +543,10 @@ class AccountCustomClientTest extends Scope
 
         $data = $this->setupPhoneConvertedToPassword();
         $session = $data['session'];
-        $newPhone = '+45632569856';
+        // Use a unique phone number to avoid target conflicts across parallel test runs
+        $newPhone = '+456' . substr(str_replace('.', '', microtime(true)), -8);
 
-        $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -531,6 +555,8 @@ class AccountCustomClientTest extends Scope
             'phone' => $newPhone,
             'password' => 'new-password'
         ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         self::$phoneUpdatedData[$cacheKey] = array_merge($data, ['phone' => $newPhone]);
 
@@ -560,6 +586,8 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $projectId . '=' . $session,
         ]));
 
+        $this->assertEquals(201, $response['headers']['status-code']);
+
         $tokenCreatedAt = $response['body']['$createdAt'];
 
         $smsRequest = $this->getLastRequestForProject(
@@ -578,6 +606,8 @@ class AccountCustomClientTest extends Scope
                 $this->assertGreaterThan($tokenCreatedAt, $tokenRecievedAt);
             }
         );
+
+        $this->assertNotEmpty($smsRequest, 'SMS request not found for phone verification');
 
         self::$phoneVerificationData[$cacheKey] = array_merge($data, [
             'token' => \substr($smsRequest['data']['message'], 0, 6)

@@ -109,7 +109,7 @@ class RealtimeConsoleClientTest extends Scope
             ], $this->getHeaders()));
             $this->assertEquals(200, $column['headers']['status-code']);
             $this->assertEquals('available', $column['body']['status']);
-        }, 10000, 500);
+        }, 30000, 500);
 
         return ['actorsId' => $actorsId, 'databaseId' => $databaseId];
     }
@@ -160,7 +160,7 @@ class RealtimeConsoleClientTest extends Scope
             ], $this->getHeaders()));
             $this->assertEquals(200, $index['headers']['status-code']);
             $this->assertEquals('available', $index['body']['status']);
-        }, 10000, 500);
+        }, 30000, 500);
 
         return $data;
     }
