@@ -3370,7 +3370,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::orderDesc('')->toString(),
+                Query::orderDesc('$createdAt')->toString(),
             ]
         ]);
 
