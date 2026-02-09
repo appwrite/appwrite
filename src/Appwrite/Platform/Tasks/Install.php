@@ -434,6 +434,11 @@ class Install extends Action
     ): void {
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, false);
+        if ($isLocalInstall && !is_dir($this->path)) {
+            if (!@mkdir($this->path, 0755, true)) {
+                throw new \Exception('Can\'t create directory ' . $this->path);
+            }
+        }
 
         $isCLI = php_sapi_name() === 'cli';
         if ($isLocalInstall) {
@@ -467,8 +472,6 @@ class Install extends Action
             ->setParam('organization', $organization)
             ->setParam('image', $image)
             ->setParam('database', $database)
-            ->setParam('hostPath', $this->hostPath)
-            ->setParam('isLocalInstall', $isLocalInstall)
             ->setParam('enableAssistant', $enableAssistant);
 
         $templateForEnv->setParam('vars', $input);
@@ -544,7 +547,12 @@ class Install extends Action
                 }
             } else {
                 if ($isCLI) {
-                    Console::success('Installation files created. Run "docker compose up -d" to start Appwrite');
+                    if ($isLocalInstall) {
+                        $composePath = $this->path . '/' . $this->getComposeFileName();
+                        Console::success('Installation files created in ' . $this->path . '. Run "docker compose -f ' . $composePath . ' up -d" to start Appwrite');
+                    } else {
+                        Console::success('Installation files created. Run "docker compose up -d" to start Appwrite');
+                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -705,7 +713,7 @@ class Install extends Action
     {
         $client = new Client();
         $client
-            ->setTimeout(30)
+//            ->setTimeout(30)
             ->addHeader('Content-Type', 'application/json')
             ->addHeader('X-Appwrite-Project', 'console');
 
@@ -924,8 +932,9 @@ class Install extends Action
         if (!$force && $this->hostPath !== '') {
             return;
         }
-        $this->path = '/usr/src/code';
         $this->hostPath = $this->getInstallerHostPath();
+        $hostPath = rtrim($this->hostPath, '/');
+        $this->path = $hostPath . '/appwrite';
     }
 
     protected function readExistingCompose(): string
@@ -947,12 +956,12 @@ class Install extends Action
 
     protected function getComposeFileName(): string
     {
-        return $this->isLocalInstall() ? 'docker-compose.web-installer.yml' : 'docker-compose.yml';
+        return 'docker-compose.yml';
     }
 
     protected function getEnvFileName(): string
     {
-        return $this->isLocalInstall() ? '.env.web-installer' : '.env';
+        return '.env';
     }
 
     private function isInstallationComplete(int $port): bool

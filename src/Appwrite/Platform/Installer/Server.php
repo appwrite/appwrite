@@ -206,14 +206,27 @@ class Server
 
     private function cleanupWebInstallerFiles(): void
     {
-        $cwd = getcwd();
-        if ($cwd === false) {
-            return;
+        $baseDir = null;
+        try {
+            $cfg = $this->state->buildConfig();
+            if ($cfg->isLocal() && !empty($cfg->getHostPath())) {
+                $baseDir = rtrim($cfg->getHostPath(), '/') . '/appwrite';
+            }
+        } catch (\Throwable) {
+            // Fall back to cwd
+        }
+
+        if ($baseDir === null) {
+            $cwd = getcwd();
+            if ($cwd === false) {
+                return;
+            }
+            $baseDir = $cwd;
         }
 
         $filesToRemove = [
-            $cwd . '/.env.web-installer',
-            $cwd . '/docker-compose.web-installer.yml',
+            $baseDir . '/.env.web-installer',
+            $baseDir . '/docker-compose.web-installer.yml',
         ];
 
         foreach ($filesToRemove as $file) {
@@ -298,6 +311,7 @@ class Server
             '-p', "127.0.0.1:$port:" . self::INSTALLER_WEB_PORT,
             '--volume', '/var/run/docker.sock:/var/run/docker.sock',
             '--volume', "$volumePath:/usr/src/code:rw",
+            '--volume', "$volumePath:$volumePath:rw",
         ];
         $args[] = '-e';
         $args[] = 'APPWRITE_INSTALLER_CONFIG=' . $configJson;
