@@ -545,7 +545,7 @@ class Migrations extends Action
             throw new \Exception('User ' . $userInternalId . ' not found');
         }
 
-        $bucket = $authorization->skip(fn () => $this->dbForPlatform->getDocument('buckets', $bucketId));
+        $bucket = $this->dbForPlatform->getDocument('buckets', $bucketId);
         if ($bucket->isEmpty()) {
             throw new \Exception('Bucket not found');
         }
