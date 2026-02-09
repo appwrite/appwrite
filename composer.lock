@@ -3367,49 +3367,28 @@
                 "utopia-php/database": "5.*"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "1.9.x-dev",
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "1.*",
+                "phpbench/phpbench": "1.*",
+                "phpstan/phpstan": "1.*",
+                "phpunit/phpunit": "9.*"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\Agents\\": "src/Agents"
+                    "Utopia\\Abuse\\": "src/Abuse"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Utopia\\Tests\\Agents\\": "tests/Agents"
-                }
-            },
-            "scripts": {
-                "check": [
-                    "./vendor/bin/phpstan analyse --level max src tests"
-                ],
-                "lint": [
-                    "./vendor/bin/pint --test"
-                ],
-                "format": [
-                    "./vendor/bin/pint"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Utopia PHP",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "A simple PHP AI agents library",
+            "description": "A simple abuse library to manage application usage limits",
             "keywords": [
-                "agents",
-                "ai",
-                "automation",
-                "machine-learning",
-                "php"
+                "Abuse",
+                "framework",
+                "php",
+                "upf",
+                "utopia"
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
@@ -4073,16 +4052,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "ecac82392e83d4a8ede76c3c94258d868d82f709"
+                "reference": "20b6a6868234d766fef35a47814dccc66906c2af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/ecac82392e83d4a8ede76c3c94258d868d82f709",
-                "reference": "ecac82392e83d4a8ede76c3c94258d868d82f709",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/20b6a6868234d766fef35a47814dccc66906c2af",
+                "reference": "20b6a6868234d766fef35a47814dccc66906c2af",
                 "shasum": ""
             },
             "require": {
@@ -4129,9 +4108,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/1.0.0"
+                "source": "https://github.com/utopia-php/domains/tree/1.0.1"
             },
-            "time": "2026-01-30T06:15:50+00:00"
+            "time": "2026-02-06T12:45:12+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -5558,16 +5537,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.25",
+            "version": "1.8.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "5c75fda3410fe97387ef8e1920b583ef48849d7d"
+                "reference": "ce65854069a1af8ef0757650da5848168cca5f02"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/5c75fda3410fe97387ef8e1920b583ef48849d7d",
-                "reference": "5c75fda3410fe97387ef8e1920b583ef48849d7d",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ce65854069a1af8ef0757650da5848168cca5f02",
+                "reference": "ce65854069a1af8ef0757650da5848168cca5f02",
                 "shasum": ""
             },
             "require": {
@@ -5603,9 +5582,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.25"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.26"
             },
-            "time": "2026-02-05T09:40:07+00:00"
+            "time": "2026-02-08T07:41:27+00:00"
         },
         {
             "name": "doctrine/annotations",
