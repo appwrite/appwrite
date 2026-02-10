@@ -1355,16 +1355,16 @@
         },
         {
             "name": "open-telemetry/exporter-otlp",
-            "version": "1.3.4",
+            "version": "1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/exporter-otlp.git",
-                "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca"
+                "reference": "283a0d66522f2adc6d8d7debfd7686be91c282be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
-                "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
+                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/283a0d66522f2adc6d8d7debfd7686be91c282be",
+                "reference": "283a0d66522f2adc6d8d7debfd7686be91c282be",
                 "shasum": ""
             },
             "require": {
@@ -1415,7 +1415,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-01-15T09:31:34+00:00"
+            "time": "2026-02-05T09:44:52+00:00"
         },
         {
             "name": "open-telemetry/gen-otlp-protobuf",
@@ -1482,16 +1482,16 @@
         },
         {
             "name": "open-telemetry/sdk",
-            "version": "1.12.0",
+            "version": "1.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
-                "reference": "7f1bd524465c1ca42755a9ef1143ba09913f5be0"
+                "reference": "c76f91203bf7ef98ab3f4e0a82ca21699af185e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/7f1bd524465c1ca42755a9ef1143ba09913f5be0",
-                "reference": "7f1bd524465c1ca42755a9ef1143ba09913f5be0",
+                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/c76f91203bf7ef98ab3f4e0a82ca21699af185e1",
+                "reference": "c76f91203bf7ef98ab3f4e0a82ca21699af185e1",
                 "shasum": ""
             },
             "require": {
@@ -1575,7 +1575,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-01-21T04:14:03+00:00"
+            "time": "2026-01-28T11:38:11+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
@@ -4230,12 +4230,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "64bf7bb5f1be8f4982c3bd66775b300d0d9f3ded"
+                "reference": "8e12530227365042c608f6e65536eb2fcf1f6970"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/64bf7bb5f1be8f4982c3bd66775b300d0d9f3ded",
-                "reference": "64bf7bb5f1be8f4982c3bd66775b300d0d9f3ded",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/8e12530227365042c608f6e65536eb2fcf1f6970",
+                "reference": "8e12530227365042c608f6e65536eb2fcf1f6970",
                 "shasum": ""
             },
             "require": {
@@ -4248,7 +4248,8 @@
                 "laravel/pint": "1.*",
                 "phpbench/phpbench": "1.*",
                 "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*"
+                "phpunit/phpunit": "9.*",
+                "swoole/ide-helper": "^6.0"
             },
             "type": "library",
             "autoload": {
@@ -4270,7 +4271,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/backport-0.34-adapters"
             },
-            "time": "2026-02-10T06:12:40+00:00"
+            "time": "2026-02-10T10:54:07+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5453,16 +5454,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.8.26",
+            "version": "1.8.27",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "ce65854069a1af8ef0757650da5848168cca5f02"
+                "reference": "9c6927336a163954c0ed6d8208af8d5b83761762"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ce65854069a1af8ef0757650da5848168cca5f02",
-                "reference": "ce65854069a1af8ef0757650da5848168cca5f02",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9c6927336a163954c0ed6d8208af8d5b83761762",
+                "reference": "9c6927336a163954c0ed6d8208af8d5b83761762",
                 "shasum": ""
             },
             "require": {
@@ -5498,9 +5499,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.26"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.8.27"
             },
-            "time": "2026-02-08T07:41:27+00:00"
+            "time": "2026-02-10T06:10:29+00:00"
         },
         {
             "name": "doctrine/annotations",
