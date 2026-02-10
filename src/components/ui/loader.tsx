@@ -7,7 +7,7 @@ const LOGO_HEIGHT = 24
 const CONTENT_MIN_WIDTH = LOGO_WIDTH + 6 + 32 // logo + gap-1.5 + " / 2.0" text
 
 // Loader is always dark regardless of app theme (matches .dark --background)
-const LOADER_BG = 'oklch(0.141 0.005 285.823)'
+export const LOADER_BG = 'oklch(0.141 0.005 285.823)'
 const LOADER_TEXT = 'oklch(0.705 0.015 286.067)' // muted-foreground on dark
 
 /**

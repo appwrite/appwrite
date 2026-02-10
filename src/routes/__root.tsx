@@ -126,7 +126,7 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { isLoading } = useInitialLoader()
+  const { isLoading, isAuthRoute } = useInitialLoader()
   const [clientMounted, setClientMounted] = useState(false)
   useEffect(() => {
     setClientMounted(true)
@@ -143,10 +143,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ClientThemeProvider>
           <NavigationHistoryProvider>
             {/* Show branded loader (logo + 2.0) from first paint; avoid route "Loading..." flash.
-                When clientMounted, always render FullscreenLoader so it can run fade-out before unmount. */}
+                Before client mount: always show static loader for non-auth routes (including "/")
+                so the very first HTML paint shows the logo instead of route-level "Loading...".
+                When clientMounted, use FullscreenLoader so it can run fade-out before unmount. */}
             {clientMounted ? (
               <FullscreenLoader isVisible={isLoading} />
-            ) : isLoading ? (
+            ) : !isAuthRoute ? (
               <StaticFullscreenLoader />
             ) : null}
             <SentryContextProvider>

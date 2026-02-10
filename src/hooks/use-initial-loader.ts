@@ -30,11 +30,12 @@ export function useInitialLoader() {
     [location.pathname],
   )
 
+  // Include "/" so the branded loader shows until redirect; don't count root as "first page"
   const shouldShowLoader = useMemo(
     () =>
       !isAuthRoute &&
-      !(location.pathname === '/') &&
-      (location.pathname.startsWith('/protected') ||
+      (location.pathname === '/' ||
+        location.pathname.startsWith('/protected') ||
         location.pathname.startsWith('/organizations') ||
         location.pathname.startsWith('/projects') ||
         location.pathname.startsWith('/console') ||
@@ -81,8 +82,8 @@ export function useInitialLoader() {
     // This prevents unnecessary processing on root/auth routes
     if (!effectiveShouldShowLoader) {
       // Don't show loader on public/auth routes
-      // Auth pages and root route don't need loaders - mark as complete immediately
-      if (isAuthRoute || location.pathname === '/') {
+      // Auth pages mark complete immediately; "/" is handled by shouldShowLoader so we don't land here for "/"
+      if (isAuthRoute) {
         hasCompletedInitialLoadRef.current = true
       } else if (
         router.state.status === 'idle' &&
@@ -149,10 +150,11 @@ export function useInitialLoader() {
     const shouldShowLoadingState = isRouterLoading || currentHasActiveRequests
 
     // Hide loader when React Query is idle (don't wait for router).
-    // Route loaders use ensureQueryData, so when they finish isFetching goes to 0.
-    // The router can stay "pending" on some nested routes; hiding on RQ idle fixes that
-    // for all routes (support, change-plan, etc.) without path-specific checks.
-    const shouldHideLoader = !currentHasActiveRequests && wasLoadingRef.current
+    // Never hide while still on "/" — wait for redirect so we don't flash content before first real page.
+    const shouldHideLoader =
+      location.pathname !== '/' &&
+      !currentHasActiveRequests &&
+      wasLoadingRef.current
 
     if (shouldShowLoadingState && !wasLoadingRef.current) {
       // Started loading
@@ -207,5 +209,5 @@ export function useInitialLoader() {
     isMutating,
   ])
 
-  return { isLoading }
+  return { isLoading, isAuthRoute }
 }

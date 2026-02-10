@@ -6,6 +6,7 @@ import {
 import { useEffect, useRef } from 'react'
 import { useAuth } from '@/components/global/auth/RequireAuth'
 import { setLastLoginMethod } from '@/lib/utils/auth-storage'
+import { LOADER_BG } from '@/components/ui/loader'
 
 export const Route = createFileRoute('/_public/')({
   component: RootRedirect,
@@ -66,10 +67,12 @@ function RootRedirect() {
     })
   }, [account, navigate, location.pathname, location.search])
 
-  // Show loading while redirecting
+  // Blank screen while redirecting — root shows branded loader; never show "Loading..." here
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="text-muted-foreground">Loading...</div>
-    </div>
+    <div
+      className="fixed inset-0"
+      style={{ backgroundColor: LOADER_BG }}
+      aria-hidden
+    />
   )
 }
