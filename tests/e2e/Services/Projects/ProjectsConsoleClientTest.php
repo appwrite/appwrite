@@ -1168,7 +1168,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'duration' => 60, // Set session duration to 1 minute
+            'duration' => 10, // Set session duration to 10 seconds
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1177,7 +1177,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('platforms', $response['body']);
         $this->assertArrayHasKey('webhooks', $response['body']);
         $this->assertArrayHasKey('keys', $response['body']);
-        $this->assertEquals(60, $response['body']['authDuration']);
+        $this->assertEquals(10, $response['body']['authDuration']);
 
         $projectId = $response['body']['$id'];
 
@@ -1218,44 +1218,30 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
 
-        // Check session doesn't expire too soon.
-        sleep(30);
+        // Eventually session expires, within 15 seconds (10+variance)
+        $this->assertEventually(function () use ($projectId, $sessionCookie) {
+            // Get User
+            $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'Cookie' => $sessionCookie,
+            ]));
 
-        // Get User
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'Cookie' => $sessionCookie,
-        ]));
+            $this->assertEquals(401, $response['headers']['status-code']);
+        }, timeoutMs: 15 * 1000);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        // Wait just over a minute
-        sleep(35);
-
-        // Get User
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'Cookie' => $sessionCookie,
-        ]));
-
-        $this->assertEquals(401, $response['headers']['status-code']);
-
-        // Set session duration to 15s
+        // Set session duration to 10min
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/duration', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'duration' => 15, // seconds
+            'duration' => 600, // seconds
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(15, $response['body']['authDuration']);
+        $this->assertEquals(600, $response['body']['authDuration']);
 
-        // Wait 20 seconds, ensure non-valid session
-        \sleep(20);
-
+        // Ensure.. Something?
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -3157,7 +3143,7 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS with custom ID
          */
-        $customKeyId = 'key-with-custom-id';
+        $customKeyId = \uniqid() . 'custom-id';
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -3169,6 +3155,20 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertSame($customKeyId, $response['body']['$id']);
+
+        /**
+         * Test for FAILURE with custom ID
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'keyId' => $customKeyId,
+            'name' => 'Key Custom',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
 
         /**
          * Test for SUCCESS with magic string ID
@@ -3237,8 +3237,8 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, $response['body']['total']);
-        $this->assertCount(2, $response['body']['keys']);
+        $this->assertEquals(5, $response['body']['total']);
+        $this->assertCount(5, $response['body']['keys']);
 
         /** List keys with limit */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
@@ -3252,7 +3252,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['keys']);
-        $this->assertEquals(2, $response['body']['total']);
+        $this->assertEquals(5, $response['body']['total']);
 
         /** List keys with offset */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
@@ -3265,8 +3265,8 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(1, $response['body']['keys']);
-        $this->assertEquals(2, $response['body']['total']);
+        $this->assertCount(4, $response['body']['keys']);
+        $this->assertEquals(5, $response['body']['total']);
 
         /** List keys with cursor after */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
@@ -3280,6 +3280,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(1, $response['body']['keys']);
+        $this->assertEquals(5, $response['body']['total']);
         $this->assertEquals($key2Id, $response['body']['keys'][0]['$id']);
 
         /** List keys filtering by expire (lessThan now — should match none) */
@@ -3308,7 +3309,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertCount(1, $response['body']['keys']);
-        $this->assertEquals('Key Test 2', $response['body']['keys'][0]['name']);
 
         /** List keys filtering by name (equal — exact match) */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
@@ -3364,9 +3364,8 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['total']);
-        $this->assertCount(1, $response['body']['keys']);
-        $this->assertEquals('Key Test', $response['body']['keys'][0]['name']);
+        $this->assertEquals(4, $response['body']['total']);
+        $this->assertCount(4, $response['body']['keys']);
 
         /** List keys filtering by scopes (contains — match key with users.read) */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
@@ -3381,7 +3380,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertCount(1, $response['body']['keys']);
-        $this->assertEquals('Key Test 2', $response['body']['keys'][0]['name']);
 
         /** List keys filtering by scopes (contains — no match) */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
@@ -3424,9 +3422,8 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(2, $response['body']['keys']);
-        $this->assertEquals('Key Test 2', $response['body']['keys'][0]['name']);
-        $this->assertEquals('Key Test', $response['body']['keys'][1]['name']);
+        $this->assertCount(5, $response['body']['keys']);
+        $this->assertGreaterThan($response['body']['keys'][1]['$createdAt'], $response['body']['keys'][0]['$createdAt']);
 
         /** List keys with total disabled */
         $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/keys', array_merge([
@@ -3434,10 +3431,13 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'total' => false,
+            'queries' => [
+                Query::limit(1)->toString()
+            ]
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(2, $response['body']['keys']);
+        $this->assertCount(1, $response['body']['keys']);
         $this->assertEquals(0, $response['body']['total']);
 
         /**

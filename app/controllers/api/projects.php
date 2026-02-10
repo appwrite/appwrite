@@ -14,13 +14,14 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
-use Appwrite\Utopia\Database\Validator\Queries\Keys;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Keys;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -1132,7 +1133,11 @@ Http::post('/v1/projects/:projectId/keys')
             'secret' => API_KEY_STANDARD . '_' . \bin2hex(\random_bytes(128)),
         ]);
 
-        $key = $dbForPlatform->createDocument('keys', $key);
+        try {
+            $key = $dbForPlatform->createDocument('keys', $key);
+        } catch (Duplicate) {
+            throw new Exception(Exception::KEY_ALREADY_EXISTS);
+        }
 
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
