@@ -2774,6 +2774,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ]), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['functions.read', 'teams.write'],
         ]);
@@ -3123,6 +3124,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['teams.read', 'teams.write'],
         ]);
@@ -3138,6 +3140,52 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertArrayHasKey('accessedAt', $response['body']);
         $this->assertEmpty($response['body']['accessedAt']);
 
+        /**
+         * Test for SUCCESS without key ID
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Key Custom',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        /**
+         * Test for SUCCESS with custom ID
+         */
+        $customKeyId = 'key-with-custom-id';
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'keyId' => $customKeyId,
+            'name' => 'Key Custom',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertSame($customKeyId, $response['body']['$id']);
+
+        /**
+         * Test for SUCCESS with magic string ID
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/keys', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'keyId' => 'unique()',
+            'name' => 'Key Custom',
+            'scopes' => ['teams.read', 'teams.write'],
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotSame('unique()', $response['body']['$id']);
+
         $data = array_merge($data, [
             'keyId' => $response['body']['$id'],
             'secret' => $response['body']['secret']
@@ -3150,6 +3198,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['unknown'],
         ]);
@@ -3439,7 +3488,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($keyId, $response['body']['$id']);
-        $this->assertEquals('Key Test', $response['body']['name']);
+        $this->assertEquals('Key Custom', $response['body']['name']);
         $this->assertContains('teams.read', $response['body']['scopes']);
         $this->assertContains('teams.write', $response['body']['scopes']);
         $this->assertCount(2, $response['body']['scopes']);
@@ -3479,6 +3528,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['users.write'],
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
@@ -3499,6 +3549,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
             'expire' => null,
@@ -3521,6 +3572,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), -3600),
@@ -3562,6 +3614,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['teams.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
@@ -3594,6 +3647,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['health.read'],
             'expire' => DateTime::addSeconds(new \DateTime(), 3600),
@@ -4603,6 +4657,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['users.read', 'users.write'],
         ]);
@@ -4623,6 +4678,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
             'name' => 'Key Test',
             'scopes' => ['users.read', 'users.write'],
         ]);
@@ -5430,6 +5486,24 @@ class ProjectsConsoleClientTest extends Scope
         ], followRedirects: false);
         $this->assertEquals(400, $response['headers']['status-code']);
 
+        // Also ensure final step blocks unknown redirect URL
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider . '/redirect', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'origin' => '',
+            'referer' => 'https://mockserver.com',
+        ], [
+            'code' => 'any-code',
+            'state' => \json_encode([
+                'success' => 'https://domain-without-rule.com',
+                'failure' => 'https://domain-without-rule.com'
+            ]),
+            'error' => '',
+            'error_description' => '',
+        ], followRedirects: false);
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertStringContainsString('project_invalid_success_url', $response['body']);
+
         // Ensure rule's domain can be redirect URL
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
             'content-type' => 'application/json',
@@ -5441,6 +5515,24 @@ class ProjectsConsoleClientTest extends Scope
             'failure' => 'https://' . $domain
         ], followRedirects: false);
         $this->assertEquals(301, $response['headers']['status-code']);
+
+        // Also ensure final step allows redirect URL
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider . '/redirect', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'origin' => '',
+            'referer' => 'https://mockserver.com',
+        ], [
+            'code' => 'any-code',
+            'state' => \json_encode([
+                'success' => 'https://' . $domain,
+                'failure' => 'https://' . $domain
+            ]),
+            'error' => '',
+            'error_deescription' => '',
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringContainsString('https://' . $domain, $response['headers']['location']);
 
         // Ensure unknown domain cannot be redirect URL
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', [
