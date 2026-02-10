@@ -1182,6 +1182,11 @@ Http::get('/v1/projects/:projectId/keys')
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
+        // Backwards compatibility
+        if (\count(Query::getByType($queries, [Query::TYPE_LIMIT])) === 0) {
+            $queries[] = Query::limit(5000);
+        }
+
         $queries[] = Query::equal('resourceType', ['projects']);
         $queries[] = Query::equal('resourceInternalId', [$project->getSequence()]);
 
