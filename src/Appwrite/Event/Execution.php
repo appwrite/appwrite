@@ -14,8 +14,7 @@ class Execution extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(Event::EXECUTIONS_QUEUE_NAME)
-            ->setClass(Event::EXECUTIONS_CLASS_NAME);
+            ->setQueue(Event::EXECUTIONS_QUEUE_NAME);
     }
 
     /**

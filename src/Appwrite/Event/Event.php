@@ -10,50 +10,35 @@ use Utopia\Queue\Queue;
 class Event
 {
     public const DATABASE_QUEUE_NAME = 'v1-database';
-    public const DATABASE_CLASS_NAME = 'DatabaseV1';
 
     public const DELETE_QUEUE_NAME = 'v1-deletes';
-    public const DELETE_CLASS_NAME = 'DeletesV1';
 
     public const AUDITS_QUEUE_NAME = 'v1-audits';
-    public const AUDITS_CLASS_NAME = 'AuditsV1';
 
     public const MAILS_QUEUE_NAME = 'v1-mails';
-    public const MAILS_CLASS_NAME = 'MailsV1';
 
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
-    public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
     public const FUNCTIONS_QUEUE_TTL = 60 * 60 * 24 * 7; // 7 days
 
     public const STATS_RESOURCES_QUEUE_NAME = 'v1-stats-resources';
-    public const STATS_RESOURCES_CLASS_NAME = 'StatsResourcesV1';
 
     public const STATS_USAGE_QUEUE_NAME = 'v1-stats-usage';
-    public const STATS_USAGE_CLASS_NAME = 'StatsUsageV1';
 
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
-    public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
     public const CERTIFICATES_QUEUE_NAME = 'v1-certificates';
-    public const CERTIFICATES_CLASS_NAME = 'CertificatesV1';
 
     public const BUILDS_QUEUE_NAME = 'v1-builds';
-    public const BUILDS_CLASS_NAME = 'BuildsV1';
 
     public const SCREENSHOTS_QUEUE_NAME = 'v1-screenshots';
-    public const SCREENSHOTS_CLASS_NAME = 'ScreenshotsV1';
 
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
-    public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
     public const EXECUTIONS_QUEUE_NAME = 'v1-executions';
-    public const EXECUTIONS_CLASS_NAME = 'ExecutionsV1';
 
     public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
-    public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
 
     protected string $queue = '';
-    protected string $class = '';
     protected string $event = '';
     protected array $params = [];
     protected array $sensitive = [];
@@ -304,28 +289,6 @@ class Event
     public function getContext(string $key): ?Document
     {
         return $this->context[$key] ?? null;
-    }
-
-    /**
-     * Set class used for this event.
-     * @param string $class
-     * @return self
-     */
-    public function setClass(string $class): self
-    {
-        $this->class = $class;
-
-        return $this;
-    }
-
-    /**
-     * Get class used for this event.
-     *
-     * @return string
-     */
-    public function getClass(): string
-    {
-        return $this->class;
     }
 
     /**

@@ -20,8 +20,7 @@ class Certificate extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME))
-            ->setClass(System::getEnv('_APP_CERTIFICATES_CLASS_NAME', Event::CERTIFICATES_CLASS_NAME));
+            ->setQueue(System::getEnv('_APP_CERTIFICATES_QUEUE_NAME', Event::CERTIFICATES_QUEUE_NAME));
     }
 
     /**

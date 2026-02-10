@@ -25,7 +25,6 @@ class Func extends Event
 
         $this
             ->setQueue(System::getEnv('_APP_FUNCTIONS_QUEUE_NAME', Event::FUNCTIONS_QUEUE_NAME))
-            ->setClass(System::getEnv('_APP_FUNCTIONS_CLASS_NAME', Event::FUNCTIONS_CLASS_NAME))
             ->setTTL(Event::FUNCTIONS_QUEUE_TTL);
     }
 

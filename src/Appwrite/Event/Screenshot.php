@@ -15,8 +15,7 @@ class Screenshot extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME))
-            ->setClass(System::getEnv('_APP_SCREENSHOTS_CLASS_NAME', Event::SCREENSHOTS_CLASS_NAME));
+            ->setQueue(System::getEnv('_APP_SCREENSHOTS_QUEUE_NAME', Event::SCREENSHOTS_QUEUE_NAME));
     }
 
     public function setDeploymentId(string $deploymentId): self

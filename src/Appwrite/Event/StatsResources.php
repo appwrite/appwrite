@@ -14,8 +14,7 @@ class StatsResources extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME))
-            ->setClass(System::getEnv('_APP_STATS_RESOURCES_CLASS_NAME', Event::STATS_RESOURCES_CLASS_NAME));
+            ->setQueue(System::getEnv('_APP_STATS_RESOURCES_QUEUE_NAME', Event::STATS_RESOURCES_QUEUE_NAME));
     }
 
     /**

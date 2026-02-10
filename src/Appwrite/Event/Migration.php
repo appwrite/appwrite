@@ -17,8 +17,7 @@ class Migration extends Event
         parent::__construct($publisher);
 
         $this
-            ->setQueue(System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME))
-            ->setClass(System::getEnv('_APP_MIGRATIONS_CLASS_NAME', Event::MIGRATIONS_CLASS_NAME));
+            ->setQueue(System::getEnv('_APP_MIGRATIONS_QUEUE_NAME', Event::MIGRATIONS_QUEUE_NAME));
     }
 
     /**
