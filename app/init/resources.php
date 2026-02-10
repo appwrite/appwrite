@@ -296,54 +296,17 @@ Http::setResource('rule', function (Request $request, Database $dbForPlatform, D
 /**
  * CORS service
  */
-Http::setResource('cors', fn (array $allowedHostnames) => new Cors(
-    $allowedHostnames,
-    allowedMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: [
-        'Accept',
-        'Origin',
-        'Cookie',
-        'Set-Cookie',
-        // Content
-        'Content-Type',
-        'Content-Range',
-        // Appwrite
-        'X-Appwrite-Project',
-        'X-Appwrite-Key',
-        'X-Appwrite-Dev-Key',
-        'X-Appwrite-Locale',
-        'X-Appwrite-Mode',
-        'X-Appwrite-JWT',
-        'X-Appwrite-Response-Format',
-        'X-Appwrite-Timeout',
-        'X-Appwrite-ID',
-        'X-Appwrite-Timestamp',
-        'X-Appwrite-Session',
-        'X-Appwrite-Platform', // for `$platform` injection and SDK generator
-        // SDK generator
-        'X-SDK-Version',
-        'X-SDK-Name',
-        'X-SDK-Language',
-        'X-SDK-Platform',
-        'X-SDK-GraphQL',
-        'X-SDK-Profile',
-        // Caching
-        'Range',
-        'Cache-Control',
-        'Expires',
-        'Pragma',
-        // Server to server
-        'X-Fallback-Cookies',
-        'X-Requested-With',
-        'X-Forwarded-For',
-        'X-Forwarded-User-Agent',
-    ],
-    allowCredentials: true,
-    exposedHeaders: [
-        'X-Appwrite-Session',
-        'X-Fallback-Cookies',
-    ],
-), ['allowedHostnames']);
+Http::setResource('cors', function (array $allowedHostnames) {
+    $corsConfig = Config::getParam('cors');
+
+    return new Cors(
+        $allowedHostnames,
+        allowedMethods: $corsConfig['allowedMethods'],
+        allowedHeaders: $corsConfig['allowedHeaders'],
+        allowCredentials: true,
+        exposedHeaders: $corsConfig['exposedHeaders'],
+    );
+}, ['allowedHostnames']);
 
 Http::setResource('originValidator', function (Document $devKey, array $allowedHostnames, array $allowedSchemes) {
     if (!$devKey->isEmpty()) {
