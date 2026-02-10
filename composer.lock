@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "45a20998a33d8e3d3c05dbf99e42d942",
+    "content-hash": "614777f35993c3bbe04bf71871c93029",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3749,20 +3749,20 @@
         },
         {
             "name": "utopia-php/console",
-            "version": "0.0.1",
+            "version": "dev-feature/console-stderr-capture",
             "source": {
                 "type": "git",
-                "url": "https://github.com/utopia-php/console.git",
-                "reference": "f77104e4a888fa9cb3e08f32955ec09479ab7a92"
+                "url": "https://github.com/ChiragAgg5k/console.git",
+                "reference": "b55d01a0398ec51777a113a85208e901c6dad612"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/console/zipball/f77104e4a888fa9cb3e08f32955ec09479ab7a92",
-                "reference": "f77104e4a888fa9cb3e08f32955ec09479ab7a92",
+                "url": "https://api.github.com/repos/ChiragAgg5k/console/zipball/b55d01a0398ec51777a113a85208e901c6dad612",
+                "reference": "b55d01a0398ec51777a113a85208e901c6dad612",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.4"
+                "php": ">=8.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -3777,7 +3777,20 @@
                     "Utopia\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "test": [
+                    "vendor/bin/phpunit --configuration phpunit.xml < tests/input.txt"
+                ],
+                "check": [
+                    "vendor/bin/phpstan analyse -c phpstan.neon"
+                ],
+                "lint": [
+                    "vendor/bin/pint --test"
+                ],
+                "format": [
+                    "vendor/bin/pint"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -3790,10 +3803,9 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/console/issues",
-                "source": "https://github.com/utopia-php/console/tree/0.0.1"
+                "source": "https://github.com/ChiragAgg5k/console/tree/feature/console-stderr-capture"
             },
-            "time": "2025-10-20T14:41:36+00:00"
+            "time": "2026-02-10T06:42:23+00:00"
         },
         {
             "name": "utopia-php/database",
@@ -8947,6 +8959,12 @@
     ],
     "aliases": [
         {
+            "package": "utopia-php/console",
+            "version": "dev-feature/console-stderr-capture",
+            "alias": "0.0.1",
+            "alias_normalized": "0.0.1.0"
+        },
+        {
             "package": "utopia-php/framework",
             "version": "dev-backport-0.34-adapters",
             "alias": "0.33.38",
@@ -8961,6 +8979,7 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/console": 20,
         "utopia-php/framework": 20,
         "utopia-php/platform": 20
     },

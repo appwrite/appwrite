@@ -76,6 +76,7 @@
         "utopia-php/telemetry": "0.2.*",
         "utopia-php/vcs": "1.*",
         "utopia-php/websocket": "0.3.*",
+        "utopia-php/console": "dev-feature/console-stderr-capture as 0.0.1",
         "matomo/device-detector": "6.4.*",
         "dragonmantank/cron-expression": "3.4.*",
         "phpmailer/phpmailer": "6.9.*",
@@ -86,6 +87,12 @@
         "league/csv": "9.24.*",
         "enshrined/svg-sanitize": "0.22.*"
     },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/ChiragAgg5k/console"
+        }
+    ],
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "*",
