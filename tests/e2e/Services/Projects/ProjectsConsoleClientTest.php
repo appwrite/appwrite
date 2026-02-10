@@ -1241,7 +1241,7 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(600, $response['body']['authDuration']);
 
-        // Ensure.. Something?
+        // Ensure session is still expired (new duration only affects new sessions)
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
