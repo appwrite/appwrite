@@ -14,6 +14,7 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Config\Config;
@@ -1094,12 +1095,15 @@ Http::post('/v1/projects/:projectId/keys')
         ]
     ))
     ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Project unique ID.', false, ['dbForProject'])
+    // TODO: When migrating to Platform API, mark keyId required for consistency
+    ->param('keyId', 'unique()', new CustomId(), 'Key ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->param('expire', null, new Nullable(new DatetimeValidator()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForPlatform) {
+        $keyId = $keyId == 'unique()' ? ID::unique() : $keyId;
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1108,7 +1112,7 @@ Http::post('/v1/projects/:projectId/keys')
         }
 
         $key = new Document([
-            '$id' => ID::unique(),
+            '$id' => $keyId,
             '$permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
