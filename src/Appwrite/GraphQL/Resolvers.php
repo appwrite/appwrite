@@ -264,7 +264,9 @@ class Resolvers
         }
 
         $request = clone $request;
+        $response = clone $response;
         $utopia->setResource('request', static fn () => $request);
+        $utopia->setResource('response', static fn () => $response);
         $response->setContentType(Response::CONTENT_TYPE_NULL);
 
         try {
