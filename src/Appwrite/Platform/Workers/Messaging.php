@@ -596,12 +596,19 @@ class Messaging extends Action
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
-        // For SMTP, move all recipients to BCC and use default recipient in TO field
-        if ($provider->getAttribute('provider') === 'smtp') {
+        // Move all recipients to BCC to prevent exposing email addresses
+        // to other recipients. This applies to all providers, not just SMTP.
+        if (\count($to) > 1) {
             foreach ($to as $recipient) {
                 $bcc[] = ['email' => $recipient];
             }
-            $to = [];
+            // Use sender as the TO address to satisfy API requirements
+            // and keep recipients hidden
+            if (!empty($fromEmail)) {
+                $to = [$fromEmail];
+            } else {
+                $to = [];
+            }
         }
 
         return new Email(
