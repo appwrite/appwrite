@@ -1255,7 +1255,7 @@ Http::error()
         }
 
         switch ($class) {
-            case Utopia\Exception::class:
+            case Utopia\Http\Exception::class:
                 $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
                 switch ($code) {
                     case 400:

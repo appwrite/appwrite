@@ -104,7 +104,7 @@ class Update extends Action
      * @throws \Utopia\Database\Exception
      * @throws Authorization
      * @throws Structure
-     * @throws \Utopia\Exception
+     * @throws \Utopia\Http\Exception
      */
     public function action(string $transactionId, bool $commit, bool $rollback, UtopiaResponse $response, Database $dbForProject, Document $user, TransactionState $transactionState, Delete $queueForDeletes, Event $queueForEvents, StatsUsage $queueForStatsUsage, Event $queueForRealtime, Event $queueForFunctions, Event $queueForWebhooks, Authorization $authorization, EventProcessor $eventProcessor): void
     {
