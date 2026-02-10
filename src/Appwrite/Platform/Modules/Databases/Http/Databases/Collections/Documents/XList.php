@@ -107,7 +107,10 @@ class XList extends Action
                 throw new Exception($this->getParentNotFoundException(), params: [$join->getCollection()]);
             }
 
-            $join->setCollection('database_' . $database->getSequence() . '_collection_' . $col->getSequence());
+            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $col->getSequence();
+
+            $join->setCollection($collectionTableId);
+            $dbForProject->addJoinCollection($collectionTableId);
         }
 
         $cursor = Query::getCursorQueries($queries, false);
