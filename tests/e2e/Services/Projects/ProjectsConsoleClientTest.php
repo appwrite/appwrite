@@ -6020,8 +6020,6 @@ class ProjectsConsoleClientTest extends Scope
             }
 
             foreach ($testCase['inaccessibleProjectIds'] as $projectId) {
-                echo "processing user " . $testCase['userEmail'] . " for project " . $projectId . "\n";
-
                 $variableId = ID::unique();
                 $response = $this->client->call(Client::METHOD_POST, '/project/variables', [
                     'origin' => 'http://localhost',
