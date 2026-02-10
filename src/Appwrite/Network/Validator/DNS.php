@@ -3,6 +3,7 @@
 namespace Appwrite\Network\Validator;
 
 use Swoole\Coroutine\WaitGroup;
+use Utopia\DNS\Message\Record;
 use Utopia\DNS\Validator\DNS as BaseDNS;
 
 class DNS extends BaseDNS
@@ -12,6 +13,8 @@ class DNS extends BaseDNS
      */
     public function __construct(protected array $dnsServers = [])
     {
+        // Dummy initialization - we don't use these parameters for the validation
+        parent::__construct('', Record::TYPE_CNAME, $dnsServers[0] ?? self::DEFAULT_DNS_SERVER);
     }
 
     /**

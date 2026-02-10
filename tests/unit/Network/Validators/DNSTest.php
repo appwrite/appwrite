@@ -10,16 +10,18 @@ class DNSTest extends TestCase
 {
     public function testSingleDNSServer(): void
     {
-        $validator = new DNS('appwrite.io', Record::TYPE_CNAME, ['8.8.8.8']);
+        $baseValidator = new DNS(['8.8.8.8']);
+        $validator = $baseValidator->forRecord('appwrite.io', Record::TYPE_CNAME);
 
-        $this->assertEquals(false, $validator->isValid(''));
+        $this->assertFalse(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid(null));
         $this->assertEquals('string', $validator->getType());
     }
 
     public function testMultipleDNSServers(): void
     {
-        $validator = new DNS('appwrite.io', Record::TYPE_CNAME, ['8.8.8.8', '1.1.1.1']);
+        $baseValidator = new DNS(['8.8.8.8', '1.1.1.1']);
+        $validator = $baseValidator->forRecord('appwrite.io', Record::TYPE_CNAME);
 
         $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid(null));
@@ -28,7 +30,8 @@ class DNSTest extends TestCase
 
     public function testValidationFailure(): void
     {
-        $validator = new DNS('invalid-target.example.com', Record::TYPE_CNAME, ['8.8.8.8', '1.1.1.1']);
+        $baseValidator = new DNS(['8.8.8.8', '1.1.1.1']);
+        $validator = $baseValidator->forRecord('invalid-target.example.com', Record::TYPE_CNAME);
 
         $result = $validator->isValid('nonexistent-domain-' . \uniqid() . '.com');
 
@@ -42,7 +45,8 @@ class DNSTest extends TestCase
     public function testCoreDNSFailure(): void
     {
         // CoreDNS is configured to return cname.localhost. for stage.webapp.com
-        $validator = new DNS('cname.localhost.', Record::TYPE_CNAME, ['172.16.238.100', '8.8.8.8']);
+        $baseValidator = new DNS(['172.16.238.100', '8.8.8.8']);
+        $validator = $baseValidator->forRecord('cname.localhost.', Record::TYPE_CNAME);
 
         $result = $validator->isValid('stage.webapp.com');
         $this->assertEquals(false, $result);
