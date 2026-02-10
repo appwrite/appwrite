@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 

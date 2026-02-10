@@ -3,8 +3,8 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
