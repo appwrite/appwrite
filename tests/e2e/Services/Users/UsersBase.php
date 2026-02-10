@@ -1190,6 +1190,26 @@ trait UsersBase
         /**
          * Test for SUCCESS
          */
+
+        // First, create a session for the user so we can verify it gets deleted on block
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => $data['userEmail'] ?? 'cristiano.ronaldo@manchester-united.co.uk',
+            'password' => 'password',
+        ]);
+
+        // Verify user has at least one session before blocking
+        $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($sessions['headers']['status-code'], 200);
+        $sessionCount = count($sessions['body']['sessions']);
+
+        // Block the user
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1207,6 +1227,26 @@ trait UsersBase
 
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertEquals($user['body']['status'], false);
+
+        // Verify all sessions were deleted when user was blocked
+        $sessions = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/sessions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($sessions['headers']['status-code'], 200);
+        $this->assertEmpty($sessions['body']['sessions']);
+
+        // Re-enable the user to not break downstream tests
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'status' => true,
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['status'], true);
 
         return $data;
     }
