@@ -22,6 +22,27 @@ class Origin extends Validator
     {
     }
 
+    public function setAllowedHostnames(array $allowedHostnames): self
+    {
+        $this->allowedHostnames = $allowedHostnames;
+        return $this;
+    }
+
+    public function setAllowedSchemes(array $allowedSchemes): self
+    {
+        $this->allowedSchemes = $allowedSchemes;
+        return $this;
+    }
+
+    public function getAllowedHostnames(): array
+    {
+        return $this->allowedHostnames;
+    }
+
+    public function getAllowedSchemes(): array
+    {
+        return $this->allowedSchemes;
+    }
 
     /**
      * Check if Origin is valid.
