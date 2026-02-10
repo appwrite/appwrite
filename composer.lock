@@ -4218,12 +4218,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "95ea85612d4db7cc30164aa54abb3befc4ba3ab8"
+                "reference": "6f9e28ebe7cccbb6e25479068ee1db34475d49a5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/95ea85612d4db7cc30164aa54abb3befc4ba3ab8",
-                "reference": "95ea85612d4db7cc30164aa54abb3befc4ba3ab8",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/6f9e28ebe7cccbb6e25479068ee1db34475d49a5",
+                "reference": "6f9e28ebe7cccbb6e25479068ee1db34475d49a5",
                 "shasum": ""
             },
             "require": {
@@ -4258,7 +4258,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/backport-0.34-adapters"
             },
-            "time": "2026-02-09T12:47:49+00:00"
+            "time": "2026-02-10T05:19:30+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4634,12 +4634,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "45f9ecefeae3c755453e96cafd31b5d3da66b2e2"
+                "reference": "2868328278789617335aff435d2ddca0b2fc3465"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/45f9ecefeae3c755453e96cafd31b5d3da66b2e2",
-                "reference": "45f9ecefeae3c755453e96cafd31b5d3da66b2e2",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/2868328278789617335aff435d2ddca0b2fc3465",
+                "reference": "2868328278789617335aff435d2ddca0b2fc3465",
                 "shasum": ""
             },
             "require": {
@@ -4678,7 +4678,7 @@
                 "issues": "https://github.com/utopia-php/platform/issues",
                 "source": "https://github.com/utopia-php/platform/tree/bump-cli-and-framework"
             },
-            "time": "2026-02-09T12:52:20+00:00"
+            "time": "2026-02-10T04:48:33+00:00"
         },
         {
             "name": "utopia-php/pools",
