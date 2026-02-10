@@ -13,7 +13,7 @@ class DNSTest extends TestCase
         $baseValidator = new DNS(['8.8.8.8']);
         $validator = $baseValidator->forRecord('appwrite.io', Record::TYPE_CNAME);
 
-        $this->assertFalse(false, $validator->isValid(''));
+        $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid(null));
         $this->assertEquals('string', $validator->getType());
     }
