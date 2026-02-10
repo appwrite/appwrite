@@ -49,12 +49,12 @@ global $register;
 $platform = new Appwrite();
 $args = $platform->getEnv('argv');
 
+\array_shift($args);
 if (!isset($args[0])) {
     Console::error('Missing task name');
     Console::exit(1);
 }
 
-\array_shift($args);
 $taskName = $args[0];
 $platform->init(Service::TYPE_TASK);
 $cli = $platform->getCli();
