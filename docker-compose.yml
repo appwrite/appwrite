@@ -99,6 +99,7 @@ services:
       - ./src:/usr/src/code/src
       - ./dev:/usr/src/code/dev
       # - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
+      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - mariadb
       - redis

@@ -18,6 +18,8 @@ class DatabasesConsoleClientTest extends Scope
 
     public function testJoins(): void
     {
+        // todo: Move to Base class
+
         $database = $this->client->call(Client::METHOD_POST, '/tablesdb', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -173,6 +175,24 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertEquals(201, $session2['headers']['status-code']);
         $this->assertEquals($bill['body']['$sequence'], $session2['body']['userId']);
 
+        /**
+         * Simple join query
+         */
+
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $users['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::select('username', '')->toString(),
+                Query::select('username', '', 'username_as')->toString(),
+                Query::select('userId', 'B')->toString(),
+                Query::join($sessions['body']['$id'], 'B', [Query::relationEqual('', '$sequence','B', 'userId')])->toString(),
+            ],
+        ]);
+
+        var_dump($rows);
+        $this->assertEquals(2, $rows['body']['total']);
 
         $this->assertEquals('shmuel', 'fogel');
 
