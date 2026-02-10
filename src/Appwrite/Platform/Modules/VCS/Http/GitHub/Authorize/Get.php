@@ -31,7 +31,7 @@ class Get extends Action
             ->desc('Create GitHub app installation')
             ->groups(['api', 'vcs'])
             ->label('scope', 'vcs.read')
-            ->label('error', __DIR__ . '/../../../../../../../../app/views/general/error.phtml')
+            ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->label('sdk', new Method(
                 namespace: 'vcs',
                 group: 'installations',
