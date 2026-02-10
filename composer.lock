@@ -4218,12 +4218,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "6f9e28ebe7cccbb6e25479068ee1db34475d49a5"
+                "reference": "64bf7bb5f1be8f4982c3bd66775b300d0d9f3ded"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/6f9e28ebe7cccbb6e25479068ee1db34475d49a5",
-                "reference": "6f9e28ebe7cccbb6e25479068ee1db34475d49a5",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/64bf7bb5f1be8f4982c3bd66775b300d0d9f3ded",
+                "reference": "64bf7bb5f1be8f4982c3bd66775b300d0d9f3ded",
                 "shasum": ""
             },
             "require": {
@@ -4258,7 +4258,7 @@
                 "issues": "https://github.com/utopia-php/http/issues",
                 "source": "https://github.com/utopia-php/http/tree/backport-0.34-adapters"
             },
-            "time": "2026-02-10T05:19:30+00:00"
+            "time": "2026-02-10T06:12:40+00:00"
         },
         {
             "name": "utopia-php/image",
