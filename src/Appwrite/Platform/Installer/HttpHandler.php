@@ -57,6 +57,7 @@ class HttpHandler
             $method === 'GET' && $uri === '/install/status' => $this->handleStatusRequest($uri),
             $method === 'POST' && $uri === '/install/validate' => $this->handleValidateRequest($uri),
             $method === 'POST' && $uri === '/install/complete' => $this->handleCompleteRequest($uri),
+            $method === 'POST' && $uri === '/install/cleanup' => $this->handleCleanupRequest($uri),
             $method === 'POST' && $uri === '/install' => $this->handleInstallRequest($uri),
             $uri === '/' => $this->handleInstallerView($uri),
             default => false,
@@ -236,6 +237,23 @@ class HttpHandler
             }
         }
 
+        return true;
+    }
+
+    private function handleCleanupRequest(string $uri): bool
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $uri !== '/install/cleanup') {
+            return false;
+        }
+
+        header('Content-Type: application/json');
+        $this->validateCsrf(false);
+
+        // Remove the installer container
+        $container = escapeshellarg(Server::DEFAULT_CONTAINER);
+        @exec("docker rm -f $container >/dev/null 2>&1");
+
+        echo json_encode(['success' => true]);
         return true;
     }
 

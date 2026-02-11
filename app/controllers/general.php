@@ -113,7 +113,8 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
             }
         }
 
-        if (!in_array($host, $platformHostnames)) {
+        $routerProtectionEnabled = System::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled';
+        if ($routerProtectionEnabled && !in_array($host, $platformHostnames)) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.', view: $errorView);
         }
 

@@ -13,7 +13,6 @@ $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
 $dbService = $this->getParam('database');
-$hostPath = rtrim($this->getParam('hostPath', ''), '/');
 ?>services:
   traefik:
     image: traefik:2.11
@@ -63,9 +62,6 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
-<?php if ($version === 'local' && !empty($hostPath)): ?>
-      - <?php echo $hostPath; ?>:/usr/src/code:rw
-<?php endif; ?>
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
@@ -957,11 +953,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     volumes:
       - appwrite-mongodb:/data/db:rw
       - appwrite-mongodb-config:/data/configdb:rw
-<?php if ($version === 'local' && !empty($hostPath)): ?>
-      - <?php echo $hostPath; ?>/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
-<?php else: ?>
       - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
-<?php endif; ?>
     ports:
       - "27017:27017"
     environment:
