@@ -596,18 +596,25 @@ class Messaging extends Action
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
-        // Move all recipients to BCC to prevent exposing email addresses
+        // Move recipients to BCC to prevent exposing email addresses
         // to other recipients. This applies to all providers, not just SMTP.
         if (\count($to) > 1) {
-            foreach ($to as $recipient) {
-                $bcc[] = ['email' => $recipient];
-            }
             // Use sender as the TO address to satisfy API requirements
             // and keep recipients hidden
             if (!empty($fromEmail)) {
+                foreach ($to as $recipient) {
+                    $bcc[] = ['email' => $recipient];
+                }
                 $to = [$fromEmail];
             } else {
-                $to = [];
+                // Should not happen if provider is configured correctly,
+                // but as a fallback, use the first recipient as TO
+                // and move the rest to BCC.
+                $first = \array_shift($to);
+                foreach ($to as $recipient) {
+                    $bcc[] = ['email' => $recipient];
+                }
+                $to = [$first];
             }
         }
 
