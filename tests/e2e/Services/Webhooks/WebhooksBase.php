@@ -1380,7 +1380,7 @@ trait WebhooksBase
     public function testCreateWebhookWithPrivateDomain(): void
     {
         /**
-         * Test for FAILURE
+         * Test for SUCCESS
          */
         $projectId = $this->getProject()['$id'];
         $webhook = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/webhooks', [
@@ -1398,17 +1398,17 @@ trait WebhooksBase
                 'teams.*',
                 'users.*'
             ],
-            'url' => 'http://localhost/webhook', // private domains not allowed
+            'url' => 'http://localhost/webhook', // private domains allowed
             'security' => false,
         ]);
 
-        $this->assertEquals(400, $webhook['headers']['status-code']);
+        $this->assertEquals(201, $webhook['headers']['status-code']);
     }
 
     public function testUpdateWebhookWithPrivateDomain(): void
     {
         /**
-         * Test for FAILURE
+         * Test for SUCCESS
          */
         $projectId = $this->getProject()['$id'];
         $webhookId = $this->getProject()['webhookId'];
@@ -1427,11 +1427,11 @@ trait WebhooksBase
                 'teams.*',
                 'users.*'
             ],
-            'url' => 'http://localhost/webhook', // private domains not allowed
+            'url' => 'http://localhost/webhook', // private domains allowed
             'security' => false,
         ]);
 
-        $this->assertEquals(400, $webhook['headers']['status-code']);
+        $this->assertEquals(200, $webhook['headers']['status-code']);
     }
 
     /**
