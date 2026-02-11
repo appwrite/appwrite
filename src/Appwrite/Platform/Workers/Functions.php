@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
+use Appwrite\Event\Execution as ExecutionEvent;
 use Appwrite\Event\Func;
 use Appwrite\Event\Realtime;
 use Appwrite\Event\StatsUsage;
@@ -16,8 +17,6 @@ use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Conflict;
-use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -50,6 +49,7 @@ class Functions extends Action
             ->inject('queueForRealtime')
             ->inject('queueForEvents')
             ->inject('queueForStatsUsage')
+            ->inject('queueForExecutions')
             ->inject('log')
             ->inject('executor')
             ->inject('isResourceBlocked')
@@ -65,6 +65,7 @@ class Functions extends Action
         Realtime $queueForRealtime,
         Event $queueForEvents,
         StatsUsage $queueForStatsUsage,
+        ExecutionEvent $queueForExecutions,
         Log $log,
         Executor $executor,
         callable $isResourceBlocked
@@ -76,15 +77,6 @@ class Functions extends Action
         }
 
         $type = $payload['type'] ?? '';
-
-        // Short-term solution to offhand write operation from API container
-        if ($type === Func::TYPE_ASYNC_WRITE) {
-            $execution = new Document($payload['execution'] ?? []);
-            if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
-                $dbForProject->createDocument('executions', $execution);
-            }
-            return;
-        }
 
         $events = $payload['events'] ?? [];
         $data = $payload['body'] ?? '';
@@ -166,6 +158,7 @@ class Functions extends Action
                         queueForRealtime: $queueForRealtime,
                         queueForStatsUsage: $queueForStatsUsage,
                         queueForEvents: $queueForEvents,
+                        queueForExecutions: $queueForExecutions,
                         project: $project,
                         function: $function,
                         executor:  $executor,
@@ -210,6 +203,7 @@ class Functions extends Action
                     queueForRealtime: $queueForRealtime,
                     queueForStatsUsage: $queueForStatsUsage,
                     queueForEvents: $queueForEvents,
+                    queueForExecutions: $queueForExecutions,
                     project: $project,
                     function: $function,
                     executor:  $executor,
@@ -236,6 +230,7 @@ class Functions extends Action
                     queueForRealtime: $queueForRealtime,
                     queueForStatsUsage: $queueForStatsUsage,
                     queueForEvents: $queueForEvents,
+                    queueForExecutions: $queueForExecutions,
                     project: $project,
                     function: $function,
                     executor:  $executor,
@@ -268,7 +263,8 @@ class Functions extends Action
      */
     private function fail(
         string $message,
-        Database $dbForProject,
+        Document $project,
+        ExecutionEvent $queueForExecutions,
         Document $function,
         string $trigger,
         string $path,
@@ -311,13 +307,10 @@ class Functions extends Action
             'duration' => 0.0,
         ]);
 
-        if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
-            $execution = $dbForProject->createDocument('executions', $execution);
-
-            if ($execution->isEmpty()) {
-                throw new Exception('Failed to create execution');
-            }
-        }
+        $queueForExecutions
+            ->setExecution($execution)
+            ->setProject($project)
+            ->trigger();
     }
 
     /**
@@ -341,9 +334,6 @@ class Functions extends Action
      * @param string|null $eventData
      * @param string|null $executionId
      * @return void
-     * @throws Structure
-     * @throws \Utopia\Database\Exception
-     * @throws Conflict
      */
     private function execute(
         Log $log,
@@ -353,6 +343,7 @@ class Functions extends Action
         Realtime $queueForRealtime,
         StatsUsage $queueForStatsUsage,
         Event $queueForEvents,
+        ExecutionEvent $queueForExecutions,
         Document $project,
         Document $function,
         Executor $executor,
@@ -380,19 +371,19 @@ class Functions extends Action
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $queueForExecutions, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
         if ($deployment->isEmpty()) {
             $errorMessage = 'The execution could not be completed because a corresponding deployment was not found. A function deployment needs to be created before it can be executed. Please create a deployment for your function and try again.';
-            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $queueForExecutions, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
         if ($deployment->getAttribute('status') !== 'ready') {
             $errorMessage = 'The execution could not be completed because the build is not ready. Please wait for the build to complete and try again.';
-            $this->fail($errorMessage, $dbForProject, $function, $trigger, $path, $method, $user, $jwt, $event);
+            $this->fail($errorMessage, $project, $queueForExecutions, $function, $trigger, $path, $method, $user, $jwt, $event);
             return;
         }
 
@@ -423,60 +414,38 @@ class Functions extends Action
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
 
-        /** Create execution or update execution status */
-        $execution = $dbForProject->getDocument('executions', $executionId ?? '');
-        if ($execution->isEmpty()) {
+        /** Create or update execution to processing status */
+        if (empty($executionId)) {
             $executionId = ID::unique();
-            $headers['x-appwrite-execution-id'] = $executionId;
-            $headersFiltered = [];
-            foreach ($headers as $key => $value) {
-                if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
-                    $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
-                }
-            }
+        }
+        $headers['x-appwrite-execution-id'] = $executionId;
 
-            $execution = new Document([
-                '$id' => $executionId,
-                '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-                'resourceInternalId' => $function->getSequence(),
-                'resourceId' => $function->getId(),
-                'resourceType' => 'functions',
-                'deploymentInternalId' => $deployment->getSequence(),
-                'deploymentId' => $deployment->getId(),
-                'trigger' => $trigger,
-                'status' => 'processing',
-                'responseStatusCode' => 0,
-                'responseHeaders' => [],
-                'requestPath' => $path,
-                'requestMethod' => $method,
-                'requestHeaders' => $headersFiltered,
-                'errors' => '',
-                'logs' => '',
-                'duration' => 0.0,
-            ]);
-
-            if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
-                $execution = $dbForProject->createDocument('executions', $execution);
-
-                // TODO: @Meldiron Trigger executions.create event here
-
-                if ($execution->isEmpty()) {
-                    throw new Exception('Failed to create or read execution');
-                }
+        $headersFiltered = [];
+        foreach ($headers as $key => $value) {
+            if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
+                $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
             }
         }
 
-        if ($execution->getAttribute('status') !== 'processing') {
-            $execution->setAttribute('status', 'processing');
-
-            if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
-                try {
-                    $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-                } catch (\Throwable $e) {
-                    $log->addExtra('updateError', $e->getMessage());
-                }
-            }
-        }
+        $execution = new Document([
+            '$id' => $executionId,
+            '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
+            'resourceInternalId' => $function->getSequence(),
+            'resourceId' => $function->getId(),
+            'resourceType' => 'functions',
+            'deploymentInternalId' => $deployment->getSequence(),
+            'deploymentId' => $deployment->getId(),
+            'trigger' => $trigger,
+            'status' => 'processing',
+            'responseStatusCode' => 0,
+            'responseHeaders' => [],
+            'requestPath' => $path,
+            'requestMethod' => $method,
+            'requestHeaders' => $headersFiltered,
+            'errors' => '',
+            'logs' => '',
+            'duration' => 0.0,
+        ]);
 
         $durationStart = \microtime(true);
 
@@ -618,14 +587,11 @@ class Functions extends Action
             $error = $th->getMessage();
             $errorCode = $th->getCode();
         } finally {
-            /** Update execution status */
-            if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
-                try {
-                    $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
-                } catch (\Throwable $e) {
-                    $log->addExtra('updateError', $e->getMessage());
-                }
-            }
+            /** Persist final execution status */
+            $queueForExecutions
+                ->setExecution($execution)
+                ->setProject($project)
+                ->trigger();
 
             /** Trigger usage queue */
             $queueForStatsUsage

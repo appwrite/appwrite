@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Ahc\Jwt\JWT;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Realtime;
+use Appwrite\Event\StatsUsage;
 use Appwrite\Extend\Exception;
 use Appwrite\Template\Template;
 use Utopia\Config\Config;
@@ -25,6 +26,10 @@ use Utopia\Migration\Destination;
 use Utopia\Migration\Destinations\Appwrite as DestinationAppwrite;
 use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Exception as MigrationException;
+use Utopia\Migration\Resource;
+use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
+use Utopia\Migration\Resources\Database\Row as ResourceRow;
+use Utopia\Migration\Resources\Database\Table as ResourceTable;
 use Utopia\Migration\Source;
 use Utopia\Migration\Sources\Appwrite as SourceAppwrite;
 use Utopia\Migration\Sources\CSV;
@@ -52,6 +57,7 @@ class Migrations extends Action
      */
     protected array $sourceReport = [];
 
+    private string $source;
     /**
      * @var callable|null
      */
@@ -78,6 +84,7 @@ class Migrations extends Action
             ->inject('deviceForMigrations')
             ->inject('deviceForFiles')
             ->inject('queueForMails')
+            ->inject('queueForStatsUsage')
             ->inject('plan')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -96,6 +103,7 @@ class Migrations extends Action
         Device $deviceForMigrations,
         Device $deviceForFiles,
         Mail $queueForMails,
+        StatsUsage $queueForStatsUsage,
         array $plan,
         Authorization $authorization,
     ): void {
@@ -139,6 +147,7 @@ class Migrations extends Action
                 $migration,
                 $queueForRealtime,
                 $queueForMails,
+                $queueForStatsUsage,
                 $platform,
                 $authorization
             );
@@ -324,6 +333,7 @@ class Migrations extends Action
         Document $migration,
         Realtime $queueForRealtime,
         Mail $queueForMails,
+        StatsUsage $queueForStatsUsage,
         array $platform,
         Authorization $authorization,
     ): void {
@@ -368,6 +378,7 @@ class Migrations extends Action
                 $destination
             );
 
+            $aggregatedResources = [];
             /** Start Transfer */
             if (empty($source->getErrors())) {
                 $migration->setAttribute('stage', 'migrating');
@@ -375,9 +386,40 @@ class Migrations extends Action
 
                 $transfer->run(
                     $migration->getAttribute('resources'),
-                    function () use ($migration, $transfer, $project, $queueForRealtime) {
+                    function ($resources) use ($migration, $transfer, $project, $queueForRealtime, &$aggregatedResources) {
                         $migration->setAttribute('resourceData', json_encode($transfer->getCache()));
                         $migration->setAttribute('statusCounters', json_encode($transfer->getStatusCounters()));
+
+                        if (!empty($resources)) {
+                            /**
+                             * @var Resource $resource
+                            */
+                            $resource = $resources[0];
+                            $count = count($resources);
+                            $databaseId = null;
+                            $tableId = null;
+                            switch ($resource->getName()) {
+                                case ResourceTable::getName():
+                                    /** @var ResourceTable $resource */
+                                    $databaseId = $resource->getDatabase()->getSequence();
+                                    break;
+                                case ResourceRow::getName():
+                                    /** @var ResourceRow $resource */
+                                    $table = $resource->getTable();
+                                    $databaseId = $table->getDatabase()->getSequence();
+                                    $tableId = $table->getSequence();
+                                    break;
+                                default:
+                                    break;
+                            }
+                            $aggregatedResources[] = [
+                                'name' => $resource->getName(),
+                                'count' => $count,
+                                'databaseId' => $databaseId,
+                                'tableId' => $tableId
+                            ];
+
+                        }
                         $this->updateMigrationDocument($migration, $project, $queueForRealtime);
                     },
                     $migration->getAttribute('resourceId'),
@@ -443,6 +485,16 @@ class Migrations extends Action
                 }
 
                 if ($migration->getAttribute('status', '') === 'completed') {
+                    foreach ($aggregatedResources as $resource) {
+                        $this->processMigrationResourceStats(
+                            $resource,
+                            $queueForStatsUsage,
+                            $project,
+                            $migration->getAttribute('source'),
+                            $authorization,
+                            $migration->getAttribute('resourceId')
+                        );
+                    }
                     $destination?->success();
                     $source?->success();
 
@@ -736,5 +788,59 @@ class Migrations extends Action
         }
 
         return $errors;
+    }
+
+    private function processMigrationResourceStats(array $resources, StatsUsage $queueForStatsUsage, Document $projectDocument, string $source, Authorization $authorization, ?string $resourceId)
+    {
+        $resourceName = $resources['name'];
+        $count = $resources['count'];
+        $databaseInternalId = $resources['databaseId'];
+        $tableInternalId = $resources['tableId'];
+
+        if ($source === CSV::getName()) {
+            [$databaseId, $tableId] = explode(':', $resourceId);
+            $database = $authorization->skip(fn () => $this->dbForProject->getDocument('databases', $databaseId));
+            $table = $authorization->skip(fn () => $this->dbForProject->getDocument('database_' . $database->getSequence(), $tableId));
+            $databaseInternalId = (int) $database->getSequence();
+            $tableInternalId = (int) $table->getSequence();
+        }
+
+        switch ($resourceName) {
+            case ResourceDatabase::getName():
+                $queueForStatsUsage->addMetric(METRIC_DATABASES, $count);
+                break;
+
+            case ResourceTable::getName():
+                $queueForStatsUsage
+                    ->addMetric(METRIC_COLLECTIONS, $count)
+                    ->addMetric(
+                        str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS),
+                        $count
+                    );
+                break;
+
+            case ResourceRow::getName():
+                $queueForStatsUsage
+                    ->addMetric(
+                        str_replace(
+                            ['{databaseInternalId}','{collectionInternalId}'],
+                            [$databaseInternalId, $tableInternalId],
+                            METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS
+                        ),
+                        $count
+                    )
+                    ->addMetric(
+                        str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS),
+                        $count
+                    )
+                    ->addMetric(METRIC_DOCUMENTS, $count);
+                break;
+
+            default:
+                break;
+        }
+
+        $queueForStatsUsage->setProject($projectDocument)->trigger();
+        $queueForStatsUsage->reset();
     }
 }

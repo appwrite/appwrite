@@ -1751,7 +1751,10 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEventually(function () use ($functionId, $userId) {
             $executions = $this->listExecutions($functionId);
 
-            $lastExecution = $executions['body']['executions'][0];
+            $this->assertEquals(200, $executions['headers']['status-code']);
+            $executionsList = $executions['body']['executions'] ?? [];
+            $this->assertNotEmpty($executionsList);
+            $lastExecution = $executionsList[0];
 
             $this->assertEquals('completed', $lastExecution['status']);
             $this->assertEquals(204, $lastExecution['responseStatusCode']);
