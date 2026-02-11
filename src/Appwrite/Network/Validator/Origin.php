@@ -51,13 +51,13 @@ class Origin extends Validator
      */
     public function isValid($origin): bool
     {
-        $this->origin = $origin;
-        $this->scheme = null;
-        $this->host = null;
-
         if (!is_string($origin) || empty($origin)) {
             return false;
         }
+
+        $this->origin = $origin;
+        $this->scheme = null;
+        $this->host = null;
 
         $this->scheme = $this->parseScheme($origin);
         $this->host = strtolower(parse_url($origin, PHP_URL_HOST) ?? '');
