@@ -4,6 +4,8 @@ namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Logs;
+use Appwrite\Logs\Resource;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
@@ -17,6 +19,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 class Delete extends Base
 {
@@ -62,6 +65,7 @@ class Delete extends Base
             ->inject('dbForPlatform')
             ->inject('queueForEvents')
             ->inject('authorization')
+            ->inject('logs')
             ->callback($this->action(...));
     }
 
@@ -72,12 +76,41 @@ class Delete extends Base
         Database $dbForProject,
         Database $dbForPlatform,
         Event $queueForEvents,
-        Authorization $authorization
+        Authorization $authorization,
+        Logs $logs,
     ) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        if (System::getEnv('FEATURE_LOGS', 'enabled') === 'enabled') {
+            $log = $logs->get($executionId);
+
+            if ($log === null) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
+
+            if ($log->resource !== Resource::Deployment) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
+
+            $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $log->resourceId));
+
+            if ($deployment->isEmpty() || $deployment->getAttribute('resourceId') !== $functionId) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
+
+            $logs->delete($executionId);
+
+            $queueForEvents
+                ->setParam('functionId', $function->getId())
+                ->setParam('executionId', $executionId);
+
+            $response->noContent();
+
+            return;
         }
 
         $execution = $dbForProject->getDocument('executions', $executionId);

@@ -3,12 +3,13 @@
 namespace Appwrite\Platform\Modules\Sites\Http\Logs;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Logs;
+use Appwrite\Logs\Resource;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
-use Appwrite\Utopia\Database\Validator\Queries\Logs;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -19,6 +20,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 
 class XList extends Base
@@ -55,19 +57,89 @@ class XList extends Base
                 ]
             ))
             ->param('siteId', '', new UID(), 'Site ID.')
-            ->param('queries', [], new Logs(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
+            ->param('queries', [], new \Appwrite\Utopia\Database\Validator\Queries\Logs(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Executions::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('logs')
             ->callback($this->action(...));
     }
 
-    public function action(string $siteId, array $queries, bool $includeTotal, Response $response, Database $dbForProject)
-    {
+    public function action(
+        string $siteId,
+        array $queries,
+        bool $includeTotal,
+        Response $response,
+        Database $dbForProject,
+        Logs $logs,
+    ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
         if ($site->isEmpty() || !$site->getAttribute('enabled')) {
             throw new Exception(Exception::SITE_NOT_FOUND);
+        }
+
+        if (System::getEnv('FEATURE_LOGS', 'enabled') === 'enabled') {
+            $deploymentId = $site->getAttribute('deploymentId', '');
+
+            if (empty($deploymentId)) {
+                $response->dynamic(new Document([
+                    'executions' => [],
+                    'total' => 0,
+                ]), Response::MODEL_EXECUTION_LIST);
+
+                return;
+            }
+
+            try {
+                $parsed = Query::parseQueries($queries);
+            } catch (QueryException $e) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            }
+
+            $limit = Query::getByType($parsed, [Query::TYPE_LIMIT])[0]?->getValue() ?? 25;
+            $offset = Query::getByType($parsed, [Query::TYPE_OFFSET])[0]?->getValue() ?? 0;
+
+            $results = $logs->list(
+                resource: Resource::Deployment,
+                resourceId: $deploymentId,
+                limit: $limit,
+                offset: $offset,
+            );
+
+            $total = $includeTotal ? $logs->count(
+                resource: Resource::Deployment,
+                resourceId: $deploymentId,
+            ) : 0;
+
+            $executions = [];
+            foreach ($results as $id => $log) {
+                $executions[] = new Document([
+                    '$id' => $id,
+                    '$createdAt' => \date('Y-m-d\TH:i:s.vP', (int) $log->timestamp),
+                    '$permissions' => [],
+                    'resourceId' => $siteId,
+                    'deploymentId' => $log->resourceId,
+                    'trigger' => 'http',
+                    'status' => $log->responseStatusCode >= 500 ? 'failed' : 'completed',
+                    'requestMethod' => $log->requestMethod->value,
+                    'requestPath' => $log->requestPath,
+                    'requestHeaders' => [],
+                    'responseStatusCode' => $log->responseStatusCode,
+                    'responseBody' => '',
+                    'responseHeaders' => [],
+                    'logs' => '',
+                    'errors' => '',
+                    'duration' => $log->durationSeconds,
+                ]);
+            }
+
+            $response->dynamic(new Document([
+                'executions' => $executions,
+                'total' => $total,
+            ]), Response::MODEL_EXECUTION_LIST);
+
+            return;
         }
 
         try {

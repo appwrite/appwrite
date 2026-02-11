@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Logs;
+use Appwrite\Logs\Resource;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -10,10 +12,12 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 
 class Get extends Base
 {
@@ -53,6 +57,7 @@ class Get extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
+            ->inject('logs')
             ->callback($this->action(...));
     }
 
@@ -61,7 +66,8 @@ class Get extends Base
         string $executionId,
         Response $response,
         Database $dbForProject,
-        Authorization $authorization
+        Authorization $authorization,
+        Logs $logs,
     ) {
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -70,6 +76,45 @@ class Get extends Base
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        if (System::getEnv('FEATURE_LOGS', 'enabled') === 'enabled') {
+            $log = $logs->get($executionId);
+
+            if ($log === null) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
+
+            if ($log->resource !== Resource::Deployment) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
+
+            $deployment = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $log->resourceId));
+
+            if ($deployment->isEmpty() || $deployment->getAttribute('resourceId') !== $functionId) {
+                throw new Exception(Exception::EXECUTION_NOT_FOUND);
+            }
+
+            $response->dynamic(new Document([
+                '$id' => $executionId,
+                '$createdAt' => \date('Y-m-d\TH:i:s.vP', (int) $log->timestamp),
+                '$permissions' => [],
+                'functionId' => $functionId,
+                'deploymentId' => $log->resourceId,
+                'trigger' => 'http',
+                'status' => $log->responseStatusCode >= 500 ? 'failed' : 'completed',
+                'requestMethod' => $log->requestMethod->value,
+                'requestPath' => $log->requestPath,
+                'requestHeaders' => [],
+                'responseStatusCode' => $log->responseStatusCode,
+                'responseBody' => '',
+                'responseHeaders' => [],
+                'logs' => '',
+                'errors' => '',
+                'duration' => $log->durationSeconds,
+            ]), Response::MODEL_EXECUTION);
+
+            return;
         }
 
         $execution = $dbForProject->getDocument('executions', $executionId);

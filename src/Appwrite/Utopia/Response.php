@@ -210,6 +210,8 @@ class Response extends SwooleResponse
     public const MODEL_DEPLOYMENT_LIST = 'deploymentList';
     public const MODEL_EXECUTION = 'execution';
     public const MODEL_EXECUTION_LIST = 'executionList';
+    public const MODEL_HTTP_LOG = 'httpLog';
+    public const MODEL_HTTP_LOG_LIST = 'httpLogList';
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
     public const MODEL_SPECIFICATION = 'specification';
