@@ -256,6 +256,12 @@ class Create extends Action
             if ($uploaded === $chunks) {
                 throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
             }
+        } else {
+            // Guard against manually setting range header for single chunk upload
+            if ($chunks === -1) {
+                $chunks = 1;
+                $chunk = 1;
+            }
         }
 
         $chunksUploaded = $deviceForFiles->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
