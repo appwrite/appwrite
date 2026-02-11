@@ -5561,6 +5561,55 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
     }
 
+    public function testOAuthRedirectWithCustomSchemeState(): void
+    {
+        // Prepare project
+        $projectId = $this->setupProject([
+            'projectId' => ID::unique(),
+            'name' => 'testOAuthRedirectWithCustomSchemeState',
+            'region' => System::getEnv('_APP_REGION', 'default')
+        ]);
+
+        $provider = 'mock';
+        $appId = '1';
+        $secret = '123456';
+
+        // Prepare OAuth provider
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $projectId . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => true,
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $scheme = 'appwrite-callback-' . $projectId;
+        $state = \json_encode([
+            'success' => $scheme . ':///',
+            'failure' => $scheme . ':///'
+        ]);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider . '/redirect', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'origin' => '',
+            'referer' => '',
+        ], [
+            'code' => 'any-code',
+            'state' => $state,
+            'error' => 'access_denied',
+            'error_description' => 'test',
+        ], followRedirects: false);
+
+        $this->assertEquals(301, $response['headers']['status-code']);
+        $this->assertStringStartsWith($scheme . '://', $response['headers']['location']);
+        $this->assertStringContainsString('error=', $response['headers']['location']);
+    }
+
     /**
      * @group abuseEnabled
      */
