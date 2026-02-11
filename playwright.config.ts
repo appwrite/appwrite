@@ -12,8 +12,18 @@ const config: PlaywrightTestConfig = {
     },
     projects: [
         {
-            name: 'chromium',
+            name: 'setup',
+            testMatch: '**/*.setup.ts',
             use: { ...devices['Desktop Chrome'] },
+        },
+        {
+            name: 'chromium',
+            dependencies: ['setup'],
+            testIgnore: '**/*.setup.ts',
+            use: {
+                ...devices['Desktop Chrome'],
+                storageState: 'e2e/.auth/auth.json',
+            },
         },
     ],
     webServer: {
