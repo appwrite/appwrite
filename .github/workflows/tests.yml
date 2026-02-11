@@ -80,6 +80,9 @@ jobs:
     name: Unit Test
     runs-on: ubuntu-latest
     needs: setup
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: checkout
@@ -124,6 +127,9 @@ jobs:
     name: E2E General Test
     runs-on: ubuntu-latest
     needs: setup
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -174,6 +180,9 @@ jobs:
     name: E2E Service Test
     runs-on: ubuntu-latest
     needs: setup
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -285,6 +294,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ setup, check_database_changes ]
     if: needs.check_database_changes.outputs.database_changed == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -380,6 +392,9 @@ jobs:
     name: E2E Service Test (Abuse enabled)
     runs-on: ubuntu-latest
     needs: setup
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -430,6 +445,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ setup, check_database_changes ]
     if: needs.check_database_changes.outputs.database_changed == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -492,6 +510,9 @@ jobs:
     name: E2E Service Test (Site Screenshots)
     runs-on: ubuntu-latest
     needs: setup
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -543,6 +564,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ setup, check_database_changes ]
     if: needs.check_database_changes.outputs.database_changed == 'true'
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
