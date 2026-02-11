@@ -660,13 +660,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      mariadb:
-        condition: service_started
-      postgresql:
-        condition: service_started
-      redis:
-        condition: service_started
-      openruntimes-executor:
+      - ${_APP_DB_HOST:-mariadb}
+      - redis
         condition: service_healthy
     environment:
       - _APP_ENV
