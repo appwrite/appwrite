@@ -119,7 +119,8 @@ class Create extends Action
             'membershipsUserName' => false,
             'membershipsUserEmail' => false,
             'membershipsMfa' => false,
-            'invalidateSessions' => true
+            'invalidateSessions' => true,
+            'status' => PROJECT_STATUS_ACTIVE,
         ];
 
         foreach ($auth as $method) {
