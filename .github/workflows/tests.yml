@@ -108,9 +108,14 @@ jobs:
         run: docker compose exec -T appwrite vars
 
       - name: Run Unit Tests
-        run: |
-          docker compose exec \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 30
+          test_dir: tests/unit
+          command: >-
+            docker compose exec
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
             appwrite test /usr/src/code/tests/unit
 
   e2e_general_test:
@@ -143,9 +148,14 @@ jobs:
           done
 
       - name: Run General Tests
-        run: |
-          docker compose exec -T \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 30
+          test_dir: tests/e2e/General
+          command: >-
+            docker compose exec -T
+            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
             appwrite test /usr/src/code/tests/e2e/General --debug
 
       - name: Failure Logs
@@ -219,37 +229,42 @@ jobs:
           done
 
       - name: Run ${{ matrix.service }} tests with Project table mode
-        run: |
-          echo "Using project tables"
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 30
+          test_dir: tests/e2e/Services/${{ matrix.service }}
+          command: |
+            echo "Using project tables"
 
-          export _APP_DATABASE_SHARED_TABLES=
-          export _APP_DATABASE_SHARED_TABLES_V1=
+            export _APP_DATABASE_SHARED_TABLES=
+            export _APP_DATABASE_SHARED_TABLES_V1=
 
-          # Set DB Adapter Specific ENV Vars using if-elif
-          if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
-            export _APP_DB_ADAPTER=mariadb
-            export _APP_DB_HOST=mariadb
-            export _APP_DB_PORT=3306
-            export _APP_DB_SCHEMA=appwrite
-          elif [ "${{ matrix.db_adapter }}" = "POSTGRESQL" ]; then
-            export _APP_DB_ADAPTER=postgresql
-            export _APP_DB_HOST=postgresql
-            export _APP_DB_PORT=5432
-            export _APP_DB_SCHEMA=appwrite
-          else
-            echo "Unknown DB adapter: ${{ matrix.db_adapter }}"
-            exit 1
-          fi
+            # Set DB Adapter Specific ENV Vars using if-elif
+            if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
+              export _APP_DB_ADAPTER=mariadb
+              export _APP_DB_HOST=mariadb
+              export _APP_DB_PORT=3306
+              export _APP_DB_SCHEMA=appwrite
+            elif [ "${{ matrix.db_adapter }}" = "POSTGRESQL" ]; then
+              export _APP_DB_ADAPTER=postgresql
+              export _APP_DB_HOST=postgresql
+              export _APP_DB_PORT=5432
+              export _APP_DB_SCHEMA=appwrite
+            else
+              echo "Unknown DB adapter: ${{ matrix.db_adapter }}"
+              exit 1
+            fi
 
-          docker compose exec -T \
-            -e _APP_DATABASE_SHARED_TABLES \
-            -e _APP_DATABASE_SHARED_TABLES_V1 \
-            -e _APP_DB_ADAPTER \
-            -e _APP_DB_HOST \
-            -e _APP_DB_PORT \
-            -e _APP_DB_SCHEMA \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group abuseEnabled,screenshots
+            docker compose exec -T \
+              -e _APP_DATABASE_SHARED_TABLES \
+              -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_DB_ADAPTER \
+              -e _APP_DB_HOST \
+              -e _APP_DB_PORT \
+              -e _APP_DB_SCHEMA \
+              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+              appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group abuseEnabled,screenshots
 
       - name: Failure Logs
         if: failure()
@@ -323,22 +338,27 @@ jobs:
           done
 
       - name: Run ${{ matrix.service }} tests with ${{ matrix.tables-mode }} table mode
-        run: |
-          if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
-            echo "Using shared tables V1"
-            export _APP_DATABASE_SHARED_TABLES=database_db_main
-            export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
-          elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
-            echo "Using shared tables V2"
-            export _APP_DATABASE_SHARED_TABLES=database_db_main
-            export _APP_DATABASE_SHARED_TABLES_V1=
-          fi
-      
-          docker compose exec -T \
-            -e _APP_DATABASE_SHARED_TABLES \
-            -e _APP_DATABASE_SHARED_TABLES_V1 \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group abuseEnabled,screenshots
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 30
+          test_dir: tests/e2e/Services/${{ matrix.service }}
+          command: |
+            if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
+              echo "Using shared tables V1"
+              export _APP_DATABASE_SHARED_TABLES=database_db_main
+              export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
+            elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
+              echo "Using shared tables V2"
+              export _APP_DATABASE_SHARED_TABLES=database_db_main
+              export _APP_DATABASE_SHARED_TABLES_V1=
+            fi
+        
+            docker compose exec -T \
+              -e _APP_DATABASE_SHARED_TABLES \
+              -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+              appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group abuseEnabled,screenshots
 
       - name: Failure Logs
         if: failure()
@@ -371,16 +391,21 @@ jobs:
           sleep 30
 
       - name: Run Projects tests in dedicated table mode
-        run: |
-          echo "Using project tables"
-          export _APP_DATABASE_SHARED_TABLES=
-          export _APP_DATABASE_SHARED_TABLES_V1=
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 30
+          test_dir: tests/e2e/Services/Projects
+          command: |
+            echo "Using project tables"
+            export _APP_DATABASE_SHARED_TABLES=
+            export _APP_DATABASE_SHARED_TABLES_V1=
 
-          docker compose exec -T \
-            -e _APP_DATABASE_SHARED_TABLES \
-            -e _APP_DATABASE_SHARED_TABLES_V1 \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
+            docker compose exec -T \
+              -e _APP_DATABASE_SHARED_TABLES \
+              -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+              appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
 
       - name: Failure Logs
         if: failure()
@@ -421,22 +446,27 @@ jobs:
           sleep 30
 
       - name: Run Projects tests in ${{ matrix.tables-mode }} table mode
-        run: |
-          if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
-            echo "Using shared tables V1"
-            export _APP_DATABASE_SHARED_TABLES=database_db_main
-            export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
-          elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
-            echo "Using shared tables V2"
-            export _APP_DATABASE_SHARED_TABLES=database_db_main
-            export _APP_DATABASE_SHARED_TABLES_V1=
-          fi
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 30
+          test_dir: tests/e2e/Services/Projects
+          command: |
+            if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
+              echo "Using shared tables V1"
+              export _APP_DATABASE_SHARED_TABLES=database_db_main
+              export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
+            elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
+              echo "Using shared tables V2"
+              export _APP_DATABASE_SHARED_TABLES=database_db_main
+              export _APP_DATABASE_SHARED_TABLES_V1=
+            fi
 
-          docker compose exec -T \
-            -e _APP_DATABASE_SHARED_TABLES \
-            -e _APP_DATABASE_SHARED_TABLES_V1 \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
+            docker compose exec -T \
+              -e _APP_DATABASE_SHARED_TABLES \
+              -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+              appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
 
       - name: Failure Logs
         if: failure()
@@ -469,17 +499,22 @@ jobs:
           sleep 30
 
       - name: Run Site tests with browser connected in dedicated table mode
-        run: |
-          echo "Keeping original value of _APP_BROWSER_HOST"
-          echo "Using project tables"
-          export _APP_DATABASE_SHARED_TABLES=
-          export _APP_DATABASE_SHARED_TABLES_V1=
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 30
+          test_dir: tests/e2e/Services/Sites
+          command: |
+            echo "Keeping original value of _APP_BROWSER_HOST"
+            echo "Using project tables"
+            export _APP_DATABASE_SHARED_TABLES=
+            export _APP_DATABASE_SHARED_TABLES_V1=
 
-          docker compose exec -T \
-            -e _APP_DATABASE_SHARED_TABLES \
-            -e _APP_DATABASE_SHARED_TABLES_V1 \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
+            docker compose exec -T \
+              -e _APP_DATABASE_SHARED_TABLES \
+              -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+              appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
 
       - name: Failure Logs
         if: failure()
@@ -520,23 +555,28 @@ jobs:
           sleep 30
 
       - name: Run Site tests with browser connected in ${{ matrix.tables-mode }} table mode
-        run: |
-          echo "Keeping original value of _APP_BROWSER_HOST"
-          if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
-            echo "Using shared tables V1"
-            export _APP_DATABASE_SHARED_TABLES=database_db_main
-            export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
-          elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
-            echo "Using shared tables V2"
-            export _APP_DATABASE_SHARED_TABLES=database_db_main
-            export _APP_DATABASE_SHARED_TABLES_V1=
-          fi
+        uses: itznotabug/php-retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 30
+          test_dir: tests/e2e/Services/Sites
+          command: |
+            echo "Keeping original value of _APP_BROWSER_HOST"
+            if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
+              echo "Using shared tables V1"
+              export _APP_DATABASE_SHARED_TABLES=database_db_main
+              export _APP_DATABASE_SHARED_TABLES_V1=database_db_main
+            elif [ "${{ matrix.tables-mode }}" == "Shared V2" ]; then
+              echo "Using shared tables V2"
+              export _APP_DATABASE_SHARED_TABLES=database_db_main
+              export _APP_DATABASE_SHARED_TABLES_V1=
+            fi
 
-          docker compose exec -T \
-            -e _APP_DATABASE_SHARED_TABLES \
-            -e _APP_DATABASE_SHARED_TABLES_V1 \
-            -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
-            appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
+            docker compose exec -T \
+              -e _APP_DATABASE_SHARED_TABLES \
+              -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
+              appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
 
       - name: Failure Logs
         if: failure()
