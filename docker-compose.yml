@@ -1196,7 +1196,7 @@ services:
     command: "mysqld --innodb-flush-method=fsync"
 
   postgresql:
-    image: postgres:15
+    image: postgres:18
     container_name: appwrite-postgresql
     <<: *x-logging
     networks:
