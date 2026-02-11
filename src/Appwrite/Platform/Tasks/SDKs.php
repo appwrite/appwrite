@@ -78,8 +78,11 @@ class SDKs extends Action
             ->callback($this->action(...));
     }
 
-    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
+    public function action(?string $platform, ?string $sdk, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
     {
+        $selectedPlatform = $platform;
+        $selectedSDK = $sdk;
+
         if (!$sdks) {
             $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
