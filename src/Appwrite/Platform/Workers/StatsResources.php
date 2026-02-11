@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Platform\Action;
 use Exception;
 use Throwable;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;

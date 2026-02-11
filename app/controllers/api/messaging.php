@@ -41,7 +41,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;

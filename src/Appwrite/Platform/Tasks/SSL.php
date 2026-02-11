@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Certificate;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
