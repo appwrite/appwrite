@@ -35,7 +35,7 @@ class Get extends Action
             ->desc('Get installation and authorization from GitHub app')
             ->groups(['api', 'vcs'])
             ->label('scope', 'public')
-            ->label('error', __DIR__ . '/../../views/general/error.phtml')
+            ->label('error', APP_VIEWS_DIR . '/general/error.phtml')
             ->param('installation_id', '', new Text(256, 0), 'GitHub installation ID', true)
             ->param('setup_action', '', new Text(256, 0), 'GitHub setup action type', true)
             ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
