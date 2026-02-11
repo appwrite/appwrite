@@ -14,19 +14,24 @@ use Appwrite\SDK\Deprecated;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Keys;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
@@ -1094,12 +1099,15 @@ Http::post('/v1/projects/:projectId/keys')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    // TODO: When migrating to Platform API, mark keyId required for consistency
+    ->param('keyId', 'unique()', new CustomId(), 'Key ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new Nullable(new ArrayList(new WhiteList(array_keys(Config::getParam('projectScopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
     ->param('expire', null, new Nullable(new DatetimeValidator()), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForPlatform) {
+        $keyId = $keyId == 'unique()' ? ID::unique() : $keyId;
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1108,7 +1116,7 @@ Http::post('/v1/projects/:projectId/keys')
         }
 
         $key = new Document([
-            '$id' => ID::unique(),
+            '$id' => $keyId,
             '$permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -1125,7 +1133,11 @@ Http::post('/v1/projects/:projectId/keys')
             'secret' => API_KEY_STANDARD . '_' . \bin2hex(\random_bytes(128)),
         ]);
 
-        $key = $dbForPlatform->createDocument('keys', $key);
+        try {
+            $key = $dbForPlatform->createDocument('keys', $key);
+        } catch (Duplicate) {
+            throw new Exception(Exception::KEY_ALREADY_EXISTS);
+        }
 
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
@@ -1152,10 +1164,11 @@ Http::get('/v1/projects/:projectId/keys')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('queries', [], new Keys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Keys::ALLOWED_ATTRIBUTES), true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, array $queries, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1163,15 +1176,46 @@ Http::get('/v1/projects/:projectId/keys')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $keys = $dbForPlatform->find('keys', [
-            Query::equal('resourceType', ['projects']),
-            Query::equal('resourceInternalId', [$project->getSequence()]),
-            Query::limit(5000),
-        ]);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        // Backwards compatibility
+        if (\count(Query::getByType($queries, [Query::TYPE_LIMIT])) === 0) {
+            $queries[] = Query::limit(5000);
+        }
+
+        $queries[] = Query::equal('resourceType', ['projects']);
+        $queries[] = Query::equal('resourceInternalId', [$project->getSequence()]);
+
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
+
+        if ($cursor !== false) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+            $keyId = $cursor->getValue();
+            $cursorDocument = $dbForPlatform->getDocument('keys', $keyId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Key '{$keyId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
+
+        $keys = $dbForPlatform->find('keys', $queries);
 
         $response->dynamic(new Document([
             'keys' => $keys,
-            'total' => $includeTotal ? count($keys) : 0,
+            'total' => $includeTotal ? $dbForPlatform->count('keys', $filterQueries, APP_LIMIT_COUNT) : 0,
         ]), Response::MODEL_KEY_LIST);
     });
 

@@ -94,6 +94,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'keyId' => ID::unique(),
             'name' => 'Demo Project Key',
             'scopes' => [
                 'users.read',
@@ -228,6 +229,7 @@ trait ProjectCustom
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
+            'keyId' => ID::unique(),
             'name' => 'Demo Project Key',
             'scopes' => $scopes,
         ]);

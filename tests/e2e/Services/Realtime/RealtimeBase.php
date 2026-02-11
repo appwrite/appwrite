@@ -68,6 +68,27 @@ trait RealtimeBase
         );
     }
 
+    /**
+     * Build WebSocket client with custom query parameters.
+     * Useful for testing edge cases like project in header only, or project as Query array.
+     *
+     * @param array $queryParams Custom query parameters (e.g., ['channels' => ['project'], 'project' => [...]])
+     * @param array $headers HTTP headers
+     * @return WebSocketClient
+     */
+    private function getWebsocketWithCustomQuery(array $queryParams, array $headers = []): WebSocketClient
+    {
+        $queryString = http_build_query($queryParams);
+
+        return new WebSocketClient(
+            "ws://appwrite.test/v1/realtime?" . $queryString,
+            [
+                "headers" => $headers,
+                "timeout" => 30,
+            ]
+        );
+    }
+
     public function testConnection(): void
     {
         /**

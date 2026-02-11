@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 
