@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Init;
 
 use Appwrite\Utopia\Request;
 use Utopia\Database\Database;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 
 /**
