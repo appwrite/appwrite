@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "06d83bf3bbd4729377e2be95738a2efb",
+    "content-hash": "367aaf665ff75a13d5d7c8b3bedb89a9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4577,56 +4577,6 @@
                 "source": "https://github.com/utopia-php/mongo/tree/0.11.0"
             },
             "time": "2025-10-20T11:11:23+00:00"
-        },
-        {
-            "name": "utopia-php/orchestration",
-            "version": "0.19.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/orchestration.git",
-                "reference": "5a1168d3c3c1af9de76289b380b60717722b36db"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/orchestration/zipball/5a1168d3c3c1af9de76289b380b60717722b36db",
-                "reference": "5a1168d3c3c1af9de76289b380b60717722b36db",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0",
-                "utopia-php/console": "0.1.*"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.2",
-                "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.3"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Orchestration\\": "src/Orchestration"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Lite & fast micro PHP abstraction library for container orchestration",
-            "keywords": [
-                "docker",
-                "framework",
-                "kubernetes",
-                "orchestration",
-                "php",
-                "swarm",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/orchestration/issues",
-                "source": "https://github.com/utopia-php/orchestration/tree/0.19.1"
-            },
-            "time": "2026-02-10T12:44:30+00:00"
         },
         {
             "name": "utopia-php/platform",
