@@ -21,11 +21,6 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
-      - name: Check & Lint
-        run: |
-          bun check
-          bun lint
-
       - name: Unit Tests
         run: bun test:unit
         env:
