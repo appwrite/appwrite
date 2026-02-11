@@ -1,4 +1,5 @@
-import { defineConfig } from 'vite'
+/// <reference types="vitest" />
+import { defineConfig } from 'vitest/config'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import { sentryTanstackStart } from '@sentry/tanstackstart-react'
 import viteReact from '@vitejs/plugin-react'
@@ -24,7 +25,7 @@ const config = defineConfig({
         // Useful for static hosting platforms
         autoSubfolderIndex: true,
         // Automatically discover and prerender static routes
-        autoStaticPathsDiscovery: true,
+        // autoStaticPathsDiscovery: true,
         // Disable link crawling to prevent infinite loops on auth routes with redirect params
         crawlLinks: false,
         // Don't fail build if prerendering encounters an error (some routes like /reset require search params)
@@ -52,14 +53,14 @@ const config = defineConfig({
     // Sentry plugin for source maps upload (only when Sentry is enabled via VITE_SENTRY_DSN)
     ...(process.env.VITE_SENTRY_DSN && process.env.SENTRY_AUTH_TOKEN
       ? [
-          sentryTanstackStart({
-            org: 'appwrite',
-            project: 'console-v4',
-            authToken: process.env.SENTRY_AUTH_TOKEN,
-          }),
-        ]
+        sentryTanstackStart({
+          org: 'appwrite',
+          project: 'console-v4',
+          authToken: process.env.SENTRY_AUTH_TOKEN,
+        }),
+      ]
       : []),
-  ],
+  ] as any,
   server: {
     host: '::',
     allowedHosts: true,
@@ -71,6 +72,9 @@ const config = defineConfig({
   },
   build: {
     outDir: 'dist',
+  },
+  test: {
+    exclude: ['e2e/**', 'node_modules/**'],
   },
 })
 

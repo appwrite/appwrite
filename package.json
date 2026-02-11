@@ -14,7 +14,12 @@
     "format": "prettier --write .",
     "generate:routes": "tsr generate",
     "generate:icons": "node scripts/generate-apple-icons.js",
-    "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack"
+    "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "e2e": "playwright test",
+    "install-browsers": "playwright install --with-deps chromium",
+    "check": "tsc --noEmit"
   },
   "dependencies": {
     "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@95675c4",
@@ -86,6 +91,7 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tanstack/eslint-config": "^0.3.0",
     "@tanstack/nitro-v2-vite-plugin": "^1.132.40",
     "@tanstack/router-cli": "^1.132.21",
