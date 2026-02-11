@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   useParams,
   useLocation,
@@ -16,6 +16,7 @@ import {
   RefreshProvider,
   useRefresh,
 } from '@/components/global/shared/RefreshContext'
+import { CreateExecutionDrawer } from './CreateExecutionDrawer'
 
 export function Layout() {
   return (
@@ -149,6 +150,8 @@ function FunctionLayoutContent() {
     toast.info('Deployment creation coming soon')
   }
 
+  const [executeDrawerOpen, setExecuteDrawerOpen] = useState(false)
+
   const handleCreateExecution = () => {
     if (!func?.deploymentId) {
       toast.error(
@@ -156,8 +159,7 @@ function FunctionLayoutContent() {
       )
       return
     }
-    // TODO: Open execution creation modal
-    toast.info('Execution creation coming soon')
+    setExecuteDrawerOpen(true)
   }
 
   const handleFilterClick = () => {
@@ -346,6 +348,14 @@ function FunctionLayoutContent() {
       <div className="flex-1">
         <Outlet />
       </div>
+      {func && functionId && (
+        <CreateExecutionDrawer
+          open={executeDrawerOpen}
+          onOpenChange={setExecuteDrawerOpen}
+          functionId={functionId}
+          func={func}
+        />
+      )}
     </div>
   )
 }

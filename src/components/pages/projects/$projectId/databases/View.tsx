@@ -1105,7 +1105,12 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
   const [hasRows, setHasRows] = useState(true) // Track if table has rows
   const [, setRowsTotal] = useState<number | undefined>(undefined) // Track total row count
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
+  const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
+    useState(false)
   const queryClient = useQueryClient()
+
+  const { project } = useProject(projectId)
+  const { plan: organizationPlan } = useOrganizationPlan(project?.teamId)
 
   // Reset rows total when switching tables
   useEffect(() => {
@@ -1156,6 +1161,54 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
     },
     onError: (error: Error) => {
       toast.error(getErrorMessage(error) || 'Failed to create table')
+    },
+  })
+
+  // Create database mutation for TableView (rows view sidebar)
+  const createDatabaseMutation = useMutation({
+    mutationFn: (data: { databaseId?: string; name: string }) =>
+      createProjectDatabase(projectId!, data),
+    onSuccess: async (database) => {
+      toast.success(`${database.name} has been created`)
+      await queryClient.refetchQueries({
+        queryKey: ['databases', 'project', projectId],
+      })
+      setCreateDatabaseDialogOpen(false)
+      try {
+        const tablesData = await queryClient.ensureQueryData(
+          tablesQueryOptions(projectId, database.$id, 0, 100, undefined),
+        )
+        const sortedTables = [...(tablesData.tables || [])].sort(
+          (a, b) =>
+            (a.name?.toLowerCase() || '').localeCompare(
+              b.name?.toLowerCase() || '',
+            ),
+        )
+        const firstTable = sortedTables[0]
+        if (firstTable?.$id) {
+          navigate({
+            to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+            params: {
+              projectId,
+              databaseId: database.$id,
+              tableId: firstTable.$id,
+            },
+          })
+        } else {
+          navigate({
+            to: '/projects/$projectId/databases/$databaseId/',
+            params: { projectId, databaseId: database.$id },
+          })
+        }
+      } catch {
+        navigate({
+          to: '/projects/$projectId/databases/$databaseId/',
+          params: { projectId, databaseId: database.$id },
+        })
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || 'Failed to create database')
     },
   })
 
@@ -1261,10 +1314,11 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
         {/* Tables List */}
         <div className="flex-1 overflow-y-auto p-2">
           {/* Database Dropdown Switcher */}
-          <div className="mb-1 px-2">
-            <Select
-              value={databaseId}
-              onValueChange={async (newDatabaseId) => {
+          <div className="mb-1 flex min-w-0 items-center gap-1 px-2">
+            <div className="min-w-0 flex-1 [&_[data-slot=select-trigger]]:h-8">
+              <Select
+                value={databaseId}
+                onValueChange={async (newDatabaseId) => {
                 // Prefetch tables for the new database to get the first table ID
                 // This prevents the redirect flash by navigating directly to the first table
                 try {
@@ -1336,6 +1390,16 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
                 ))}
               </SelectContent>
             </Select>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => setCreateDatabaseDialogOpen(true)}
+              title="Create database"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Overview Link */}
@@ -1667,6 +1731,14 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
         </div>
       </div>
 
+      {/* Create Database Dialog */}
+      <CreateDatabase
+        open={createDatabaseDialogOpen}
+        onOpenChange={setCreateDatabaseDialogOpen}
+        onCreate={(data) => createDatabaseMutation.mutate(data)}
+        isLoading={createDatabaseMutation.isPending}
+        backupsEnabled={organizationPlan?.backupsEnabled}
+      />
       {/* Create Table Dialog */}
       <CreateTable
         open={createTableDialogOpen}
@@ -3476,7 +3548,7 @@ function RowEditDrawer({
       open={open}
       onOpenChange={handleOpenChange}
       title={isCreateMode ? 'Create Row' : 'Update Row'}
-      maxWidth="sm:max-w-lg"
+      maxWidth="sm:max-w-2xl"
       headerActions={
         !isCreateMode ? (
           <TooltipProvider>

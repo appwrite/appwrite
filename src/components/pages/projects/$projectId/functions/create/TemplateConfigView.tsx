@@ -5,11 +5,12 @@
  * Create function, domain, variables, then createTemplateDeployment (tag).
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -23,10 +24,14 @@ import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
 import { Loader2, Key, Tag, GitBranch } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ID } from '@appwrite.io/console'
-import { TemplateReferenceType } from '@appwrite.io/console'
+import { ID, TemplateReferenceType, type Runtime } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useFunctionTemplate } from '@/lib/react-query/hooks'
+import { useFunctionTemplate, useFunctionSpecifications } from '@/lib/react-query/hooks'
+import {
+  getFirstEnabledSpecification,
+  isSpecificationAllowedInPlan,
+  hasUnavailableSpecifications,
+} from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
 import { DomainInput } from '@/components/global/shared/DomainInput'
 import { EnvironmentVariablesCard } from '@/components/global/shared/EnvironmentVariablesCard'
@@ -50,6 +55,11 @@ export function TemplateConfigView({
     projectId,
     templateId,
   )
+  const { data: specificationsData } = useFunctionSpecifications(projectId)
+  const specifications = useMemo(
+    () => specificationsData?.specifications ?? [],
+    [specificationsData],
+  )
 
   const [functionName, setFunctionName] = useState('')
   const [functionId, setFunctionId] = useState<string | undefined>()
@@ -57,7 +67,16 @@ export function TemplateConfigView({
   const [domain, setDomain] = useState('')
   const [domainValid, setDomainValid] = useState(false)
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])
+  const [isPublic, setIsPublic] = useState(true)
+  const [specification, setSpecification] = useState('')
   const [isDeploying, setIsDeploying] = useState(false)
+
+  useEffect(() => {
+    if (specifications.length > 0 && !specification) {
+      const first = getFirstEnabledSpecification(specifications)
+      if (first?.slug) setSpecification(first.slug)
+    }
+  }, [specifications, specification])
 
   useEffect(() => {
     if (template) {
@@ -139,19 +158,33 @@ export function TemplateConfigView({
     const finalFunctionId = (functionId?.trim() || ID.unique()) as string
     const domainTrimmed = domain.toLowerCase().trim()
 
+    const selectedRuntimeObj = (template.runtimes ?? []).find(
+      (r) =>
+        (r as { name?: string }).name === runtime ||
+        (r as { key?: string }).key === runtime,
+    ) as { entrypoint?: string; commands?: string; providerRootDirectory?: string } | undefined
+
     try {
       await projectSdk.functions.create({
         functionId: finalFunctionId,
         name: functionName.trim(),
-        runtime: runtime as unknown,
-        execute: [],
+        runtime: runtime as Runtime,
+        execute: isPublic
+          ? ['any']
+          : template.permissions?.length
+            ? template.permissions
+            : [],
         events: template.events?.length ? template.events : undefined,
         schedule: template.cron || undefined,
         timeout: template.timeout ?? undefined,
         enabled: true,
-        entrypoint: template.instructions ? undefined : undefined,
-        commands: undefined,
+        entrypoint: selectedRuntimeObj?.entrypoint,
+        commands: selectedRuntimeObj?.commands,
         scopes: template.scopes?.length ? template.scopes : undefined,
+        providerBranch: 'main',
+        providerSilentMode: false,
+        providerRootDirectory: './',
+        specification: specification || undefined,
       })
 
       await projectSdk.proxy.createFunctionRule({
@@ -169,13 +202,27 @@ export function TemplateConfigView({
         })
       }
 
+      // Use template deployment so the deployment has source code (same as sites).
+      // Payload must match backend expectation: repository name, owner, rootDirectory path in repo (e.g. php/starter), tag reference (e.g. 0.2.*).
+      if (!template.providerRepositoryId || !template.providerOwner) {
+        toast.error('Template is missing repository information')
+        setIsDeploying(false)
+        return
+      }
+      const runtimeRoot = selectedRuntimeObj?.providerRootDirectory?.trim()
+      // Derive path when template does not provide it (e.g. appwrite/templates uses php/starter, node/starter).
+      const rootDirectory =
+        runtimeRoot ||
+        (runtime ? `${runtime.split('-')[0]}/starter` : './')
+      const reference = template.providerVersion?.trim() || 'main'
+
       await projectSdk.functions.createTemplateDeployment({
         functionId: finalFunctionId,
         repository: template.providerRepositoryId,
         owner: template.providerOwner,
-        rootDirectory: './',
+        rootDirectory,
         type: TemplateReferenceType.Tag,
-        reference: template.providerVersion || 'main',
+        reference,
         activate: true,
       })
 
@@ -189,7 +236,9 @@ export function TemplateConfigView({
         params: { projectId, functionId: finalFunctionId },
       })
     } catch (err: unknown) {
-      toast.error(err?.message || 'Failed to create function')
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to create function',
+      )
       setIsDeploying(false)
     }
   }
@@ -408,6 +457,54 @@ export function TemplateConfigView({
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-[13px]">Public</Label>
+              <p className="text-[11px] text-muted-foreground">
+                Allow anyone to execute this function (execute role: any)
+              </p>
+            </div>
+            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+          </div>
+          {specifications.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="specification" className="text-[13px]">
+                Compute
+              </Label>
+              <Select
+                value={specification || undefined}
+                onValueChange={setSpecification}
+              >
+                <SelectTrigger
+                  id="specification"
+                  className="h-9 text-[13px]"
+                >
+                  <SelectValue placeholder="Select specification" />
+                </SelectTrigger>
+                <SelectContent>
+                  {specifications
+                    .filter((s) => s.slug?.trim())
+                    .map((spec) => (
+                      <SelectItem
+                        key={spec.slug}
+                        value={spec.slug}
+                        disabled={!isSpecificationAllowedInPlan(spec)}
+                      >
+                        {spec.cpus} CPU, {spec.memory}MB RAM
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Runtime specification for your function
+              </p>
+              {hasUnavailableSpecifications(specifications) && (
+                <p className="text-[11px] text-muted-foreground">
+                  Upgrade your plan to unlock additional specifications.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -82,15 +82,17 @@ export function View() {
     setLoadedScreenshots(new Set())
   }, [isDark])
 
-  // Helper function to get screenshot URL
+  // Helper function to get screenshot URL (preview size, theme matches app)
   const getScreenshotUrl = (site: Models.Site) => {
     const screenshotId = isDark
       ? (site as unknown).deploymentScreenshotDark
       : (site as unknown).deploymentScreenshotLight
     if (!screenshotId) return null
-    return sdk.forConsole.storage.getFileDownload({
+    return sdk.forConsole.storage.getFilePreview({
       bucketId: SCREENSHOTS_BUCKET_ID,
       fileId: screenshotId,
+      width: 1280,
+      height: 720,
     })
   }
 

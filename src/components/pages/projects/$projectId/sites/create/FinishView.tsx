@@ -79,16 +79,18 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
     )
   }, [theme, resolvedTheme])
 
-  // Get screenshot URL
+  // Get screenshot URL (preview size, theme matches app)
   const screenshotUrl = useMemo(() => {
     if (!deployment) return null
     const screenshotId = isDark
       ? (deployment as { screenshotDark?: string }).screenshotDark
       : (deployment as { screenshotLight?: string }).screenshotLight
     if (!screenshotId) return null
-    return sdk.forConsole.storage.getFileDownload({
+    return sdk.forConsole.storage.getFilePreview({
       bucketId: SCREENSHOTS_BUCKET_ID,
       fileId: screenshotId,
+      width: 1280,
+      height: 720,
     })
   }, [deployment, isDark])
 

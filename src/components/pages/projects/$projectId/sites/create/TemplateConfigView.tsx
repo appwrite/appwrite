@@ -316,10 +316,15 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
       // 4. Create deployment: always use template deployment so the build has source code.
       // (When connect now, the site is linked to the user's repo for future VCS deployments,
       // but the initial deploy uses the template repo so new/empty user repos don't fail.)
+      if (!template.providerRepositoryId || !template.providerOwner) {
+        toast.error('Template is missing repository information')
+        setIsDeploying(false)
+        return
+      }
       const deployment = await createTemplateDeploymentMutation.mutateAsync({
         siteId: site.$id,
-        repository: template.providerRepositoryId || template.key,
-        owner: template.providerOwner || 'appwrite',
+        repository: template.providerRepositoryId,
+        owner: template.providerOwner,
         rootDirectory: templateFramework?.providerRootDirectory ?? './',
         type: 'tag',
         reference: template.providerVersion || 'main',

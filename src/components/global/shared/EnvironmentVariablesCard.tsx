@@ -29,10 +29,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { Plus, Trash2, Eye, EyeOff, Upload, Code } from 'lucide-react'
+import { Plus, Trash2, Eye, EyeOff, Upload, Code, Key } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { VariableEditor } from '@/components/global/shared/VariableEditor'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 
 export interface EnvVariable {
   key: string
@@ -281,7 +282,15 @@ export function EnvironmentVariablesCard({
                   Editor
                 </Button>
               </div>
-              {variables.length > 0 && (
+              {variables.length === 0 ? (
+                <EmptyState
+                  icon={Key}
+                  title="No environment variables yet"
+                  description="Add a variable below or import from a .env file."
+                  isEmpty={true}
+                  variant="card"
+                />
+              ) : (
                 <div className="rounded-lg border border-border overflow-hidden">
                   <Table>
                     <TableHeader>

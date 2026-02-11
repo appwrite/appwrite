@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Copy,
   Check,
+  Key,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -20,6 +21,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import { VariableEditor } from '@/components/global/shared/VariableEditor'
 import {
   Dialog,
@@ -639,17 +641,15 @@ export function FunctionVariablesCard({
                     Import .env
                   </Button>
                 </div>
-                {total > 0 && (
-                  <Button
-                    size="sm"
-                    className="h-9 text-[13px]"
-                    onClick={() => setShowCreateModal(true)}
-                    disabled={isLoading}
-                  >
-                    <Plus className="mr-1.5 h-4 w-4" />
-                    Create variable
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  className="h-9 text-[13px]"
+                  onClick={() => setShowCreateModal(true)}
+                  disabled={isLoading}
+                >
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Create variable
+                </Button>
               </div>
 
               {/* Variables Table */}
@@ -658,12 +658,13 @@ export function FunctionVariablesCard({
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
               ) : total === 0 ? (
-                <div
-                  className="text-center py-8 text-[13px] text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
-                  onClick={() => setShowCreateModal(true)}
-                >
-                  Create a variable to get started
-                </div>
+                <EmptyState
+                  icon={Key}
+                  title="No environment variables yet"
+                  description="Add a variable above or import from a .env file."
+                  isEmpty={true}
+                  variant="card"
+                />
               ) : (
                 <>
                   <div className="rounded-lg border border-border overflow-hidden">

@@ -5,11 +5,19 @@
  * Repo is parsed from query params; no repo selected in the wizard cover.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from '@tanstack/react-router'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { IdInput } from '@/components/ui/id-input'
 import { WizardLayout } from '@/components/global/shared/WizardLayout'
 import { RuntimeIcon } from '@/components/global/shared/RuntimeIcon'
@@ -18,7 +26,15 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ID, Runtime, TemplateReferenceType } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useProjectRuntimes } from '@/lib/react-query/hooks'
+import {
+  useProjectRuntimes,
+  useFunctionSpecifications,
+} from '@/lib/react-query/hooks'
+import {
+  getFirstEnabledSpecification,
+  isSpecificationAllowedInPlan,
+  hasUnavailableSpecifications,
+} from '@/lib/specifications'
 import { useFunctionWizard } from './WizardContext'
 import type { FunctionWizardVariable } from './RepositoryConfigView'
 
@@ -66,10 +82,24 @@ export function DeployFromUrlView({
   const [domain, setDomain] = useState('')
   const [domainValid, setDomainValid] = useState(false)
   const [variables, setVariables] = useState<FunctionWizardVariable[]>([])
+  const [isPublic, setIsPublic] = useState(true)
+  const [specification, setSpecification] = useState('')
   const [isDeploying, setIsDeploying] = useState(false)
 
   const { data: runtimesData } = useProjectRuntimes(projectId)
+  const { data: specificationsData } = useFunctionSpecifications(projectId)
   const runtimes = runtimesData?.runtimes ?? []
+  const specifications = useMemo(
+    () => specificationsData?.specifications ?? [],
+    [specificationsData],
+  )
+
+  useEffect(() => {
+    if (specifications.length > 0 && !specification) {
+      const first = getFirstEnabledSpecification(specifications)
+      if (first?.slug) setSpecification(first.slug)
+    }
+  }, [specifications, specification])
 
   useEffect(() => {
     if (parsed?.name && !functionName) setFunctionName(parsed.name)
@@ -109,10 +139,11 @@ export function DeployFromUrlView({
         functionId: finalFunctionId,
         name: functionName.trim(),
         runtime: runtime as Runtime,
-        execute: [],
+        execute: isPublic ? ['any'] : [],
         entrypoint: entrypoint.trim() || undefined,
         commands: commands.trim() || undefined,
         providerSilentMode: true,
+        specification: specification || undefined,
       })
 
       await projectSdk.proxy.createFunctionRule({
@@ -320,6 +351,54 @@ export function DeployFromUrlView({
               className="h-9 text-[13px] font-mono"
             />
           </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-[13px]">Public</Label>
+              <p className="text-[11px] text-muted-foreground">
+                Allow anyone to execute this function (execute role: any)
+              </p>
+            </div>
+            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+          </div>
+          {specifications.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="specification" className="text-[13px]">
+                Compute
+              </Label>
+              <Select
+                value={specification || undefined}
+                onValueChange={setSpecification}
+              >
+                <SelectTrigger
+                  id="specification"
+                  className="h-9 text-[13px]"
+                >
+                  <SelectValue placeholder="Select specification" />
+                </SelectTrigger>
+                <SelectContent>
+                  {specifications
+                    .filter((s) => s.slug?.trim())
+                    .map((spec) => (
+                      <SelectItem
+                        key={spec.slug}
+                        value={spec.slug}
+                        disabled={!isSpecificationAllowedInPlan(spec)}
+                      >
+                        {spec.cpus} CPU, {spec.memory}MB RAM
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Runtime specification for your function
+              </p>
+              {hasUnavailableSpecifications(specifications) && (
+                <p className="text-[11px] text-muted-foreground">
+                  Upgrade your plan to unlock additional specifications.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

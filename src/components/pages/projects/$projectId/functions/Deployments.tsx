@@ -22,8 +22,6 @@ import {
   FileCode,
   Package,
   ChevronDown,
-  Globe,
-  ExternalLink,
   MoreHorizontal,
 } from 'lucide-react'
 import {
@@ -37,11 +35,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
@@ -81,7 +74,6 @@ import {
   useFunctionDeployments,
   useFunctionDeployment,
   useFunctionDomains,
-  useFunctionDeploymentProxyRules,
   useProjectRuntimes,
   useFunctionSpecifications,
   Dependencies,
@@ -96,6 +88,7 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { DeploymentDownloadType } from '@appwrite.io/console'
 import { toast } from 'sonner'
 import { Route } from '@/routes/_public/projects.$projectId.functions.$functionId.index'
+import { CreateExecutionDrawer } from './CreateExecutionDrawer'
 
 const DEPLOYMENTS_PER_PAGE = 25
 
@@ -241,6 +234,7 @@ export function View() {
   const [selectedSpecification, setSelectedSpecification] = useState<string>('')
   const [redeployDialogOpen, setRedeployDialogOpen] = useState(false)
   const [activateDialogOpen, setActivateDialogOpen] = useState(false)
+  const [executeDrawerOpen, setExecuteDrawerOpen] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const { data: func, isLoading: funcLoading } = useProjectFunction(
@@ -326,13 +320,6 @@ export function View() {
   // Fetch domains for the function (filter by active deployment)
   // Fetch up to 20 to ensure we have 3 after filtering by active deployment
   const { data: domainsData } = useFunctionDomains(projectId, functionId, 0, 20)
-
-  // Fetch proxy rules for active deployment
-  const { rules: activeProxyRules } = useFunctionDeploymentProxyRules(
-    projectId,
-    functionId,
-    activeDeployment?.$id,
-  )
 
   // Fetch runtimes to get runtime name
   const { data: runtimesData } = useProjectRuntimes(projectId)
@@ -905,14 +892,14 @@ export function View() {
                   </div>
                   {activeDomains.length > 0 ? (
                     <>
-                      <div className="space-y-1">
+                      <div className="flex flex-col gap-1">
                         {activeDomains.map((rule) => (
                           <a
                             key={rule.$id}
                             href={`https://${rule.domain}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[13px] font-mono text-foreground hover:underline"
+                            className="block text-[13px] font-mono text-foreground hover:underline"
                           >
                             {rule.domain}
                           </a>
@@ -923,28 +910,86 @@ export function View() {
                           +{totalActiveDomains - activeDomains.length} more
                         </p>
                       )}
-                      <Link
-                        to="/projects/$projectId/functions/$functionId/domains"
-                        params={{
-                          projectId: projectId!,
-                          functionId: functionId!,
-                        }}
-                        className="text-[11px] text-primary hover:underline mt-2 inline-block"
-                      >
-                        Add domain
-                      </Link>
+                      <div className="mt-3 pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-[13px] font-medium text-primary"
+                          asChild
+                        >
+                          <Link
+                            to="/projects/$projectId/functions/$functionId/domains"
+                            params={{
+                              projectId: projectId!,
+                              functionId: functionId!,
+                            }}
+                          >
+                            View all domains
+                            {hasMoreDomains && (
+                              <Badge
+                                variant="secondary"
+                                className="ml-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
+                              >
+                                +{totalActiveDomains - activeDomains.length}
+                              </Badge>
+                            )}
+                          </Link>
+                        </Button>
+                        <span className="text-muted-foreground/60">·</span>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-[13px] font-medium text-primary"
+                          asChild
+                        >
+                          <Link
+                            to="/projects/$projectId/functions/$functionId/domains"
+                            params={{
+                              projectId: projectId!,
+                              functionId: functionId!,
+                            }}
+                          >
+                            Add domain
+                          </Link>
+                        </Button>
+                      </div>
                     </>
                   ) : (
-                    <Link
-                      to="/projects/$projectId/functions/$functionId/domains"
-                      params={{
-                        projectId: projectId!,
-                        functionId: functionId!,
-                      }}
-                      className="text-[11px] text-primary hover:underline"
-                    >
-                      Add domain
-                    </Link>
+                    <div className="mt-2 pt-2 border-t border-border/60 flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-[13px] font-medium text-primary"
+                        asChild
+                      >
+                        <Link
+                          to="/projects/$projectId/functions/$functionId/domains"
+                          params={{
+                            projectId: projectId!,
+                            functionId: functionId!,
+                          }}
+                        >
+                          View all domains
+                        </Link>
+                      </Button>
+                      <span className="text-muted-foreground/60">·</span>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-[13px] font-medium text-primary"
+                        asChild
+                      >
+                        <Link
+                          to="/projects/$projectId/functions/$functionId/domains"
+                          params={{
+                            projectId: projectId!,
+                            functionId: functionId!,
+                          }}
+                        >
+                          Add domain
+                        </Link>
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1000,46 +1045,15 @@ export function View() {
                 >
                   Build logs
                 </Button>
-                {activeProxyRules.length > 0 && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 text-[13px]"
-                      >
-                        <Globe className="mr-1.5 h-4 w-4" />
-                        Visit
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="z-[200] w-80">
-                      <div className="space-y-3">
-                        <div>
-                          <h4 className="text-[13px] font-semibold text-foreground mb-2">
-                            Domains
-                          </h4>
-                          <div className="space-y-1.5">
-                            {activeProxyRules.map((rule) => (
-                              <a
-                                key={rule.$id}
-                                href={`https://${rule.domain}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors group"
-                              >
-                                <Globe className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />
-                                <span className="text-[12px] font-mono text-foreground group-hover:text-primary flex-1 truncate">
-                                  {rule.domain}
-                                </span>
-                                <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-foreground shrink-0" />
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setExecuteDrawerOpen(true)}
+                  className="h-9 text-[13px]"
+                >
+                  <Play className="mr-1.5 h-4 w-4" />
+                  Execute
+                </Button>
               </div>
             </div>
           )}
@@ -1909,6 +1923,13 @@ export function View() {
           </DialogContent>
         </Dialog>
       )}
+
+      <CreateExecutionDrawer
+        open={executeDrawerOpen}
+        onOpenChange={setExecuteDrawerOpen}
+        functionId={functionId!}
+        func={func}
+      />
     </div>
   )
 }
