@@ -19,11 +19,6 @@ class HTTPTest extends Scope
         $this->client->setEndpoint('http://appwrite.test');
     }
 
-    /**
-     * @group ci-ignore
-     *
-     * @return void
-     */
     public function testOptions()
     {
         /**
