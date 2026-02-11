@@ -360,7 +360,7 @@ return [
             ],
             [
                 'name' => '_APP_DB_ADAPTER',
-                'description' => 'To switch between mariadb and postgresql',
+                'description' => 'Which database adapter to use. Must be one of: mariadb, postgresql.',
                 'introduction' => '1.6.0',
                 'default' => 'mariadb',
                 'required' => true,
