@@ -16,7 +16,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;

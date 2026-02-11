@@ -20,7 +20,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;

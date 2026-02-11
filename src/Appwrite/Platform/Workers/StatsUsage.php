@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Exception;
 use Throwable;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

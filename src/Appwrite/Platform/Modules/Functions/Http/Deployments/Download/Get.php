@@ -11,10 +11,10 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
-use Utopia\Swoole\Request;
 use Utopia\Validator\WhiteList;
 
 class Get extends Action

@@ -11,7 +11,7 @@ use JsonException;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 /**
  * @method int getStatusCode()
@@ -302,8 +302,6 @@ class Response extends SwooleResponse
      */
     protected static array $models = [];
 
-    protected SwooleHTTPResponse $swoole;
-
     /**
      * Response constructor.
      *
@@ -311,7 +309,6 @@ class Response extends SwooleResponse
      */
     public function __construct(SwooleHTTPResponse $response)
     {
-        $this->swoole = $response;
         parent::__construct($response);
     }
 

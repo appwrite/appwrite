@@ -43,7 +43,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;

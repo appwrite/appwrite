@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Modules\Databases\Workers;
 
 use Appwrite\Event\Realtime;
 use Exception;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception as DatabaseException;
