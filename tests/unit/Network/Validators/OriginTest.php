@@ -16,6 +16,8 @@ class OriginTest extends TestCase
 
         $this->assertEquals(false, $validator->isValid(''));
         $this->assertEquals(false, $validator->isValid('/'));
+        $this->assertEquals(false, $validator->isValid([]));
+        $this->assertEquals(false, $validator->isValid(['http://localhost']));
 
         $this->assertEquals(true, $validator->isValid('https://localhost'));
         $this->assertEquals(true, $validator->isValid('http://localhost'));

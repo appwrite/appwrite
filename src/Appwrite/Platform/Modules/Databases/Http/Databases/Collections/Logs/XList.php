@@ -20,8 +20,8 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Locale\Locale;
-use Utopia\Swoole\Response as SwooleResponse;
 
 class XList extends Action
 {

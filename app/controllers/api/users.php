@@ -59,7 +59,7 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
