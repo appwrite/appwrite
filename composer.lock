@@ -216,16 +216,16 @@
         },
         {
             "name": "brick/math",
-            "version": "0.14.7",
+            "version": "0.14.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "07ff363b16ef8aca9692bba3be9e73fe63f34e50"
+                "reference": "63422359a44b7f06cae63c3b429b59e8efcc0629"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/07ff363b16ef8aca9692bba3be9e73fe63f34e50",
-                "reference": "07ff363b16ef8aca9692bba3be9e73fe63f34e50",
+                "url": "https://api.github.com/repos/brick/math/zipball/63422359a44b7f06cae63c3b429b59e8efcc0629",
+                "reference": "63422359a44b7f06cae63c3b429b59e8efcc0629",
                 "shasum": ""
             },
             "require": {
@@ -264,7 +264,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.14.7"
+                "source": "https://github.com/brick/math/tree/0.14.8"
             },
             "funding": [
                 {
@@ -272,7 +272,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-07T10:57:35+00:00"
+            "time": "2026-02-10T14:33:43+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -1355,16 +1355,16 @@
         },
         {
             "name": "open-telemetry/exporter-otlp",
-            "version": "1.3.4",
+            "version": "1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/exporter-otlp.git",
-                "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca"
+                "reference": "283a0d66522f2adc6d8d7debfd7686be91c282be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
-                "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
+                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/283a0d66522f2adc6d8d7debfd7686be91c282be",
+                "reference": "283a0d66522f2adc6d8d7debfd7686be91c282be",
                 "shasum": ""
             },
             "require": {
@@ -1415,7 +1415,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-01-15T09:31:34+00:00"
+            "time": "2026-02-05T09:44:52+00:00"
         },
         {
             "name": "open-telemetry/gen-otlp-protobuf",
@@ -1482,16 +1482,16 @@
         },
         {
             "name": "open-telemetry/sdk",
-            "version": "1.12.0",
+            "version": "1.13.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
-                "reference": "7f1bd524465c1ca42755a9ef1143ba09913f5be0"
+                "reference": "c76f91203bf7ef98ab3f4e0a82ca21699af185e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/7f1bd524465c1ca42755a9ef1143ba09913f5be0",
-                "reference": "7f1bd524465c1ca42755a9ef1143ba09913f5be0",
+                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/c76f91203bf7ef98ab3f4e0a82ca21699af185e1",
+                "reference": "c76f91203bf7ef98ab3f4e0a82ca21699af185e1",
                 "shasum": ""
             },
             "require": {
@@ -1575,7 +1575,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2026-01-21T04:14:03+00:00"
+            "time": "2026-01-28T11:38:11+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
@@ -3799,12 +3799,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "5564abe0598cc1c388eee615a2af41bd95c4c90a"
+                "reference": "032d9452ee87412809d8c65e748cde22913a9bf1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/5564abe0598cc1c388eee615a2af41bd95c4c90a",
-                "reference": "5564abe0598cc1c388eee615a2af41bd95c4c90a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/032d9452ee87412809d8c65e748cde22913a9bf1",
+                "reference": "032d9452ee87412809d8c65e748cde22913a9bf1",
                 "shasum": ""
             },
             "require": {
@@ -3849,7 +3849,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/joins8"
             },
-            "time": "2026-02-10T10:01:39+00:00"
+            "time": "2026-02-11T06:14:00+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4212,16 +4212,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.38",
+            "version": "0.33.39",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "decfa49d60d99e922de364c49169b396fafd5ab8"
+                "reference": "409a258814d664d3a50fa2f48b6695679334d30b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/decfa49d60d99e922de364c49169b396fafd5ab8",
-                "reference": "decfa49d60d99e922de364c49169b396fafd5ab8",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/409a258814d664d3a50fa2f48b6695679334d30b",
+                "reference": "409a258814d664d3a50fa2f48b6695679334d30b",
                 "shasum": ""
             },
             "require": {
@@ -4234,7 +4234,8 @@
                 "laravel/pint": "1.*",
                 "phpbench/phpbench": "1.*",
                 "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*"
+                "phpunit/phpunit": "9.*",
+                "swoole/ide-helper": "^6.0"
             },
             "type": "library",
             "autoload": {
@@ -4254,9 +4255,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.38"
+                "source": "https://github.com/utopia-php/http/tree/0.33.39"
             },
-            "time": "2026-02-04T04:59:25+00:00"
+            "time": "2026-02-11T06:33:42+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4785,22 +4786,21 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.15.4",
+            "version": "0.15.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "2d693ec59119f853602f4be271602fddefbab507"
+                "reference": "aa80ffe6350efd3394615c3763dba138223a225a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/2d693ec59119f853602f4be271602fddefbab507",
-                "reference": "2d693ec59119f853602f4be271602fddefbab507",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/aa80ffe6350efd3394615c3763dba138223a225a",
+                "reference": "aa80ffe6350efd3394615c3763dba138223a225a",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.3",
                 "php-amqplib/php-amqplib": "^3.7",
-                "utopia-php/console": "0.0.*",
                 "utopia-php/fetch": "0.5.*",
                 "utopia-php/pools": "1.*",
                 "utopia-php/servers": "0.2.*",
@@ -4846,9 +4846,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.15.4"
+                "source": "https://github.com/utopia-php/queue/tree/0.15.5"
             },
-            "time": "2026-02-04T08:50:35+00:00"
+            "time": "2026-02-10T12:30:46+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5763,16 +5763,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.27.0",
+            "version": "v1.27.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "c67b4195b75491e4dfc6b00b1c78b68d86f54c90"
+                "reference": "54cca2de13790570c7b6f0f94f37896bee4abcb5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/c67b4195b75491e4dfc6b00b1c78b68d86f54c90",
-                "reference": "c67b4195b75491e4dfc6b00b1c78b68d86f54c90",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/54cca2de13790570c7b6f0f94f37896bee4abcb5",
+                "reference": "54cca2de13790570c7b6f0f94f37896bee4abcb5",
                 "shasum": ""
             },
             "require": {
@@ -5783,13 +5783,13 @@
                 "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.92.4",
-                "illuminate/view": "^12.44.0",
-                "larastan/larastan": "^3.8.1",
-                "laravel-zero/framework": "^12.0.4",
+                "friendsofphp/php-cs-fixer": "^3.93.1",
+                "illuminate/view": "^12.51.0",
+                "larastan/larastan": "^3.9.2",
+                "laravel-zero/framework": "^12.0.5",
                 "mockery/mockery": "^1.6.12",
                 "nunomaduro/termwind": "^2.3.3",
-                "pestphp/pest": "^3.8.4"
+                "pestphp/pest": "^3.8.5"
             },
             "bin": [
                 "builds/pint"
@@ -5826,7 +5826,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2026-01-05T16:49:17+00:00"
+            "time": "2026-02-10T20:00:20+00:00"
         },
         {
             "name": "matthiasmullie/minify",
