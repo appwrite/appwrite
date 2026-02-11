@@ -2262,4 +2262,192 @@ class RealtimeCustomClientQueryTest extends Scope
 
         $client->close();
     }
+
+    public function testProjectChannelWithQuery()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Test OLD SDK behavior: project=projectId (string) in query param
+        // For reserved \"project\" param, string is treated as routing-only (project ID),
+        // and is not used as queries for the project channel. We should fall back to select(*).
+        $clientOldSdk = $this->getWebsocket(['project'], [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
+        ], $projectId, null);
+
+        $response = json_decode($clientOldSdk->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        // Should have default select(['*']) subscription since project param was treated as project ID, not queries
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $clientOldSdk->close();
+
+        // Test NEW SDK behavior: project=Query array in query param, project ID in header
+        // The reserved param logic should use Query array as subscription queries for project channel
+        $queryArray = [Query::select(['*'])->toString()];
+        $clientNewSdk = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project'],
+                'project' => [
+                    0 => [
+                        0 => $queryArray[0]
+                    ]
+                ]
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($clientNewSdk->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        // Should have subscription with the provided query
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $clientNewSdk->close();
+
+        // Test edge case: project param is array but not a valid Query array
+        // This should now fail with an invalid query error rather than silently falling back.
+        $clientEdgeCase = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project'],
+                'project' => ['invalid', 'array']
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($clientEdgeCase->receive(), true);
+        $this->assertEquals('error', $response['type']);
+        $this->assertStringContainsString('Invalid query', $response['data']['message']);
+    }
+
+    public function testProjectChannelWithHeaderOnly()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        // Test: project ID only in header, no project query param
+        // This simulates a client that only uses x-appwrite-project header
+        $client = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project']
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($client->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        // Should have default select(['*']) subscription since no project query param
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $client->close();
+
+        // Test: project channel with queries, project ID only in header
+        $queryArray = [Query::select(['*'])->toString()];
+        $clientWithQuery = $this->getWebsocketWithCustomQuery(
+            [
+                'channels' => ['project'],
+                'project' => [
+                    0 => [
+                        0 => $queryArray[0]
+                    ]
+                ]
+            ],
+            [
+                'origin' => 'http://localhost',
+                'cookie' => 'a_session_' . $projectId . '=' . $session,
+                'x-appwrite-project' => $projectId,
+            ]
+        );
+
+        $response = json_decode($clientWithQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertContains('project', $response['data']['channels']);
+        $this->assertArrayHasKey('subscriptions', $response['data']);
+        $this->assertIsArray($response['data']['subscriptions']);
+        $this->assertNotEmpty($response['data']['subscriptions']);
+
+        $clientWithQuery->close();
+    }
+
+    public function testTestsChannelWithQueries()
+    {
+        $projectId = 'console';
+
+        // Subscribe without queries - should receive all events
+        $clientNoQuery = $this->getWebsocket(['tests'], [
+            'origin' => 'http://localhost',
+        ], $projectId);
+
+        $response = json_decode($clientNoQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        // Subscribe with matching query - should receive events
+        $clientWithMatchingQuery = $this->getWebsocket(['tests'], [
+            'origin' => 'http://localhost',
+        ], $projectId, [
+            Query::equal('response', ['WS:/v1/realtime:passed'])->toString(),
+        ]);
+
+        $response = json_decode($clientWithMatchingQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        // Subscribe with non-matching query - should NOT receive events
+        $clientWithNonMatchingQuery = $this->getWebsocket(['tests'], [
+            'origin' => 'http://localhost',
+        ], $projectId, [
+            Query::equal('response', ['failed'])->toString(),
+        ]);
+
+        $response = json_decode($clientWithNonMatchingQuery->receive(), true);
+        $this->assertEquals('connected', $response['type']);
+
+        sleep(6);
+
+        // Client without query should receive event
+        $eventNoQuery = json_decode($clientNoQuery->receive(), true);
+        $this->assertEquals('event', $eventNoQuery['type']);
+        $this->assertEquals('test.event', $eventNoQuery['data']['events'][0]);
+        $this->assertEquals('WS:/v1/realtime:passed', $eventNoQuery['data']['payload']['response']);
+
+        // Client with matching query should receive event
+        $eventMatching = json_decode($clientWithMatchingQuery->receive(), true);
+        $this->assertEquals('event', $eventMatching['type']);
+        $this->assertEquals('test.event', $eventMatching['data']['events'][0]);
+        $this->assertEquals('WS:/v1/realtime:passed', $eventMatching['data']['payload']['response']);
+
+        // Client with non-matching query should NOT receive event
+        try {
+            $clientWithNonMatchingQuery->receive();
+            $this->fail('Expected TimeoutException - client with non-matching query should not receive event');
+        } catch (TimeoutException $e) {
+            $this->assertTrue(true);
+        }
+
+        $clientNoQuery->close();
+        $clientWithMatchingQuery->close();
+        $clientWithNonMatchingQuery->close();
+    }
 }
