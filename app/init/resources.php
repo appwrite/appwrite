@@ -10,6 +10,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Execution;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
@@ -160,6 +161,9 @@ Http::setResource('queueForAudits', function (Publisher $publisher) {
 }, ['publisher']);
 Http::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
+}, ['publisher']);
+Http::setResource('queueForExecutions', function (Publisher $publisher) {
+    return new Execution($publisher);
 }, ['publisher']);
 Http::setResource('eventProcessor', function () {
     return new EventProcessor();
@@ -522,6 +526,10 @@ Http::setResource('project', function ($dbForPlatform, $request, $console, $auth
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
+    // Realtime channel "project" can send project=Query array
+    if (!\is_string($projectId)) {
+        $projectId = $request->getHeader('x-appwrite-project', '');
+    }
 
     if (empty($projectId) || $projectId === 'console') {
         return $console;

@@ -318,6 +318,7 @@ class Exception extends \Exception
 
     /** Keys */
     public const string KEY_NOT_FOUND = 'key_not_found';
+    public const string KEY_ALREADY_EXISTS = 'key_already_exists';
 
     /** Variables */
     public const string VARIABLE_NOT_FOUND = 'variable_not_found';

@@ -87,4 +87,11 @@ class StatsUsage extends Event
             'context' => $this->context,
         ];
     }
+
+    public function reset(): Event
+    {
+        $this->metrics = [];
+        parent::reset();
+        return $this;
+    }
 }
