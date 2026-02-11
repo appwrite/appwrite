@@ -3799,12 +3799,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "a118f464c942afdd4cf7f63928ff2f774139b758"
+                "reference": "032d9452ee87412809d8c65e748cde22913a9bf1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/a118f464c942afdd4cf7f63928ff2f774139b758",
-                "reference": "a118f464c942afdd4cf7f63928ff2f774139b758",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/032d9452ee87412809d8c65e748cde22913a9bf1",
+                "reference": "032d9452ee87412809d8c65e748cde22913a9bf1",
                 "shasum": ""
             },
             "require": {
@@ -3849,7 +3849,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/joins8"
             },
-            "time": "2026-02-10T14:54:39+00:00"
+            "time": "2026-02-11T06:14:00+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4212,16 +4212,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.38",
+            "version": "0.33.39",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "decfa49d60d99e922de364c49169b396fafd5ab8"
+                "reference": "409a258814d664d3a50fa2f48b6695679334d30b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/decfa49d60d99e922de364c49169b396fafd5ab8",
-                "reference": "decfa49d60d99e922de364c49169b396fafd5ab8",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/409a258814d664d3a50fa2f48b6695679334d30b",
+                "reference": "409a258814d664d3a50fa2f48b6695679334d30b",
                 "shasum": ""
             },
             "require": {
@@ -4234,7 +4234,8 @@
                 "laravel/pint": "1.*",
                 "phpbench/phpbench": "1.*",
                 "phpstan/phpstan": "1.*",
-                "phpunit/phpunit": "9.*"
+                "phpunit/phpunit": "9.*",
+                "swoole/ide-helper": "^6.0"
             },
             "type": "library",
             "autoload": {
@@ -4254,9 +4255,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.38"
+                "source": "https://github.com/utopia-php/http/tree/0.33.39"
             },
-            "time": "2026-02-04T04:59:25+00:00"
+            "time": "2026-02-11T06:33:42+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5762,16 +5763,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.27.0",
+            "version": "v1.27.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "c67b4195b75491e4dfc6b00b1c78b68d86f54c90"
+                "reference": "54cca2de13790570c7b6f0f94f37896bee4abcb5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/c67b4195b75491e4dfc6b00b1c78b68d86f54c90",
-                "reference": "c67b4195b75491e4dfc6b00b1c78b68d86f54c90",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/54cca2de13790570c7b6f0f94f37896bee4abcb5",
+                "reference": "54cca2de13790570c7b6f0f94f37896bee4abcb5",
                 "shasum": ""
             },
             "require": {
@@ -5782,13 +5783,13 @@
                 "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.92.4",
-                "illuminate/view": "^12.44.0",
-                "larastan/larastan": "^3.8.1",
-                "laravel-zero/framework": "^12.0.4",
+                "friendsofphp/php-cs-fixer": "^3.93.1",
+                "illuminate/view": "^12.51.0",
+                "larastan/larastan": "^3.9.2",
+                "laravel-zero/framework": "^12.0.5",
                 "mockery/mockery": "^1.6.12",
                 "nunomaduro/termwind": "^2.3.3",
-                "pestphp/pest": "^3.8.4"
+                "pestphp/pest": "^3.8.5"
             },
             "bin": [
                 "builds/pint"
@@ -5825,7 +5826,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2026-01-05T16:49:17+00:00"
+            "time": "2026-02-10T20:00:20+00:00"
         },
         {
             "name": "matthiasmullie/minify",
