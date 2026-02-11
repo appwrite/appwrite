@@ -119,8 +119,7 @@ class Create extends Action
             'membershipsUserName' => false,
             'membershipsUserEmail' => false,
             'membershipsMfa' => false,
-            'invalidateSessions' => true,
-            'status' => PROJECT_STATUS_ACTIVE,
+            'invalidateSessions' => true
         ];
 
         foreach ($auth as $method) {
@@ -193,6 +192,7 @@ class Create extends Action
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
                 'labels' => [],
+                'status' => PROJECT_STATUS_ACTIVE,
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
