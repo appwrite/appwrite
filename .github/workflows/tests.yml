@@ -112,6 +112,8 @@ jobs:
         with:
           max_attempts: 3
           timeout_minutes: 30
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/unit
           command: >-
             docker compose exec
@@ -152,6 +154,8 @@ jobs:
         with:
           max_attempts: 3
           timeout_minutes: 30
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/General
           command: >-
             docker compose exec -T
@@ -233,6 +237,8 @@ jobs:
         with:
           max_attempts: 3
           timeout_minutes: 30
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/${{ matrix.service }}
           command: |
             echo "Using project tables"
@@ -342,6 +348,8 @@ jobs:
         with:
           max_attempts: 3
           timeout_minutes: 30
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/${{ matrix.service }}
           command: |
             if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
@@ -395,6 +403,8 @@ jobs:
         with:
           max_attempts: 3
           timeout_minutes: 30
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/Projects
           command: |
             echo "Using project tables"
@@ -450,6 +460,8 @@ jobs:
         with:
           max_attempts: 3
           timeout_minutes: 30
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/Projects
           command: |
             if [ "${{ matrix.tables-mode }}" == "Shared V1" ]; then
@@ -503,6 +515,8 @@ jobs:
         with:
           max_attempts: 3
           timeout_minutes: 30
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/Sites
           command: |
             echo "Keeping original value of _APP_BROWSER_HOST"
@@ -559,6 +573,8 @@ jobs:
         with:
           max_attempts: 3
           timeout_minutes: 30
+          job_id: ${{ job.check_run_id }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           test_dir: tests/e2e/Services/Sites
           command: |
             echo "Keeping original value of _APP_BROWSER_HOST"
