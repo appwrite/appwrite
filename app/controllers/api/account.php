@@ -1514,21 +1514,25 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Allow redirect to rule URL if related to project
-        //Check if $redirectValidator is instance of Redirect class
+        // Check if $redirectValidator is instance of Redirect class
         if ($redirectValidator instanceof Redirect) {
-            $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', [
-                Query::equal('domain', [
-                    parse_url($state['success'], PHP_URL_HOST),
-                    parse_url($state['failure'], PHP_URL_HOST)
-                ]),
-                Query::equal('projectInternalId', [$project->getSequence()]),
-                Query::limit(2)
-            ]));
+            $domains = \array_filter([
+                parse_url($state['success'], PHP_URL_HOST) ?? '',
+                parse_url($state['failure'], PHP_URL_HOST) ?? ''
+            ], fn ($domain) => \is_string($domain) && $domain !== '');
 
-            foreach ($rules as $rule) {
-                $allowedHostnames = $redirectValidator->getAllowedHostnames();
-                $allowedHostnames[] = $rule->getAttribute('domain', '');
-                $redirectValidator->setAllowedHostnames($allowedHostnames);
+            if (!empty($domains)) {
+                $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', [
+                    Query::equal('domain', \array_values(\array_unique($domains))),
+                    Query::equal('projectInternalId', [$project->getSequence()]),
+                    Query::limit(2)
+                ]));
+
+                foreach ($rules as $rule) {
+                    $allowedHostnames = $redirectValidator->getAllowedHostnames();
+                    $allowedHostnames[] = $rule->getAttribute('domain', '');
+                    $redirectValidator->setAllowedHostnames($allowedHostnames);
+                }
             }
         }
 
