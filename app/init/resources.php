@@ -10,6 +10,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Execution;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
@@ -42,8 +43,8 @@ use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -51,7 +52,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
@@ -158,6 +159,9 @@ Http::setResource('queueForAudits', function (Publisher $publisher) {
 }, ['publisher']);
 Http::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
+}, ['publisher']);
+Http::setResource('queueForExecutions', function (Publisher $publisher) {
+    return new Execution($publisher);
 }, ['publisher']);
 Http::setResource('eventProcessor', function () {
     return new EventProcessor();
@@ -483,6 +487,10 @@ Http::setResource('project', function ($dbForPlatform, $request, $console, $auth
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
+    // Realtime channel "project" can send project=Query array
+    if (!\is_string($projectId)) {
+        $projectId = $request->getHeader('x-appwrite-project', '');
+    }
 
     if (empty($projectId) || $projectId === 'console') {
         return $console;

@@ -46,6 +46,9 @@ class Event
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
+    public const EXECUTIONS_QUEUE_NAME = 'v1-executions';
+    public const EXECUTIONS_CLASS_NAME = 'ExecutionsV1';
+
     public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
     public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
 

@@ -1,5 +1,10 @@
 # Change Log
 
+## 13.3.2
+
+- Fix handle null rows in table parser 
+- Export config zod schemas
+
 ## 13.3.1
 
 - Fix generated TS imports to auto-detect ESM vs non-ESM
