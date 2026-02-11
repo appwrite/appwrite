@@ -1208,6 +1208,7 @@ trait UsersBase
 
         $this->assertEquals($sessions['headers']['status-code'], 200);
         $sessionCount = count($sessions['body']['sessions']);
+        $this->assertGreaterThan(0, $sessionCount);
 
         // Block the user
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/status', array_merge([
