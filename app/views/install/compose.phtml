@@ -12,6 +12,7 @@ $version = $this->getParam('version', '');
 $organization = $this->getParam('organization', '');
 $image = $this->getParam('image', '');
 $enableAssistant = $this->getParam('enableAssistant', false);
+$dbService = $this->getParam('database');
 ?>services:
   traefik:
     image: traefik:3.6
@@ -70,8 +71,8 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
-      - <?= $dbService  . "\n" ?>
       - redis
+      - <?= $dbService  . "\n" ?>
 #      - clamav
     environment:
       - _APP_ENV
@@ -109,6 +110,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -224,8 +226,8 @@ $enableAssistant = $this->getParam('enableAssistant', false);
     networks:
       - appwrite
     depends_on:
-      - <?= $dbService  . "\n" ?>
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -242,6 +244,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
 
@@ -270,6 +273,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-webhooks:
@@ -295,6 +299,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -333,6 +338,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -390,6 +396,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-builds:
@@ -424,6 +431,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
@@ -497,6 +505,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-functions:
@@ -527,6 +536,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
@@ -549,6 +559,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -561,6 +572,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -586,6 +598,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -600,6 +613,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
@@ -659,6 +673,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -673,6 +688,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - appwrite
     depends_on:
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -694,6 +710,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -724,6 +741,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -754,6 +772,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -783,6 +802,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -816,6 +836,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
 
   appwrite-task-scheduler-executions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -842,6 +863,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
 
   appwrite-task-scheduler-messages:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -868,6 +890,7 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
 
 <?php if ($enableAssistant): ?>
   appwrite-assistant:
@@ -941,61 +964,40 @@ $enableAssistant = $this->getParam('enableAssistant', false);
       - OPR_EXECUTOR_STORAGE_WASABI_REGION=$_APP_STORAGE_WASABI_REGION
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
 
-      <?php if ($dbService === 'mariadb'): ?>
 
-mariadb:
-  image: mariadb:10.11
-  container_name: appwrite-mariadb
-  restart: unless-stopped
-  networks:
-    - appwrite
-  volumes:
-    - appwrite-mariadb:/var/lib/mysql:rw
-  environment:
-    - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
-    - MYSQL_DATABASE=${_APP_DB_SCHEMA}
-    - MYSQL_USER=${_APP_DB_USER}
-    - MYSQL_PASSWORD=${_APP_DB_PASS}
-    - MARIADB_AUTO_UPGRADE=1
-  command: 'mysqld --innodb-flush-method=fsync'
+<?php if ($dbService === 'mariadb'): ?>
 
-<?php elseif ($dbService === 'mongodb'): ?>
-
-  mongodb:
-    image: mongo:8.0.10
-    container_name: appwrite-mongodb
-    <<: *x-logging
+  mariadb:
+    image: mariadb:10.11
+    container_name: appwrite-mariadb
+    restart: unless-stopped
     networks:
       - appwrite
     volumes:
-      - appwrite-mongodb:/data/db
-      - appwrite-mongodb-keyfile:/data/keyfile
-      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
-    ports:
-      - "27017:27017"
+      - appwrite-mariadb:/var/lib/mysql:rw
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
-      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
-      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
-      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
-    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
-    healthcheck:
-      test: |
-        bash -c "
-          if mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval 'rs.status().ok' 2>/dev/null | grep -q 1; then
-            exit 0
-          else
-            mongosh -u root -p ${_APP_DB_ROOT_PASS} --authenticationDatabase admin --quiet --eval \"
-              rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]})
-            \" 2>/dev/null || exit 1
-          fi
-        "
-      interval: 10s
-      timeout: 10s
-      retries: 10
-      start_period: 30s
+      - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MYSQL_DATABASE=${_APP_DB_SCHEMA}
+      - MYSQL_USER=${_APP_DB_USER}
+      - MYSQL_PASSWORD=${_APP_DB_PASS}
+      - MARIADB_AUTO_UPGRADE=1
+    command: 'mysqld --innodb-flush-method=fsync'
+
+<?php elseif ($dbService === 'postgresql'): ?>
+
+  postgresql:
+    image: postgres:15
+    container_name: appwrite-postgresql
+    restart: unless-stopped
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-postgresql:/var/lib/postgresql/data:rw
+    environment:
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: "postgres"
 
 <?php endif; ?>
 
@@ -1034,9 +1036,8 @@ networks:
 volumes:
 <?php if ($dbService === 'mariadb'): ?>
   appwrite-mariadb:
-<?php elseif ($dbService === 'mongodb'): ?>
-  appwrite-mongodb:
-  appwrite-mongodb-keyfile:
+<?php elseif ($dbService === 'postgresql'): ?>
+  appwrite-postgresql:
 <?php endif; ?>
   appwrite-redis:
   appwrite-cache:

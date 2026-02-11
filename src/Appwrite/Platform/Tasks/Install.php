@@ -32,7 +32,7 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new Text(0), 'Database to use (mongodb|mariadb)', true)
+            ->param('database', 'mariadb', new Text(0), 'Database to use (mariadb|postgresql)', true)
             ->callback($this->action(...));
     }
 
@@ -138,6 +138,7 @@ class Install extends Action
                 }
             }
         }
+
 
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHTTPPort . ')');
@@ -248,11 +249,10 @@ class Install extends Action
                 }
             }
         }
-
         $database = $input['_APP_DB_ADAPTER'];
-        if ($database === 'mongodb') {
-            $input['_APP_DB_HOST'] = 'mongodb';
-            $input['_APP_DB_PORT'] = 27017;
+        if ($database === 'postgresql') {
+            $input['_APP_DB_HOST'] = 'postgresql';
+            $input['_APP_DB_PORT'] = 5432;
         } elseif ($database === 'mariadb') {
             $input['_APP_DB_HOST'] = 'mariadb';
             $input['_APP_DB_PORT'] = 3306;
@@ -260,7 +260,6 @@ class Install extends Action
 
         $templateForCompose = new View(__DIR__ . '/../../../../app/views/install/compose.phtml');
         $templateForEnv = new View(__DIR__ . '/../../../../app/views/install/env.phtml');
-
         $templateForCompose
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)

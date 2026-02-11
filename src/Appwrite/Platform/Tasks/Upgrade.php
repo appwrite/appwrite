@@ -24,7 +24,7 @@ class Upgrade extends Install
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new Text(length: 0), 'Database to use (mongodb|mariadb)', true)
+            ->param('database', 'mariadb', new Text(length: 0), 'Database to use (mariadb|postgresql)', true)
             ->callback($this->action(...));
     }
 
@@ -41,7 +41,7 @@ class Upgrade extends Install
             Console::log('      └── docker-compose.yml');
             Console::exit(1);
         }
-        $database = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
+        $database = System::getEnv('_APP_DB_ADAPTER', 'mariadb');
         parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
     }
 }
