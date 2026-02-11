@@ -12,7 +12,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\Text;

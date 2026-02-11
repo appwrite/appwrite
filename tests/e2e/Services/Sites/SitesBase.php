@@ -6,7 +6,7 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Async\Exceptions\Critical;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\System\System;
