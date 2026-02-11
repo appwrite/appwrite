@@ -1,8 +1,3 @@
-# WARNING!
-# This is a development version of THE Appwrite docker-compose.yml file.
-# Avoid using this file in your production environment.
-# We're exposing here sensitive ports and mounting code volumes for rapid development and debugging of the server stack.
-
 x-logging: &x-logging
   logging:
     driver: "json-file"
@@ -28,9 +23,7 @@ services:
       - --accesslog=true
     ports:
       - 80:80
-      - 8080:80
       - 443:443
-      - 9500:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - appwrite-config:/storage/config:ro
@@ -52,19 +45,8 @@ services:
     container_name: appwrite
     <<: *x-logging
     image: appwrite-dev
-    build:
-      context: .
-      target: development
-      args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
-    ports:
-      - 9501:80
     networks:
       - appwrite
-    dns:
-      - 172.16.238.100
     labels:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
@@ -80,9 +62,6 @@ services:
       - traefik.http.routers.appwrite_api_https.service=appwrite_api
       - traefik.http.routers.appwrite_api_https.tls=true
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Only needed for tests
-      - ./docker-compose.yml:/usr/src/code/docker-compose.yml # Only needed for tests
-      - ./.env:/usr/src/code/.env # Only needed for tests
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-imports:/storage/imports:rw
       - appwrite-cache:/storage/cache:rw
@@ -91,19 +70,9 @@ services:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
-      - ./phpunit.xml:/usr/src/code/phpunit.xml
-      - ./tests:/usr/src/code/tests
-      - ./app:/usr/src/code/app
-      - ./docs:/usr/src/code/docs
-      - ./public:/usr/src/code/public
-      - ./src:/usr/src/code/src
-      - ./dev:/usr/src/code/dev
-      # - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
     depends_on:
       - mariadb
       - redis
-      - coredns
-      # - clamav
     entrypoint:
       - php
       - -e
@@ -261,8 +230,6 @@ services:
     container_name: appwrite-realtime
     image: appwrite-dev
     restart: unless-stopped
-    ports:
-      - 9505:80
     labels:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
@@ -279,9 +246,6 @@ services:
       - traefik.http.routers.appwrite_realtime_wss.tls=true
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
@@ -313,9 +277,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -343,14 +304,9 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
-      - request-catcher-sms
-      - request-catcher-webhook
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -387,8 +343,6 @@ services:
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
       - appwrite-certificates:/storage/certificates:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -441,9 +395,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -477,8 +428,6 @@ services:
       - appwrite-functions:/storage/functions:rw
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -549,8 +498,6 @@ services:
       - appwrite
     volumes:
       - appwrite-uploads:/storage/uploads:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -613,8 +560,6 @@ services:
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -648,9 +593,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       redis:
         condition: service_started
@@ -679,9 +621,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       redis:
         condition: service_started
@@ -726,13 +665,8 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - maildev
-      # - smtp
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -764,8 +698,6 @@ services:
       - appwrite
     volumes:
       - appwrite-uploads:/storage/uploads:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
     environment:
@@ -821,9 +753,6 @@ services:
     volumes:
       - appwrite-imports:/storage/imports:rw
       - appwrite-uploads:/storage/uploads:rw
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-      - ./tests:/usr/src/code/tests
     depends_on:
       - mariadb
     environment:
@@ -861,9 +790,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
@@ -906,9 +832,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
@@ -945,9 +868,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -977,9 +897,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -1009,9 +926,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - redis
       - mariadb
@@ -1041,9 +955,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
@@ -1070,9 +981,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
@@ -1098,9 +1006,6 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes:
-      - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
     depends_on:
       - mariadb
       - redis
@@ -1201,8 +1106,6 @@ services:
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
-    ports:
-      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -1220,155 +1123,10 @@ services:
       --maxmemory            512mb
       --maxmemory-policy     allkeys-lru
       --maxmemory-samples    5
-    ports:
-      - "6379:6379"
     networks:
       - appwrite
     volumes:
       - appwrite-redis:/data:rw
-
-  coredns: # DNS server for testing purposes (Proxy APIs)
-    image: coredns/coredns:1.12.4
-    container_name: appwrite-coredns
-    restart: unless-stopped
-    <<: *x-logging
-    command: ["-conf", "/mnt/resources/Corefile"]
-    # If you need to debug CoreDNS, do it from "appwrite container", or port forward:
-    # ports:
-    #  - "53:53"
-    networks:
-      appwrite:
-        ipv4_address: 172.16.238.100
-    volumes:
-      - ./tests/resources/coredns:/mnt/resources:ro
-
-  # Dev Tools Start ------------------------------------------------------------------------------------------
-  #
-  # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
-  #
-  # Here is a description of the different tools and why are we using them:
-  #
-  # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
-  # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
-  # Redis Insight - A nice UI for exploring Redis data
-  # Adminer - A nice UI for exploring MariaDB data
-  # GraphQl Explorer - A nice UI for exploring GraphQL API
-
-  maildev: # used mainly for dev tests
-    image: appwrite/mailcatcher:1.1.1
-    container_name: appwrite-mailcatcher
-    <<: *x-logging
-    ports:
-      - "9503:1080"
-    networks:
-      - appwrite
-      - gateway
-    labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=gateway"
-      - "traefik.http.services.appwrite_maildev.loadbalancer.server.port=1080"
-      - "traefik.http.routers.appwrite_maildev_http.entrypoints=appwrite_web"
-      - "traefik.http.routers.appwrite_maildev_http.rule=Host(`mail.localhost`)"
-      - "traefik.http.routers.appwrite_maildev_http.service=appwrite_maildev"
-      - "traefik.http.routers.appwrite_maildev_https.entrypoints=appwrite_websecure"
-      - "traefik.http.routers.appwrite_maildev_https.rule=Host(`mail.localhost`)"
-      - "traefik.http.routers.appwrite_maildev_https.service=appwrite_maildev"
-      - "traefik.http.routers.appwrite_maildev_https.tls=true"
-    environment:
-      - MAILDEV_INCOMING_USER=${_APP_SMTP_USERNAME}
-      - MAILDEV_INCOMING_PASS=${_APP_SMTP_PASSWORD}
-
-  request-catcher-webhook: # used mainly for dev tests (mock HTTP webhook)
-    image: appwrite/requestcatcher:1.0.0
-    container_name: appwrite-requestcatcher-webhook
-    <<: *x-logging
-    ports:
-      - "9504:5000"
-    networks:
-      - appwrite
-
-  request-catcher-sms: # used mainly for dev tests (mock SMS auth secret)
-    image: appwrite/requestcatcher:1.0.0
-    container_name: appwrite-requestcatcher-sms
-    <<: *x-logging
-    ports:
-      - "9507:5000"
-    networks:
-      - appwrite
-
-  adminer:
-    image: adminer
-    container_name: appwrite-adminer
-    <<: *x-logging
-    restart: always
-    ports:
-      - 9506:8080
-    networks:
-      - appwrite
-      - gateway
-    environment:
-      - ADMINER_DESIGN=pepa-linha
-      - ADMINER_DEFAULT_SERVER=mariadb
-      - ADMINER_DEFAULT_USERNAME=root
-      - ADMINER_DEFAULT_PASSWORD=rootsecretpassword
-      - ADMINER_DEFAULT_DB=appwrite
-    configs:
-      - source: adminer-index.php
-        target: /var/www/html/index.php
-        mode: 0755
-    labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=gateway"
-      - "traefik.http.services.appwrite_adminer.loadbalancer.server.port=8080"
-      - "traefik.http.routers.appwrite_adminer_http.entrypoints=appwrite_web"
-      - "traefik.http.routers.appwrite_adminer_http.rule=Host(`mysql.localhost`)"
-      - "traefik.http.routers.appwrite_adminer_http.service=appwrite_adminer"
-      - "traefik.http.routers.appwrite_adminer_https.entrypoints=appwrite_websecure"
-      - "traefik.http.routers.appwrite_adminer_https.rule=Host(`mysql.localhost`)"
-      - "traefik.http.routers.appwrite_adminer_https.service=appwrite_adminer"
-      - "traefik.http.routers.appwrite_adminer_https.tls=true"
-
-  redis-insight:
-    image: redis/redisinsight:latest
-    restart: unless-stopped
-    networks:
-      - appwrite
-      - gateway
-    environment:
-      - RI_PRE_SETUP_DATABASES_PATH=/mnt/connections.json
-    configs:
-      - source: redisinsight-connections.json
-        target: /mnt/connections.json
-        mode: 0755
-    labels:
-      - "traefik.enable=true"
-      - "traefik.constraint-label-stack=appwrite"
-      - "traefik.docker.network=gateway"
-      - "traefik.http.services.appwrite_redisinsight.loadbalancer.server.port=5540"
-      - "traefik.http.routers.appwrite_redisinsight_http.entrypoints=appwrite_web"
-      - "traefik.http.routers.appwrite_redisinsight_http.rule=Host(`redis.localhost`)"
-      - "traefik.http.routers.appwrite_redisinsight_http.service=appwrite_redisinsight"
-      - "traefik.http.routers.appwrite_redisinsight_https.entrypoints=appwrite_websecure"
-      - "traefik.http.routers.appwrite_redisinsight_https.rule=Host(`redis.localhost`)"
-      - "traefik.http.routers.appwrite_redisinsight_https.service=appwrite_redisinsight"
-      - "traefik.http.routers.appwrite_redisinsight_https.tls=true"
-    ports:
-      - "8081:5540"
-
-  graphql-explorer:
-    container_name: appwrite-graphql-explorer
-    image: appwrite/altair:0.3.0
-    restart: unless-stopped
-    networks:
-      - appwrite
-    ports:
-      - "9509:3000"
-    environment:
-      - SERVER_URL=http://localhost/v1/graphql
-
-  # Dev Tools End   ------------------------------------------------------------------------------------------
 
 networks:
   gateway:
@@ -1380,61 +1138,6 @@ networks:
         - subnet: 172.16.238.0/24
   runtimes:
     name: runtimes
-
-configs:
-  redisinsight-connections.json:
-    content: |
-      [
-        {
-          "compressor": "NONE",
-          "id": "104dc90a-21ef-4d5e-8912-b30baabb152f",
-          "host": "redis",
-          "port": 6379,
-          "name": "redis:6379",
-          "db": 0,
-          "username": "default",
-          "password": null,
-          "connectionType": "STANDALONE",
-          "nameFromProvider": null,
-          "provider": "REDIS",
-          "lastConnection": "2025-10-16T09:22:02.591Z",
-          "modules": [
-            {
-              "name": "ReJSON",
-              "version": 20808,
-              "semanticVersion": "2.8.8"
-            },
-            {
-              "name": "search",
-              "version": 21015,
-              "semanticVersion": "2.10.15"
-            }
-          ],
-          "tls": false,
-          "tlsServername": null,
-          "verifyServerCert": null,
-          "caCert": null,
-          "clientCert": null,
-          "ssh": false,
-          "sshOptions": null,
-          "forceStandalone": false,
-          "tags": []
-        }
-      ]
-
-  adminer-index.php:
-    content: |
-      <?php
-        if(!count($$_GET)) {
-          $$_POST['auth'] = [
-            'server' => $$_ENV['ADMINER_DEFAULT_SERVER'],
-            'driver' => 'server', /* seems to autodetect the driver from server settings */
-            'username' => $$_ENV['ADMINER_DEFAULT_USERNAME'],
-            'password' => $$_ENV['ADMINER_DEFAULT_PASSWORD'],
-            'db' => $$_ENV['ADMINER_DEFAULT_DB'],
-          ];
-        }
-        include './adminer.php';
 
 volumes:
   appwrite-mariadb:

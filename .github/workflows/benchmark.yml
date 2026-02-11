@@ -71,12 +71,10 @@ jobs:
         run: docker compose down -v
       - name: Installing latest version
         run: |
-          rm docker-compose.yml
-          rm .env
-          curl https://appwrite.io/install/compose -o docker-compose.yml
-          curl https://appwrite.io/install/env -o .env
-          sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env
-          docker compose up -d
+          curl https://appwrite.io/install/compose -o docker-compose.latest.yml
+          curl https://appwrite.io/install/env -o .env.latest
+          sed -i 's/_APP_OPTIONS_ABUSE=enabled/_APP_OPTIONS_ABUSE=disabled/g' .env.latest
+          docker compose -f docker-compose.latest.yml --env-file .env.latest up -d
           sleep 10
       - name: Benchmark Latest
         run: oha -z 180s http://localhost/v1/health/version --output-format json > benchmark-latest.json
