@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "909bf7bde6669e0eea5ff56178023246",
+    "content-hash": "06d83bf3bbd4729377e2be95738a2efb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4214,16 +4214,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "dev-backport-0.34-adapters",
+            "version": "0.33.39",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "f6572e3b7e02c5da459520b85b82e7137e005127"
+                "reference": "409a258814d664d3a50fa2f48b6695679334d30b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/f6572e3b7e02c5da459520b85b82e7137e005127",
-                "reference": "f6572e3b7e02c5da459520b85b82e7137e005127",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/409a258814d664d3a50fa2f48b6695679334d30b",
+                "reference": "409a258814d664d3a50fa2f48b6695679334d30b",
                 "shasum": ""
             },
             "require": {
@@ -4257,9 +4257,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/backport-0.34-adapters"
+                "source": "https://github.com/utopia-php/http/tree/0.33.39"
             },
-            "time": "2026-02-10T12:08:18+00:00"
+            "time": "2026-02-11T06:33:42+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -4630,16 +4630,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "dev-bump-cli-and-framework",
+            "version": "0.7.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "2868328278789617335aff435d2ddca0b2fc3465"
+                "reference": "34e67e4b80b5741c380071fe765fbc12a132de4f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/2868328278789617335aff435d2ddca0b2fc3465",
-                "reference": "2868328278789617335aff435d2ddca0b2fc3465",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/34e67e4b80b5741c380071fe765fbc12a132de4f",
+                "reference": "34e67e4b80b5741c380071fe765fbc12a132de4f",
                 "shasum": ""
             },
             "require": {
@@ -4647,7 +4647,7 @@
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.22.*",
-                "utopia-php/framework": "dev-backport-0.34-adapters as 0.33.38",
+                "utopia-php/framework": "0.33.*",
                 "utopia-php/queue": "0.15.*"
             },
             "require-dev": {
@@ -4658,7 +4658,6 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\": "src",
                     "Utopia\\Platform\\": "src/Platform"
                 }
             },
@@ -4676,9 +4675,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/bump-cli-and-framework"
+                "source": "https://github.com/utopia-php/platform/tree/0.7.16"
             },
-            "time": "2026-02-10T04:48:33+00:00"
+            "time": "2026-02-11T06:36:48+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -8944,25 +8943,9 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/framework",
-            "version": "dev-backport-0.34-adapters",
-            "alias": "0.33.38",
-            "alias_normalized": "0.33.38.0"
-        },
-        {
-            "package": "utopia-php/platform",
-            "version": "dev-bump-cli-and-framework",
-            "alias": "0.7.15",
-            "alias_normalized": "0.7.15.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/framework": 20,
-        "utopia-php/platform": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
