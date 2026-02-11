@@ -119,7 +119,7 @@ class DatabasesConsoleClientTest extends Scope
                 'age' => 50,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
+                //Permission::read(Role::user($this->getUser()['$id'])),
             ]
         ]);
         $this->assertEquals(201, $abraham['headers']['status-code']);
@@ -137,7 +137,7 @@ class DatabasesConsoleClientTest extends Scope
                 'age' => 40,
             ],
             'permissions' => [
-                Permission::read(Role::user($this->getUser()['$id'])),
+                //Permission::read(Role::user($this->getUser()['$id'])),
             ]
         ]);
         $this->assertEquals(201, $bill['headers']['status-code']);
@@ -178,24 +178,57 @@ class DatabasesConsoleClientTest extends Scope
         /**
          * Simple join query
          */
+        $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $users['body']['$id'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::join($sessions['body']['$id'], 'B', [Query::relationEqual('', '$sequence','B', 'userId')])->toString(),
+                Query::orderDesc('username', '')->toString(),
+            ],
+        ]);
 
+        $this->assertEquals(2, $rows['body']['total']);
+        $this->assertEquals('Bill', $rows['body']['rows'][0]['username']);
+        $this->assertEquals(40, $rows['body']['rows'][0]['age']);
+        $this->assertEquals('Abraham', $rows['body']['rows'][1]['username']);
+        $this->assertArrayHasKey('$id', $rows['body']['rows'][0]);
+        $this->assertArrayHasKey('$sequence', $rows['body']['rows'][0]);
+        $this->assertArrayHasKey('$createdAt', $rows['body']['rows'][0]);
+        $this->assertArrayHasKey('$updatedAt', $rows['body']['rows'][0]);
+        $this->assertArrayHasKey('$permissions', $rows['body']['rows'][0]);
+        $this->assertArrayNotHasKey('userId', $rows['body']['rows'][0]);
+
+        /**
+         * Simple join query with select queries
+         */
         $rows = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $users['body']['$id'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
                 Query::select('username', '')->toString(),
-                Query::select('username', '', 'username_as')->toString(),
                 Query::select('userId', 'B')->toString(),
                 Query::join($sessions['body']['$id'], 'B', [Query::relationEqual('', '$sequence','B', 'userId')])->toString(),
+                Query::orderDesc('username', '')->toString(),
             ],
         ]);
 
         var_dump($rows);
         $this->assertEquals(2, $rows['body']['total']);
+        $this->assertEquals('Bill', $rows['body']['rows'][0]['username']);
+        $this->assertEquals('Abraham', $rows['body']['rows'][1]['username']);
+        $this->assertEquals($bill['body']['$sequence'], $rows['body']['rows'][0]['userId']);
+        $this->assertEquals($abraham['body']['$sequence'], $rows['body']['rows'][1]['userId']);
+        $this->assertArrayNotHasKey('age', $rows['body']['rows'][0]);
+        $this->assertArrayNotHasKey('$id', $rows['body']['rows'][0]);
+        $this->assertArrayNotHasKey('$sequence', $rows['body']['rows'][0]);
+        $this->assertArrayNotHasKey('$createdAt', $rows['body']['rows'][0]);
+        $this->assertArrayNotHasKey('$updatedAt', $rows['body']['rows'][0]);
+        $this->assertArrayNotHasKey('$permissions', $rows['body']['rows'][0]);
+
 
         $this->assertEquals('shmuel', 'fogel');
-
     }
 
 
