@@ -524,6 +524,10 @@ Http::setResource('project', function ($dbForPlatform, $request, $console, $auth
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
+    // Realtime channel "project" can send project=Query array
+    if (!\is_string($projectId)) {
+        $projectId = $request->getHeader('x-appwrite-project', '');
+    }
 
     if (empty($projectId) || $projectId === 'console') {
         return $console;
