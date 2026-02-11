@@ -15,16 +15,20 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Keys;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Http;
@@ -1129,7 +1133,11 @@ Http::post('/v1/projects/:projectId/keys')
             'secret' => API_KEY_STANDARD . '_' . \bin2hex(\random_bytes(128)),
         ]);
 
-        $key = $dbForPlatform->createDocument('keys', $key);
+        try {
+            $key = $dbForPlatform->createDocument('keys', $key);
+        } catch (Duplicate) {
+            throw new Exception(Exception::KEY_ALREADY_EXISTS);
+        }
 
         $dbForPlatform->purgeCachedDocument('projects', $project->getId());
 
@@ -1156,10 +1164,11 @@ Http::get('/v1/projects/:projectId/keys')
         ]
     ))
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('queries', [], new Keys(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Keys::ALLOWED_ATTRIBUTES), true)
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
+    ->action(function (string $projectId, array $queries, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1167,15 +1176,46 @@ Http::get('/v1/projects/:projectId/keys')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $keys = $dbForPlatform->find('keys', [
-            Query::equal('resourceType', ['projects']),
-            Query::equal('resourceInternalId', [$project->getSequence()]),
-            Query::limit(5000),
-        ]);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        // Backwards compatibility
+        if (\count(Query::getByType($queries, [Query::TYPE_LIMIT])) === 0) {
+            $queries[] = Query::limit(5000);
+        }
+
+        $queries[] = Query::equal('resourceType', ['projects']);
+        $queries[] = Query::equal('resourceInternalId', [$project->getSequence()]);
+
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
+
+        if ($cursor !== false) {
+            $validator = new Cursor();
+            if (!$validator->isValid($cursor)) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
+            }
+
+            $keyId = $cursor->getValue();
+            $cursorDocument = $dbForPlatform->getDocument('keys', $keyId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Key '{$keyId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
+
+        $keys = $dbForPlatform->find('keys', $queries);
 
         $response->dynamic(new Document([
             'keys' => $keys,
-            'total' => $includeTotal ? count($keys) : 0,
+            'total' => $includeTotal ? $dbForPlatform->count('keys', $filterQueries, APP_LIMIT_COUNT) : 0,
         ]), Response::MODEL_KEY_LIST);
     });
 

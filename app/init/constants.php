@@ -5,6 +5,8 @@ use Appwrite\Platform\Modules\Compute\Specification;
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 
+const APP_VIEWS_DIR = __DIR__ . '/../views';
+
 // Email
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = ''; // Default security email address
