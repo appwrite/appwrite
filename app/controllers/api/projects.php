@@ -35,7 +35,6 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
-
 use Utopia\DSN\DSN;
 use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
