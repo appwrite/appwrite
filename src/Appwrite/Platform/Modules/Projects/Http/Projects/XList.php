@@ -9,7 +9,6 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\ListSelection;
 use Utopia\Config\Config;
@@ -85,8 +84,8 @@ class XList extends Action
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
-        
-        if(!$team->isEmpty()) {
+
+        if (!$team->isEmpty()) {
             $queries[] = Query::equal('teamInternalId', [$team->getSequence()]);
         }
 
