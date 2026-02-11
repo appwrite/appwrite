@@ -146,6 +146,7 @@ class XList extends Action
                 // has selects, allow relationship on documents
                 $documents = $dbForProject->find($collectionTableId, $queries);
                 $total = $includeTotal ? $dbForProject->count($collectionTableId, $queries, APP_LIMIT_COUNT) : 0;
+                var_dump($documents);
             } else {
                 // has no selects, disable relationship loading on documents
                 /* @type Document[] $documents */
