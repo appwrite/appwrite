@@ -34,7 +34,7 @@ class XList extends DatabaseXList
                 group: 'vectordb',
                 name: 'list',
                 description: '/docs/references/vectordb/list.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

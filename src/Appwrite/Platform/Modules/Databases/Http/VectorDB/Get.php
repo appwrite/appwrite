@@ -32,7 +32,7 @@ class Get extends DatabaseGet
                 group: 'vectordb',
                 name: 'get',
                 description: '/docs/references/vectordb/get.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

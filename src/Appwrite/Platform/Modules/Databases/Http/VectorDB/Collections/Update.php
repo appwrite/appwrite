@@ -49,7 +49,7 @@ class Update extends CollectionAction
                 group: 'collections',
                 name: 'updateCollection',
                 description: '/docs/references/vectordb/update-collection.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

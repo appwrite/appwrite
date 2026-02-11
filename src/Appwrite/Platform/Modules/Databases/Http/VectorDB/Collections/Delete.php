@@ -40,7 +40,7 @@ class Delete extends CollectionDelete
                 group: 'collections',
                 name: 'deleteCollection',
                 description: '/docs/references/vectordb/delete-collection.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_NOCONTENT,

@@ -37,7 +37,7 @@ class Create extends DatabaseCreate
                 group: 'vectordb',
                 name: 'create',
                 description: '/docs/references/vectordb/create.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,

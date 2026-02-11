@@ -35,7 +35,7 @@ class Delete extends DatabaseDelete
                 group: 'vectordb',
                 name: 'delete',
                 description: '/docs/references/vectordb/delete.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_NOCONTENT,

@@ -59,7 +59,7 @@ class Create extends CreateDocumentAction
                     name: 'createTextEmbeddings',
                     desc: 'Create Text Embedding',
                     description: '/docs/references/vectordb/create-document.md',
-                    auth: [AuthType::KEY, AuthType::JWT],
+                    auth: [AuthType::ADMIN, AuthType::KEY, AuthType::JWT],
                     responses: [
                         new SDKResponse(
                             code: SwooleResponse::STATUS_CODE_OK,

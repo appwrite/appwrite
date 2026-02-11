@@ -46,7 +46,7 @@ class Update extends DocumentUpdate
                 group: $this->getSdkGroup(),
                 name: 'updateDocument',
                 description: '/docs/references/vectordb/update-document.md',
-                auth: [AuthType::SESSION, AuthType::KEY, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_OK,

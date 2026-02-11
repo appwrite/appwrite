@@ -57,7 +57,7 @@ class Create extends CollectionAction
                 group: 'collections',
                 name: 'createCollection',
                 description: '/docs/references/vectordb/create-collection.md',
-                auth: [AuthType::KEY],
+                auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_CREATED,

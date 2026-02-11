@@ -37,7 +37,7 @@ class Delete extends TransactionsDelete
                 group: 'transactions',
                 name: 'deleteTransaction',
                 description: '/docs/references/vectordb/delete-transaction.md',
-                auth: [AuthType::KEY, AuthType::SESSION, AuthType::JWT],
+                auth: [AuthType::ADMIN, AuthType::KEY, AuthType::SESSION, AuthType::JWT],
                 responses: [
                     new SDKResponse(
                         code: SwooleResponse::STATUS_CODE_NOCONTENT,
