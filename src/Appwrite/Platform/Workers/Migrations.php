@@ -367,7 +367,6 @@ class Migrations extends Action
         $project = $this->project;
 
         $tempAPIKey = $this->generateAPIKey($project);
-        $tempConsoleAPIKey = $this->generateConsoleAPIKey();
 
         $transfer = $source = $destination = null;
 
@@ -386,10 +385,10 @@ class Migrations extends Action
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                 $credentials['endpoint'] = $credentials['endpoint'] ?? $endpoint;
 
-                // Only set consoleApiKey for same-instance migrations to avoid
-                // leaking a locally-signed JWT to untrusted remote servers
-                if (($credentials['endpoint'] ?? '') === $endpoint) {
-                    $credentials['consoleApiKey'] = $tempConsoleAPIKey;
+                // Only generate and set consoleApiKey for same-instance migrations
+                // to avoid leaking a locally-signed JWT to untrusted remote servers
+                if ($credentials['endpoint'] === $endpoint) {
+                    $credentials['consoleApiKey'] = $this->generateConsoleAPIKey();
                     $credentials['sourceProjectId'] = $credentials['projectId'];
                 }
             }
