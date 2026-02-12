@@ -96,6 +96,14 @@ abstract class Scope extends TestCase
     }
 
     /**
+     * Check if the database adapter supports fulltext wildcard search
+     */
+    protected function getSupportForFulltextWildcard(): bool
+    {
+        return $this->getConsoleVariables()['supportForFulltextWildcard'] ?? true;
+    }
+
+    /**
      * Get the maximum index length supported by the database adapter
      */
     protected function getMaxIndexLength(): int

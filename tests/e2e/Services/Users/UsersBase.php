@@ -707,7 +707,7 @@ trait UsersBase
         $this->assertCount(1, $response['body']['users']);
 
         // Some databases only support fulltext search on complete words
-        if ($this->getSupportForRelationships()) {
+        if ($this->getSupportForFulltextWildcard()) {
             $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],

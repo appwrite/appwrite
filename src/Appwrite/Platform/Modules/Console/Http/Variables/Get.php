@@ -95,6 +95,7 @@ class Get extends Action
             'supportForRelationships' => $adapter->getSupportForRelationships(),
             'supportForOperators' => $adapter->getSupportForOperators(),
             'supportForSpatials' => $adapter->getSupportForSpatialAttributes(),
+            'supportForFulltextWildcard' => $adapter->getSupportForFulltextWildcardIndex(),
             'maxIndexLength' => $adapter->getMaxIndexLength(),
         ]);
 

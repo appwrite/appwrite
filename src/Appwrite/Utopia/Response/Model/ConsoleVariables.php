@@ -143,6 +143,15 @@ class ConsoleVariables extends Model
                 ]
             )
             ->addRule(
+                'supportForFulltextWildcard',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports fulltext wildcard search.',
+                    'default' => true,
+                    'example' => true,
+                ]
+            )
+            ->addRule(
                 'maxIndexLength',
                 [
                     'type' => self::TYPE_INTEGER,
