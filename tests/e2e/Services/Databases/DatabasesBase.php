@@ -240,8 +240,8 @@ trait DatabasesBase
         $this->assertEquals(202, $relationship['headers']['status-code']);
         $this->assertEquals(202, $integers['headers']['status-code']);
 
-        // wait for database worker to create attributes (longer timeout for MariaDB under parallel load)
-        $this->waitForAllAttributes($databaseId, $data['moviesId'], 600000);
+        // wait for database worker to create attributes
+        $this->waitForAllAttributes($databaseId, $data['moviesId']);
 
         self::$attributesCache[$cacheKey] = $data;
         return self::$attributesCache[$cacheKey];
@@ -9132,8 +9132,8 @@ trait DatabasesBase
 
         $this->assertEquals(202, $poly['headers']['status-code']);
 
-        // Wait for attributes to be available (longer timeout for MariaDB spatial columns under parallel load)
-        $this->waitForAllAttributes($databaseId, $colId, 600000);
+        // Wait for attributes to be available
+        $this->waitForAllAttributes($databaseId, $colId);
 
         // Create a new document without spatial data to test default values
         $newDocument = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $colId), array_merge([
