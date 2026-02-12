@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\SDK\Language\AgentSkills;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\CLI;
@@ -51,6 +52,7 @@ class SDKs extends Action
         'graphql',
         'rest',
         'markdown',
+        'agent-skills'
     ];
 
     public static function getName(): string
@@ -283,6 +285,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'markdown':
                         $config = new Markdown();
                         $config->setNPMPackage('@appwrite.io/docs');
+                        break;
+                    case 'agent-skills':
+                        $config = new AgentSkills();
                         break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
@@ -576,9 +581,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 foreach ($docDirectories as $languageTitle => $path) {
                     $languagePath = strtolower($languageTitle !== 0 ? '/' . $languageTitle : '');
+                    $examplesSource = $result . '/docs/examples' . $languagePath;
+
+                    if (!\is_dir($examplesSource)) {
+                        Console::warning("No code examples found for {$language['name']} SDK at: {$examplesSource}. Skipping copy.");
+                        continue;
+                    }
+
                     \exec(
                         'mkdir -p ' . $resultExamples . $languagePath . ' && \
-                        cp -r ' . $result . '/docs/examples' . $languagePath . ' ' . $resultExamples
+                        cp -r ' . $examplesSource . ' ' . $resultExamples
                     );
                     Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
                 }
