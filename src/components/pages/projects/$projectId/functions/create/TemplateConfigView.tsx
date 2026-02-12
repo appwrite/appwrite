@@ -26,7 +26,10 @@ import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ID, TemplateReferenceType, type Runtime } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
-import { useFunctionTemplate, useFunctionSpecifications } from '@/lib/react-query/hooks'
+import {
+  useFunctionTemplate,
+  useFunctionSpecifications,
+} from '@/lib/react-query/hooks'
 import {
   getFirstEnabledSpecification,
   isSpecificationAllowedInPlan,
@@ -162,7 +165,13 @@ export function TemplateConfigView({
       (r) =>
         (r as { name?: string }).name === runtime ||
         (r as { key?: string }).key === runtime,
-    ) as { entrypoint?: string; commands?: string; providerRootDirectory?: string } | undefined
+    ) as
+      | {
+          entrypoint?: string
+          commands?: string
+          providerRootDirectory?: string
+        }
+      | undefined
 
     try {
       await projectSdk.functions.create({
@@ -212,8 +221,7 @@ export function TemplateConfigView({
       const runtimeRoot = selectedRuntimeObj?.providerRootDirectory?.trim()
       // Derive path when template does not provide it (e.g. appwrite/templates uses php/starter, node/starter).
       const rootDirectory =
-        runtimeRoot ||
-        (runtime ? `${runtime.split('-')[0]}/starter` : './')
+        runtimeRoot || (runtime ? `${runtime.split('-')[0]}/starter` : './')
       const reference = template.providerVersion?.trim() || 'main'
 
       await projectSdk.functions.createTemplateDeployment({
@@ -475,10 +483,7 @@ export function TemplateConfigView({
                 value={specification || undefined}
                 onValueChange={setSpecification}
               >
-                <SelectTrigger
-                  id="specification"
-                  className="h-9 text-[13px]"
-                >
+                <SelectTrigger id="specification" className="h-9 text-[13px]">
                   <SelectValue placeholder="Select specification" />
                 </SelectTrigger>
                 <SelectContent>

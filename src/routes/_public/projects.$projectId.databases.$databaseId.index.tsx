@@ -1,44 +1,50 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { DatabaseOverview } from '@/components/pages/projects/$projectId/databases/View'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import {
   projectQueryOptions,
   databaseQueryOptions,
   tablesQueryOptions,
 } from '@/lib/react-query/hooks'
 
-const TABLES_PER_PAGE = 25
+const TABLES_PER_PAGE = 100
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/',
 )({
   loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
-    }
+    if (typeof window === 'undefined') return
 
     const { projectId, databaseId } = params
     const { queryClient } = context
 
     if (!projectId || !databaseId) return
 
-    // Fetch project first so setProjectRegion runs and project-scoped calls use the correct regional endpoint
     await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    await queryClient.ensureQueryData(
+      databaseQueryOptions(projectId, databaseId),
+    )
+    const tablesData = await queryClient.ensureQueryData(
+      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+    )
 
-    // Fetch critical data before rendering to prevent layout shifts
-    await Promise.all([
-      // Fetch database - blocks navigation until ready
-      queryClient.ensureQueryData(databaseQueryOptions(projectId, databaseId)),
-      // Fetch first page of tables - blocks navigation until ready
-      queryClient.ensureQueryData(
-        tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE),
-      ),
-    ])
+    const sortedTables = [...(tablesData.tables || [])].sort((a, b) => {
+      const nameA = a.name?.toLowerCase() || ''
+      const nameB = b.name?.toLowerCase() || ''
+      return nameA.localeCompare(nameB)
+    })
+    const firstTable = sortedTables[0]
+
+    if (firstTable?.$id) {
+      throw redirect({
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: { projectId, databaseId, tableId: firstTable.$id },
+        replace: true,
+      })
+    }
+
+    throw redirect({
+      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+      params: { projectId, databaseId, tableId: '-' },
+      replace: true,
+    })
   },
-  component: DatabaseIndexPage,
 })
-
-function DatabaseIndexPage() {
-  const { databaseId } = Route.useParams()
-  return <DatabaseOverview databaseId={databaseId} activeTab="tables" />
-}

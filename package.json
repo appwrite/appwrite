@@ -58,6 +58,7 @@
     "@tanstack/react-router-devtools": "^1.132.31",
     "@tanstack/react-router-ssr-query": "^1.132.31",
     "@tanstack/react-start": "^1.132.32",
+    "@tanstack/react-virtual": "^3.13.18",
     "@tanstack/router-plugin": "^1.132.31",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

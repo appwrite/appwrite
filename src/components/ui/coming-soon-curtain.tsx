@@ -104,8 +104,16 @@ export function ComingSoonCurtain({
         {children}
       </div>
 
-      {/* Curtain overlay */}
-      <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-lg z-10 p-1.5 @[200px]:p-2 @[300px]:p-3 @[400px]:p-4 @[500px]:p-6 overflow-hidden">
+      {/* Curtain overlay - edges fade into background via soft radial mask */}
+      <div
+        className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-lg z-10 p-1.5 @[200px]:p-2 @[300px]:p-3 @[400px]:p-4 @[500px]:p-6 overflow-hidden"
+        style={{
+          maskImage:
+            'radial-gradient(ellipse 120% 120% at 50% 50%, black 0%, black 22%, transparent 72%)',
+          WebkitMaskImage:
+            'radial-gradient(ellipse 120% 120% at 50% 50%, black 0%, black 22%, transparent 72%)',
+        }}
+      >
         <div className="flex flex-col items-center justify-center gap-1.5 @[200px]:gap-2 @[300px]:gap-2.5 @[400px]:flex-row @[400px]:gap-3 @[500px]:gap-4 w-full max-w-full @[400px]:max-w-lg max-h-full">
           {/* Icon - hidden on very small containers */}
           <div className="hidden @[200px]:flex shrink-0">

@@ -83,10 +83,7 @@ export function CreateExecutionDrawer({
   )
 
   const hostnames = useMemo(
-    () =>
-      proxyRules
-        .filter((r) => r.domain)
-        .map((r) => r.domain as string),
+    () => proxyRules.filter((r) => r.domain).map((r) => r.domain as string),
     [proxyRules],
   )
 
@@ -109,7 +106,7 @@ export function CreateExecutionDrawer({
     if (hostnames.length > 0) {
       setHostname(hostnames[0])
     }
-  }, [open])
+  }, [open, hostnames])
 
   useEffect(() => {
     if (hostnames.length > 0 && !hostname) {
@@ -135,9 +132,11 @@ export function CreateExecutionDrawer({
     }
     if (
       body.trim() &&
-      [ExecutionMethod.POST, ExecutionMethod.PUT, ExecutionMethod.PATCH].includes(
-        method,
-      )
+      [
+        ExecutionMethod.POST,
+        ExecutionMethod.PUT,
+        ExecutionMethod.PATCH,
+      ].includes(method)
     ) {
       init.body = body.trim()
     }
@@ -188,7 +187,9 @@ export function CreateExecutionDrawer({
         : message
       setResponse({
         status: 0,
-        statusText: isCorsOrNetwork ? 'Response blocked (see Network tab)' : 'Error',
+        statusText: isCorsOrNetwork
+          ? 'Response blocked (see Network tab)'
+          : 'Error',
         headers: [],
         body: bodyMessage,
         ok: false,
@@ -210,10 +211,7 @@ export function CreateExecutionDrawer({
   }
 
   const addHeader = () => {
-    setHeaders((prev) => [
-      ...prev,
-      { id: nextHeaderId(), key: '', value: '' },
-    ])
+    setHeaders((prev) => [...prev, { id: nextHeaderId(), key: '', value: '' }])
   }
 
   const updateHeader = (id: string, updates: Partial<HeaderRow>) => {
@@ -256,242 +254,239 @@ export function CreateExecutionDrawer({
             <div className="flex flex-col flex-1 min-h-0">
               <div className="flex-1 overflow-y-auto min-h-0">
                 <div className="px-6 py-6 space-y-6">
-                {!func?.deploymentId && (
-                  <p className="text-[13px] text-amber-600 dark:text-amber-400">
-                    No active deployment. Deploy the function first to run
-                    executions.
-                  </p>
-                )}
-                {func?.deploymentId && hostnames.length === 0 && (
-                  <p className="text-[13px] text-amber-600 dark:text-amber-400">
-                    No domains configured for this deployment. Add a domain in
-                    the Domains tab.
-                  </p>
-                )}
+                  {!func?.deploymentId && (
+                    <p className="text-[13px] text-amber-600 dark:text-amber-400">
+                      No active deployment. Deploy the function first to run
+                      executions.
+                    </p>
+                  )}
+                  {func?.deploymentId && hostnames.length === 0 && (
+                    <p className="text-[13px] text-amber-600 dark:text-amber-400">
+                      No domains configured for this deployment. Add a domain in
+                      the Domains tab.
+                    </p>
+                  )}
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="create-exec-hostname" className="text-[13px]">
-                      Hostname
-                    </Label>
-                    <Select
-                      value={hostname}
-                      onValueChange={setHostname}
-                      disabled={hostnames.length === 0}
-                    >
-                      <SelectTrigger
-                        id="create-exec-hostname"
-                        className="h-9 w-full text-[13px] font-mono"
-                      >
-                        <SelectValue placeholder="Select hostname" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {hostnames.map((d) => (
-                          <SelectItem key={d} value={d}>
-                            {d}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-2 items-end">
-                    <div className="space-y-2 min-w-0">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
                       <Label
-                        htmlFor="create-exec-method"
+                        htmlFor="create-exec-hostname"
                         className="text-[13px]"
                       >
-                        Method
+                        Hostname
                       </Label>
                       <Select
-                        value={method}
-                        onValueChange={(v) =>
-                          setMethod(v as ExecutionMethod)
-                        }
+                        value={hostname}
+                        onValueChange={setHostname}
+                        disabled={hostnames.length === 0}
                       >
                         <SelectTrigger
-                          id="create-exec-method"
-                          className="h-9 text-[13px] w-full min-w-0 mb-0"
+                          id="create-exec-hostname"
+                          className="h-9 w-full text-[13px] font-mono"
                         >
-                          <SelectValue />
+                          <SelectValue placeholder="Select hostname" />
                         </SelectTrigger>
                         <SelectContent>
-                          {HTTP_METHODS.map((m) => (
-                            <SelectItem key={m.value} value={m.value}>
-                              {m.label}
+                          {hostnames.map((d) => (
+                            <SelectItem key={d} value={d}>
+                              {d}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2 min-w-0">
-                      <Label
-                        htmlFor="create-exec-path"
-                        className="text-[13px]"
-                      >
-                        Path
-                      </Label>
-                      <Input
-                        id="create-exec-path"
-                        value={path}
-                        onChange={(e) => setPath(e.target.value)}
-                        placeholder="/"
-                        className="h-9 text-[13px] font-mono"
+
+                    <div className="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-2 items-end">
+                      <div className="space-y-2 min-w-0">
+                        <Label
+                          htmlFor="create-exec-method"
+                          className="text-[13px]"
+                        >
+                          Method
+                        </Label>
+                        <Select
+                          value={method}
+                          onValueChange={(v) => setMethod(v as ExecutionMethod)}
+                        >
+                          <SelectTrigger
+                            id="create-exec-method"
+                            className="h-9 text-[13px] w-full min-w-0 mb-0"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {HTTP_METHODS.map((m) => (
+                              <SelectItem key={m.value} value={m.value}>
+                                {m.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2 min-w-0">
+                        <Label
+                          htmlFor="create-exec-path"
+                          className="text-[13px]"
+                        >
+                          Path
+                        </Label>
+                        <Input
+                          id="create-exec-path"
+                          value={path}
+                          onChange={(e) => setPath(e.target.value)}
+                          placeholder="/"
+                          className="h-9 text-[13px] font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[14px] font-medium">Headers</span>
+                        <Badge
+                          variant="secondary"
+                          className="text-[11px] font-normal"
+                        >
+                          Optional
+                        </Badge>
+                      </div>
+                      <p className="text-[13px] text-muted-foreground mb-3">
+                        Provide essential metadata to define the content type,
+                        authentication details, and the expected response
+                        format.
+                      </p>
+                      <div className="space-y-3">
+                        <datalist id="header-keys-suggestions">
+                          {SUGGESTED_HEADER_KEYS.map((k) => (
+                            <option key={k} value={k} />
+                          ))}
+                        </datalist>
+                        {headers.map((row) => (
+                          <div
+                            key={row.id}
+                            className="flex gap-2 items-center flex-wrap"
+                          >
+                            <Input
+                              value={row.key}
+                              onChange={(e) =>
+                                updateHeader(row.id, { key: e.target.value })
+                              }
+                              list="header-keys-suggestions"
+                              placeholder="Header name"
+                              className="h-9 text-[13px] w-[180px] shrink-0"
+                            />
+                            <Input
+                              value={row.value}
+                              onChange={(e) =>
+                                updateHeader(row.id, { value: e.target.value })
+                              }
+                              placeholder="Enter value"
+                              className="h-9 text-[13px] flex-1 min-w-[120px]"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-9 w-9 p-0 shrink-0 text-muted-foreground hover:text-destructive"
+                              onClick={() => removeHeader(row.id)}
+                              aria-label="Remove header"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-[13px] text-primary hover:text-primary"
+                          onClick={addHeader}
+                        >
+                          <Plus className="mr-1.5 h-3.5 w-3.5" />
+                          Add header
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border pt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[14px] font-medium">Body</span>
+                        <Badge
+                          variant="secondary"
+                          className="text-[11px] font-normal"
+                        >
+                          Optional
+                        </Badge>
+                      </div>
+                      <p className="text-[13px] text-muted-foreground mb-3">
+                        Provide the request body to include the main data you
+                        want to send to the server.
+                      </p>
+                      <Textarea
+                        value={body}
+                        onChange={(e) => setBody(e.target.value)}
+                        placeholder="Enter request body here..."
+                        className="min-h-[100px] text-[13px] font-mono resize-y"
+                        rows={4}
                       />
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
 
-                  <div className="border-t border-border pt-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[14px] font-medium">
-                        Headers
-                      </span>
-                      <Badge
-                        variant="secondary"
-                        className="text-[11px] font-normal"
-                      >
-                        Optional
-                      </Badge>
-                    </div>
-                    <p className="text-[13px] text-muted-foreground mb-3">
-                      Provide essential metadata to define the content type,
-                      authentication details, and the expected response format.
+            {response && (
+              <div className="flex-shrink-0 border-t border-border bg-muted/30 overflow-hidden">
+                <div className="px-6 py-3 border-b border-border">
+                  <span className="text-[13px] font-medium">Response</span>
+                  <Badge
+                    variant={response.ok ? 'default' : 'destructive'}
+                    className="ml-2 text-[11px]"
+                  >
+                    {response.status} {response.statusText}
+                  </Badge>
+                </div>
+                <div className="max-h-[200px] overflow-y-auto">
+                  <div className="px-6 py-3 border-b border-border">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                      Headers
                     </p>
-                    <div className="space-y-3">
-                      <datalist id="header-keys-suggestions">
-                        {SUGGESTED_HEADER_KEYS.map((k) => (
-                          <option key={k} value={k} />
-                        ))}
-                      </datalist>
-                      {headers.map((row) => (
+                    <div className="space-y-1">
+                      {response.headers.map((h) => (
                         <div
-                          key={row.id}
-                          className="flex gap-2 items-center flex-wrap"
+                          key={h.name}
+                          className="text-[12px] font-mono flex gap-2"
                         >
-                          <Input
-                            value={row.key}
-                            onChange={(e) =>
-                              updateHeader(row.id, { key: e.target.value })
-                            }
-                            list="header-keys-suggestions"
-                            placeholder="Header name"
-                            className="h-9 text-[13px] w-[180px] shrink-0"
-                          />
-                          <Input
-                            value={row.value}
-                            onChange={(e) =>
-                              updateHeader(row.id, { value: e.target.value })
-                            }
-                            placeholder="Enter value"
-                            className="h-9 text-[13px] flex-1 min-w-[120px]"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 w-9 p-0 shrink-0 text-muted-foreground hover:text-destructive"
-                            onClick={() => removeHeader(row.id)}
-                            aria-label="Remove header"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          <span className="text-muted-foreground shrink-0">
+                            {h.name}:
+                          </span>
+                          <span className="break-all">{h.value}</span>
                         </div>
                       ))}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 text-[13px] text-primary hover:text-primary"
-                        onClick={addHeader}
-                      >
-                        <Plus className="mr-1.5 h-3.5 w-3.5" />
-                        Add header
-                      </Button>
+                      {response.headers.length === 0 && (
+                        <p className="text-[12px] text-muted-foreground">
+                          No headers
+                        </p>
+                      )}
                     </div>
                   </div>
-
-                  <div className="border-t border-border pt-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[14px] font-medium">Body</span>
-                      <Badge
-                        variant="secondary"
-                        className="text-[11px] font-normal"
-                      >
-                        Optional
-                      </Badge>
-                    </div>
-                    <p className="text-[13px] text-muted-foreground mb-3">
-                      Provide the request body to include the main data you
-                      want to send to the server.
+                  <div className="px-6 py-3">
+                    <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2">
+                      Body
                     </p>
-                    <Textarea
-                      value={body}
-                      onChange={(e) => setBody(e.target.value)}
-                      placeholder="Enter request body here..."
-                      className="min-h-[100px] text-[13px] font-mono resize-y"
-                      rows={4}
-                    />
+                    <pre className="text-[12px] font-mono whitespace-pre-wrap break-words bg-background/50 rounded border border-border p-3 overflow-x-auto">
+                      {response.body
+                        ? formatResponseBody(response.body)
+                        : '(empty)'}
+                    </pre>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {response && (
-            <div className="flex-shrink-0 border-t border-border bg-muted/30 overflow-hidden">
-              <div className="px-6 py-3 border-b border-border">
-                <span className="text-[13px] font-medium">Response</span>
-                <Badge
-                  variant={response.ok ? 'default' : 'destructive'}
-                  className="ml-2 text-[11px]"
-                >
-                  {response.status} {response.statusText}
-                </Badge>
-              </div>
-              <div className="max-h-[200px] overflow-y-auto">
-                <div className="px-6 py-3 border-b border-border">
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                    Headers
-                  </p>
-                  <div className="space-y-1">
-                    {response.headers.map((h) => (
-                      <div
-                        key={h.name}
-                        className="text-[12px] font-mono flex gap-2"
-                      >
-                        <span className="text-muted-foreground shrink-0">
-                          {h.name}:
-                        </span>
-                        <span className="break-all">{h.value}</span>
-                      </div>
-                    ))}
-                    {response.headers.length === 0 && (
-                      <p className="text-[12px] text-muted-foreground">
-                        No headers
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="px-6 py-3">
-                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-2">
-                    Body
-                  </p>
-                  <pre className="text-[12px] font-mono whitespace-pre-wrap break-words bg-background/50 rounded border border-border p-3 overflow-x-auto">
-                    {response.body
-                      ? formatResponseBody(response.body)
-                      : '(empty)'}
-                  </pre>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
           </fieldset>
 
           <div className="flex-shrink-0 flex items-center justify-start gap-2 border-t border-border bg-muted/30 px-6 py-4">
-            <Button
-              type="submit"
-              disabled={!canExecute || isExecuting}
-            >
+            <Button type="submit" disabled={!canExecute || isExecuting}>
               <Play className="mr-1.5 h-4 w-4" />
               Execute
             </Button>

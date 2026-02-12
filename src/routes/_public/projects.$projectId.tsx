@@ -61,22 +61,28 @@ function ProjectLayout() {
   const pathParts = location.pathname.split('/')
   const activeSection = pathParts[3] || 'overview'
 
-  // Check if we're in a database table spreadsheet view (rows, columns, indexes, security, settings)
-  // Pattern: /projects/:projectId/databases/:databaseId/tables/:tableId/(rows|columns|indexes|security|settings)
+  // Check if we're in a database table view (rows, columns, indexes, security, settings, visualizer, insights, backups, db-security, db-settings)
+  // Pattern: /projects/:projectId/databases/:databaseId/tables/:tableId/<tab>
   const isDatabaseSpreadsheetView =
     activeSection === 'databases' &&
     pathParts.length >= 8 &&
     pathParts[5] === 'tables' &&
-    ['rows', 'columns', 'indexes', 'security', 'settings'].includes(
-      pathParts[7],
-    )
+    [
+      'rows',
+      'columns',
+      'indexes',
+      'security',
+      'settings',
+      'visualizer',
+      'insights',
+      'backups',
+      'db-security',
+      'db-settings',
+    ].includes(pathParts[7])
 
-  // Check if we're in the database visualizer view
-  // Pattern: /projects/:projectId/databases/:databaseId/visualizer
+  // Visualizer is now under tables/:tableId/visualizer; keep for backwards compatibility with redirect
   const isDatabaseVisualizerView =
-    activeSection === 'databases' &&
-    pathParts.length >= 6 &&
-    pathParts[5] === 'visualizer'
+    isDatabaseSpreadsheetView && pathParts[7] === 'visualizer'
 
   // Functions local code editor (Monaco)
   const isFunctionsEditorView =

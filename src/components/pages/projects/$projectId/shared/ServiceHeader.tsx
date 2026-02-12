@@ -181,7 +181,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                 role="tab"
                 aria-selected={isActive}
                 className={cn(
-                  'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                  'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                   'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                   isActive
                     ? 'text-foreground'
@@ -200,7 +200,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
               aria-selected={isActive}
               onClick={() => onTabChange?.(tab.id)}
               className={cn(
-                'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                 isActive
                   ? 'text-foreground'
@@ -220,7 +220,8 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
         {!isCollapsed && !hideTitle && (
           <div
             className={cn(
-              'flex flex-col gap-1 px-4 pt-6 pb-4 sm:px-6',
+              'flex flex-col gap-1 px-4 pt-6 sm:px-6',
+              hasTabs ? 'pb-4' : 'pb-6',
               fullWidthBorder && !fullWidth && 'mx-auto w-full max-w-7xl',
               fullWidthBorder && fullWidth && 'w-full',
             )}
@@ -286,7 +287,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         role="tab"
                         aria-selected={isActive}
                         className={cn(
-                          'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                          'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                           'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                           isActive
                             ? 'text-foreground'
@@ -305,7 +306,7 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                       aria-selected={isActive}
                       onClick={() => onTabChange?.(tab.id)}
                       className={cn(
-                        'relative flex shrink-0 items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
+                        'relative flex shrink-0 cursor-pointer items-center gap-1.5 px-3 py-2.5 text-[13px] font-medium transition-colors rounded-sm',
                         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                         isActive
                           ? 'text-foreground'

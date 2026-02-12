@@ -53,12 +53,7 @@ interface PermissionActions {
   execute: boolean
 }
 
-type PermissionAction =
-  | 'create'
-  | 'read'
-  | 'update'
-  | 'delete'
-  | 'execute'
+type PermissionAction = 'create' | 'read' | 'update' | 'delete' | 'execute'
 
 const EMPTY_ACTIONS: PermissionActions = {
   create: false,
@@ -73,12 +68,7 @@ function hasAnyPermission(
   executeOnly: boolean,
 ): boolean {
   if (executeOnly) return actions.execute
-  return (
-    actions.create ||
-    actions.read ||
-    actions.update ||
-    actions.delete
-  )
+  return actions.create || actions.read || actions.update || actions.delete
 }
 
 /**
@@ -1325,11 +1315,7 @@ export function PermissionsEditor({
                     <Checkbox
                       checked={actions.read}
                       onCheckedChange={(checked) =>
-                        handlePermissionChange(
-                          role,
-                          'read',
-                          checked === true,
-                        )
+                        handlePermissionChange(role, 'read', checked === true)
                       }
                       aria-label={`Read permission for ${role}`}
                     />
@@ -1338,11 +1324,7 @@ export function PermissionsEditor({
                     <Checkbox
                       checked={actions.update}
                       onCheckedChange={(checked) =>
-                        handlePermissionChange(
-                          role,
-                          'update',
-                          checked === true,
-                        )
+                        handlePermissionChange(role, 'update', checked === true)
                       }
                       aria-label={`Update permission for ${role}`}
                     />
@@ -1351,11 +1333,7 @@ export function PermissionsEditor({
                     <Checkbox
                       checked={actions.delete}
                       onCheckedChange={(checked) =>
-                        handlePermissionChange(
-                          role,
-                          'delete',
-                          checked === true,
-                        )
+                        handlePermissionChange(role, 'delete', checked === true)
                       }
                       aria-label={`Delete permission for ${role}`}
                     />

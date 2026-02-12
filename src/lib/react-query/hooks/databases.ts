@@ -197,12 +197,17 @@ export async function createProjectTable(
  * @param search - Optional search query
  * @returns Paginated tables with total count
  */
+/** Attribute to sort tables by in list APIs */
+export type TablesSortBy = '$createdAt' | 'name' | '$updatedAt'
+
 export async function fetchProjectTables(
   projectId: string,
   databaseId: string,
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  order: 'asc' | 'desc' = 'asc',
+  sortBy: TablesSortBy = '$createdAt',
 ) {
   if (!projectId || !databaseId) {
     return { tables: [], total: 0 }
@@ -210,7 +215,7 @@ export async function fetchProjectTables(
 
   const projectSdk = sdk.forProject(projectId)
   const queries = [
-    Query.orderDesc('$createdAt'),
+    order === 'asc' ? Query.orderAsc(sortBy) : Query.orderDesc(sortBy),
     Query.limit(limit),
     Query.offset(page * limit),
   ]
@@ -1208,6 +1213,8 @@ export function tablesQueryOptions(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  order: 'asc' | 'desc' = 'asc',
+  sortBy: TablesSortBy = '$createdAt',
 ) {
   // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
@@ -1221,6 +1228,8 @@ export function tablesQueryOptions(
       page,
       limit,
       normalizedSearch,
+      order,
+      sortBy,
     ],
     queryFn: () =>
       fetchProjectTables(
@@ -1229,6 +1238,8 @@ export function tablesQueryOptions(
         page,
         limit,
         normalizedSearch,
+        order,
+        sortBy,
       ),
     enabled: !!projectId && !!databaseId,
     staleTime: DEFAULT_STALE_TIME,
@@ -1540,6 +1551,8 @@ export function useProjectTables(
   page: number = 0,
   limit: number = DEFAULT_PAGE_SIZE,
   search?: string,
+  order: 'asc' | 'desc' = 'asc',
+  sortBy: TablesSortBy = '$createdAt',
 ) {
   // Normalize search to undefined if empty string for consistent query keys
   const normalizedSearch = search?.trim() || undefined
@@ -1552,7 +1565,15 @@ export function useProjectTables(
     error,
     refetch,
   } = useQuery(
-    tablesQueryOptions(projectId, databaseId, page, limit, normalizedSearch),
+    tablesQueryOptions(
+      projectId,
+      databaseId,
+      page,
+      limit,
+      normalizedSearch,
+      order,
+      sortBy,
+    ),
   )
 
   // Map tables to our Collection type

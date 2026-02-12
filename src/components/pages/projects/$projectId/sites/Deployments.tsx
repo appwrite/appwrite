@@ -362,9 +362,14 @@ export function View() {
     return () => clearInterval(interval)
   }, [hasInProgressDeployment])
 
-  // Screenshot theme: user override or current app theme
-  const screenshotTheme =
-    screenshotThemeOverride ?? (isDark ? 'dark' : 'light')
+  // Screenshot theme: user override or current active app theme (resolvedTheme when available)
+  const defaultScreenshotTheme =
+    resolvedTheme === 'dark' || resolvedTheme === 'light'
+      ? resolvedTheme
+      : isDark
+        ? 'dark'
+        : 'light'
+  const screenshotTheme = screenshotThemeOverride ?? defaultScreenshotTheme
 
   // Reset screenshot loaded state when active deployment or theme changes
   useEffect(() => {
@@ -1027,12 +1032,16 @@ export function View() {
                                         variant="secondary"
                                         className="ml-1.5 h-4 min-w-4 px-1 text-[10px] font-semibold tabular-nums"
                                       >
-                                        +{totalActiveDomains - activeDomains.length}
+                                        +
+                                        {totalActiveDomains -
+                                          activeDomains.length}
                                       </Badge>
                                     )}
                                   </Link>
                                 </Button>
-                                <span className="text-muted-foreground/60">·</span>
+                                <span className="text-muted-foreground/60">
+                                  ·
+                                </span>
                                 <Button
                                   variant="link"
                                   size="sm"
@@ -1069,7 +1078,9 @@ export function View() {
                                   View all domains
                                 </Link>
                               </Button>
-                              <span className="text-muted-foreground/60">·</span>
+                              <span className="text-muted-foreground/60">
+                                ·
+                              </span>
                               <Button
                                 variant="link"
                                 size="sm"

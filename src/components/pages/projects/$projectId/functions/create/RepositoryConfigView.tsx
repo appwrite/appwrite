@@ -536,10 +536,7 @@ export function RepositoryConfigView({
                 value={specification || undefined}
                 onValueChange={setSpecification}
               >
-                <SelectTrigger
-                  id="specification"
-                  className="h-9 text-[13px]"
-                >
+                <SelectTrigger id="specification" className="h-9 text-[13px]">
                   <SelectValue placeholder="Select specification" />
                 </SelectTrigger>
                 <SelectContent>

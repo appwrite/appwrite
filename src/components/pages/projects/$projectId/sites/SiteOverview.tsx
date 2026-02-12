@@ -368,7 +368,8 @@ export function SiteOverviewView() {
                             ))}
                             {hasMoreDomains && (
                               <span className="text-[11px] text-muted-foreground">
-                                +{totalActiveDomains - activeDomains.length} more
+                                +{totalActiveDomains - activeDomains.length}{' '}
+                                more
                               </span>
                             )}
                           </div>

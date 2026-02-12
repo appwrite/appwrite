@@ -6,38 +6,35 @@ const LOGO_WIDTH = 132
 const LOGO_HEIGHT = 24
 const CONTENT_MIN_WIDTH = LOGO_WIDTH + 6 + 32 // logo + gap-1.5 + " / 2.0" text
 
-// Loader is always dark regardless of app theme (matches .dark --background)
-export const LOADER_BG = 'oklch(0.141 0.005 285.823)'
-const LOADER_TEXT = 'oklch(0.705 0.015 286.067)' // muted-foreground on dark
-
 /**
  * Static fullscreen loader (logo + " / 2.0") with no theme hooks.
  * Used on first paint before client mount so the user sees the branded loader
- * instead of route-level "Loading..." text. Always dark.
+ * instead of route-level "Loading..." text. Background and text use theme CSS variables.
  */
 export function StaticFullscreenLoader() {
   return (
-    <div
-      className="fixed inset-0 z-[9999]"
-      style={{ backgroundColor: LOADER_BG }}
-      aria-label="Loading"
-    >
+    <div className="fixed inset-0 z-[9999] bg-background" aria-label="Loading">
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div
           className="flex items-center gap-1.5 min-h-6 animate-in fade-in duration-500"
           style={{ minWidth: CONTENT_MIN_WIDTH }}
         >
           <img
-            src="/appwrite-dark.svg"
+            src="/appwrite-light.svg"
             alt="Appwrite"
             width={LOGO_WIDTH}
             height={LOGO_HEIGHT}
-            className="h-6 w-auto"
+            className="h-6 w-auto dark:hidden"
           />
-          <span
-            className="text-xs font-extralight tracking-tight"
-            style={{ color: LOADER_TEXT }}
-          >
+          <img
+            src="/appwrite-dark.svg"
+            alt=""
+            width={LOGO_WIDTH}
+            height={LOGO_HEIGHT}
+            className="h-6 w-auto hidden dark:block"
+            aria-hidden
+          />
+          <span className="text-xs font-extralight tracking-tight text-muted-foreground">
             / 2.0
           </span>
         </div>
@@ -91,8 +88,7 @@ export function FullscreenLoader({
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5, ease: 'easeInOut' }}
-          className="fixed inset-0 z-[9999]"
-          style={{ backgroundColor: LOADER_BG }}
+          className="fixed inset-0 z-[9999] bg-background"
         >
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <motion.div
@@ -103,23 +99,28 @@ export function FullscreenLoader({
               transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               <img
-                src="/appwrite-dark.svg"
+                src="/appwrite-light.svg"
                 alt="Appwrite"
                 width={LOGO_WIDTH}
                 height={LOGO_HEIGHT}
-                className="h-6 w-auto"
+                className="h-6 w-auto dark:hidden"
               />
-              <span
-                className="text-xs font-extralight tracking-tight"
-                style={{ color: LOADER_TEXT }}
-              >
+              <img
+                src="/appwrite-dark.svg"
+                alt=""
+                width={LOGO_WIDTH}
+                height={LOGO_HEIGHT}
+                className="h-6 w-auto hidden dark:block"
+                aria-hidden
+              />
+              <span className="text-xs font-extralight tracking-tight text-muted-foreground">
                 / 2.0
               </span>
             </motion.div>
           </div>
           {showSpinner && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
-              <div className="w-4 h-4 border-2 rounded-full animate-spin border-[oklch(0.274_0.006_286.033)] border-t-[oklch(0.705_0.015_286.067)]" />
+              <div className="w-4 h-4 border-2 rounded-full animate-spin border-muted border-t-muted-foreground" />
             </div>
           )}
         </motion.div>

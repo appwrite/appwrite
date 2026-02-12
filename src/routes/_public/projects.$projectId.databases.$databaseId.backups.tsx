@@ -1,71 +1,39 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { DatabaseOverview } from '@/components/pages/projects/$projectId/databases/View'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import {
-  databaseQueryOptions,
-  backupPoliciesQueryOptions,
-  backupArchivesQueryOptions,
   projectQueryOptions,
-  organizationPlanQueryOptions,
+  databaseQueryOptions,
+  tablesQueryOptions,
 } from '@/lib/react-query/hooks'
+
+const TABLES_PER_PAGE = 100
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/backups',
 )({
   loader: async ({ params, context }) => {
-    // Only run on client side (SDK requires browser environment)
-    if (typeof window === 'undefined') {
-      return
-    }
+    if (typeof window === 'undefined') return
 
     const { projectId, databaseId } = params
     const { queryClient } = context
 
-    if (!projectId || !databaseId) {
-      return
-    }
+    if (!projectId || !databaseId) return
 
-    // Fetch critical data before rendering to prevent layout shifts
-    // Uses ensureQueryData with queryOptions to prevent duplicate API calls
-
-    // First fetch project to get teamId (organization ID)
-    const project = await queryClient.ensureQueryData(
-      projectQueryOptions(projectId),
+    await queryClient.ensureQueryData(projectQueryOptions(projectId))
+    await queryClient.ensureQueryData(
+      databaseQueryOptions(projectId, databaseId),
     )
+    const tablesData = await queryClient.ensureQueryData(
+      tablesQueryOptions(projectId, databaseId, 0, TABLES_PER_PAGE, undefined),
+    )
+    const sorted = [...(tablesData.tables || [])].sort((a, b) =>
+      (a.name?.toLowerCase() || '').localeCompare(b.name?.toLowerCase() || ''),
+    )
+    const tableId = sorted[0]?.$id ?? '-'
 
-    // Then fetch organization plan if we have a teamId
-    let plan = null
-    if (project?.teamId) {
-      plan = await queryClient.ensureQueryData(
-        organizationPlanQueryOptions(project.teamId),
-      )
-    }
-
-    // Only fetch backup data if backups are enabled in the plan
-    const backupsEnabled = plan?.backupsEnabled ?? false
-    if (backupsEnabled) {
-      // Fetch all backup data in parallel - blocks navigation until ready
-      await Promise.all([
-        queryClient.ensureQueryData(
-          databaseQueryOptions(projectId, databaseId),
-        ),
-        queryClient.ensureQueryData(
-          backupPoliciesQueryOptions(projectId, databaseId),
-        ),
-        queryClient.ensureQueryData(
-          backupArchivesQueryOptions(projectId, databaseId, 0, 10),
-        ),
-      ])
-    } else {
-      // Still fetch database for metadata even if backups are disabled - blocks navigation until ready
-      await queryClient.ensureQueryData(
-        databaseQueryOptions(projectId, databaseId),
-      )
-    }
+    throw redirect({
+      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/backups',
+      params: { projectId, databaseId, tableId },
+      replace: true,
+    })
   },
-  component: DatabaseOverviewBackups,
 })
-
-function DatabaseOverviewBackups() {
-  const { databaseId } = Route.useParams()
-  return <DatabaseOverview databaseId={databaseId} activeTab="backups" />
-}

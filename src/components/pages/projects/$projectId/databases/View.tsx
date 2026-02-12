@@ -34,6 +34,7 @@ import {
   FileText,
   Copy,
   Pencil,
+  Search,
 } from 'lucide-react'
 import {
   databases,
@@ -68,6 +69,7 @@ import {
   createProjectDatabase,
   createProjectTable,
   tablesQueryOptions,
+  type TablesSortBy,
 } from '@/lib/react-query/hooks'
 import { ColumnDrawer, ColumnFormData } from './tables/Column'
 import { IndexDrawer, IndexFormData } from './tables/Index'
@@ -93,6 +95,7 @@ import {
   getChatGPTDeepLink,
   getClaudeDeepLink,
 } from '@/lib/utils/database-schema-export'
+import { useDebugMode } from '@/components/global/providers/DebugMode'
 import type { Models } from '@appwrite.io/console'
 
 /** Database list item: API may return extra backup/createdAt fields */
@@ -170,6 +173,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -366,8 +373,12 @@ export function View() {
       })
       setCreateDatabaseDialogOpen(false)
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/',
-        params: { projectId: projectId!, databaseId: database.$id },
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: {
+          projectId: projectId!,
+          databaseId: database.$id,
+          tableId: '-',
+        },
       })
     },
     onError: (error: Error) => {
@@ -1037,19 +1048,87 @@ export function DatabaseDetailLayout({
   )
 }
 
-// Table View - shows table content with tabs
+// Database-level tab when embedded in TableView (under tables/$tableId/...)
+export type DatabaseTabId =
+  | 'visualizer'
+  | 'insights'
+  | 'backups'
+  | 'db-security'
+  | 'db-settings'
+  | 'browser'
+
+// Table View - shows table content with tabs; can also show database-level tabs when databaseTab is set or tableId is '-'
 interface TableViewProps {
   databaseId: string
   tableId: string
   activeTab: 'rows' | 'columns' | 'indexes' | 'security' | 'settings'
+  /** When set, main content shows database-level tab (visualizer, backups, etc.) instead of table tabs */
+  databaseTab?: DatabaseTabId
 }
 
-export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
+const DATABASE_TAB_TO_OVERVIEW: Record<
+  DatabaseTabId,
+  DatabaseOverviewProps['activeTab']
+> = {
+  visualizer: 'visualizer',
+  insights: 'insights',
+  backups: 'backups',
+  'db-security': 'security',
+  'db-settings': 'settings',
+  browser: 'browser',
+}
+
+const DATABASE_TAB_LABELS: Record<DatabaseTabId, string> = {
+  visualizer: 'Visualizer',
+  insights: 'Insights',
+  backups: 'Backups',
+  'db-security': 'Security',
+  'db-settings': 'Settings',
+  browser: 'Browser',
+}
+
+export function TableView({
+  databaseId,
+  tableId,
+  activeTab,
+  databaseTab,
+}: TableViewProps) {
   const params = useParams({
     strict: false,
   })
   const projectId = params.projectId as string
   const navigate = useNavigate()
+  const isDatabaseLevelView = tableId === '-' || databaseTab != null
+  const { isDebugModeOpen } = useDebugMode()
+
+  // Debug: create 50 random tables (only when debug mode is open and on tables list)
+  const createFiftyTablesMutation = useMutation({
+    mutationFn: async () => {
+      const names = Array.from({ length: 50 }, (_, i) => `Table ${i + 1}`)
+      for (const name of names) {
+        await createProjectTable(projectId, databaseId, { name })
+      }
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
+      })
+      toast.success('Created 50 tables')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create tables')
+    },
+  })
+
+  // Sidebar tables list: search, pagination, order (API-backed)
+  const [sidebarTablesSearch, setSidebarTablesSearch] = useState('')
+  const [sidebarTablesPage, setSidebarTablesPage] = useState(1)
+  const sidebarTablesPageSize = 25
+  const [sidebarTablesOrder, setSidebarTablesOrder] = useState<'asc' | 'desc'>(
+    'asc',
+  )
+  const [sidebarTablesSortBy, setSidebarTablesSortBy] =
+    useState<TablesSortBy>('$createdAt')
 
   // Fetch all databases for the switcher
   const { databases: allDatabases } = useProjectDatabases(projectId, 0, 100, '')
@@ -1060,13 +1139,38 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
     databaseId,
   )
 
-  // Fetch tables for the database
+  // Fetch tables for the database (full list for selectedTable and total count)
   const { tables: dbTables, isLoading: tablesLoading } = useProjectTables(
     projectId,
     databaseId,
     0,
     100,
   )
+
+  // Paginated + searchable tables for sidebar list only (ordered by $createdAt)
+  const {
+    tables: sidebarTables,
+    total: sidebarTablesTotal,
+    isLoading: sidebarTablesLoading,
+  } = useProjectTables(
+    projectId,
+    databaseId,
+    sidebarTablesPage - 1,
+    sidebarTablesPageSize,
+    sidebarTablesSearch.trim() || undefined,
+    sidebarTablesOrder,
+    sidebarTablesSortBy,
+  )
+
+  // Keep previous table list visible while search/filter is fetching (no loading flash)
+  const lastSidebarTablesRef = useRef<typeof sidebarTables>([])
+  if (sidebarTables.length > 0) {
+    lastSidebarTablesRef.current = sidebarTables
+  }
+  const displayedSidebarTables =
+    sidebarTablesLoading && sidebarTables.length === 0
+      ? lastSidebarTablesRef.current
+      : sidebarTables
 
   // Sort databases by name in ascending order
   const sortedDatabases = useMemo(() => {
@@ -1077,22 +1181,18 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
     })
   }, [allDatabases])
 
-  // Sort tables by name in ascending order
-  const sortedTables = useMemo(() => {
-    return [...dbTables].sort((a, b) => {
-      const nameA = a.name?.toLowerCase() || ''
-      const nameB = b.name?.toLowerCase() || ''
-      return nameA.localeCompare(nameB)
-    })
-  }, [dbTables])
+  // Reset sidebar to page 1 when search, sort, or database changes
+  useEffect(() => {
+    setSidebarTablesPage(1)
+  }, [sidebarTablesSearch, sidebarTablesOrder, sidebarTablesSortBy, databaseId])
 
-  const selectedTable = dbTables.find((c) => c.$id === tableId)
+  const selectedTable =
+    tableId === '-' ? undefined : dbTables.find((c) => c.$id === tableId)
 
   // Only show loading if we don't have data yet (account for prefetched data)
   const isActuallyLoading =
     (databaseLoading && !database) || (tablesLoading && dbTables.length === 0)
   const [searchValue, setSearchValue] = useState('')
-  const [tablesExpanded, setTablesExpanded] = useState(true)
   const rowsRefetchRef = useRef<(() => Promise<unknown>) | null>(null)
   const openCreateRowDrawerRef = useRef<(() => void) | null>(null)
   const openCreateColumnDialogRef = useRef<(() => void) | null>(null)
@@ -1132,10 +1232,14 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
   }
 
   const handleBackToDatabase = () => {
-    navigate({
-      to: '/projects/$projectId/databases/$databaseId/',
-      params: { projectId, databaseId },
-    })
+    if (tableId === '-') {
+      navigate({ to: '/projects/$projectId/databases', params: { projectId } })
+    } else {
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: { projectId, databaseId, tableId: '-' },
+      })
+    }
   }
 
   // Create table mutation for TableView
@@ -1178,11 +1282,10 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
         const tablesData = await queryClient.ensureQueryData(
           tablesQueryOptions(projectId, database.$id, 0, 100, undefined),
         )
-        const sortedTables = [...(tablesData.tables || [])].sort(
-          (a, b) =>
-            (a.name?.toLowerCase() || '').localeCompare(
-              b.name?.toLowerCase() || '',
-            ),
+        const sortedTables = [...(tablesData.tables || [])].sort((a, b) =>
+          (a.name?.toLowerCase() || '').localeCompare(
+            b.name?.toLowerCase() || '',
+          ),
         )
         const firstTable = sortedTables[0]
         if (firstTable?.$id) {
@@ -1196,14 +1299,14 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
           })
         } else {
           navigate({
-            to: '/projects/$projectId/databases/$databaseId/',
-            params: { projectId, databaseId: database.$id },
+            to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+            params: { projectId, databaseId: database.$id, tableId: '-' },
           })
         }
       } catch {
         navigate({
-          to: '/projects/$projectId/databases/$databaseId/',
-          params: { projectId, databaseId: database.$id },
+          to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+          params: { projectId, databaseId: database.$id, tableId: '-' },
         })
       }
     },
@@ -1212,14 +1315,13 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
     },
   })
 
-  // Fetch columns to get the count for tabs
-  useProjectTableColumns(projectId, databaseId, tableId)
-
-  // Fetch full table data to check enabled status
+  // Fetch columns and table only when a table is selected (skip when tableId is '-')
+  const effectiveTableId = tableId === '-' ? undefined : tableId
+  useProjectTableColumns(projectId, databaseId, effectiveTableId)
   const { table: tableDataForStatus } = useProjectTable(
     projectId,
     databaseId,
-    tableId,
+    effectiveTableId,
   )
 
   const tableTabs: Tab[] = [
@@ -1276,18 +1378,30 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
     )
   }
 
-  if (!database || !selectedTable) {
+  if (!database) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
           <p className="text-[14px] font-medium text-foreground">
-            {!database ? 'Database not found' : 'Table not found'}
+            Database not found
           </p>
-          <Button
-            variant="link"
-            onClick={!database ? handleBackToDatabases : handleBackToDatabase}
-          >
-            {!database ? 'Back to databases' : 'Back to database'}
+          <Button variant="link" onClick={handleBackToDatabases}>
+            Back to databases
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (tableId !== '-' && !selectedTable) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <p className="text-[14px] font-medium text-foreground">
+            Table not found
+          </p>
+          <Button variant="link" onClick={handleBackToDatabase}>
+            Back to database
           </Button>
         </div>
       </div>
@@ -1296,100 +1410,80 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
 
   return (
     <div className="@container flex h-full">
-      {/* Tables Sidebar - uses container query to show/hide based on available space */}
-      <div className="hidden w-56 shrink-0 flex-col border-r border-border lg:flex">
-        {/* Databases Header */}
-        <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
-          <button
-            onClick={handleBackToDatabases}
-            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <span className="text-[13px] font-medium text-foreground">
-            Databases
-          </span>
-        </div>
-
-        {/* Tables List */}
-        <div className="flex-1 overflow-y-auto p-2">
-          {/* Database Dropdown Switcher */}
-          <div className="mb-1 flex min-w-0 items-center gap-1 px-2">
+      {/* Tables Sidebar - sticky sections: database selector, create table, scrollable list, bottom nav */}
+      <div className="hidden w-56 shrink-0 flex-col border-r border-border lg:flex lg:h-full">
+        {/* 1. Sticky top: Database selector */}
+        <div className="flex shrink-0 flex-col border-b border-border bg-background">
+          <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
+            <button
+              onClick={handleBackToDatabases}
+              className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              aria-label="Back to databases"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <span className="text-[13px] font-medium text-foreground">
+              Databases
+            </span>
+          </div>
+          <div className="flex min-w-0 items-center gap-2 px-2 py-2">
             <div className="min-w-0 flex-1 [&_[data-slot=select-trigger]]:h-8">
               <Select
                 value={databaseId}
                 onValueChange={async (newDatabaseId) => {
-                // Prefetch tables for the new database to get the first table ID
-                // This prevents the redirect flash by navigating directly to the first table
-                try {
-                  const tablesData = await queryClient.ensureQueryData(
-                    tablesQueryOptions(
-                      projectId,
-                      newDatabaseId,
-                      0,
-                      100,
-                      undefined,
-                    ),
-                  )
-
-                  // Sort tables by name to get the first one (matching redirect logic)
-                  const sortedTables = [...(tablesData.tables || [])].sort(
-                    (a, b) => {
-                      const nameA = a.name?.toLowerCase() || ''
-                      const nameB = b.name?.toLowerCase() || ''
-                      return nameA.localeCompare(nameB)
-                    },
-                  )
-
-                  const firstTable = sortedTables[0]
-
-                  if (firstTable?.$id) {
-                    // Navigate directly to the first table - no redirect needed
+                  try {
+                    const tablesData = await queryClient.ensureQueryData(
+                      tablesQueryOptions(
+                        projectId,
+                        newDatabaseId,
+                        0,
+                        100,
+                        undefined,
+                      ),
+                    )
+                    const sorted = [...(tablesData.tables || [])].sort(
+                      (a: { name?: string }, b: { name?: string }) => {
+                        const nameA = a.name?.toLowerCase() || ''
+                        const nameB = b.name?.toLowerCase() || ''
+                        return nameA.localeCompare(nameB)
+                      },
+                    )
+                    const firstTable = sorted[0] as { $id?: string } | undefined
                     navigate({
                       to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
                       params: {
                         projectId,
                         databaseId: newDatabaseId,
-                        tableId: firstTable.$id,
+                        tableId: firstTable?.$id ?? '-',
                       },
                     })
-                  } else {
-                    // No tables exist, navigate to database overview
+                  } catch {
                     navigate({
-                      to: '/projects/$projectId/databases/$databaseId/',
+                      to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
                       params: {
                         projectId,
                         databaseId: newDatabaseId,
+                        tableId: '-',
                       },
                     })
                   }
-                } catch {
-                  // Fallback: navigate to database overview if prefetch fails
-                  navigate({
-                    to: '/projects/$projectId/databases/$databaseId/',
-                    params: {
-                      projectId,
-                      databaseId: newDatabaseId,
-                    },
-                  })
-                }
-              }}
-            >
-              <SelectTrigger className="h-8 w-full text-[13px]">
-                <SelectValue placeholder="Select database" />
-              </SelectTrigger>
-              <SelectContent>
-                {sortedDatabases.map((db) => (
-                  <SelectItem
-                    key={db.$id}
-                    value={db.$id}
-                    className="text-[13px]"
-                  >
-                    {db.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                }}
+              >
+                <SelectTrigger className="h-8 w-full text-[13px]">
+                  <SelectValue placeholder="Select database" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortedDatabases.map((db) => (
+                    <SelectItem
+                      key={db.$id}
+                      value={db.$id}
+                      className="text-[13px]"
+                    >
+                      {db.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button
               variant="outline"
@@ -1401,119 +1495,237 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
               <Plus className="h-4 w-4" />
             </Button>
           </div>
+        </div>
 
-          {/* Overview Link */}
-          <Link
-            to="/projects/$projectId/databases/$databaseId/"
-            params={{ projectId, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-          >
-            <Database className="h-3.5 w-3.5 shrink-0" />
-            <span className="min-w-0 flex-1 truncate text-[13px]">
-              Overview
-            </span>
-          </Link>
-
-          {/* Tables Section Header */}
-          <button
-            onClick={() => setTablesExpanded(!tablesExpanded)}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-          >
-            <Table2 className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-[13px] font-medium">Tables</span>
-            <span className="text-[11px] text-muted-foreground">
-              {dbTables.length}
-            </span>
-            {tablesExpanded ? (
-              <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-            )}
-          </button>
-
-          {/* Tables List (collapsible) */}
-          {tablesExpanded && (
-            <div className="ml-3 mt-0.5 border-l border-border pl-2">
-              {sortedTables.map((table) => (
-                <Link
-                  key={table.$id}
-                  to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                  params={{ projectId, databaseId, tableId: table.$id }}
-                  className={cn(
-                    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors',
-                    selectedTable?.$id === table.$id
-                      ? 'bg-accent text-foreground'
-                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                  )}
-                >
-                  <Table2 className="h-3.5 w-3.5 shrink-0" />
-                  <span className="min-w-0 flex-1 truncate text-[13px]">
-                    {table.name}
-                  </span>
-                  {table.enabled === false && (
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                  )}
-                </Link>
-              ))}
-
-              {/* Create Table Button */}
-              <button
-                onClick={() => setCreateTableDialogOpen(true)}
-                className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[13px]">Create table</span>
-              </button>
+        {/* 2. Scrollable: search, tables list, create table (sticky above pagination), pagination */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="shrink-0 space-y-2 border-b border-border px-2 py-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="relative min-w-0 flex-1">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search tables..."
+                  value={sidebarTablesSearch}
+                  onChange={(e) => setSidebarTablesSearch(e.target.value)}
+                  className="h-8 pl-8 pr-2 text-[13px]"
+                />
+              </div>
+              <DropdownMenu>
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0"
+                          aria-label="Sort tables"
+                        >
+                          <ArrowUpDown className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">
+                      Sort by attribute and direction
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuLabel className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Sort tables
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuRadioGroup
+                    value={`${sidebarTablesSortBy}-${sidebarTablesOrder}`}
+                    onValueChange={(value) => {
+                      const [by, dir] = value.split('-')
+                      if (
+                        by &&
+                        (dir === 'asc' || dir === 'desc') &&
+                        (by === 'name' ||
+                          by === '$createdAt' ||
+                          by === '$updatedAt')
+                      ) {
+                        setSidebarTablesSortBy(by)
+                        setSidebarTablesOrder(dir)
+                        setSidebarTablesPage(1)
+                      }
+                    }}
+                  >
+                    <DropdownMenuRadioItem value="name-asc">
+                      Name (A → Z)
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="name-desc">
+                      Name (Z → A)
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="$createdAt-asc">
+                      Created (oldest first)
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="$createdAt-desc">
+                      Created (newest first)
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="$updatedAt-asc">
+                      Updated (oldest first)
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="$updatedAt-desc">
+                      Updated (newest first)
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          )}
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {displayedSidebarTables.length === 0 && sidebarTablesLoading ? (
+              <div className="p-2 text-center text-[12px] text-muted-foreground">
+                Loading…
+              </div>
+            ) : (
+              <div className="space-y-0.5 border-l border-border pl-2.5 pr-1 py-1">
+                {displayedSidebarTables.map((table) => {
+                  const isTableSelected =
+                    selectedTable?.$id === table.$id && !databaseTab
+                  return (
+                    <Link
+                      key={table.$id}
+                      to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
+                      params={{ projectId, databaseId, tableId: table.$id }}
+                      className={cn(
+                        'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                        isTableSelected
+                          ? 'bg-accent text-foreground'
+                          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                      )}
+                    >
+                      <Table2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="min-w-0 flex-1 truncate">
+                        {table.name}
+                      </span>
+                      {table.enabled === false && (
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+          <div className="shrink-0 border-t border-border px-2 py-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 w-full gap-2 pl-6 pr-6 text-[13px] font-medium"
+              onClick={() => setCreateTableDialogOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Create table
+            </Button>
+          </div>
+          <div className="shrink-0 border-t border-border px-2 py-1.5">
+            <div className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
+              <span className="shrink-0 tabular-nums">
+                {sidebarTablesTotal === 0
+                  ? '0 tables'
+                  : `${(sidebarTablesPage - 1) * sidebarTablesPageSize + 1}-${Math.min(sidebarTablesPage * sidebarTablesPageSize, sidebarTablesTotal ?? 0)} of ${(sidebarTablesTotal ?? 0).toLocaleString()}`}
+              </span>
+              <div className="flex items-center gap-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() =>
+                    setSidebarTablesPage((p) => Math.max(1, p - 1))
+                  }
+                  disabled={sidebarTablesPage <= 1}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="h-3 w-3" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={() => setSidebarTablesPage((p) => p + 1)}
+                  disabled={
+                    sidebarTablesPage >=
+                    Math.ceil((sidebarTablesTotal ?? 0) / sidebarTablesPageSize)
+                  }
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
 
-          {/* Visualizer Link */}
+        {/* 4. Sticky bottom: Nav links (match main sidebar item size and spacing) */}
+        <div className="shrink-0 space-y-0.5 border-t border-border bg-background px-2.5 py-2">
           <Link
-            to="/projects/$projectId/databases/$databaseId/visualizer"
-            params={{ projectId, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            to="/projects/$projectId/databases/$databaseId/tables/$tableId/visualizer"
+            params={{ projectId, databaseId, tableId }}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'visualizer'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
           >
             <Network className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Visualizer</span>
+            <span>Visualizer</span>
           </Link>
-
-          {/* Security Link */}
           <Link
-            to="/projects/$projectId/databases/$databaseId/security"
-            params={{ projectId, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-security"
+            params={{ projectId, databaseId, tableId }}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'db-security'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
           >
             <Lock className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Security</span>
+            <span>Security</span>
           </Link>
-
-          {/* Insights Link - Coming Soon */}
-          <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground/50">
-            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-            <span className="flex-1 text-[13px]">Insights</span>
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              Soon
-            </span>
-          </span>
-
-          {/* Backups Link */}
           <Link
-            to="/projects/$projectId/databases/$databaseId/backups"
-            params={{ projectId, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            to="/projects/$projectId/databases/$databaseId/tables/$tableId/insights"
+            params={{ projectId, databaseId, tableId }}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'insights'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
+          >
+            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+            <span>Insights</span>
+          </Link>
+          <Link
+            to="/projects/$projectId/databases/$databaseId/tables/$tableId/backups"
+            params={{ projectId, databaseId, tableId }}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'backups'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
           >
             <Archive className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Backups</span>
+            <span>Backups</span>
           </Link>
-
-          {/* Settings Link */}
           <Link
-            to="/projects/$projectId/databases/$databaseId/settings"
-            params={{ projectId, databaseId }}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+            to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings"
+            params={{ projectId, databaseId, tableId }}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'db-settings'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
           >
             <Settings className="h-3.5 w-3.5 shrink-0" />
-            <span className="text-[13px]">Settings</span>
+            <span>Settings</span>
           </Link>
         </div>
       </div>
@@ -1521,74 +1733,114 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <ServiceHeader
-          title={selectedTable.name}
-          tabs={tableTabs}
-          activeTab={activeTab}
+          title={
+            isDatabaseLevelView ? (
+              databaseTab ? (
+                DATABASE_TAB_LABELS[databaseTab]
+              ) : (
+                'Tables'
+              )
+            ) : (
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="truncate">{selectedTable!.name}</span>
+                <CopyableId
+                  id={selectedTable!.$id}
+                  size="xs"
+                  className="shrink-0"
+                />
+              </div>
+            )
+          }
+          tabs={isDatabaseLevelView ? undefined : tableTabs}
+          activeTab={isDatabaseLevelView ? undefined : activeTab}
           searchPlaceholder={
-            activeTab === 'settings' ||
-            activeTab === 'security' ||
-            activeTab === 'rows'
+            isDatabaseLevelView
               ? undefined
-              : `Search ${activeTab}...`
+              : activeTab === 'settings' ||
+                  activeTab === 'security' ||
+                  activeTab === 'rows'
+                ? undefined
+                : `Search ${activeTab}...`
           }
           searchValue={
-            activeTab === 'settings' ||
-            activeTab === 'security' ||
-            activeTab === 'rows'
+            isDatabaseLevelView
               ? undefined
-              : searchValue
+              : activeTab === 'settings' ||
+                  activeTab === 'security' ||
+                  activeTab === 'rows'
+                ? undefined
+                : searchValue
           }
           onSearchChange={
-            activeTab === 'settings' ||
-            activeTab === 'security' ||
-            activeTab === 'rows'
+            isDatabaseLevelView
               ? undefined
-              : setSearchValue
+              : activeTab === 'settings' ||
+                  activeTab === 'security' ||
+                  activeTab === 'rows'
+                ? undefined
+                : setSearchValue
           }
-          createLabel={getCreateLabel()}
-          onCreate={() => {
-            if (activeTab === 'rows' && openCreateRowDrawerRef.current) {
-              openCreateRowDrawerRef.current()
-            } else if (
-              activeTab === 'columns' &&
-              openCreateColumnDialogRef.current
-            ) {
-              openCreateColumnDialogRef.current()
-            } else if (
-              activeTab === 'indexes' &&
-              openCreateIndexDialogRef.current
-            ) {
-              openCreateIndexDialogRef.current()
-            }
-          }}
-          showFilters={activeTab === 'rows' && hasRows}
-          showRefresh={activeTab === 'rows'}
-          onRefresh={async () => {
-            if (rowsRefetchRef.current) {
-              refreshStartTimeRef.current = Date.now()
-              setIsRefreshingRows(true)
-              try {
-                await rowsRefetchRef.current()
-                // Ensure minimum animation duration
-                const elapsed = Date.now() - (refreshStartTimeRef.current || 0)
-                const remaining = Math.max(0, minAnimationDuration - elapsed)
-                await new Promise((resolve) => setTimeout(resolve, remaining))
-                toast.success('Rows refreshed successfully')
-              } catch {
-                toast.error('Failed to refresh rows')
-              } finally {
-                setIsRefreshingRows(false)
-                refreshStartTimeRef.current = null
-              }
-            }
-          }}
+          createLabel={isDatabaseLevelView ? undefined : getCreateLabel()}
+          onCreate={
+            isDatabaseLevelView
+              ? undefined
+              : () => {
+                  if (activeTab === 'rows' && openCreateRowDrawerRef.current) {
+                    openCreateRowDrawerRef.current()
+                  } else if (
+                    activeTab === 'columns' &&
+                    openCreateColumnDialogRef.current
+                  ) {
+                    openCreateColumnDialogRef.current()
+                  } else if (
+                    activeTab === 'indexes' &&
+                    openCreateIndexDialogRef.current
+                  ) {
+                    openCreateIndexDialogRef.current()
+                  }
+                }
+          }
+          showFilters={!isDatabaseLevelView && activeTab === 'rows' && hasRows}
+          showRefresh={!isDatabaseLevelView && activeTab === 'rows'}
+          onRefresh={
+            !isDatabaseLevelView && activeTab === 'rows'
+              ? async () => {
+                  if (rowsRefetchRef.current) {
+                    refreshStartTimeRef.current = Date.now()
+                    setIsRefreshingRows(true)
+                    try {
+                      await rowsRefetchRef.current()
+                      const elapsed =
+                        Date.now() - (refreshStartTimeRef.current || 0)
+                      const remaining = Math.max(
+                        0,
+                        minAnimationDuration - elapsed,
+                      )
+                      await new Promise((resolve) =>
+                        setTimeout(resolve, remaining),
+                      )
+                      toast.success('Rows refreshed successfully')
+                    } catch {
+                      toast.error('Failed to refresh rows')
+                    } finally {
+                      setIsRefreshingRows(false)
+                      refreshStartTimeRef.current = null
+                    }
+                  }
+                }
+              : undefined
+          }
           isRefreshing={isRefreshingRows}
-          showImport={activeTab === 'rows'}
-          onImport={() => {}}
-          showExport={activeTab === 'rows'}
-          onExport={() => {}}
+          showImport={!isDatabaseLevelView && activeTab === 'rows'}
+          onImport={
+            !isDatabaseLevelView && activeTab === 'rows' ? () => {} : undefined
+          }
+          showExport={!isDatabaseLevelView && activeTab === 'rows'}
+          onExport={
+            !isDatabaseLevelView && activeTab === 'rows' ? () => {} : undefined
+          }
           beforeCreateButtons={
-            activeTab === 'columns' ? (
+            isDatabaseLevelView ? undefined : activeTab === 'columns' ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -1618,9 +1870,24 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
               </Button>
             ) : undefined
           }
-          collapsible
+          collapsible={!isDatabaseLevelView}
           fullWidthBorder
-          fullWidth
+          fullWidth={!isDatabaseLevelView || databaseTab === 'visualizer'}
+          rightContent={
+            isDatabaseLevelView && isDebugModeOpen ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => createFiftyTablesMutation.mutate()}
+                disabled={createFiftyTablesMutation.isPending}
+              >
+                {createFiftyTablesMutation.isPending
+                  ? 'Creating…'
+                  : 'Debug: Create 50 tables'}
+              </Button>
+            ) : undefined
+          }
           contentAfterBorder={
             database && (database as Models.Database).enabled === false ? (
               <div className="border-b border-border bg-amber-500/5">
@@ -1690,44 +1957,65 @@ export function TableView({ databaseId, tableId, activeTab }: TableViewProps) {
           Back to {database.name}
         </button>
 
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          {activeTab === 'rows' && (
-            <RowsSpreadsheet
-              table={selectedTable}
-              onRefetchReady={(refetchFn) => {
-                rowsRefetchRef.current = refetchFn
-              }}
-              onCreateRowReady={(openCreateDrawer) => {
-                openCreateRowDrawerRef.current = openCreateDrawer
-              }}
-              onCreateColumnReady={openCreateColumnDialogRef.current}
-              onRowsCountChange={handleRowsCountChange}
-            />
+        <div
+          className={cn(
+            'flex-1 min-h-0 overflow-y-auto',
+            isDatabaseLevelView && 'pt-4 sm:pt-6',
           )}
-          {activeTab === 'columns' && (
-            <ColumnsSpreadsheet
-              table={selectedTable}
-              onCreateReady={(openDialog) => {
-                openCreateColumnDialogRef.current = openDialog
-              }}
-              onSuggestReady={(openDialog) => {
-                openSuggestColumnsDialogRef.current = openDialog
-              }}
+        >
+          {isDatabaseLevelView ? (
+            <DatabaseOverview
+              databaseId={databaseId}
+              activeTab={
+                databaseTab ? DATABASE_TAB_TO_OVERVIEW[databaseTab] : 'tables'
+              }
+              contentOnly
             />
+          ) : (
+            <>
+              {activeTab === 'rows' && (
+                <RowsSpreadsheet
+                  table={selectedTable}
+                  onRefetchReady={(refetchFn) => {
+                    rowsRefetchRef.current = refetchFn
+                  }}
+                  onCreateRowReady={(openCreateDrawer) => {
+                    openCreateRowDrawerRef.current = openCreateDrawer
+                  }}
+                  onCreateColumnReady={openCreateColumnDialogRef.current}
+                  onRowsCountChange={handleRowsCountChange}
+                />
+              )}
+              {activeTab === 'columns' && (
+                <ColumnsSpreadsheet
+                  table={selectedTable}
+                  onCreateReady={(openDialog) => {
+                    openCreateColumnDialogRef.current = openDialog
+                  }}
+                  onSuggestReady={(openDialog) => {
+                    openSuggestColumnsDialogRef.current = openDialog
+                  }}
+                />
+              )}
+              {activeTab === 'indexes' && (
+                <IndexesSpreadsheet
+                  table={selectedTable}
+                  onCreateReady={(openDialog) => {
+                    openCreateIndexDialogRef.current = openDialog
+                  }}
+                  onSuggestReady={(openDialog) => {
+                    openSuggestIndexesDialogRef.current = openDialog
+                  }}
+                />
+              )}
+              {activeTab === 'security' && (
+                <TableSecurity table={selectedTable!} />
+              )}
+              {activeTab === 'settings' && (
+                <TableSettings table={selectedTable!} />
+              )}
+            </>
           )}
-          {activeTab === 'indexes' && (
-            <IndexesSpreadsheet
-              table={selectedTable}
-              onCreateReady={(openDialog) => {
-                openCreateIndexDialogRef.current = openDialog
-              }}
-              onSuggestReady={(openDialog) => {
-                openSuggestIndexesDialogRef.current = openDialog
-              }}
-            />
-          )}
-          {activeTab === 'security' && <TableSecurity table={selectedTable} />}
-          {activeTab === 'settings' && <TableSettings table={selectedTable} />}
         </div>
       </div>
 
@@ -1766,9 +2054,33 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
   })
   const projectId = params.projectId as string
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [tablesExpanded, setTablesExpanded] = useState(true)
+  const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
 
   const database = databases.find((db) => db.$id === databaseId)
+  const createTableMutation = useMutation({
+    mutationFn: (data: { tableId?: string; name: string }) =>
+      createProjectTable(projectId!, databaseId!, data),
+    onSuccess: async (table) => {
+      toast.success(`${table.name} has been created`)
+      await queryClient.refetchQueries({
+        queryKey: ['tables', 'project', projectId, databaseId],
+      })
+      setCreateTableDialogOpen(false)
+      navigate({
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: {
+          projectId: projectId!,
+          databaseId: databaseId!,
+          tableId: table.$id,
+        },
+      })
+    },
+    onError: (error: Error) => {
+      toast.error(getErrorMessage(error) || 'Failed to create table')
+    },
+  })
 
   const handleBack = () => {
     navigate({
@@ -1912,6 +2224,12 @@ export function DatabaseEmptyState({ databaseId }: DatabaseEmptyStateProps) {
           </div>
         </div>
       </div>
+      <CreateTable
+        open={createTableDialogOpen}
+        onOpenChange={setCreateTableDialogOpen}
+        onCreate={(data) => createTableMutation.mutate(data)}
+        isLoading={createTableMutation.isPending}
+      />
     </div>
   )
 }
@@ -1926,11 +2244,15 @@ interface DatabaseOverviewProps {
     | 'insights'
     | 'settings'
     | 'visualizer'
+    | 'browser'
+  /** When true, only the tab content is rendered (no header). Used when embedded in TableView. */
+  contentOnly?: boolean
 }
 
 export function DatabaseOverview({
   databaseId,
   activeTab,
+  contentOnly = false,
 }: DatabaseOverviewProps) {
   const params = useParams({
     strict: false,
@@ -2428,171 +2750,178 @@ export function DatabaseOverview({
   }
 
   return (
-    <div className="flex h-full flex-col min-h-0">
-      <ServiceHeader
-        title={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={handleBack}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <span>{database.name}</span>
-          </div>
-        }
-        tabs={databaseTabs}
-        activeTab={activeTab}
-        searchPlaceholder={
-          activeTab === 'tables' ? 'Search tables...' : undefined
-        }
-        searchValue={activeTab === 'tables' ? searchValue : ''}
-        onSearchChange={activeTab === 'tables' ? handleSearchChange : undefined}
-        createLabel={activeTab === 'tables' ? 'Create table' : undefined}
-        onCreate={
-          activeTab === 'tables'
-            ? () => setCreateTableDialogOpen(true)
-            : undefined
-        }
-        beforeCreateButtons={
-          activeTab === 'tables' ? (
-            <>
-              {/* Copy dropdown */}
-              <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Copy schema</TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={handleCopyJSON}>
-                    <FileJson className="h-4 w-4 mr-2" />
-                    Copy as JSON
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleCopyMarkdown}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Copy as Markdown
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Export SVG button */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
-                    onClick={handleExportSVG}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">Export as SVG</TooltipContent>
-              </Tooltip>
-
-              {/* Open in dropdown */}
-              <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">Open in...</TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={handleOpenInChatGPT}>
-                    <img
-                      src="/icons/chatgpt.svg"
-                      alt="ChatGPT"
-                      className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
-                    />
-                    ChatGPT
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleOpenInClaude}>
-                    <img
-                      src="/icons/claude.svg"
-                      alt="Claude"
-                      className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
-                    />
-                    Claude
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleOpenInCursor}>
-                    <img
-                      src="/icons/cursor-ai.svg"
-                      alt="Cursor"
-                      className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
-                    />
-                    Cursor
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleOpenInLovable}>
-                    <img
-                      src="/icons/lovable.svg"
-                      alt="Lovable"
-                      className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
-                    />
-                    Lovable
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          ) : undefined
-        }
-        showFilters={false}
-        fullWidthBorder
-        contentAfterBorder={
-          database && (database as Models.Database).enabled === false ? (
-            <div className="border-b border-border bg-amber-500/5">
-              <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
-                <Alert
-                  variant="default"
-                  className="border-amber-500/30 bg-transparent"
-                >
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
-                    Database is disabled
-                  </AlertTitle>
-                  <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
-                    <span className="inline">
-                      This database is disabled and not accessible to end users
-                      through the API. Console actions remain available.{' '}
-                      <Link
-                        to="/projects/$projectId/databases/$databaseId/settings"
-                        params={{
-                          projectId: projectId!,
-                          databaseId: databaseId,
-                        }}
-                        className="font-medium underline hover:no-underline inline"
-                      >
-                        Enable it in the Settings tab
-                      </Link>{' '}
-                      to make it available to end users.
-                    </span>
-                  </AlertDescription>
-                </Alert>
-              </div>
+    <div
+      className="flex h-full flex-col min-h-0"
+      data-content-only={contentOnly || undefined}
+    >
+      {!contentOnly && (
+        <ServiceHeader
+          title={
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={handleBack}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <span>{database.name}</span>
             </div>
-          ) : undefined
-        }
-      />
+          }
+          tabs={databaseTabs}
+          activeTab={activeTab}
+          searchPlaceholder={
+            activeTab === 'tables' ? 'Search tables...' : undefined
+          }
+          searchValue={activeTab === 'tables' ? searchValue : ''}
+          onSearchChange={
+            activeTab === 'tables' ? handleSearchChange : undefined
+          }
+          createLabel={activeTab === 'tables' ? 'Create table' : undefined}
+          onCreate={
+            activeTab === 'tables'
+              ? () => setCreateTableDialogOpen(true)
+              : undefined
+          }
+          beforeCreateButtons={
+            activeTab === 'tables' ? (
+              <>
+                {/* Copy dropdown */}
+                <DropdownMenu>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Copy schema</TooltipContent>
+                  </Tooltip>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={handleCopyJSON}>
+                      <FileJson className="h-4 w-4 mr-2" />
+                      Copy as JSON
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleCopyMarkdown}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      Copy as Markdown
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Export SVG button */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                      onClick={handleExportSVG}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">Export as SVG</TooltipContent>
+                </Tooltip>
+
+                {/* Open in dropdown */}
+                <DropdownMenu>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">Open in...</TooltipContent>
+                  </Tooltip>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={handleOpenInChatGPT}>
+                      <img
+                        src="/icons/chatgpt.svg"
+                        alt="ChatGPT"
+                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                      />
+                      ChatGPT
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleOpenInClaude}>
+                      <img
+                        src="/icons/claude.svg"
+                        alt="Claude"
+                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                      />
+                      Claude
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleOpenInCursor}>
+                      <img
+                        src="/icons/cursor-ai.svg"
+                        alt="Cursor"
+                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                      />
+                      Cursor
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleOpenInLovable}>
+                      <img
+                        src="/icons/lovable.svg"
+                        alt="Lovable"
+                        className="h-4 w-4 mr-2 brightness-0 dark:brightness-100"
+                      />
+                      Lovable
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : undefined
+          }
+          showFilters={false}
+          fullWidthBorder
+          contentAfterBorder={
+            database && (database as Models.Database).enabled === false ? (
+              <div className="border-b border-border bg-amber-500/5">
+                <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+                  <Alert
+                    variant="default"
+                    className="border-amber-500/30 bg-transparent"
+                  >
+                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                    <AlertTitle className="text-[13px] font-medium text-amber-600 dark:text-amber-400">
+                      Database is disabled
+                    </AlertTitle>
+                    <AlertDescription className="text-[12px] text-amber-600/80 dark:text-amber-400/80">
+                      <span className="inline">
+                        This database is disabled and not accessible to end
+                        users through the API. Console actions remain available.{' '}
+                        <Link
+                          to="/projects/$projectId/databases/$databaseId/settings"
+                          params={{
+                            projectId: projectId!,
+                            databaseId: databaseId,
+                          }}
+                          className="font-medium underline hover:no-underline inline"
+                        >
+                          Enable it in the Settings tab
+                        </Link>{' '}
+                        to make it available to end users.
+                      </span>
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              </div>
+            ) : undefined
+          }
+        />
+      )}
 
       <div className="flex-1 min-h-0 flex flex-col">
         {activeTab === 'tables' && (
@@ -2825,30 +3154,40 @@ export function DatabaseOverview({
                   </DialogContent>
                 </Dialog>
               </>
+            ) : searchValue ? (
+              <EmptyState
+                icon={Table2}
+                isEmpty={false}
+                hasFilters={true}
+                variant="card"
+              />
             ) : (
-              <div className="py-12 text-center">
-                <EmptyState
-                  icon={Table2}
-                  title={searchValue ? undefined : 'No tables yet'}
-                  description={
-                    searchValue
-                      ? undefined
-                      : 'Create your first table to get started'
-                  }
-                  isEmpty={!searchValue}
-                  hasFilters={!!searchValue}
-                  iconSize="md"
-                />
-                {!searchValue && (
+              <EmptyState
+                icon={Table2}
+                title="No tables yet"
+                description="Create your first table to get started"
+                isEmpty={true}
+                variant="card"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                    <Table2 className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="mb-1 text-[14px] font-medium text-foreground">
+                    No tables yet
+                  </p>
+                  <p className="mb-4 text-[13px] text-muted-foreground">
+                    Create your first table to get started
+                  </p>
                   <Button
                     onClick={() => setCreateTableDialogOpen(true)}
-                    className="mt-4"
+                    className="gap-1.5"
                   >
-                    <Plus className="mr-1.5 h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                     Create table
                   </Button>
-                )}
-              </div>
+                </div>
+              </EmptyState>
             )}
           </div>
         )}
@@ -7875,17 +8214,16 @@ function TableSettings({ table }: SpreadsheetProps) {
         }
       }
 
-      queryClient.invalidateQueries({
+      await queryClient.refetchQueries({
         queryKey: ['tables', 'project', projectId, databaseId],
       })
       toast.success(`${tableData?.name || 'Table'} has been deleted`)
       setShowDelete(false)
       setDeleteError(null)
 
-      // Navigate to database tables list
       navigate({
-        to: '/projects/$projectId/databases/$databaseId/',
-        params: { projectId, databaseId },
+        to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+        params: { projectId, databaseId, tableId: '-' },
         replace: true,
       })
     },

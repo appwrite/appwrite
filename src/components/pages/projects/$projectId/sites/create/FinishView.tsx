@@ -194,7 +194,7 @@ export function FinishView({ siteId, deploymentId }: FinishViewProps) {
               <img
                 src={screenshotUrl}
                 alt={`${site.name} preview`}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover object-top"
               />
             </div>
           ) : (

@@ -387,15 +387,15 @@ export function TemplateConfigView({ templateParam }: TemplateConfigViewProps) {
         </div>
       </div>
 
-      {/* Template preview - tilted screenshot style */}
+      {/* Template preview - tilted screenshot style (aspect-video reserves space to avoid layout shift) */}
       <div className="relative h-[120px] overflow-hidden border-b border-border/50">
         {screenshotUrl ? (
-          <div className="absolute left-6 -right-4 top-4 transform -rotate-3">
-            <div className="overflow-hidden rounded-lg ring-1 ring-border">
+          <div className="absolute left-6 -right-4 top-4 aspect-video transform -rotate-3">
+            <div className="relative h-full w-full overflow-hidden rounded-lg ring-1 ring-border bg-muted/30">
               <FadeImage
                 src={screenshotUrl}
                 alt={`${template.name} preview`}
-                className="w-full object-cover object-top"
+                className="absolute inset-0 h-full w-full object-cover object-top"
               />
             </div>
           </div>

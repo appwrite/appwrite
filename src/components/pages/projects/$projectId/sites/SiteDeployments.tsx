@@ -337,9 +337,14 @@ export function SiteDeploymentsView() {
     site?.deploymentId || undefined,
   )
 
-  // Screenshot theme: user override or current app theme
-  const screenshotTheme =
-    screenshotThemeOverride ?? (isDark ? 'dark' : 'light')
+  // Screenshot theme: user override or current active app theme (resolvedTheme when available)
+  const defaultScreenshotTheme =
+    resolvedTheme === 'dark' || resolvedTheme === 'light'
+      ? resolvedTheme
+      : isDark
+        ? 'dark'
+        : 'light'
+  const screenshotTheme = screenshotThemeOverride ?? defaultScreenshotTheme
 
   // Reset screenshot loaded state when active deployment or theme changes
   useEffect(() => {
