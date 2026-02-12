@@ -6439,7 +6439,7 @@ trait DatabasesBase
     public function testSpatialPointAttributes(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -6583,7 +6583,7 @@ trait DatabasesBase
     public function testSpatialLineAttributes(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -6726,7 +6726,7 @@ trait DatabasesBase
     public function testSpatialPolygonAttributes(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -6867,7 +6867,7 @@ trait DatabasesBase
     public function testSpatialAttributesMixedCollection(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -7027,7 +7027,7 @@ trait DatabasesBase
     public function testUpdateSpatialAttributes(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -7192,7 +7192,7 @@ trait DatabasesBase
     public function testSpatialQuery(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -7608,7 +7608,7 @@ trait DatabasesBase
 
     public function testSpatialRelationshipOneToOne(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForRelationships() || !$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -7751,7 +7751,7 @@ trait DatabasesBase
 
     public function testSpatialRelationshipOneToMany(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForRelationships() || !$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -7891,7 +7891,7 @@ trait DatabasesBase
     public function testSpatialRelationshipManyToOne(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForRelationships() || !$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8021,7 +8021,7 @@ trait DatabasesBase
 
     public function testSpatialRelationshipManyToMany(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForRelationships() || !$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8152,7 +8152,7 @@ trait DatabasesBase
     public function testSpatialIndex(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8268,7 +8268,7 @@ trait DatabasesBase
     public function testSpatialDistanceInMeter(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8429,7 +8429,7 @@ trait DatabasesBase
     public function testSpatialColCreateOnExistingData(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8565,7 +8565,7 @@ trait DatabasesBase
     public function testSpatialColCreateOnExistingDataWithDefaults(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }

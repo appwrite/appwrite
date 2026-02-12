@@ -848,7 +848,10 @@ class DatabaseServerTest extends Scope
      * @depends testUpdateStringAttribute
      * @depends testUpdateIntegerAttribute
      * @depends testUpdateBooleanAttribute
+     * @depends testUpdateFloatAttribute
+     * @depends testUpdateEmailAttribute
      * @depends testUpdateEnumAttribute
+     * @depends testUpdateDatetimeAttribute
      * @throws Exception
      */
     public function testCreateDocument($data): array

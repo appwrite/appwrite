@@ -849,7 +849,10 @@ class DatabaseServerTest extends Scope
      * @depends testUpdateStringColumn
      * @depends testUpdateIntegerColumn
      * @depends testUpdateBooleanColumn
+     * @depends testUpdateFloatColumn
+     * @depends testUpdateEmailColumn
      * @depends testUpdateEnumColumn
+     * @depends testUpdateDatetimeColumn
      * @throws Exception
      */
     public function testCreateRow($data): array

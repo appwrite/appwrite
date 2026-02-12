@@ -8328,7 +8328,7 @@ trait DatabasesBase
 
     public function testSpatialPointColumns(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8471,7 +8471,7 @@ trait DatabasesBase
 
     public function testSpatialLineColumns(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8610,7 +8610,7 @@ trait DatabasesBase
 
     public function testSpatialPolygonColumns(): void
     {
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8748,7 +8748,7 @@ trait DatabasesBase
     public function testSpatialColumnsMixedTable(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -8908,7 +8908,7 @@ trait DatabasesBase
     public function testSpatialQuery(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -9303,7 +9303,7 @@ trait DatabasesBase
     public function testSpatialIndex(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -9425,7 +9425,7 @@ trait DatabasesBase
     public function testUpdateSpatialColumns(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -9588,7 +9588,7 @@ trait DatabasesBase
     public function testSpatialDistanceInMeter(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -9690,7 +9690,7 @@ trait DatabasesBase
     public function testSpatialColCreateOnExistingData(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -9826,7 +9826,7 @@ trait DatabasesBase
     public function testSpatialColCreateOnExistingDataWithDefaults(): void
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSpatials()) {
             $this->expectNotToPerformAssertions();
             return;
         }
