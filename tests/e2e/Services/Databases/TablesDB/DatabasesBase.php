@@ -2362,7 +2362,7 @@ trait DatabasesBase
         $sequence = $response['body']['$sequence'];
 
         // Query by sequence on get single row route
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/tables/' . $row['$collectionId'] . '/rows/' . $row['$id'], array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$collectionId'] . '/rows/' . $row['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -2375,7 +2375,7 @@ trait DatabasesBase
         $this->assertEquals('Invalid query method: equal', $response['body']['message']);
 
         // Query by sequence
-        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $row . '/tables/' . $row['$collectionId'] . '/rows', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $row . '/tables/' . $row['$collectionId'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
