@@ -9,6 +9,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Columns;
 use Appwrite\Utopia\Response as UtopiaResponse;
 use Utopia\Database\Database;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
@@ -57,9 +58,9 @@ class XList extends AttributesXList
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $tableId, array $queries, bool $includeTotal, UtopiaResponse $response, Database $dbForProject): void
+    public function action(string $databaseId, string $tableId, array $queries, bool $includeTotal, UtopiaResponse $response, Database $dbForProject, Authorization $authorization): void
     {
         // Call parent action with tableId as collectionId since they refer to the same resource
-        parent::action($databaseId, $tableId, $queries, $includeTotal, $response, $dbForProject);
+        parent::action($databaseId, $tableId, $queries, $includeTotal, $response, $dbForProject, $authorization);
     }
 }
