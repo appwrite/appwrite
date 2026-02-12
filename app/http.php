@@ -14,9 +14,9 @@ use Swoole\Timer;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
 use Utopia\Audit\Audit;
-use Utopia\CLI\Console;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -26,16 +26,16 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Http;
+use Utopia\Http\Files;
+use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
-use Utopia\Swoole\Files;
 use Utopia\System\System;
 
-Files::load(__DIR__.'/../public');
-
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
+
+$files = null;
 
 $domains = new Table(1_000_000); // 1 million rows
 $domains->column('value', Table::TYPE_INT, 1);
@@ -162,7 +162,11 @@ $http
         Constant::OPTION_TASK_WORKER_NUM => 1, // required for the task to fetch domains background
     ]);
 
-$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
+$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) use (&$files) {
+    if (!$server->taskworker) {
+        $files = new Files();
+        $files->load(__DIR__ . '/../public');
+    }
     Console::success('Worker ' . ++$workerId . ' started successfully');
 });
 
@@ -181,7 +185,7 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
 
 include __DIR__ . '/controllers/general.php';
 
-function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, callable $extraSetup = null): void
+function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
     $max = 15;
     $sleep = 2;
@@ -468,21 +472,21 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
     });
 });
 
-$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
+$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register, &$files) {
     Http::setResource('swooleRequest', fn () => $swooleRequest);
     Http::setResource('swooleResponse', fn () => $swooleResponse);
 
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
-    if (Files::isFileLoaded($request->getURI())) {
-        $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
+    if ($files instanceof Files && $files->isFileLoaded($request->getURI())) {
+        $time = (60 * 60 * 24 * 45); // 45 days cache
 
         $response
-            ->setContentType(Files::getFileMimeType($request->getURI()))
+            ->setContentType($files->getFileMimeType($request->getURI()))
             ->addHeader('Cache-Control', 'public, max-age=' . $time)
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-            ->send(Files::getFileContents($request->getURI()));
+            ->send($files->getFileContents($request->getURI()));
 
         return;
     }

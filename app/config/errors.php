@@ -1144,6 +1144,11 @@ return [
         'description' => 'Key with the requested ID could not be found.',
         'code' => 404,
     ],
+    Exception::KEY_ALREADY_EXISTS => [
+        'name' => Exception::KEY_ALREADY_EXISTS,
+        'description' => 'Key with the same ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
     Exception::PLATFORM_NOT_FOUND => [
         'name' => Exception::PLATFORM_NOT_FOUND,
         'description' => 'Platform with the requested ID could not be found.',

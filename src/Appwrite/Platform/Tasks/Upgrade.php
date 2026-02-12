@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -26,7 +26,7 @@ class Upgrade extends Install
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new Text(length: 0), 'Database to use (mongodb|mariadb)', true)
+            ->param('database', 'mongodb', new Text(length: 0), 'Database to use (mongodb|mariadb|postgresql)', true)
             ->callback($this->action(...));
     }
 
@@ -44,7 +44,6 @@ class Upgrade extends Install
             Console::exit(1);
         }
 
-        // Extract existing database adapter from docker-compose.yml
         $database = null;
         $compose = new Compose($data);
         foreach ($compose->getServices() as $service) {
@@ -58,7 +57,6 @@ class Upgrade extends Install
             }
         }
 
-        // Fallback to .env file if not found in compose
         if ($database === null) {
             $envData = @file_get_contents($this->path . '/.env');
             if ($envData !== false) {
@@ -67,7 +65,6 @@ class Upgrade extends Install
             }
         }
 
-        // Final fallback to environment variable or default
         if ($database === null) {
             // TODO: Change default to 'mongodb' after next release
             $database = System::getEnv('_APP_DB_ADAPTER', 'mariadb');

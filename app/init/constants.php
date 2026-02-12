@@ -5,6 +5,8 @@ use Appwrite\Platform\Modules\Compute\Specification;
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 
+const APP_VIEWS_DIR = __DIR__ . '/../views';
+
 // Email
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = ''; // Default security email address
@@ -369,6 +371,7 @@ const RESOURCE_TYPE_TOPICS = 'topics';
 const RESOURCE_TYPE_SUBSCRIBERS = 'subscribers';
 const RESOURCE_TYPE_MESSAGES = 'messages';
 const RESOURCE_TYPE_EXECUTIONS = 'executions';
+const RESOURCE_TYPE_VCS = 'vcs';
 
 // Resource types for Tokens
 const TOKENS_RESOURCE_TYPE_FILES = 'files';
@@ -387,3 +390,6 @@ const COOKIE_NAME_PREVIEW = 'a_jwt_console';
 // Cache Reconnect
 const CACHE_RECONNECT_MAX_RETRIES = 2;
 const CACHE_RECONNECT_RETRY_DELAY = 1000;
+
+// Project status
+const PROJECT_STATUS_ACTIVE = 'active';

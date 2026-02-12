@@ -7,8 +7,8 @@ use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -32,7 +32,7 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->param('database', 'mongodb', new Text(0), 'Database to use (mongodb|mariadb)', true)
+            ->param('database', 'mongodb', new Text(0), 'Database to use (mongodb|mariadb|postgres)', true)
             ->callback($this->action(...));
     }
 
@@ -147,6 +147,7 @@ class Install extends Action
             }
         }
 
+
         if (empty($httpPort)) {
             $httpPort = Console::confirm('Choose your server HTTP port: (default: ' . $defaultHTTPPort . ')');
             $httpPort = ($httpPort) ? $httpPort : $defaultHTTPPort;
@@ -257,6 +258,14 @@ class Install extends Action
                 }
             }
         }
+        $database = $input['_APP_DB_ADAPTER'];
+        if ($database === 'postgresql') {
+            $input['_APP_DB_HOST'] = 'postgresql';
+            $input['_APP_DB_PORT'] = 5432;
+        } elseif ($database === 'mariadb') {
+            $input['_APP_DB_HOST'] = 'mariadb';
+            $input['_APP_DB_PORT'] = 3306;
+        }
 
         $database = $input['_APP_DB_ADAPTER'];
         if ($database === 'mongodb') {
@@ -269,7 +278,6 @@ class Install extends Action
 
         $templateForCompose = new View(__DIR__ . '/../../../../app/views/install/compose.phtml');
         $templateForEnv = new View(__DIR__ . '/../../../../app/views/install/env.phtml');
-
         $templateForCompose
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)

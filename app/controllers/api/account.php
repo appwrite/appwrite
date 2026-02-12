@@ -60,7 +60,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Emails\Email;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
@@ -1469,13 +1469,14 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('devKey')
     ->inject('user')
     ->inject('dbForProject')
+    ->inject('dbForPlatform')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('store')
     ->inject('proofForPassword')
     ->inject('proofForToken')
     ->inject('authorization')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) use ($oauthDefaultSuccess) {
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Validator $redirectValidator, Document $devKey, User $user, Database $dbForProject, Database $dbForPlatform, Reader $geodb, Event $queueForEvents, Store $store, ProofsPassword $proofForPassword, ProofsToken $proofForToken, Authorization $authorization) use ($oauthDefaultSuccess) {
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
         $port = $request->getPort();
         $callbackBase = $protocol . '://' . $request->getHostname();
@@ -1511,6 +1512,29 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
         } else {
             $state = $defaultState;
+        }
+
+        // Allow redirect to rule URL if related to project
+        // Check if $redirectValidator is instance of Redirect class
+        if ($redirectValidator instanceof Redirect) {
+            $domains = \array_filter([
+                parse_url($state['success'], PHP_URL_HOST) ?? '',
+                parse_url($state['failure'], PHP_URL_HOST) ?? ''
+            ], fn ($domain) => \is_string($domain) && $domain !== '');
+
+            if (!empty($domains)) {
+                $rules = $authorization->skip(fn () => $dbForPlatform->find('rules', [
+                    Query::equal('domain', \array_values(\array_unique($domains))),
+                    Query::equal('projectInternalId', [$project->getSequence()]),
+                    Query::limit(2)
+                ]));
+
+                foreach ($rules as $rule) {
+                    $allowedHostnames = $redirectValidator->getAllowedHostnames();
+                    $allowedHostnames[] = $rule->getAttribute('domain', '');
+                    $redirectValidator->setAllowedHostnames($allowedHostnames);
+                }
+            }
         }
 
         if ($devKey->isEmpty() && !$redirectValidator->isValid($state['success'])) {
@@ -4578,16 +4602,10 @@ Http::get('/v1/account/identities')
 
         $queries[] = Query::equal('userInternalId', [$user->getSequence()]);
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());

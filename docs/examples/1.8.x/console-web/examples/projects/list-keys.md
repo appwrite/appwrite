@@ -9,6 +9,7 @@ const projects = new Projects(client);
 
 const result = await projects.listKeys({
     projectId: '<PROJECT_ID>',
+    queries: [], // optional
     total: false // optional
 });
 
