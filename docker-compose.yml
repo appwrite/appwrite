@@ -567,7 +567,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       # Specific
       - _APP_BROWSER_HOST
@@ -670,7 +670,7 @@ services:
     depends_on:
       redis:
         condition: service_started
-      mariadb:
+      ${_APP_DB_HOST:-mongodb}:
         condition: service_started
     environment:
       - _APP_ENV
@@ -883,7 +883,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV
@@ -930,7 +930,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - mariadb
+      - ${_APP_DB_HOST:-mongodb}
       - redis
     environment:
       - _APP_ENV

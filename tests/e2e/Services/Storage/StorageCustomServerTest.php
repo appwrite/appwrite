@@ -224,13 +224,8 @@ class StorageCustomServerTest extends Scope
                 $this->getHeaders()
             )
         );
-        // Some databases have shorter max UID length (36), so validation catches this and returns 400
-        // Others support longer UIDs (255), so it passes validation and returns 404 when not found
-        if (!$this->getSupportForRelationships()) {
-            $this->assertEquals(404, $response['headers']['status-code']);
-        } else {
-            $this->assertEquals(400, $response['headers']['status-code']);
-        }
+        // UID validator always limits to 36 chars regardless of adapter, so validation catches this and returns 400
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
