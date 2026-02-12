@@ -1150,7 +1150,6 @@ Http::get('/v1/projects/:projectId/keys')
     ->desc('List keys')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.read')
-
     ->label('sdk', new Method(
         namespace: 'projects',
         group: 'keys',
@@ -1223,7 +1222,6 @@ Http::get('/v1/projects/:projectId/keys/:keyId')
     ->desc('Get key')
     ->groups(['api', 'projects'])
     ->label('scope', 'keys.read')
-
     ->label('sdk', new Method(
         namespace: 'projects',
         group: 'keys',
@@ -1490,7 +1488,6 @@ Http::get('/v1/projects/:projectId/platforms')
     ->desc('List platforms')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.read')
-
     ->label('sdk', new Method(
         namespace: 'projects',
         group: 'platforms',
@@ -1530,7 +1527,6 @@ Http::get('/v1/projects/:projectId/platforms/:platformId')
     ->desc('Get platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'platforms.read')
-
     ->label('sdk', new Method(
         namespace: 'projects',
         group: 'platforms',
