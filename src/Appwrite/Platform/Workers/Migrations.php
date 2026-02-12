@@ -385,7 +385,13 @@ class Migrations extends Action
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                 $credentials['endpoint'] = $credentials['endpoint'] ?? $endpoint;
-                $credentials['consoleApiKey'] = $credentials['consoleApiKey'] ?? $tempConsoleAPIKey;
+
+                // Only set consoleApiKey for same-instance migrations to avoid
+                // leaking a locally-signed JWT to untrusted remote servers
+                if (($credentials['endpoint'] ?? '') === $endpoint) {
+                    $credentials['consoleApiKey'] = $tempConsoleAPIKey;
+                    $credentials['sourceProjectId'] = $credentials['projectId'];
+                }
             }
 
             if ($migration->getAttribute('destination') === DestinationAppwrite::getName()) {

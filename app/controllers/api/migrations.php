@@ -1,6 +1,5 @@
 <?php
 
-use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -719,17 +718,7 @@ Http::get('/v1/migrations/appwrite/report')
     ->inject('user')
     ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
 
-        $consoleApiKey = '';
-        $openSslKey = System::getEnv('_APP_OPENSSL_KEY_V1');
-        if (!empty($openSslKey)) {
-            $jwt = new JWT($openSslKey, 'HS256', 86400, 0);
-            $consoleApiKey = API_KEY_DYNAMIC . '_' . $jwt->encode([
-                'projectId' => 'console',
-                'scopes' => ['platforms.read', 'keys.read'],
-            ]);
-        }
-
-        $appwrite = new Appwrite($projectID, $endpoint, $key, consoleApiKey: $consoleApiKey, sourceProjectId: $projectID);
+        $appwrite = new Appwrite($projectID, $endpoint, $key);
 
         try {
             $report = $appwrite->report($resources);
