@@ -17,27 +17,37 @@ trait FunctionsBase
     protected string $stdout = '';
     protected string $stderr = '';
 
-    protected function setupFunction(mixed $params): string
+    /**
+     * Retry an API call on transient 401 auth errors.
+     * CI can intermittently fail API key lookups under load.
+     */
+    protected function callWithAuthRetry(string $method, string $path, array $headers, mixed $params = []): array
     {
-        $maxRetries = 3;
-        $function = null;
+        $maxRetries = 5;
+        $response = null;
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
-            $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-                'content-type' => 'application/json',
-                'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]), $params);
+            $response = $this->client->call($method, $path, array_merge($headers), $params);
 
-            if ($function['headers']['status-code'] === 201) {
-                break;
+            if ($response['headers']['status-code'] !== 401) {
+                return $response;
             }
 
-            if ($attempt < $maxRetries && $function['headers']['status-code'] === 401) {
-                \sleep(2);
-                continue;
+            if ($attempt < $maxRetries) {
+                \sleep($attempt * 2);
             }
         }
+
+        return $response;
+    }
+
+    protected function setupFunction(mixed $params): string
+    {
+        $function = $this->callWithAuthRetry(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $params);
 
         $this->assertEquals($function['headers']['status-code'], 201, 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
 
@@ -48,11 +58,11 @@ trait FunctionsBase
 
     protected function setupDeployment(string $functionId, mixed $params): string
     {
-        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+        $deployment = $this->callWithAuthRetry(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $params);
+        ], $params);
         $this->assertEquals($deployment['headers']['status-code'], 202, 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         $deploymentId = $deployment['body']['$id'] ?? '';
 
