@@ -319,6 +319,8 @@ class Migrations extends Action
                 'functions.write',
                 'tokens.read',
                 'tokens.write',
+                'platforms.read',
+                'keys.read',
             ]
         ]);
 
@@ -326,23 +328,37 @@ class Migrations extends Action
     }
 
     /**
-     * Generate a console-scoped dynamic API key for settings migration.
-     *
-     * This key allows the source adapter to read platforms and keys
-     * via the console API endpoints (same-instance only).
-     *
-     * @throws Exception
+     * Decode a dynamic API key and extract its scopes.
      */
-    protected function generateConsoleAPIKey(string $targetProjectId): string
+    protected function decodeAPIKeyScopes(string $apiKey): array
     {
+        if (\str_contains($apiKey, '_')) {
+            [, $secret] = \explode('_', $apiKey, 2);
+        } else {
+            $secret = $apiKey;
+        }
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+        $payload = $jwt->decode($secret);
+
+        return $payload['scopes'] ?? [];
+    }
+
+    /**
+     * Generate a console-scoped dynamic API key for settings migration.
+     * Scopes are derived from the project API key (same-instance only).
+     */
+    protected function generateConsoleAPIKey(string $targetProjectId, array $scopes): string
+    {
+        if (empty($scopes)) {
+            return '';
+        }
+
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
 
         $apiKey = $jwt->encode([
             'projectId' => 'console',
-            'scopes' => [
-                'platforms.read',
-                'keys.read',
-            ],
+            'scopes' => $scopes,
             'targetProjectId' => $targetProjectId,
         ]);
 
@@ -389,8 +405,14 @@ class Migrations extends Action
                 // Only generate and set consoleApiKey for same-instance migrations
                 // to avoid leaking a locally-signed JWT to untrusted remote servers
                 if ($credentials['endpoint'] === $endpoint) {
-                    $credentials['consoleApiKey'] = $this->generateConsoleAPIKey($credentials['projectId']);
-                    $credentials['sourceProjectId'] = $credentials['projectId'];
+                    // Read scopes from the project API key
+                    $projectKeyScopes = $this->decodeAPIKeyScopes($credentials['apiKey']);
+                    $consoleApiKey = $this->generateConsoleAPIKey($credentials['projectId'], $projectKeyScopes);
+
+                    if (!empty($consoleApiKey)) {
+                        $credentials['consoleApiKey'] = $consoleApiKey;
+                        $credentials['sourceProjectId'] = $credentials['projectId'];
+                    }
                 }
             }
 
