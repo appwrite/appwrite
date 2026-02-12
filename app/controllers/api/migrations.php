@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -713,10 +714,22 @@ Http::get('/v1/migrations/appwrite/report')
     ->param('projectID', '', new Text(512), "Source's Project ID")
     ->param('key', '', new Text(512), "Source's API Key")
     ->inject('response')
-    ->inject('dbForPlatform')
-    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response, Database $dbForPlatform) {
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('user')
+    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
 
-        $appwrite = new Appwrite($projectID, $endpoint, $key);
+        $consoleApiKey = '';
+        $openSslKey = System::getEnv('_APP_OPENSSL_KEY_V1');
+        if (!empty($openSslKey)) {
+            $jwt = new JWT($openSslKey, 'HS256', 86400, 0);
+            $consoleApiKey = API_KEY_DYNAMIC . '_' . $jwt->encode([
+                'projectId' => 'console',
+                'scopes' => ['platforms.read', 'keys.read'],
+            ]);
+        }
+
+        $appwrite = new Appwrite($projectID, $endpoint, $key, consoleApiKey: $consoleApiKey, sourceProjectId: $projectID);
 
         try {
             $report = $appwrite->report($resources);
@@ -731,25 +744,6 @@ Http::get('/v1/migrations/appwrite/report')
             }
 
             throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
-        }
-
-        $sourceProject = $dbForPlatform->getDocument('projects', $projectID);
-
-        if (!$sourceProject->isEmpty()) {
-            $projectInternalId = $sourceProject->getSequence();
-
-            if (\in_array(Resource::TYPE_PLATFORM, $resources)) {
-                $report[Resource::TYPE_PLATFORM] = $dbForPlatform->count('platforms', [
-                    Query::equal('projectInternalId', [$projectInternalId]),
-                ]);
-            }
-
-            if (\in_array(Resource::TYPE_KEY, $resources)) {
-                $report[Resource::TYPE_KEY] = $dbForPlatform->count('keys', [
-                    Query::equal('resourceType', ['projects']),
-                    Query::equal('resourceInternalId', [$projectInternalId]),
-                ]);
-            }
         }
 
         $response
