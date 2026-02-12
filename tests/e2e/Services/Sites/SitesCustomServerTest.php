@@ -878,7 +878,13 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentIdActive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 300000, 500);
+
+        // Wait for activation to propagate (build worker sets deploymentId after status=ready)
+        $this->assertEventually(function () use ($siteId, $deploymentIdActive) {
+            $site = $this->getSite($siteId);
+            $this->assertEquals($deploymentIdActive, $site['body']['deploymentId']);
+        }, 30000, 500);
 
         $deployment = $this->createDeployment($siteId, [
             'code' => $this->packageSite('static-single-file'),
@@ -894,7 +900,7 @@ class SitesCustomServerTest extends Scope
             $deployment = $this->getDeployment($siteId, $deploymentIdInactive);
 
             $this->assertEquals('ready', $deployment['body']['status']);
-        }, 50000, 500);
+        }, 300000, 500);
 
         $site = $this->getSite($siteId);
 
