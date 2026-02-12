@@ -1,7 +1,6 @@
 <?php
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Key;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -696,7 +695,7 @@ Http::get('/v1/migrations/:migrationId')
 Http::get('/v1/migrations/appwrite/settings-key')
     ->groups(['api', 'migrations'])
     ->desc('Generate console API key for settings migration')
-    ->label('scope', 'platforms.read')
+    ->label('scope', 'migrations.read')
     ->label('sdk', new Method(
         namespace: 'migrations',
         group: null,
@@ -712,8 +711,7 @@ Http::get('/v1/migrations/appwrite/settings-key')
     ))
     ->inject('response')
     ->inject('project')
-    ->inject('apiKey')
-    ->action(function (Response $response, Document $project, Key $apiKey) {
+    ->action(function (Response $response, Document $project) {
         $targetProjectId = $project->getId();
 
         if (empty($targetProjectId)) {
@@ -723,7 +721,7 @@ Http::get('/v1/migrations/appwrite/settings-key')
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 120, 0);
         $consoleKey = $jwt->encode([
             'projectId' => 'console',
-            'scopes' => $apiKey->getScopes(),
+            'scopes' => ['platforms.read', 'keys.read'],
             'targetProjectId' => $targetProjectId,
         ]);
 
