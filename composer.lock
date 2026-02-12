@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "57189be7990142e6a44a13eefdfe3043",
+    "content-hash": "1988c2437549ecb68bf6dfa294598a5a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4464,16 +4464,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "1.5.2",
+            "version": "dev-feat-platform-key-migration",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "93904948f6dd07491821615fd9b9acbcaadec12e"
+                "reference": "aee64c99d03bd04d2961c678bc934bd727c081ec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/93904948f6dd07491821615fd9b9acbcaadec12e",
-                "reference": "93904948f6dd07491821615fd9b9acbcaadec12e",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/aee64c99d03bd04d2961c678bc934bd727c081ec",
+                "reference": "aee64c99d03bd04d2961c678bc934bd727c081ec",
                 "shasum": ""
             },
             "require": {
@@ -4513,9 +4513,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/1.5.2"
+                "source": "https://github.com/utopia-php/migration/tree/feat-platform-key-migration"
             },
-            "time": "2026-02-11T06:19:35+00:00"
+            "time": "2026-02-12T15:26:26+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -8893,9 +8893,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-feat-platform-key-migration",
+            "alias": "1.5.0",
+            "alias_normalized": "1.5.0.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -8919,5 +8928,5 @@
     "platform-overrides": {
         "php": "8.3"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

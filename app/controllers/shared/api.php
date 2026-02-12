@@ -273,6 +273,17 @@ Http::init()
 
         $scopes = \array_unique($scopes);
 
+        // Migration-scoped keys (with targetProjectId) can only access routes
+        // that have a :projectId param matching the key's target project.
+        // This allows any /v1/projects/:projectId/* endpoint to be used during
+        // migration without needing per-route labels, while blocking all other routes.
+        if (!empty($apiKey) && !empty($apiKey->getTargetProjectId())) {
+            $routeProjectId = $request->getParam('projectId', '');
+            if (empty($routeProjectId) || $routeProjectId !== $apiKey->getTargetProjectId()) {
+                throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+            }
+        }
+
         $authorization->addRole($role);
         foreach ($user->getRoles($authorization) as $authRole) {
             $authorization->addRole($authRole);

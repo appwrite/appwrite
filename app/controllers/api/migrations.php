@@ -724,7 +724,7 @@ Http::get('/v1/migrations/appwrite/settings-key')
             throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
         }
 
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 120, 0);
         $consoleKey = $jwt->encode([
             'projectId' => 'console',
             'scopes' => $scopes,

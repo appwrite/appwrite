@@ -168,7 +168,13 @@ class Key
                 $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $deploymentStatusIgnored = $payload['deploymentStatusIgnored'] ?? false;
                 $targetProjectId = $payload['targetProjectId'] ?? '';
-                $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
+
+                // Keys with targetProjectId are restricted — only use explicit JWT scopes
+                if (!empty($targetProjectId)) {
+                    $scopes = $payload['scopes'] ?? [];
+                } else {
+                    $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
+                }
 
                 if (!$projectCheckDisabled && $projectId !== $project->getId()) {
                     return $guestKey;
