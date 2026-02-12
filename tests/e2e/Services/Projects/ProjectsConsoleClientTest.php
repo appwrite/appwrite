@@ -6438,7 +6438,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * Test project specific permissions for project resources, in this case 'variables'.
+     * Test project specific permissions for project resources, in this case 'function variables'.
      */
     public function testProjectSpecificPermissionsForProjectResources(): void
     {
@@ -6511,12 +6511,17 @@ class ProjectsConsoleClientTest extends Scope
         ]);
         $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
+        // Setup functions
+        $functionId = ID::unique();
+        $this->setupFunction($projectIdA, $functionId, $token);
+        $this->setupFunction($projectIdB, $functionId, $token);
+
         foreach ($testCases as $testCase) {
             $this->updateMembershipRole($teamId, $testUserMembershipId, $testCase['roles']);
 
             foreach ($testCase['successProjectIds'] as $projectId) {
                 $variableId = ID::unique();
-                $response = $this->client->call(Client::METHOD_POST, '/project/variables', [
+                $response = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
                     'origin' => 'http://localhost',
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $projectId,
@@ -6535,7 +6540,7 @@ class ProjectsConsoleClientTest extends Scope
 
             foreach ($testCase['failureProjectIds'] as $projectId) {
                 $variableId = ID::unique();
-                $response = $this->client->call(Client::METHOD_POST, '/project/variables', [
+                $response = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', [
                     'origin' => 'http://localhost',
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $projectId,

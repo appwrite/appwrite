@@ -4,6 +4,7 @@ namespace Tests\E2E\Services\Projects;
 
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 
 trait ProjectsBase
 {
@@ -150,5 +151,30 @@ trait ProjectsBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+    }
+
+    protected function setupFunction(string $projectId, string $functionId, string $token): void
+    {
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-mode' => 'admin',
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $token,
+        ]), [
+            'functionId' => $functionId,
+            'name' => 'Test function',
+            'execute' => [Role::any()->toString()],
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'schedule' => '0 0 1 1 *',
+            'timeout' => 10,
+        ]);
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $this->assertNotEmpty($function['body']['$id']);
     }
 }

@@ -263,13 +263,25 @@ Http::init()
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
+            $projectId = $project->getId();
+            if ($projectId === 'console' && str_starts_with($route->getPath(), '/v1/projects/:projectId')) {
+                $uri = $request->getURI();
+                $projectId = explode('/', $uri)[3];
+            }
+
             $scopes = []; // Reset scope if admin
             foreach ($adminRoles as $role) {
-                if (str_starts_with($role, 'project-')) {
-                    $role = substr($role, strrpos($role, '-') + 1);
+                $isTeamWideRole = !str_starts_with($role, 'project-');
+                $isProjectSpecificRole = $projectId !== 'console' && str_starts_with($role, 'project-' . $projectId);
+
+                if ($isTeamWideRole || $isProjectSpecificRole) {
+                    $role = match (str_starts_with($role, 'project-')) {
+                        true => substr($role, strrpos($role, '-') + 1),
+                        false => $role,
+                    };
+                    $scopes = \array_merge($scopes, $roles[$role]['scopes']);
+                    $authorization->addRole($role);
                 }
-                $scopes = \array_merge($scopes, $roles[$role]['scopes']);
-                $authorization->addRole($role);
             }
 
             /**
