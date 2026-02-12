@@ -333,7 +333,7 @@ class Migrations extends Action
      *
      * @throws Exception
      */
-    protected function generateConsoleAPIKey(): string
+    protected function generateConsoleAPIKey(string $targetProjectId): string
     {
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
 
@@ -343,6 +343,7 @@ class Migrations extends Action
                 'platforms.read',
                 'keys.read',
             ],
+            'targetProjectId' => $targetProjectId,
         ]);
 
         return API_KEY_DYNAMIC . '_' . $apiKey;
@@ -388,7 +389,7 @@ class Migrations extends Action
                 // Only generate and set consoleApiKey for same-instance migrations
                 // to avoid leaking a locally-signed JWT to untrusted remote servers
                 if ($credentials['endpoint'] === $endpoint) {
-                    $credentials['consoleApiKey'] = $this->generateConsoleAPIKey();
+                    $credentials['consoleApiKey'] = $this->generateConsoleAPIKey($credentials['projectId']);
                     $credentials['sourceProjectId'] = $credentials['projectId'];
                 }
             }
