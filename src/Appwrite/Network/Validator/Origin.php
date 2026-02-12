@@ -22,6 +22,27 @@ class Origin extends Validator
     {
     }
 
+    public function setAllowedHostnames(array $allowedHostnames): self
+    {
+        $this->allowedHostnames = $allowedHostnames;
+        return $this;
+    }
+
+    public function setAllowedSchemes(array $allowedSchemes): self
+    {
+        $this->allowedSchemes = $allowedSchemes;
+        return $this;
+    }
+
+    public function getAllowedHostnames(): array
+    {
+        return $this->allowedHostnames;
+    }
+
+    public function getAllowedSchemes(): array
+    {
+        return $this->allowedSchemes;
+    }
 
     /**
      * Check if Origin is valid.
@@ -30,13 +51,13 @@ class Origin extends Validator
      */
     public function isValid($origin): bool
     {
-        $this->origin = $origin;
-        $this->scheme = null;
-        $this->host = null;
-
         if (!is_string($origin) || empty($origin)) {
             return false;
         }
+
+        $this->origin = $origin;
+        $this->scheme = null;
+        $this->host = null;
 
         $this->scheme = $this->parseScheme($origin);
         $this->host = strtolower(parse_url($origin, PHP_URL_HOST) ?? '');

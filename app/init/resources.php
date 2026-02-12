@@ -10,6 +10,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Execution;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
@@ -42,8 +43,8 @@ use Utopia\Auth\Store;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
@@ -51,7 +52,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
@@ -159,6 +160,9 @@ Http::setResource('queueForAudits', function (Publisher $publisher) {
 Http::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
+Http::setResource('queueForExecutions', function (Publisher $publisher) {
+    return new Execution($publisher);
+}, ['publisher']);
 Http::setResource('eventProcessor', function () {
     return new EventProcessor();
 }, []);
@@ -198,15 +202,26 @@ Http::setResource('allowedHostnames', function (array $platform, Document $proje
     }
 
     $originHostname = parse_url($request->getOrigin(), PHP_URL_HOST);
+    $refererHostname = parse_url($request->getReferer(), PHP_URL_HOST);
+
+    $hostname = $originHostname;
+    if (empty($hostname)) {
+        $hostname = $refererHostname;
+    }
 
     /* Add request hostname for preflight requests */
     if ($request->getMethod() === 'OPTIONS') {
-        $allowed[] = $originHostname;
+        $allowed[] = $hostname;
     }
 
-    /* Allow the request origin if a dev key or rule is found */
-    if ((!$rule->isEmpty() || !$devKey->isEmpty()) && !empty($originHostname)) {
-        $allowed[] = $originHostname;
+    /* Allow the request origin of rule */
+    if (!$rule->isEmpty() && !empty($rule->getAttribute('domain', ''))) {
+        $allowed[] = $rule->getAttribute('domain', '');
+    }
+
+    /* Allow the request origin if a dev key is found */
+    if (!$devKey->isEmpty() && !empty($hostname)) {
+        $allowed[] = $hostname;
     }
 
     return array_unique($allowed);
@@ -237,6 +252,11 @@ Http::setResource('allowedSchemes', function (Document $project) {
  */
 Http::setResource('rule', function (Request $request, Database $dbForPlatform, Document $project, Authorization $authorization) {
     $domain = \parse_url($request->getOrigin(), PHP_URL_HOST);
+
+    if (empty($domain)) {
+        $domain = \parse_url($request->getReferer(), PHP_URL_HOST);
+    }
+
     if (empty($domain)) {
         return new Document();
     }
@@ -504,6 +524,10 @@ Http::setResource('project', function ($dbForPlatform, $request, $console, $auth
     /** @var Utopia\Database\Document $console */
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
+    // Realtime channel "project" can send project=Query array
+    if (!\is_string($projectId)) {
+        $projectId = $request->getHeader('x-appwrite-project', '');
+    }
 
     if (empty($projectId) || $projectId === 'console') {
         return $console;

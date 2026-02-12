@@ -16,7 +16,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Swoole\Request;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\System\System;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
@@ -94,6 +94,12 @@ class Base extends Action
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
+        } else {
+            // Fallback till we have tag support here
+            // Goal is to set providerBranch, so build worker knows what to clone as base
+            // Without this, clone command would be cloning empty branch, and failing
+            $providerBranch = $function->getAttribute('providerBranch', 'main');
+            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
         }
 
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
@@ -184,6 +190,12 @@ class Base extends Action
             } catch (\Throwable $error) {
                 // Ignore; deployment can continue
             }
+        } else {
+            // Fallback till we have tag support here
+            // Goal is to set providerBranch, so build worker knows what to clone as base
+            // Without this, clone command would be cloning empty branch, and failing
+            $providerBranch = $site->getAttribute('providerBranch', 'main');
+            $branchUrl = "https://github.com/$owner/$repositoryName/tree/$providerBranch";
         }
 
         $repositoryUrl = "https://github.com/$owner/$repositoryName";
