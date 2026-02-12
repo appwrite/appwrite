@@ -19,11 +19,25 @@ trait FunctionsBase
 
     protected function setupFunction(mixed $params): string
     {
-        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $params);
+        $maxRetries = 3;
+        $function = null;
+
+        for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]), $params);
+
+            if ($function['headers']['status-code'] === 201) {
+                break;
+            }
+
+            if ($attempt < $maxRetries && $function['headers']['status-code'] === 401) {
+                \sleep(2);
+                continue;
+            }
+        }
 
         $this->assertEquals($function['headers']['status-code'], 201, 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
 
