@@ -9132,8 +9132,8 @@ trait DatabasesBase
 
         $this->assertEquals(202, $poly['headers']['status-code']);
 
-        // Wait for attributes to be available
-        $this->waitForAllAttributes($databaseId, $colId);
+        // Wait for attributes to be available (longer timeout for MariaDB spatial columns under parallel load)
+        $this->waitForAllAttributes($databaseId, $colId, 600000);
 
         // Create a new document without spatial data to test default values
         $newDocument = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $colId), array_merge([

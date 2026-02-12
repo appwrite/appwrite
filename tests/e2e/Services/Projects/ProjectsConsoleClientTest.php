@@ -3249,8 +3249,6 @@ class ProjectsConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-
-        return $data;
     }
 
 
