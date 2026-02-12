@@ -278,7 +278,8 @@ Http::init()
         // This allows any /v1/projects/:projectId/* endpoint to be used during
         // migration without needing per-route labels, while blocking all other routes.
         if (!empty($apiKey) && !empty($apiKey->getTargetProjectId())) {
-            $routeProjectId = $request->getParam('projectId', '');
+            $pathValues = $route->getPathValues($request);
+            $routeProjectId = $pathValues['projectId'] ?? '';
             if (empty($routeProjectId) || $routeProjectId !== $apiKey->getTargetProjectId()) {
                 throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
             }
