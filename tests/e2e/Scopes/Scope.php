@@ -96,6 +96,14 @@ abstract class Scope extends TestCase
     }
 
     /**
+     * Check if the database adapter supports spatial indexes on nullable columns
+     */
+    protected function getSupportForSpatialIndexNull(): bool
+    {
+        return $this->getConsoleVariables()['supportForSpatialIndexNull'] ?? false;
+    }
+
+    /**
      * Check if the database adapter supports fulltext wildcard search
      */
     protected function getSupportForFulltextWildcard(): bool

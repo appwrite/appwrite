@@ -143,6 +143,15 @@ class ConsoleVariables extends Model
                 ]
             )
             ->addRule(
+                'supportForSpatialIndexNull',
+                [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether the database adapter supports spatial indexes on nullable columns.',
+                    'default' => false,
+                    'example' => false,
+                ]
+            )
+            ->addRule(
                 'supportForFulltextWildcard',
                 [
                     'type' => self::TYPE_BOOLEAN,

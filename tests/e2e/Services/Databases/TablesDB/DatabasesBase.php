@@ -9373,7 +9373,7 @@ trait DatabasesBase
         ]);
         $this->assertEquals(202, $okIndex['headers']['status-code']);
 
-        // Create index on optional spatial column (should fail in case of mariadb)
+        // Create index on optional spatial column (should fail for adapters that don't support spatial index null)
         $badIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -9383,31 +9383,38 @@ trait DatabasesBase
             'type' => Database::INDEX_SPATIAL,
             'columns' => ['pOptional'],
         ]);
-        $this->assertEquals(400, $badIndex['headers']['status-code']);
 
-        // making it required to create index on it
-        $updated = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/point/'.'pOptional', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'required' => true,
-            'default' => null
-        ]);
-        $this->assertEquals(200, $updated['headers']['status-code']);
+        if ($this->getSupportForSpatialIndexNull()) {
+            // PostgreSQL allows spatial indexes on nullable columns
+            $this->assertEquals(202, $badIndex['headers']['status-code']);
+        } else {
+            // MariaDB requires spatial indexed columns to be NOT NULL
+            $this->assertEquals(400, $badIndex['headers']['status-code']);
 
-        sleep(2);
+            // making it required to create index on it
+            $updated = $this->client->call(Client::METHOD_PATCH, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/point/'.'pOptional', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'required' => true,
+                'default' => null
+            ]);
+            $this->assertEquals(200, $updated['headers']['status-code']);
 
-        $retriedIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'idx_optional_point',
-            'type' => Database::INDEX_SPATIAL,
-            'columns' => ['pOptional'],
-        ]);
-        $this->assertEquals(202, $retriedIndex['headers']['status-code']);
+            sleep(2);
+
+            $retriedIndex = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/indexes', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'idx_optional_point',
+                'type' => Database::INDEX_SPATIAL,
+                'columns' => ['pOptional'],
+            ]);
+            $this->assertEquals(202, $retriedIndex['headers']['status-code']);
+        }
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/tablesdb/' . $databaseId . '/tables/' . $tableId, array_merge([
@@ -9762,19 +9769,23 @@ trait DatabasesBase
             'required' => true,
         ]);
 
-        $this->assertEquals(400, $point['headers']['status-code']);
+        if ($this->getSupportForSpatialIndexNull()) {
+            $this->assertEquals(202, $point['headers']['status-code']);
+        } else {
+            $this->assertEquals(400, $point['headers']['status-code']);
 
-        $point = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/point', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'loc',
-            'required' => false,
-            'default' => null
-        ]);
+            $point = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/point', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'loc',
+                'required' => false,
+                'default' => null
+            ]);
 
-        $this->assertEquals(202, $point['headers']['status-code']);
+            $this->assertEquals(202, $point['headers']['status-code']);
+        }
 
         $line = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/line', array_merge([
             'content-type' => 'application/json',
@@ -9785,19 +9796,23 @@ trait DatabasesBase
             'required' => true,
         ]);
 
-        $this->assertEquals(400, $line['headers']['status-code']);
+        if ($this->getSupportForSpatialIndexNull()) {
+            $this->assertEquals(202, $line['headers']['status-code']);
+        } else {
+            $this->assertEquals(400, $line['headers']['status-code']);
 
-        $line = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/line', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'route',
-            'required' => false,
-            'default' => null
-        ]);
+            $line = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/line', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'route',
+                'required' => false,
+                'default' => null
+            ]);
 
-        $this->assertEquals(202, $line['headers']['status-code']);
+            $this->assertEquals(202, $line['headers']['status-code']);
+        }
 
         $poly = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/polygon', array_merge([
             'content-type' => 'application/json',
@@ -9808,19 +9823,23 @@ trait DatabasesBase
             'required' => true,
         ]);
 
-        $this->assertEquals(400, $poly['headers']['status-code']);
+        if ($this->getSupportForSpatialIndexNull()) {
+            $this->assertEquals(202, $poly['headers']['status-code']);
+        } else {
+            $this->assertEquals(400, $poly['headers']['status-code']);
 
-        $poly = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/polygon', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'area',
-            'required' => false,
-            'default' => null
-        ]);
+            $poly = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $tableId . '/columns/polygon', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ]), [
+                'key' => 'area',
+                'required' => false,
+                'default' => null
+            ]);
 
-        $this->assertEquals(202, $poly['headers']['status-code']);
+            $this->assertEquals(202, $poly['headers']['status-code']);
+        }
     }
 
     public function testSpatialColCreateOnExistingDataWithDefaults(): void
