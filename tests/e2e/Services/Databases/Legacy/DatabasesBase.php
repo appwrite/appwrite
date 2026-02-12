@@ -2430,9 +2430,10 @@ trait DatabasesBase
         $this->assertEquals($document['title'], $response['body']['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
         $this->assertArrayNotHasKey('birthDay', $response['body']);
+
         $sequence = $response['body']['$sequence'];
 
-        // Query by sequence
+        // Query by sequence on get single document route
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2442,10 +2443,23 @@ trait DatabasesBase
             ],
         ]);
 
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid query method: equal', $response['body']['message']);
+
+        // Query by sequence
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$sequence', [$sequence.''])->toString()
+            ],
+        ]);
+
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($document['title'], $response['body']['title']);
-        $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
-        $this->assertTrue(array_key_exists('$sequence', $response['body']));
+        $this->assertEquals($document['title'], $response['body']['documents'][0]['title']);
+        $this->assertEquals($document['releaseYear'], $response['body']['documents'][0]['releaseYear']);
+        $this->assertTrue(array_key_exists('$sequence', $response['body']['documents'][0]));
     }
 
     /**
