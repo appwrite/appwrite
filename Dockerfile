@@ -32,6 +32,11 @@ WORKDIR /usr/src/code
 
 COPY --from=composer /usr/local/src/vendor /usr/src/code/vendor
 
+# Patch: Fix PostgreSQL boolean type mismatch in batch inserts (utopia-php/database#createDocuments).
+# TODO: Remove once utopia-php/database is updated with the upstream fix.
+COPY ./patches/fix-postgres-boolean.php /tmp/fix-postgres-boolean.php
+RUN php /tmp/fix-postgres-boolean.php && rm /tmp/fix-postgres-boolean.php
+
 # Add Source Code
 COPY ./app /usr/src/code/app
 COPY ./public /usr/src/code/public
