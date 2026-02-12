@@ -180,13 +180,13 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => $fallbackForDB,
             'multiple' => true,
-           'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
         ],
         'logs' => [
             'type' => 'database',
             'dsns' => System::getEnv('_APP_CONNECTIONS_DB_LOGS', $fallbackForDB),
             'multiple' => false,
-           'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
+            'schemes' => ['mariadb', 'mongodb', 'mysql', 'postgresql'],
         ],
         'publisher' => [
             'type' => 'publisher',
@@ -386,20 +386,22 @@ $register->set('db', function () {
     switch ($dbAdapter) {
         case 'mongodb':
             try {
-                $mongo = new MongoClient($dbScheme, $dbHost, (int)$dbPort, $dbUser, $dbPass, false);
+                $mongo = new MongoClient($dbSchema, $dbHost, (int)$dbPort, $dbUser, $dbPass, false);
                 @$mongo->connect();
-
                 return $mongo;
             } catch (\Throwable $e) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'MongoDB connection failed: ' . $e->getMessage());
             }
         case 'mysql':
         case 'mariadb':
-            $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4";
+            $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
             return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
         case 'postgresql':
             $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}";
-			return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+            return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
+        default:
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');
+    }
 });
 
 $register->set('smtp', function () {
