@@ -16,7 +16,6 @@ use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Query\Cursor;
-use Utopia\Platform\Action;
 use Utopia\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
@@ -91,6 +90,9 @@ class XList extends Action
 
             $cursor->setValue($cursorDocument);
         }
+
+        // use base action to get all types, contexts, etc!
+        $queries[] = Query::equal('type', [$this->getDatabaseType()]);
 
         try {
             $databases = $dbForProject->find('databases', $queries);
