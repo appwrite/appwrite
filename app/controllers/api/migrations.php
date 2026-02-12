@@ -1,5 +1,7 @@
 <?php
 
+use Ahc\Jwt\JWT;
+use Appwrite\Auth\Key;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -691,6 +693,50 @@ Http::get('/v1/migrations/:migrationId')
         $response->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
+Http::get('/v1/migrations/appwrite/settings-key')
+    ->groups(['api', 'migrations'])
+    ->desc('Generate console API key for settings migration')
+    ->label('scope', 'platforms.read')
+    ->label('sdk', new Method(
+        namespace: 'migrations',
+        group: null,
+        name: 'getAppwriteSettingsKey',
+        description: '/docs/references/migrations/migration-appwrite-settings-key.md',
+        auth: [AuthType::KEY],
+        responses: [
+            new SDKResponse(
+                code: Response::STATUS_CODE_OK,
+                model: Response::MODEL_NONE,
+            )
+        ]
+    ))
+    ->inject('response')
+    ->inject('project')
+    ->inject('apiKey')
+    ->action(function (Response $response, Document $project, ?Key $apiKey) {
+        if ($apiKey === null) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        }
+
+        $scopes = $apiKey->getScopes();
+        $settingsScopes = \array_values(\array_intersect($scopes, ['platforms.read', 'keys.read']));
+
+        if (empty($settingsScopes)) {
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        }
+
+        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
+        $consoleKey = $jwt->encode([
+            'projectId' => 'console',
+            'scopes' => $settingsScopes,
+            'targetProjectId' => $project->getId(),
+        ]);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->json(['key' => API_KEY_DYNAMIC . '_' . $consoleKey]);
+    });
+
 Http::get('/v1/migrations/appwrite/report')
     ->groups(['api', 'migrations'])
     ->desc('Get Appwrite migration report')
@@ -717,7 +763,6 @@ Http::get('/v1/migrations/appwrite/report')
     ->inject('project')
     ->inject('user')
     ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
-
         $appwrite = new Appwrite($projectID, $endpoint, $key);
 
         try {

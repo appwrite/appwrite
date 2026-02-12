@@ -214,8 +214,6 @@ class Migrations extends Action
                 $dataSource,
                 $database,
                 $queries,
-                $credentials['consoleApiKey'] ?? '',
-                $credentials['projectId'] ?? '',
             ),
             CSV::getName() => new CSV(
                 $resourceId,
@@ -328,44 +326,6 @@ class Migrations extends Action
     }
 
     /**
-     * Decode a dynamic API key and extract its scopes.
-     */
-    protected function decodeAPIKeyScopes(string $apiKey): array
-    {
-        if (\str_contains($apiKey, '_')) {
-            [, $secret] = \explode('_', $apiKey, 2);
-        } else {
-            $secret = $apiKey;
-        }
-
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
-        $payload = $jwt->decode($secret);
-
-        return $payload['scopes'] ?? [];
-    }
-
-    /**
-     * Generate a console-scoped dynamic API key for settings migration.
-     * Scopes are derived from the project API key (same-instance only).
-     */
-    protected function generateConsoleAPIKey(string $targetProjectId, array $scopes): string
-    {
-        if (empty($scopes)) {
-            return '';
-        }
-
-        $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 86400, 0);
-
-        $apiKey = $jwt->encode([
-            'projectId' => 'console',
-            'scopes' => $scopes,
-            'targetProjectId' => $targetProjectId,
-        ]);
-
-        return API_KEY_DYNAMIC . '_' . $apiKey;
-    }
-
-    /**
      * @throws AuthorizationException
      * @throws Conflict
      * @throws Restricted
@@ -401,19 +361,6 @@ class Migrations extends Action
                 $credentials['projectId'] = $credentials['projectId'] ?? $project->getId();
                 $credentials['apiKey'] = $credentials['apiKey'] ?? $tempAPIKey;
                 $credentials['endpoint'] = $credentials['endpoint'] ?? $endpoint;
-
-                // Only generate and set consoleApiKey for same-instance migrations
-                // to avoid leaking a locally-signed JWT to untrusted remote servers
-                if ($credentials['endpoint'] === $endpoint) {
-                    // Read scopes from the project API key
-                    $projectKeyScopes = $this->decodeAPIKeyScopes($credentials['apiKey']);
-                    $consoleApiKey = $this->generateConsoleAPIKey($credentials['projectId'], $projectKeyScopes);
-
-                    if (!empty($consoleApiKey)) {
-                        $credentials['consoleApiKey'] = $consoleApiKey;
-                        $credentials['sourceProjectId'] = $credentials['projectId'];
-                    }
-                }
             }
 
             if ($migration->getAttribute('destination') === DestinationAppwrite::getName()) {
