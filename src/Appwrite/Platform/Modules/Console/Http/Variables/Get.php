@@ -7,6 +7,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Domains\Domain;
 use Utopia\Platform\Action;
@@ -47,10 +48,11 @@ class Get extends Action
             ))
             ->inject('response')
             ->inject('platform')
+            ->inject('dbForProject')
             ->callback($this->action(...));
     }
 
-    public function action(Response $response, array $platform)
+    public function action(Response $response, array $platform, Database $dbForProject)
     {
         $validator = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME'));
         $isCNAMEValid = !empty(System::getEnv('_APP_DOMAIN_TARGET_CNAME', '')) && $validator->isKnown() && !$validator->isTest();
@@ -71,6 +73,8 @@ class Get extends Action
 
         $isAssistantEnabled = !empty(System::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 
+        $adapter = $dbForProject->getAdapter();
+
         $variables = new Document([
             '_APP_DOMAIN_TARGET_CNAME' => System::getEnv('_APP_DOMAIN_TARGET_CNAME'),
             '_APP_DOMAIN_TARGET_AAAA' => System::getEnv('_APP_DOMAIN_TARGET_AAAA'),
@@ -87,6 +91,11 @@ class Get extends Action
             '_APP_DOMAIN_FUNCTIONS' => $platform['functionsDomain'],
             '_APP_OPTIONS_FORCE_HTTPS' => System::getEnv('_APP_OPTIONS_FORCE_HTTPS'),
             '_APP_DOMAINS_NAMESERVERS' => System::getEnv('_APP_DOMAINS_NAMESERVERS'),
+            '_APP_DB_ADAPTER' => System::getEnv('_APP_DB_ADAPTER', 'mariadb'),
+            'supportForRelationships' => $adapter->getSupportForRelationships(),
+            'supportForOperators' => $adapter->getSupportForOperators(),
+            'supportForSpatials' => $adapter->getSupportForSpatialAttributes(),
+            'maxIndexLength' => $adapter->getMaxIndexLength(),
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);
