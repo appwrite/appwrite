@@ -978,6 +978,10 @@ Http::setResource('redis', function () {
     return $redis;
 });
 
+Http::setResource('logs', function (\Redis $redis) {
+    return new \Appwrite\Logs\Redis($redis);
+}, ['redis']);
+
 Http::setResource('timelimit', function (\Redis $redis) {
     return function (string $key, int $limit, int $time) use ($redis) {
         return new TimeLimitRedis($key, $limit, $time, $redis);

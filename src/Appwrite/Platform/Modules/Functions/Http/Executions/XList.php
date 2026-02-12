@@ -3,6 +3,8 @@
 namespace Appwrite\Platform\Modules\Functions\Http\Executions;
 
 use Appwrite\Extend\Exception;
+use Appwrite\Logs;
+use Appwrite\Logs\Resource;
 use Appwrite\Platform\Modules\Compute\Base;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -20,6 +22,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\System\System;
 use Utopia\Validator\Boolean;
 
 class XList extends Base
@@ -61,6 +64,7 @@ class XList extends Base
             ->inject('response')
             ->inject('dbForProject')
             ->inject('authorization')
+            ->inject('logs')
             ->callback($this->action(...));
     }
 
@@ -70,7 +74,8 @@ class XList extends Base
         bool $includeTotal,
         Response $response,
         Database $dbForProject,
-        Authorization $authorization
+        Authorization $authorization,
+        Logs $logs,
     ) {
         $function = $authorization->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -79,6 +84,69 @@ class XList extends Base
 
         if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        if (System::getEnv('FEATURE_LOGS', 'enabled') === 'enabled') {
+            $deploymentId = $function->getAttribute('deploymentId', '');
+
+            if (empty($deploymentId)) {
+                $response->dynamic(new Document([
+                    'executions' => [],
+                    'total' => 0,
+                ]), Response::MODEL_EXECUTION_LIST);
+
+                return;
+            }
+
+            try {
+                $parsed = Query::parseQueries($queries);
+            } catch (QueryException $e) {
+                throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+            }
+
+            $limit = Query::getByType($parsed, [Query::TYPE_LIMIT])[0]?->getValue() ?? 25;
+            $offset = Query::getByType($parsed, [Query::TYPE_OFFSET])[0]?->getValue() ?? 0;
+
+            $results = $logs->list(
+                resource: Resource::Deployment,
+                resourceId: $deploymentId,
+                limit: $limit,
+                offset: $offset,
+            );
+
+            $total = $includeTotal ? $logs->count(
+                resource: Resource::Deployment,
+                resourceId: $deploymentId,
+            ) : 0;
+
+            $executions = [];
+            foreach ($results as $id => $log) {
+                $executions[] = new Document([
+                    '$id' => $id,
+                    '$createdAt' => \date('Y-m-d\TH:i:s.vP', (int) $log->timestamp),
+                    '$permissions' => [],
+                    'functionId' => $functionId,
+                    'deploymentId' => $log->resourceId,
+                    'trigger' => 'http',
+                    'status' => $log->responseStatusCode >= 500 ? 'failed' : 'completed',
+                    'requestMethod' => $log->requestMethod->value,
+                    'requestPath' => $log->requestPath,
+                    'requestHeaders' => [],
+                    'responseStatusCode' => $log->responseStatusCode,
+                    'responseBody' => '',
+                    'responseHeaders' => [],
+                    'logs' => '',
+                    'errors' => '',
+                    'duration' => $log->durationSeconds,
+                ]);
+            }
+
+            $response->dynamic(new Document([
+                'executions' => $executions,
+                'total' => $total,
+            ]), Response::MODEL_EXECUTION_LIST);
+
+            return;
         }
 
         try {
