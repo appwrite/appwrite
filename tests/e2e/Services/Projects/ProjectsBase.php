@@ -138,4 +138,17 @@ trait ProjectsBase
             'membershipId' => $membershipId,
         ];
     }
+
+    protected function updateMembershipRole(string $teamId, string $membershipId, array $roles): void
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/teams/' . $teamId . '/memberships/' . $membershipId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'roles' => $roles,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+    }
 }
