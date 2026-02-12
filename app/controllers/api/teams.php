@@ -56,6 +56,7 @@ use Utopia\Locale\Locale;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
+use Utopia\Validator\WhiteList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
