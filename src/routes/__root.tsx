@@ -102,7 +102,7 @@ function ClientThemeProvider({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="dark"
+      defaultTheme="system"
       enableSystem
       disableTransitionOnChange
       themes={['light', 'dark', 'system', 'crazy', 'stealth']}
