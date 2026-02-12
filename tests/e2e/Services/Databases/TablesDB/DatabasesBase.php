@@ -2375,7 +2375,7 @@ trait DatabasesBase
         $this->assertEquals('Invalid query method: equal', $response['body']['message']);
 
         // Query by sequence
-        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $row . '/tables/' . $row['$tableId'] . '/rows', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$tableId'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
