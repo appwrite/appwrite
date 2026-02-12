@@ -14,7 +14,7 @@ const config = defineConfig({
       projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
-    tanstackStart({
+    !process.env.VITEST ? tanstackStart({
       // Disable SSR - run as SPA (Single Page Application) only
       spa: {
         enabled: true,
@@ -47,7 +47,7 @@ const config = defineConfig({
           return true
         },
       },
-    }),
+    }) : null,
     devtoolsJson(),
     viteReact(),
     // Sentry plugin for source maps upload (only when Sentry is enabled via VITE_SENTRY_DSN)
@@ -66,6 +66,9 @@ const config = defineConfig({
     allowedHosts: true,
     hmr: true,
   },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
   preview: {
     port: 4173,
     host: '::',
@@ -74,6 +77,11 @@ const config = defineConfig({
     outDir: 'dist',
   },
   test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./vitest.setup.ts'],
+    css: false,
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['e2e/**', 'node_modules/**'],
   },
 })
