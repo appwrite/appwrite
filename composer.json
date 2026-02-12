@@ -88,7 +88,7 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "dev-feat/agent-skills",
+        "appwrite/sdk-generator": "*",
         "phpunit/phpunit": "9.*",
         "swoole/ide-helper": "6.*",
         "phpstan/phpstan": "1.8.*",
