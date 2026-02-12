@@ -214,6 +214,8 @@ class Migrations extends Action
                 $dataSource,
                 $database,
                 $queries,
+                $this->dbForPlatform,
+                $this->project->getSequence(),
             ),
             CSV::getName() => new CSV(
                 $resourceId,
@@ -246,6 +248,8 @@ class Migrations extends Action
                 $credentials['destinationApiKey'],
                 $this->dbForProject,
                 Config::getParam('collections', [])['databases']['collections'],
+                $this->dbForPlatform,
+                $this->project->getSequence(),
             ),
             DestinationCSV::getName() => new DestinationCSV(
                 $this->deviceForFiles,
