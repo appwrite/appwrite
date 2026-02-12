@@ -590,7 +590,7 @@ class Migrations extends Action
 
             foreach ($platforms as $platform) {
                 $resource = new ResourcePlatform(
-                    $platform->getId(),
+                    'unique()',
                     $platform->getAttribute('type', ''),
                     $platform->getAttribute('name', ''),
                     $platform->getAttribute('key', ''),
@@ -635,7 +635,7 @@ class Migrations extends Action
 
             foreach ($keys as $key) {
                 $resource = new ResourceKey(
-                    $key->getId(),
+                    'unique()',
                     $key->getAttribute('name', ''),
                     $key->getAttribute('scopes', []),
                     $key->getAttribute('secret', ''),
