@@ -199,7 +199,7 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
             $database = is_callable($resource) ? $resource() : $resource;
             break; // exit loop on success
         } catch (\Throwable $e) {
-            Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
+            Console::warning("  └── Database not ready ({$dbName}). Retrying connection ({$attempts}): " . $e->getMessage());
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
             }
