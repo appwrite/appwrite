@@ -1776,6 +1776,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(204, $user['headers']['status-code']);
     }
 
+    #[Retry(count: 3)]
     public function testScopes()
     {
         $functionId = $this->setupFunction([

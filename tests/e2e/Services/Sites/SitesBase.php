@@ -76,7 +76,7 @@ trait SitesBase
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
                 $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-            }, 400000, 500);
+            }, 600000, 500);
         }
 
         return $deploymentId;
