@@ -618,7 +618,7 @@ class Migrations extends Action
 
         while (true) {
             $queries = [
-                Query::equal('resourceType', ['project']),
+                Query::equal('resourceType', ['projects']),
                 Query::equal('resourceInternalId', [$sourceInternalId]),
                 Query::limit($batchSize),
             ];

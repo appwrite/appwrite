@@ -746,7 +746,7 @@ Http::get('/v1/migrations/appwrite/report')
 
             if (\in_array(Resource::TYPE_KEY, $resources)) {
                 $report[Resource::TYPE_KEY] = $dbForPlatform->count('keys', [
-                    Query::equal('resourceType', ['project']),
+                    Query::equal('resourceType', ['projects']),
                     Query::equal('resourceInternalId', [$projectInternalId]),
                 ]);
             }
