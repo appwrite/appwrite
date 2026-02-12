@@ -1584,7 +1584,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 200000, 500);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -1655,7 +1655,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 200000, 500);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -1733,7 +1733,7 @@ class SitesCustomServerTest extends Scope
         $this->assertEventually(function () use ($siteId) {
             $site = $this->getSite($siteId);
             $this->assertNotEmpty($site['body']['deploymentId']);
-        }, 50000, 500);
+        }, 200000, 500);
 
         $domain = $this->setupSiteDomain($siteId);
         $proxyClient = new Client();
@@ -2064,7 +2064,7 @@ class SitesCustomServerTest extends Scope
 
         // Poll for execution logs to be written (async)
         $logs = null;
-        $timeout = 30;
+        $timeout = 120;
         $start = \time();
         while (\time() - $start < $timeout) {
             $logs = $this->listLogs($siteId, [

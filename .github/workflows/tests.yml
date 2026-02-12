@@ -229,7 +229,9 @@ jobs:
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's|^_APP_BROWSER_HOST=.*|_APP_BROWSER_HOST=http://invalid-browser/v1|' .env
 
-          # Set DB Adapter in .env before starting services
+          # Set DB Adapter and Compose profile in .env before starting services
+          DB_ADAPTER_LOWER=$(echo "${{ matrix.db_adapter }}" | tr 'A-Z' 'a-z')
+          sed -i "s|^COMPOSE_PROFILES=.*|COMPOSE_PROFILES=${DB_ADAPTER_LOWER}|" .env
           if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
             sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mariadb|' .env
             sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mariadb|' .env
