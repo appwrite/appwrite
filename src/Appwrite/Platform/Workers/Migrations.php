@@ -597,6 +597,7 @@ class Migrations extends Action
                     $platform->getAttribute('store', ''),
                     $platform->getAttribute('hostname', ''),
                 );
+                $resource->setPermissions($platform->getPermissions());
                 $destination->importSettingsResource($resource);
             }
 
@@ -643,6 +644,7 @@ class Migrations extends Action
                     $key->getAttribute('accessedAt', null),
                     $key->getAttribute('sdks', []),
                 );
+                $resource->setPermissions($key->getPermissions());
                 $destination->importSettingsResource($resource);
             }
 
