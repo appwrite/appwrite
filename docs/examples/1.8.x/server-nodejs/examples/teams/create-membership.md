@@ -10,7 +10,7 @@ const teams = new sdk.Teams(client);
 
 const result = await teams.createMembership({
     teamId: '<TEAM_ID>',
-    roles: [sdk.Roles.Admin],
+    roles: [],
     email: 'email@example.com', // optional
     userId: '<USER_ID>', // optional
     phone: '+12065550100', // optional
