@@ -64,6 +64,7 @@ services:
     networks:
       - appwrite
     dns:
+      - 127.0.0.11
       - 172.16.238.100
     labels:
       - "traefik.enable=true"

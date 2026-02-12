@@ -303,8 +303,20 @@ jobs:
       - name: Failure Logs
         if: failure()
         run: |
+          echo "=== Container Status ==="
+          docker compose ps
+          echo "=== Appwrite DNS Config ==="
+          docker compose exec -T appwrite cat /etc/resolv.conf || true
           echo "=== Appwrite Server Logs ==="
           docker compose logs appwrite
+          echo "=== Database Container Logs (${{ matrix.db_adapter }}) ==="
+          if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
+            docker compose logs mariadb || true
+          elif [ "${{ matrix.db_adapter }}" = "MONGODB" ]; then
+            docker compose logs mongodb || true
+          elif [ "${{ matrix.db_adapter }}" = "POSTGRESQL" ]; then
+            docker compose logs postgresql || true
+          fi
           echo "=== Appwrite Worker Builds Logs ==="
           docker compose logs appwrite-worker-builds
           echo "=== OpenRuntimes Executor Logs ==="
