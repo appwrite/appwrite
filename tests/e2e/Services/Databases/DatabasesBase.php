@@ -240,8 +240,8 @@ trait DatabasesBase
         $this->assertEquals(202, $relationship['headers']['status-code']);
         $this->assertEquals(202, $integers['headers']['status-code']);
 
-        // wait for database worker to create attributes
-        $this->waitForAllAttributes($databaseId, $data['moviesId']);
+        // wait for database worker to create attributes (longer timeout for MariaDB under parallel load)
+        $this->waitForAllAttributes($databaseId, $data['moviesId'], 600000);
 
         self::$attributesCache[$cacheKey] = $data;
         return self::$attributesCache[$cacheKey];
