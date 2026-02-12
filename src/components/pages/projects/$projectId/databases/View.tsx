@@ -1479,7 +1479,10 @@ export function TableView({
                       value={db.$id}
                       className="text-[13px]"
                     >
-                      {db.name}
+                      <span className="flex items-center gap-1.5">
+                        <Database className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        {db.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
