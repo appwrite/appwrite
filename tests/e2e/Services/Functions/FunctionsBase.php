@@ -72,7 +72,8 @@ trait FunctionsBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]));
-            $this->assertEquals('ready', $deployment['body']['status'], 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+            $this->assertNotEquals(401, $deployment['headers']['status-code'], 'Auth failed while polling deployment status');
+            $this->assertEquals('ready', $deployment['body']['status'] ?? '', 'Deployment status is not ready, deployment: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         }, 100000, 500);
 
         // Not === so multipart/form-data works fine too
@@ -83,7 +84,8 @@ trait FunctionsBase
                     'x-appwrite-project' => $this->getProject()['$id'],
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
-                $this->assertEquals($deploymentId, $function['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+                $this->assertNotEquals(401, $function['headers']['status-code'], 'Auth failed while polling function activation');
+                $this->assertEquals($deploymentId, $function['body']['deploymentId'] ?? '', 'Deployment is not activated, deployment: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
             }, 100000, 500);
         }
 
