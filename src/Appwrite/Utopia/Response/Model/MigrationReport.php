@@ -53,6 +53,18 @@ class MigrationReport extends Model
                 'default' => 0,
                 'example' => 20,
             ])
+            ->addRule(Resource::TYPE_PLATFORM, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of platforms to be migrated.',
+                'default' => 0,
+                'example' => 5,
+            ])
+            ->addRule(Resource::TYPE_KEY, [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of API keys to be migrated.',
+                'default' => 0,
+                'example' => 10,
+            ])
             ->addRule('size', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Size of files to be migrated in mb.',

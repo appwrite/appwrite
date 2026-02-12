@@ -713,10 +713,8 @@ Http::get('/v1/migrations/appwrite/report')
     ->param('projectID', '', new Text(512), "Source's Project ID")
     ->param('key', '', new Text(512), "Source's API Key")
     ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('user')
-    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
+    ->inject('dbForPlatform')
+    ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response, Database $dbForPlatform) {
 
         $appwrite = new Appwrite($projectID, $endpoint, $key);
 
@@ -733,6 +731,25 @@ Http::get('/v1/migrations/appwrite/report')
             }
 
             throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+        }
+
+        $sourceProject = $dbForPlatform->getDocument('projects', $projectID);
+
+        if (!$sourceProject->isEmpty()) {
+            $projectInternalId = $sourceProject->getSequence();
+
+            if (\in_array(Resource::TYPE_PLATFORM, $resources)) {
+                $report[Resource::TYPE_PLATFORM] = $dbForPlatform->count('platforms', [
+                    Query::equal('projectInternalId', [$projectInternalId]),
+                ]);
+            }
+
+            if (\in_array(Resource::TYPE_KEY, $resources)) {
+                $report[Resource::TYPE_KEY] = $dbForPlatform->count('keys', [
+                    Query::equal('resourceType', ['project']),
+                    Query::equal('resourceInternalId', [$projectInternalId]),
+                ]);
+            }
         }
 
         $response
