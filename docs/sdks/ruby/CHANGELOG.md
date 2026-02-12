@@ -1,5 +1,9 @@
 # Change Log
 
+## 21.0.1
+
+* Fix doc examples with proper formatting
+
 ## 21.0.0
 
 * Add array-based enum parameters (e.g., `permissions: Array<BrowserPermission>`).
