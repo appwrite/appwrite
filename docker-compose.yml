@@ -668,10 +668,8 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      redis:
-        condition: service_started
-      ${_APP_DB_HOST:-mongodb}:
-        condition: service_started
+      - redis
+      - ${_APP_DB_HOST:-mongodb}
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
