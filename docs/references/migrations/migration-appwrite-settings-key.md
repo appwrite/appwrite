@@ -1,0 +1,1 @@
+Generate a short-lived console-scoped API key for settings migration. This key allows the migration source to access project platforms and keys on the source instance.

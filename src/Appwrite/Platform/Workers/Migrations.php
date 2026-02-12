@@ -317,8 +317,6 @@ class Migrations extends Action
                 'functions.write',
                 'tokens.read',
                 'tokens.write',
-                'platforms.read',
-                'keys.read',
             ]
         ]);
 
