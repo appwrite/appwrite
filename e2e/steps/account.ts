@@ -8,9 +8,6 @@ export function signInStep(
     return test.step('sign in', async () => {
         await page.goto('/sign-in', { waitUntil: 'domcontentloaded' });
         await page.waitForURL(/\/sign-in/);
-        // Log credentials for debugging (DO NOT COMMIT)
-        console.log(`[DEBUG] Attempting sign-in with: Email: "${email}", Password: "${password}"`);
-
         await page.getByLabel('Email').waitFor({ state: 'visible', timeout: 30000 });
         await page.getByLabel('Email').fill(email);
         await page.getByLabel('Password').fill(password);

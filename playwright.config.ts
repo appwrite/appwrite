@@ -1,10 +1,16 @@
 import { devices, type PlaywrightTestConfig } from '@playwright/test';
 
+const isCI = !!process.env.CI;
+
 const config: PlaywrightTestConfig = {
     timeout: 120000,
     reportSlowTests: null,
-    reporter: [['html', { open: 'never' }]],
-    retries: 3,
+    reporter: isCI
+        ? [['github'], ['html', { open: 'never' }]]
+        : [['html', { open: 'never' }]],
+    retries: isCI ? 2 : 0,
+    forbidOnly: isCI,
+    workers: isCI ? 1 : undefined,
     testDir: 'e2e',
     use: {
         baseURL: 'http://localhost:4173/',

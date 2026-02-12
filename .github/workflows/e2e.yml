@@ -30,6 +30,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
 
+      - name: Cache E2E auth state
+        uses: actions/cache@v4
+        id: e2e-auth-cache
+        with:
+          path: e2e/.auth
+          key: ${{ runner.os }}-e2e-auth-${{ hashFiles('playwright.config.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-e2e-auth-
+
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: bunx playwright install --with-deps chromium
@@ -42,6 +51,7 @@ jobs:
           VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+          E2E_REUSE_AUTH: 'true'
         run: bun run e2e
 
       - uses: actions/upload-artifact@v4
