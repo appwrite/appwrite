@@ -1293,13 +1293,16 @@ services:
       - mongodb
 
   postgresql:
-    image: postgres:18
+    build:
+      context: ./tests/resources/postgresql
+      args:
+        POSTGRES_VERSION: 17
     container_name: appwrite-postgresql
     <<: *x-logging
     networks:
       - appwrite
     volumes:
-      - appwrite-postgresql:/var/lib/postgresql:rw
+      - appwrite-postgresql:/var/lib/postgresql/data:rw
     ports:
       - "5432:5432"
     environment:
