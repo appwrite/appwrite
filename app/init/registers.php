@@ -292,7 +292,7 @@ $register->set('pools', function () {
                 },
                 'postgresql' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                     return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase}", $dsnUser, $dsnPass, array(
+                        return new PDO("pgsql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};connect_timeout=3", $dsnUser, $dsnPass, array(
                             \PDO::ATTR_TIMEOUT => 3, // Seconds
                             \PDO::ATTR_PERSISTENT => false,
                             \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
@@ -397,7 +397,7 @@ $register->set('db', function () {
             $dsn = "mysql:host={$dbHost};port={$dbPort};dbname={$dbSchema};charset=utf8mb4";
             return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
         case 'postgresql':
-            $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}";
+            $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema};connect_timeout=3";
             return new PDO($dsn, $dbUser, $dbPass, SQL::getPDOAttributes());
         default:
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid database adapter');

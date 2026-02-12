@@ -303,6 +303,8 @@ jobs:
       - name: Failure Logs
         if: failure()
         run: |
+          echo "=== Appwrite Server Logs ==="
+          docker compose logs appwrite
           echo "=== Appwrite Worker Builds Logs ==="
           docker compose logs appwrite-worker-builds
           echo "=== OpenRuntimes Executor Logs ==="
