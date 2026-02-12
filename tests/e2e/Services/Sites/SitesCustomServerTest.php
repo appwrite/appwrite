@@ -633,7 +633,7 @@ class SitesCustomServerTest extends Scope
         $siteId = $this->setupSite([
             'buildRuntime' => 'node-22',
             'fallbackFile' => '',
-            'framework' => 'other',
+            'framework' => 'analog',
             'name' => 'Test List Sites',
             'outputDirectory' => './',
             'providerBranch' => 'main',
@@ -698,9 +698,9 @@ class SitesCustomServerTest extends Scope
         $this->assertCount(1, $sites['body']['sites']);
         $this->assertEquals($sites['body']['sites'][0]['$id'], $siteId);
 
-        // Test search framework
+        // Test search framework ('analog' used because PostgreSQL treats 'other' as a fulltext stop word)
         $sites = $this->listSites([
-            'search' => 'other'
+            'search' => 'analog'
         ]);
 
         $this->assertEquals($sites['headers']['status-code'], 200);
@@ -2062,10 +2062,21 @@ class SitesCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString("Inline logs printed.", $response['body']);
 
-        $logs = $this->listLogs($siteId, [
-            Query::orderDesc('$createdAt')->toString(),
-            Query::limit(1)->toString(),
-        ]);
+        // Poll for execution logs to be written (async)
+        $logs = null;
+        $timeout = 30;
+        $start = \time();
+        while (\time() - $start < $timeout) {
+            $logs = $this->listLogs($siteId, [
+                Query::orderDesc('$createdAt')->toString(),
+                Query::limit(1)->toString(),
+            ]);
+            if (!empty($logs['body']['executions'])) {
+                break;
+            }
+            \sleep(1);
+        }
+        $this->assertNotEmpty($logs['body']['executions'], 'Execution logs were not available within timeout');
         $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertStringContainsString($deploymentId, $logs['body']['executions'][0]['deploymentId']);
         $this->assertStringContainsString("GET", $logs['body']['executions'][0]['requestMethod']);
