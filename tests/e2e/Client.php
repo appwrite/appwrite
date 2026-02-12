@@ -188,7 +188,7 @@ class Client
         if (isset($params['queries'])) {
             foreach ($params['queries'] as $value) {
                 if (!is_string($value)) {
-                    throw new Exception('Queries must be a strings');
+                    throw new Exception('Queries must be converted to strings');
                 }
             }
         }
