@@ -419,10 +419,10 @@ $register->set('db', function () {
             } catch (\Throwable $e) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, "MongoDB connection failed: " . $e->getMessage());
             }
-        
+
         case 'postgresql':
-                    $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}";
-                    break;
+            $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}";
+            break;
 
         case 'mysql':
         case 'mariadb':
