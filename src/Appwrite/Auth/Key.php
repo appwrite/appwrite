@@ -28,7 +28,6 @@ class Key
         protected bool $projectCheckDisabled = false,
         protected bool $previewAuthDisabled = false,
         protected bool $deploymentStatusIgnored = false,
-        protected string $targetProjectId = '',
     ) {
     }
 
@@ -104,11 +103,6 @@ class Key
         return $this->projectCheckDisabled;
     }
 
-    public function getTargetProjectId(): string
-    {
-        return $this->targetProjectId;
-    }
-
     /**
      * Decode the given secret key into a Key object, containing the project ID, type, role, scopes, and name.
      * Can be a stored API key or a dynamic key (JWT).
@@ -167,7 +161,6 @@ class Key
                 $projectCheckDisabled = $payload['projectCheckDisabled'] ?? false;
                 $previewAuthDisabled = $payload['previewAuthDisabled'] ?? false;
                 $deploymentStatusIgnored = $payload['deploymentStatusIgnored'] ?? false;
-                $targetProjectId = $payload['targetProjectId'] ?? '';
                 $scopes = \array_merge($payload['scopes'] ?? [], $scopes);
 
                 if (!$projectCheckDisabled && $projectId !== $project->getId()) {
@@ -188,8 +181,7 @@ class Key
                     $bannerDisabled,
                     $projectCheckDisabled,
                     $previewAuthDisabled,
-                    $deploymentStatusIgnored,
-                    $targetProjectId
+                    $deploymentStatusIgnored
                 );
             case API_KEY_STANDARD:
                 $key = $project->find(

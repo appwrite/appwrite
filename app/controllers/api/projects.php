@@ -1,7 +1,6 @@
 <?php
 
 use Ahc\Jwt\JWT;
-use Appwrite\Auth\Key;
 use Appwrite\Auth\Validator\MockNumber;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
@@ -1169,12 +1168,7 @@ Http::get('/v1/projects/:projectId/keys')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->inject('apiKey')
-    ->action(function (string $projectId, array $queries, bool $includeTotal, Response $response, Database $dbForPlatform, ?Key $apiKey) {
-
-        if ($apiKey !== null && !empty($apiKey->getTargetProjectId()) && $apiKey->getTargetProjectId() !== $projectId) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
-        }
+    ->action(function (string $projectId, array $queries, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1246,12 +1240,7 @@ Http::get('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', '', new UID(), 'Key unique ID.')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->inject('apiKey')
-    ->action(function (string $projectId, string $keyId, Response $response, Database $dbForPlatform, ?Key $apiKey) {
-
-        if ($apiKey !== null && !empty($apiKey->getTargetProjectId()) && $apiKey->getTargetProjectId() !== $projectId) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
-        }
+    ->action(function (string $projectId, string $keyId, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1518,12 +1507,7 @@ Http::get('/v1/projects/:projectId/platforms')
     ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
     ->inject('response')
     ->inject('dbForPlatform')
-    ->inject('apiKey')
-    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform, ?Key $apiKey) {
-
-        if ($apiKey !== null && !empty($apiKey->getTargetProjectId()) && $apiKey->getTargetProjectId() !== $projectId) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
-        }
+    ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -1563,12 +1547,7 @@ Http::get('/v1/projects/:projectId/platforms/:platformId')
     ->param('platformId', '', new UID(), 'Platform unique ID.')
     ->inject('response')
     ->inject('dbForPlatform')
-    ->inject('apiKey')
-    ->action(function (string $projectId, string $platformId, Response $response, Database $dbForPlatform, ?Key $apiKey) {
-
-        if ($apiKey !== null && !empty($apiKey->getTargetProjectId()) && $apiKey->getTargetProjectId() !== $projectId) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
-        }
+    ->action(function (string $projectId, string $platformId, Response $response, Database $dbForPlatform) {
 
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
