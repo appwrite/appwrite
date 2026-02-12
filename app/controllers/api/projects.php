@@ -1169,6 +1169,7 @@ Http::get('/v1/projects/:projectId/keys')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, array $queries, bool $includeTotal, Response $response, Database $dbForPlatform) {
+
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1240,6 +1241,7 @@ Http::get('/v1/projects/:projectId/keys/:keyId')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $keyId, Response $response, Database $dbForPlatform) {
+
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1506,6 +1508,7 @@ Http::get('/v1/projects/:projectId/platforms')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, bool $includeTotal, Response $response, Database $dbForPlatform) {
+
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -1545,6 +1548,7 @@ Http::get('/v1/projects/:projectId/platforms/:platformId')
     ->inject('response')
     ->inject('dbForPlatform')
     ->action(function (string $projectId, string $platformId, Response $response, Database $dbForPlatform) {
+
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
