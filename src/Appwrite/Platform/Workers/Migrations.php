@@ -28,6 +28,8 @@ use Utopia\Migration\Destinations\CSV as DestinationCSV;
 use Utopia\Migration\Exception as MigrationException;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Resources\Database\Database as ResourceDatabase;
+use Utopia\Migration\Resources\Settings\Key as ResourceKey;
+use Utopia\Migration\Resources\Settings\Platform as ResourcePlatform;
 use Utopia\Migration\Resources\Database\Row as ResourceRow;
 use Utopia\Migration\Resources\Database\Table as ResourceTable;
 use Utopia\Migration\Source;
@@ -214,8 +216,6 @@ class Migrations extends Action
                 $dataSource,
                 $database,
                 $queries,
-                $this->dbForPlatform,
-                $this->project->getSequence(),
             ),
             CSV::getName() => new CSV(
                 $resourceId,
@@ -430,6 +430,8 @@ class Migrations extends Action
                     $migration->getAttribute('resourceType')
                 );
 
+                $this->migrateSettings($migration, $destination);
+
                 $destination->shutdown();
                 $source->shutdown();
             }
@@ -514,6 +516,140 @@ class Migrations extends Action
                 $transfer = null;
                 $source = null;
                 $destination = null;
+            }
+        }
+    }
+
+    /**
+     * Migrate platforms and API keys at the worker level.
+     *
+     * Settings (platforms, keys) live in dbForPlatform, not dbForProject.
+     * Instead of passing dbForPlatform to the source adapter, the worker
+     * reads from the source project and writes via the destination adapter.
+     */
+    protected function migrateSettings(Document $migration, Destination $destination): void
+    {
+        if (!($destination instanceof DestinationAppwrite)) {
+            return;
+        }
+
+        $resources = $migration->getAttribute('resources', []);
+        $credentials = $migration->getAttribute('credentials', []);
+
+        $hasPlatforms = \in_array(Resource::TYPE_PLATFORM, $resources);
+        $hasKeys = \in_array(Resource::TYPE_KEY, $resources);
+
+        if (!$hasPlatforms && !$hasKeys) {
+            return;
+        }
+
+        $sourceProjectId = $credentials['projectId'] ?? '';
+        if (empty($sourceProjectId)) {
+            return;
+        }
+
+        $sourceProject = $this->dbForPlatform->getDocument('projects', $sourceProjectId);
+        if ($sourceProject->isEmpty()) {
+            return;
+        }
+
+        $sourceInternalId = $sourceProject->getSequence();
+
+        if ($hasPlatforms) {
+            $this->migratePlatforms($sourceInternalId, $destination);
+        }
+
+        if ($hasKeys) {
+            $this->migrateKeys($sourceInternalId, $destination);
+        }
+    }
+
+    /**
+     * Read platforms from source project and import via destination.
+     */
+    protected function migratePlatforms(string $sourceInternalId, DestinationAppwrite $destination): void
+    {
+        $lastDocument = null;
+        $batchSize = 100;
+
+        while (true) {
+            $queries = [
+                Query::equal('projectInternalId', [$sourceInternalId]),
+                Query::limit($batchSize),
+            ];
+
+            if ($lastDocument !== null) {
+                $queries[] = Query::cursorAfter($lastDocument);
+            }
+
+            $platforms = $this->dbForPlatform->find('platforms', $queries);
+
+            if (empty($platforms)) {
+                break;
+            }
+
+            foreach ($platforms as $platform) {
+                $resource = new ResourcePlatform(
+                    $platform->getId(),
+                    $platform->getAttribute('type', ''),
+                    $platform->getAttribute('name', ''),
+                    $platform->getAttribute('key', ''),
+                    $platform->getAttribute('store', ''),
+                    $platform->getAttribute('hostname', ''),
+                );
+                $destination->importSettingsResource($resource);
+            }
+
+            $lastDocument = \end($platforms);
+
+            if (\count($platforms) < $batchSize) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Read API keys from source project and import via destination.
+     */
+    protected function migrateKeys(string $sourceInternalId, DestinationAppwrite $destination): void
+    {
+        $lastDocument = null;
+        $batchSize = 100;
+
+        while (true) {
+            $queries = [
+                Query::equal('resourceType', ['project']),
+                Query::equal('resourceInternalId', [$sourceInternalId]),
+                Query::limit($batchSize),
+            ];
+
+            if ($lastDocument !== null) {
+                $queries[] = Query::cursorAfter($lastDocument);
+            }
+
+            $keys = $this->dbForPlatform->find('keys', $queries);
+
+            if (empty($keys)) {
+                break;
+            }
+
+            foreach ($keys as $key) {
+                $resource = new ResourceKey(
+                    $key->getId(),
+                    $key->getAttribute('name', ''),
+                    $key->getAttribute('scopes', []),
+                    $key->getAttribute('secret', ''),
+                    $key->getAttribute('expire', null),
+                    $key->getAttribute('accessedAt', null),
+                    $key->getAttribute('sdks', []),
+                );
+                $destination->importSettingsResource($resource);
+            }
+
+            $lastDocument = \end($keys);
+
+            if (\count($keys) < $batchSize) {
+                break;
             }
         }
     }
