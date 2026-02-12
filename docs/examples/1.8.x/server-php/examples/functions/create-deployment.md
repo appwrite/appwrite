@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -17,4 +18,4 @@ $result = $functions->createDeployment(
     activate: false,
     entrypoint: '<ENTRYPOINT>', // optional
     commands: '<COMMANDS>' // optional
-);
+);```

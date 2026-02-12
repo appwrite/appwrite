@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ ColumnEmail result = await tablesDB.CreateEmailColumn(
     required: false,
     default: "email@example.com", // optional
     array: false // optional
-);
+);```

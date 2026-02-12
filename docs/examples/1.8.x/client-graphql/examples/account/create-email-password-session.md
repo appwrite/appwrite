@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreateEmailPasswordSession(
         email: "email@example.com",
@@ -34,3 +35,4 @@ mutation {
         mfaUpdatedAt
     }
 }
+```

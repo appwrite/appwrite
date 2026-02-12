@@ -359,6 +359,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DB_ADAPTER',
+                'description' => 'Which database adapter to use. Must be one of: mariadb, postgresql.',
+                'introduction' => '1.6.0',
+                'default' => 'mariadb',
+                'required' => true,
+                'question' => 'Choose your database (mariadb|postgresql)',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_TRUSTED_HEADERS',
                 'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively.',
                 'introduction' => '1.8.0',
@@ -1285,6 +1294,15 @@ return [
         'category' => 'GraphQL',
         'description' => '',
         'variables' => [
+            [
+                'name' => '_APP_GRAPHQL_INTROSPECTION',
+                'description' => 'Enable or disable GraphQL introspection. Set to \'enabled\' to allow schema introspection, or \'disabled\' to block it. The default value is \'enabled\'.',
+                'introduction' => '',
+                'default' => 'enabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
             [
                 'name' => '_APP_GRAPHQL_MAX_BATCH_SIZE',
                 'description' => 'Maximum number of batched queries per request. The default value is 10.',

@@ -19,6 +19,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Device;
@@ -26,7 +27,6 @@ use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
@@ -246,6 +246,7 @@ class Create extends Action
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
                     'buildCommands' => $commands,
+                    'startCommand' => $function->getAttribute('startCommand', ''),
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,
@@ -283,6 +284,7 @@ class Create extends Action
                     'resourceType' => 'functions',
                     'entrypoint' => $entrypoint,
                     'buildCommands' => $commands,
+                    'startCommand' => $function->getAttribute('startCommand', ''),
                     'sourcePath' => $path,
                     'sourceSize' => $fileSize,
                     'totalSize' => $fileSize,

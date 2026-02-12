@@ -1,3 +1,4 @@
+```graphql
 mutation {
     databasesUpdateCollection(
         databaseId: "<DATABASE_ID>",
@@ -28,5 +29,8 @@ mutation {
             lengths
             orders
         }
+        bytesMax
+        bytesUsed
     }
 }
+```

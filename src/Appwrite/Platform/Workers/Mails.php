@@ -68,7 +68,8 @@ class Mails extends Action
             throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
         }
 
-        $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
+        $type = empty($smtp) ? 'cloud' : 'smtp';
+        $log->addTag('type', $type);
 
         $protocol = System::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
         $hostname = System::getEnv('_APP_CONSOLE_DOMAIN');
@@ -182,6 +183,9 @@ class Mails extends Action
         try {
             $mail->send();
         } catch (\Throwable $error) {
+            if ($type === 'smtp') {
+                throw new Exception('Error sending mail: ' . $error->getMessage(), 401);
+            }
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
     }
@@ -209,6 +213,8 @@ class Mails extends Action
         $mail->SMTPSecure = $smtp['secure'];
         $mail->SMTPAutoTLS = false;
         $mail->CharSet = 'UTF-8';
+        $mail->Timeout = 10; /* Connection timeout */
+        $mail->getSMTPInstance()->Timelimit = 30; /* Timeout for each individual SMTP command (e.g. HELO, EHLO, etc.) */
 
         $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
 

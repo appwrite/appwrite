@@ -1,3 +1,4 @@
+```graphql
 mutation {
     usersUpdatePrefs(
         userId: "<USER_ID>",
@@ -6,3 +7,4 @@ mutation {
         data
     }
 }
+```

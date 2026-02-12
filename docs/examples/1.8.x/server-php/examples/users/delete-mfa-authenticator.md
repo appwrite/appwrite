@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -14,4 +15,4 @@ $users = new Users($client);
 $result = $users->deleteMFAAuthenticator(
     userId: '<USER_ID>',
     type: AuthenticatorType::TOTP()
-);
+);```

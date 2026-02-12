@@ -7,6 +7,10 @@ use Appwrite\Platform\Modules\Projects\Http\DevKeys\Delete as DeleteDevKey;
 use Appwrite\Platform\Modules\Projects\Http\DevKeys\Get as GetDevKey;
 use Appwrite\Platform\Modules\Projects\Http\DevKeys\Update as UpdateDevKey;
 use Appwrite\Platform\Modules\Projects\Http\DevKeys\XList as ListDevKeys;
+use Appwrite\Platform\Modules\Projects\Http\Projects\Create as CreateProject;
+use Appwrite\Platform\Modules\Projects\Http\Projects\Labels\Update as UpdateProjectLabels;
+use Appwrite\Platform\Modules\Projects\Http\Projects\Team\Update as UpdateProjectTeam;
+use Appwrite\Platform\Modules\Projects\Http\Projects\Update as UpdateProject;
 use Appwrite\Platform\Modules\Projects\Http\Projects\XList as ListProjects;
 use Utopia\Platform\Service;
 
@@ -21,6 +25,10 @@ class Http extends Service
         $this->addAction(ListDevKeys::getName(), new ListDevKeys());
         $this->addAction(DeleteDevKey::getName(), new DeleteDevKey());
 
+        $this->addAction(CreateProject::getName(), new CreateProject());
+        $this->addAction(UpdateProject::getName(), new UpdateProject());
         $this->addAction(ListProjects::getName(), new ListProjects());
+        $this->addAction(UpdateProjectLabels::getName(), new UpdateProjectLabels());
+        $this->addAction(UpdateProjectTeam::getName(), new UpdateProjectTeam());
     }
 }

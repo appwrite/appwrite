@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -19,3 +20,4 @@ result = messaging.update_resend_provider(
     reply_to_name: '<REPLY_TO_NAME>', # optional
     reply_to_email: '<REPLY_TO_EMAIL>' # optional
 )
+```

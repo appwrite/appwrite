@@ -1,3 +1,4 @@
+```graphql
 mutation {
     messagingUpdateTextmagicProvider(
         providerId: "<PROVIDER_ID>",
@@ -18,3 +19,4 @@ mutation {
         options
     }
 }
+```

@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Sites
@@ -16,3 +17,4 @@ val response = sites.updateVariable(
     value = "<VALUE>", // optional
     secret = false // optional
 )
+```

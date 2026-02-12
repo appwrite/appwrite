@@ -1,3 +1,4 @@
+```javascript
 import { Client, Projects, EmailTemplateType, EmailTemplateLocale } from "@appwrite.io/console";
 
 const client = new Client()
@@ -18,3 +19,4 @@ const result = await projects.updateEmailTemplate({
 });
 
 console.log(result);
+```

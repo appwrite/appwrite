@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Users
@@ -13,8 +14,9 @@ val users = Users(client)
 val response = users.createTarget(
     userId = "<USER_ID>",
     targetId = "<TARGET_ID>",
-    providerType =  MessagingProviderType.EMAIL,
+    providerType = MessagingProviderType.EMAIL,
     identifier = "<IDENTIFIER>",
     providerId = "<PROVIDER_ID>", // optional
     name = "<NAME>" // optional
 )
+```

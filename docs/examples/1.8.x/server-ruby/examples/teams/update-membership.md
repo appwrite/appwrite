@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -14,3 +15,4 @@ result = teams.update_membership(
     membership_id: '<MEMBERSHIP_ID>',
     roles: []
 )
+```

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     tablesDBCreatePolygonColumn(
         databaseId: "<DATABASE_ID>",
@@ -17,3 +18,4 @@ mutation {
         default
     }
 }
+```

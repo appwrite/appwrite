@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 from appwrite.permission import Permission
@@ -24,3 +25,4 @@ result = tables_db.update_row(
     permissions = [Permission.read(Role.any())], # optional
     transaction_id = '<TRANSACTION_ID>' # optional
 )
+```

@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -31,3 +32,4 @@ result = messaging.update_push(
     critical: false, # optional
     priority: MessagePriority::NORMAL # optional
 )
+```

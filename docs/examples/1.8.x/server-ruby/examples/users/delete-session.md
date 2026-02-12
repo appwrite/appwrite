@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -13,3 +14,4 @@ result = users.delete_session(
     user_id: '<USER_ID>',
     session_id: '<SESSION_ID>'
 )
+```

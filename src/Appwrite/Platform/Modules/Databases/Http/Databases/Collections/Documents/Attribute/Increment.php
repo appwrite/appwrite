@@ -24,7 +24,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Numeric;
 
@@ -178,6 +178,7 @@ class Increment extends Action
                 value: $value,
                 max: $max
             );
+            $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$' . $this->getCollectionsEventsContext() . 'Id', $collectionId);
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());

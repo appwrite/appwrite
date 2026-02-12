@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -15,3 +16,4 @@ let bytes = try await avatars.getFlag(
     quality: -1 // optional
 )
 
+```

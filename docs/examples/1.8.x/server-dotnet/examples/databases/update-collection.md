@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,8 +13,8 @@ Databases databases = new Databases(client);
 Collection result = await databases.UpdateCollection(
     databaseId: "<DATABASE_ID>",
     collectionId: "<COLLECTION_ID>",
-    name: "<NAME>",
+    name: "<NAME>", // optional
     permissions: new List<string> { Permission.Read(Role.Any()) }, // optional
     documentSecurity: false, // optional
     enabled: false // optional
-);
+);```

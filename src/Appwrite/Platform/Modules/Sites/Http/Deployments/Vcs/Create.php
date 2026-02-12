@@ -14,9 +14,9 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -74,6 +74,7 @@ class Create extends Base
             ->inject('queueForBuilds')
             ->inject('gitHub')
             ->inject('authorization')
+            ->inject('platform')
             ->callback($this->action(...));
     }
 
@@ -90,7 +91,8 @@ class Create extends Base
         Event $queueForEvents,
         Build $queueForBuilds,
         GitHub $github,
-        Authorization $authorization
+        Authorization $authorization,
+        array $platform
     ) {
         $site = $dbForProject->getDocument('sites', $siteId);
 
@@ -115,7 +117,8 @@ class Create extends Base
             activate: $activate,
             authorization: $authorization,
             reference: $reference,
-            referenceType: $type
+            referenceType: $type,
+            platform: $platform
         );
 
         $queueForEvents

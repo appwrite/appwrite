@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -17,4 +18,4 @@ $result = $messaging->createTwilioProvider(
     accountSid: '<ACCOUNT_SID>', // optional
     authToken: '<AUTH_TOKEN>', // optional
     enabled: false // optional
-);
+);```

@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -18,4 +19,4 @@ ColumnFloat result = await tablesDB.UpdateFloatColumn(
     min: 0, // optional
     max: 0, // optional
     newKey: "" // optional
-);
+);```

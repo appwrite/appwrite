@@ -1,3 +1,4 @@
+```dart
 import 'dart:io';
 import 'package:dart_appwrite/dart_appwrite.dart';
 
@@ -16,3 +17,4 @@ Deployment result = await sites.createDeployment(
     buildCommand: '<BUILD_COMMAND>', // (optional)
     outputDirectory: '<OUTPUT_DIRECTORY>', // (optional)
 );
+```

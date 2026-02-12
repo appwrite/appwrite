@@ -1,3 +1,4 @@
+```bash
 appwrite projects update-webhook \
     --project-id <PROJECT_ID> \
     --webhook-id <WEBHOOK_ID> \
@@ -5,3 +6,4 @@ appwrite projects update-webhook \
     --events one two three \
     --url '' \
     --security false
+```

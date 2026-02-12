@@ -1,3 +1,4 @@
+```dart
 import 'package:appwrite/appwrite.dart';
 
 Client client = Client()
@@ -15,3 +16,4 @@ Membership result = await teams.createMembership(
     url: 'https://example.com', // optional
     name: '<NAME>', // optional
 );
+```

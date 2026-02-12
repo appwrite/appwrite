@@ -1,3 +1,4 @@
+```python
 from appwrite.client import Client
 from appwrite.services.tables_db import TablesDB
 
@@ -16,3 +17,4 @@ result = tables_db.update_line_column(
     default = [[1, 2], [3, 4], [5, 6]], # optional
     new_key = '' # optional
 )
+```

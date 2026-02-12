@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -16,4 +17,4 @@ ColumnDatetime result = await tablesDB.UpdateDatetimeColumn(
     required: false,
     default: "",
     newKey: "" // optional
-);
+);```

@@ -1,3 +1,4 @@
+```swift
 import Appwrite
 import AppwriteEnums
 
@@ -15,3 +16,4 @@ let deployment = try await sites.createVcsDeployment(
     activate: false // optional
 )
 
+```

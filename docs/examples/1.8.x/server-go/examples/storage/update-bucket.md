@@ -1,4 +1,4 @@
-package main
+```gopackage main
 
 import (
     "fmt"
@@ -27,3 +27,4 @@ response, error := service.UpdateBucket(
     storage.WithUpdateBucketAntivirus(false),
     storage.WithUpdateBucketTransformations(false),
 )
+```

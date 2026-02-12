@@ -17,9 +17,9 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Swoole\Request;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -159,6 +159,7 @@ class Create extends Base
             'resourceType' => 'functions',
             'entrypoint' => $function->getAttribute('entrypoint', ''),
             'buildCommands' => $function->getAttribute('commands', ''),
+            'startCommand' => $function->getAttribute('startCommand', ''),
             'providerRepositoryName' => $repository,
             'providerRepositoryOwner' => $owner,
             'providerRepositoryUrl' => $repositoryUrl,

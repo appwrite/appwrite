@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -11,4 +12,4 @@ Functions functions = new Functions(client);
 
 await functions.Delete(
     functionId: "<FUNCTION_ID>"
-);
+);```

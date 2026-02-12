@@ -1,3 +1,4 @@
+```http
 PATCH /v1/messaging/providers/telesign/{providerId} HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
@@ -12,3 +13,4 @@ X-Appwrite-Key: <YOUR_API_KEY>
   "apiKey": "<API_KEY>",
   "from": "<FROM>"
 }
+```

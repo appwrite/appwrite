@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -12,4 +13,4 @@ Users users = new Users(client);
 Preferences result = await users.UpdatePrefs(
     userId: "<USER_ID>",
     prefs: [object]
-);
+);```

@@ -1,3 +1,4 @@
+```graphql
 mutation {
     storageCreateBucket(
         bucketId: "<BUCKET_ID>",
@@ -25,5 +26,7 @@ mutation {
         encryption
         antivirus
         transformations
+        totalSize
     }
 }
+```

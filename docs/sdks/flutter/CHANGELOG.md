@@ -1,5 +1,21 @@
 # Change Log
 
+## 21.1.0
+
+* Add `queries` parameter to Realtime subscriptions for filtering events
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `List<String>`
+* Fix doc examples with proper formatting and syntax highlighting
+
+## 21.0.0
+
+* Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).
+* Breaking change: `Output` enum has been removed; use `ImageFormat` instead.
+* Add `Channel` helpers for Realtime.
+
+## 20.3.3
+
+* Fix boolean parameter not handled correctly in Client requests
+
 ## 20.3.2
 
 * Fix OAuth2 browser infinite redirect issue

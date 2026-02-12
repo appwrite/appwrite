@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreateEmailToken(
         userId: "<USER_ID>",
@@ -12,3 +13,4 @@ mutation {
         phrase
     }
 }
+```

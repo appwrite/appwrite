@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -15,3 +16,4 @@ result = databases.delete_documents(
     queries: [], # optional
     transaction_id: '<TRANSACTION_ID>' # optional
 )
+```

@@ -5,7 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;

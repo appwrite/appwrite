@@ -1,3 +1,4 @@
+```bash
 appwrite users create-scrypt-modified-user \
     --user-id <USER_ID> \
     --email email@example.com \
@@ -5,3 +6,4 @@ appwrite users create-scrypt-modified-user \
     --password-salt <PASSWORD_SALT> \
     --password-salt-separator <PASSWORD_SALT_SEPARATOR> \
     --password-signer-key <PASSWORD_SIGNER_KEY>
+```

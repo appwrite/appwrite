@@ -1,3 +1,4 @@
+```kotlin
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Health
@@ -12,3 +13,4 @@ val health = Health(client)
 val response = health.getQueueStatsResources(
     threshold = 0 // optional
 )
+```

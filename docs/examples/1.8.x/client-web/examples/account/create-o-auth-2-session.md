@@ -1,3 +1,4 @@
+```javascript
 import { Client, Account, OAuthProvider } from "appwrite";
 
 const client = new Client()
@@ -13,3 +14,4 @@ account.createOAuth2Session({
     scopes: [] // optional
 });
 
+```

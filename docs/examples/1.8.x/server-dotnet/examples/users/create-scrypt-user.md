@@ -1,3 +1,4 @@
+```csharp
 using Appwrite;
 using Appwrite.Models;
 using Appwrite.Services;
@@ -19,4 +20,4 @@ User result = await users.CreateScryptUser(
     passwordParallel: 0,
     passwordLength: 0,
     name: "<NAME>" // optional
-);
+);```

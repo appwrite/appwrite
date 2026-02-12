@@ -1,3 +1,4 @@
+```graphql
 mutation {
     databasesCreateCollection(
         databaseId: "<DATABASE_ID>",
@@ -30,5 +31,8 @@ mutation {
             lengths
             orders
         }
+        bytesMax
+        bytesUsed
     }
 }
+```

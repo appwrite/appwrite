@@ -12,16 +12,16 @@ use Appwrite\Utopia\Response as AppwriteResponse;
 use Exception;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
-use Utopia\App;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\Http\Http;
+use Utopia\Http\Request as UtopiaRequest;
+use Utopia\Http\Response as UtopiaResponse;
 use Utopia\Platform\Action;
-use Utopia\Request as UtopiaRequest;
-use Utopia\Response as UtopiaResponse;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -66,7 +66,7 @@ class Specs extends Action
      *
      * @return array<string>
      */
-    protected function getPlatforms(): array
+    public static function getPlatforms(): array
     {
         return [
             APP_SDK_PLATFORM_CLIENT,
@@ -199,6 +199,12 @@ class Specs extends Action
                     'description' => '',
                     'in' => 'header',
                 ],
+                'Cookie' => [
+                    'type' => 'apiKey',
+                    'name' => 'Cookie',
+                    'description' => 'The user cookie to authenticate with',
+                    'in' => 'header',
+                ],
             ],
         ];
     }
@@ -226,7 +232,7 @@ class Specs extends Action
 
     public function action(string $version, string $mode): void
     {
-        $appRoutes = App::getRoutes();
+        $appRoutes = Http::getRoutes();
 
         /** @var AppwriteResponse $response */
         $response = $this->getResponse();
@@ -234,12 +240,12 @@ class Specs extends Action
         $mocks = ($mode === 'mocks');
 
         // Mock dependencies
-        App::setResource('request', fn () => $this->getRequest());
-        App::setResource('response', fn () => $response);
-        App::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
-        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        Http::setResource('request', fn () => $this->getRequest());
+        Http::setResource('response', fn () => $response);
+        Http::setResource('dbForPlatform', fn () => new Database(new MySQL(''), new Cache(new None())));
+        Http::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
-        $platforms = $this->getPlatforms();
+        $platforms = static::getPlatforms();
         $authCounts = $this->getAuthCounts();
         $keys = $this->getKeys();
 
@@ -326,7 +332,7 @@ class Specs extends Action
             }
 
             $arguments = [
-                new App('UTC'),
+                new Http('UTC'),
                 $services,
                 $routes,
                 $models,

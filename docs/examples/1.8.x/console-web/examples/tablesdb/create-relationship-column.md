@@ -1,3 +1,4 @@
+```javascript
 import { Client, TablesDB, RelationshipType, RelationMutate } from "@appwrite.io/console";
 
 const client = new Client()
@@ -18,3 +19,4 @@ const result = await tablesDB.createRelationshipColumn({
 });
 
 console.log(result);
+```

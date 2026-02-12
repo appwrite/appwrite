@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Modules\Proxy\Http\Rules\Function;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
-use Appwrite\Platform\Modules\Proxy\Http\Rules\Action;
+use Appwrite\Platform\Modules\Proxy\Action;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -79,9 +79,6 @@ class Create extends Action
     {
         $this->validateDomainRestrictions($domain, $platform);
 
-        $sitesDomain = System::getEnv('_APP_DOMAIN_SITES', '');
-        $functionsDomain = System::getEnv('_APP_DOMAIN_FUNCTIONS', '');
-
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
             throw new Exception(Exception::RULE_RESOURCE_NOT_FOUND);
@@ -94,10 +91,7 @@ class Create extends Action
         $status = RULE_STATUS_CREATED;
         $owner = '';
 
-        if (
-            ($functionsDomain != '' && \str_ends_with($domain, $functionsDomain)) ||
-            ($sitesDomain != '' && \str_ends_with($domain, $sitesDomain))
-        ) {
+        if ($this->isAppwriteOwned($domain)) {
             $status = RULE_STATUS_VERIFIED;
             $owner = 'Appwrite';
         }
@@ -143,6 +137,7 @@ class Create extends Action
                     'domain' => $rule->getAttribute('domain'),
                     'domainType' => $rule->getAttribute('deploymentResourceType', $rule->getAttribute('type')),
                 ]))
+                ->setAction(Certificate::ACTION_GENERATION)
                 ->trigger();
         }
 

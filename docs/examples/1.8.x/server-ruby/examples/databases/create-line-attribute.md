@@ -1,3 +1,4 @@
+```ruby
 require 'appwrite'
 
 include Appwrite
@@ -16,3 +17,4 @@ result = databases.create_line_attribute(
     required: false,
     default: [[1, 2], [3, 4], [5, 6]] # optional
 )
+```

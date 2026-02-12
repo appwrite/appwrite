@@ -1,3 +1,4 @@
+```javascript
 const sdk = require('node-appwrite');
 
 const client = new sdk.Client()
@@ -14,3 +15,4 @@ const result = await sites.updateVariable({
     value: '<VALUE>', // optional
     secret: false // optional
 });
+```

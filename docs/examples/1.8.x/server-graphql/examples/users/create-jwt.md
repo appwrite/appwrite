@@ -1,3 +1,4 @@
+```graphql
 mutation {
     usersCreateJWT(
         userId: "<USER_ID>",
@@ -7,3 +8,4 @@ mutation {
         jwt
     }
 }
+```

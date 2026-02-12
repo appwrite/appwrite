@@ -5,13 +5,13 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\ClamAV\Network;
 use Appwrite\PubSub\Adapter\Pool as PubSubPool;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\App;
 use Utopia\Cache\Adapter\Pool as CachePool;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Domains\Domain;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
@@ -281,7 +281,7 @@ class Doctor extends Action
         }
 
         try {
-            if (App::isProduction()) {
+            if (Http::isProduction()) {
                 Console::log('');
                 $version = \json_decode(@\file_get_contents(System::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
 

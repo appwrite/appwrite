@@ -1,3 +1,4 @@
+```graphql
 mutation {
     databasesUpsertDocument(
         databaseId: "<DATABASE_ID>",
@@ -17,3 +18,4 @@ mutation {
         data
     }
 }
+```

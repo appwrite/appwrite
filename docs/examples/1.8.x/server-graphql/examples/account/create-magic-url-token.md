@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountCreateMagicURLToken(
         userId: "<USER_ID>",
@@ -13,3 +14,4 @@ mutation {
         phrase
     }
 }
+```

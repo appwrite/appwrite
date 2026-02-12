@@ -1,3 +1,4 @@
+```graphql
 mutation {
     accountUpdateStatus {
         _id
@@ -33,3 +34,4 @@ mutation {
         accessedAt
     }
 }
+```

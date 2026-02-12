@@ -1,3 +1,4 @@
+```php
 <?php
 
 use Appwrite\Client;
@@ -19,4 +20,4 @@ $result = $databases->updateIntegerAttribute(
     min: null, // optional
     max: null, // optional
     newKey: '' // optional
-);
+);```
