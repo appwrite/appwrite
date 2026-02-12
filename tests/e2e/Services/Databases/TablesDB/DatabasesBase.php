@@ -7768,6 +7768,11 @@ trait DatabasesBase
      */
     public function testInvalidRelationshipDocumentId(array $data): void
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $databaseId = $data['databaseId'];
 
         // Create parent table
