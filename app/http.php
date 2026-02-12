@@ -163,10 +163,11 @@ $http
     ]);
 
 $http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) use (&$files) {
-    $files = new Files();
-    $files->load(__DIR__ . '/../public');
+    if (!$server->taskworker) {
+        $files = new Files();
+        $files->load(__DIR__ . '/../public');
+    }
     Console::success('Worker ' . ++$workerId . ' started successfully');
-    Console::info('Loaded static files: ' . $files->getCount());
 });
 
 $http->on(Constant::EVENT_WORKER_STOP, function ($server, $workerId) {
@@ -451,7 +452,7 @@ $http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, Swool
     $response = new Response($swooleResponse);
 
     if ($files instanceof Files && $files->isFileLoaded($request->getURI())) {
-        $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
+        $time = (60 * 60 * 24 * 45); // 45 days cache
 
         $response
             ->setContentType($files->getFileMimeType($request->getURI()))
