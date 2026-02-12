@@ -144,9 +144,12 @@ jobs:
       - name: Load and Start Appwrite
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
+          sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mariadb|' .env
+          sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mariadb|' .env
+          sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=3306|' .env
           docker compose up -d
           sleep 10
-          
+
       - name: Wait for Open Runtimes
         timeout-minutes: 3
         run: |
@@ -165,6 +168,10 @@ jobs:
           test_dir: tests/e2e/General
           command: >-
             docker compose exec -T
+            -e _APP_DB_ADAPTER=mariadb
+            -e _APP_DB_HOST=mariadb
+            -e _APP_DB_PORT=3306
+            -e _APP_DB_SCHEMA=appwrite
             -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}"
             appwrite test /usr/src/code/tests/e2e/General --debug
 
@@ -363,6 +370,12 @@ jobs:
       - name: Load and Start Appwrite
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
+
+          # Shared tables mode uses MariaDB
+          sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mariadb|' .env
+          sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mariadb|' .env
+          sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=3306|' .env
+
           docker compose up -d
           sleep 30
 
@@ -392,10 +405,19 @@ jobs:
               export _APP_DATABASE_SHARED_TABLES=database_db_main
               export _APP_DATABASE_SHARED_TABLES_V1=
             fi
-        
+
+            export _APP_DB_ADAPTER=mariadb
+            export _APP_DB_HOST=mariadb
+            export _APP_DB_PORT=3306
+            export _APP_DB_SCHEMA=appwrite
+
             docker compose exec -T \
               -e _APP_DATABASE_SHARED_TABLES \
               -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_DB_ADAPTER \
+              -e _APP_DB_HOST \
+              -e _APP_DB_PORT \
+              -e _APP_DB_SCHEMA \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group abuseEnabled,screenshots
 
@@ -429,6 +451,9 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mariadb|' .env
+          sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mariadb|' .env
+          sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=3306|' .env
           docker compose up -d
           sleep 30
 
@@ -445,9 +470,18 @@ jobs:
             export _APP_DATABASE_SHARED_TABLES=
             export _APP_DATABASE_SHARED_TABLES_V1=
 
+            export _APP_DB_ADAPTER=mariadb
+            export _APP_DB_HOST=mariadb
+            export _APP_DB_PORT=3306
+            export _APP_DB_SCHEMA=appwrite
+
             docker compose exec -T \
               -e _APP_DATABASE_SHARED_TABLES \
               -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_DB_ADAPTER \
+              -e _APP_DB_HOST \
+              -e _APP_DB_PORT \
+              -e _APP_DB_SCHEMA \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
 
@@ -489,6 +523,12 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+
+          # Shared tables mode uses MariaDB
+          sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mariadb|' .env
+          sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mariadb|' .env
+          sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=3306|' .env
+
           docker compose up -d
           sleep 30
 
@@ -511,9 +551,18 @@ jobs:
               export _APP_DATABASE_SHARED_TABLES_V1=
             fi
 
+            export _APP_DB_ADAPTER=mariadb
+            export _APP_DB_HOST=mariadb
+            export _APP_DB_PORT=3306
+            export _APP_DB_SCHEMA=appwrite
+
             docker compose exec -T \
               -e _APP_DATABASE_SHARED_TABLES \
               -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_DB_ADAPTER \
+              -e _APP_DB_HOST \
+              -e _APP_DB_PORT \
+              -e _APP_DB_SCHEMA \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               appwrite test /usr/src/code/tests/e2e/Services/Projects --debug --group=abuseEnabled
 
@@ -547,6 +596,9 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+          sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mariadb|' .env
+          sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mariadb|' .env
+          sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=3306|' .env
           docker compose up -d
           sleep 30
 
@@ -564,9 +616,18 @@ jobs:
             export _APP_DATABASE_SHARED_TABLES=
             export _APP_DATABASE_SHARED_TABLES_V1=
 
+            export _APP_DB_ADAPTER=mariadb
+            export _APP_DB_HOST=mariadb
+            export _APP_DB_PORT=3306
+            export _APP_DB_SCHEMA=appwrite
+
             docker compose exec -T \
               -e _APP_DATABASE_SHARED_TABLES \
               -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_DB_ADAPTER \
+              -e _APP_DB_HOST \
+              -e _APP_DB_PORT \
+              -e _APP_DB_SCHEMA \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
 
@@ -608,6 +669,12 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           sed -i 's/_APP_OPTIONS_ABUSE=disabled/_APP_OPTIONS_ABUSE=enabled/' .env
+
+          # Shared tables mode uses MariaDB
+          sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mariadb|' .env
+          sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mariadb|' .env
+          sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=3306|' .env
+
           docker compose up -d
           sleep 30
 
@@ -631,9 +698,18 @@ jobs:
               export _APP_DATABASE_SHARED_TABLES_V1=
             fi
 
+            export _APP_DB_ADAPTER=mariadb
+            export _APP_DB_HOST=mariadb
+            export _APP_DB_PORT=3306
+            export _APP_DB_SCHEMA=appwrite
+
             docker compose exec -T \
               -e _APP_DATABASE_SHARED_TABLES \
               -e _APP_DATABASE_SHARED_TABLES_V1 \
+              -e _APP_DB_ADAPTER \
+              -e _APP_DB_HOST \
+              -e _APP_DB_PORT \
+              -e _APP_DB_SCHEMA \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               appwrite test /usr/src/code/tests/e2e/Services/Sites --debug --group=screenshots
 
