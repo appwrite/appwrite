@@ -713,22 +713,18 @@ Http::get('/v1/migrations/appwrite/settings-key')
     ->inject('response')
     ->inject('project')
     ->inject('apiKey')
-    ->action(function (Response $response, Document $project, ?Key $apiKey) {
-        if ($apiKey === null) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
-        }
+    ->action(function (Response $response, Document $project, Key $apiKey) {
+        $targetProjectId = $project->getId();
 
-        $scopes = $apiKey->getScopes();
-
-        if (empty($scopes)) {
-            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE);
+        if (empty($targetProjectId)) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
         $jwt = new JWT(System::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 120, 0);
         $consoleKey = $jwt->encode([
             'projectId' => 'console',
-            'scopes' => $scopes,
-            'targetProjectId' => $project->getId(),
+            'scopes' => $apiKey->getScopes(),
+            'targetProjectId' => $targetProjectId,
         ]);
 
         $response
