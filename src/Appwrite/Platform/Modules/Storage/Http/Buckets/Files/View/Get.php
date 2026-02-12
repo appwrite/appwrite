@@ -17,13 +17,13 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Algorithms\Zstd;
 use Utopia\Storage\Compression\Compression;
 use Utopia\Storage\Device;
-use Utopia\Swoole\Request;
 use Utopia\System\System;
 use Utopia\Validator\Text;
 

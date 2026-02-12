@@ -69,7 +69,7 @@ class Executor
         string $entrypoint = '',
         string $destination = '',
         array $variables = [],
-        string $command = null,
+        ?string $command = null,
         string $outputDirectory = '',
         string $runtimeEntrypoint = ''
     ) {
@@ -294,7 +294,7 @@ class Executor
      * @return array|string
      * @throws Exception
      */
-    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, callable $callback = null)
+    private function call(string $endpoint, string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15, ?callable $callback = null)
     {
         $headers            = array_merge($this->headers, $headers);
         $ch                 = curl_init($endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));

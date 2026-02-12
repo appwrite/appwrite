@@ -1,5 +1,15 @@
 # Change Log
 
+## 13.4.0
+
+* Add `--queries` option to `list-keys` command
+* Add `--key-id` option to `create-key` command
+
+## 13.3.2
+
+- Fix handle null rows in table parser 
+- Export config zod schemas
+
 ## 13.3.1
 
 - Fix generated TS imports to auto-detect ESM vs non-ESM

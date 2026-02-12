@@ -1,5 +1,15 @@
 # Change Log
 
+## 22.1.0
+
+* Add `queries` parameter to `Realtime.subscribe()` and `client.subscribe()` for server-side query filtering
+* Add slot-based subscription management with subscription ID mappings from backend
+* Add `subscriptions` field to `RealtimeResponseEvent` type
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `string[]`
+* Fix parameter detection in overloaded methods to check for optional params (Account, Avatars, Graphql)
+* Fix WebSocket connection handling with stale connection guards and improved close/reconnect logic
+* Fix doc examples wrapped in markdown code fences
+
 ## 22.0.0
 
 * Add array-based enum parameters (e.g., `permissions: BrowserPermission[]`).

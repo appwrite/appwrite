@@ -344,8 +344,31 @@ class Realtime extends MessagingAdapter
     {
         $subscriptions = [];
 
+        /**
+         * Reserved channel params with expected type
+         * If matched the expected type then skip the query parsing like in project
+         */
+        $reservedParamExpectedTypes = [
+            'project' => 'string',
+        ];
+
         foreach ($channelNames as $channel) {
-            $params = $getQueryParam(\str_replace('.', '_', $channel));
+            $paramKey = \str_replace('.', '_', $channel);
+            $params = $getQueryParam($paramKey);
+
+            if (\array_key_exists($paramKey, $reservedParamExpectedTypes) && $params !== null) {
+                $expectedType = $reservedParamExpectedTypes[$paramKey];
+                $isExpectedType = match ($expectedType) {
+                    'array' => \is_array($params),
+                    'string' => \is_string($params),
+                    default => false,
+                };
+
+                // If the value matches the expected type dont use it the queries
+                if ($isExpectedType) {
+                    $params = null;
+                }
+            }
 
             if ($params === null) {
                 if (!isset($subscriptions[0])) {
@@ -358,7 +381,7 @@ class Realtime extends MessagingAdapter
                 continue;
             }
 
-            if (!is_array($params)) {
+            if (!\is_array($params)) {
                 $params = [$params];
             }
 
@@ -367,12 +390,12 @@ class Realtime extends MessagingAdapter
                     $subscriptions[$index] = ['channels' => [], 'queries' => []];
                 }
 
-                if (!in_array($channel, $subscriptions[$index]['channels'])) {
+                if (!\in_array($channel, $subscriptions[$index]['channels'], true)) {
                     $subscriptions[$index]['channels'][] = $channel;
                 }
 
                 if (empty($subscriptions[$index]['queries'])) {
-                    $raw = is_array($slot) ? $slot : [$slot];
+                    $raw = \is_array($slot) ? $slot : [$slot];
                     $subscriptions[$index]['queries'] = self::convertQueries($raw);
                 }
             }
