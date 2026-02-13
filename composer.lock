@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bc64aa37fc3ab6fa2acf7ac8f5456e9f",
+    "content-hash": "c9436e3de3d010184dc928a7f1ff4721",
     "packages": [
         {
             "name": "adhocore/jwt",
