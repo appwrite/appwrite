@@ -17,7 +17,7 @@
     "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack"
   },
   "dependencies": {
-    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@95675c4",
+    "@appwrite.io/console": "https://pkg.vc/-/@appwrite/@appwrite.io/console@c6f60aa",
     "@faker-js/faker": "^10.1.0",
     "@hookform/resolvers": "^5.2.2",
     "@monaco-editor/react": "^4.7.0",
@@ -72,6 +72,8 @@
     "motion": "^12.23.22",
     "next-themes": "^0.4.6",
     "node-appwrite": "^20.2.1",
+    "prism-react-renderer": "^2.4.1",
+    "prismjs": "^1.30.0",
     "react": "^19.1.1",
     "react-day-picker": "^9.11.0",
     "react-dom": "^19.1.1",
@@ -94,6 +96,7 @@
     "@testing-library/react": "^16.2.0",
     "@types/bun": "^1.2.22",
     "@types/node": "^22.12.0",
+    "@types/prismjs": "^1.26.6",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
