@@ -1245,13 +1245,13 @@ trait MessagingBase
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
-            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 30),
+            'scheduledAt' => DateTime::addSeconds(new \DateTime(), 20),
         ]);
 
         $this->assertEquals(201, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::SCHEDULED, $message['body']['status']);
 
-        $scheduledAt = DateTime::addSeconds(new \DateTime(), 15);
+        $scheduledAt = DateTime::addSeconds(new \DateTime(), 10);
 
         $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $message['body']['$id'], [
             'content-type' => 'application/json',
