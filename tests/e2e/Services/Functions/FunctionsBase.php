@@ -19,11 +19,12 @@ trait FunctionsBase
 
     /**
      * Retry an API call on transient 401 auth errors.
-     * CI can intermittently fail API key lookups under load.
+     * CI can intermittently fail API key lookups under load,
+     * especially on MongoDB when the database is recovering.
      */
     protected function callWithAuthRetry(string $method, string $path, array $headers, mixed $params = []): array
     {
-        $maxRetries = 5;
+        $maxRetries = 8;
         $response = null;
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
@@ -34,7 +35,7 @@ trait FunctionsBase
             }
 
             if ($attempt < $maxRetries) {
-                \sleep($attempt * 2);
+                \sleep(\min($attempt * 2, 10));
             }
         }
 
@@ -49,7 +50,7 @@ trait FunctionsBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $params);
 
-        $this->assertEquals($function['headers']['status-code'], 201, 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+        $this->assertEquals(201, $function['headers']['status-code'], 'Setup function failed with status code: ' . $function['headers']['status-code'] . ' and response: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
 
         $functionId = $function['body']['$id'];
 
@@ -63,7 +64,7 @@ trait FunctionsBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], $params);
-        $this->assertEquals($deployment['headers']['status-code'], 202, 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
+        $this->assertEquals(202, $deployment['headers']['status-code'], 'Setup deployment failed with status code: ' . $deployment['headers']['status-code'] . ' and response: ' . json_encode($deployment['body'], JSON_PRETTY_PRINT));
         $deploymentId = $deployment['body']['$id'] ?? '';
 
         $this->assertEventually(function () use ($functionId, $deploymentId) {
@@ -100,7 +101,7 @@ trait FunctionsBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
 
-        $this->assertEquals($function['headers']['status-code'], 204);
+        $this->assertEquals(204, $function['headers']['status-code']);
     }
 
     protected function createFunction(mixed $params): mixed

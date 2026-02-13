@@ -27,7 +27,7 @@ trait ProjectCustom
         // Small delay to ensure session is fully propagated under parallel load
         usleep(100000); // 100ms
 
-        $maxRetries = 3;
+        $maxRetries = 5;
         $team = null;
         $teamId = ID::unique();
 
@@ -47,7 +47,7 @@ trait ProjectCustom
             }
 
             if ($team['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
-                usleep(500000); // 500ms delay before retry
+                \sleep(1); // 1s delay before retry
                 continue;
             }
         }
@@ -80,7 +80,7 @@ trait ProjectCustom
             }
 
             if ($project['headers']['status-code'] === 401 && $i < $maxRetries - 1) {
-                usleep(500000); // 500ms delay before retry
+                \sleep(1); // 1s delay before retry
                 continue;
             }
         }
