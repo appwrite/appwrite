@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Plug2 } from 'lucide-react'
 import { useParams } from '@tanstack/react-router'
 import { ServiceHeader } from '../shared/ServiceHeader'
+import { ConnectProject } from '../shared/ConnectProject'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { usePlatforms } from '@/lib/react-query/hooks'
@@ -29,9 +30,21 @@ const supportedPlatforms = [
   { id: 'linux', platform: 'linux' },
 ] as const
 
+const platformToSdkId: Record<string, string> = {
+  web: 'web',
+  'react-native': 'web',
+  flutter: 'flutter',
+  apple: 'apple',
+  android: 'android',
+  windows: 'web',
+  linux: 'web',
+}
+
 export function View({ initialData }: ViewProps = {}) {
   const { projectId } = useParams({ strict: false })
   const [searchValue, setSearchValue] = useState('')
+  const [connectDialogOpen, setConnectDialogOpen] = useState(false)
+  const [connectInitialSdk, setConnectInitialSdk] = useState('web')
 
   // Use initialData on first paint so no loading skeleton flash
   const { platforms: platformsFromHook, isLoading } = usePlatforms(projectId)
@@ -55,8 +68,9 @@ export function View({ initialData }: ViewProps = {}) {
     )
   }, [platforms, searchValue])
 
-  const handleAddApp = () => {
-    // TODO: Open add app / create platform flow
+  const handleAddApp = (platformId?: string) => {
+    setConnectInitialSdk(platformToSdkId[platformId ?? 'web'] ?? 'web')
+    setConnectDialogOpen(true)
   }
 
   return (
@@ -116,7 +130,7 @@ export function View({ initialData }: ViewProps = {}) {
                     <button
                       key={id}
                       type="button"
-                      onClick={handleAddApp}
+                      onClick={() => handleAddApp(id)}
                       className="inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       <PlatformIcon platform={platform} size="sm" />
@@ -180,6 +194,13 @@ export function View({ initialData }: ViewProps = {}) {
           </div>
         )}
       </div>
+
+      <ConnectProject
+        open={connectDialogOpen}
+        onOpenChange={setConnectDialogOpen}
+        projectId={projectId ?? ''}
+        initialSdk={connectInitialSdk}
+      />
     </div>
   )
 }
