@@ -175,7 +175,7 @@ class SchedulesCustomServerTest extends Scope
     {
         // Filter by resourceType
         $response = $this->listSchedules([
-            'queries' => ['equal("resourceType", "function")'],
+            'queries' => ['equal("resourceType", ["function"])'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -187,7 +187,7 @@ class SchedulesCustomServerTest extends Scope
 
         // Filter by active status
         $response = $this->listSchedules([
-            'queries' => ['equal("active", true)'],
+            'queries' => ['equal("active", [true])'],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
