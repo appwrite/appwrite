@@ -301,7 +301,7 @@ class Create extends Base
 
         if ($async) {
             if (is_null($scheduledAt)) {
-                if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
+                if ($project->getId() != '6862e6a6000cce69f9da') {
                     $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
                 }
                 $queueForFunctions
@@ -344,7 +344,7 @@ class Create extends Base
                     ->setAttribute('scheduleInternalId', $schedule->getSequence())
                     ->setAttribute('scheduledAt', $scheduledAt);
 
-                if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
+                if ($project->getId() != '6862e6a6000cce69f9da') {
                     $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
                 }
             }
@@ -505,7 +505,7 @@ class Create extends Base
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [RESOURCE_TYPE_FUNCTIONS, $function->getSequence()], METRIC_RESOURCE_TYPE_ID_EXECUTIONS_MB_SECONDS), (int)(($spec['memory'] ?? APP_COMPUTE_MEMORY_DEFAULT) * $execution->getAttribute('duration', 0) * ($spec['cpus'] ?? APP_COMPUTE_CPUS_DEFAULT)))
             ;
 
-            if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
+            if ($project->getId() != '6862e6a6000cce69f9da') {
                 $execution = $authorization->skip(fn () => $dbForProject->createDocument('executions', $execution));
             }
         }
