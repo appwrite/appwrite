@@ -224,28 +224,31 @@ jobs:
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
-      - name: Load and Start Appwrite
+      - name: Set DB Adapter environment
+        id: set-db-env
         run: |
-          docker load --input /tmp/${{ env.IMAGE }}.tar
-          sed -i 's|^_APP_BROWSER_HOST=.*|_APP_BROWSER_HOST=http://invalid-browser/v1|' .env
-
-          # Set DB Adapter and Compose profile in .env before starting services
           DB_ADAPTER_LOWER=$(echo "${{ matrix.db_adapter }}" | tr 'A-Z' 'a-z')
-          sed -i "s|^COMPOSE_PROFILES=.*|COMPOSE_PROFILES=${DB_ADAPTER_LOWER}|" .env
+          echo "COMPOSE_PROFILES=${DB_ADAPTER_LOWER}" >> $GITHUB_ENV
+          
           if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
-            sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mariadb|' .env
-            sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mariadb|' .env
-            sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=3306|' .env
+            echo "_APP_DB_ADAPTER=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mariadb" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=3306" >> $GITHUB_ENV
           elif [ "${{ matrix.db_adapter }}" = "MONGODB" ]; then
-            sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=mongodb|' .env
-            sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=mongodb|' .env
-            sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=27017|' .env
+            echo "_APP_DB_ADAPTER=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=mongodb" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=27017" >> $GITHUB_ENV
           elif [ "${{ matrix.db_adapter }}" = "POSTGRESQL" ]; then
-            sed -i 's|^_APP_DB_ADAPTER=.*|_APP_DB_ADAPTER=postgresql|' .env
-            sed -i 's|^_APP_DB_HOST=.*|_APP_DB_HOST=postgresql|' .env
-            sed -i 's|^_APP_DB_PORT=.*|_APP_DB_PORT=5432|' .env
+            echo "_APP_DB_ADAPTER=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_HOST=postgresql" >> $GITHUB_ENV
+            echo "_APP_DB_PORT=5432" >> $GITHUB_ENV
           fi
 
+      - name: Load and Start Appwrite
+        env:
+          _APP_BROWSER_HOST: http://invalid-browser/v1
+        run: |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 30
 
@@ -259,6 +262,8 @@ jobs:
 
       - name: Run ${{ matrix.service }} tests with Project table mode
         uses: itznotabug/php-retry@v3
+        env:
+          _APP_DB_SCHEMA: appwrite
         with:
           max_attempts: 3
           timeout_minutes: 30
@@ -268,37 +273,13 @@ jobs:
           command: |
             echo "Using project tables"
 
-            export _APP_DATABASE_SHARED_TABLES=
-            export _APP_DATABASE_SHARED_TABLES_V1=
-
-            # Set DB Adapter Specific ENV Vars
-            if [ "${{ matrix.db_adapter }}" = "MARIADB" ]; then
-              export _APP_DB_ADAPTER=mariadb
-              export _APP_DB_HOST=mariadb
-              export _APP_DB_PORT=3306
-              export _APP_DB_SCHEMA=appwrite
-            elif [ "${{ matrix.db_adapter }}" = "MONGODB" ]; then
-              export _APP_DB_ADAPTER=mongodb
-              export _APP_DB_HOST=mongodb
-              export _APP_DB_PORT=27017
-              export _APP_DB_SCHEMA=appwrite
-            elif [ "${{ matrix.db_adapter }}" = "POSTGRESQL" ]; then
-              export _APP_DB_ADAPTER=postgresql
-              export _APP_DB_HOST=postgresql
-              export _APP_DB_PORT=5432
-              export _APP_DB_SCHEMA=appwrite
-            else
-              echo "Unknown DB adapter: ${{ matrix.db_adapter }}"
-              exit 1
-            fi
-
             docker compose exec -T \
-              -e _APP_DATABASE_SHARED_TABLES \
-              -e _APP_DATABASE_SHARED_TABLES_V1 \
-              -e _APP_DB_ADAPTER \
-              -e _APP_DB_HOST \
-              -e _APP_DB_PORT \
-              -e _APP_DB_SCHEMA \
+              -e _APP_DATABASE_SHARED_TABLES= \
+              -e _APP_DATABASE_SHARED_TABLES_V1= \
+              -e _APP_DB_ADAPTER="${{ env._APP_DB_ADAPTER }}" \
+              -e _APP_DB_HOST="${{ env._APP_DB_HOST }}" \
+              -e _APP_DB_PORT="${{ env._APP_DB_PORT }}" \
+              -e _APP_DB_SCHEMA="${{ env._APP_DB_SCHEMA }}" \
               -e _APP_E2E_RESPONSE_FORMAT="${{ github.event.inputs.response_format }}" \
               appwrite test /usr/src/code/tests/e2e/Services/${{ matrix.service }} --debug --exclude-group abuseEnabled,screenshots
 
