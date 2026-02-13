@@ -52,6 +52,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
+use Utopia\Span\Span;
 use Utopia\System\System;
 use Utopia\Validator;
 use Utopia\Validator\Text;
@@ -1245,17 +1246,7 @@ Http::error()
         $trace = $error->getTrace();
 
         if (php_sapi_name() === 'cli') {
-            Console::error('[Error] Timestamp: ' . date('c', time()));
-
-            if ($route) {
-                Console::error('[Error] Method: ' . $route->getMethod());
-                Console::error('[Error] URL: ' . $route->getPath());
-            }
-
-            Console::error('[Error] Type: ' . get_class($error));
-            Console::error('[Error] Message: ' . $message);
-            Console::error('[Error] File: ' . $file);
-            Console::error('[Error] Line: ' . $line);
+            Span::error($error);
         }
 
         switch ($class) {
