@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\SDK\Language\AgentSkills;
 use Appwrite\SDK\Language\Android;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\CLI;
@@ -23,8 +24,8 @@ use Appwrite\SDK\Language\Swift;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use Appwrite\Spec\Swagger2;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Platform\Action;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -51,6 +52,7 @@ class SDKs extends Action
         'graphql',
         'rest',
         'markdown',
+        'agent-skills'
     ];
 
     public static function getName(): string
@@ -78,8 +80,11 @@ class SDKs extends Action
             ->callback($this->action(...));
     }
 
-    public function action(?string $selectedPlatform, ?string $selectedSDK, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
+    public function action(?string $platform, ?string $sdk, ?string $version, ?string $git, ?string $message, ?string $release, ?string $commit, ?string $sdks): void
     {
+        $selectedPlatform = $platform;
+        $selectedSDK = $sdk;
+
         if (!$sdks) {
             $selectedPlatform ??= Console::confirm('Choose Platform ("' . implode('", "', static::getPlatforms()) . '" or "*" for all):');
             $selectedSDK ??= \strtolower(Console::confirm('Choose SDK ("*" for all):'));
@@ -280,6 +285,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                     case 'markdown':
                         $config = new Markdown();
                         $config->setNPMPackage('@appwrite.io/docs');
+                        break;
+                    case 'agent-skills':
+                        $config = new AgentSkills();
                         break;
                     default:
                         throw new \Exception('Language "' . $language['key'] . '" not supported');
@@ -573,9 +581,16 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 foreach ($docDirectories as $languageTitle => $path) {
                     $languagePath = strtolower($languageTitle !== 0 ? '/' . $languageTitle : '');
+                    $examplesSource = $result . '/docs/examples' . $languagePath;
+
+                    if (!\is_dir($examplesSource)) {
+                        Console::warning("No code examples found for {$language['name']} SDK at: {$examplesSource}. Skipping copy.");
+                        continue;
+                    }
+
                     \exec(
                         'mkdir -p ' . $resultExamples . $languagePath . ' && \
-                        cp -r ' . $result . '/docs/examples' . $languagePath . ' ' . $resultExamples
+                        cp -r ' . $examplesSource . ' ' . $resultExamples
                     );
                     Console::success("Copied code examples for {$language['name']} SDK to: {$resultExamples}");
                 }

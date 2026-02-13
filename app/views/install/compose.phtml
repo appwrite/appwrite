@@ -16,7 +16,7 @@ $dbService = $this->getParam('database');
 $hostPath = rtrim($this->getParam('hostPath', ''), '/');
 ?>services:
   traefik:
-    image: traefik:2.11
+    image: traefik:3.6
     container_name: appwrite-traefik
     <<: *x-logging
     command:
@@ -75,8 +75,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite-sites:/storage/sites:rw
       - appwrite-builds:/storage/builds:rw
     depends_on:
-      - <?= $dbService . "\n" ?>
       - redis
+      - <?= $dbService  . "\n" ?>
 #      - clamav
     environment:
       - _APP_ENV
@@ -108,11 +108,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -186,7 +188,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
   appwrite-console:
     <<: *x-logging
     container_name: appwrite-console
-    image: <?php echo $organization; ?>/console:7.5.7
+    image: <?php echo $organization; ?>/console:7.6.4
     restart: unless-stopped
     networks:
       - appwrite
@@ -228,8 +230,8 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
     networks:
       - appwrite
     depends_on:
-      - <?= $dbService . "\n" ?>
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -240,11 +242,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_USAGE_STATS
       - _APP_LOGGING_CONFIG
 
@@ -267,11 +271,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-webhooks:
@@ -291,11 +297,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_OPENSSL_KEY_V1
       - _APP_EMAIL_SECURITY
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -328,11 +336,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -384,11 +394,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-builds:
@@ -417,11 +429,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_VCS_GITHUB_APP_NAME
       - _APP_VCS_GITHUB_PRIVATE_KEY
@@ -489,11 +503,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
 
   appwrite-worker-functions:
@@ -518,11 +534,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_SITES_TIMEOUT
       - _APP_COMPUTE_BUILD_TIMEOUT
@@ -545,17 +563,20 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite
     depends_on:
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -581,6 +602,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite-uploads:/storage/uploads:rw
     depends_on:
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -589,11 +611,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
@@ -647,11 +671,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
       - _APP_MIGRATIONS_FIREBASE_CLIENT_SECRET
@@ -666,6 +692,7 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - appwrite
     depends_on:
       - redis
+      - <?= $dbService  . "\n" ?>
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -681,11 +708,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -710,11 +739,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -739,11 +770,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -767,11 +800,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -799,11 +834,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
 
   appwrite-task-scheduler-executions:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -824,11 +861,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
 
   appwrite-task-scheduler-messages:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
@@ -849,11 +888,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_ADAPTER
 
 <?php if ($enableAssistant): ?>
   appwrite-assistant:
@@ -929,16 +970,13 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
 
 <?php if ($dbService === 'mariadb'): ?>
   mariadb:
-    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.11
     container_name: appwrite-mariadb
-    <<: *x-logging
     restart: unless-stopped
     networks:
       - appwrite
     volumes:
       - appwrite-mariadb:/var/lib/mysql:rw
-    ports:
-      - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
@@ -946,31 +984,100 @@ $hostPath = rtrim($this->getParam('hostPath', ''), '/');
       - MYSQL_PASSWORD=${_APP_DB_PASS}
       - MARIADB_AUTO_UPGRADE=1
     command: 'mysqld --innodb-flush-method=fsync'
-<?php else: ?>
+
+<?php elseif ($dbService === 'mongodb'): ?>
+
   mongodb:
-    image: mongo:8.0.8
+    image: mongo:8.2.5
     container_name: appwrite-mongodb
     <<: *x-logging
+    networks:
+      - appwrite
+    volumes:
+      - appwrite-mongodb:/data/db
+      - appwrite-mongodb-keyfile:/data/keyfile
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=${_APP_DB_ROOT_PASS}
+      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
+      - MONGO_INITDB_USERNAME=${_APP_DB_USER}
+      - MONGO_INITDB_PASSWORD=${_APP_DB_PASS}
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        KEYFILE_PATH="/data/keyfile/mongo-keyfile"
+        INIT_FLAG="/data/db/.mongodb_initialized"
+
+        # Generate keyfile if it doesn't exist
+        if [ ! -f "$$KEYFILE_PATH" ]; then
+          echo "Generating random MongoDB keyfile..."
+          mkdir -p /data/keyfile
+          openssl rand -base64 756 > "$$KEYFILE_PATH"
+        fi
+        chmod 400 "$$KEYFILE_PATH"
+        chown mongodb:mongodb "$$KEYFILE_PATH" 2>/dev/null || chown 999:999 "$$KEYFILE_PATH"
+
+        # If not initialized, start without auth first to set up replica set and users
+        if [ ! -f "$$INIT_FLAG" ]; then
+          echo "First-time initialization: starting MongoDB without auth..."
+          mongod --replSet rs0 --bind_ip_all --fork --logpath /var/log/mongodb/mongod.log --dbpath /data/db
+
+          echo "Waiting for MongoDB to start..."
+          sleep 5
+
+          echo "Initializing replica set..."
+          mongosh --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'mongodb:27017'}]})"
+
+          echo "Waiting for replica set to initialize..."
+          sleep 5
+
+          echo "Creating root user..."
+          mongosh admin --eval "db.createUser({user: '$$MONGO_INITDB_ROOT_USERNAME', pwd: '$$MONGO_INITDB_ROOT_PASSWORD', roles: ['root']})"
+
+          echo "Creating application user..."
+          mongosh admin --eval "db.createUser({user: '$$MONGO_INITDB_USERNAME', pwd: '$$MONGO_INITDB_PASSWORD', roles: [{role: 'readWrite', db: '$$MONGO_INITDB_DATABASE'}]})"
+
+          echo "Shutting down MongoDB..."
+          mongod --dbpath /data/db --shutdown
+
+          touch "$$INIT_FLAG"
+          echo "Initialization complete."
+        fi
+
+        echo "Starting MongoDB with authentication..."
+        exec mongod --replSet rs0 --bind_ip_all --auth --keyFile "$$KEYFILE_PATH"
+    healthcheck:
+      test: |
+        mongosh -u root -p "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --quiet --eval "rs.status().ok" | grep -q 1
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+<?php elseif ($dbService === 'postgresql'): ?>
+
+  postgresql:
+    image: postgres:18
+    container_name: appwrite-postgresql
     restart: unless-stopped
     networks:
       - appwrite
     volumes:
-      - appwrite-mongodb:/data/db:rw
-      - appwrite-mongodb-config:/data/configdb:rw
-<?php if ($version === 'local' && !empty($hostPath)): ?>
-      - <?php echo $hostPath; ?>/mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
-<?php else: ?>
-      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
-<?php endif; ?>
-    ports:
-      - "27017:27017"
+      - appwrite-postgresql:/var/lib/postgresql/data:rw
     environment:
-      - MONGO_INITDB_DATABASE=${_APP_DB_SCHEMA}
-    entrypoint: ["/bin/bash", "/mongo-entrypoint.sh"]
+      - POSTGRES_DB=${_APP_DB_SCHEMA}
+      - POSTGRES_USER=${_APP_DB_USER}
+      - POSTGRES_PASSWORD=${_APP_DB_PASS}
+    command: "postgres"
+
 <?php endif; ?>
 
   redis:
-    image: redis:7.2.4-alpine
+    image: redis:7.4.7-alpine
     container_name: appwrite-redis
     <<: *x-logging
     restart: unless-stopped
@@ -1004,8 +1111,11 @@ networks:
 volumes:
 <?php if ($dbService === 'mariadb'): ?>
   appwrite-mariadb:
-<?php else: ?>
+<?php elseif ($dbService === 'postgresql'): ?>
+  appwrite-postgresql:
+<?php elseif ($dbService === 'mongodb'): ?>
   appwrite-mongodb:
+  appwrite-mongodb-keyfile:
   appwrite-mongodb-config:
 <?php endif; ?>
   appwrite-redis:

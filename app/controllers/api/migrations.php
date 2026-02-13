@@ -21,7 +21,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries\Documents;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\CSV;
@@ -64,7 +64,7 @@ Http::post('/v1/migrations/appwrite')
     ))
     ->param('resources', [], new ArrayList(new WhiteList(Appwrite::getSupportedResources())), 'List of resources to migrate')
     ->param('endpoint', '', new URL(), 'Source Appwrite endpoint')
-    ->param('projectId', '', new UID(), 'Source Project ID')
+    ->param('projectId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Source Project ID', false, ['dbForProject'])
     ->param('apiKey', '', new Text(512), 'Source API Key')
     ->inject('response')
     ->inject('dbForProject')
@@ -335,8 +335,8 @@ Http::post('/v1/migrations/csv/imports')
             )
         ]
     ))
-    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
-    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('bucketId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).', false, ['dbForProject'])
+    ->param('fileId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'File ID.', false, ['dbForProject'])
     ->param('resourceId', null, new CompoundUID(), 'Composite ID in the format {databaseId:collectionId}, identifying a collection within a database.')
     ->param('internalFile', false, new Boolean(), 'Is the file stored in an internal bucket?', true)
     ->inject('response')
@@ -629,16 +629,10 @@ Http::get('/v1/migrations')
             $queries[] = Query::search('search', $search);
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
 
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
@@ -684,7 +678,7 @@ Http::get('/v1/migrations/:migrationId')
             )
         ]
     ))
-    ->param('migrationId', '', new UID(), 'Migration unique ID.')
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $migrationId, Response $response, Database $dbForProject) {
@@ -917,7 +911,7 @@ Http::patch('/v1/migrations/:migrationId')
             )
         ]
     ))
-    ->param('migrationId', '', new UID(), 'Migration unique ID.')
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
@@ -971,7 +965,7 @@ Http::delete('/v1/migrations/:migrationId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('migrationId', '', new UID(), 'Migration ID.')
+    ->param('migrationId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Migration ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')

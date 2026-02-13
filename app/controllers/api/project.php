@@ -16,7 +16,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Http;
+use Utopia\Http\Http;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
@@ -496,7 +496,7 @@ Http::get('/v1/project/variables/:variableId')
             )
         ]
     ))
-    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -526,7 +526,7 @@ Http::put('/v1/project/variables/:variableId')
             )
         ]
     ))
-    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Nullable(new Text(8192, 0)), 'Variable value. Max length: 8192 chars.', true)
     ->param('secret', null, new Nullable(new Boolean()), 'Secret variables can be updated or deleted, but only projects can read them during build and runtime.', true)
@@ -585,7 +585,7 @@ Http::delete('/v1/project/variables/:variableId')
         ],
         contentType: ContentType::NONE
     ))
-    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->param('variableId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Variable unique ID.', false, ['dbForProject'])
     ->inject('project')
     ->inject('response')
     ->inject('dbForProject')

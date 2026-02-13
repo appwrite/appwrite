@@ -11,6 +11,6 @@ const teams = new sdk.Teams(client);
 const result = await teams.updateMembership({
     teamId: '<TEAM_ID>',
     membershipId: '<MEMBERSHIP_ID>',
-    roles: [sdk.Roles.Admin]
+    roles: []
 });
 ```

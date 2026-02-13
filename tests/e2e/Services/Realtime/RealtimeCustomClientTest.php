@@ -2974,6 +2974,11 @@ class RealtimeCustomClientTest extends Scope
 
     public function testRelationshipPayloadHidesRelatedDoc()
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
         $user = $this->getUser();
         $session = $user['session'] ?? '';
         $projectId = $this->getProject()['$id'];

@@ -6,7 +6,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use DateInterval;
 use DateTime;
-use Utopia\CLI\Console;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime as DatabaseDateTime;
 use Utopia\Database\Document;

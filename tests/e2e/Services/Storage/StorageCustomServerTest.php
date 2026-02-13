@@ -221,6 +221,7 @@ class StorageCustomServerTest extends Scope
                 $this->getHeaders()
             )
         );
+        // UID validator always limits to 36 chars regardless of adapter, so validation catches this and returns 400
         $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;

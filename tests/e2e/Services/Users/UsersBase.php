@@ -700,19 +700,23 @@ trait UsersBase
         $this->assertEquals(1, $response['body']['total']);
         $this->assertCount(1, $response['body']['users']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'search' => "man",
-        ]);
+        // Some databases only support fulltext search on complete words
+        if ($this->getSupportForFulltextWildcard()) {
+            $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'search' => "man",
+            ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertIsArray($response['body']);
-        $this->assertIsArray($response['body']['users']);
-        $this->assertIsInt($response['body']['total']);
-        $this->assertEquals(1, $response['body']['total']);
-        $this->assertCount(1, $response['body']['users']);
+
+            $this->assertEquals($response['headers']['status-code'], 200);
+            $this->assertIsArray($response['body']);
+            $this->assertIsArray($response['body']['users']);
+            $this->assertIsInt($response['body']['total']);
+            $this->assertEquals(1, $response['body']['total']);
+            $this->assertCount(1, $response['body']['users']);
+        }
 
         $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
             'content-type' => 'application/json',

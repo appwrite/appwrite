@@ -1,5 +1,11 @@
 # Change Log
 
+## 0.26.0
+
+* Add `dart-3.10` and `flutter-3.38` to `BuildRuntime` and `Runtime` enums
+* Add `bytesMax` and `bytesUsed` properties to `Collection` and `Table` models
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `IReadOnlyList<string>`
+
 ## 0.25.0
 
 * Add array-based enum parameters (e.g., `permissions: IReadOnlyList<BrowserPermission>`).

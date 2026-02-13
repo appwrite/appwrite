@@ -1,37 +1,17 @@
 #!/bin/bash
 set -e
 
-# Start MongoDB in the background
-mongod --replSet rs0 --bind_ip_all &
+# Fix keyfile permissions if mounted from volume
+KEYFILE_PATH="/data/keyfile/mongo-keyfile"
 
-# Wait for MongoDB to start
-echo "Waiting for MongoDB to start..."
-until mongosh --eval "print('MongoDB is ready')" > /dev/null 2>&1; do
-    sleep 1
-done
+if [ ! -f "$KEYFILE_PATH" ]; then
+  echo "Generating random MongoDB keyfile..."
+  mkdir -p /data/keyfile
+  openssl rand -base64 756 > "$KEYFILE_PATH"
+fi
 
-# Initialize replica set if not already initialized
-echo "Initializing replica set..."
-mongosh --eval "
-try {
-    rs.status();
-    print('Replica set already initialized');
-} catch (e) {
-    rs.initiate({
-        _id: 'rs0',
-        members: [{ _id: 0, host: 'localhost:27017' }]
-    });
-    print('Replica set initialized');
-}
-"
+chmod 400 "$KEYFILE_PATH"
+chown mongodb:mongodb "$KEYFILE_PATH" 2>/dev/null || chown 999:999 "$KEYFILE_PATH"
 
-# Wait for replica set to be ready
-echo "Waiting for replica set to be ready..."
-until mongosh --eval "rs.status().ok" > /dev/null 2>&1; do
-    sleep 1
-done
-
-echo "MongoDB replica set is ready"
-
-# Keep the container running by waiting on the MongoDB process
-wait
+# Use MongoDB's standard entrypoint with our command
+exec docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --auth --keyFile "$KEYFILE_PATH"

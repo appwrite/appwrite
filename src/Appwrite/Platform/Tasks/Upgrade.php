@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Utopia\CLI\Console;
 use Utopia\System\System;
@@ -29,11 +30,19 @@ class Upgrade extends Install
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
-            ->callback($this->upgradeAction(...));
+            ->param('database', 'mongodb', new Text(length: 0), 'Database to use (mongodb|mariadb|postgresql)', true)
+            ->callback($this->action(...));
     }
 
-    public function upgradeAction(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart): void
-    {
+    public function action(
+		string $httpPort,
+		string $httpsPort,
+		string $organization,
+		string $image,
+		string $interactive,
+		bool $noStart,
+		string $database
+		): void {
         $isLocalInstall = $this->isLocalInstall();
         $this->applyLocalPaths($isLocalInstall, true);
 
@@ -49,23 +58,52 @@ class Upgrade extends Install
         }
 
         $database = null;
-        $envPath = $this->path . '/' . $this->getEnvFileName();
-        $envData = @file_get_contents($envPath);
-        if ($envData !== false) {
-            $env = new Env($envData);
-            $envVars = $env->list();
-            $database = $envVars['_APP_DB_ADAPTER'] ?? null;
+        $compose = new Compose($data);
+        foreach ($compose->getServices() as $service) {
+            if (!$service) {
+                continue;
+            }
+            $env = $service->getEnvironment()->list();
+            if (isset($env['_APP_DB_ADAPTER'])) {
+                $database = $env['_APP_DB_ADAPTER'];
+                break;
+            }
         }
-        if (empty($database)) {
-            $database = System::getEnv('_APP_DB_ADAPTER', 'mongodb');
-        }
-        $this->lockedDatabase = (string) $database;
 
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, true);
+        if ($database === null) {
+            $envData = @file_get_contents($this->path . '/.env');
+            if ($envData !== false) {
+                $envFile = new Env($envData);
+                $database = $envFile->list()['_APP_DB_ADAPTER'] ?? null;
+            }
+        }
+
+        if ($database === null) {
+            throw new \Exception('Database type not found, can not updgrade. Ensure `_APP_DB_ADAPTER` is set in your environment.')
+        }
+
+        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart, $database);
     }
 
-    protected function startWebServer(string $defaultHttpPort, string $defaultHttpsPort, string $organization, string $image, bool $noStart, array $vars, bool $isUpgrade = false, ?string $lockedDatabase = null): void
-    {
-        parent::startWebServer($defaultHttpPort, $defaultHttpsPort, $organization, $image, $noStart, $vars, true, $this->lockedDatabase);
+    protected function startWebServer(
+		string $defaultHttpPort,
+		string $defaultHttpsPort,
+		string $organization,
+		string $image,
+		bool $noStart,
+		array $vars,
+		bool $isUpgrade = false,
+		?string $lockedDatabase = null
+	): void {
+        parent::startWebServer(
+			$defaultHttpPort,
+			$defaultHttpsPort,
+			$organization,
+			$image,
+			$noStart,
+			$vars,
+			true,
+			$this->lockedDatabase
+		);
     }
 }

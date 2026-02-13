@@ -601,6 +601,11 @@ class DatabaseServerTest extends Scope
     #[Depends('testCreateCollection')]
     public function testCreateRelationshipAttribute(array $data): array
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_RELATIONSHIP_ATTRIBUTE);
         $gqlPayload = [
@@ -631,6 +636,11 @@ class DatabaseServerTest extends Scope
     #[Depends('testCreateRelationshipAttribute')]
     public function testUpdateRelationshipAttribute(array $data): array
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         sleep(1);
 
         $projectId = $this->getProject()['$id'];
@@ -828,6 +838,13 @@ class DatabaseServerTest extends Scope
     }
 
     /**
+     * @depends testUpdateStringAttribute
+     * @depends testUpdateIntegerAttribute
+     * @depends testUpdateBooleanAttribute
+     * @depends testUpdateFloatAttribute
+     * @depends testUpdateEmailAttribute
+     * @depends testUpdateEnumAttribute
+     * @depends testUpdateDatetimeAttribute
      * @throws Exception
      */
     #[Depends('testCreateIndex')]

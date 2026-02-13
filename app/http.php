@@ -14,9 +14,9 @@ use Swoole\Timer;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Adapter\SQL as AuditAdapterSQL;
 use Utopia\Audit\Audit;
-use Utopia\CLI\Console;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -26,16 +26,16 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Http;
+use Utopia\Http\Files;
+use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
-use Utopia\Swoole\Files;
 use Utopia\System\System;
 
-Files::load(__DIR__.'/../public');
-
 const DOMAIN_SYNC_TIMER = 30; // 30 seconds
+
+$files = null;
 
 $domains = new Table(1_000_000); // 1 million rows
 $domains->column('value', Table::TYPE_INT, 1);
@@ -162,7 +162,11 @@ $http
         Constant::OPTION_TASK_WORKER_NUM => 1, // required for the task to fetch domains background
     ]);
 
-$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
+$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) use (&$files) {
+    if (!$server->taskworker) {
+        $files = new Files();
+        $files->load(__DIR__ . '/../public');
+    }
     Console::success('Worker ' . ++$workerId . ' started successfully');
 });
 
@@ -181,10 +185,10 @@ $http->on(Constant::EVENT_AFTER_RELOAD, function ($server) {
 
 include __DIR__ . '/controllers/general.php';
 
-function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, callable $extraSetup = null): void
+function createDatabase(Http $app, string $resourceKey, string $dbName, array $collections, mixed $pools, ?callable $extraSetup = null): void
 {
-    $max = 10;
-    $sleep = 1;
+    $max = 15;
+    $sleep = 2;
     $attempts = 0;
 
     while (true) {
@@ -194,8 +198,8 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
             /* @var $database Database */
             $database = is_callable($resource) ? $resource() : $resource;
             break; // exit loop on success
-        } catch (\Exception $e) {
-            Console::warning("  └── Database not ready. Retrying connection ({$attempts})...");
+        } catch (\Throwable $e) {
+            Console::warning("  └── Database not ready ({$dbName}). Retrying connection ({$attempts}): " . $e->getMessage());
             if ($attempts >= $max) {
                 throw new \Exception('  └── Failed to connect to database: ' . $e->getMessage());
             }
@@ -205,12 +209,26 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
 
     Console::success("[Setup] - $dbName database init started...");
 
-    // Attempt to create the database
-    try {
-        Console::info("  └── Creating database: $dbName...");
-        $database->create();
-    } catch (\Exception $e) {
-        Console::info("  └── Skip: metadata table already exists");
+    $attempts = 0;
+    while (true) {
+        try {
+            $attempts++;
+            Console::info("  └── Creating database: $dbName...");
+            $database->create();
+            break; // exit loop on success
+        } catch (\Exception $e) {
+            if ($e instanceof DuplicateException) {
+                Console::info("  └── Skip: metadata table already exists");
+                break;
+            }
+
+            Console::warning("  └── Database create failed. Retrying ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('  └── Failed to create database: ' . $e->getMessage());
+            }
+
+            \sleep($sleep);
+        }
     }
 
     // Process collections
@@ -394,11 +412,25 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 ->setTenant(null)
                 ->setNamespace(System::getEnv('_APP_DATABASE_SHARED_NAMESPACE', ''));
 
-            try {
-                Console::success('[Setup] - Creating project database: ' . $hostname . '...');
-                $dbForProject->create();
-            } catch (DuplicateException) {
-                Console::success('[Setup] - Skip: metadata table already exists');
+            $max = 15;
+            $sleep = 2;
+            $attempts = 0;
+            while (true) {
+                try {
+                    $attempts++;
+                    Console::success('[Setup] - Creating project database: ' . $hostname . '...');
+                    $dbForProject->create();
+                    break; // exit loop on success
+                } catch (DuplicateException) {
+                    Console::success('[Setup] - Skip: metadata table already exists');
+                    break;
+                } catch (\Throwable $e) {
+                    Console::warning("  └── Project database create failed. Retrying ({$attempts})...");
+                    if ($attempts >= $max) {
+                        throw new \Exception('  └── Failed to create project database: ' . $e->getMessage());
+                    }
+                    sleep($sleep);
+                }
             }
 
             if ($dbForProject->getCollection(AuditAdapterSQL::COLLECTION)->isEmpty()) {
@@ -440,21 +472,21 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
     });
 });
 
-$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
+$http->on(Constant::EVENT_REQUEST, function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register, &$files) {
     Http::setResource('swooleRequest', fn () => $swooleRequest);
     Http::setResource('swooleResponse', fn () => $swooleResponse);
 
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
-    if (Files::isFileLoaded($request->getURI())) {
-        $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
+    if ($files instanceof Files && $files->isFileLoaded($request->getURI())) {
+        $time = (60 * 60 * 24 * 45); // 45 days cache
 
         $response
-            ->setContentType(Files::getFileMimeType($request->getURI()))
+            ->setContentType($files->getFileMimeType($request->getURI()))
             ->addHeader('Cache-Control', 'public, max-age=' . $time)
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-            ->send(Files::getFileContents($request->getURI()));
+            ->send($files->getFileContents($request->getURI()));
 
         return;
     }
@@ -585,7 +617,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                 if ($latestDocument !== null) {
                     $queries[] =  Query::cursorAfter($latestDocument);
                 }
-                if ($lastSyncUpdate != null) {
+                if ($lastSyncUpdate !== null) {
                     $queries[] = Query::greaterThanEqual('$updatedAt', $lastSyncUpdate);
                 }
                 $results = [];
@@ -593,7 +625,7 @@ $http->on(Constant::EVENT_TASK, function () use ($register, $domains) {
                     $authorization = $app->getResource('authorization');
                     $results = $authorization->skip(fn () =>  $dbForPlatform->find('rules', $queries));
                 } catch (Throwable $th) {
-                    Console::error($th->getMessage());
+                    Console::error('rules ' . $th->getMessage());
                 }
 
                 $sum = count($results);

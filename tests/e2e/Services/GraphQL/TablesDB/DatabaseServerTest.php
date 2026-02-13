@@ -603,6 +603,11 @@ class DatabaseServerTest extends Scope
     #[Depends('testCreateTable')]
     public function testCreateRelationshipColumn(array $data): array
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::CREATE_RELATIONSHIP_COLUMN);
         $gqlPayload = [
@@ -633,6 +638,11 @@ class DatabaseServerTest extends Scope
     #[Depends('testCreateRelationshipColumn')]
     public function testUpdateRelationshipColumn(array $data): array
     {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return $data;
+        }
+
         sleep(1);
 
         $projectId = $this->getProject()['$id'];

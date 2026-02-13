@@ -8,8 +8,8 @@ use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Utopia\View;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
@@ -51,14 +51,23 @@ class Install extends Action
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
             ->param('no-start', false, new Boolean(true), 'Run an interactive session', true)
+            ->param('database', 'mongodb', new Text(0), 'Database to use (mongodb|mariadb|postgres)', true)
             ->callback($this->action(...));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart, bool $isUpgrade = false): void
-    {
+    public function action(
+        string $httpPort,
+		string $httpsPort,
+		string $organization,
+		string $image,
+		string $interactive,
+		bool $noStart,
+		string $database
+	): void {
         $defaultHttpPort = '80';
         $defaultHttpsPort = '443';
         $config = Config::getParam('variables');
+
         /** @var array<string, array<string, string>> $vars array where key is variable name and value is variable */
         $vars = [];
 
@@ -155,6 +164,14 @@ class Install extends Action
                     }
                 }
             }
+
+            // Block database type changes on existing installations
+            $existingDatabase = $vars['_APP_DB_ADAPTER']['default'] ?? null;
+            if ($existingDatabase !== null && $existingDatabase !== $database) {
+                Console::error("Cannot change database type from '{$existingDatabase}' to '{$database}'.");
+                Console::error('Changing database types on an existing installation is not supported.');
+                Console::exit(1);
+            }
         }
 
         // If interactive and web mode enabled, start web server
@@ -233,6 +250,11 @@ class Install extends Action
                 continue;
             }
 
+            if ($var['name'] === '_APP_DB_ADAPTER' && $data !== false) {
+                $input[$var['name']] = $database;
+                continue;
+            }
+
             $value = Console::confirm($var['question'] . ' (default: \'' . $var['default'] . '\')');
 
             if (!empty($value)) {
@@ -246,6 +268,23 @@ class Install extends Action
                 printf($mask, "A or AAAA", "@", "<YOUR PUBLIC IP>");
                 Console::warning("\nUse 'AAAA' if you're using an IPv6 address and 'A' if you're using an IPv4 address.\n");
             }
+        }
+        $database = $input['_APP_DB_ADAPTER'];
+        if ($database === 'postgresql') {
+            $input['_APP_DB_HOST'] = 'postgresql';
+            $input['_APP_DB_PORT'] = 5432;
+        } elseif ($database === 'mariadb') {
+            $input['_APP_DB_HOST'] = 'mariadb';
+            $input['_APP_DB_PORT'] = 3306;
+        }
+
+        $database = $input['_APP_DB_ADAPTER'];
+        if ($database === 'mongodb') {
+            $input['_APP_DB_HOST'] = 'mongodb';
+            $input['_APP_DB_PORT'] = 27017;
+        } elseif ($database === 'mariadb') {
+            $input['_APP_DB_HOST'] = 'mariadb';
+            $input['_APP_DB_PORT'] = 3306;
         }
 
         $shouldGenerateSecrets = !$existingInstallation && !$isUpgrade;
@@ -363,6 +402,9 @@ class Install extends Action
         } elseif ($database === 'mariadb') {
             $input['_APP_DB_HOST'] = 'mariadb';
             $input['_APP_DB_PORT'] = 3306;
+        } elseif ($database === 'postgresql') {
+            $input['_APP_DB_HOST'] = 'postgres';
+            $input['_APP_DB_PORT'] = 5432;
         }
 
         return $input;
@@ -532,11 +574,10 @@ class Install extends Action
                 $this->updateProgress($progress, InstallerServer::STEP_DOCKER_CONTAINERS, InstallerServer::STATUS_COMPLETED, $messages);
 
                 if (!$isUpgrade) {
-                    // Create console account on fresh install only
                     $this->createInitialAdminAccount($account, $progress);
                 }
 
-                /* track installs for metrics */
+                // Track installs
                 $this->trackSelfHostedInstall($input, $isUpgrade, $version, $account);
 
                 if ($isCLI) {

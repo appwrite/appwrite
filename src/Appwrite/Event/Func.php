@@ -9,8 +9,6 @@ use Utopia\System\System;
 
 class Func extends Event
 {
-    public const TYPE_ASYNC_WRITE = 'async_write';
-
     protected string $jwt = '';
     protected string $type = '';
     protected string $body = '';

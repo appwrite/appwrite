@@ -28,7 +28,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Nullable;
@@ -118,13 +118,13 @@ class Create extends Action
                     ),
                 )
             ])
-            ->param('databaseId', '', new UID(), 'Database ID.')
-            ->param('documentId', '', new CustomId(), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
-            ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.')
+            ->param('databaseId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Database ID.', false, ['dbForProject'])
+            ->param('documentId', '', fn (Database $dbForProject) => new CustomId(false, $dbForProject->getAdapter()->getMaxUIDLength()), 'Document ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true, ['dbForProject'])
+            ->param('collectionId', '', fn (Database $dbForProject) => new UID($dbForProject->getAdapter()->getMaxUIDLength()), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection). Make sure to define attributes before creating documents.', false, ['dbForProject'])
             ->param('data', [], new JSON(), 'Document data as JSON object.', true, example: '{"username":"walter.obrien","email":"walter.obrien@example.com","fullName":"Walter O\'Brien","age":30,"isAdmin":false}')
             ->param('permissions', null, new Nullable(new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE])), 'An array of permissions strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
             ->param('documents', [], fn (array $plan) => new ArrayList(new JSON(), $plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH), 'Array of documents data as JSON objects.', true, ['plan'])
-            ->param('transactionId', null, new Nullable(new UID()), 'Transaction ID for staging the operation.', true)
+            ->param('transactionId', null, fn (Database $dbForProject) => new Nullable(new UID($dbForProject->getAdapter()->getMaxUIDLength())), 'Transaction ID for staging the operation.', true, ['dbForProject'])
             ->inject('response')
             ->inject('dbForProject')
             ->inject('user')
@@ -448,11 +448,17 @@ class Create extends Action
         }
 
         try {
+            $created = [];
             $dbForProject->withPreserveDates(
-                fn () => $dbForProject->createDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                    $documents,
-                )
+                function () use (&$created, $dbForProject, $database, $collection, $documents) {
+                    $dbForProject->createDocuments(
+                        'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
+                        $documents,
+                        onNext: function ($doc) use (&$created) {
+                            $created[] = $doc;
+                        }
+                    );
+                }
             );
         } catch (DuplicateException) {
             throw new Exception($this->getDuplicateException(), params: [$documentId]);
@@ -472,7 +478,7 @@ class Create extends Action
             ->setContext($this->getCollectionsEventsContext(), $collection);
 
         $collectionsCache = [];
-        foreach ($documents as $document) {
+        foreach ($created as $document) {
             $this->processDocument(
                 database: $database,
                 collection: $collection,
@@ -491,15 +497,15 @@ class Create extends Action
 
         if ($isBulk) {
             $response->dynamic(new Document([
-                'total' => count($documents),
-                $this->getSDKGroup() => $documents
+                'total' => count($created),
+                $this->getSdkGroup() => $created
             ]), $this->getBulkResponseModel());
 
             $this->triggerBulk(
                 'databases.[databaseId].collections.[collectionId].documents.[documentId].create',
                 $database,
                 $collection,
-                $documents,
+                $created,
                 $queueForEvents,
                 $queueForRealtime,
                 $queueForFunctions,
@@ -511,12 +517,12 @@ class Create extends Action
         }
 
         $queueForEvents
-            ->setParam('documentId', $documents[0]->getId())
-            ->setParam('rowId', $documents[0]->getId())
+            ->setParam('documentId', $created[0]->getId())
+            ->setParam('rowId', $created[0]->getId())
             ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
 
         $response->dynamic(
-            $documents[0],
+            $created[0],
             $this->getResponseModel()
         );
     }

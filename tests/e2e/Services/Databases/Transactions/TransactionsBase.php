@@ -5598,8 +5598,9 @@ trait TransactionsBase
      */
     public function testArrayOperatorsWithUpdateRow(): void
     {
-        if ($this->getDatabaseType() !== 'tablesdb') {
-            $this->markTestSkipped('Test only applicable to TablesDB');
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         // Create database
@@ -5724,8 +5725,9 @@ trait TransactionsBase
      */
     public function testArrayOperatorsWithCreateOperations(): void
     {
-        if ($this->getDatabaseType() !== 'tablesdb') {
-            $this->markTestSkipped('Test only applicable to TablesDB');
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         // Create database
@@ -5853,8 +5855,9 @@ trait TransactionsBase
      */
     public function testMultipleArrayOperators(): void
     {
-        if ($this->getDatabaseType() !== 'tablesdb') {
-            $this->markTestSkipped('Test only applicable to TablesDB');
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
         }
 
         // Create database
