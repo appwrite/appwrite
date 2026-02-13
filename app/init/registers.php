@@ -165,13 +165,13 @@ $register->set('pools', function () {
     $connections = [
         'console' => [
             'type' => 'database',
-            'dsns' => $fallbackForDB,
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
             'multiple' => false,
             'schemes' => ['mariadb', 'mysql'],
         ],
         'database' => [
             'type' => 'database',
-            'dsns' => $fallbackForDB,
+            'dsns' => System::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
             'multiple' => true,
             'schemes' => ['mariadb', 'mysql'],
         ],

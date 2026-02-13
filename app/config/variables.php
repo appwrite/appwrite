@@ -412,12 +412,12 @@ return [
         ],
     ],
     [
-        'category' => 'MariaDB',
-        'description' => 'Appwrite is using a MariaDB server for managing persistent database data. The MariaDB env vars are used to allow Appwrite server to connect to the MariaDB container.',
+        'category' => 'Database',
+        'description' => 'Appwrite uses a MariaDB or MySQL server for managing persistent database data. The DB env vars are used to allow Appwrite server to connect to the database container. To use an external MySQL 8.x database, set _APP_CONNECTIONS_DB_CONSOLE and _APP_CONNECTIONS_DB_PROJECT with a mysql:// scheme DSN.',
         'variables' => [
             [
                 'name' => '_APP_DB_HOST',
-                'description' => 'MariaDB server host name address. Default value is: \'mariadb\'.',
+                'description' => 'Database server host name address. Default value is: \'mariadb\'.',
                 'introduction' => '',
                 'default' => 'mariadb',
                 'required' => false,
@@ -426,7 +426,7 @@ return [
             ],
             [
                 'name' => '_APP_DB_PORT',
-                'description' => 'MariaDB server TCP port. Default value is: \'3306\'.',
+                'description' => 'Database server TCP port. Default value is: \'3306\'.',
                 'introduction' => '',
                 'default' => '3306',
                 'required' => false,
@@ -435,7 +435,7 @@ return [
             ],
             [
                 'name' => '_APP_DB_SCHEMA',
-                'description' => 'MariaDB server database schema. Default value is: \'appwrite\'.',
+                'description' => 'Database server database schema. Default value is: \'appwrite\'.',
                 'introduction' => '',
                 'default' => 'appwrite',
                 'required' => false,
@@ -444,7 +444,7 @@ return [
             ],
             [
                 'name' => '_APP_DB_USER',
-                'description' => 'MariaDB server user name. Default value is: \'user\'.',
+                'description' => 'Database server user name. Default value is: \'user\'.',
                 'introduction' => '',
                 'default' => 'user',
                 'required' => false,
@@ -453,7 +453,7 @@ return [
             ],
             [
                 'name' => '_APP_DB_PASS',
-                'description' => 'MariaDB server user password. Default value is: \'password\'.',
+                'description' => 'Database server user password. Default value is: \'password\'.',
                 'introduction' => '',
                 'default' => 'password',
                 'required' => false,
@@ -462,12 +462,30 @@ return [
             ],
             [
                 'name' => '_APP_DB_ROOT_PASS',
-                'description' => 'MariaDB server root password. Default value is: \'rootsecretpassword\'.',
+                'description' => 'Database server root password. Default value is: \'rootsecretpassword\'.',
                 'introduction' => '',
                 'default' => 'rootsecretpassword',
                 'required' => false,
                 'question' => '',
                 'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DB_CONSOLE',
+                'description' => 'Full DSN for the console database connection. Allows overriding the default MariaDB connection with a custom DSN including scheme selection (mariadb:// or mysql://). Format: db_main=mysql://user:password@host:port/database. When not set, falls back to the default MariaDB connection built from _APP_DB_* variables.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONNECTIONS_DB_PROJECT',
+                'description' => 'Full DSN for the project database connection. Allows overriding the default MariaDB connection with a custom DSN including scheme selection (mariadb:// or mysql://). Format: db_main=mysql://user:password@host:port/database. When not set, falls back to the default MariaDB connection built from _APP_DB_* variables.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
             ],
         ],
     ],
