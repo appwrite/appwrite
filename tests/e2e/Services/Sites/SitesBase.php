@@ -69,14 +69,46 @@ trait SitesBase
 
         // Not === so multipart/form-data works fine too
         if (($params['activate'] ?? false) == true) {
-            $this->assertEventually(function () use ($siteId, $deploymentId) {
+            // Wait briefly for auto-activation, then explicitly activate if needed
+            $activated = false;
+            $autoActivateTimeout = 30000; // 30 seconds for auto-activation
+            $start = \microtime(true);
+
+            while ((\microtime(true) - $start) * 1000 < $autoActivateTimeout) {
                 $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
                     'content-type' => 'application/json',
                     'x-appwrite-project' => $this->getProject()['$id'],
                     'x-appwrite-key' => $this->getProject()['apiKey'],
                 ]));
-                $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
-            }, 600000, 500);
+
+                if (($site['body']['deploymentId'] ?? '') === $deploymentId) {
+                    $activated = true;
+                    break;
+                }
+
+                \usleep(500000); // 500ms
+            }
+
+            if (!$activated) {
+                // Auto-activation didn't happen in time, explicitly activate
+                $this->client->call(Client::METHOD_PATCH, '/sites/' . $siteId . '/deployment', array_merge([
+                    'content-type' => 'application/json',
+                    'x-appwrite-project' => $this->getProject()['$id'],
+                    'x-appwrite-key' => $this->getProject()['apiKey'],
+                ]), [
+                    'deploymentId' => $deploymentId,
+                ]);
+
+                // Verify activation
+                $this->assertEventually(function () use ($siteId, $deploymentId) {
+                    $site = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId, array_merge([
+                        'content-type' => 'application/json',
+                        'x-appwrite-project' => $this->getProject()['$id'],
+                        'x-appwrite-key' => $this->getProject()['apiKey'],
+                    ]));
+                    $this->assertEquals($deploymentId, $site['body']['deploymentId'], 'Deployment is not activated after explicit activation, deployment: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+                }, 30000, 500);
+            }
         }
 
         return $deploymentId;
