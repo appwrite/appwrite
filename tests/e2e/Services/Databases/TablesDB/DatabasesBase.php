@@ -2358,6 +2358,36 @@ trait DatabasesBase
         $this->assertEquals($row['title'], $response['body']['title']);
         $this->assertEquals($row['releaseYear'], $response['body']['releaseYear']);
         $this->assertArrayNotHasKey('birthDay', $response['body']);
+
+        $sequence = $response['body']['$sequence'];
+
+        // Query by sequence on get single row route
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$tableId'] . '/rows/' . $row['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$sequence', [$sequence])->toString()
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid query method: equal', $response['body']['message']);
+
+        // Query by sequence
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$tableId'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$sequence', [$sequence.''])->toString()
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($row['title'], $response['body']['rows'][0]['title']);
+        $this->assertEquals($row['releaseYear'], $response['body']['rows'][0]['releaseYear']);
+        $this->assertTrue(array_key_exists('$sequence', $response['body']['rows'][0]));
     }
 
     /**

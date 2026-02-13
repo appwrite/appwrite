@@ -2,7 +2,6 @@
 require 'appwrite'
 
 include Appwrite
-include Appwrite::Enums
 
 client = Client.new
     .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
@@ -13,7 +12,7 @@ teams = Teams.new(client)
 
 result = teams.create_membership(
     team_id: '<TEAM_ID>',
-    roles: [Roles::ADMIN],
+    roles: [],
     email: 'email@example.com', # optional
     user_id: '<USER_ID>', # optional
     phone: '+12065550100', # optional

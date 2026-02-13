@@ -1,5 +1,11 @@
 # Change Log
 
+## 21.1.0
+
+* Add `queries` parameter to Realtime subscriptions for filtering events
+* Fix `Roles` enum removed from Teams service; `roles` parameter now accepts `List<String>`
+* Fix doc examples with proper formatting and syntax highlighting
+
 ## 21.0.0
 
 * Add array-based enum parameters (e.g., `permissions: List<BrowserPermission>`).

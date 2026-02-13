@@ -155,7 +155,7 @@ class SitesCustomServerTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()), [
                 'queries' => [
-                    Query::equal('deploymentResourceId', [$siteId])
+                    Query::equal('deploymentResourceId', [$siteId])->toString()
                 ]
             ]);
 
