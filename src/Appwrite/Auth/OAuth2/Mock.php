@@ -56,7 +56,6 @@ class Mock extends OAuth2
      */
     protected function getTokens(string $code): array
     {
-
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'GET',

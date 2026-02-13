@@ -359,15 +359,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_DB_ADAPTER',
-                'description' => 'Which database adapter to use. Must be one of: mariadb, postgresql.',
-                'introduction' => '1.6.0',
-                'default' => 'mariadb',
-                'required' => true,
-                'question' => 'Choose your database (mariadb|postgresql)',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_TRUSTED_HEADERS',
                 'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively.',
                 'introduction' => '1.8.0',
@@ -380,16 +371,70 @@ return [
     ],
     [
         'category' => 'Database',
-        'description' => 'Appwrite uses a database for storing user data and metadata. You can choose between MariaDB and MongoDB.',
+        'description' => 'Appwrite uses a database for storing user and meta data. You can choose between MariaDB, MongoDB or PostgreSQL.',
         'variables' => [
             [
                 'name' => '_APP_DB_ADAPTER',
-                'description' => 'To switch between mariadb and mongoDB',
-                'introduction' => '1.8.0',
+                'description' => 'Which database to use. Must be one of: MariaDB, MongoDB, or PostgreSQL',
+                'introduction' => '1.9.0',
                 'default' => 'mongodb',
                 'required' => true,
-                'question' => 'Choose your database (mariadb|mongodb)',
+                'question' => 'Choose your database (mariadb|mongodb|postgresql)',
                 'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_HOST',
+                'description' => 'Database server host name address. Default value is: \'mongodb\'.',
+                'introduction' => '',
+                'default' => 'mongodb',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PORT',
+                'description' => 'Database server TCP port. Default value is: \'27017\'.',
+                'introduction' => '',
+                'default' => '27017',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_SCHEMA',
+                'description' => 'Database server database schema. Default value is: \'appwrite\'.',
+                'introduction' => '',
+                'default' => 'appwrite',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_USER',
+                'description' => 'Database server user name. Default value is: \'user\'.',
+                'introduction' => '',
+                'default' => 'user',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DB_PASS',
+                'description' => 'Database server user password. Default value is: \'password\'.',
+                'introduction' => '',
+                'default' => 'password',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
+            ],
+            [
+                'name' => '_APP_DB_ROOT_PASS',
+                'description' => 'Database server root password. Default value is: \'rootsecretpassword\'.',
+                'introduction' => '',
+                'default' => 'rootsecretpassword',
+                'required' => false,
+                'question' => '',
+                'filter' => 'password'
             ],
         ],
     ],
@@ -432,66 +477,6 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ],
-        ],
-    ],
-    [
-        'category' => 'MariaDB',
-        'description' => 'Appwrite is using a MariaDB server for managing persistent database data. The MariaDB env vars are used to allow Appwrite server to connect to the MariaDB container.',
-        'variables' => [
-            [
-                'name' => '_APP_DB_HOST',
-                'description' => 'MariaDB server host name address. Default value is: \'mariadb\'.',
-                'introduction' => '',
-                'default' => 'mariadb',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_PORT',
-                'description' => 'MariaDB server TCP port. Default value is: \'3306\'.',
-                'introduction' => '',
-                'default' => '3306',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_SCHEMA',
-                'description' => 'MariaDB server database schema. Default value is: \'appwrite\'.',
-                'introduction' => '',
-                'default' => 'appwrite',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_USER',
-                'description' => 'MariaDB server user name. Default value is: \'user\'.',
-                'introduction' => '',
-                'default' => 'user',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_DB_PASS',
-                'description' => 'MariaDB server user password. Default value is: \'password\'.',
-                'introduction' => '',
-                'default' => 'password',
-                'required' => false,
-                'question' => '',
-                'filter' => 'password'
-            ],
-            [
-                'name' => '_APP_DB_ROOT_PASS',
-                'description' => 'MariaDB server root password. Default value is: \'rootsecretpassword\'.',
-                'introduction' => '',
-                'default' => 'rootsecretpassword',
-                'required' => false,
-                'question' => '',
-                'filter' => 'password'
             ],
         ],
     ],
