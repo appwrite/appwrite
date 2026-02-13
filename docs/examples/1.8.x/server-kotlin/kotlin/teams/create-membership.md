@@ -2,7 +2,6 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Teams
-import io.appwrite.enums.Roles
 
 val client = Client()
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -13,7 +12,7 @@ val teams = Teams(client)
 
 val response = teams.createMembership(
     teamId = "<TEAM_ID>",
-    roles = listOf(Roles.ADMIN),
+    roles = listOf(),
     email = "email@example.com", // optional
     userId = "<USER_ID>", // optional
     phone = "+12065550100", // optional
