@@ -434,3 +434,11 @@ $register->set('promiseAdapter', function () {
 $register->set('hooks', function () {
     return new Hooks();
 });
+$listeners = require __DIR__ . '/../listeners.php';
+$register->set('bus', function () use ($listeners) {
+    $bus = new \Utopia\Bus\Bus();
+    foreach ($listeners as $listener) {
+        $bus->subscribe($listener);
+    }
+    return $bus;
+});

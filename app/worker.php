@@ -9,7 +9,6 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Execution;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
@@ -355,9 +354,6 @@ Server::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
 }, ['publisher']);
 
-Server::setResource('queueForExecutions', function (Publisher $publisher) {
-    return new Execution($publisher);
-}, ['publisher']);
 
 Server::setResource('queueForRealtime', function () {
     return new Realtime();
@@ -541,6 +537,10 @@ try {
 }
 
 $worker = $platform->getWorker();
+
+Server::setResource('bus', function ($register) use ($worker) {
+    return $register->get('bus')->setResolver(fn (string $name) => $worker->getResource($name));
+}, ['register']);
 
 $worker
     ->error()
