@@ -6,6 +6,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 
 class SchedulesCustomServerTest extends Scope
 {
@@ -175,7 +176,7 @@ class SchedulesCustomServerTest extends Scope
     {
         // Filter by resourceType
         $response = $this->listSchedules([
-            'queries' => ['equal("resourceType", ["function"])'],
+            'queries' => [Query::equal('resourceType', ['function'])->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -187,7 +188,7 @@ class SchedulesCustomServerTest extends Scope
 
         // Filter by active status
         $response = $this->listSchedules([
-            'queries' => ['equal("active", [true])'],
+            'queries' => [Query::equal('active', [true])->toString()],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -211,7 +212,7 @@ class SchedulesCustomServerTest extends Scope
     public function testListSchedulesInvalidQuery(): void
     {
         $response = $this->listSchedules([
-            'queries' => ['equal("nonexistent", "value")'],
+            'queries' => [Query::equal('nonexistent', ['value'])->toString()],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
