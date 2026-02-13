@@ -19,9 +19,13 @@ class SchedulesCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
+        $function = $this->createFunction();
+        $this->assertEquals(201, $function['headers']['status-code']);
+        $functionId = $function['body']['$id'];
+
         $response = $this->createSchedule([
             'resourceType' => 'function',
-            'resourceId' => ID::unique(),
+            'resourceId' => $functionId,
             'schedule' => '0 0 * * *',
             'active' => true,
         ]);
@@ -31,39 +35,44 @@ class SchedulesCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertNotEmpty($response['body']['$updatedAt']);
         $this->assertEquals('function', $response['body']['resourceType']);
-        $this->assertNotEmpty($response['body']['resourceId']);
+        $this->assertEquals($functionId, $response['body']['resourceId']);
         $this->assertNotEmpty($response['body']['resourceUpdatedAt']);
         $this->assertNotEmpty($response['body']['projectId']);
         $this->assertEquals('0 0 * * *', $response['body']['schedule']);
         $this->assertTrue($response['body']['active']);
         $this->assertNotEmpty($response['body']['region']);
 
-        return ['scheduleId' => $response['body']['$id']];
+        return ['scheduleId' => $response['body']['$id'], 'functionId' => $functionId];
     }
 
-    public function testCreateScheduleExecutionType(): void
+    public function testCreateScheduleResourceNotFound(): void
     {
+        // Function not found
+        $response = $this->createSchedule([
+            'resourceType' => 'function',
+            'resourceId' => ID::unique(),
+            'schedule' => '0 0 * * *',
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        // Execution not found
         $response = $this->createSchedule([
             'resourceType' => 'execution',
             'resourceId' => ID::unique(),
             'schedule' => '*/10 * * * *',
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertEquals('execution', $response['body']['resourceType']);
-        $this->assertFalse($response['body']['active']);
-    }
+        $this->assertEquals(404, $response['headers']['status-code']);
 
-    public function testCreateScheduleMessageType(): void
-    {
+        // Message not found
         $response = $this->createSchedule([
             'resourceType' => 'message',
             'resourceId' => ID::unique(),
             'schedule' => '0 9 * * 1',
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertEquals('message', $response['body']['resourceType']);
+        $this->assertEquals(404, $response['headers']['status-code']);
     }
 
     public function testCreateScheduleInvalidResourceType(): void
@@ -220,10 +229,13 @@ class SchedulesCustomServerTest extends Scope
 
     public function testScheduleProjectIsolation(): void
     {
-        // Create a schedule in the current project
+        // Create a function and schedule in the current project
+        $function = $this->createFunction();
+        $this->assertEquals(201, $function['headers']['status-code']);
+
         $response = $this->createSchedule([
             'resourceType' => 'function',
-            'resourceId' => ID::unique(),
+            'resourceId' => $function['body']['$id'],
             'schedule' => '0 12 * * *',
         ]);
 
