@@ -1,11 +1,10 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../fixtures/authenticated'
 
 test('account page renders tabs and logout', async ({ page }) => {
   await page.goto('/account', { waitUntil: 'domcontentloaded' })
 
-  // Should stay within account area and not bounce to sign-in.
-  await expect(page).toHaveURL(/\/account/)
-  await expect(page).not.toHaveURL(/\/sign-in/)
+  // Should stay within account area.
+  await expect(page).toHaveURL((url) => new URL(url).pathname === '/account')
 
   // Tabs are the stable, public UI for this page.
   const tablist = page.getByRole('tablist')

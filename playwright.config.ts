@@ -1,18 +1,23 @@
 import 'dotenv/config'
 import { devices, type PlaywrightTestConfig } from '@playwright/test'
+import { env } from './e2e/config/env'
 
-const isCI = !!process.env.CI
+const isCI = env.CI
 
 const config: PlaywrightTestConfig = {
   timeout: 120000,
   reportSlowTests: null,
   reporter: isCI
-    ? [['github'], ['html', { open: 'never' }]]
-    : [['html', { open: 'never' }]],
+    ? [
+        ['github'],
+        ['html', { open: 'never', outputFolder: 'e2e/playwright-report' }],
+      ]
+    : [['html', { open: 'never', outputFolder: 'e2e/playwright-report' }]],
   retries: isCI ? 2 : 0,
   forbidOnly: isCI,
-  workers: isCI ? 1 : undefined,
+  workers: undefined,
   testDir: 'e2e',
+  outputDir: 'e2e/test-results',
   use: {
     baseURL: 'http://localhost:4173/',
     trace: 'on-first-retry',
@@ -34,10 +39,10 @@ const config: PlaywrightTestConfig = {
     },
   ],
   webServer: {
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: !env.CI,
     timeout: 120000,
     env: {
-      VITE_APPWRITE_ENDPOINT: process.env.VITE_APPWRITE_ENDPOINT || '',
+      VITE_APPWRITE_ENDPOINT: env.VITE_APPWRITE_ENDPOINT,
       PUBLIC_CONSOLE_MODE: process.env.PUBLIC_CONSOLE_MODE || '',
       PUBLIC_APPWRITE_MULTI_REGION:
         process.env.PUBLIC_APPWRITE_MULTI_REGION || '',

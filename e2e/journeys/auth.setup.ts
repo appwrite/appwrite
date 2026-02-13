@@ -1,43 +1,19 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from '../fixtures/base'
 import fs from 'node:fs'
 import path from 'node:path'
-import { signInStep } from '../steps/account'
-
-type StoredCookie = {
-  name: string
-  expires?: number
-}
 
 type StorageState = {
-  cookies?: StoredCookie[]
+  cookies?: unknown[]
 }
 
 function parseSessionSecret(secret: string): StorageState {
   try {
-    return JSON.parse(secret) as StorageState
+    const state: StorageState = JSON.parse(secret)
+    return state
   } catch {
     const decoded = Buffer.from(secret, 'base64').toString('utf-8')
-    return JSON.parse(decoded) as StorageState
-  }
-}
-
-function hasValidStoredSession(authPath: string): boolean {
-  if (!fs.existsSync(authPath)) return false
-
-  try {
-    const raw = fs.readFileSync(authPath, 'utf-8')
-    const state = JSON.parse(raw) as StorageState
-    const sessionCookie = state.cookies?.find((cookie) =>
-      /session/i.test(cookie.name),
-    )
-    if (!sessionCookie || typeof sessionCookie.expires !== 'number') {
-      return false
-    }
-
-    const nowSeconds = Math.floor(Date.now() / 1000)
-    return sessionCookie.expires > nowSeconds + 60
-  } catch {
-    return false
+    const state: StorageState = JSON.parse(decoded)
+    return state
   }
 }
 
@@ -72,12 +48,38 @@ test('authenticate once and persist storage state', async ({
     return
   }
 
-  if (hasValidStoredSession(authPath)) {
+  if (fs.existsSync(authPath)) {
     return
   }
 
   // Log in once and reuse storage state across tests to avoid creating new sessions/users.
-  await signInStep(page, email, password)
+  await test.step('sign in', async () => {
+    await page.goto('/sign-in', { waitUntil: 'domcontentloaded' })
+
+    await page.getByLabel('Email').fill(email)
+    await page.getByLabel('Password').fill(password)
+    const sessionPromise = page.waitForResponse(
+      (response) =>
+        response.url().includes('/sessions') &&
+        response.request().method() === 'POST',
+    )
+    await page.getByRole('button', { name: 'Login', exact: true }).click()
+    const response = await sessionPromise
+    if (!response.ok()) {
+      console.log('Login failed:', response.status(), await response.text())
+    }
+
+    await page.waitForURL(
+      (url) => {
+        const pathname = new URL(url).pathname
+        return (
+          pathname === '/onboarding' ||
+          pathname.startsWith('/organizations/')
+        )
+      },
+      { timeout: 15000 },
+    )
+  })
 
   const cookies = await context.cookies()
   const sessionCookie = cookies.find((cookie) => /session/i.test(cookie.name))

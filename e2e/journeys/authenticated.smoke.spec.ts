@@ -1,6 +1,4 @@
-import { expect, test } from '@playwright/test'
-
-test.use({ storageState: 'e2e/.auth/auth.json' })
+import { expect, test } from '../fixtures/authenticated'
 
 test('authenticated session is restored', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })

@@ -14,42 +14,40 @@ const config = defineConfig({
       projects: ['./tsconfig.json'],
     }),
     tailwindcss(),
-    !process.env.VITEST
-      ? tanstackStart({
-          // Disable SSR - run as SPA (Single Page Application) only
-          spa: {
-            enabled: true,
-          },
-          prerender: {
-            enabled: true,
-            // Enable if you need pages to be at `/page/index.html` instead of `/page.html`
-            // Useful for static hosting platforms
-            autoSubfolderIndex: true,
-            // Automatically discover and prerender static routes
-            // autoStaticPathsDiscovery: true,
-            // Disable link crawling to prevent infinite loops on auth routes with redirect params
-            crawlLinks: false,
-            // Don't fail build if prerendering encounters an error (some routes like /reset require search params)
-            failOnError: false,
-            // Filter out routes that require search params or are dynamic
-            filter: ({ path }) => {
-              // Exclude routes that require search params (they'll be handled client-side)
-              if (path === '/reset') return false
-              // Exclude authentication routes - they handle redirects client-side and cause infinite loops
-              if (
-                path.startsWith('/sign-in') ||
-                path.startsWith('/sign-up') ||
-                path.startsWith('/mfa')
-              ) {
-                return false
-              }
-              // Exclude any routes with query parameters (they're dynamic and shouldn't be prerendered)
-              if (path.includes('?')) return false
-              return true
-            },
-          },
-        })
-      : null,
+    tanstackStart({
+      // Disable SSR - run as SPA (Single Page Application) only
+      spa: {
+        enabled: true,
+      },
+      prerender: {
+        enabled: true,
+        // Enable if you need pages to be at `/page/index.html` instead of `/page.html`
+        // Useful for static hosting platforms
+        autoSubfolderIndex: true,
+        // Automatically discover and prerender static routes
+        // autoStaticPathsDiscovery: true,
+        // Disable link crawling to prevent infinite loops on auth routes with redirect params
+        crawlLinks: false,
+        // Don't fail build if prerendering encounters an error (some routes like /reset require search params)
+        failOnError: false,
+        // Filter out routes that require search params or are dynamic
+        filter: ({ path }) => {
+          // Exclude routes that require search params (they'll be handled client-side)
+          if (path === '/reset') return false
+          // Exclude authentication routes - they handle redirects client-side and cause infinite loops
+          if (
+            path.startsWith('/sign-in') ||
+            path.startsWith('/sign-up') ||
+            path.startsWith('/mfa')
+          ) {
+            return false
+          }
+          // Exclude any routes with query parameters (they're dynamic and shouldn't be prerendered)
+          if (path.includes('?')) return false
+          return true
+        },
+      },
+    }),
     devtoolsJson(),
     viteReact(),
     // Sentry plugin for source maps upload (only when Sentry is enabled via VITE_SENTRY_DSN)

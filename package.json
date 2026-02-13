@@ -16,7 +16,7 @@
     "generate:icons": "node scripts/generate-apple-icons.js",
     "clean": "rm -rf .output dist node_modules/.vite .nitro .tanstack",
     "test:unit": "vitest run",
-    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "e2e": "playwright test",
     "install-browsers": "playwright install --with-deps chromium",
     "check": "tsc --noEmit"

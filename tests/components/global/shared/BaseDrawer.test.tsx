@@ -31,49 +31,27 @@ describe('BaseDrawer', () => {
         expect(screen.queryByText('content')).toBeNull()
     })
 
-    it('renders children when open', () => {
-        render(
-            <BaseDrawer open={true} onOpenChange={vi.fn()}>
-                <div>drawer content</div>
-            </BaseDrawer>,
-        )
-        expect(screen.getByText('drawer content')).toBeDefined()
-    })
-
-    it('renders title when provided', () => {
-        render(
-            <BaseDrawer open={true} onOpenChange={vi.fn()} title="Details">
-                <div>content</div>
-            </BaseDrawer>,
-        )
-        expect(screen.getByText('Details')).toBeDefined()
-    })
-
-    it('renders header actions', () => {
-        render(
-            <BaseDrawer
-                open={true}
-                onOpenChange={vi.fn()}
-                headerActions={<button>Edit</button>}
-            >
-                <div>content</div>
-            </BaseDrawer>,
-        )
-        expect(screen.getByText('Edit')).toBeDefined()
-    })
-
-    it('renders divider when headerActions provided', () => {
+    it('renders open state content and header elements', () => {
         const { container } = render(
             <BaseDrawer
                 open={true}
                 onOpenChange={vi.fn()}
+                title="Details"
                 headerActions={<button>Edit</button>}
+                contentClassName="custom-class"
+                maxWidth="sm:max-w-2xl"
             >
-                <div>content</div>
+                <div>drawer content</div>
             </BaseDrawer>,
         )
+        expect(screen.getByText('drawer content')).toBeDefined()
+        expect(screen.getByText('Details')).toBeDefined()
+        expect(screen.getByText('Edit')).toBeDefined()
         const divider = container.querySelector('.bg-border')
         expect(divider).not.toBeNull()
+        const sheetContent = screen.getByTestId('sheet-content')
+        expect(sheetContent.className).toContain('custom-class')
+        expect(sheetContent.className).toContain('sm:max-w-2xl')
     })
 
     it('does not render divider without headerActions', () => {
@@ -86,20 +64,6 @@ describe('BaseDrawer', () => {
         expect(divider).toBeNull()
     })
 
-    it('applies contentClassName to sheet content', () => {
-        render(
-            <BaseDrawer
-                open={true}
-                onOpenChange={vi.fn()}
-                contentClassName="custom-class"
-            >
-                <div>content</div>
-            </BaseDrawer>,
-        )
-        const sheetContent = screen.getByTestId('sheet-content')
-        expect(sheetContent.className).toContain('custom-class')
-    })
-
     it('applies default maxWidth', () => {
         render(
             <BaseDrawer open={true} onOpenChange={vi.fn()}>
@@ -108,15 +72,5 @@ describe('BaseDrawer', () => {
         )
         const sheetContent = screen.getByTestId('sheet-content')
         expect(sheetContent.className).toContain('sm:max-w-lg')
-    })
-
-    it('applies custom maxWidth', () => {
-        render(
-            <BaseDrawer open={true} onOpenChange={vi.fn()} maxWidth="sm:max-w-2xl">
-                <div>content</div>
-            </BaseDrawer>,
-        )
-        const sheetContent = screen.getByTestId('sheet-content')
-        expect(sheetContent.className).toContain('sm:max-w-2xl')
     })
 })
