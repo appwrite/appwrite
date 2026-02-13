@@ -1,61 +1,89 @@
-import { expect, test } from '@playwright/test';
-import fs from 'node:fs';
-import path from 'node:path';
-import { signInStep } from '../steps/account';
+import { expect, test } from '@playwright/test'
+import fs from 'node:fs'
+import path from 'node:path'
+import { signInStep } from '../steps/account'
 
 type StoredCookie = {
-    name: string;
-    expires?: number;
-};
-
-type StorageState = {
-    cookies?: StoredCookie[];
-};
-
-function hasValidStoredSession(authPath: string): boolean {
-    if (!fs.existsSync(authPath)) return false;
-
-    try {
-        const raw = fs.readFileSync(authPath, 'utf-8');
-        const state = JSON.parse(raw) as StorageState;
-        const sessionCookie = state.cookies?.find((cookie) => /session/i.test(cookie.name));
-        if (!sessionCookie || typeof sessionCookie.expires !== 'number') {
-            return false;
-        }
-
-        const nowSeconds = Math.floor(Date.now() / 1000);
-        return sessionCookie.expires > nowSeconds + 60;
-    } catch {
-        return false;
-    }
+  name: string
+  expires?: number
 }
 
-test('authenticate once and persist storage state', async ({ page, context }) => {
-    const email = process.env.E2E_TEST_EMAIL;
-    const password = process.env.E2E_TEST_PASSWORD;
-    const isCI = !!process.env.CI;
-    const allowCIReuse = process.env.E2E_REUSE_AUTH === 'true';
+type StorageState = {
+  cookies?: StoredCookie[]
+}
 
-    if (!email || !password) {
-        test.fail(true, 'E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set');
-        return;
+function parseSessionSecret(secret: string): StorageState {
+  try {
+    return JSON.parse(secret) as StorageState
+  } catch {
+    const decoded = Buffer.from(secret, 'base64').toString('utf-8')
+    return JSON.parse(decoded) as StorageState
+  }
+}
+
+function hasValidStoredSession(authPath: string): boolean {
+  if (!fs.existsSync(authPath)) return false
+
+  try {
+    const raw = fs.readFileSync(authPath, 'utf-8')
+    const state = JSON.parse(raw) as StorageState
+    const sessionCookie = state.cookies?.find((cookie) =>
+      /session/i.test(cookie.name),
+    )
+    if (!sessionCookie || typeof sessionCookie.expires !== 'number') {
+      return false
     }
 
-    const authDir = path.join('e2e', '.auth');
-    const authPath = path.join(authDir, 'auth.json');
+    const nowSeconds = Math.floor(Date.now() / 1000)
+    return sessionCookie.expires > nowSeconds + 60
+  } catch {
+    return false
+  }
+}
 
-    if ((!isCI || allowCIReuse) && hasValidStoredSession(authPath)) {
-        return;
+test('authenticate once and persist storage state', async ({
+  page,
+  context,
+}) => {
+  const email = process.env.E2E_TEST_EMAIL
+  const password = process.env.E2E_TEST_PASSWORD
+  const sessionSecret = process.env.E2E_TEST_SESSION_SECRET
+
+  const authDir = path.join('e2e', '.auth')
+  const authPath = path.join(authDir, 'auth.json')
+
+  if (sessionSecret) {
+    fs.mkdirSync(authDir, { recursive: true })
+    try {
+      const storageState = parseSessionSecret(sessionSecret)
+      fs.writeFileSync(authPath, JSON.stringify(storageState, null, 2), 'utf-8')
+      return
+    } catch (error) {
+      test.fail(
+        true,
+        `Failed to parse E2E_TEST_SESSION_SECRET: ${(error as Error).message}`,
+      )
+      return
     }
+  }
 
-    // Log in once and reuse storage state across tests to avoid creating new sessions/users.
-    await signInStep(page, email, password);
+  if (!email || !password) {
+    test.fail(true, 'E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set')
+    return
+  }
 
-    const cookies = await context.cookies();
-    const sessionCookie = cookies.find((cookie) => /session/i.test(cookie.name));
-    expect(sessionCookie, 'Expected a session cookie after login').toBeTruthy();
+  if (hasValidStoredSession(authPath)) {
+    return
+  }
 
-    fs.mkdirSync(authDir, { recursive: true });
+  // Log in once and reuse storage state across tests to avoid creating new sessions/users.
+  await signInStep(page, email, password)
 
-    await context.storageState({ path: authPath });
-});
+  const cookies = await context.cookies()
+  const sessionCookie = cookies.find((cookie) => /session/i.test(cookie.name))
+  expect(sessionCookie, 'Expected a session cookie after login').toBeTruthy()
+
+  fs.mkdirSync(authDir, { recursive: true })
+
+  await context.storageState({ path: authPath })
+})

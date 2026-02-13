@@ -10,16 +10,8 @@
     "target": "ES2022",
     "jsx": "react-jsx",
     "module": "ESNext",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
-    "types": [
-      "vite/client",
-      "bun",
-      "vitest/globals"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "bun", "vitest/globals"],
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -34,9 +26,7 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     }
   }
 }
