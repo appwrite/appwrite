@@ -1,5 +1,9 @@
 # Change Log
 
+## v0.16.1
+
+* Fix doc examples with proper formatting
+
 ## v0.16.0
 
 * Added ability to create columns and indexes synchronously while creating a table

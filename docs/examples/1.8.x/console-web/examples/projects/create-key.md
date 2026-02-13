@@ -11,6 +11,7 @@ const result = await projects.createKey({
     projectId: '<PROJECT_ID>',
     name: '<NAME>',
     scopes: [Scopes.SessionsWrite],
+    keyId: '<KEY_ID>', // optional
     expire: '' // optional
 });
 
