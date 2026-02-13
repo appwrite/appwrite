@@ -1755,7 +1755,7 @@ trait DatabasesBase
         $this->assertEquals($document1['body']['actors'][1], 'Samuel Jackson');
         $this->assertEquals($document1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
         $this->assertTrue(array_key_exists('$sequence', $document1['body']));
-        $this->assertIsInt($document1['body']['$sequence']);
+        $this->assertIsString($document1['body']['$sequence']);
 
         $this->assertEquals(201, $document2['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document2['body']['$collectionId']);
@@ -2526,17 +2526,16 @@ trait DatabasesBase
         $this->assertEquals('Invalid query method: equal', $response['body']['message']);
 
         // Query by sequence
-        $queryStr = Query::equal('$sequence', [$sequence])->toString();
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                $queryStr
+                Query::equal('$sequence', [$sequence])->toString()
             ],
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code'], 'Query by $sequence failed. Sequence value: "' . $sequence . '", query: "' . $queryStr . '", response: ' . json_encode($response['body']));
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($document['title'], $response['body']['documents'][0]['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['documents'][0]['releaseYear']);
         $this->assertTrue(array_key_exists('$sequence', $response['body']['documents'][0]));
@@ -3192,7 +3191,7 @@ trait DatabasesBase
         $this->assertEquals($id, $response['body']['$id']);
         $this->assertEquals($data['moviesId'], $response['body']['$collectionId']);
         $this->assertEquals($databaseId, $response['body']['$databaseId']);
-        $this->assertNotEquals(9999, $response['body']['$sequence']);
+        $this->assertNotEquals('9999', $response['body']['$sequence']);
 
         if ($this->getSide() === 'client') {
             $this->assertNotEquals('2024-01-01T00:00:00.000+00:00', $response['body']['$createdAt']);

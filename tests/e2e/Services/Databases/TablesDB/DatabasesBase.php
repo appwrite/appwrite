@@ -1707,7 +1707,7 @@ trait DatabasesBase
         $this->assertEquals($row1['body']['actors'][1], 'Samuel Jackson');
         $this->assertEquals($row1['body']['birthDay'], '1975-06-12T12:12:55.000+00:00');
         $this->assertTrue(array_key_exists('$sequence', $row1['body']));
-        $this->assertIsInt($row1['body']['$sequence']);
+        $this->assertIsString($row1['body']['$sequence']);
 
         $this->assertEquals(201, $row2['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $row2['body']['$tableId']);
@@ -2448,17 +2448,16 @@ trait DatabasesBase
         $this->assertEquals('Invalid query method: equal', $response['body']['message']);
 
         // Query by sequence
-        $queryStr = Query::equal('$sequence', [$sequence])->toString();
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$tableId'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                $queryStr
+                Query::equal('$sequence', [$sequence])->toString()
             ],
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code'], 'Query by $sequence failed. Sequence value: "' . $sequence . '", query: "' . $queryStr . '", response: ' . json_encode($response['body']));
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($row['title'], $response['body']['rows'][0]['title']);
         $this->assertEquals($row['releaseYear'], $response['body']['rows'][0]['releaseYear']);
         $this->assertTrue(array_key_exists('$sequence', $response['body']['rows'][0]));

@@ -37,10 +37,10 @@ class Row extends Any
                 'example' => '5e5ea5c16897e',
             ])
             ->addRule('$sequence', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'Row automatically incrementing ID.',
-                'default' => 0,
-                'example' => 1,
+                'type' => self::TYPE_STRING,
+                'description' => 'Row sequence ID.',
+                'default' => '',
+                'example' => '1',
                 'readOnly' => true,
             ])
             ->addRule('$tableId', [
@@ -82,7 +82,7 @@ class Row extends Any
     {
         $document->removeAttribute('$collection');
         $document->removeAttribute('$tenant');
-        $document->setAttribute('$sequence', (int)$document->getAttribute('$sequence', 0));
+        $document->setAttribute('$sequence', (string)$document->getAttribute('$sequence', ''));
 
         foreach ($document->getAttributes() as $column) {
             if (\is_array($column)) {
