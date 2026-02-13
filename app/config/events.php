@@ -405,6 +405,20 @@ return [
             '$description' => 'This event triggers when a provider is deleted.'
         ],
     ],
+    'schedules' => [
+        '$model' => Response::MODEL_SCHEDULE,
+        '$resource' => true,
+        '$description' => 'This event triggers on any schedule event.',
+        'create' => [
+            '$description' => 'This event triggers when a schedule is created.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a schedule is updated.',
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a schedule is deleted.',
+        ],
+    ],
     'rules' => [
         '$model' => Response::MODEL_PROXY_RULE,
         '$resource' => true,

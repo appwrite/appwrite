@@ -57,6 +57,7 @@ class Create extends Action
             ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
             ->inject('response')
             ->inject('project')
+            ->inject('dbForProject')
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->callback($this->action(...));
@@ -69,16 +70,33 @@ class Create extends Action
         bool $active,
         Response $response,
         Document $project,
+        Database $dbForProject,
         Database $dbForPlatform,
         Authorization $authorization,
     ): void {
+        $collection = match ($resourceType) {
+            SCHEDULE_RESOURCE_TYPE_FUNCTION => 'functions',
+            SCHEDULE_RESOURCE_TYPE_EXECUTION => 'executions',
+            SCHEDULE_RESOURCE_TYPE_MESSAGE => 'messages',
+        };
+
+        $resource = $dbForProject->getDocument($collection, $resourceId);
+
+        if ($resource->isEmpty()) {
+            throw new Exception(match ($resourceType) {
+                SCHEDULE_RESOURCE_TYPE_FUNCTION => Exception::FUNCTION_NOT_FOUND,
+                SCHEDULE_RESOURCE_TYPE_EXECUTION => Exception::EXECUTION_NOT_FOUND,
+                SCHEDULE_RESOURCE_TYPE_MESSAGE => Exception::MESSAGE_NOT_FOUND,
+            });
+        }
+
         try {
             $doc = $authorization->skip(
                 fn () => $dbForPlatform->createDocument('schedules', new Document([
                     'region' => $project->getAttribute('region'),
                     'resourceType' => $resourceType,
                     'resourceId' => $resourceId,
-                    'resourceInternalId' => '',
+                    'resourceInternalId' => $resource->getSequence(),
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule' => $schedule,
