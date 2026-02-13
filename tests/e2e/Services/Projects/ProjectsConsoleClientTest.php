@@ -6152,7 +6152,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group cl-ignore
+     * @group ci-ignore
      */
     public function testProjectSpecificPermissionsForListProjects(): void
     {
@@ -6240,7 +6240,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group cl-ignore
+     * @group ci-ignore
      */
     public function testProjectSpecificPermissionsForUpdateProject(): void
     {
@@ -6349,7 +6349,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group cl-ignore
+     * @group ci-ignore
      */
     public function testProjectSpecificPermissionsForDeleteProject(): void
     {
@@ -6447,7 +6447,7 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @group cl-ignore
+     * @group ci-ignore
      * Test project specific permissions for project resources, in this case 'function variables'.
      */
     public function testProjectSpecificPermissionsForProjectResources(): void
