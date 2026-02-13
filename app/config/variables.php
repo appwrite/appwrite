@@ -384,11 +384,11 @@ return [
         'variables' => [
             [
                 'name' => '_APP_DB_ADAPTER',
-                'description' => 'To switch between mariadb and mongoDB',
-                'introduction' => '1.8.0',
+                'description' => 'Which database to use. Must be one of: MariaDB, MongoDB or PostgreSQL',
+                'introduction' => '1.9.0',
                 'default' => 'mongodb',
                 'required' => true,
-                'question' => 'Choose your database (mariadb|mongodb)',
+                'question' => 'Choose your database (mariadb|mongodb|postgresql)',
                 'filter' => ''
             ],
         ],
