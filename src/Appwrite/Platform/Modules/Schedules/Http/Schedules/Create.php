@@ -1,0 +1,96 @@
+<?php
+
+namespace Appwrite\Platform\Modules\Schedules\Http\Schedules;
+
+use Appwrite\Extend\Exception;
+use Appwrite\SDK\AuthType;
+use Appwrite\SDK\Method;
+use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Task\Validator\Cron;
+use Appwrite\Utopia\Response;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\UID;
+use Utopia\Platform\Action;
+use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\WhiteList;
+
+class Create extends Action
+{
+    use HTTP;
+
+    public static function getName(): string
+    {
+        return 'createSchedule';
+    }
+
+    public function __construct()
+    {
+        $this
+            ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
+            ->setHttpPath('/v1/schedules')
+            ->desc('Create schedule')
+            ->groups(['api', 'schedules'])
+            ->label('scope', 'schedules.write')
+            ->label('audits.event', 'schedule.create')
+            ->label('audits.resource', 'schedule/{response.$id}')
+            ->label('sdk', new Method(
+                namespace: 'schedules',
+                group: 'schedules',
+                name: 'create',
+                description: '/docs/references/schedules/create.md',
+                auth: [AuthType::ADMIN, AuthType::KEY],
+                responses: [
+                    new SDKResponse(
+                        code: Response::STATUS_CODE_CREATED,
+                        model: Response::MODEL_SCHEDULE,
+                    )
+                ],
+            ))
+            ->param('resourceType', '', new WhiteList([SCHEDULE_RESOURCE_TYPE_FUNCTION, SCHEDULE_RESOURCE_TYPE_EXECUTION, SCHEDULE_RESOURCE_TYPE_MESSAGE], true), 'The resource type for the schedule. Possible values: ' . implode(', ', [SCHEDULE_RESOURCE_TYPE_FUNCTION, SCHEDULE_RESOURCE_TYPE_EXECUTION, SCHEDULE_RESOURCE_TYPE_MESSAGE]) . '.')
+            ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
+            ->param('schedule', '', new Cron(), 'Schedule CRON expression.')
+            ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
+            ->inject('response')
+            ->inject('project')
+            ->inject('dbForPlatform')
+            ->inject('authorization')
+            ->callback($this->action(...));
+    }
+
+    public function action(
+        string $resourceType,
+        string $resourceId,
+        string $schedule,
+        bool $active,
+        Response $response,
+        Document $project,
+        Database $dbForPlatform,
+        Authorization $authorization,
+    ): void {
+        try {
+            $doc = $authorization->skip(
+                fn () => $dbForPlatform->createDocument('schedules', new Document([
+                    'region' => $project->getAttribute('region'),
+                    'resourceType' => $resourceType,
+                    'resourceId' => $resourceId,
+                    'resourceInternalId' => '',
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule' => $schedule,
+                    'active' => $active,
+                ]))
+            );
+        } catch (DuplicateException) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to create schedule. Please try again.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($doc, Response::MODEL_SCHEDULE);
+    }
+}
