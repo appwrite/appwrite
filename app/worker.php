@@ -45,17 +45,13 @@ use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
-use Utopia\Span\Exporter;
-use Utopia\Span\Span;
-use Utopia\Span\Storage;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 Runtime::enableCoroutine();
-Span::setStorage(new Storage\Coroutine());
-Span::addExporter(new Exporter\Stdout());
+require_once __DIR__ . '/init/span.php';
 
 global $register;
 Server::setResource('register', fn () => $register);

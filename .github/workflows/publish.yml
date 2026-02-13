@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 2
         submodules: recursive
@@ -38,7 +38,7 @@ jobs:
           type=ref,event=tag
 
     - name: Build & Publish to DockerHub
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: .
         platforms: linux/amd64,linux/arm64

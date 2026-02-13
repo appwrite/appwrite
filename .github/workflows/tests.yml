@@ -5,6 +5,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  COMPOSE_FILE: docker-compose.yml
   IMAGE: appwrite-dev
   CACHE_KEY: appwrite-dev-${{ github.event.pull_request.head.sha }}
 
@@ -26,7 +27,7 @@ jobs:
       database_changed: ${{ steps.check.outputs.database_changed }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Fetch base branch
         run: git fetch origin ${{ github.event.pull_request.base.ref }}
@@ -48,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -65,6 +66,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
+          target: development
           build-args: |
             DEBUG=false
             TESTING=true
@@ -86,7 +88,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Load Cache
         uses: actions/cache@v4
@@ -132,7 +134,7 @@ jobs:
       pull-requests: write
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Load Cache
         uses: actions/cache@v4
@@ -217,7 +219,7 @@ jobs:
         ]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Load Cache
         uses: actions/cache@v4
@@ -332,7 +334,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Load Cache
         uses: actions/cache@v4
@@ -397,7 +399,7 @@ jobs:
       pull-requests: write
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Load Cache
         uses: actions/cache@v4
@@ -457,7 +459,7 @@ jobs:
         ]
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Load Cache
         uses: actions/cache@v4
@@ -515,7 +517,7 @@ jobs:
       pull-requests: write
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Load Cache
         uses: actions/cache@v4
@@ -576,7 +578,7 @@ jobs:
         ]
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Load Cache
         uses: actions/cache@v4
