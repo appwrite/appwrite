@@ -630,8 +630,15 @@ function router(Http $utopia, Database $dbForPlatform, callable $getProjectDB, S
                 $headerOverrides['x-appwrite-log-id'] = $execution->getId();
             }
 
+            // Headers that must have single values (RFC 7230)
+            $singleValueHeaders = ['content-length', 'content-type'];
+
             foreach ($headerOverrides as $key => $value) {
-                if (\array_key_exists($key, $executionResponse['headers'])) {
+                $keyLower = \strtolower($key);
+                if (\in_array($keyLower, $singleValueHeaders)) {
+                    // Single-value headers must replace, not append
+                    $executionResponse['headers'][$key] = $value;
+                } elseif (\array_key_exists($key, $executionResponse['headers'])) {
                     if (\is_array($executionResponse['headers'][$key])) {
                         $executionResponse['headers'][$key][] = $value;
                     } else {

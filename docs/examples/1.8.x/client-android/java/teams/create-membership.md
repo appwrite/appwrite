@@ -2,7 +2,6 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Teams;
-import io.appwrite.enums.Roles;
 
 Client client = new Client(context)
     .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
@@ -12,7 +11,7 @@ Teams teams = new Teams(client);
 
 teams.createMembership(
     "<TEAM_ID>", // teamId 
-    Roles.ADMIN, // roles 
+    List.of(), // roles 
     "email@example.com", // email (optional)
     "<USER_ID>", // userId (optional)
     "+12065550100", // phone (optional)
