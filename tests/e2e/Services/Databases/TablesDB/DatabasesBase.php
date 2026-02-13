@@ -2448,16 +2448,17 @@ trait DatabasesBase
         $this->assertEquals('Invalid query method: equal', $response['body']['message']);
 
         // Query by sequence
+        $queryStr = Query::equal('$sequence', [$sequence])->toString();
         $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$tableId'] . '/rows', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('$sequence', [$sequence.''])->toString()
+                $queryStr
             ],
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(200, $response['headers']['status-code'], 'Query by $sequence failed. Sequence value: "' . $sequence . '", query: "' . $queryStr . '", response: ' . json_encode($response['body']));
         $this->assertEquals($row['title'], $response['body']['rows'][0]['title']);
         $this->assertEquals($row['releaseYear'], $response['body']['rows'][0]['releaseYear']);
         $this->assertTrue(array_key_exists('$sequence', $response['body']['rows'][0]));
