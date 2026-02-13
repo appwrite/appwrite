@@ -93,7 +93,7 @@ class Base extends Queries
             new Limit(),
             new Offset(),
             new Cursor(),
-            new Filter($attributes, APP_DATABASE_QUERY_MAX_VALUES),
+            new Filter($attributes, Database::VAR_INTEGER, APP_DATABASE_QUERY_MAX_VALUES),
             new Order($attributes),
         ];
 

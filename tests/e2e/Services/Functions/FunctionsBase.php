@@ -24,10 +24,17 @@ trait FunctionsBase
      */
     protected function callWithAuthRetry(string $method, string $path, array $headers, mixed $params = []): array
     {
-        $maxRetries = 8;
+        $maxRetries = 10;
         $response = null;
 
         for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+            // Refresh project credentials after several failed attempts
+            if ($attempt === 5) {
+                $project = $this->getProject(true);
+                $headers['x-appwrite-project'] = $project['$id'];
+                $headers['x-appwrite-key'] = $project['apiKey'];
+            }
+
             $response = $this->client->call($method, $path, array_merge($headers), $params);
 
             if ($response['headers']['status-code'] !== 401) {

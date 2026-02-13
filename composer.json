@@ -55,7 +55,7 @@
         "utopia-php/cli": "0.22.*",
         "utopia-php/config": "1.*",
         "utopia-php/console": "0.1.*",
-        "utopia-php/database": "5.*",
+        "utopia-php/database": "dev-fix/sequence-validator-integer as 5.1.3",
         "utopia-php/detector": "0.2.*",
         "utopia-php/domains": "1.*",
         "utopia-php/emails": "0.6.*",

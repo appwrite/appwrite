@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c9436e3de3d010184dc928a7f1ff4721",
+    "content-hash": "a8eed08cb94072ce519450aa66d6da81",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3797,16 +3797,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.1.2",
+            "version": "dev-fix/sequence-validator-integer",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1530a1c7608daf31f412f8f9a487a3b2eadd83af"
+                "reference": "6f9d4117175bd894450235ac749219a9fd11150d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1530a1c7608daf31f412f8f9a487a3b2eadd83af",
-                "reference": "1530a1c7608daf31f412f8f9a487a3b2eadd83af",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/6f9d4117175bd894450235ac749219a9fd11150d",
+                "reference": "6f9d4117175bd894450235ac749219a9fd11150d",
                 "shasum": ""
             },
             "require": {
@@ -3849,9 +3849,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.1.2"
+                "source": "https://github.com/utopia-php/database/tree/fix/sequence-validator-integer"
             },
-            "time": "2026-02-13T01:41:26+00:00"
+            "time": "2026-02-13T09:34:51+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -8887,9 +8887,18 @@
             "time": "2024-03-07T20:33:40+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-fix/sequence-validator-integer",
+            "alias": "5.1.3",
+            "alias_normalized": "5.1.3.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
