@@ -2500,7 +2500,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::select(['title', 'releaseYear', '$id'])->toString(),
+                Query::select(['title', 'releaseYear', '$id', '$sequence'])->toString(),
             ],
         ]);
 
@@ -2508,8 +2508,9 @@ trait DatabasesBase
         $this->assertEquals($document['title'], $response['body']['title']);
         $this->assertEquals($document['releaseYear'], $response['body']['releaseYear']);
         $this->assertArrayNotHasKey('birthDay', $response['body']);
+        $this->assertArrayHasKey('$sequence', $response['body']);
 
-        $sequence = $response['body']['$sequence'];
+        $sequence = (string) $response['body']['$sequence'];
 
         // Query by sequence on get single document route
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $document['$collectionId'] . '/documents/' . $document['$id'], array_merge([
