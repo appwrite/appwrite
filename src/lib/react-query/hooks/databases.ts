@@ -731,6 +731,43 @@ export async function createProjectTableColumn(
 
   // Call the appropriate method based on column type
   switch (type) {
+    case 'varchar':
+      return await projectSdk.tablesDB.createVarcharColumn({
+        databaseId,
+        tableId,
+        key,
+        size: size ?? 255,
+        required,
+        xdefault,
+        array,
+      })
+    case 'text':
+      return await projectSdk.tablesDB.createTextColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+        array,
+      })
+    case 'mediumtext':
+      return await projectSdk.tablesDB.createMediumtextColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+        array,
+      })
+    case 'longtext':
+      return await projectSdk.tablesDB.createLongtextColumn({
+        databaseId,
+        tableId,
+        key,
+        required,
+        xdefault,
+        array,
+      })
     case 'string':
       return await projectSdk.tablesDB.createStringColumn({
         databaseId,
@@ -865,6 +902,43 @@ export async function updateProjectTableColumn(
 
   // Call the appropriate update method based on column type
   switch (type) {
+    case 'varchar':
+      return await projectSdk.tablesDB.updateVarcharColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        size,
+        newKey,
+      })
+    case 'text':
+      return await projectSdk.tablesDB.updateTextColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
+    case 'mediumtext':
+      return await projectSdk.tablesDB.updateMediumtextColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
+    case 'longtext':
+      return await projectSdk.tablesDB.updateLongtextColumn({
+        databaseId,
+        tableId,
+        key: columnKey,
+        required,
+        xdefault,
+        newKey,
+      })
     case 'string':
       return await projectSdk.tablesDB.updateStringColumn({
         databaseId,

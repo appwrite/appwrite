@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { getColumnIcon } from '@/lib/utils/column-icons'
+import { isTextType } from '@/lib/utils/database-columns'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import {
   Database,
@@ -71,7 +72,7 @@ import {
   tablesQueryOptions,
   type TablesSortBy,
 } from '@/lib/react-query/hooks'
-import { ColumnDrawer, ColumnFormData } from './tables/Column'
+import { ColumnDrawer, ColumnFormData, type ColumnType } from './tables/Column'
 import { IndexDrawer, IndexFormData } from './tables/Index'
 import {
   createProjectTableIndex,
@@ -117,6 +118,13 @@ interface IndexColumnEntry {
 const getColumnTypeColor = (type: string) => {
   const colors: Record<string, string> = {
     string:
+      'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    varchar:
+      'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    text: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    mediumtext:
+      'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+    longtext:
       'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
     integer:
       'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
@@ -4226,6 +4234,7 @@ function RowEditDrawer({
                                       (item, index) => {
                                         const columnInfo = getColumnInfo(key)
                                         const size = columnInfo?.size || null
+                                        const colType = columnInfo?.type || 'string'
                                         // Check multiple possible properties for required status
                                         const isRequired =
                                           columnInfo?.required === true ||
@@ -4240,7 +4249,10 @@ function RowEditDrawer({
                                           : String(item || '')
                                         const charCount = stringValue.length
                                         const hasLimit =
-                                          size !== null && size > 0
+                                          (colType === 'string' ||
+                                            colType === 'varchar') &&
+                                          size !== null &&
+                                          size > 0
                                         const isRTLContent = isRTL(stringValue)
                                         const showNullCheckbox = !isRequired
 
@@ -4531,10 +4543,19 @@ function RowEditDrawer({
                                   ? ''
                                   : String(currentValue || '')
                                 const charCount = stringValue.length
-                                const hasLimit = size !== null && size > 0
+                                // Only string and varchar have maxlength in UI
+                                const hasLimit =
+                                  (fieldType === 'string' ||
+                                    fieldType === 'varchar') &&
+                                  size !== null &&
+                                  size > 0
                                 const isRTLContent = isRTL(stringValue)
                                 const showNullCheckbox = !isRequired
-                                const useTextarea = size && size >= 50
+                                const useTextarea =
+                                  (size && size >= 50) ||
+                                  fieldType === 'text' ||
+                                  fieldType === 'mediumtext' ||
+                                  fieldType === 'longtext'
                                 const needsCounterSpace =
                                   hasLimit || showNullCheckbox
                                 const counterPadding = needsCounterSpace
@@ -5827,6 +5848,9 @@ function ColumnsSpreadsheet({
   const { columns: apiColumns, isLoading: columnsLoading } =
     useProjectTableColumns(projectId, databaseId, tableId)
 
+  // Fetch full table for row size metadata (bytesUsed, bytesMax) when creating varchar columns
+  const { table: fullTable } = useProjectTable(projectId, databaseId, tableId)
+
   // Fetch tables for relationship columns
   const { tables: availableTables } = useTablesForColumns(
     projectId,
@@ -5996,14 +6020,19 @@ function ColumnsSpreadsheet({
       }
 
       // Extract all relevant fields, ensuring we get updated values
+      // Only set size for string and varchar (index/suggestions payload)
+      const suggestionType = suggestion.type as string
       const columnData: ColumnFormData = {
         key: suggestion.key,
         type: suggestion.type as ColumnType,
         required: suggestion.required ?? false,
         array: suggestion.array ?? false,
         // Type-specific fields
-        size: suggestion.size,
-        encrypt: suggestion.encrypt,
+        size:
+          suggestionType === 'string' || suggestionType === 'varchar'
+            ? suggestion.size
+            : undefined,
+        encrypt: suggestionType === 'string' ? suggestion.encrypt : undefined,
         min: suggestion.min,
         max: suggestion.max,
         elements: suggestion.elements,
@@ -6766,7 +6795,10 @@ function ColumnsSpreadsheet({
                       bodyCellBorderClass,
                     )}
                   >
-                    {col.size ?? '—'}
+                    {col.key !== '$id' &&
+                    (col.type === 'string' || col.type === 'varchar')
+                      ? col.size ?? '—'
+                      : '—'}
                   </td>
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>
                     {col.required ? (
@@ -6901,6 +6933,14 @@ function ColumnsSpreadsheet({
         isLoading={
           createColumnMutation.isPending || updateColumnMutation.isPending
         }
+        table={(() => {
+          const t = fullTable ?? table
+          const bytesUsed = (t as { bytesUsed?: number })?.bytesUsed
+          const bytesMax = (t as { bytesMax?: number })?.bytesMax
+          return bytesUsed !== undefined && bytesMax !== undefined
+            ? { bytesUsed, bytesMax }
+            : undefined
+        })()}
       />
 
       {/* Delete Confirmation Dialog */}
@@ -7211,9 +7251,10 @@ function IndexesSpreadsheet({
 
           const columnType = columnDef?.type
 
-          // Only key indexes on string columns support length
+          // Only key indexes on string and varchar columns support length
           const supportsLength =
-            suggestion.type === 'key' && columnType === 'string'
+            suggestion.type === 'key' &&
+            (columnType === 'string' || columnType === 'varchar')
 
           // Cap length at maximum of 767
           let length = suggestion.lengths?.[idx] || null
@@ -8243,9 +8284,9 @@ function TableSettings({ table }: SpreadsheetProps) {
     )
   }
 
-  // Get valid string columns for display names
+  // Get valid text-type columns for display names (string, varchar, text, mediumtext, longtext; not array)
   const validStringColumns = tableColumns.filter(
-    (col: unknown) => col.type === 'string' && col.array === false,
+    (col: unknown) => isTextType(col.type) && col.array === false,
   )
 
   // Filter display name options (exclude already selected except current)

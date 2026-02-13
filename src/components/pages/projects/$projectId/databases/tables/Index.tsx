@@ -530,13 +530,15 @@ export function IndexDrawer({
 
                     {showLength &&
                       (() => {
-                        // Only show length for string columns
+                        // Only show length for string and varchar columns
                         const selectedColumn = availableColumns?.find(
                           (col) => col.key === columnEntry.column,
                         )
-                        const isStringColumn = selectedColumn?.type === 'string'
+                        const isSizedStringColumn =
+                          selectedColumn?.type === 'string' ||
+                          selectedColumn?.type === 'varchar'
 
-                        if (!isStringColumn) {
+                        if (!isSizedStringColumn) {
                           return null
                         }
 
@@ -561,7 +563,7 @@ export function IndexDrawer({
                               disabled={isLoading}
                             />
                             <p className="text-[10px] text-muted-foreground">
-                              Only applicable to string columns
+                              Only applicable to string and varchar columns
                             </p>
                           </div>
                         )

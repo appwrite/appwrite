@@ -226,15 +226,25 @@ export function generateSampleRow(columns: Column[]): Record<string, unknown> {
     } else {
       switch (column.type.toLowerCase()) {
         case 'string':
+        case 'varchar':
         case 'email':
         case 'url':
         case 'ip':
         case 'enum':
           value = generateStringValue(column)
-          // Truncate to column size limit
+          // Truncate to column size limit (varchar/string use size; cap at 1000 for faker sanity)
           if (column.size && typeof value === 'string') {
             const maxSize = Math.min(column.size, 1000)
             value = value.slice(0, maxSize)
+          }
+          break
+        case 'text':
+        case 'mediumtext':
+        case 'longtext':
+          value = generateStringValue(column)
+          // Reasonable length for faker; backend enforces max
+          if (typeof value === 'string' && value.length > 1000) {
+            value = value.slice(0, 1000)
           }
           break
         case 'integer':
@@ -260,11 +270,13 @@ export function generateSampleRow(columns: Column[]): Record<string, unknown> {
           value = generatePolygonValue()
           break
         default:
-          // Default to string for unknown types
+          // Default to string for unknown types (e.g. new text types)
           value = generateStringValue(column)
           if (column.size && typeof value === 'string') {
             const maxSize = Math.min(column.size, 1000)
             value = value.slice(0, maxSize)
+          } else if (typeof value === 'string' && value.length > 1000) {
+            value = value.slice(0, 1000)
           }
       }
     }

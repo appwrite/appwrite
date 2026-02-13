@@ -22,6 +22,10 @@ import {
 export function getColumnIcon(type: string): LucideIcon {
   switch (type) {
     case 'string':
+    case 'varchar':
+    case 'text':
+    case 'mediumtext':
+    case 'longtext':
       return Type
     case 'integer':
     case 'float':
