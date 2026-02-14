@@ -439,7 +439,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
 
   if (isBackupsDisabled) {
     return (
-      <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+      <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
         <UpgradeCurtain
           isLocked={true}
           orgId={project?.teamId}
@@ -475,7 +475,7 @@ export function BackupsView({ databaseId }: BackupsViewProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+    <div className="mx-auto w-full max-w-7xl mt-4 px-4 pb-4 sm:mt-6 sm:px-6 sm:pb-6">
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Policies Section */}
         <div className="lg:col-span-1">

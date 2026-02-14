@@ -80,6 +80,7 @@ import {
   useProjectTableIndexes,
 } from '@/lib/react-query/hooks'
 import { BackupsView } from './Backups'
+import { ExportImportView } from './ExportImportView'
 import { CreateDatabase } from './CreateDatabase'
 import { CreateTable } from './CreateTable'
 import { ImportCsv } from './_components/ImportCsv'
@@ -1063,6 +1064,7 @@ export type DatabaseTabId =
   | 'visualizer'
   | 'insights'
   | 'backups'
+  | 'export-import'
   | 'db-security'
   | 'db-settings'
   | 'browser'
@@ -1083,6 +1085,7 @@ const DATABASE_TAB_TO_OVERVIEW: Record<
   visualizer: 'visualizer',
   insights: 'insights',
   backups: 'backups',
+  'export-import': 'export-import',
   'db-security': 'security',
   'db-settings': 'settings',
   browser: 'browser',
@@ -1092,6 +1095,7 @@ const DATABASE_TAB_LABELS: Record<DatabaseTabId, string> = {
   visualizer: 'Visualizer',
   insights: 'Insights',
   backups: 'Backups',
+  'export-import': 'Export / Import',
   'db-security': 'Security',
   'db-settings': 'Settings',
   browser: 'Browser',
@@ -1730,6 +1734,19 @@ export function TableView({
             <span>Backups</span>
           </Link>
           <Link
+            to="/projects/$projectId/databases/$databaseId/tables/$tableId/export-import"
+            params={{ projectId, databaseId, tableId }}
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+              databaseTab === 'export-import'
+                ? 'bg-accent text-foreground'
+                : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+            )}
+          >
+            <Download className="h-3.5 w-3.5 shrink-0" />
+            <span>Export / Import</span>
+          </Link>
+          <Link
             to="/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings"
             params={{ projectId, databaseId, tableId }}
             className={cn(
@@ -1981,8 +1998,7 @@ export function TableView({
 
         <div
           className={cn(
-            'flex-1 min-h-0 overflow-y-auto',
-            isDatabaseLevelView && 'pt-4 sm:pt-6',
+            'flex-1 min-h-0 overflow-y-auto'
           )}
         >
           {isDatabaseLevelView ? (
@@ -2282,6 +2298,7 @@ interface DatabaseOverviewProps {
   activeTab:
     | 'tables'
     | 'backups'
+    | 'export-import'
     | 'security'
     | 'insights'
     | 'settings'
@@ -2650,6 +2667,12 @@ export function DatabaseOverview({
       params: { projectId, databaseId },
     },
     {
+      id: 'export-import',
+      label: 'Export / Import',
+      to: '/projects/$projectId/databases/$databaseId/export-import',
+      params: { projectId, databaseId },
+    },
+    {
       id: 'settings',
       label: 'Settings',
       to: '/projects/$projectId/databases/$databaseId/settings',
@@ -2965,7 +2988,7 @@ export function DatabaseOverview({
         />
       )}
 
-      <div className="flex-1 min-h-0 flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto">
         {activeTab === 'tables' && (
           <div className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6 sm:pb-6">
             {showTablesLoading ? (
@@ -3235,6 +3258,10 @@ export function DatabaseOverview({
         )}
 
         {activeTab === 'backups' && <BackupsView databaseId={databaseId} />}
+
+        {activeTab === 'export-import' && (
+          <ExportImportView databaseId={databaseId} />
+        )}
 
         {activeTab === 'visualizer' && (
           <div className="flex-1 min-h-0">

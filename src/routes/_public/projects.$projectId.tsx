@@ -64,7 +64,7 @@ function ProjectLayout() {
   const pathParts = location.pathname.split('/')
   const activeSection = pathParts[3] || 'overview'
 
-  // Check if we're in a database table view (rows, columns, indexes, security, settings, visualizer, insights, backups, db-security, db-settings)
+  // Check if we're in a database table view (rows, columns, indexes, security, settings, visualizer, insights, backups, export-import, db-security, db-settings)
   // Pattern: /projects/:projectId/databases/:databaseId/tables/:tableId/<tab>
   const isDatabaseSpreadsheetView =
     activeSection === 'databases' &&
@@ -79,6 +79,7 @@ function ProjectLayout() {
       'visualizer',
       'insights',
       'backups',
+      'export-import',
       'db-security',
       'db-settings',
     ].includes(pathParts[7])

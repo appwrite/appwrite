@@ -412,6 +412,21 @@ code {
   }
 }
 
+/* Smoother loader spin: longer duration + will-change for compositor */
+@keyframes spin-smooth {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-smooth {
+  animation: spin-smooth 1.2s linear infinite;
+  will-change: transform;
+}
+
 .upgrade-button-wrapper {
   position: relative;
   padding: 1px;

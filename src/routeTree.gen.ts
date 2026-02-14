@@ -118,6 +118,7 @@ import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTablesRouteImport } 
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.settings'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.security'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdInsightsRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.insights'
+import { Route as PublicProjectsProjectIdDatabasesDatabaseIdExportImportRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.export-import'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdBrowserRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.browser'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdBackupsRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.backups'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTableIdRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.$tableId'
@@ -155,6 +156,7 @@ import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdSecurit
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRowsRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.tables.$tableId.rows'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdInsightsRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.tables.$tableId.insights'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.tables.$tableId.indexes'
+import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.tables.$tableId.export-import'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSettingsRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.tables.$tableId.db-settings'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSecurityRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.tables.$tableId.db-security'
 import { Route as PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdColumnsRouteImport } from './routes/_public/projects.$projectId.databases.$databaseId.tables.$tableId.columns'
@@ -795,6 +797,12 @@ const PublicProjectsProjectIdDatabasesDatabaseIdInsightsRoute =
     path: '/insights',
     getParentRoute: () => PublicProjectsProjectIdDatabasesDatabaseIdRoute,
   } as any)
+const PublicProjectsProjectIdDatabasesDatabaseIdExportImportRoute =
+  PublicProjectsProjectIdDatabasesDatabaseIdExportImportRouteImport.update({
+    id: '/export-import',
+    path: '/export-import',
+    getParentRoute: () => PublicProjectsProjectIdDatabasesDatabaseIdRoute,
+  } as any)
 const PublicProjectsProjectIdDatabasesDatabaseIdBrowserRoute =
   PublicProjectsProjectIdDatabasesDatabaseIdBrowserRouteImport.update({
     id: '/browser',
@@ -1048,6 +1056,15 @@ const PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute =
         PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRoute,
     } as any,
   )
+const PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRoute =
+  PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRouteImport.update(
+    {
+      id: '/export-import',
+      path: '/export-import',
+      getParentRoute: () =>
+        PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRoute,
+    } as any,
+  )
 const PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSettingsRoute =
   PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSettingsRouteImport.update(
     {
@@ -1172,6 +1189,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$databaseId/$tableId': typeof PublicProjectsProjectIdDatabasesDatabaseIdTableIdRoute
   '/projects/$projectId/databases/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesDatabaseIdBackupsRoute
   '/projects/$projectId/databases/$databaseId/browser': typeof PublicProjectsProjectIdDatabasesDatabaseIdBrowserRoute
+  '/projects/$projectId/databases/$databaseId/export-import': typeof PublicProjectsProjectIdDatabasesDatabaseIdExportImportRoute
   '/projects/$projectId/databases/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesDatabaseIdInsightsRoute
   '/projects/$projectId/databases/$databaseId/security': typeof PublicProjectsProjectIdDatabasesDatabaseIdSecurityRoute
   '/projects/$projectId/databases/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesDatabaseIdSettingsRoute
@@ -1230,6 +1248,7 @@ export interface FileRoutesByFullPath {
   '/projects/$projectId/databases/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdColumnsRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/db-security': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSecurityRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSettingsRoute
+  '/projects/$projectId/databases/$databaseId/tables/$tableId/export-import': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/insights': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdInsightsRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRowsRoute
@@ -1304,6 +1323,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/$databaseId/$tableId': typeof PublicProjectsProjectIdDatabasesDatabaseIdTableIdRoute
   '/projects/$projectId/databases/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesDatabaseIdBackupsRoute
   '/projects/$projectId/databases/$databaseId/browser': typeof PublicProjectsProjectIdDatabasesDatabaseIdBrowserRoute
+  '/projects/$projectId/databases/$databaseId/export-import': typeof PublicProjectsProjectIdDatabasesDatabaseIdExportImportRoute
   '/projects/$projectId/databases/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesDatabaseIdInsightsRoute
   '/projects/$projectId/databases/$databaseId/security': typeof PublicProjectsProjectIdDatabasesDatabaseIdSecurityRoute
   '/projects/$projectId/databases/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesDatabaseIdSettingsRoute
@@ -1357,6 +1377,7 @@ export interface FileRoutesByTo {
   '/projects/$projectId/databases/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdColumnsRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/db-security': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSecurityRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSettingsRoute
+  '/projects/$projectId/databases/$databaseId/tables/$tableId/export-import': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/insights': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdInsightsRoute
   '/projects/$projectId/databases/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRowsRoute
@@ -1453,6 +1474,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$databaseId/$tableId': typeof PublicProjectsProjectIdDatabasesDatabaseIdTableIdRoute
   '/_public/projects/$projectId/databases/$databaseId/backups': typeof PublicProjectsProjectIdDatabasesDatabaseIdBackupsRoute
   '/_public/projects/$projectId/databases/$databaseId/browser': typeof PublicProjectsProjectIdDatabasesDatabaseIdBrowserRoute
+  '/_public/projects/$projectId/databases/$databaseId/export-import': typeof PublicProjectsProjectIdDatabasesDatabaseIdExportImportRoute
   '/_public/projects/$projectId/databases/$databaseId/insights': typeof PublicProjectsProjectIdDatabasesDatabaseIdInsightsRoute
   '/_public/projects/$projectId/databases/$databaseId/security': typeof PublicProjectsProjectIdDatabasesDatabaseIdSecurityRoute
   '/_public/projects/$projectId/databases/$databaseId/settings': typeof PublicProjectsProjectIdDatabasesDatabaseIdSettingsRoute
@@ -1511,6 +1533,7 @@ export interface FileRoutesById {
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/columns': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdColumnsRoute
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/db-security': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSecurityRoute
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSettingsRoute
+  '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/export-import': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRoute
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/indexes': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/insights': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdInsightsRoute
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/rows': typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRowsRoute
@@ -1605,6 +1628,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$databaseId/$tableId'
     | '/projects/$projectId/databases/$databaseId/backups'
     | '/projects/$projectId/databases/$databaseId/browser'
+    | '/projects/$projectId/databases/$databaseId/export-import'
     | '/projects/$projectId/databases/$databaseId/insights'
     | '/projects/$projectId/databases/$databaseId/security'
     | '/projects/$projectId/databases/$databaseId/settings'
@@ -1663,6 +1687,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/columns'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/db-security'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings'
+    | '/projects/$projectId/databases/$databaseId/tables/$tableId/export-import'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/insights'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/rows'
@@ -1737,6 +1762,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$databaseId/$tableId'
     | '/projects/$projectId/databases/$databaseId/backups'
     | '/projects/$projectId/databases/$databaseId/browser'
+    | '/projects/$projectId/databases/$databaseId/export-import'
     | '/projects/$projectId/databases/$databaseId/insights'
     | '/projects/$projectId/databases/$databaseId/security'
     | '/projects/$projectId/databases/$databaseId/settings'
@@ -1790,6 +1816,7 @@ export interface FileRouteTypes {
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/columns'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/db-security'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings'
+    | '/projects/$projectId/databases/$databaseId/tables/$tableId/export-import'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/indexes'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/insights'
     | '/projects/$projectId/databases/$databaseId/tables/$tableId/rows'
@@ -1885,6 +1912,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$databaseId/$tableId'
     | '/_public/projects/$projectId/databases/$databaseId/backups'
     | '/_public/projects/$projectId/databases/$databaseId/browser'
+    | '/_public/projects/$projectId/databases/$databaseId/export-import'
     | '/_public/projects/$projectId/databases/$databaseId/insights'
     | '/_public/projects/$projectId/databases/$databaseId/security'
     | '/_public/projects/$projectId/databases/$databaseId/settings'
@@ -1943,6 +1971,7 @@ export interface FileRouteTypes {
     | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/columns'
     | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/db-security'
     | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings'
+    | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/export-import'
     | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/indexes'
     | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/insights'
     | '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/rows'
@@ -2730,6 +2759,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdInsightsRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdRoute
     }
+    '/_public/projects/$projectId/databases/$databaseId/export-import': {
+      id: '/_public/projects/$projectId/databases/$databaseId/export-import'
+      path: '/export-import'
+      fullPath: '/projects/$projectId/databases/$databaseId/export-import'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdExportImportRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdRoute
+    }
     '/_public/projects/$projectId/databases/$databaseId/browser': {
       id: '/_public/projects/$projectId/databases/$databaseId/browser'
       path: '/browser'
@@ -2989,6 +3025,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRouteImport
       parentRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRoute
     }
+    '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/export-import': {
+      id: '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/export-import'
+      path: '/export-import'
+      fullPath: '/projects/$projectId/databases/$databaseId/tables/$tableId/export-import'
+      preLoaderRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRouteImport
+      parentRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRoute
+    }
     '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings': {
       id: '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/db-settings'
       path: '/db-settings'
@@ -3246,6 +3289,7 @@ interface PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRouteChildren {
   PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdColumnsRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdColumnsRoute
   PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSecurityRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSecurityRoute
   PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSettingsRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSettingsRoute
+  PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRoute
   PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute
   PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdInsightsRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdInsightsRoute
   PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRowsRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRowsRoute
@@ -3265,6 +3309,8 @@ const PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdRouteChildren: Publ
       PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSecurityRoute,
     PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSettingsRoute:
       PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdDbSettingsRoute,
+    PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRoute:
+      PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdExportImportRoute,
     PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute:
       PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdIndexesRoute,
     PublicProjectsProjectIdDatabasesDatabaseIdTablesTableIdInsightsRoute:
@@ -3305,6 +3351,7 @@ interface PublicProjectsProjectIdDatabasesDatabaseIdRouteChildren {
   PublicProjectsProjectIdDatabasesDatabaseIdTableIdRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdTableIdRoute
   PublicProjectsProjectIdDatabasesDatabaseIdBackupsRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdBackupsRoute
   PublicProjectsProjectIdDatabasesDatabaseIdBrowserRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdBrowserRoute
+  PublicProjectsProjectIdDatabasesDatabaseIdExportImportRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdExportImportRoute
   PublicProjectsProjectIdDatabasesDatabaseIdInsightsRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdInsightsRoute
   PublicProjectsProjectIdDatabasesDatabaseIdSecurityRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdSecurityRoute
   PublicProjectsProjectIdDatabasesDatabaseIdSettingsRoute: typeof PublicProjectsProjectIdDatabasesDatabaseIdSettingsRoute
@@ -3322,6 +3369,8 @@ const PublicProjectsProjectIdDatabasesDatabaseIdRouteChildren: PublicProjectsPro
       PublicProjectsProjectIdDatabasesDatabaseIdBackupsRoute,
     PublicProjectsProjectIdDatabasesDatabaseIdBrowserRoute:
       PublicProjectsProjectIdDatabasesDatabaseIdBrowserRoute,
+    PublicProjectsProjectIdDatabasesDatabaseIdExportImportRoute:
+      PublicProjectsProjectIdDatabasesDatabaseIdExportImportRoute,
     PublicProjectsProjectIdDatabasesDatabaseIdInsightsRoute:
       PublicProjectsProjectIdDatabasesDatabaseIdInsightsRoute,
     PublicProjectsProjectIdDatabasesDatabaseIdSecurityRoute:

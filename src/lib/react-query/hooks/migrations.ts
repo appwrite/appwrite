@@ -5,7 +5,12 @@
  * CSV export/import migrations are used by the floating progress boxes.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  queryOptions,
+} from '@tanstack/react-query'
 import { Query } from '@appwrite.io/console'
 import type { Models } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
@@ -87,6 +92,42 @@ export async function fetchCsvImportMigrations(projectId: string) {
   return {
     migrations: (response.migrations || []) as Models.Migration[],
   }
+}
+
+/** Limit for list view; we filter by resourceId client-side so fetch more. */
+const MIGRATIONS_LIST_LIMIT = 100
+
+/**
+ * Fetch CSV export/import migrations in one API call, then filter client-side
+ * by resourceId (API does not support querying by resourceId).
+ * Only returns migrations whose resourceId is in the given set (databaseId:tableId).
+ *
+ * @param projectId - Project ID
+ * @param resourceIds - Set of "databaseId:tableId" for tables in the database
+ */
+export async function fetchDatabaseCsvMigrations(
+  projectId: string,
+  resourceIds: string[],
+) {
+  if (!projectId) {
+    return { migrations: [] as Models.Migration[] }
+  }
+  const projectSdk = sdk.forProject(projectId)
+  const response = await projectSdk.migrations.list({
+    queries: [
+      Query.or([
+        Query.equal('destination', 'CSV'),
+        Query.equal('source', 'CSV'),
+      ]),
+      Query.orderDesc('$updatedAt'),
+      Query.limit(MIGRATIONS_LIST_LIMIT),
+    ],
+  })
+  const all = (response.migrations || []) as Models.Migration[]
+  const set =
+    resourceIds.length > 0 ? new Set(resourceIds) : new Set<string>()
+  const migrations = set.size > 0 ? all.filter((m) => set.has(m.resourceId)) : []
+  return { migrations }
 }
 
 // ============================================================================
@@ -253,6 +294,58 @@ export function useCsvImportMigrations(
   })
   return {
     migrations: data?.migrations ?? [],
+    refetch,
+  }
+}
+
+// ============================================================================
+// CSV EXPORT / IMPORT LIST (for database Export / Import tab) – single API call
+// ============================================================================
+
+/**
+ * Query options for fetching CSV export/import migrations for a database.
+ * Uses resourceId filter (databaseId:tableId) and source/destination CSV.
+ */
+export function databaseCsvMigrationsQueryOptions(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableIds: string[],
+) {
+  const resourceIds =
+    projectId && databaseId && tableIds.length > 0
+      ? tableIds.map((tableId) => `${databaseId}:${tableId}`)
+      : []
+  return queryOptions({
+    queryKey: [
+      'migrations',
+      'project',
+      projectId,
+      'database',
+      databaseId,
+      'csv',
+      resourceIds.slice().sort(),
+    ],
+    queryFn: () => fetchDatabaseCsvMigrations(projectId!, resourceIds),
+    enabled: !!projectId && resourceIds.length > 0,
+    staleTime: 30 * 1000,
+  })
+}
+
+/**
+ * Hook to fetch CSV export/import migrations for a database in one API call.
+ * Pass table IDs from useProjectTables; resourceIds are built as databaseId:tableId.
+ */
+export function useDatabaseCsvMigrations(
+  projectId: string | null | undefined,
+  databaseId: string | null | undefined,
+  tableIds: string[],
+) {
+  const { data, isLoading, refetch } = useQuery(
+    databaseCsvMigrationsQueryOptions(projectId, databaseId, tableIds),
+  )
+  return {
+    migrations: data?.migrations ?? [],
+    isLoading,
     refetch,
   }
 }

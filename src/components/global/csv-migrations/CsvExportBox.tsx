@@ -1,22 +1,15 @@
 /**
  * CSV export progress items (no wrapper).
  * Renders the same card style as file uploads; shows Download link when export completes.
+ * Row count is throttled to avoid lag when the number updates frequently.
  */
 
-import { useMemo } from 'react'
+import { useMemo, useRef, useState, useEffect, memo } from 'react'
 import { X, Download, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
 import { useCsvExportMigrations } from '@/lib/react-query/hooks'
 import { useSessionMigrations } from '@/components/global/providers/SessionMigrationsContext'
 import type { Models } from '@appwrite.io/console'
-
-const statusToProgress: Record<string, number> = {
-  pending: 10,
-  processing: 60,
-  completed: 100,
-  failed: 100,
-}
 
 const statusToLabel = (status: string): string => {
   switch (status) {
@@ -31,6 +24,54 @@ const statusToLabel = (status: string): string => {
     default:
       return `Export (${status})`
   }
+}
+
+const ExportStatusHeader = memo(function ExportStatusHeader({
+  status,
+}: {
+  status: string
+}) {
+  const isPendingOrProcessing =
+    status === 'pending' || status === 'processing'
+  const isCompleted = status === 'completed'
+  const isFailed = status === 'failed'
+  const label = statusToLabel(status)
+  return (
+    <div className="flex items-center gap-2 mb-1">
+      {isPendingOrProcessing ? (
+        <Loader2 className="h-4 w-4 animate-spin-smooth text-primary shrink-0" />
+      ) : isCompleted ? (
+        <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+      ) : isFailed ? (
+        <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+      ) : (
+        <Loader2 className="h-4 w-4 animate-spin-smooth text-muted-foreground shrink-0" />
+      )}
+      <p className="text-[13px] font-medium text-foreground truncate">
+        {label}
+      </p>
+    </div>
+  )
+})
+
+type StatusCounters = {
+  row?: {
+    success?: number
+    processing?: number
+    error?: number
+    pending?: number
+    skip?: number
+    warning?: number
+  }
+}
+
+function getExportedRowCount(m: Models.Migration): number | null {
+  const counters = m.statusCounters as StatusCounters | undefined
+  const row = counters?.row
+  if (!row) return null
+  const success = row.success ?? 0
+  const processing = row.processing ?? 0
+  return success + processing
 }
 
 interface CsvExportBoxProps {
@@ -50,18 +91,59 @@ export function CsvExportBox({ projectId }: CsvExportBoxProps) {
   )
   const visible = migrations.filter((m) => !dismissedSet.has(m.$id))
 
+  const latestCountsRef = useRef<Record<string, number>>({})
+  const [displayedCounts, setDisplayedCounts] = useState<
+    Record<string, number>
+  >({})
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  visible.forEach((m) => {
+    const count = getExportedRowCount(m)
+    if (count !== null) latestCountsRef.current[m.$id] = count
+  })
+
+  useEffect(() => {
+    const throttleMs = 400
+    const sync = () => {
+      setDisplayedCounts((prev) => {
+        const next = { ...prev }
+        let changed = false
+        for (const [id, count] of Object.entries(latestCountsRef.current)) {
+          if (prev[id] !== count) {
+            next[id] = count
+            changed = true
+          }
+        }
+        return changed ? next : prev
+      })
+    }
+    sync()
+    intervalRef.current = setInterval(sync, throttleMs)
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [visible.length])
+
   if (visible.length === 0) return null
 
   return (
     <div className="w-full max-w-sm space-y-2">
       {visible.map((m: Models.Migration) => {
-        const progress = statusToProgress[m.status] ?? 50
-        const isFailed = m.status === 'failed'
         const isCompleted = m.status === 'completed'
-        const isPendingOrProcessing =
-          m.status === 'pending' || m.status === 'processing'
         const url = (m.options as { downloadUrl?: string })?.downloadUrl
-        const label = statusToLabel(m.status)
+        const liveCount = getExportedRowCount(m)
+        const rowCount =
+          isCompleted && liveCount !== null
+            ? liveCount
+            : displayedCounts[m.$id] ?? liveCount
+        const statusLine =
+          rowCount !== null && rowCount > 0
+            ? `${rowCount.toLocaleString()} rows exported`
+            : m.status === 'pending'
+              ? 'Preparing export...'
+              : m.status === 'processing'
+                ? 'Exporting...'
+                : null
         return (
           <div
             key={m.$id}
@@ -69,21 +151,14 @@ export function CsvExportBox({ projectId }: CsvExportBoxProps) {
           >
             <div className="flex items-start gap-3">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  {isPendingOrProcessing ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
-                  ) : isCompleted ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-                  ) : isFailed ? (
-                    <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
-                  ) : (
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground shrink-0" />
-                  )}
-                  <p className="text-[13px] font-medium text-foreground truncate">
-                    {label}
+                <ExportStatusHeader status={m.status} />
+                {statusLine ? (
+                  <p className="text-[11px] text-muted-foreground mb-2">
+                    {statusLine}
                   </p>
-                </div>
-                <ProgressBarRow value={progress} />
+                ) : (
+                  <div className="mb-2 min-h-[14px]" />
+                )}
                 <div className="min-h-[28px] flex items-center">
                   {isCompleted && url ? (
                     <Button
