@@ -244,6 +244,7 @@ export function useCreateMigrationKey(projectId: string | null | undefined) {
  * Hook to fetch CSV export migrations for the current session only.
  * Only runs when sessionExportIds has length > 0 (user triggered an export this session).
  * Returns migrations filtered to session ids so we don't show old exports on reload.
+ * Progress updates come from realtime (migrations.*.update); no polling or refetch on window focus.
  */
 export function useCsvExportMigrations(
   projectId: string | null | undefined,
@@ -260,8 +261,8 @@ export function useCsvExportMigrations(
       }
     },
     enabled: !!projectId && hasSessionIds,
-    staleTime: 5 * 1000,
-    refetchOnWindowFocus: true,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
   })
   return {
     migrations: data?.migrations ?? [],
@@ -273,6 +274,7 @@ export function useCsvExportMigrations(
  * Hook to fetch CSV import migrations for the current session only.
  * Only runs when sessionImportIds has length > 0 (user triggered an import this session).
  * Returns migrations filtered to session ids so we don't show old imports on reload.
+ * Progress updates come from realtime (migrations.*.update); no polling or refetch on window focus.
  */
 export function useCsvImportMigrations(
   projectId: string | null | undefined,
@@ -289,8 +291,8 @@ export function useCsvImportMigrations(
       }
     },
     enabled: !!projectId && hasSessionIds,
-    staleTime: 5 * 1000,
-    refetchOnWindowFocus: true,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
   })
   return {
     migrations: data?.migrations ?? [],

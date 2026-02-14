@@ -3,12 +3,61 @@
  *
  * Subscribes to the console channel only (project=console), filters events by
  * current project where needed, and invalidates React Query cache so the UI updates.
+ * For migration update events we merge the payload into the cache instead of
+ * invalidating, to avoid many refetches during export/import progress.
  */
 
 import type { QueryClient } from '@tanstack/react-query'
 import type { RealtimeResponseEvent } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
 import { PROJECT_CHANNELS, REALTIME_EVENTS } from './constants'
+
+/** Realtime payload may have statusCounters as JSON string; normalize to object */
+function normalizeMigrationPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  const out = { ...payload }
+  if (typeof out.statusCounters === 'string') {
+    try {
+      out.statusCounters = JSON.parse(out.statusCounters as string) as object
+    } catch {
+      // leave as-is
+    }
+  }
+  if (typeof out.resourceData === 'string') {
+    try {
+      out.resourceData = JSON.parse(out.resourceData as string) as object
+    } catch {
+      // leave as-is
+    }
+  }
+  return out
+}
+
+/**
+ * Merge a migration realtime payload into all migration list caches for this project.
+ * Avoids refetching on every progress event.
+ */
+function mergeMigrationPayloadIntoCache(
+  queryClient: QueryClient,
+  projectId: string,
+  payload: Record<string, unknown>,
+): void {
+  const id = payload.$id as string | undefined
+  if (!id) return
+
+  const normalized = normalizeMigrationPayload(payload)
+
+  queryClient.setQueriesData(
+    { queryKey: ['migrations', 'project', projectId], exact: false },
+    (old: unknown) => {
+      const data = old as { migrations?: Array<Record<string, unknown>> } | undefined
+      if (!data?.migrations || !Array.isArray(data.migrations)) return old
+      const next = data.migrations.map((m) =>
+        m.$id === id ? { ...m, ...normalized } : m,
+      )
+      return { ...data, migrations: next }
+    },
+  )
+}
 
 /** Check if the event list includes an event that starts with the given prefix */
 function eventMatches(events: string[], prefix: string): boolean {
@@ -139,14 +188,23 @@ function handleRealtimeEvent(
   }
 
   if (hasEvent(events, REALTIME_EVENTS.MIGRATIONS_ANY)) {
-    queryClient.invalidateQueries({
-      queryKey: ['migrations', 'project', projectId],
-    })
-    queryClient.invalidateQueries({
-      queryKey: ['migration', 'project', projectId],
-    })
-    if (response.payload != null) {
-      onMigrationEvent?.(response.payload)
+    const payload = response.payload
+    if (payload != null && typeof payload === 'object' && payload !== null && '$id' in payload) {
+      // Merge update into cache so progress boxes and list update without refetching
+      mergeMigrationPayloadIntoCache(
+        queryClient,
+        projectId,
+        payload as Record<string, unknown>,
+      )
+      onMigrationEvent?.(payload)
+    } else {
+      // No payload (e.g. delete) – invalidate so lists refetch
+      queryClient.invalidateQueries({
+        queryKey: ['migrations', 'project', projectId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['migration', 'project', projectId],
+      })
     }
   }
 
