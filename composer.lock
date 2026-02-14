@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c9436e3de3d010184dc928a7f1ff4721",
+    "content-hash": "5ff74ae8c068eeb21d0d815cf85b1fea",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4909,16 +4909,16 @@
         },
         {
             "name": "utopia-php/span",
-            "version": "1.1.4",
+            "version": "1.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/span.git",
-                "reference": "49d04aa588a2cdbbc9381ee7a1c129469e0f905c"
+                "reference": "028406940ca92bdc88099f0b1a123a3b2cbdd4e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/span/zipball/49d04aa588a2cdbbc9381ee7a1c129469e0f905c",
-                "reference": "49d04aa588a2cdbbc9381ee7a1c129469e0f905c",
+                "url": "https://api.github.com/repos/utopia-php/span/zipball/028406940ca92bdc88099f0b1a123a3b2cbdd4e5",
+                "reference": "028406940ca92bdc88099f0b1a123a3b2cbdd4e5",
                 "shasum": ""
             },
             "require": {
@@ -4947,9 +4947,9 @@
             "description": "Simple span tracing library for PHP with coroutine support",
             "support": {
                 "issues": "https://github.com/utopia-php/span/issues",
-                "source": "https://github.com/utopia-php/span/tree/1.1.4"
+                "source": "https://github.com/utopia-php/span/tree/1.1.5"
             },
-            "time": "2026-02-13T10:58:12+00:00"
+            "time": "2026-02-13T18:00:11+00:00"
         },
         {
             "name": "utopia-php/storage",
@@ -5390,16 +5390,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.9.0",
+            "version": "1.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "94a2d7ef55ea63c6e8afb166d39a82c07d01c8c0"
+                "reference": "02587e667091df7fb9a0f79fb080b28cada92706"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/94a2d7ef55ea63c6e8afb166d39a82c07d01c8c0",
-                "reference": "94a2d7ef55ea63c6e8afb166d39a82c07d01c8c0",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/02587e667091df7fb9a0f79fb080b28cada92706",
+                "reference": "02587e667091df7fb9a0f79fb080b28cada92706",
                 "shasum": ""
             },
             "require": {
@@ -5435,9 +5435,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.9.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.9.1"
             },
-            "time": "2026-02-12T12:08:13+00:00"
+            "time": "2026-02-13T16:33:55+00:00"
         },
         {
             "name": "doctrine/annotations",
