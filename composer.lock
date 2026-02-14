@@ -3948,22 +3948,22 @@
         },
         {
             "name": "utopia-php/dns",
-            "version": "1.5.4",
+            "version": "1.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dns.git",
-                "reference": "ee831a6f2ceb28babb042ea65539c26ea4530bf6"
+                "reference": "98c70520213a41e2fe1867e5b110273c06bf1cab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dns/zipball/ee831a6f2ceb28babb042ea65539c26ea4530bf6",
-                "reference": "ee831a6f2ceb28babb042ea65539c26ea4530bf6",
+                "url": "https://api.github.com/repos/utopia-php/dns/zipball/98c70520213a41e2fe1867e5b110273c06bf1cab",
+                "reference": "98c70520213a41e2fe1867e5b110273c06bf1cab",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.3",
                 "utopia-php/domains": "1.0.*",
-                "utopia-php/span": "1.0.*",
+                "utopia-php/span": "1.1.*",
                 "utopia-php/telemetry": "*",
                 "utopia-php/validators": "0.*"
             },
@@ -3999,9 +3999,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dns/issues",
-                "source": "https://github.com/utopia-php/dns/tree/1.5.4"
+                "source": "https://github.com/utopia-php/dns/tree/1.6.2"
             },
-            "time": "2026-02-02T10:40:38+00:00"
+            "time": "2026-02-13T12:29:08+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -4909,25 +4909,26 @@
         },
         {
             "name": "utopia-php/span",
-            "version": "1.0.0",
+            "version": "1.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/span.git",
-                "reference": "f2f6c499ded3a776e8019902e83d140ff0f89693"
+                "reference": "49d04aa588a2cdbbc9381ee7a1c129469e0f905c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/span/zipball/f2f6c499ded3a776e8019902e83d140ff0f89693",
-                "reference": "f2f6c499ded3a776e8019902e83d140ff0f89693",
+                "url": "https://api.github.com/repos/utopia-php/span/zipball/49d04aa588a2cdbbc9381ee7a1c129469e0f905c",
+                "reference": "49d04aa588a2cdbbc9381ee7a1c129469e0f905c",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.1"
+                "php": ">=8.2"
             },
             "require-dev": {
                 "laravel/pint": "^1.0",
                 "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^10.0",
+                "rector/rector": "^2.3",
                 "swoole/ide-helper": "^5.0"
             },
             "suggest": {
@@ -4946,9 +4947,9 @@
             "description": "Simple span tracing library for PHP with coroutine support",
             "support": {
                 "issues": "https://github.com/utopia-php/span/issues",
-                "source": "https://github.com/utopia-php/span/tree/1.0.0"
+                "source": "https://github.com/utopia-php/span/tree/1.1.4"
             },
-            "time": "2026-01-12T20:05:10+00:00"
+            "time": "2026-02-13T10:58:12+00:00"
         },
         {
             "name": "utopia-php/storage",

@@ -572,6 +572,7 @@ services:
     environment:
       # Specific
       - _APP_BROWSER_HOST
+      - _APP_WORKER_SCREENSHOTS_ROUTER
       # Basic
       - _APP_ENV
       - _APP_WORKER_PER_CORE

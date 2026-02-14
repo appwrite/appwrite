@@ -7,7 +7,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\System\System;
 
 class Executions extends Action
 {
@@ -45,7 +44,8 @@ class Executions extends Action
             throw new Exception('Missing execution');
         }
 
-        if (System::getEnv('_APP_REGION') !== 'nyc') { // TODO: Remove region check
+        $project = new Document($payload['project'] ?? []);
+        if ($project->getId() != '6862e6a6000cce69f9da') {
             $dbForProject->upsertDocument('executions', $execution);
         }
     }
