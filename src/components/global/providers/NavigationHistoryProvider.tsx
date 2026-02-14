@@ -22,7 +22,18 @@ interface NavigationHistoryContextType {
    * Returns the path that was navigated to, or undefined if no history
    */
   popHistory: () => string | undefined
+  /**
+   * Get a copy of the back stack (oldest first). Each entry has path and page title.
+   */
+  getBackStack: () => { path: string; title: string }[]
+  /**
+   * Remove the given path and any entries after it from the stack, then return the path.
+   * Consumer should navigate to the returned path. Returns undefined if path not in stack.
+   */
+  popUntil: (path: string) => string | undefined
 }
+
+export type NavigationHistoryEntry = { path: string; title: string }
 
 const NavigationHistoryContext =
   createContext<NavigationHistoryContextType | null>(null)
@@ -58,7 +69,7 @@ export function NavigationHistoryProvider({
   const location = useLocation()
 
   // Use ref to store history stack to avoid re-renders on navigation
-  const historyStackRef = useRef<string[]>([])
+  const historyStackRef = useRef<NavigationHistoryEntry[]>([])
 
   // Track the current path to avoid duplicates
   const currentPathRef = useRef<string>('')
@@ -72,9 +83,12 @@ export function NavigationHistoryProvider({
 
     // Don't add duplicate consecutive entries
     if (currentPath !== currentPathRef.current) {
-      // Add the previous path to history (not the current one)
+      // Add the previous path to history with the page title (of the page we're leaving)
       if (currentPathRef.current) {
-        historyStackRef.current.push(currentPathRef.current)
+        historyStackRef.current.push({
+          path: currentPathRef.current,
+          title: typeof document !== 'undefined' ? document.title : currentPathRef.current,
+        })
 
         // Limit history stack to prevent memory issues
         if (historyStackRef.current.length > 50) {
@@ -92,17 +106,32 @@ export function NavigationHistoryProvider({
 
   const getPreviousPath = useCallback(() => {
     const stack = historyStackRef.current
-    return stack.length > 0 ? stack[stack.length - 1] : undefined
+    return stack.length > 0 ? stack[stack.length - 1].path : undefined
   }, [])
 
   const popHistory = useCallback(() => {
-    return historyStackRef.current.pop()
+    const entry = historyStackRef.current.pop()
+    return entry?.path
+  }, [])
+
+  const getBackStack = useCallback(() => {
+    return [...historyStackRef.current]
+  }, [])
+
+  const popUntil = useCallback((path: string) => {
+    const stack = historyStackRef.current
+    const i = stack.findIndex((e) => e.path === path)
+    if (i === -1) return undefined
+    stack.splice(i)
+    return path
   }, [])
 
   const value: NavigationHistoryContextType = {
     hasInternalHistory,
     getPreviousPath,
     popHistory,
+    getBackStack,
+    popUntil,
   }
 
   return (

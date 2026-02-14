@@ -57,6 +57,7 @@ import {
   createProjectTableRows,
   createProjectTableRow,
   updateProjectTableRow,
+  fetchProjectTableRow,
   createProjectTableColumn,
   updateProjectTableColumn,
   deleteProjectTableColumn,
@@ -70,6 +71,9 @@ import {
   createProjectDatabase,
   createProjectTable,
   tablesQueryOptions,
+  tableQueryOptions,
+  tableColumnsQueryOptions,
+  tableRowsQueryOptions,
   type TablesSortBy,
 } from '@/lib/react-query/hooks'
 import { ColumnDrawer, ColumnFormData, type ColumnType } from './tables/Column'
@@ -83,6 +87,8 @@ import { BackupsView } from './Backups'
 import { ExportImportView } from './ExportImportView'
 import { CreateDatabase } from './CreateDatabase'
 import { CreateTable } from './CreateTable'
+import { TableContextMenu } from './_components/TableContextMenu'
+import { RowContextMenu } from './_components/RowContextMenu'
 import { ImportCsv } from './_components/ImportCsv'
 import { ExportCsv } from './_components/ExportCsv'
 import { ComingSoonCurtain } from '@/components/ui/coming-soon-curtain'
@@ -959,27 +965,55 @@ export function DatabaseDetailLayout({
           {/* Tables List (collapsible) */}
           {tablesExpanded && (
             <div className="ml-3 mt-0.5 border-l border-border pl-2">
-              {dbTables.map((table) => (
-                <Link
-                  key={table.$id}
-                  to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                  params={{ projectId, databaseId, tableId: table.$id }}
-                  className={cn(
-                    'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors',
-                    selectedTable?.$id === table.$id
-                      ? 'bg-accent text-foreground'
-                      : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                  )}
-                >
-                  <Table2 className="h-3.5 w-3.5 shrink-0" />
-                  <span className="min-w-0 flex-1 truncate text-[13px]">
-                    {table.name}
-                  </span>
-                  {table.enabled === false && (
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                  )}
-                </Link>
-              ))}
+              {dbTables.map((table) =>
+                projectId ? (
+                  <TableContextMenu
+                    key={table.$id}
+                    projectId={projectId}
+                    databaseId={databaseId}
+                    table={table}
+                  >
+                    <Link
+                      to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
+                      params={{ projectId, databaseId, tableId: table.$id }}
+                      className={cn(
+                        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors',
+                        selectedTable?.$id === table.$id
+                          ? 'bg-accent text-foreground'
+                          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                      )}
+                    >
+                      <Table2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="min-w-0 flex-1 truncate text-[13px]">
+                        {table.name}
+                      </span>
+                      {table.enabled === false && (
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                      )}
+                    </Link>
+                  </TableContextMenu>
+                ) : (
+                  <Link
+                    key={table.$id}
+                    to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
+                    params={{ projectId: '', databaseId, tableId: table.$id }}
+                    className={cn(
+                      'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors',
+                      selectedTable?.$id === table.$id
+                        ? 'bg-accent text-foreground'
+                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                    )}
+                  >
+                    <Table2 className="h-3.5 w-3.5 shrink-0" />
+                    <span className="min-w-0 flex-1 truncate text-[13px]">
+                      {table.name}
+                    </span>
+                    {table.enabled === false && (
+                      <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                    )}
+                  </Link>
+                ),
+              )}
 
               {/* Create Table Button */}
               <button
@@ -1606,25 +1640,67 @@ export function TableView({
                   const isTableSelected =
                     selectedTable?.$id === table.$id && !databaseTab
                   return (
-                    <Link
+                    <TableContextMenu
                       key={table.$id}
-                      to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                      params={{ projectId, databaseId, tableId: table.$id }}
-                      className={cn(
-                        'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
-                        isTableSelected
-                          ? 'bg-accent text-foreground'
-                          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
-                      )}
+                      projectId={projectId!}
+                      databaseId={databaseId}
+                      table={table}
+                      onCreateSimilar={async (newTableId) => {
+                        await queryClient.refetchQueries({
+                          queryKey: ['tables', 'project', projectId, databaseId],
+                        })
+                        // Prefetch new table data before navigating to avoid layout shift / loading screen
+                        await Promise.all([
+                          queryClient.ensureQueryData(
+                            tableQueryOptions(projectId, databaseId, newTableId),
+                          ),
+                          queryClient.ensureQueryData(
+                            tableColumnsQueryOptions(
+                              projectId,
+                              databaseId,
+                              newTableId,
+                            ),
+                          ),
+                          queryClient.ensureQueryData(
+                            tableRowsQueryOptions(
+                              projectId,
+                              databaseId,
+                              newTableId,
+                              0,
+                              25,
+                              undefined,
+                            ),
+                          ),
+                        ])
+                        navigate({
+                          to: '/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
+                          params: {
+                            projectId: projectId!,
+                            databaseId,
+                            tableId: newTableId,
+                          },
+                        })
+                      }}
                     >
-                      <Table2 className="h-3.5 w-3.5 shrink-0" />
-                      <span className="min-w-0 flex-1 truncate">
-                        {table.name}
-                      </span>
-                      {table.enabled === false && (
-                        <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-                      )}
-                    </Link>
+                      <Link
+                        to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
+                        params={{ projectId, databaseId, tableId: table.$id }}
+                        className={cn(
+                          'flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors duration-150',
+                          isTableSelected
+                            ? 'bg-accent text-foreground'
+                            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                        )}
+                      >
+                        <Table2 className="h-3.5 w-3.5 shrink-0" />
+                        <span className="min-w-0 flex-1 truncate">
+                          {table.name}
+                        </span>
+                        {table.enabled === false && (
+                          <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+                        )}
+                      </Link>
+                    </TableContextMenu>
                   )
                 })}
               </div>
@@ -3064,35 +3140,46 @@ export function DatabaseOverview({
                             />
                           </TableCell>
                           <TableCell className="px-4 py-3">
-                            <Link
-                              to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
-                              params={{
-                                projectId,
-                                databaseId,
-                                tableId: table.$id,
+                            <TableContextMenu
+                              projectId={projectId}
+                              databaseId={databaseId}
+                              table={table}
+                              onCreateSimilar={async () => {
+                                await queryClient.refetchQueries({
+                                  queryKey: ['tables', 'project', projectId, databaseId],
+                                })
                               }}
-                              className="block group"
                             >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <Table2 className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                  <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
-                                    {table.name}
-                                  </p>
-                                  <div className="mt-0.5">
-                                    <CopyableId id={table.$id} size="xs" />
+                              <Link
+                                to="/projects/$projectId/databases/$databaseId/tables/$tableId/rows"
+                                params={{
+                                  projectId,
+                                  databaseId,
+                                  tableId: table.$id,
+                                }}
+                                className="block group"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <Table2 className="h-4 w-4 text-muted-foreground/60 shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="truncate text-[13px] font-medium text-foreground group-hover:text-primary transition-colors">
+                                      {table.name}
+                                    </p>
+                                    <div className="mt-0.5">
+                                      <CopyableId id={table.$id} size="xs" />
+                                    </div>
                                   </div>
+                                  {table.enabled === false && (
+                                    <Badge
+                                      variant="error"
+                                      className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
+                                    >
+                                      Disabled
+                                    </Badge>
+                                  )}
                                 </div>
-                                {table.enabled === false && (
-                                  <Badge
-                                    variant="error"
-                                    className="text-[11px] font-medium border px-2 py-0.5 shrink-0"
-                                  >
-                                    Disabled
-                                  </Badge>
-                                )}
-                              </div>
-                            </Link>
+                              </Link>
+                            </TableContextMenu>
                           </TableCell>
                           <TableCell className="px-4 py-3">
                             <Link
@@ -3699,6 +3786,8 @@ interface RowEditDrawerProps {
   row: RowData | null
   tableName: string
   focusedField?: string | null
+  /** When set, drawer opens with this tab selected (e.g. 'permissions' from context menu) */
+  initialTab?: 'overview' | 'permissions'
   columns?: unknown[]
   onSave: (
     rowId: string | null,
@@ -3714,6 +3803,7 @@ function RowEditDrawer({
   onOpenChange,
   row,
   focusedField,
+  initialTab,
   columns = [],
   onSave,
   isSaving = false,
@@ -3744,6 +3834,13 @@ function RowEditDrawer({
   const [linkCopied, setLinkCopied] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
   const [rowPermissions, setRowPermissions] = useState<string[]>([])
+
+  // When drawer opens with initialTab (e.g. from "Update permissions" context menu), switch to that tab
+  useEffect(() => {
+    if (open && initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [open, initialTab])
 
   // Initialize row permissions from row data
   useEffect(() => {
@@ -3802,16 +3899,16 @@ function RowEditDrawer({
   }, [row?.$id, columns]) // Re-run when row ID changes or columns change
 
   // Switch to data tab when a field is focused (cell clicked)
-  // Also set initial tab when drawer opens
+  // Also set initial tab when drawer opens (unless parent passed initialTab e.g. "Update permissions")
   useEffect(() => {
     if (focusedField) {
       setActiveTab('data')
-    } else if (open) {
+    } else if (open && !initialTab) {
       // Reset to overview when opening without a focused field (only in edit mode)
-      // In create mode, default to data tab
+      // In create mode, default to data tab. Don't override when initialTab is set.
       setActiveTab(isCreateMode ? 'data' : 'overview')
     }
-  }, [focusedField, open, isCreateMode])
+  }, [focusedField, open, isCreateMode, initialTab])
 
   // Focus the requested field when drawer opens
   useEffect(() => {
@@ -4840,6 +4937,9 @@ function RowsSpreadsheet({
   const [displayedPage, setDisplayedPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
+  const [drawerInitialTab, setDrawerInitialTab] = useState<
+    'overview' | 'permissions' | null
+  >(null)
   const [selectedRowForEdit, setSelectedRowForEdit] = useState<RowData | null>(
     null,
   )
@@ -4926,6 +5026,7 @@ function RowsSpreadsheet({
       const openFn = () => {
         setSelectedRowForEdit(null)
         setFocusedField(null)
+        setDrawerInitialTab(null)
         setEditDrawerOpen(true)
       }
       onCreateRowReady(openFn)
@@ -5058,14 +5159,94 @@ function RowsSpreadsheet({
   const handleRowClick = (row: RowData) => {
     setSelectedRowForEdit(row)
     setFocusedField(null)
+    setDrawerInitialTab(null)
+    setEditDrawerOpen(true)
+  }
+
+  const handleOpenPermissionsRow = (row: RowData) => {
+    setSelectedRowForEdit(row)
+    setFocusedField(null)
+    setDrawerInitialTab('permissions')
     setEditDrawerOpen(true)
   }
 
   const handleCellClick = (row: RowData, key: string) => {
     setSelectedRowForEdit(row)
     setFocusedField(key)
+    setDrawerInitialTab(null)
     setEditDrawerOpen(true)
   }
+
+  // Open row drawer when URL has #row-<id> or #row-<id>-permissions (e.g. from copied link).
+  // Use window.location.hash and hashchange so it works on new-tab load and when hash is set after load.
+  const lastProcessedHashRef = useRef<string | null>(null)
+  const openRowDrawerFromHash = useCallback(
+    (hash: string, currentRows: RowData[]) => {
+      const rawHash = hash.replace(/^#/, '')
+      const match = rawHash.match(/^row-(.+?)(-permissions)?$/)
+      if (!match || !projectId || !databaseId || !tableId) {
+        lastProcessedHashRef.current = null
+        return
+      }
+      if (lastProcessedHashRef.current === hash) return
+      lastProcessedHashRef.current = hash
+      const rowId = match[1]
+      const openToPermissions = !!match[2]
+
+      const fromCurrentPage = currentRows.find((r) => r.$id === rowId)
+      if (fromCurrentPage) {
+        setSelectedRowForEdit(fromCurrentPage)
+        setFocusedField(null)
+        setDrawerInitialTab(openToPermissions ? 'permissions' : null)
+        setEditDrawerOpen(true)
+        return
+      }
+
+      fetchProjectTableRow(projectId, databaseId, tableId, rowId).then(
+        (apiRow: unknown) => {
+          if (!apiRow || typeof apiRow !== 'object') return
+          const rowObj = apiRow as Record<string, unknown>
+          const data: Record<string, string | number | boolean> = {}
+          Object.keys(rowObj).forEach((key) => {
+            if (!key.startsWith('$'))
+              data[key] = rowObj[key] as string | number | boolean
+          })
+          const rowData: RowData = {
+            $id: (rowObj.$id as string) ?? rowId,
+            $sequence: rowObj.$sequence as number | undefined,
+            rowNumber: 0,
+            data,
+            $createdAt: rowObj.$createdAt as string | undefined,
+            $updatedAt: rowObj.$updatedAt as string | undefined,
+            $permissions: (rowObj.$permissions as string[]) || [],
+          }
+          setSelectedRowForEdit(rowData)
+          setFocusedField(null)
+          setDrawerInitialTab(openToPermissions ? 'permissions' : null)
+          setEditDrawerOpen(true)
+        },
+      )
+    },
+    [projectId, databaseId, tableId],
+  )
+
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash) openRowDrawerFromHash(hash, rows)
+  }, [rows, openRowDrawerFromHash])
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash
+      if (!hash) {
+        lastProcessedHashRef.current = null
+        return
+      }
+      openRowDrawerFromHash(hash, rows)
+    }
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [rows, openRowDrawerFromHash])
 
   // Create/Update row mutation
   const saveRowMutation = useMutation({
@@ -5167,6 +5348,28 @@ function RowsSpreadsheet({
     if (selectedRows.size === 0) return
     bulkDeleteMutation.mutate(Array.from(selectedRows))
   }
+
+  const duplicateRowMutation = useMutation({
+    mutationFn: async (row: RowData) => {
+      const data = { ...row.data } as Record<string, unknown>
+      if (Object.prototype.hasOwnProperty.call(data, '$id')) delete data.$id
+      return createProjectTableRow(
+        projectId,
+        databaseId,
+        tableId,
+        data,
+      )
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['rows', 'project', projectId, databaseId, tableId],
+      })
+      toast.success('Row duplicated')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message ?? 'Failed to duplicate row')
+    },
+  })
 
   // Sample data generation mutation
   const sampleDataMutation = useMutation({
@@ -5295,6 +5498,7 @@ function RowsSpreadsheet({
         // Fallback: directly open the drawer
         setSelectedRowForEdit(null)
         setFocusedField(null)
+        setDrawerInitialTab(null)
         setEditDrawerOpen(true)
       }
     }
@@ -5603,144 +5807,171 @@ function RowsSpreadsheet({
           </thead>
           <tbody>
             {paginatedRows.map((row) => (
-              <tr
+              <RowContextMenu
                 key={row.$id}
-                className={cn(
-                  'group cursor-pointer transition-colors',
-                  selectedRows.has(row.$id)
-                    ? 'bg-sky-100 dark:bg-sky-950'
-                    : 'hover:bg-muted/50',
-                )}
-                onClick={() => handleRowClick(row)}
+                projectId={projectId}
+                databaseId={databaseId}
+                tableId={tableId}
+                row={row}
+                onUpdateRow={(r) => handleRowClick(r as RowData)}
+                onUpdatePermissions={(r) =>
+                  handleOpenPermissionsRow(r as RowData)
+                }
+                queryKey={['rows', 'project', projectId, databaseId, tableId]}
               >
-                <td
+                <tr
                   className={cn(
-                    'sticky left-0 w-10 border-b border-gray-200 dark:border-border bg-background px-2 py-1.5',
-                    'shadow-[inset_-1px_0_0_0_#d1d5db] dark:shadow-[inset_-1px_0_0_0_rgb(255_255_255_/_0.1)]',
-                    selectedRows.has(row.$id) && 'bg-sky-100 dark:bg-sky-950',
+                    'group cursor-pointer transition-colors',
+                    selectedRows.has(row.$id)
+                      ? 'bg-sky-100 dark:bg-sky-950'
+                      : 'hover:bg-muted/50',
                   )}
+                  onClick={() => handleRowClick(row)}
                 >
-                  <Checkbox
-                    checked={selectedRows.has(row.$id)}
-                    onCheckedChange={() => toggleRow(row.$id)}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </td>
-                <td className={cn('px-3 py-1.5', bodyCellBorderClass)}>
-                  <span className="text-[12px] text-muted-foreground">
-                    {row.$sequence ?? row.rowNumber}
-                  </span>
-                </td>
-                <td
-                  className={cn(
-                    'w-[180px] px-3 py-1.5',
-                    columns.length === 0
-                      ? 'border-b border-gray-200 dark:border-border'
-                      : bodyCellBorderClass,
-                  )}
-                >
-                  <CopyableId id={row.$id} size="xs" />
-                </td>
-                {columns.map((col: string) => (
                   <td
-                    key={col}
-                    className={cn('px-3 py-1.5', bodyCellBorderClass)}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleCellClick(row, col)
-                    }}
+                    className={cn(
+                      'sticky left-0 w-10 border-b border-gray-200 dark:border-border bg-background px-2 py-1.5',
+                      'shadow-[inset_-1px_0_0_0_#d1d5db] dark:shadow-[inset_-1px_0_0_0_rgb(255_255_255_/_0.1)]',
+                      selectedRows.has(row.$id) && 'bg-sky-100 dark:bg-sky-950',
+                    )}
                   >
-                    {(() => {
-                      const { full, display, isNull } = formatCellValue(
-                        row.data[col as keyof typeof row.data] as
-                          | string
-                          | number
-                          | boolean
-                          | Record<string, unknown>
-                          | null
-                          | undefined,
-                      )
-                      // Only apply RTL detection to string values
-                      const cellValue = row.data[col as keyof typeof row.data]
-                      const isRTLContent =
-                        typeof cellValue === 'string' ? isRTL(cellValue) : false
-                      return (
-                        <span
-                          className={cn(
-                            'block max-w-[220px] truncate whitespace-nowrap text-[12px]',
-                            isNull ? 'text-foreground/60' : 'text-foreground',
-                          )}
-                          title={full}
-                          dir={isRTLContent ? 'rtl' : 'ltr'}
-                        >
-                          {display}
-                        </span>
-                      )
-                    })()}
+                    <Checkbox
+                      checked={selectedRows.has(row.$id)}
+                      onCheckedChange={() => toggleRow(row.$id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
                   </td>
-                ))}
-                <td
-                  className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {row.$createdAt ? (
-                    <DateTooltip
-                      date={new Date(row.$createdAt)}
-                      className="text-[12px] text-muted-foreground"
-                    />
-                  ) : (
-                    <span className="text-[12px] text-foreground/60">N/A</span>
-                  )}
-                </td>
-                <td
-                  className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {row.$updatedAt ? (
-                    <DateTooltip
-                      date={new Date(row.$updatedAt)}
-                      className="text-[12px] text-muted-foreground"
-                    />
-                  ) : (
-                    <span className="text-[12px] text-foreground/60">N/A</span>
-                  )}
-                </td>
-                <td
-                  className={cn(
-                    'sticky right-0 border-b border-gray-200 dark:border-border bg-background p-0',
-                    'shadow-[inset_1px_0_0_0_#d1d5db] dark:shadow-[inset_1px_0_0_0_rgb(255_255_255_/_0.1)]',
-                    selectedRows.has(row.$id) && 'bg-sky-100 dark:bg-sky-950',
-                  )}
-                  style={{ width: '40px', minWidth: '40px', maxWidth: '40px' }}
-                >
-                  <div className="flex h-full w-[40px] items-center justify-center py-1.5">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="rounded p-1 hover:bg-muted"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleRowClick(row)
-                          }}
-                        >
-                          Update Row
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>Duplicate</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          Delete Row
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </td>
-              </tr>
+                  <td className={cn('px-3 py-1.5', bodyCellBorderClass)}>
+                    <span className="text-[12px] text-muted-foreground">
+                      {row.$sequence ?? row.rowNumber}
+                    </span>
+                  </td>
+                  <td
+                    className={cn(
+                      'w-[180px] px-3 py-1.5',
+                      columns.length === 0
+                        ? 'border-b border-gray-200 dark:border-border'
+                        : bodyCellBorderClass,
+                    )}
+                  >
+                    <CopyableId id={row.$id} size="xs" />
+                  </td>
+                  {columns.map((col: string) => (
+                    <td
+                      key={col}
+                      className={cn('px-3 py-1.5', bodyCellBorderClass)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleCellClick(row, col)
+                      }}
+                    >
+                      {(() => {
+                        const { full, display, isNull } = formatCellValue(
+                          row.data[col as keyof typeof row.data] as
+                            | string
+                            | number
+                            | boolean
+                            | Record<string, unknown>
+                            | null
+                            | undefined,
+                        )
+                        // Only apply RTL detection to string values
+                        const cellValue = row.data[col as keyof typeof row.data]
+                        const isRTLContent =
+                          typeof cellValue === 'string' ? isRTL(cellValue) : false
+                        return (
+                          <span
+                            className={cn(
+                              'block max-w-[220px] truncate whitespace-nowrap text-[12px]',
+                              isNull ? 'text-foreground/60' : 'text-foreground',
+                            )}
+                            title={full}
+                            dir={isRTLContent ? 'rtl' : 'ltr'}
+                          >
+                            {display}
+                          </span>
+                        )
+                      })()}
+                    </td>
+                  ))}
+                  <td
+                    className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {row.$createdAt ? (
+                      <DateTooltip
+                        date={new Date(row.$createdAt)}
+                        className="text-[12px] text-muted-foreground"
+                      />
+                    ) : (
+                      <span className="text-[12px] text-foreground/60">N/A</span>
+                    )}
+                  </td>
+                  <td
+                    className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {row.$updatedAt ? (
+                      <DateTooltip
+                        date={new Date(row.$updatedAt)}
+                        className="text-[12px] text-muted-foreground"
+                      />
+                    ) : (
+                      <span className="text-[12px] text-foreground/60">N/A</span>
+                    )}
+                  </td>
+                  <td
+                    className={cn(
+                      'sticky right-0 border-b border-gray-200 dark:border-border bg-background p-0',
+                      'shadow-[inset_1px_0_0_0_#d1d5db] dark:shadow-[inset_1px_0_0_0_rgb(255_255_255_/_0.1)]',
+                      selectedRows.has(row.$id) && 'bg-sky-100 dark:bg-sky-950',
+                    )}
+                    style={{ width: '40px', minWidth: '40px', maxWidth: '40px' }}
+                  >
+                    <div className="flex h-full w-[40px] items-center justify-center py-1.5">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="rounded p-1 hover:bg-muted"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleRowClick(row)
+                            }}
+                          >
+                            Update row
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              duplicateRowMutation.mutate(row)
+                            }}
+                            disabled={duplicateRowMutation.isPending}
+                          >
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelectedRows(new Set([row.$id]))
+                              setDeleteDialogOpen(true)
+                            }}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </td>
+                </tr>
+              </RowContextMenu>
             ))}
           </tbody>
         </table>
@@ -5809,10 +6040,14 @@ function RowsSpreadsheet({
       {/* Row Update Drawer */}
       <RowEditDrawer
         open={editDrawerOpen}
-        onOpenChange={setEditDrawerOpen}
+        onOpenChange={(open) => {
+          setEditDrawerOpen(open)
+          if (!open) setDrawerInitialTab(null)
+        }}
         row={selectedRowForEdit}
         tableName={table.name}
         focusedField={focusedField}
+        initialTab={drawerInitialTab ?? undefined}
         columns={apiColumns}
         onSave={handleSaveRow}
         isSaving={saveRowMutation.isPending}

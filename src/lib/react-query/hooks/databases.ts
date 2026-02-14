@@ -185,6 +185,150 @@ export async function createProjectTable(
   })
 }
 
+/** Column definition for createTable (key, type, required, and type-specific options) */
+export type CreateTableColumnDef = Record<string, unknown>
+
+/** Index definition for createTable (key, type, attributes, optional orders and lengths) */
+export type CreateTableIndexDef = {
+  key: string
+  type: string
+  attributes: string[]
+  orders?: string[]
+  lengths?: number[]
+}
+
+/**
+ * Create a new table with optional column and index structure.
+ * Used for "create table similar to" flow.
+ */
+export async function createProjectTableWithStructure(
+  projectId: string,
+  databaseId: string,
+  data: {
+    tableId?: string | null
+    name: string
+    columns?: CreateTableColumnDef[]
+    indexes?: object[]
+  },
+) {
+  if (!projectId || !databaseId) {
+    throw new Error('Project ID and Database ID are required')
+  }
+  const projectSdk = sdk.forProject(projectId)
+  const tableId =
+    data.tableId && data.tableId.trim() !== ''
+      ? data.tableId.trim()
+      : ID.unique()
+
+  return await projectSdk.tablesDB.createTable({
+    databaseId,
+    tableId,
+    name: data.name.trim(),
+    columns: data.columns?.length ? data.columns : undefined,
+    indexes: data.indexes?.length ? data.indexes : undefined,
+  })
+}
+
+/**
+ * Fetch table columns and indexes via listColumns/listIndexes and map to createTable format.
+ * Only includes columns and indexes with status 'available'. Used for "create similar" flow.
+ */
+export async function fetchTableStructureForCopy(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+): Promise<{
+  columns: CreateTableColumnDef[]
+  indexes: CreateTableIndexDef[]
+}> {
+  if (!projectId || !databaseId || !tableId) {
+    return { columns: [], indexes: [] }
+  }
+  const projectSdk = sdk.forProject(projectId)
+
+  let list: Models.ColumnList
+  try {
+    list = await projectSdk.tablesDB.listColumns({
+      databaseId,
+      tableId,
+      total: true,
+    })
+  } catch {
+    return { columns: [], indexes: [] }
+  }
+
+  const columns = list.columns ?? []
+  const columnDefs: CreateTableColumnDef[] = []
+  for (const col of columns) {
+    if ((col as { status?: string }).status !== 'available') continue
+    const c = col as Record<string, unknown>
+    const key = (c.key as string) || ''
+    const type = (c.type as string) || 'string'
+    const required = !!c.required
+    const array = !!c.array
+    const def: CreateTableColumnDef = {
+      key,
+      type,
+      required,
+      ...(array && { array: true }),
+    }
+    if (type === 'string' || type === 'varchar' || type === 'text' || type === 'mediumtext' || type === 'longtext') {
+      if (typeof c.size === 'number') def.size = c.size
+      else if (type === 'varchar') def.size = 255
+      else if (type === 'string') def.size = 255
+    }
+    if (c.default !== undefined && c.default !== null) def.default = c.default
+    if (type === 'integer' || type === 'double') {
+      if (typeof c.min !== 'undefined') def.min = c.min
+      if (typeof c.max !== 'undefined') def.max = c.max
+    }
+    if (type === 'enum' && Array.isArray(c.elements)) def.elements = c.elements
+    if (type === 'datetime' && typeof c.format === 'string') def.format = c.format
+    if (type === 'relationship') {
+      def.relatedTable = c.relatedTable
+      def.relationType = c.relationType ?? c.relationshipType
+      if (typeof c.twoWay === 'boolean') def.twoWay = c.twoWay
+      if (typeof c.twoWayKey === 'string') def.twoWayKey = c.twoWayKey
+      if (typeof c.onDelete === 'string') def.onDelete = c.onDelete
+    }
+    if (type === 'point' || type === 'linestring' || type === 'polygon') {
+      if (typeof c.format === 'string') def.format = c.format
+    }
+    if (typeof c.encrypt === 'boolean') def.encrypt = c.encrypt
+    columnDefs.push(def)
+  }
+
+  let indexList: Models.ColumnIndexList
+  try {
+    indexList = await projectSdk.tablesDB.listIndexes({
+      databaseId,
+      tableId,
+      total: true,
+    })
+  } catch {
+    return { columns: columnDefs, indexes: [] }
+  }
+
+  const indexDefs: CreateTableIndexDef[] = []
+  const rawIndexes = (indexList.indexes ?? []) as Models.ColumnIndex[]
+  for (const idx of rawIndexes) {
+    if (idx.status !== 'available') continue
+    const { key, type, columns: indexColumns, orders, lengths } = idx
+    if (!key || !type || !Array.isArray(indexColumns) || indexColumns.length === 0)
+      continue
+    const def: CreateTableIndexDef = {
+      key,
+      type,
+      attributes: indexColumns,
+    }
+    if (Array.isArray(orders) && orders.length > 0) def.orders = orders
+    if (Array.isArray(lengths) && lengths.length > 0) def.lengths = lengths
+    indexDefs.push(def)
+  }
+
+  return { columns: columnDefs, indexes: indexDefs }
+}
+
 /**
  * Query function to fetch tables (collections) for a database
  *
@@ -336,6 +480,33 @@ export async function fetchProjectTableRows(
     rows: response.rows || response.documents || [],
     total: response.total || 0,
   }
+}
+
+/**
+ * Fetch a single row by ID. Used when opening the row drawer from a shared link (hash).
+ */
+export async function fetchProjectTableRow(
+  projectId: string,
+  databaseId: string,
+  tableId: string,
+  rowId: string,
+) {
+  if (!projectId || !databaseId || !tableId || !rowId) {
+    return null
+  }
+  const projectSdk = sdk.forProject(projectId)
+  try {
+    if (typeof projectSdk.tablesDB.getRow === 'function') {
+      return await projectSdk.tablesDB.getRow({
+        databaseId,
+        tableId,
+        rowId,
+      })
+    }
+  } catch {
+    // Row may not exist or no permission
+  }
+  return null
 }
 
 /**

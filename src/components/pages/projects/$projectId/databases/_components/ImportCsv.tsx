@@ -23,7 +23,7 @@ import {
 } from '@/lib/react-query/hooks'
 import { useSessionMigrations } from '@/components/global/providers/SessionMigrationsContext'
 import { useQueryClient } from '@tanstack/react-query'
-import { sdk } from '@/lib/appwrite/sdk'
+import { sdk, getProjectRegion } from '@/lib/appwrite/sdk'
 import { toast } from 'sonner'
 import {
   Upload,
@@ -271,47 +271,32 @@ export function ImportCsv({
 
   const handleSubmitUpload = async () => {
     if (!file || !projectId || !databaseId || !tableId) return
-    const bucketForUpload =
-      buckets.length > 0
-        ? buckets.find((b) => b.$id === 'default') ?? buckets[0]
-        : null
-    if (!bucketForUpload) {
-      toast.error(
-        'No storage bucket found. Create a bucket in Storage first, or select a file from an existing bucket.',
-      )
-      return
-    }
-    const bucketId = bucketForUpload.$id
     setUploading(true)
     try {
-      const projectSdk = sdk.forProject(projectId)
+      // Upload to console's default bucket (backend can read it for import).
+      // Same pattern as the old Console: local file → console storage → createCSVImport(internalFile: true).
+      const region = getProjectRegion(projectId) ?? 'unknown'
+      const consoleSdk = sdk.forConsoleIn(region)
       const fileId = ID.unique()
-      await projectSdk.storage.createFile({
-        bucketId,
+      const uploaded = await consoleSdk.storage.createFile({
+        bucketId: 'default',
         fileId,
         file,
       })
       const migration = await createImport.mutateAsync({
-        bucketId,
-        fileId,
+        bucketId: uploaded.bucketId ?? 'default',
+        fileId: uploaded.$id,
         resourceId: `${databaseId}:${tableId}`,
-        internalFile: false,
+        internalFile: true,
       })
       if (migration?.$id) addImportId(projectId, migration.$id)
+      toast.success('CSV import started')
       reset()
       onOpenChange(false)
       onSuccess?.()
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
-      const isExtensionError =
-        /extension|file type|not allowed|allowed file/i.test(message)
-      if (isExtensionError) {
-        toast.error(
-          'That bucket does not accept CSV files. In Storage, open the bucket, go to Settings, and add "csv" to allowed file extensions (or clear the list to allow all types), then try again.',
-        )
-      } else {
-        toast.error(message)
-      }
+      toast.error(message)
     } finally {
       setUploading(false)
     }

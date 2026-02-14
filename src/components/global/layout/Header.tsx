@@ -57,6 +57,8 @@ interface ConsoleHeaderProps {
   projectId?: string
   onCommandCenterOpen?: () => void
   onCreateOrganization?: () => void
+  /** When true, search is hidden (e.g. when native app bar is shown above) */
+  hideSearch?: boolean
 }
 
 export function ConsoleHeader({
@@ -65,6 +67,7 @@ export function ConsoleHeader({
   projectId,
   onCommandCenterOpen,
   onCreateOrganization,
+  hideSearch = false,
 }: ConsoleHeaderProps) {
   const { openCommandCenter: contextOpenCommandCenter } =
     useKeyboardShortcutsContext()
@@ -376,25 +379,29 @@ export function ConsoleHeader({
 
         {/* Right: Actions */}
         <div className="flex shrink-0 items-center gap-1 sm:gap-2 min-w-0">
-          {/* Search - hidden on small containers */}
-          <button
-            onClick={openCommandCenter}
-            className="hidden h-8 items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
-          >
-            <Search className="h-3.5 w-3.5 shrink-0" />
-            <span className="hidden @[850px]:inline">Search...</span>
-            <kbd className="ml-2 hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground @[850px]:inline shrink-0">
-              ⌘K
-            </kbd>
-          </button>
+          {/* Search - hidden on small containers or when hideSearch (e.g. native app bar) */}
+          {!hideSearch && (
+            <>
+              <button
+                onClick={openCommandCenter}
+                className="hidden h-8 items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
+              >
+                <Search className="h-3.5 w-3.5 shrink-0" />
+                <span className="hidden @[850px]:inline">Search...</span>
+                <kbd className="ml-2 hidden rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground @[850px]:inline shrink-0">
+                  ⌘K
+                </kbd>
+              </button>
 
-          {/* Mobile search icon */}
-          <button
-            onClick={openCommandCenter}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
-          >
-            <Search className="h-4 w-4" />
-          </button>
+              {/* Mobile search icon */}
+              <button
+                onClick={openCommandCenter}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+            </>
+          )}
 
           {/* Feedback - hidden on small containers */}
           <div className="hidden @[800px]:flex shrink-0">
@@ -609,7 +616,7 @@ export function ConsoleHeader({
 
               <DropdownMenuItem
                 onClick={() => signOut()}
-                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-red-500 hover:bg-red-500/10 hover:text-red-500 focus:bg-red-500/10 focus:text-red-500"
+                className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Sign out</span>
