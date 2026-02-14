@@ -45,7 +45,7 @@ class Executions extends Action
         }
 
         $project = new Document($payload['project'] ?? []);
-        if ($project->getId() != '6862e6a6000cce69f9da') {
+        if ($project->getId() != '6862e6ad0007bea1226e') {
             $dbForProject->upsertDocument('executions', $execution);
         }
     }
