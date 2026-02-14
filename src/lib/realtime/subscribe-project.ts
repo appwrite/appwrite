@@ -26,6 +26,8 @@ function hasEvent(events: string[], name: string): boolean {
   return false
 }
 
+export type OnMigrationEvent = (payload: unknown) => void
+
 /**
  * Handle a realtime event: invalidate or refetch the relevant queries.
  * For project-scoped channels we only react when the event is for the current project.
@@ -34,6 +36,7 @@ function handleRealtimeEvent(
   queryClient: QueryClient,
   projectId: string,
   response: RealtimeResponseEvent<unknown>,
+  onMigrationEvent?: OnMigrationEvent,
 ): void {
   const { events, channels } = response
 
@@ -142,6 +145,9 @@ function handleRealtimeEvent(
     queryClient.invalidateQueries({
       queryKey: ['migration', 'project', projectId],
     })
+    if (response.payload != null) {
+      onMigrationEvent?.(response.payload)
+    }
   }
 
   if (events.includes(`projects.${projectId}.ping`)) {
@@ -169,6 +175,10 @@ export type RealtimeSubscriptionCleanup = () => Promise<void>
 // duplicate WebSockets.
 let tail: Promise<void> = Promise.resolve()
 
+export interface SubscribeProjectRealtimeOptions {
+  onMigrationEvent?: OnMigrationEvent
+}
+
 /**
  * Subscribe to realtime events for the given project.
  * Uses the console client (project=console) with channel ['console'] only.
@@ -181,9 +191,11 @@ let tail: Promise<void> = Promise.resolve()
 export async function subscribeProjectRealtime(
   projectId: string,
   queryClient: QueryClient,
+  options?: SubscribeProjectRealtimeOptions,
 ): Promise<RealtimeSubscriptionCleanup> {
+  const { onMigrationEvent } = options ?? {}
   const handler = (response: RealtimeResponseEvent<unknown>) => {
-    handleRealtimeEvent(queryClient, projectId, response)
+    handleRealtimeEvent(queryClient, projectId, response, onMigrationEvent)
   }
 
   // Acquire lock: next caller will wait on our release (resolveNext in cleanup)

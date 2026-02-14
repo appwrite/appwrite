@@ -13,7 +13,12 @@ import type {
   UploadItem,
 } from '@/lib/upload-queue/types'
 
-export function GlobalUploadProgress() {
+interface GlobalUploadProgressProps {
+  /** When true, renders without fixed positioning for use inside a shared progress panel */
+  embedded?: boolean
+}
+
+export function GlobalUploadProgress({ embedded }: GlobalUploadProgressProps = {}) {
   const { activeUploads } = useActiveUploads()
   const queryClient = useQueryClient()
   const invalidatedUploadsRef = useRef<Set<string>>(new Set())
@@ -112,11 +117,17 @@ export function GlobalUploadProgress() {
     await uploadManager.cancelUpload(uploadId)
   }
 
+  const handleDismiss = async (uploadId: string) => {
+    await uploadManager.removeUploadItem(uploadId)
+  }
+
   return (
     <UploadProgress
       uploads={activeUploads}
       onCancel={handleCancel}
-      className="bottom-4 right-4" // Position on right/end side
+      onDismiss={handleDismiss}
+      embedded={embedded}
+      className={embedded ? undefined : 'bottom-4 right-4'}
     />
   )
 }

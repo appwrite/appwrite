@@ -239,10 +239,10 @@ class UploadManager {
         progress: 100,
       })
 
-      // Clean up after a delay
+      // Keep completed item in DB so UI can show "View file" link (clean up after 5 min)
       setTimeout(() => {
         db.deleteUploadItem(item.id)
-      }, 5000)
+      }, 5 * 60 * 1000)
     } catch (error: unknown) {
       if (error.name === 'AbortError' || error.message?.includes('aborted')) {
         // Upload was cancelled
@@ -402,12 +402,15 @@ class UploadManager {
   }
 
   /**
-   * Get all active uploads (pending or uploading) across all buckets
+   * Get uploads for display: active (pending/uploading) plus recently completed (so UI can show "View file" link)
    */
   async getActiveUploads(): Promise<UploadItem[]> {
-    const pending = await db.getUploadItems('pending')
-    const uploading = await db.getUploadItems('uploading')
-    return [...pending, ...uploading]
+    const [pending, uploading, completed] = await Promise.all([
+      db.getUploadItems('pending'),
+      db.getUploadItems('uploading'),
+      db.getUploadItems('completed'),
+    ])
+    return [...pending, ...uploading, ...completed]
   }
 
   /**
@@ -429,6 +432,13 @@ class UploadManager {
 
     // Process the queue
     await this.processQueue()
+  }
+
+  /**
+   * Remove a completed (or any) upload from the queue (e.g. when user dismisses the progress item)
+   */
+  async removeUploadItem(id: string): Promise<void> {
+    await db.deleteUploadItem(id)
   }
 
   /**

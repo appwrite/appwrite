@@ -82,6 +82,8 @@ import {
 import { BackupsView } from './Backups'
 import { CreateDatabase } from './CreateDatabase'
 import { CreateTable } from './CreateTable'
+import { ImportCsv } from './_components/ImportCsv'
+import { ExportCsv } from './_components/ExportCsv'
 import { ComingSoonCurtain } from '@/components/ui/coming-soon-curtain'
 import { SchemaVisualizer } from './SchemaVisualizer'
 import { SchemaExportDialog } from './SchemaExport'
@@ -1212,6 +1214,8 @@ export function TableView({
   const minAnimationDuration = 1000 // 1 second for at least one full rotation
   const [hasRows, setHasRows] = useState(true) // Track if table has rows
   const [, setRowsTotal] = useState<number | undefined>(undefined) // Track total row count
+  const [importCsvOpen, setImportCsvOpen] = useState(false)
+  const [exportCsvOpen, setExportCsvOpen] = useState(false)
   const [createTableDialogOpen, setCreateTableDialogOpen] = useState(false)
   const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
     useState(false)
@@ -1844,12 +1848,19 @@ export function TableView({
           isRefreshing={isRefreshingRows}
           showImport={!isDatabaseLevelView && activeTab === 'rows'}
           onImport={
-            !isDatabaseLevelView && activeTab === 'rows' ? () => {} : undefined
+            !isDatabaseLevelView && activeTab === 'rows'
+              ? () => setImportCsvOpen(true)
+              : undefined
           }
+          importTooltip="Import CSV"
           showExport={!isDatabaseLevelView && activeTab === 'rows'}
           onExport={
-            !isDatabaseLevelView && activeTab === 'rows' ? () => {} : undefined
+            !isDatabaseLevelView && activeTab === 'rows'
+              ? () => setExportCsvOpen(true)
+              : undefined
           }
+          exportTooltip="Export CSV"
+          exportDisabled={!isDatabaseLevelView && activeTab === 'rows' && !hasRows}
           beforeCreateButtons={
             isDatabaseLevelView ? undefined : activeTab === 'columns' ? (
               <Button
@@ -2045,6 +2056,26 @@ export function TableView({
         onCreate={(data) => createTableMutation.mutate(data)}
         isLoading={createTableMutation.isPending}
       />
+      {/* Import CSV Dialog */}
+      {tableId !== '-' && (
+        <ImportCsv
+          projectId={projectId}
+          databaseId={databaseId}
+          tableId={tableId}
+          open={importCsvOpen}
+          onOpenChange={setImportCsvOpen}
+        />
+      )}
+      {/* Export CSV Dialog */}
+      {tableId !== '-' && (
+        <ExportCsv
+          projectId={projectId}
+          databaseId={databaseId}
+          tableId={tableId}
+          open={exportCsvOpen}
+          onOpenChange={setExportCsvOpen}
+        />
+      )}
     </div>
   )
 }

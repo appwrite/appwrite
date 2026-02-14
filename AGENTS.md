@@ -288,6 +288,20 @@ All tables must use consistent styling matching the users table pattern for visu
 
 See `src/components/pages/projects/$projectId/auth/View.tsx` for the canonical users table implementation.
 
+### Long-running task progress
+
+Use one unified progress panel per scope (e.g. on project routes: file uploads, CSV export, CSV import together). All task types share the same card style; there is no wrapper or group header around a type.
+
+**Structure:**
+
+- **Single panel**: One fixed area (e.g. bottom-right) that contains all progress items. On project routes use a single panel with `GlobalUploadProgress embedded`, `CsvImportBox`, and `CsvExportBox` (or equivalent) stacked with `gap-2`. Outside that scope (e.g. root), show only the relevant progress (e.g. uploads) without the project-specific items.
+- **Flat list of cards**: Do not wrap one task type in its own box (no “CSV export” / “CSV import” header, no collapse, no group dismiss). Each task is one card in a flat list. Use `w-full max-w-sm space-y-2` for the list container; each item is a standalone card.
+- **Card style** (same for uploads, CSV export, CSV import): `rounded-lg border border-border bg-background p-3`. Inside: icon (status-based) + label row, then `ProgressBarRow` from `@/components/global/shared/ProgressBarRow`, then optional action (e.g. Download, View details). Provide a per-card dismiss (X button) so users can remove individual items; no “dismiss all” in a group header.
+- **Icons**: `Loader2` with `animate-spin` for in-progress, `CheckCircle2` (e.g. `text-green-600`) for completed, `AlertCircle` with `text-destructive` for failed.
+- **Auto-actions on completion**: When a task completes (e.g. export ready to download), trigger the action (e.g. open download URL) only when the status **transitions** to completed (track previous status in a ref). Do not run the action when the task is already completed on initial load (avoids re-downloads on reload).
+
+**Reference:** `UploadProgress`, `CsvExportBox`, `CsvImportBox` in `components/global/`; project layout panel in `src/routes/_public/projects.$projectId.tsx`.
+
 ### Service View Pattern
 
 Standard structure for service pages (Storage, Functions, Databases, etc.):
@@ -906,6 +920,7 @@ Follow the modal structure pattern above. For no-content modals, skip content se
 | Models types           | Always `Models.*` from `@appwrite.io/console`                                                                                                      |
 | Table header           | `hover:bg-transparent border-b border-border` on row, `px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider` on head |
 | Table cells            | `px-4 py-3` on all cells (preserve special padding like `pl-6 sm:pl-8` where needed)                                                               |
+| Long-running progress  | One panel per scope; flat list of cards (no wrapper per type); same card style + ProgressBarRow; per-card dismiss; auto-action only on status transition to completed |
 
 ---
 

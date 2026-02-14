@@ -4,6 +4,9 @@ import { ConsoleLayout } from '@/components/global/layout/ConsoleLayout'
 import { KeyboardShortcutsProvider } from '@/components/global/providers/KeyboardShortcuts'
 import { RealtimeProvider } from '@/components/global/providers/RealtimeProvider'
 import { RequireAuth } from '@/components/global/auth/RequireAuth'
+import { CsvExportBox, CsvImportBox } from '@/components/global/csv-migrations'
+import { SessionMigrationsProvider } from '@/components/global/providers/SessionMigrationsContext'
+import { GlobalUploadProgress } from '@/components/global/shared/GlobalUploadProgress'
 import {
   fetchProject,
   organizationPlanQueryOptions,
@@ -175,8 +178,9 @@ function ProjectLayout() {
 
   return (
     <RequireAuth>
-      <RealtimeProvider projectId={projectId}>
-        <KeyboardShortcutsProvider projectId={projectId}>
+      <SessionMigrationsProvider>
+        <RealtimeProvider projectId={projectId}>
+          <KeyboardShortcutsProvider projectId={projectId}>
           <ConsoleLayout
             sidebar={{
               projectId,
@@ -191,8 +195,15 @@ function ProjectLayout() {
           >
             <Outlet />
           </ConsoleLayout>
-        </KeyboardShortcutsProvider>
-      </RealtimeProvider>
+          {/* Unified progress panel: file uploads + CSV export/import (same style, no collision) */}
+          <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
+            <GlobalUploadProgress embedded />
+            <CsvImportBox projectId={projectId} />
+            <CsvExportBox projectId={projectId} />
+          </div>
+          </KeyboardShortcutsProvider>
+        </RealtimeProvider>
+      </SessionMigrationsProvider>
     </RequireAuth>
   )
 }

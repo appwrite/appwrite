@@ -65,9 +65,17 @@ interface ServiceHeaderProps {
   /** Show import button */
   showImport?: boolean
   onImport?: () => void
+  /** Tooltip for import button (e.g. "Import CSV") */
+  importTooltip?: string
+  /** Disable import button (e.g. while import is starting) */
+  importDisabled?: boolean
   /** Show export button */
   showExport?: boolean
   onExport?: () => void
+  /** Tooltip for export button (e.g. "Export CSV") */
+  exportTooltip?: string
+  /** Disable export button (e.g. when no rows to export) */
+  exportDisabled?: boolean
   /** Allow collapsing the header (hides tabs) */
   collapsible?: boolean
   /** Breadcrumbs to show above the title */
@@ -102,8 +110,12 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
       isRefreshing = false,
       showImport = false,
       onImport,
+      importTooltip,
+      importDisabled = false,
       showExport = false,
       onExport,
+      exportTooltip,
+      exportDisabled = false,
       collapsible = false,
       breadcrumbs,
       hideTitle = false,
@@ -403,13 +415,14 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         variant="outline"
                         size="sm"
                         onClick={onImport}
-                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                        disabled={importDisabled}
+                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
                         <Upload className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>Import</p>
+                      <p>{importTooltip ?? 'Import'}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -422,13 +435,14 @@ export const ServiceHeader = forwardRef<ServiceHeaderRef, ServiceHeaderProps>(
                         variant="outline"
                         size="sm"
                         onClick={onExport}
-                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                        disabled={exportDisabled}
+                        className="h-9 w-9 p-0 border-border bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <p>Export</p>
+                      <p>{exportTooltip ?? 'Export'}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
