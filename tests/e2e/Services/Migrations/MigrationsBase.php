@@ -1376,7 +1376,7 @@ trait MigrationsBase
 
         // Verify the downloaded content is valid CSV
         $csvData = $downloadWithJwt['body'];
-        var_dump($csvData);
+
         $this->assertNotEmpty($csvData, 'CSV export should not be empty');
         $this->assertStringContainsString('name', $csvData, 'CSV should contain the name column header');
         $this->assertStringContainsString('email', $csvData, 'CSV should contain the email column header');
