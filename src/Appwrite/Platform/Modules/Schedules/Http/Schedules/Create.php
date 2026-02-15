@@ -32,18 +32,18 @@ class Create extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
-            ->setHttpPath('/v1/schedules')
+            ->setHttpPath('/v1/projects/:projectId/schedules')
             ->desc('Create schedule')
-            ->groups(['api', 'schedules'])
+            ->groups(['api', 'projects'])
             ->label('scope', 'schedules.write')
             ->label('audits.event', 'schedule.create')
             ->label('audits.resource', 'schedule/{response.$id}')
             ->label('sdk', new Method(
-                namespace: 'schedules',
+                namespace: 'projects',
                 group: 'schedules',
-                name: 'create',
+                name: 'createSchedule',
                 description: '/docs/references/schedules/create.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
@@ -51,29 +51,37 @@ class Create extends Action
                     )
                 ],
             ))
+            ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('resourceType', '', new WhiteList([SCHEDULE_RESOURCE_TYPE_FUNCTION, SCHEDULE_RESOURCE_TYPE_EXECUTION, SCHEDULE_RESOURCE_TYPE_MESSAGE], true), 'The resource type for the schedule. Possible values: ' . implode(', ', [SCHEDULE_RESOURCE_TYPE_FUNCTION, SCHEDULE_RESOURCE_TYPE_EXECUTION, SCHEDULE_RESOURCE_TYPE_MESSAGE]) . '.')
             ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
             ->param('schedule', '', new Cron(), 'Schedule CRON expression.')
             ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
             ->inject('response')
-            ->inject('project')
-            ->inject('dbForProject')
             ->inject('dbForPlatform')
+            ->inject('getProjectDB')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
     public function action(
+        string $projectId,
         string $resourceType,
         string $resourceId,
         string $schedule,
         bool $active,
         Response $response,
-        Document $project,
-        Database $dbForProject,
         Database $dbForPlatform,
+        callable $getProjectDB,
         Authorization $authorization,
     ): void {
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $dbForProject = $getProjectDB($project);
+
         $collection = match ($resourceType) {
             SCHEDULE_RESOURCE_TYPE_FUNCTION => 'functions',
             SCHEDULE_RESOURCE_TYPE_EXECUTION => 'executions',

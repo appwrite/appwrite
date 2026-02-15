@@ -8,7 +8,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -27,16 +26,16 @@ class Get extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/schedules/:scheduleId')
+            ->setHttpPath('/v1/projects/:projectId/schedules/:scheduleId')
             ->desc('Get schedule')
-            ->groups(['api', 'schedules'])
+            ->groups(['api', 'projects'])
             ->label('scope', 'schedules.read')
             ->label('sdk', new Method(
-                namespace: 'schedules',
+                namespace: 'projects',
                 group: 'schedules',
-                name: 'get',
+                name: 'getSchedule',
                 description: '/docs/references/schedules/get.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -44,21 +43,27 @@ class Get extends Action
                     )
                 ]
             ))
+            ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('scheduleId', '', new UID(), 'Schedule ID.')
             ->inject('response')
-            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
     public function action(
+        string $projectId,
         string $scheduleId,
         Response $response,
-        Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
     ): void {
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         $schedule = $authorization->skip(
             fn () => $dbForPlatform->getDocument('schedules', $scheduleId)
         );

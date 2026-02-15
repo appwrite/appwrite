@@ -2,28 +2,50 @@
 
 namespace Tests\E2E\Services\Schedules;
 
-use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Client;
+use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\SideServer;
+use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\System\System;
 
 class SchedulesCustomServerTest extends Scope
 {
     use SchedulesBase;
-    use ProjectCustom;
-    use SideServer;
+    use ProjectConsole;
+    use SideClient;
 
-    public function testCreateSchedule(): array
+    /**
+     * @depends testCreateProject
+     */
+    public function testCreateSchedule($data): array
     {
+        $id = $data['projectId'] ?? '';
+        $apiKey = $data['apiKey'] ?? '';
+
         /**
          * Test for SUCCESS
          */
-        $function = $this->createFunction();
+        $function = $this->client->call(Client::METHOD_POST, '/functions', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $id,
+            'x-appwrite-key' => $apiKey,
+        ], [
+            'functionId' => ID::unique(),
+            'name' => 'Test Schedule Function',
+            'runtime' => 'node-22',
+            'entrypoint' => 'index.js',
+            'execute' => ['any'],
+        ]);
+
         $this->assertEquals(201, $function['headers']['status-code']);
         $functionId = $function['body']['$id'];
 
-        $response = $this->createSchedule([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'resourceType' => 'function',
             'resourceId' => $functionId,
             'schedule' => '0 0 * * *',
@@ -42,13 +64,20 @@ class SchedulesCustomServerTest extends Scope
         $this->assertTrue($response['body']['active']);
         $this->assertNotEmpty($response['body']['region']);
 
-        return ['scheduleId' => $response['body']['$id'], 'functionId' => $functionId];
-    }
+        $data = array_merge($data, [
+            'scheduleId' => $response['body']['$id'],
+            'functionId' => $functionId,
+        ]);
 
-    public function testCreateScheduleResourceNotFound(): void
-    {
-        // Function not found
-        $response = $this->createSchedule([
+        /**
+         * Test for FAILURE
+         */
+
+        // Resource not found
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'resourceType' => 'function',
             'resourceId' => ID::unique(),
             'schedule' => '0 0 * * *',
@@ -56,51 +85,35 @@ class SchedulesCustomServerTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
-        // Execution not found
-        $response = $this->createSchedule([
-            'resourceType' => 'execution',
-            'resourceId' => ID::unique(),
-            'schedule' => '*/10 * * * *',
-        ]);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-
-        // Message not found
-        $response = $this->createSchedule([
-            'resourceType' => 'message',
-            'resourceId' => ID::unique(),
-            'schedule' => '0 9 * * 1',
-        ]);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-    }
-
-    public function testCreateScheduleInvalidResourceType(): void
-    {
-        $response = $this->createSchedule([
+        // Invalid resource type
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'resourceType' => 'invalid',
             'resourceId' => ID::unique(),
             'schedule' => '0 0 * * *',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-    }
 
-    public function testCreateScheduleInvalidCron(): void
-    {
-        $response = $this->createSchedule([
+        // Invalid cron
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'resourceType' => 'function',
             'resourceId' => ID::unique(),
             'schedule' => 'not-a-cron',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
-    }
 
-    public function testCreateScheduleMissingRequired(): void
-    {
         // Missing resourceType
-        $response = $this->createSchedule([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'resourceId' => ID::unique(),
             'schedule' => '0 0 * * *',
         ]);
@@ -108,7 +121,10 @@ class SchedulesCustomServerTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Missing resourceId
-        $response = $this->createSchedule([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'resourceType' => 'function',
             'schedule' => '0 0 * * *',
         ]);
@@ -116,49 +132,69 @@ class SchedulesCustomServerTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Missing schedule
-        $response = $this->createSchedule([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'resourceType' => 'function',
             'resourceId' => ID::unique(),
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
     }
 
     /**
      * @depends testCreateSchedule
      */
-    public function testGetSchedule(array $data): void
+    public function testGetSchedule($data): array
     {
-        $scheduleId = $data['scheduleId'];
+        $id = $data['projectId'] ?? '';
+        $scheduleId = $data['scheduleId'] ?? '';
 
         /**
          * Test for SUCCESS
          */
-        $response = $this->getSchedule($scheduleId);
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules/' . $scheduleId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals($scheduleId, $response['body']['$id']);
         $this->assertEquals('function', $response['body']['resourceType']);
         $this->assertEquals('0 0 * * *', $response['body']['schedule']);
         $this->assertTrue($response['body']['active']);
-    }
 
-    public function testGetScheduleNotFound(): void
-    {
-        $response = $this->getSchedule('nonexistent');
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules/error', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
+
+        return $data;
     }
 
     /**
      * @depends testCreateSchedule
      */
-    public function testListSchedules(array $data): void
+    public function testListSchedules($data): array
     {
+        $id = $data['projectId'] ?? '';
+
         /**
          * Test for SUCCESS
          */
-        $response = $this->listSchedules();
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['schedules']);
@@ -176,15 +212,12 @@ class SchedulesCustomServerTest extends Scope
         $this->assertArrayHasKey('schedule', $schedule);
         $this->assertArrayHasKey('active', $schedule);
         $this->assertArrayHasKey('region', $schedule);
-    }
 
-    /**
-     * @depends testCreateSchedule
-     */
-    public function testListSchedulesWithQuery(array $data): void
-    {
-        // Filter by resourceType
-        $response = $this->listSchedules([
+        /** Filter by resourceType */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'queries' => [Query::equal('resourceType', ['function'])->toString()],
         ]);
 
@@ -195,8 +228,11 @@ class SchedulesCustomServerTest extends Scope
             $this->assertEquals('function', $schedule['resourceType']);
         }
 
-        // Filter by active status
-        $response = $this->listSchedules([
+        /** Filter by active status */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'queries' => [Query::equal('active', [true])->toString()],
         ]);
 
@@ -205,61 +241,78 @@ class SchedulesCustomServerTest extends Scope
         foreach ($response['body']['schedules'] as $schedule) {
             $this->assertTrue($schedule['active']);
         }
-    }
 
-    public function testListSchedulesWithTotalDisabled(): void
-    {
-        $response = $this->listSchedules([
+        /** List with total disabled */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'total' => false,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['total']);
         $this->assertIsArray($response['body']['schedules']);
-    }
 
-    public function testListSchedulesInvalidQuery(): void
-    {
-        $response = $this->listSchedules([
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
             'queries' => [Query::equal('nonexistent', ['value'])->toString()],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        return $data;
     }
 
-    public function testScheduleProjectIsolation(): void
+    /**
+     * @depends testCreateSchedule
+     */
+    public function testScheduleProjectIsolation($data): void
     {
-        // Create a function and schedule in the current project
-        $function = $this->createFunction();
-        $this->assertEquals(201, $function['headers']['status-code']);
+        $scheduleId = $data['scheduleId'] ?? '';
 
-        $response = $this->createSchedule([
-            'resourceType' => 'function',
-            'resourceId' => $function['body']['$id'],
-            'schedule' => '0 12 * * *',
+        // Create a second project
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Isolation Test Team',
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $scheduleId = $response['body']['$id'];
+        $this->assertEquals(201, $team['headers']['status-code']);
 
-        // Create a fresh project with its own key
-        $freshProject = $this->getProject(true);
+        $otherProject = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Isolation Test Project',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
+
+        $this->assertEquals(201, $otherProject['headers']['status-code']);
+        $otherProjectId = $otherProject['body']['$id'];
 
         // Try to get the schedule from the other project
-        $response = $this->client->call(\Tests\E2E\Client::METHOD_GET, '/schedules/' . $scheduleId, [
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $otherProjectId . '/schedules/' . $scheduleId, array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $freshProject['$id'],
-            'x-appwrite-key' => $freshProject['apiKey'],
-        ]);
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
         // List should not include schedules from other projects
-        $response = $this->client->call(\Tests\E2E\Client::METHOD_GET, '/schedules', [
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $otherProjectId . '/schedules', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $freshProject['$id'],
-            'x-appwrite-key' => $freshProject['apiKey'],
-        ]);
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
 

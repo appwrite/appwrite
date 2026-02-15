@@ -15,6 +15,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
@@ -32,16 +33,16 @@ class XList extends Action
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/schedules')
+            ->setHttpPath('/v1/projects/:projectId/schedules')
             ->desc('List schedules')
-            ->groups(['api', 'schedules'])
+            ->groups(['api', 'projects'])
             ->label('scope', 'schedules.read')
             ->label('sdk', new Method(
-                namespace: 'schedules',
+                namespace: 'projects',
                 group: 'schedules',
-                name: 'list',
+                name: 'listSchedules',
                 description: '/docs/references/schedules/list.md',
-                auth: [AuthType::ADMIN, AuthType::KEY],
+                auth: [AuthType::ADMIN],
                 responses: [
                     new SDKResponse(
                         code: Response::STATUS_CODE_OK,
@@ -49,30 +50,35 @@ class XList extends Action
                     )
                 ]
             ))
+            ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('queries', [], new Schedules(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Schedules::ALLOWED_ATTRIBUTES), true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
-            ->inject('project')
             ->inject('dbForPlatform')
             ->inject('authorization')
             ->callback($this->action(...));
     }
 
     public function action(
+        string $projectId,
         array $queries,
         bool $includeTotal,
         Response $response,
-        Document $project,
         Database $dbForPlatform,
         Authorization $authorization,
     ): void {
+        $project = $dbForPlatform->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
-        // Always scope to the current project
         $queries[] = Query::equal('projectId', [$project->getId()]);
 
         $cursor = Query::getCursorQueries($queries, false);
