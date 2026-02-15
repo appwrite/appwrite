@@ -1250,8 +1250,37 @@ trait MigrationsBase
             'size' => 255,
             'required' => false,
         ]);
-
         $this->assertEquals(202, $email['headers']['status-code']);
+
+        $text = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'regulartext',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $text['headers']['status-code']);
+
+        $mediumtext = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'mediumtext',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $mediumtext['headers']['status-code']);
+
+        $longtext = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'key' => 'longtext',
+            'required' => false,
+        ]);
+        $this->assertEquals(202, $longtext['headers']['status-code']);
 
         \sleep(3);
 
@@ -1265,7 +1294,10 @@ trait MigrationsBase
                 'documentId' => ID::unique(),
                 'data' => [
                     'name' => 'Test User ' . $i,
-                    'email' => 'user' . $i . '@appwrite.io'
+                    'email' => 'user' . $i . '@appwrite.io',
+                    'regulartext' => 'regularText',
+                    'mediumtext' => 'mediumText',
+                    'longtext' => 'longText',
                 ]
             ]);
 
@@ -1344,10 +1376,15 @@ trait MigrationsBase
 
         // Verify the downloaded content is valid CSV
         $csvData = $downloadWithJwt['body'];
+        var_dump($csvData);
         $this->assertNotEmpty($csvData, 'CSV export should not be empty');
         $this->assertStringContainsString('name', $csvData, 'CSV should contain the name column header');
         $this->assertStringContainsString('email', $csvData, 'CSV should contain the email column header');
         $this->assertStringContainsString('Test User 1', $csvData, 'CSV should contain test data');
+
+        $this->assertStringContainsString('regularText', $csvData, 'CSV should contain the text column header');
+        $this->assertStringContainsString('mediumText', $csvData, 'CSV should contain the medium column header');
+        $this->assertStringContainsString('longText', $csvData, 'CSV should contain the long text column header');
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId, [
