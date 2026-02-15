@@ -8,12 +8,23 @@ import {
   tableIndexesQueryOptions,
   tableQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const TABLES_PER_PAGE = 100
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/settings',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.database?.name ?? 'Database',
+          'Databases',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -51,6 +62,10 @@ export const Route = createFileRoute(
         tableQueryOptions(projectId, databaseId, tableId),
       ),
     ])
+    const database = queryClient.getQueryData<{ name?: string }>(
+      databaseQueryOptions(projectId, databaseId).queryKey,
+    )
+    return { database }
   },
   component: SettingsPage,
 })

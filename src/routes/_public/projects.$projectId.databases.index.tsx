@@ -5,11 +5,13 @@ import {
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const DATABASES_PER_PAGE = 25
 
 export const Route = createFileRoute('/_public/projects/$projectId/databases/')(
   {
+    head: () => ({ meta: [{ title: pageTitle('Databases') }] }),
     pendingComponent: () => (
       <div className="flex h-full items-center justify-center">
         <div className="text-muted-foreground">Loading databases...</div>

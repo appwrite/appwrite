@@ -6,11 +6,14 @@ import {
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 
+import { pageTitle } from '@/lib/utils/page-title'
+
 const PROVIDERS_PER_PAGE = 25
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/messaging/providers/',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Providers', 'Messaging') }] }),
   pendingComponent: () => (
     <div className="flex h-full items-center justify-center">
       <div className="text-muted-foreground">Loading providers...</div>

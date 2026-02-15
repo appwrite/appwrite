@@ -357,7 +357,7 @@ export function LogsListView({
               })}
             </TableBody>
           </Table>
-          <div className="px-4 py-3 sm:px-6">
+          <div className="px-4 py-2 sm:px-6">
             <Pagination
               currentPage={currentPage}
               totalItems={total}
@@ -366,6 +366,7 @@ export function LogsListView({
               onPageChange={onPageChange}
               onPageSizeChange={onPageSizeChange}
               itemLabel={itemLabel}
+              className="py-2"
             />
           </div>
         </>

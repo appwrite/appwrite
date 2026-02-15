@@ -10,6 +10,7 @@ import {
 import { fetchVcsInstallations } from '@/lib/react-query/hooks/vcs'
 import { Query } from '@appwrite.io/console'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const searchSchema = z.object({
   page: z.coerce.number().int().min(1).optional().catch(undefined),
@@ -18,6 +19,16 @@ const searchSchema = z.object({
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/deployments/',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.site?.name ?? loaderData?.site?.resourceId ?? 'Site',
+          'Sites',
+        ),
+      },
+    ],
+  }),
   validateSearch: searchSchema,
   loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)

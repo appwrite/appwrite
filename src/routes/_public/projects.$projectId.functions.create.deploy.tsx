@@ -7,10 +7,12 @@
 
 import { createFileRoute } from '@tanstack/react-router'
 import { DeployFromUrlView } from '@/components/pages/projects/$projectId/functions/create/DeployFromUrlView'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/create/deploy',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Deploy from URL', 'Functions') }] }),
   component: DeployFromUrlPage,
 })
 

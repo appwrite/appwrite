@@ -3,10 +3,21 @@ import { View } from '@/components/pages/projects/$projectId/sites/VerifyDomain'
 import { siteQueryOptions, projectQueryOptions } from '@/lib/react-query/hooks'
 import { fetchOrganizationDomains } from '@/lib/react-query/hooks/domains'
 import { sdk } from '@/lib/appwrite/sdk'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/domains/add-domain/verify/$domain',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.site?.name ?? loaderData?.site?.resourceId ?? 'Site',
+          'Sites',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

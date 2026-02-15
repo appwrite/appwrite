@@ -1,12 +1,23 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/storage/$bucketId/View'
 import { fetchBucket, fetchBucketFiles } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const FILES_PER_PAGE = 25
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/storage/$bucketId/',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.bucket?.name ?? 'Bucket',
+          'Storage',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -42,6 +53,13 @@ export const Route = createFileRoute(
           staleTime: 30 * 1000,
         }),
       ])
+      const bucket = queryClient.getQueryData<Awaited<ReturnType<typeof fetchBucket>>>([
+        'bucket',
+        'project',
+        projectId,
+        bucketId,
+      ])
+      return { bucket }
     }
   },
   component: BucketFilesPage,

@@ -1,11 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/apps/View'
 import { fetchProject, fetchPlatforms } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const STALE_TIME = 30 * 1000
 const PROJECT_STALE_TIME = 5 * 60 * 1000
 
 export const Route = createFileRoute('/_public/projects/$projectId/apps')({
+  head: () => ({ meta: [{ title: pageTitle('Apps') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return undefined
 

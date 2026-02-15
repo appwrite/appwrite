@@ -26,6 +26,8 @@ import {
   Trash2,
   Link2,
   Lock,
+  ExternalLink,
+  Square,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
@@ -47,6 +49,8 @@ interface RowContextMenuProps {
   databaseId: string
   tableId: string
   row: RowContextMenuRow
+  /** When set, right-click was on a cell; show "Copy value" in Copy submenu for this column */
+  contextColumnKey?: string | null
   onUpdateRow: (row: RowContextMenuRow) => void
   onUpdatePermissions?: (row: RowContextMenuRow) => void
   children: React.ReactNode
@@ -63,11 +67,33 @@ const rowsPath = (
   return rowId ? `${path}#row-${rowId}` : path
 }
 
+const rowJsonPayload = (row: RowContextMenuRow): Record<string, unknown> => {
+  const payload: Record<string, unknown> = { $id: row.$id, ...row.data }
+  if (row.$createdAt) payload.$createdAt = row.$createdAt
+  if (row.$updatedAt) payload.$updatedAt = row.$updatedAt
+  return payload
+}
+
+function formatCellValueForCopy(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'object') return JSON.stringify(value)
+  return String(value)
+}
+
+function getCellValue(row: RowContextMenuRow, columnKey: string): unknown {
+  if (columnKey === '$id') return row.$id
+  if (columnKey === '$sequence') return (row as { $sequence?: number }).$sequence
+  if (columnKey === '$createdAt') return row.$createdAt
+  if (columnKey === '$updatedAt') return row.$updatedAt
+  return row.data[columnKey]
+}
+
 export function RowContextMenu({
   projectId,
   databaseId,
   tableId,
   row,
+  contextColumnKey,
   onUpdateRow,
   onUpdatePermissions,
   children,
@@ -122,11 +148,29 @@ export function RowContextMenu({
 
   const handleCopyAsJson = async () => {
     try {
-      const payload: Record<string, unknown> = { $id: row.$id, ...row.data }
-      if (row.$createdAt) payload.$createdAt = row.$createdAt
-      if (row.$updatedAt) payload.$updatedAt = row.$updatedAt
-      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2))
+      await navigator.clipboard.writeText(
+        JSON.stringify(rowJsonPayload(row), null, 2),
+      )
       toast.success('JSON copied to clipboard')
+    } catch {
+      toast.error('Failed to copy')
+    }
+  }
+
+  const handleOpenInNewTab = () => {
+    window.open(rowHref, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleOpenInNewWindow = () => {
+    window.open(rowHref, '_blank', 'noopener,noreferrer,width=1200,height=800')
+  }
+
+  const handleCopyValue = async () => {
+    if (contextColumnKey == null) return
+    try {
+      const value = getCellValue(row, contextColumnKey)
+      await navigator.clipboard.writeText(formatCellValueForCopy(value))
+      toast.success('Value copied')
     } catch {
       toast.error('Failed to copy')
     }
@@ -199,6 +243,14 @@ export function RowContextMenu({
                 </span>
                 Copy link
               </ContextMenuItem>
+              {contextColumnKey != null && contextColumnKey !== '' && (
+                <ContextMenuItem onSelect={handleCopyValue}>
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+                    <Copy className="size-4" />
+                  </span>
+                  Copy value
+                </ContextMenuItem>
+              )}
               <ContextMenuItem onSelect={handleCopyAsJson}>
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                   <FileJson className="size-4" />
@@ -215,6 +267,19 @@ export function RowContextMenu({
               <CopyPlus className="size-4" />
             </span>
             Duplicate
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onSelect={handleOpenInNewTab}>
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+              <ExternalLink className="size-4" />
+            </span>
+            Open in new tab
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={handleOpenInNewWindow}>
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center">
+              <Square className="size-4" />
+            </span>
+            Open in new window
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onSelect={handleDeleteClick}>

@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { pageTitle } from '@/lib/utils/page-title'
 import {
   fetchOrganizationMemberships,
   organizationsQueryOptions,
@@ -7,6 +8,7 @@ import {
 const MEMBERSHIPS_PER_PAGE = 25
 
 export const Route = createFileRoute('/_public/organizations/$orgId/members')({
+  head: () => ({ meta: [{ title: pageTitle('Members', 'Organization') }] }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

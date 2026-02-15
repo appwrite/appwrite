@@ -5,8 +5,10 @@ import {
   activeProjectsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { DEFAULT_PAGE_SIZE } from '@/lib/react-query/hooks/constants'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/')({
+  head: () => ({ meta: [{ title: pageTitle('Organization') }] }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

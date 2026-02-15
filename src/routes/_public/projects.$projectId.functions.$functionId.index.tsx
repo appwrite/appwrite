@@ -10,6 +10,7 @@ import {
   projectRuntimesQueryOptions,
   functionSpecificationsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const DEPLOYMENTS_PER_PAGE = 25
 const DOMAINS_LIMIT = 20 // Fetch enough to ensure we have 3 after filtering by active deployment
@@ -21,6 +22,16 @@ const searchSchema = z.object({
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.function?.name ?? 'Function',
+          'Functions',
+        ),
+      },
+    ],
+  }),
   validateSearch: searchSchema,
   loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
@@ -83,6 +94,11 @@ export const Route = createFileRoute(
     }
 
     await Promise.all(criticalPromises)
+
+    const fn = queryClient.getQueryData<{ name?: string }>(
+      projectFunctionQueryOptions(projectId, functionId).queryKey,
+    )
+    return { function: fn }
   },
   component: View,
 })

@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const tableSearchSchema = z.object({
   tab: z
@@ -10,6 +11,7 @@ const tableSearchSchema = z.object({
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/$tableId',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Database', 'Databases') }] }),
   validateSearch: tableSearchSchema,
   loader: ({ params, search }) => {
     // Redirect to new nested route structure

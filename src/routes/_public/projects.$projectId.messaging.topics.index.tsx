@@ -6,11 +6,14 @@ import {
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
 
+import { pageTitle } from '@/lib/utils/page-title'
+
 const TOPICS_PER_PAGE = 25
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/messaging/topics/',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Topics', 'Messaging') }] }),
   pendingComponent: () => (
     <div className="flex h-full items-center justify-center">
       <div className="text-muted-foreground">Loading topics...</div>

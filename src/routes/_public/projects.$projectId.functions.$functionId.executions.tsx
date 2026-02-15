@@ -6,6 +6,7 @@ import {
   projectFunctionQueryOptions,
   functionExecutionsQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const EXECUTIONS_PER_PAGE = 25
 
@@ -17,6 +18,16 @@ const searchSchema = z.object({
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/$functionId/executions',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.function?.name ?? 'Function',
+          'Functions',
+        ),
+      },
+    ],
+  }),
   validateSearch: searchSchema,
   loader: async ({ params, context, location }) => {
     // Only run on client side (SDK requires browser environment)
@@ -51,6 +62,10 @@ export const Route = createFileRoute(
         ),
       ),
     ])
+    const fn = queryClient.getQueryData<{ name?: string }>(
+      projectFunctionQueryOptions(projectId, functionId).queryKey,
+    )
+    return { function: fn }
   },
   component: View,
 })

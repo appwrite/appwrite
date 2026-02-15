@@ -10,6 +10,7 @@ import {
   projectQueryOptions,
   organizationPlanQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const TABLES_PER_PAGE = 100
 const ROWS_PER_PAGE = 25
@@ -17,6 +18,16 @@ const ROWS_PER_PAGE = 25
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/rows',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.database?.name ?? 'Database',
+          'Databases',
+        ),
+      },
+    ],
+  }),
   pendingComponent: () => (
     <div className="flex h-full items-center justify-center">
       <div className="text-muted-foreground">Loading rows...</div>
@@ -66,7 +77,10 @@ export const Route = createFileRoute(
       await queryClient.ensureQueryData(
         databaseQueryOptions(projectId, databaseId),
       )
-      return
+      const database = queryClient.getQueryData<{ name?: string }>(
+        databaseQueryOptions(projectId, databaseId).queryKey,
+      )
+      return { database }
     }
 
     if (tableId) {
@@ -143,6 +157,10 @@ export const Route = createFileRoute(
             // Don't block on optional data errors
           }),
       ])
+      const database = queryClient.getQueryData<{ name?: string }>(
+        databaseQueryOptions(projectId, databaseId).queryKey,
+      )
+      return { database }
     } else {
       await tablesPromise
     }

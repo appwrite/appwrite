@@ -4,12 +4,14 @@ import {
   databaseQueryOptions,
   tablesQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const TABLES_PER_PAGE = 100
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/security',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Database', 'Databases') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 

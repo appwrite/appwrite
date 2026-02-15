@@ -5,10 +5,21 @@ import {
   siteUsageQueryOptions,
   projectQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/$siteId/usage',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.site?.name ?? loaderData?.site?.resourceId ?? 'Site',
+          'Sites',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

@@ -175,7 +175,7 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
               ))}
             </TableBody>
           </Table>
-          <div className="px-4 pb-4 pt-4 sm:px-6">
+          <div className="px-4 py-2 sm:px-6">
             <Pagination
               currentPage={currentPage}
               totalItems={total}
@@ -184,6 +184,7 @@ export function RealtimeMessages({ projectId }: RealtimeMessagesProps) {
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
               itemLabel="messages"
+              className="py-2"
             />
           </div>
         </>

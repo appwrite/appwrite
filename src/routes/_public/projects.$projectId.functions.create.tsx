@@ -19,10 +19,12 @@ import {
   FunctionWizardProvider,
   useFunctionWizard,
 } from '@/components/pages/projects/$projectId/functions/create/WizardContext'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/create',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Create', 'Functions') }] }),
   pendingComponent: () => (
     <div className="flex h-full items-center justify-center">
       <div className="text-muted-foreground">Loading wizard...</div>

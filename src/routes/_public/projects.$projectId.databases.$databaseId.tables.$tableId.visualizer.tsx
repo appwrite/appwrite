@@ -6,12 +6,23 @@ import {
   tablesQueryOptions,
   allTablesForVisualizerQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const TABLES_PER_PAGE = 100
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/visualizer',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.database?.name ?? 'Database',
+          'Databases',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 
@@ -53,6 +64,11 @@ export const Route = createFileRoute(
     await queryClient.ensureQueryData(
       allTablesForVisualizerQueryOptions(projectId, databaseId),
     )
+
+    const database = queryClient.getQueryData<{ name?: string }>(
+      databaseQueryOptions(projectId, databaseId).queryKey,
+    )
+    return { database }
   },
   component: VisualizerPage,
 })

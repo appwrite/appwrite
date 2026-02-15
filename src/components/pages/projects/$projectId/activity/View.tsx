@@ -716,7 +716,7 @@ export function View({ plan = 'pro' }: ViewProps) {
                 ))}
               </TableBody>
             </Table>
-            <div className="px-4 py-3 sm:px-6">
+            <div className="px-4 py-2 sm:px-6">
               <Pagination
                 currentPage={currentPage}
                 totalItems={filteredActivities.length}
@@ -728,7 +728,7 @@ export function View({ plan = 'pro' }: ViewProps) {
                   setCurrentPage(1)
                 }}
                 itemLabel="activities"
-                className="border-0 mt-0"
+                className="border-0 mt-0 py-2"
               />
             </div>
           </>

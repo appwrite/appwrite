@@ -2,11 +2,23 @@ import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/auth/teams/View'
 import { fetchTeam, fetchTeamMemberships } from '@/lib/react-query/hooks/users'
 
+import { pageTitle } from '@/lib/utils/page-title'
+
 const MEMBERSHIPS_PER_PAGE = 25
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/auth/teams/$teamId/members',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.team?.name ?? 'Team',
+          'Auth',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {

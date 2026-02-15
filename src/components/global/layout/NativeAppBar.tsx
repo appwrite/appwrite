@@ -29,23 +29,30 @@ export function NativeAppBar() {
   const [historyOpen, setHistoryOpen] = useState(false)
 
   const canGoBack = navigationHistory?.hasInternalHistory() ?? false
+  const canGoForward = navigationHistory?.hasForwardHistory() ?? false
   const backStack = navigationHistory?.getBackStack() ?? []
   const hasHistory = backStack.length > 0
 
   const handleBack = () => {
     const path = navigationHistory?.popHistory()
     if (path) {
+      navigationHistory?.skipNextPush()
       navigate({ to: path })
     }
   }
 
   const handleForward = () => {
-    window.history.forward()
+    const path = navigationHistory?.popForward()
+    if (path) {
+      navigationHistory?.skipNextPush()
+      navigate({ to: path })
+    }
   }
 
   const handleHistorySelect = (path: string) => {
     const target = navigationHistory?.popUntil(path)
     if (target) {
+      navigationHistory?.skipNextPush()
       navigate({ to: target })
       setHistoryOpen(false)
     }
@@ -84,7 +91,8 @@ export function NativeAppBar() {
               <button
                 type="button"
                 onClick={handleForward}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                disabled={!canGoForward}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
                 aria-label="Forward"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -100,7 +108,8 @@ export function NativeAppBar() {
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    disabled={!hasHistory}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
                     aria-label="History"
                   >
                     <History className="h-4 w-4" />

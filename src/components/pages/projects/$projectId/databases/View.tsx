@@ -3239,6 +3239,7 @@ export function DatabaseOverview({
                   onPageChange={handleTablesPageChange}
                   onPageSizeChange={handleTablesPageSizeChange}
                   itemLabel="tables"
+                  className="py-2"
                 />
 
                 {/* Bulk Delete Action Bar */}
@@ -3786,8 +3787,8 @@ interface RowEditDrawerProps {
   row: RowData | null
   tableName: string
   focusedField?: string | null
-  /** When set, drawer opens with this tab selected (e.g. 'permissions' from context menu) */
-  initialTab?: 'overview' | 'permissions'
+  /** When set, drawer opens with this tab selected (e.g. 'data' for Update row, 'permissions' from context menu) */
+  initialTab?: 'overview' | 'data' | 'permissions'
   columns?: unknown[]
   onSave: (
     rowId: string | null,
@@ -4938,7 +4939,7 @@ function RowsSpreadsheet({
   const [pageSize, setPageSize] = useState(25)
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
   const [drawerInitialTab, setDrawerInitialTab] = useState<
-    'overview' | 'permissions' | null
+    'overview' | 'data' | 'permissions' | null
   >(null)
   const [selectedRowForEdit, setSelectedRowForEdit] = useState<RowData | null>(
     null,
@@ -4948,6 +4949,9 @@ function RowsSpreadsheet({
   const [sampleDataModalOpen, setSampleDataModalOpen] = useState(false)
   const [columnDialogOpen, setColumnDialogOpen] = useState(false)
   const [selectedColumn, setSelectedColumn] = useState<unknown>(null)
+  const [contextCellColumnKey, setContextCellColumnKey] = useState<
+    string | null
+  >(null)
   const openCreateRowFnRef = useRef<(() => void) | null>(null)
   const openCreateColumnFnRef = useRef<(() => void) | null>(null)
 
@@ -5159,7 +5163,7 @@ function RowsSpreadsheet({
   const handleRowClick = (row: RowData) => {
     setSelectedRowForEdit(row)
     setFocusedField(null)
-    setDrawerInitialTab(null)
+    setDrawerInitialTab('data')
     setEditDrawerOpen(true)
   }
 
@@ -5197,7 +5201,7 @@ function RowsSpreadsheet({
       if (fromCurrentPage) {
         setSelectedRowForEdit(fromCurrentPage)
         setFocusedField(null)
-        setDrawerInitialTab(openToPermissions ? 'permissions' : null)
+        setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
         setEditDrawerOpen(true)
         return
       }
@@ -5220,10 +5224,10 @@ function RowsSpreadsheet({
             $updatedAt: rowObj.$updatedAt as string | undefined,
             $permissions: (rowObj.$permissions as string[]) || [],
           }
-          setSelectedRowForEdit(rowData)
-          setFocusedField(null)
-          setDrawerInitialTab(openToPermissions ? 'permissions' : null)
-          setEditDrawerOpen(true)
+        setSelectedRowForEdit(rowData)
+        setFocusedField(null)
+        setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
+        setEditDrawerOpen(true)
         },
       )
     },
@@ -5813,6 +5817,7 @@ function RowsSpreadsheet({
                 databaseId={databaseId}
                 tableId={tableId}
                 row={row}
+                contextColumnKey={contextCellColumnKey}
                 onUpdateRow={(r) => handleRowClick(r as RowData)}
                 onUpdatePermissions={(r) =>
                   handleOpenPermissionsRow(r as RowData)
@@ -5827,6 +5832,11 @@ function RowsSpreadsheet({
                       : 'hover:bg-muted/50',
                   )}
                   onClick={() => handleRowClick(row)}
+                  onContextMenu={(e) => {
+                    const td = (e.target as HTMLElement).closest('td')
+                    const key = td?.getAttribute('data-column') ?? null
+                    setContextCellColumnKey(key)
+                  }}
                 >
                   <td
                     className={cn(
@@ -5841,7 +5851,10 @@ function RowsSpreadsheet({
                       onClick={(e) => e.stopPropagation()}
                     />
                   </td>
-                  <td className={cn('px-3 py-1.5', bodyCellBorderClass)}>
+                  <td
+                    className={cn('px-3 py-1.5', bodyCellBorderClass)}
+                    data-column="$sequence"
+                  >
                     <span className="text-[12px] text-muted-foreground">
                       {row.$sequence ?? row.rowNumber}
                     </span>
@@ -5853,6 +5866,7 @@ function RowsSpreadsheet({
                         ? 'border-b border-gray-200 dark:border-border'
                         : bodyCellBorderClass,
                     )}
+                    data-column="$id"
                   >
                     <CopyableId id={row.$id} size="xs" />
                   </td>
@@ -5860,6 +5874,7 @@ function RowsSpreadsheet({
                     <td
                       key={col}
                       className={cn('px-3 py-1.5', bodyCellBorderClass)}
+                      data-column={col}
                       onClick={(e) => {
                         e.stopPropagation()
                         handleCellClick(row, col)
@@ -5896,6 +5911,7 @@ function RowsSpreadsheet({
                   ))}
                   <td
                     className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
+                    data-column="$createdAt"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {row.$createdAt ? (
@@ -5909,6 +5925,7 @@ function RowsSpreadsheet({
                   </td>
                   <td
                     className={cn('w-[180px] px-3 py-1.5', bodyCellBorderClass)}
+                    data-column="$updatedAt"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {row.$updatedAt ? (

@@ -4,8 +4,10 @@ import {
   organizationProjectsQueryOptions,
 } from '@/lib/react-query/hooks'
 import { SupportWizardFullscreen } from '@/components/pages/organizations/$orgId/support/SupportWizardFullscreen'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute('/_public/organizations/$orgId/support')({
+  head: () => ({ meta: [{ title: pageTitle('Support', 'Organization') }] }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') {
       return

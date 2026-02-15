@@ -2,11 +2,23 @@ import { createFileRoute } from '@tanstack/react-router'
 import { View } from '@/components/pages/projects/$projectId/messaging/topics/$topicId/View'
 import { fetchTopic, fetchTopicSubscribers } from '@/lib/react-query/hooks'
 
+import { pageTitle } from '@/lib/utils/page-title'
+
 const SUBSCRIBERS_PER_PAGE = 25
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/messaging/topics/$topicId/',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.topic?.name ?? 'Topic',
+          'Messaging',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -47,6 +59,13 @@ export const Route = createFileRoute(
           staleTime: 30 * 1000,
         }),
       ])
+      const topic = queryClient.getQueryData<{ name?: string }>([
+        'topic',
+        'project',
+        projectId,
+        topicId,
+      ])
+      return { topic }
     }
   },
   component: TopicDetailPage,

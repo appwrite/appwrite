@@ -12,11 +12,25 @@ import {
 } from '@/lib/react-query/hooks'
 import { Query } from '@appwrite.io/console'
 import { sdk } from '@/lib/appwrite/sdk'
+import { pageTitle } from '@/lib/utils/page-title'
 
 // Valid account tabs
 const VALID_TABS = ['overview', 'sessions', 'payments'] as const
 
+const TAB_LABELS: Record<string, string> = {
+  overview: 'Overview',
+  sessions: 'Sessions',
+  payments: 'Payments',
+}
+
 export const Route = createFileRoute('/_public/account/$tab')({
+  head: ({ params }) => {
+    const tab = params.tab as string | undefined
+    const tabLabel = tab
+      ? TAB_LABELS[tab] ?? tab.charAt(0).toUpperCase() + tab.slice(1)
+      : 'Overview'
+    return { meta: [{ title: pageTitle(tabLabel, 'Account') }] }
+  },
   pendingComponent: () => (
     <div className="flex h-full items-center justify-center">
       <div className="text-muted-foreground">Loading account...</div>
@@ -24,7 +38,8 @@ export const Route = createFileRoute('/_public/account/$tab')({
   ),
   loader: async ({ params, context }) => {
     // Redirect invalid tabs to overview
-    if (params.tab && !VALID_TABS.includes(params.tab as unknown)) {
+    const tab = params.tab as string | undefined
+    if (tab && !(VALID_TABS as readonly string[]).includes(tab)) {
       throw redirect({
         to: '/account',
         replace: true,
@@ -37,7 +52,6 @@ export const Route = createFileRoute('/_public/account/$tab')({
       return
     }
 
-    const { tab } = params
     const { queryClient } = context
 
     // Fetch critical data before rendering to prevent layout shifts

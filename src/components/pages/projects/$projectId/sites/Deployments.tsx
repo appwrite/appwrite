@@ -1720,6 +1720,7 @@ export function View() {
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 itemLabel="deployments"
+                className="py-2"
               />
             </>
           ) : (

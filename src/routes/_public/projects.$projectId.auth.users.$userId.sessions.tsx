@@ -5,10 +5,21 @@ import {
   fetchUserSessions,
   fetchUserMFAFactors,
 } from '@/lib/react-query/hooks/users'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/auth/users/$userId/sessions',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.user?.name ?? loaderData?.user?.email ?? 'User',
+          'Auth',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     // Only run on client side (SDK requires browser environment)
     if (typeof window === 'undefined') {
@@ -38,6 +49,13 @@ export const Route = createFileRoute(
           staleTime: 30 * 1000,
         }),
       ])
+      const user = queryClient.getQueryData<{ name?: string; email?: string }>([
+        'user',
+        'project',
+        projectId,
+        userId,
+      ])
+      return { user }
     }
   },
   component: UserSessionsPage,

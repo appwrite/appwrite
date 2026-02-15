@@ -1622,6 +1622,7 @@ export function SiteDeploymentsView() {
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
                 itemLabel="deployments"
+                className="py-2"
               />
             </>
           ) : (

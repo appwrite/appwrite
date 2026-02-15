@@ -18,10 +18,12 @@ import {
   WizardProvider,
   useWizard,
 } from '@/components/pages/projects/$projectId/sites/create/WizardContext'
+import { pageTitle } from '@/lib/utils/page-title'
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/create',
 )({
+  head: () => ({ meta: [{ title: pageTitle('Create', 'Sites') }] }),
   pendingComponent: () => (
     <div className="flex h-full items-center justify-center">
       <div className="text-muted-foreground">Loading wizard...</div>

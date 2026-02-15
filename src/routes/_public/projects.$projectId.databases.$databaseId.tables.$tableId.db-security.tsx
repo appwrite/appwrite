@@ -5,12 +5,23 @@ import {
   databaseQueryOptions,
   tablesQueryOptions,
 } from '@/lib/react-query/hooks'
+import { pageTitle } from '@/lib/utils/page-title'
 
 const TABLES_PER_PAGE = 100
 
 export const Route = createFileRoute(
   '/_public/projects/$projectId/databases/$databaseId/tables/$tableId/db-security',
 )({
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: pageTitle(
+          loaderData?.database?.name ?? 'Database',
+          'Databases',
+        ),
+      },
+    ],
+  }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 
@@ -45,9 +56,14 @@ export const Route = createFileRoute(
             tableId: first?.$id ?? '-',
           },
           replace: true,
-        })
+        }        )
       }
     }
+
+    const database = queryClient.getQueryData<{ name?: string }>(
+      databaseQueryOptions(projectId, databaseId).queryKey,
+    )
+    return { database }
   },
   component: DbSecurityPage,
 })
