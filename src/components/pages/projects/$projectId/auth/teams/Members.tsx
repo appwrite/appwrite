@@ -199,7 +199,7 @@ export function TeamMembers({
           </p>
         </div>
       ) : memberships.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card py-12">
+        <div className="space-y-4">
           <EmptyState
             icon={Users}
             title="No memberships available"
@@ -210,12 +210,17 @@ export function TeamMembers({
             }
             isEmpty={!search}
             hasFilters={!!search}
+            variant="card"
             iconSize="md"
           />
           {!hasHeaderInParent && !search && (
-            <div className="mt-4 text-center">
-              <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-1.5" />
+            <div className="flex justify-center">
+              <Button
+                size="sm"
+                className="h-9 text-[13px]"
+                onClick={() => setCreateDialogOpen(true)}
+              >
+                <Plus className="mr-1.5 h-4 w-4" />
                 Invite member
               </Button>
             </div>

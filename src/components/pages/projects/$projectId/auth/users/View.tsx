@@ -92,9 +92,7 @@ import {
   useUpdateUserMFA,
   useDeleteUserMFAAuthenticator,
   useDeleteUserMembership,
-  useDeleteUserIdentity,
   useCreateUserTarget,
-  useDeleteUserTarget,
   useDeleteUserSession,
   useDeleteAllUserSessions,
   useDeleteProjectUser,
@@ -404,7 +402,7 @@ export function View() {
               onClick={() => setDeleteAllSessionsDialogOpen(true)}
               disabled={deleteAllSessions.isPending}
             >
-              <LogOut className="mr-1.5 h-3.5 w-3.5" />
+              <LogOut className="mr-1.5 h-4 w-4" />
               Delete all sessions
             </Button>
           ) : undefined
@@ -457,12 +455,17 @@ export function View() {
             </div>
           )}
           {activeTab === 'targets' && (
-            <div className="px-4 py-4 sm:px-6">
+            <div className="px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
               <TargetsTab projectId={projectId!} userId={userId!} />
             </div>
           )}
           {activeTab === 'sessions' && (
-            <div className="px-4 py-4 sm:px-6">
+            <div
+              className={cn(
+                'px-4 pb-4 sm:px-6 sm:pb-6',
+                sessions.length === 0 && 'pt-4 sm:pt-6',
+              )}
+            >
               <SessionsTab
                 projectId={projectId!}
                 userId={userId!}
@@ -1826,25 +1829,14 @@ function MembershipsTab({
 
   if (memberships.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card py-12">
-        <EmptyState
-          icon={Users}
-          title="No memberships available"
-          description="This user is not a member of any teams."
-          isEmpty={true}
-          iconSize="md"
-        />
-        <div className="mt-4 text-center">
-          <a
-            href="https://appwrite.io/docs/users"
-            className="text-[13px] text-primary hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn more about memberships
-          </a>
-        </div>
-      </div>
+      <EmptyState
+        icon={Users}
+        title="No memberships available"
+        description="This user is not a member of any teams."
+        isEmpty={true}
+        variant="card"
+        iconSize="md"
+      />
     )
   }
 
@@ -2009,12 +2001,6 @@ function IdentitiesTab({
 }) {
   const [page, setPage] = useState(1)
   const [search] = useState('')
-  const [selectedIdentities, setSelectedIdentities] = useState<Set<string>>(
-    new Set(),
-  )
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const deleteIdentity = useDeleteUserIdentity(projectId, userId)
-
   const { data, isLoading } = useUserIdentities(
     projectId,
     userId,
@@ -2076,22 +2062,6 @@ function IdentitiesTab({
     return nameMap[provider.toLowerCase()] || provider
   }
 
-  const handleBulkDelete = async () => {
-    if (selectedIdentities.size === 0) return
-
-    const identityIds = Array.from(selectedIdentities)
-    try {
-      await Promise.all(identityIds.map((id) => deleteIdentity.mutateAsync(id)))
-      toast.success(
-        `${identityIds.length} identit${identityIds.length === 1 ? 'y' : 'ies'} have been deleted`,
-      )
-      setSelectedIdentities(new Set())
-      setDeleteDialogOpen(false)
-    } catch (error: unknown) {
-      toast.error(error.message || 'Failed to delete identities')
-    }
-  }
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -2102,25 +2072,14 @@ function IdentitiesTab({
 
   if (identities.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card py-12">
-        <EmptyState
-          icon={Key}
-          title="No identities available"
-          description="No OAuth identities linked to this user."
-          isEmpty={true}
-          iconSize="md"
-        />
-        <div className="mt-4 text-center">
-          <a
-            href="https://appwrite.io/docs/users"
-            className="text-[13px] text-primary hover:underline"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn more about identities
-          </a>
-        </div>
-      </div>
+      <EmptyState
+        icon={Key}
+        title="No identities available"
+        description="No OAuth identities linked to this user."
+        isEmpty={true}
+        variant="card"
+        iconSize="md"
+      />
     )
   }
 
@@ -2135,45 +2094,10 @@ function IdentitiesTab({
           </p>
         </div>
 
-        {selectedIdentities.size > 0 && (
-          <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
-            <span className="text-[13px] text-foreground">
-              {selectedIdentities.size} identit
-              {selectedIdentities.size === 1 ? 'y' : 'ies'} selected
-            </span>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setDeleteDialogOpen(true)}
-            >
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-              Delete selected
-            </Button>
-          </div>
-        )}
-
         <div className="rounded-lg border border-border bg-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
-                <TableHead className="w-[40px] px-4">
-                  <Checkbox
-                    checked={
-                      identities.length > 0 &&
-                      selectedIdentities.size === identities.length
-                    }
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedIdentities(
-                          new Set(identities.map((i) => i.$id)),
-                        )
-                      } else {
-                        setSelectedIdentities(new Set())
-                      }
-                    }}
-                  />
-                </TableHead>
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Identity ID
                 </TableHead>
@@ -2186,28 +2110,11 @@ function IdentitiesTab({
                 <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Created
                 </TableHead>
-                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                  Actions
-                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {identities.map((identity) => (
                 <TableRow key={identity.$id}>
-                  <TableCell className="px-4 py-3">
-                    <Checkbox
-                      checked={selectedIdentities.has(identity.$id)}
-                      onCheckedChange={(checked) => {
-                        const newSelected = new Set(selectedIdentities)
-                        if (checked) {
-                          newSelected.add(identity.$id)
-                        } else {
-                          newSelected.delete(identity.$id)
-                        }
-                        setSelectedIdentities(newSelected)
-                      }}
-                    />
-                  </TableCell>
                   <TableCell className="px-4 py-3">
                     <CopyableId id={identity.$id} size="xs" />
                   </TableCell>
@@ -2235,27 +2142,6 @@ function IdentitiesTab({
                       className="text-[12px] text-muted-foreground"
                     />
                   </TableCell>
-                  <TableCell className="px-4 py-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => {
-                        deleteIdentity.mutate(identity.$id, {
-                          onSuccess: () => {
-                            toast.success('Identity has been deleted')
-                          },
-                          onError: (error: Error) => {
-                            toast.error(
-                              error.message || 'Failed to delete identity',
-                            )
-                          },
-                        })
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -2272,36 +2158,6 @@ function IdentitiesTab({
           />
         )}
       </div>
-
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>Delete identities</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete {selectedIdentities.size} identit
-              {selectedIdentities.size === 1 ? 'y' : 'ies'}? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleBulkDelete}
-              disabled={deleteIdentity.isPending}
-            >
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
@@ -2318,11 +2174,6 @@ function TargetsTab({
   userId: string
 }) {
   const [page, setPage] = useState(1)
-  const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set())
-  const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const deleteTarget = useDeleteUserTarget(projectId, userId)
-
   const { data, isLoading } = useUserTargets(
     projectId,
     userId,
@@ -2332,22 +2183,6 @@ function TargetsTab({
 
   const targets = data?.targets || []
   const total = data?.total || 0
-
-  const handleBulkDelete = async () => {
-    if (selectedTargets.size === 0) return
-
-    const targetIds = Array.from(selectedTargets)
-    try {
-      await Promise.all(targetIds.map((id) => deleteTarget.mutateAsync(id)))
-      toast.success(
-        `${targetIds.length} target${targetIds.length === 1 ? '' : 's'} have been deleted`,
-      )
-      setSelectedTargets(new Set())
-      setDeleteDialogOpen(false)
-    } catch (error: unknown) {
-      toast.error(error.message || 'Failed to delete targets')
-    }
-  }
 
   if (isLoading) {
     return (
@@ -2359,79 +2194,22 @@ function TargetsTab({
 
   return (
     <>
-      <div className="space-y-4">
-        <div className="flex items-center justify-end">
-          <Button
-            size="sm"
-            className="h-9 text-[13px]"
-            onClick={() => setCreateDialogOpen(true)}
-          >
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Create target
-          </Button>
-        </div>
-
-        {selectedTargets.size > 0 && (
-          <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
-            <span className="text-[13px] text-foreground">
-              {selectedTargets.size} target
-              {selectedTargets.size === 1 ? '' : 's'} selected
-            </span>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setDeleteDialogOpen(true)}
-            >
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-              Delete selected
-            </Button>
-          </div>
-        )}
-
+      <div className="space-y-0">
         {targets.length === 0 ? (
-          <div className="rounded-lg border border-border bg-card py-12">
-            <EmptyState
-              icon={Smartphone}
-              title="No targets available"
-              description="No messaging targets configured for this user."
-              isEmpty={true}
-              iconSize="md"
-            />
-            <div className="mt-4 text-center">
-              <a
-                href="https://appwrite.io/docs/users"
-                className="text-[13px] text-primary hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Learn more about targets
-              </a>
-            </div>
-          </div>
+          <EmptyState
+            icon={Smartphone}
+            title="No targets available"
+            description="No messaging targets configured for this user."
+            isEmpty={true}
+            variant="card"
+            iconSize="md"
+          />
         ) : (
           <>
             <div className="rounded-lg border border-border bg-card overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-b border-border">
-                    <TableHead className="w-[40px] px-4">
-                      <Checkbox
-                        checked={
-                          targets.length > 0 &&
-                          selectedTargets.size === targets.length
-                        }
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedTargets(
-                              new Set(targets.map((t) => t.$id)),
-                            )
-                          } else {
-                            setSelectedTargets(new Set())
-                          }
-                        }}
-                      />
-                    </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Target ID
                     </TableHead>
@@ -2444,28 +2222,14 @@ function TargetsTab({
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                       Created
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                      Actions
-                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {targets.map((target) => (
-                    <TableRow key={target.$id}>
-                      <TableCell className="px-4 py-3">
-                        <Checkbox
-                          checked={selectedTargets.has(target.$id)}
-                          onCheckedChange={(checked) => {
-                            const newSelected = new Set(selectedTargets)
-                            if (checked) {
-                              newSelected.add(target.$id)
-                            } else {
-                              newSelected.delete(target.$id)
-                            }
-                            setSelectedTargets(newSelected)
-                          }}
-                        />
-                      </TableCell>
+                    <TableRow
+                      key={target.$id}
+                      className="border-b border-border/50 hover:bg-muted/30 transition-colors"
+                    >
                       <TableCell className="px-4 py-3">
                         <CopyableId id={target.$id} size="xs" />
                       </TableCell>
@@ -2473,7 +2237,10 @@ function TargetsTab({
                         {target.name || target.identifier}
                       </TableCell>
                       <TableCell className="px-4 py-3">
-                        <Badge variant="secondary" className="text-[12px]">
+                        <Badge
+                          variant="outline"
+                          className="text-[12px] font-medium border-border"
+                        >
                           {target.providerType}
                         </Badge>
                       </TableCell>
@@ -2482,27 +2249,6 @@ function TargetsTab({
                           date={new Date(target.$createdAt)}
                           className="text-[12px] text-muted-foreground"
                         />
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={() => {
-                            deleteTarget.mutate(target.$id, {
-                              onSuccess: () => {
-                                toast.success('Target has been deleted')
-                              },
-                              onError: (error: Error) => {
-                                toast.error(
-                                  error.message || 'Failed to delete target',
-                                )
-                              },
-                            })
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -2523,42 +2269,12 @@ function TargetsTab({
         )}
 
         <CreateTargetDialog
-          open={createDialogOpen}
-          onOpenChange={setCreateDialogOpen}
+          open={false}
+          onOpenChange={() => {}}
           projectId={projectId}
           userId={userId}
         />
       </div>
-
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>Delete targets</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete {selectedTargets.size} target
-              {selectedTargets.size === 1 ? '' : 's'}? This action cannot be
-              undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleBulkDelete}
-              disabled={deleteTarget.isPending}
-            >
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
@@ -2880,6 +2596,27 @@ function SessionsTab({
     return ip
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (sessions.length === 0) {
+    return (
+      <EmptyState
+        icon={Monitor}
+        title="No active sessions"
+        description="This user doesn't have any active sessions at the moment."
+        isEmpty={true}
+        variant="card"
+        iconSize="md"
+      />
+    )
+  }
+
   return (
     <>
       <div className="rounded-lg border border-border bg-card overflow-hidden">
@@ -2905,31 +2642,7 @@ function SessionsTab({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="px-6 py-12">
-                  <div className="text-center">
-                    <p className="text-[13px] text-muted-foreground">
-                      Loading sessions...
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : sessions.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="px-6 py-12">
-                  <div className="text-center">
-                    <p className="text-[14px] font-medium text-foreground mb-1">
-                      No active sessions
-                    </p>
-                    <p className="text-[13px] text-muted-foreground">
-                      This user doesn't have any active sessions at the moment.
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : (
-              sessions.map((session) => {
+            {sessions.map((session) => {
                 const deviceInfo = formatDeviceInfo(session)
                 const isCurrent = session.current || false
                 const flagUrl = getCountryFlagUrl(session.countryCode)
@@ -3061,8 +2774,7 @@ function SessionsTab({
                     </TableCell>
                   </TableRow>
                 )
-              })
-            )}
+              })}
           </TableBody>
         </Table>
       </div>

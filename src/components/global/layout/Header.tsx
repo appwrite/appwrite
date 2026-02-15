@@ -132,7 +132,7 @@ export function ConsoleHeader({
           {!isOrgOverview && (
             <button
               onClick={onMenuClick}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
+              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -384,7 +384,7 @@ export function ConsoleHeader({
             <>
               <button
                 onClick={openCommandCenter}
-                className="hidden h-8 items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
+                className="hidden h-8 cursor-pointer items-center gap-2 rounded-md border border-border bg-accent/50 px-3 text-[13px] text-muted-foreground transition-colors hover:border-border hover:bg-accent @[700px]:flex shrink-0"
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <span className="hidden @[850px]:inline">Search...</span>
@@ -396,7 +396,7 @@ export function ConsoleHeader({
               {/* Mobile search icon */}
               <button
                 onClick={openCommandCenter}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
+                className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[700px]:hidden"
               >
                 <Search className="h-4 w-4" />
               </button>
@@ -428,7 +428,7 @@ export function ConsoleHeader({
             <TooltipTrigger asChild>
               <button
                 onClick={toggleChat}
-                className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
+                className="hidden h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground @[1000px]:flex"
               >
                 <MessageSquare className="h-4 w-4" />
               </button>
@@ -450,7 +450,7 @@ export function ConsoleHeader({
                 <Button
                   asChild
                   size="sm"
-                  className="h-8 shrink-0 bg-blue-600 px-3 text-[12px] font-semibold text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700 relative z-10 rounded-[calc(0.375rem-1px)]"
+                  className="h-8 shrink-0 cursor-pointer bg-blue-600 px-3 text-[12px] font-semibold text-white hover:bg-blue-700 dark:bg-blue-600 dark:text-white dark:hover:bg-blue-700 relative z-10 rounded-[calc(0.375rem-1px)]"
                 >
                   <Link
                     to="/organizations/$orgId/change-plan"
@@ -469,7 +469,7 @@ export function ConsoleHeader({
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex shrink-0 items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent min-w-0">
+              <button className="flex shrink-0 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-accent min-w-0">
                 <InitialsAvatar
                   name={displayName}
                   size="sm"
@@ -561,7 +561,7 @@ export function ConsoleHeader({
                             onClick={() =>
                               copyToClipboard(accountId, 'accountId')
                             }
-                            className="flex items-center gap-1.5 group"
+                            className="flex cursor-pointer items-center gap-1.5 group"
                           >
                             <p className="text-[14px] text-foreground font-mono">
                               {accountId}

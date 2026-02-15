@@ -29,8 +29,10 @@ import {
   Smartphone,
   Tablet,
   Monitor,
+  Loader2,
 } from 'lucide-react'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
+import { EmptyState } from '@/components/global/shared/EmptyState'
 import type { Models } from '@appwrite.io/console'
 import { Badge } from '@/components/ui/badge'
 import { Browser } from '@appwrite.io/console'
@@ -291,83 +293,72 @@ export function AccountSessions() {
     return ip
   }
 
-  return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
-      <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-[15px] font-semibold text-foreground">
-                Sessions
-              </h3>
-              <p className="text-[13px] text-muted-foreground mt-1">
-                Manage your active sessions across different devices. You can
-                revoke access from any device at any time.
-              </p>
-            </div>
-            {sessions.length > 1 && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 text-[13px]"
-                onClick={handleDeleteAllClick}
-                disabled={deleteAllSessionsMutation.isPending}
-              >
-                Delete all sessions
-              </Button>
-            )}
-          </div>
+  if (sessionsLoading) {
+    return (
+      <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
-        <div className="border-t border-border -mx-6" />
-        <div className="px-6 py-4">
-          <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-border">
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[320px]">
-                    Device & Auth
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                    Location
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
-                    IP Address
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[160px]">
-                    Created
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
-                    Expires
-                  </TableHead>
-                  <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sessionsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="px-6 py-12">
-                      <div className="text-center">
-                        <p className="text-[13px] text-muted-foreground">
-                          Loading sessions...
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : sessions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="px-6 py-12">
-                      <div className="text-center">
-                        <p className="text-[14px] font-medium text-foreground mb-1">
-                          No active sessions
-                        </p>
-                        <p className="text-[13px] text-muted-foreground">
-                          You don't have any active sessions at the moment.
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  sessions.map((session) => {
+      </div>
+    )
+  }
+
+  if (sessions.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+        <EmptyState
+          icon={Monitor}
+          title="No active sessions"
+          description="You don't have any active sessions at the moment."
+          isEmpty={true}
+          variant="card"
+          iconSize="md"
+        />
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="mx-auto w-full max-w-7xl px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
+        {sessions.length > 1 && (
+          <div className="mb-4 flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 text-[13px]"
+              onClick={handleDeleteAllClick}
+              disabled={deleteAllSessionsMutation.isPending}
+            >
+              <LogOut className="mr-1.5 h-4 w-4" />
+              Delete all sessions
+            </Button>
+          </div>
+        )}
+        <div className="rounded-lg border border-border bg-card overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[320px]">
+                  Device & Auth
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                  Location
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[140px]">
+                  IP Address
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[160px]">
+                  Created
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[180px]">
+                  Expires
+                </TableHead>
+                <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[80px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sessions.map((session) => {
                     const deviceInfo = formatDeviceInfo(session)
                     const isCurrent = session.current || false
                     const flagUrl = getCountryFlagUrl(session.countryCode)
@@ -499,11 +490,9 @@ export function AccountSessions() {
                         </TableCell>
                       </TableRow>
                     )
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
+              })}
+            </TableBody>
+          </Table>
         </div>
       </div>
 
@@ -574,6 +563,6 @@ export function AccountSessions() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }
