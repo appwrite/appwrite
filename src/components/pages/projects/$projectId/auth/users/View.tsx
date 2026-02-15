@@ -72,6 +72,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Pagination } from '@/components/global/shared/Pagination'
+import { MembershipUpdateDrawer } from '../_components/MembershipUpdateDrawer'
 import {
   useUser,
   useUserMemberships,
@@ -1804,42 +1805,15 @@ function MembershipsTab({
   const [selectedMemberships, setSelectedMemberships] = useState<Set<string>>(
     new Set(),
   )
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [membershipToDelete, setMembershipToDelete] =
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectedMembership, setSelectedMembership] =
     useState<Models.Membership | null>(null)
-  const deleteMembership = useDeleteUserMembership(projectId)
-  const navigate = useNavigate()
 
   const memberships = data?.memberships || []
 
-  const handleDelete = (membership: Models.Membership) => {
-    setMembershipToDelete(membership)
-    setDeleteDialogOpen(true)
-  }
-
-  const confirmDelete = () => {
-    if (membershipToDelete) {
-      deleteMembership.mutate(
-        {
-          teamId: membershipToDelete.teamId,
-          membershipId: membershipToDelete.$id,
-        },
-        {
-          onSuccess: () => {
-            toast.success('Membership has been deleted')
-            setDeleteDialogOpen(false)
-            setMembershipToDelete(null)
-            navigate({
-              to: '/projects/$projectId/auth/users/$userId/memberships',
-              params: { projectId, userId },
-            })
-          },
-          onError: (error: Error) => {
-            toast.error(error.message || 'Failed to delete membership')
-          },
-        },
-      )
-    }
+  const openDrawer = (membership: Models.Membership) => {
+    setSelectedMembership(membership)
+    setDrawerOpen(true)
   }
 
   if (isLoading) {
@@ -1880,7 +1854,7 @@ function MembershipsTab({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-b border-border">
-              <TableHead className="w-[40px] px-4">
+              <TableHead className="w-[40px] px-4 py-3">
                 <Checkbox
                   checked={
                     memberships.length > 0 &&
@@ -1901,20 +1875,27 @@ function MembershipsTab({
                 Name
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Status
+              </TableHead>
+              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Roles
               </TableHead>
               <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">
                 Joined
               </TableHead>
-              <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
-                Actions
-              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {memberships.map((membership) => (
-              <TableRow key={membership.$id}>
-                <TableCell className="px-4 py-3">
+              <TableRow
+                key={membership.$id}
+                className="cursor-pointer hover:bg-muted/30 transition-colors"
+                onClick={() => openDrawer(membership)}
+              >
+                <TableCell
+                  className="w-[40px] px-4 py-3"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Checkbox
                     checked={selectedMemberships.has(membership.$id)}
                     onCheckedChange={(checked) => {
@@ -1928,46 +1909,75 @@ function MembershipsTab({
                     }}
                   />
                 </TableCell>
-                <TableCell className="px-4 py-3">
-                  <Link
-                    to="/projects/$projectId/auth/teams/$teamId"
-                    params={{ projectId, teamId: membership.teamId }}
-                    className="flex items-center gap-2 hover:underline"
-                  >
+                <TableCell
+                  className="px-4 py-3"
+                  onClick={() => openDrawer(membership)}
+                >
+                  <div className="flex items-center gap-2">
                     <InitialsAvatar name={membership.teamName} size="sm" />
                     <span className="text-[13px] font-medium text-foreground">
                       {membership.teamName}
                     </span>
-                  </Link>
-                </TableCell>
-                <TableCell className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    {membership.roles.map((role) => (
-                      <Badge
-                        key={role}
-                        variant="secondary"
-                        className="text-[11px]"
-                      >
-                        {role}
-                      </Badge>
-                    ))}
                   </div>
                 </TableCell>
-                <TableCell className="px-4 py-3">
+                <TableCell
+                  className="px-4 py-3"
+                  onClick={() => openDrawer(membership)}
+                >
+                  <Badge
+                    variant={membership.confirm ? 'active' : 'pending'}
+                    className="text-[12px] font-medium"
+                  >
+                    {membership.confirm ? 'Active' : 'Pending'}
+                  </Badge>
+                </TableCell>
+                <TableCell
+                  className="px-4 py-3"
+                  onClick={() => openDrawer(membership)}
+                >
+                  <div className="flex flex-wrap gap-1.5 items-center">
+                    {(() => {
+                      const roles = membership.roles ?? []
+                      const maxVisible = 2
+                      const visible = roles.slice(0, maxVisible)
+                      const remaining = roles.length - maxVisible
+                      return (
+                        <>
+                          {visible.map((role) => (
+                            <Badge
+                              key={role}
+                              variant="outline"
+                              className="text-[12px] font-medium border-border"
+                            >
+                              {role}
+                            </Badge>
+                          ))}
+                          {remaining > 0 && (
+                            <Badge
+                              variant="secondary"
+                              className="text-[12px] font-medium"
+                            >
+                              +{remaining}
+                            </Badge>
+                          )}
+                          {roles.length === 0 && (
+                            <span className="text-[12px] text-muted-foreground">
+                              -
+                            </span>
+                          )}
+                        </>
+                      )
+                    })()}
+                  </div>
+                </TableCell>
+                <TableCell
+                  className="px-4 py-3"
+                  onClick={() => openDrawer(membership)}
+                >
                   <DateTooltip
                     date={new Date(membership.joined)}
                     className="text-[12px] text-muted-foreground"
                   />
-                </TableCell>
-                <TableCell className="px-4 py-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => handleDelete(membership)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -1975,42 +1985,13 @@ function MembershipsTab({
         </Table>
       </div>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md p-0">
-          <DialogHeader className="px-6 pt-6 text-left">
-            <DialogTitle>Delete member</DialogTitle>
-            <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete{' '}
-              <strong>
-                {membershipToDelete?.userName || 'this user'} ·{' '}
-                {membershipToDelete?.teamName || 'this team'}
-              </strong>
-              ? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              className="h-9 text-[13px]"
-              onClick={confirmDelete}
-              disabled={deleteMembership.isPending}
-            >
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <MembershipUpdateDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        membership={selectedMembership}
+        projectId={projectId!}
+        context="user"
+      />
     </>
   )
 }

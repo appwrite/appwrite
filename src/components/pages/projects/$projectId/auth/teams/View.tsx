@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useParams, useLocation, useNavigate } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { ArrowLeft, Loader2 } from 'lucide-react'
@@ -64,6 +64,10 @@ export function View() {
     ],
     [projectId, teamId],
   )
+
+  const [membersSearchValue, setMembersSearchValue] = useState('')
+  const [createMembershipDialogOpen, setCreateMembershipDialogOpen] =
+    useState(false)
 
   const handleBack = () => {
     navigate({
@@ -154,21 +158,38 @@ export function View() {
         }
         tabs={tabs}
         activeTab={activeTab}
+        searchPlaceholder={
+          activeTab === 'members' ? 'Search members...' : undefined
+        }
+        searchValue={activeTab === 'members' ? membersSearchValue : undefined}
+        onSearchChange={
+          activeTab === 'members' ? setMembersSearchValue : undefined
+        }
+        createLabel={activeTab === 'members' ? 'Invite member' : undefined}
+        onCreate={
+          activeTab === 'members'
+            ? () => setCreateMembershipDialogOpen(true)
+            : undefined
+        }
         showFilters={false}
         fullWidthBorder
       />
 
       <div className="flex-1 flex flex-col">
-        <div className={cn('mx-auto w-full max-w-7xl flex-1')}>
-          {activeTab === 'overview' && (
-            <div className="px-4 py-4 sm:px-6">
-              <TeamOverview />
-            </div>
+        <div
+          className={cn(
+            'mx-auto w-full max-w-7xl flex-1 px-4 pb-4 sm:px-6 sm:pb-6',
+            activeTab === 'overview' && 'pt-4 sm:pt-6',
           )}
+        >
+          {activeTab === 'overview' && <TeamOverview />}
           {activeTab === 'members' && (
-            <div className="px-4 py-4 sm:px-6">
-              <TeamMembers />
-            </div>
+            <TeamMembers
+                searchValue={membersSearchValue}
+                onSearchChange={setMembersSearchValue}
+                createDialogOpen={createMembershipDialogOpen}
+                onCreateDialogOpenChange={setCreateMembershipDialogOpen}
+              />
           )}
         </div>
       </div>
