@@ -4,44 +4,57 @@ namespace Tests\E2E\Services\Schedules;
 
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
+use Utopia\System\System;
 
 trait SchedulesBase
 {
-    protected function createSchedule(array $params = []): array
+    public function testCreateProject(): array
     {
-        return $this->client->call(Client::METHOD_POST, '/schedules', array_merge([
+        $team = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-    }
+        ], $this->getHeaders()), [
+            'teamId' => ID::unique(),
+            'name' => 'Schedule Test Team',
+        ]);
 
-    protected function getSchedule(string $scheduleId): array
-    {
-        return $this->client->call(Client::METHOD_GET, '/schedules/' . $scheduleId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-    }
+        $this->assertEquals(201, $team['headers']['status-code']);
 
-    protected function listSchedules(array $params = []): array
-    {
-        return $this->client->call(Client::METHOD_GET, '/schedules', array_merge([
+        $project = $this->client->call(Client::METHOD_POST, '/projects', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $params);
-    }
+        ], $this->getHeaders()), [
+            'projectId' => ID::unique(),
+            'name' => 'Schedule Test Project',
+            'teamId' => $team['body']['$id'],
+            'region' => System::getEnv('_APP_REGION', 'default'),
+        ]);
 
-    protected function createFunction(array $params = []): array
-    {
-        return $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+        $this->assertEquals(201, $project['headers']['status-code']);
+
+        $projectId = $project['body']['$id'];
+
+        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), array_merge([
-            'functionId' => ID::unique(),
-            'name' => 'Test Schedule Function',
-            'runtime' => 'node-22',
-            'entrypoint' => 'index.js',
-            'execute' => ['any'],
-        ], $params));
+        ], $this->getHeaders()), [
+            'keyId' => ID::unique(),
+            'name' => 'Schedule Test Key',
+            'scopes' => [
+                'functions.read',
+                'functions.write',
+                'execution.read',
+                'execution.write',
+                'messages.read',
+                'messages.write',
+            ],
+        ]);
+
+        $this->assertEquals(201, $key['headers']['status-code']);
+
+        return [
+            'projectId' => $projectId,
+            'apiKey' => $key['body']['secret'],
+        ];
     }
 }
