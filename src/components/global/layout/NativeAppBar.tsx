@@ -120,11 +120,7 @@ export function NativeAppBar() {
                 <p>History</p>
               </TooltipContent>
             </Tooltip>
-            <PopoverContent
-              align="start"
-              className="w-72 p-0"
-              sideOffset={4}
-            >
+            <PopoverContent align="start" className="w-72 p-0" sideOffset={4}>
               <div className="border-b border-border px-3 py-2">
                 <p className="text-[12px] font-semibold text-foreground">
                   Recent pages

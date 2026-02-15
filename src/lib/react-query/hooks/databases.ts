@@ -272,7 +272,13 @@ export async function fetchTableStructureForCopy(
       required,
       ...(array && { array: true }),
     }
-    if (type === 'string' || type === 'varchar' || type === 'text' || type === 'mediumtext' || type === 'longtext') {
+    if (
+      type === 'string' ||
+      type === 'varchar' ||
+      type === 'text' ||
+      type === 'mediumtext' ||
+      type === 'longtext'
+    ) {
       if (typeof c.size === 'number') def.size = c.size
       else if (type === 'varchar') def.size = 255
       else if (type === 'string') def.size = 255
@@ -283,7 +289,8 @@ export async function fetchTableStructureForCopy(
       if (typeof c.max !== 'undefined') def.max = c.max
     }
     if (type === 'enum' && Array.isArray(c.elements)) def.elements = c.elements
-    if (type === 'datetime' && typeof c.format === 'string') def.format = c.format
+    if (type === 'datetime' && typeof c.format === 'string')
+      def.format = c.format
     if (type === 'relationship') {
       def.relatedTable = c.relatedTable
       def.relationType = c.relationType ?? c.relationshipType
@@ -314,7 +321,12 @@ export async function fetchTableStructureForCopy(
   for (const idx of rawIndexes) {
     if (idx.status !== 'available') continue
     const { key, type, columns: indexColumns, orders, lengths } = idx
-    if (!key || !type || !Array.isArray(indexColumns) || indexColumns.length === 0)
+    if (
+      !key ||
+      !type ||
+      !Array.isArray(indexColumns) ||
+      indexColumns.length === 0
+    )
       continue
     const def: CreateTableIndexDef = {
       key,

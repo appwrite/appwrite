@@ -8,10 +8,7 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(
-          loaderData?.topic?.name ?? 'Topic',
-          'Messaging',
-        ),
+        title: pageTitle(loaderData?.topic?.name ?? 'Topic', 'Messaging'),
       },
     ],
   }),

@@ -27,7 +27,7 @@ export const Route = createFileRoute('/_public/account/$tab')({
   head: ({ params }) => {
     const tab = params.tab as string | undefined
     const tabLabel = tab
-      ? TAB_LABELS[tab] ?? tab.charAt(0).toUpperCase() + tab.slice(1)
+      ? (TAB_LABELS[tab] ?? tab.charAt(0).toUpperCase() + tab.slice(1))
       : 'Overview'
     return { meta: [{ title: pageTitle(tabLabel, 'Account') }] }
   },

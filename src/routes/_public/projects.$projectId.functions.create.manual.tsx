@@ -11,7 +11,9 @@ import { pageTitle } from '@/lib/utils/page-title'
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/create/manual',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Create manually', 'Functions') }] }),
+  head: () => ({
+    meta: [{ title: pageTitle('Create manually', 'Functions') }],
+  }),
   component: ManualCreatePage,
 })
 

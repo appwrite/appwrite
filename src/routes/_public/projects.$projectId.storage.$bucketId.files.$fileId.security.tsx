@@ -9,10 +9,7 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(
-          loaderData?.file?.name ?? 'File',
-          'Storage',
-        ),
+        title: pageTitle(loaderData?.file?.name ?? 'File', 'Storage'),
       },
     ],
   }),

@@ -37,11 +37,17 @@ interface SessionMigrationsContextValue {
 const SessionMigrationsContext =
   createContext<SessionMigrationsContextValue | null>(null)
 
-export function SessionMigrationsProvider({ children }: { children: ReactNode }) {
-  const [exportIdsByProject, setExportIdsByProject] =
-    useState<SessionIdsState>({})
-  const [importIdsByProject, setImportIdsByProject] =
-    useState<SessionIdsState>({})
+export function SessionMigrationsProvider({
+  children,
+}: {
+  children: ReactNode
+}) {
+  const [exportIdsByProject, setExportIdsByProject] = useState<SessionIdsState>(
+    {},
+  )
+  const [importIdsByProject, setImportIdsByProject] = useState<SessionIdsState>(
+    {},
+  )
   const [dismissedExportByProject, setDismissedExportByProject] =
     useState<SessionIdsState>({})
   const [dismissedImportByProject, setDismissedImportByProject] =
@@ -67,21 +73,27 @@ export function SessionMigrationsProvider({ children }: { children: ReactNode })
     })
   }, [])
 
-  const dismissExport = useCallback((projectId: string, migrationId: string) => {
-    setDismissedExportByProject((prev) => {
-      const list = prev[projectId] ?? []
-      if (list.includes(migrationId)) return prev
-      return { ...prev, [projectId]: [...list, migrationId] }
-    })
-  }, [])
+  const dismissExport = useCallback(
+    (projectId: string, migrationId: string) => {
+      setDismissedExportByProject((prev) => {
+        const list = prev[projectId] ?? []
+        if (list.includes(migrationId)) return prev
+        return { ...prev, [projectId]: [...list, migrationId] }
+      })
+    },
+    [],
+  )
 
-  const dismissImport = useCallback((projectId: string, migrationId: string) => {
-    setDismissedImportByProject((prev) => {
-      const list = prev[projectId] ?? []
-      if (list.includes(migrationId)) return prev
-      return { ...prev, [projectId]: [...list, migrationId] }
-    })
-  }, [])
+  const dismissImport = useCallback(
+    (projectId: string, migrationId: string) => {
+      setDismissedImportByProject((prev) => {
+        const list = prev[projectId] ?? []
+        if (list.includes(migrationId)) return prev
+        return { ...prev, [projectId]: [...list, migrationId] }
+      })
+    },
+    [],
+  )
 
   const getExportIds = useCallback(
     (projectId: string) => exportIdsByProject[projectId] ?? [],
@@ -105,11 +117,19 @@ export function SessionMigrationsProvider({ children }: { children: ReactNode })
 
   const addMigrationFromRealtime = useCallback(
     (projectId: string, payload: unknown) => {
-      const m = payload as { $id?: string; destination?: string; source?: string; status?: string }
+      const m = payload as {
+        $id?: string
+        destination?: string
+        source?: string
+        status?: string
+      }
       if (!m?.$id || typeof m.status !== 'string') return
       const dismissedExport = dismissedExportRef.current[projectId] ?? []
       const dismissedImport = dismissedImportRef.current[projectId] ?? []
-      if (m.destination === 'CSV' && IN_PROGRESS_EXPORT_STATUSES.includes(m.status)) {
+      if (
+        m.destination === 'CSV' &&
+        IN_PROGRESS_EXPORT_STATUSES.includes(m.status)
+      ) {
         if (!dismissedExport.includes(m.$id)) {
           setExportIdsByProject((prev) => {
             const list = prev[projectId] ?? []
@@ -118,7 +138,10 @@ export function SessionMigrationsProvider({ children }: { children: ReactNode })
           })
         }
       }
-      if (m.source === 'CSV' && IN_PROGRESS_IMPORT_STATUSES.includes(m.status)) {
+      if (
+        m.source === 'CSV' &&
+        IN_PROGRESS_IMPORT_STATUSES.includes(m.status)
+      ) {
         if (!dismissedImport.includes(m.$id)) {
           setImportIdsByProject((prev) => {
             const list = prev[projectId] ?? []
@@ -175,11 +198,11 @@ export function useSessionMigrations(projectId: string | null | undefined) {
       sessionImportIds: [] as string[],
       dismissedExportIds: [] as string[],
       dismissedImportIds: [] as string[],
-      addExportId: (_p: string, _id: string) => {},
-      addImportId: (_p: string, _id: string) => {},
-      dismissExport: (_p: string, _id: string) => {},
-      dismissImport: (_p: string, _id: string) => {},
-      addMigrationFromRealtime: (_p: string, _payload: unknown) => {},
+      addExportId: () => {},
+      addImportId: () => {},
+      dismissExport: () => {},
+      dismissImport: () => {},
+      addMigrationFromRealtime: () => {},
     }
   }
   return {

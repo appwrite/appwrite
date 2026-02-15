@@ -9,10 +9,7 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(
-          loaderData?.team?.name ?? 'Team',
-          'Auth',
-        ),
+        title: pageTitle(loaderData?.team?.name ?? 'Team', 'Auth'),
       },
     ],
   }),
@@ -32,12 +29,9 @@ export const Route = createFileRoute(
         queryFn: () => fetchTeam(projectId, teamId),
         staleTime: 30 * 1000, // 30 seconds
       })
-      const team = queryClient.getQueryData<Awaited<ReturnType<typeof fetchTeam>>>([
-        'team',
-        'project',
-        projectId,
-        teamId,
-      ])
+      const team = queryClient.getQueryData<
+        Awaited<ReturnType<typeof fetchTeam>>
+      >(['team', 'project', projectId, teamId])
       return { team }
     }
   },

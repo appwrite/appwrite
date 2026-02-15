@@ -13,7 +13,9 @@ import { sdk } from '@/lib/appwrite/sdk'
 import { PROJECT_CHANNELS, REALTIME_EVENTS } from './constants'
 
 /** Realtime payload may have statusCounters as JSON string; normalize to object */
-function normalizeMigrationPayload(payload: Record<string, unknown>): Record<string, unknown> {
+function normalizeMigrationPayload(
+  payload: Record<string, unknown>,
+): Record<string, unknown> {
   const out = { ...payload }
   if (typeof out.statusCounters === 'string') {
     try {
@@ -49,7 +51,9 @@ function mergeMigrationPayloadIntoCache(
   queryClient.setQueriesData(
     { queryKey: ['migrations', 'project', projectId], exact: false },
     (old: unknown) => {
-      const data = old as { migrations?: Array<Record<string, unknown>> } | undefined
+      const data = old as
+        | { migrations?: Array<Record<string, unknown>> }
+        | undefined
       if (!data?.migrations || !Array.isArray(data.migrations)) return old
       const next = data.migrations.map((m) =>
         m.$id === id ? { ...m, ...normalized } : m,
@@ -189,7 +193,12 @@ function handleRealtimeEvent(
 
   if (hasEvent(events, REALTIME_EVENTS.MIGRATIONS_ANY)) {
     const payload = response.payload
-    if (payload != null && typeof payload === 'object' && payload !== null && '$id' in payload) {
+    if (
+      payload != null &&
+      typeof payload === 'object' &&
+      payload !== null &&
+      '$id' in payload
+    ) {
       // Merge update into cache so progress boxes and list update without refetching
       mergeMigrationPayloadIntoCache(
         queryClient,

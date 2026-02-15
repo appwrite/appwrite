@@ -4,7 +4,13 @@
  * Shows file uploads with progress bars; completed uploads keep the same layout with a "View file" link.
  */
 
-import { X, CheckCircle2, AlertCircle, Loader2, ExternalLink } from 'lucide-react'
+import {
+  X,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  ExternalLink,
+} from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { ProgressBarRow } from '@/components/global/shared/ProgressBarRow'
@@ -48,9 +54,13 @@ export function UploadProgress({
       {displayUploads.map((upload) => {
         const isCompleted = upload.status === 'completed'
         const isFailed = upload.status === 'failed'
-        const isActive = upload.status === 'pending' || upload.status === 'uploading'
-        const showCloseButton =
-          isActive ? !!onCancel : (isCompleted || isFailed) ? !!onDismiss : false
+        const isActive =
+          upload.status === 'pending' || upload.status === 'uploading'
+        const showCloseButton = isActive
+          ? !!onCancel
+          : isCompleted || isFailed
+            ? !!onDismiss
+            : false
 
         return (
           <div

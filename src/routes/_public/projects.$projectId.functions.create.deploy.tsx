@@ -12,7 +12,9 @@ import { pageTitle } from '@/lib/utils/page-title'
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/create/deploy',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Deploy from URL', 'Functions') }] }),
+  head: () => ({
+    meta: [{ title: pageTitle('Deploy from URL', 'Functions') }],
+  }),
   component: DeployFromUrlPage,
 })
 

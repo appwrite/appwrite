@@ -21,10 +21,7 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(
-          loaderData?.database?.name ?? 'Database',
-          'Databases',
-        ),
+        title: pageTitle(loaderData?.database?.name ?? 'Database', 'Databases'),
       },
     ],
   }),

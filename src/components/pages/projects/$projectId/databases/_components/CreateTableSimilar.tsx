@@ -12,7 +12,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IdInput } from '@/components/ui/id-input'
 import { Checkbox } from '@/components/ui/checkbox'
-import { fetchTableStructureForCopy, createProjectTableWithStructure } from '@/lib/react-query/hooks'
+import {
+  fetchTableStructureForCopy,
+  createProjectTableWithStructure,
+} from '@/lib/react-query/hooks'
 import { getErrorMessage } from '@/lib/utils/error-formatting'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
@@ -49,8 +52,14 @@ export function CreateTableSimilar({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const { data: structure, isLoading: structureLoading } = useQuery({
-    queryKey: ['table-structure-for-copy', projectId, databaseId, sourceTable.$id],
-    queryFn: () => fetchTableStructureForCopy(projectId, databaseId, sourceTable.$id),
+    queryKey: [
+      'table-structure-for-copy',
+      projectId,
+      databaseId,
+      sourceTable.$id,
+    ],
+    queryFn: () =>
+      fetchTableStructureForCopy(projectId, databaseId, sourceTable.$id),
     enabled: open && !!projectId && !!databaseId && !!sourceTable.$id,
   })
 
@@ -85,14 +94,24 @@ export function CreateTableSimilar({
     if (!validate()) return
     setIsSubmitting(true)
     try {
-      const columns = copyStructure && structure?.columns?.length ? structure.columns : undefined
-      const indexes = copyStructure && structure?.indexes?.length ? structure.indexes : undefined
-      const newTable = await createProjectTableWithStructure(projectId, databaseId, {
-        tableId: tableId || undefined,
-        name: name.trim(),
-        columns,
-        indexes,
-      })
+      const columns =
+        copyStructure && structure?.columns?.length
+          ? structure.columns
+          : undefined
+      const indexes =
+        copyStructure && structure?.indexes?.length
+          ? structure.indexes
+          : undefined
+      const newTable = await createProjectTableWithStructure(
+        projectId,
+        databaseId,
+        {
+          tableId: tableId || undefined,
+          name: name.trim(),
+          columns,
+          indexes,
+        },
+      )
       toast.success(`${newTable.name} has been created`)
       onOpenChange(false)
       await onCreated?.(newTable.$id)
@@ -107,9 +126,12 @@ export function CreateTableSimilar({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         <DialogHeader className="px-6 pt-6 pb-4 text-left">
-          <DialogTitle>Duplicate structure: "{sourceTable.name ?? sourceTable.$id}"</DialogTitle>
+          <DialogTitle>
+            Duplicate structure: "{sourceTable.name ?? sourceTable.$id}"
+          </DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Create a new table with the same column structure as the source table.
+            Create a new table with the same column structure as the source
+            table.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border" />
@@ -176,10 +198,12 @@ export function CreateTableSimilar({
                       <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
                       <span>Loading structure…</span>
                     </>
-                  ) : structure?.columns?.length != null && structure.columns.length > 0 ? (
+                  ) : structure?.columns?.length != null &&
+                    structure.columns.length > 0 ? (
                     <span>
                       {structure.columns.length} columns
-                      {structure.indexes?.length != null && structure.indexes.length > 0
+                      {structure.indexes?.length != null &&
+                      structure.indexes.length > 0
                         ? `, ${structure.indexes.length} indexes`
                         : ''}
                     </span>

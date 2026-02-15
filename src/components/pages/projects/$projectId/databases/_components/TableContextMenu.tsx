@@ -121,7 +121,11 @@ export function TableContextMenu({
   }
 
   const handleOpenInNewWindow = () => {
-    window.open(tableHref, '_blank', 'noopener,noreferrer,width=1200,height=800')
+    window.open(
+      tableHref,
+      '_blank',
+      'noopener,noreferrer,width=1200,height=800',
+    )
   }
 
   const handleCopyJson = async () => {
@@ -161,10 +165,7 @@ export function TableContextMenu({
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-52">
           {TABLE_TABS.map(({ id, label, path, icon: Icon }) => (
-            <ContextMenuItem
-              key={id}
-              onSelect={() => handleGoToTab(path)}
-            >
+            <ContextMenuItem key={id} onSelect={() => handleGoToTab(path)}>
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                 <Icon className="size-4" />
               </span>
@@ -235,8 +236,9 @@ export function TableContextMenu({
           <DialogHeader className="px-6 pt-6 pb-4 text-left">
             <DialogTitle>Delete table</DialogTitle>
             <DialogDescription className="text-[13px] mt-2">
-              Are you sure you want to delete <strong>{table.name ?? table.$id}</strong>?
-              All rows and data will be permanently removed. This action cannot be undone.
+              Are you sure you want to delete{' '}
+              <strong>{table.name ?? table.$id}</strong>? All rows and data will
+              be permanently removed. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

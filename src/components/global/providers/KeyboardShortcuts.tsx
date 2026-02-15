@@ -3,7 +3,6 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
   type ReactNode,
 } from 'react'
 import { useNavigate } from '@tanstack/react-router'

@@ -1647,12 +1647,21 @@ export function TableView({
                       table={table}
                       onCreateSimilar={async (newTableId) => {
                         await queryClient.refetchQueries({
-                          queryKey: ['tables', 'project', projectId, databaseId],
+                          queryKey: [
+                            'tables',
+                            'project',
+                            projectId,
+                            databaseId,
+                          ],
                         })
                         // Prefetch new table data before navigating to avoid layout shift / loading screen
                         await Promise.all([
                           queryClient.ensureQueryData(
-                            tableQueryOptions(projectId, databaseId, newTableId),
+                            tableQueryOptions(
+                              projectId,
+                              databaseId,
+                              newTableId,
+                            ),
                           ),
                           queryClient.ensureQueryData(
                             tableColumnsQueryOptions(
@@ -1953,7 +1962,9 @@ export function TableView({
               : undefined
           }
           exportTooltip="Export CSV"
-          exportDisabled={!isDatabaseLevelView && activeTab === 'rows' && !hasRows}
+          exportDisabled={
+            !isDatabaseLevelView && activeTab === 'rows' && !hasRows
+          }
           beforeCreateButtons={
             isDatabaseLevelView ? undefined : activeTab === 'columns' ? (
               <Button
@@ -2072,11 +2083,7 @@ export function TableView({
           Back to {database.name}
         </button>
 
-        <div
-          className={cn(
-            'flex-1 min-h-0 overflow-y-auto'
-          )}
-        >
+        <div className={cn('flex-1 min-h-0 overflow-y-auto')}>
           {isDatabaseLevelView ? (
             <DatabaseOverview
               databaseId={databaseId}
@@ -3146,7 +3153,12 @@ export function DatabaseOverview({
                               table={table}
                               onCreateSimilar={async () => {
                                 await queryClient.refetchQueries({
-                                  queryKey: ['tables', 'project', projectId, databaseId],
+                                  queryKey: [
+                                    'tables',
+                                    'project',
+                                    projectId,
+                                    databaseId,
+                                  ],
                                 })
                               }}
                             >
@@ -4390,7 +4402,8 @@ function RowEditDrawer({
                                       (item, index) => {
                                         const columnInfo = getColumnInfo(key)
                                         const size = columnInfo?.size || null
-                                        const colType = columnInfo?.type || 'string'
+                                        const colType =
+                                          columnInfo?.type || 'string'
                                         // Check multiple possible properties for required status
                                         const isRequired =
                                           columnInfo?.required === true ||
@@ -5224,10 +5237,10 @@ function RowsSpreadsheet({
             $updatedAt: rowObj.$updatedAt as string | undefined,
             $permissions: (rowObj.$permissions as string[]) || [],
           }
-        setSelectedRowForEdit(rowData)
-        setFocusedField(null)
-        setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
-        setEditDrawerOpen(true)
+          setSelectedRowForEdit(rowData)
+          setFocusedField(null)
+          setDrawerInitialTab(openToPermissions ? 'permissions' : 'data')
+          setEditDrawerOpen(true)
         },
       )
     },
@@ -5357,12 +5370,7 @@ function RowsSpreadsheet({
     mutationFn: async (row: RowData) => {
       const data = { ...row.data } as Record<string, unknown>
       if (Object.prototype.hasOwnProperty.call(data, '$id')) delete data.$id
-      return createProjectTableRow(
-        projectId,
-        databaseId,
-        tableId,
-        data,
-      )
+      return createProjectTableRow(projectId, databaseId, tableId, data)
     },
     onSuccess: async () => {
       await queryClient.refetchQueries({
@@ -5893,7 +5901,9 @@ function RowsSpreadsheet({
                         // Only apply RTL detection to string values
                         const cellValue = row.data[col as keyof typeof row.data]
                         const isRTLContent =
-                          typeof cellValue === 'string' ? isRTL(cellValue) : false
+                          typeof cellValue === 'string'
+                            ? isRTL(cellValue)
+                            : false
                         return (
                           <span
                             className={cn(
@@ -5920,7 +5930,9 @@ function RowsSpreadsheet({
                         className="text-[12px] text-muted-foreground"
                       />
                     ) : (
-                      <span className="text-[12px] text-foreground/60">N/A</span>
+                      <span className="text-[12px] text-foreground/60">
+                        N/A
+                      </span>
                     )}
                   </td>
                   <td
@@ -5934,7 +5946,9 @@ function RowsSpreadsheet({
                         className="text-[12px] text-muted-foreground"
                       />
                     ) : (
-                      <span className="text-[12px] text-foreground/60">N/A</span>
+                      <span className="text-[12px] text-foreground/60">
+                        N/A
+                      </span>
                     )}
                   </td>
                   <td
@@ -5943,7 +5957,11 @@ function RowsSpreadsheet({
                       'shadow-[inset_1px_0_0_0_#d1d5db] dark:shadow-[inset_1px_0_0_0_rgb(255_255_255_/_0.1)]',
                       selectedRows.has(row.$id) && 'bg-sky-100 dark:bg-sky-950',
                     )}
-                    style={{ width: '40px', minWidth: '40px', maxWidth: '40px' }}
+                    style={{
+                      width: '40px',
+                      minWidth: '40px',
+                      maxWidth: '40px',
+                    }}
                   >
                     <div className="flex h-full w-[40px] items-center justify-center py-1.5">
                       <DropdownMenu>
@@ -7107,7 +7125,7 @@ function ColumnsSpreadsheet({
                   >
                     {col.key !== '$id' &&
                     (col.type === 'string' || col.type === 'varchar')
-                      ? col.size ?? '—'
+                      ? (col.size ?? '—')
                       : '—'}
                   </td>
                   <td className={cn('px-3 py-2', bodyCellBorderClass)}>

@@ -31,8 +31,7 @@ const ExportStatusHeader = memo(function ExportStatusHeader({
 }: {
   status: string
 }) {
-  const isPendingOrProcessing =
-    status === 'pending' || status === 'processing'
+  const isPendingOrProcessing = status === 'pending' || status === 'processing'
   const isCompleted = status === 'completed'
   const isFailed = status === 'failed'
   const label = statusToLabel(status)
@@ -79,11 +78,8 @@ interface CsvExportBoxProps {
 }
 
 export function CsvExportBox({ projectId }: CsvExportBoxProps) {
-  const {
-    sessionExportIds,
-    dismissedExportIds,
-    dismissExport,
-  } = useSessionMigrations(projectId)
+  const { sessionExportIds, dismissedExportIds, dismissExport } =
+    useSessionMigrations(projectId)
   const { migrations } = useCsvExportMigrations(projectId, sessionExportIds)
   const dismissedSet = useMemo(
     () => new Set(dismissedExportIds),
@@ -135,7 +131,7 @@ export function CsvExportBox({ projectId }: CsvExportBoxProps) {
         const rowCount =
           isCompleted && liveCount !== null
             ? liveCount
-            : displayedCounts[m.$id] ?? liveCount
+            : (displayedCounts[m.$id] ?? liveCount)
         const statusLine =
           rowCount !== null && rowCount > 0
             ? `${rowCount.toLocaleString()} rows exported`

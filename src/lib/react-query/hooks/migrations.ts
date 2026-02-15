@@ -124,9 +124,9 @@ export async function fetchDatabaseCsvMigrations(
     ],
   })
   const all = (response.migrations || []) as Models.Migration[]
-  const set =
-    resourceIds.length > 0 ? new Set(resourceIds) : new Set<string>()
-  const migrations = set.size > 0 ? all.filter((m) => set.has(m.resourceId)) : []
+  const set = resourceIds.length > 0 ? new Set(resourceIds) : new Set<string>()
+  const migrations =
+    set.size > 0 ? all.filter((m) => set.has(m.resourceId)) : []
   return { migrations }
 }
 
@@ -252,7 +252,13 @@ export function useCsvExportMigrations(
 ) {
   const hasSessionIds = sessionExportIds.length > 0
   const { data, refetch } = useQuery({
-    queryKey: ['migrations', 'project', projectId, 'csv-export', sessionExportIds],
+    queryKey: [
+      'migrations',
+      'project',
+      projectId,
+      'csv-export',
+      sessionExportIds,
+    ],
     queryFn: async () => {
       const result = await fetchCsvExportMigrations(projectId!)
       const set = new Set(sessionExportIds)
@@ -282,7 +288,13 @@ export function useCsvImportMigrations(
 ) {
   const hasSessionIds = sessionImportIds.length > 0
   const { data, refetch } = useQuery({
-    queryKey: ['migrations', 'project', projectId, 'csv-import', sessionImportIds],
+    queryKey: [
+      'migrations',
+      'project',
+      projectId,
+      'csv-import',
+      sessionImportIds,
+    ],
     queryFn: async () => {
       const result = await fetchCsvImportMigrations(projectId!)
       const set = new Set(sessionImportIds)

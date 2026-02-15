@@ -43,20 +43,6 @@ const APPWRITE_CLI_INSTALL_URL =
   'https://appwrite.io/docs/tooling/command-line/installation'
 const APPWRITE_CLI_DOCS_URL =
   'https://appwrite.io/docs/tooling/command-line/commands'
-const APPWRITE_SDKS_DOCS_URL = 'https://appwrite.io/docs/sdks'
-
-/** Framework-specific quickstart doc paths (optional). */
-const FRAMEWORK_GUIDE_URL: Record<string, string> = {
-  react: `${APPWRITE_DOCS_URL}/getting-started-for-web`,
-  vue: `${APPWRITE_DOCS_URL}/getting-started-for-web`,
-  svelte: `${APPWRITE_DOCS_URL}/getting-started-for-web`,
-  next: `${APPWRITE_DOCS_URL}/getting-started-for-web`,
-  vanilla: `${APPWRITE_DOCS_URL}/getting-started-for-web`,
-  node: `${APPWRITE_DOCS_URL}/getting-started-for-server`,
-  express: `${APPWRITE_DOCS_URL}/getting-started-for-server`,
-  flutter: `${APPWRITE_DOCS_URL}/getting-started-for-flutter`,
-  'react-native': `${APPWRITE_DOCS_URL}/getting-started-for-react-native`,
-}
 
 interface CodeFile {
   label: string
@@ -133,7 +119,10 @@ const USING_OPTIONS: Record<string, { id: string; label: string }[]> = {
 }
 
 /** Package manager options for web/node; null = not applicable (use all in install). */
-const PACKAGE_MANAGER_OPTIONS: Record<string, { id: string; label: string }[] | null> = {
+const PACKAGE_MANAGER_OPTIONS: Record<
+  string,
+  { id: string; label: string }[] | null
+> = {
   web: [
     { id: 'npm', label: 'npm' },
     { id: 'bun', label: 'bun' },
@@ -180,11 +169,17 @@ function getCodeFiles(
   endpoint: string,
   projectId: string,
 ): CodeFile[] {
-  const envCode = getEnvExample(sdkId, runtime, frameworkId, usingId, endpoint, projectId)
+  const envCode = getEnvExample(
+    sdkId,
+    runtime,
+    frameworkId,
+    usingId,
+    endpoint,
+    projectId,
+  )
   const envLabel = frameworkId === 'next' ? '.env.local' : '.env'
   const tsLang = 'typescript' as CodeBlockLanguage
 
-  const isServer = runtime === 'server'
   const webEndpoint =
     frameworkId === 'next'
       ? 'process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT'
@@ -628,8 +623,16 @@ export default function Home() {
       if (frameworkId === 'refine') {
         return [
           { label: envLabel, code: envCode, language: 'plaintext' },
-          { label: 'src/lib/appwrite.ts', code: `import { Client } from 'appwrite'\n\n${clientInitWeb}\n\nexport { client }\n`, language: tsLang },
-          { label: 'src/App.tsx', code: `import { client } from './lib/appwrite'\nimport { Account } from 'appwrite'\nconst account = new Account(client)\naccount.get().then((u) => console.log('Hello,', u.name)).catch(console.error)\n`, language: tsLang },
+          {
+            label: 'src/lib/appwrite.ts',
+            code: `import { Client } from 'appwrite'\n\n${clientInitWeb}\n\nexport { client }\n`,
+            language: tsLang,
+          },
+          {
+            label: 'src/App.tsx',
+            code: `import { client } from './lib/appwrite'\nimport { Account } from 'appwrite'\nconst account = new Account(client)\naccount.get().then((u) => console.log('Hello,', u.name)).catch(console.error)\n`,
+            language: tsLang,
+          },
         ]
       }
       // Vanilla / Web
@@ -790,7 +793,11 @@ export default function App() {
       ]
     case 'apple':
       return [
-        { label: 'Config (env or xcconfig)', code: envCode, language: 'plaintext' },
+        {
+          label: 'Config (env or xcconfig)',
+          code: envCode,
+          language: 'plaintext',
+        },
         {
           label: 'AppwriteClient.swift',
           code: `import Appwrite
@@ -922,10 +929,14 @@ puts "Hello, #{user['name']}"
       ]
     case 'dotnet':
       return [
-        { label: '.env or launchSettings', code: envCode, language: 'plaintext' },
+        {
+          label: '.env or launchSettings',
+          code: envCode,
+          language: 'plaintext',
+        },
         {
           label: 'Program.cs',
-            code: `using Appwrite;
+          code: `using Appwrite;
 using Appwrite.Services;
 
 var client = new Client()
@@ -1027,7 +1038,14 @@ console.log("Hello,", user.name)
         },
       ]
     default:
-      return getCodeFiles('web', 'vanilla', 'vite', 'client', endpoint, projectId)
+      return getCodeFiles(
+        'web',
+        'vanilla',
+        'vite',
+        'client',
+        endpoint,
+        projectId,
+      )
   }
 }
 
@@ -1071,7 +1089,11 @@ function getInstallInstructions(
       return {
         title: 'Install the Deno SDK',
         options: [
-          { label: 'Import from JSR', code: 'import { Client } from "jsr:/@appwrite/sdk"', language: 'typescript' },
+          {
+            label: 'Import from JSR',
+            code: 'import { Client } from "jsr:/@appwrite/sdk"',
+            language: 'typescript',
+          },
         ],
       }
     case 'flutter':
@@ -1126,8 +1148,16 @@ function getInstallInstructions(
       return {
         title: 'Install the React Native SDK',
         options: [
-          { label: 'npm', code: 'npm install react-native-appwrite', language: 'bash' },
-          { label: 'bun', code: 'bun add react-native-appwrite', language: 'bash' },
+          {
+            label: 'npm',
+            code: 'npm install react-native-appwrite',
+            language: 'bash',
+          },
+          {
+            label: 'bun',
+            code: 'bun add react-native-appwrite',
+            language: 'bash',
+          },
         ],
       }
     case 'python':
@@ -1153,7 +1183,11 @@ function getInstallInstructions(
       return {
         title: 'Install the PHP SDK',
         options: [
-          { label: 'Composer', code: 'composer require appwrite/appwrite', language: 'bash' },
+          {
+            label: 'Composer',
+            code: 'composer require appwrite/appwrite',
+            language: 'bash',
+          },
         ],
       }
     case 'ruby':
@@ -1167,14 +1201,22 @@ function getInstallInstructions(
       return {
         title: 'Install the .NET SDK',
         options: [
-          { label: 'NuGet', code: 'dotnet add package Appwrite', language: 'bash' },
+          {
+            label: 'NuGet',
+            code: 'dotnet add package Appwrite',
+            language: 'bash',
+          },
         ],
       }
     case 'go':
       return {
         title: 'Install the Go SDK',
         options: [
-          { label: 'go get', code: 'go get github.com/appwrite/sdk-for-go', language: 'bash' },
+          {
+            label: 'go get',
+            code: 'go get github.com/appwrite/sdk-for-go',
+            language: 'bash',
+          },
         ],
       }
     case 'swift':
@@ -1278,12 +1320,19 @@ export function ConnectProject({
     [sdkId, frameworkId, usingId, runtime, endpoint, projectId],
   )
   const [connectTab, setConnectTab] = useState<'app' | 'cli' | 'mcp'>('app')
-  const [cliInstallOs, setCliInstallOs] = useState<'macos' | 'windows' | 'linux'>(() => {
+  const [cliInstallOs, setCliInstallOs] = useState<
+    'macos' | 'windows' | 'linux'
+  >(() => {
     if (typeof navigator === 'undefined') return 'macos'
     const ua = navigator.userAgent.toLowerCase()
     const platform = navigator.platform?.toLowerCase() ?? ''
-    if (/platform|win32|win64|wow64|windows/.test(platform) || /windows|win32|wow64/.test(ua)) return 'windows'
-    if (/mac|darwin|iphone|ipad/.test(platform) || /macintosh|mac os/.test(ua)) return 'macos'
+    if (
+      /platform|win32|win64|wow64|windows/.test(platform) ||
+      /windows|win32|wow64/.test(ua)
+    )
+      return 'windows'
+    if (/mac|darwin|iphone|ipad/.test(platform) || /macintosh|mac os/.test(ua))
+      return 'macos'
     return 'linux'
   })
   const [selectedFileIndex, setSelectedFileIndex] = useState(0)
@@ -1299,11 +1348,6 @@ export function ConnectProject({
     toast.success('Copied to clipboard')
     setTimeout(() => setCopied(false), 2000)
   }
-  const guideUrl = FRAMEWORK_GUIDE_URL[frameworkId] ?? APPWRITE_DOCS_URL
-  const guideLabel =
-    frameworkId === 'vanilla' || frameworkId === 'express'
-      ? 'Getting started guide'
-      : `${frameworks.find((f) => f.id === frameworkId)?.label ?? 'Framework'} guide`
   const installInstructions = useMemo(
     () => getInstallInstructions(sdkId, packageManagerId),
     [sdkId, packageManagerId],
@@ -1333,8 +1377,8 @@ export function ConnectProject({
         <DialogHeader className="shrink-0 px-6 pt-6 pb-4 text-left">
           <DialogTitle>Connect to your project</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Get your project credentials and code snippets to integrate
-            Appwrite into your app.
+            Get your project credentials and code snippets to integrate Appwrite
+            into your app.
           </DialogDescription>
         </DialogHeader>
         <Tabs
@@ -1375,261 +1419,263 @@ export function ConnectProject({
             value="app"
             className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-0 data-[state=inactive]:hidden flex flex-col"
           >
-          {/* Selectors above grid: SDK (Client + Server), Framework, Package manager */}
-          <div className="shrink-0 flex flex-wrap items-end gap-4 pt-4 pb-4 border-b border-border">
-            <div className="min-w-[160px]">
-              <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
-                SDK / Platform
-              </label>
-              <Select
-                value={
-                  [...CLIENT_SDK_OPTIONS, ...SERVER_SDK_OPTIONS].some((o) => o.id === sdkId)
-                    ? sdkId
-                    : 'web'
-                }
-                onValueChange={setSdkId}
-              >
-                <SelectTrigger className="w-full h-9 text-[13px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Client
-                    </SelectLabel>
-                    {CLIENT_SDK_OPTIONS.map((opt) => (
-                      <SelectItem
-                        key={opt.id}
-                        value={opt.id}
-                        className="text-[13px]"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <PlatformIcon platform={opt.platform} size="sm" />
-                          {opt.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      Server
-                    </SelectLabel>
-                    {SERVER_SDK_OPTIONS.map((opt) => (
-                      <SelectItem
-                        key={opt.id}
-                        value={opt.id}
-                        className="text-[13px]"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <FrameworkIcon framework={opt.id} size="sm" />
-                          {opt.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            {frameworks.length > 1 && (
-              <div className="min-w-[120px]">
+            {/* Selectors above grid: SDK (Client + Server), Framework, Package manager */}
+            <div className="shrink-0 flex flex-wrap items-end gap-4 pt-4 pb-4 border-b border-border">
+              <div className="min-w-[160px]">
                 <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
-                  Framework
-                </label>
-                <Select value={frameworkId} onValueChange={setFrameworkId}>
-                  <SelectTrigger className="w-full h-9 text-[13px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {frameworks.map((fw) => (
-                      <SelectItem
-                        key={fw.id}
-                        value={fw.id}
-                        className="text-[13px]"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <FrameworkIcon framework={fw.id} size="sm" />
-                          {fw.label}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {usingVariants && usingVariants.length > 1 && (
-              <div className="min-w-[140px]">
-                <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
-                  Using
-                </label>
-                <Select value={usingId} onValueChange={setUsingId}>
-                  <SelectTrigger className="w-full h-9 text-[13px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {usingVariants.map((v) => (
-                      <SelectItem
-                        key={v.id}
-                        value={v.id}
-                        className="text-[13px]"
-                      >
-                        {v.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {packageManagers && packageManagers.length > 1 && (
-              <div className="min-w-[100px]">
-                <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
-                  Package manager
+                  SDK / Platform
                 </label>
                 <Select
-                  value={packageManagerId}
-                  onValueChange={setPackageManagerId}
+                  value={
+                    [...CLIENT_SDK_OPTIONS, ...SERVER_SDK_OPTIONS].some(
+                      (o) => o.id === sdkId,
+                    )
+                      ? sdkId
+                      : 'web'
+                  }
+                  onValueChange={setSdkId}
                 >
                   <SelectTrigger className="w-full h-9 text-[13px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {packageManagers.map((pm) => (
-                      <SelectItem
-                        key={pm.id}
-                        value={pm.id}
-                        className="text-[13px]"
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <PackageManagerIcon
-                            packageManager={pm.id}
-                            size="sm"
-                          />
-                          {pm.label}
-                        </span>
-                      </SelectItem>
-                    ))}
+                    <SelectGroup>
+                      <SelectLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Client
+                      </SelectLabel>
+                      {CLIENT_SDK_OPTIONS.map((opt) => (
+                        <SelectItem
+                          key={opt.id}
+                          value={opt.id}
+                          className="text-[13px]"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <PlatformIcon platform={opt.platform} size="sm" />
+                            {opt.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        Server
+                      </SelectLabel>
+                      {SERVER_SDK_OPTIONS.map((opt) => (
+                        <SelectItem
+                          key={opt.id}
+                          value={opt.id}
+                          className="text-[13px]"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <FrameworkIcon framework={opt.id} size="sm" />
+                            {opt.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   </SelectContent>
                 </Select>
               </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-[0.9fr_1.4fr] gap-6 pt-4 min-h-0 flex-1">
-            {/* Left: install instructions + API keys when server */}
-            <div className="space-y-4 min-w-0 min-h-0 overflow-y-auto">
-              <div className="space-y-4">
-                <h4 className="text-[13px] font-semibold text-foreground">
-                  {installInstructions.title}
-                </h4>
-                <div className="space-y-4">
-                  {installInstructions.options.map((option, i) => (
-                    <CodeBlock
-                      key={i}
-                      code={option.code}
-                      language={option.language ?? 'plaintext'}
-                      label={option.label}
-                      showCopy={true}
-                    />
-                  ))}
-                </div>
-              </div>
-              {isServer && (
-                <div className="rounded-xl border border-border bg-muted/30 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-border">
-                    <h4 className="text-[13px] font-semibold text-foreground">
-                      API keys
-                    </h4>
-                  </div>
-                  <div className="px-4 py-3 space-y-3">
-                    <p className="text-[13px] text-muted-foreground">
-                      Server and backend code need an API key with the right
-                      scopes. Create and manage keys in your project.
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="h-9 text-[13px] gap-1.5"
-                        onClick={handleViewApiKeys}
-                      >
-                        <Key className="h-4 w-4" />
-                        View API keys
-                      </Button>
-                      <a
-                        href={`${APPWRITE_DOCS_URL}/getting-started-for-server`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
-                      >
-                        Server setup guide
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    </div>
-                  </div>
+              {frameworks.length > 1 && (
+                <div className="min-w-[120px]">
+                  <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
+                    Framework
+                  </label>
+                  <Select value={frameworkId} onValueChange={setFrameworkId}>
+                    <SelectTrigger className="w-full h-9 text-[13px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {frameworks.map((fw) => (
+                        <SelectItem
+                          key={fw.id}
+                          value={fw.id}
+                          className="text-[13px]"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <FrameworkIcon framework={fw.id} size="sm" />
+                            {fw.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
-              <a
-                href={APPWRITE_DOCS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
-              >
-                Read the docs
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
+              {usingVariants && usingVariants.length > 1 && (
+                <div className="min-w-[140px]">
+                  <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
+                    Using
+                  </label>
+                  <Select value={usingId} onValueChange={setUsingId}>
+                    <SelectTrigger className="w-full h-9 text-[13px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {usingVariants.map((v) => (
+                        <SelectItem
+                          key={v.id}
+                          value={v.id}
+                          className="text-[13px]"
+                        >
+                          {v.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {packageManagers && packageManagers.length > 1 && (
+                <div className="min-w-[100px]">
+                  <label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider block mb-2">
+                    Package manager
+                  </label>
+                  <Select
+                    value={packageManagerId}
+                    onValueChange={setPackageManagerId}
+                  >
+                    <SelectTrigger className="w-full h-9 text-[13px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {packageManagers.map((pm) => (
+                        <SelectItem
+                          key={pm.id}
+                          value={pm.id}
+                          className="text-[13px]"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <PackageManagerIcon
+                              packageManager={pm.id}
+                              size="sm"
+                            />
+                            {pm.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
-            {/* Right: File-based code examples */}
-            <div className="min-w-0 min-h-0 flex flex-col gap-2 flex-1">
-              <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
-                {codeFiles.length > 1 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {codeFiles.map((file, i) => (
-                      <button
-                        key={file.label}
-                        type="button"
-                        onClick={() => setSelectedFileIndex(i)}
-                        className={cn(
-                          'rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
-                          i === selectedFileIndex
-                            ? 'bg-muted text-foreground'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
-                        )}
-                      >
-                        {file.label}
-                      </button>
+
+            <div className="grid grid-cols-[0.9fr_1.4fr] gap-6 pt-4 min-h-0 flex-1">
+              {/* Left: install instructions + API keys when server */}
+              <div className="space-y-4 min-w-0 min-h-0 overflow-y-auto">
+                <div className="space-y-4">
+                  <h4 className="text-[13px] font-semibold text-foreground">
+                    {installInstructions.title}
+                  </h4>
+                  <div className="space-y-4">
+                    {installInstructions.options.map((option, i) => (
+                      <CodeBlock
+                        key={i}
+                        code={option.code}
+                        language={option.language ?? 'plaintext'}
+                        label={option.label}
+                        showCopy={true}
+                      />
                     ))}
                   </div>
-                ) : (
-                  <span />
+                </div>
+                {isServer && (
+                  <div className="rounded-xl border border-border bg-muted/30 overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border">
+                      <h4 className="text-[13px] font-semibold text-foreground">
+                        API keys
+                      </h4>
+                    </div>
+                    <div className="px-4 py-3 space-y-3">
+                      <p className="text-[13px] text-muted-foreground">
+                        Server and backend code need an API key with the right
+                        scopes. Create and manage keys in your project.
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-9 text-[13px] gap-1.5"
+                          onClick={handleViewApiKeys}
+                        >
+                          <Key className="h-4 w-4" />
+                          View API keys
+                        </Button>
+                        <a
+                          href={`${APPWRITE_DOCS_URL}/getting-started-for-server`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+                        >
+                          Server setup guide
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
                 )}
+                <a
+                  href={APPWRITE_DOCS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:underline"
+                >
+                  Read the docs
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              </div>
+              {/* Right: File-based code examples */}
+              <div className="min-w-0 min-h-0 flex flex-col gap-2 flex-1">
+                <div className="shrink-0 flex flex-wrap items-center justify-between gap-2">
+                  {codeFiles.length > 1 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {codeFiles.map((file, i) => (
+                        <button
+                          key={file.label}
+                          type="button"
+                          onClick={() => setSelectedFileIndex(i)}
+                          className={cn(
+                            'rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
+                            i === selectedFileIndex
+                              ? 'bg-muted text-foreground'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted/70',
+                          )}
+                        >
+                          {file.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <span />
+                  )}
+                  {selectedFile && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
+                      onClick={handleCopyCode}
+                    >
+                      {copied ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                      )}
+                      Copy
+                    </Button>
+                  )}
+                </div>
                 {selectedFile && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 gap-1 text-[12px] text-muted-foreground shrink-0"
-                    onClick={handleCopyCode}
-                  >
-                    {copied ? (
-                      <Check className="h-3.5 w-3.5" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
-                    Copy
-                  </Button>
+                  <div className="min-h-0 flex-1 flex flex-col">
+                    <CodeBlock
+                      code={selectedFile.code}
+                      language={selectedFile.language ?? 'plaintext'}
+                      showCopy={false}
+                      fixedHeight="100%"
+                      className="flex-1 min-h-0 flex flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0"
+                    />
+                  </div>
                 )}
               </div>
-              {selectedFile && (
-                <div className="min-h-0 flex-1 flex flex-col">
-                  <CodeBlock
-                    code={selectedFile.code}
-                    language={selectedFile.language ?? 'plaintext'}
-                    showCopy={false}
-                    fixedHeight="100%"
-                    className="flex-1 min-h-0 flex flex-col [&>div:last-child]:flex-1 [&>div:last-child]:min-h-0"
-                  />
-                </div>
-              )}
             </div>
-          </div>
           </TabsContent>
           <TabsContent
             value="cli"
@@ -1657,7 +1703,11 @@ export function ConnectProject({
                           : 'text-muted-foreground hover:text-foreground',
                       )}
                     >
-                      {os === 'macos' ? 'macOS' : os === 'windows' ? 'Windows' : 'Linux'}
+                      {os === 'macos'
+                        ? 'macOS'
+                        : os === 'windows'
+                          ? 'Windows'
+                          : 'Linux'}
                     </button>
                   ))}
                 </div>
@@ -1809,7 +1859,11 @@ export function ConnectProject({
           </TabsContent>
         </Tabs>
         <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/30 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+          >
             Close
           </Button>
         </div>

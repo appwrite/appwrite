@@ -18,7 +18,9 @@ interface GlobalUploadProgressProps {
   embedded?: boolean
 }
 
-export function GlobalUploadProgress({ embedded }: GlobalUploadProgressProps = {}) {
+export function GlobalUploadProgress({
+  embedded,
+}: GlobalUploadProgressProps = {}) {
   const { activeUploads } = useActiveUploads()
   const queryClient = useQueryClient()
   const invalidatedUploadsRef = useRef<Set<string>>(new Set())

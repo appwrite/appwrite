@@ -240,9 +240,12 @@ class UploadManager {
       })
 
       // Keep completed item in DB so UI can show "View file" link (clean up after 5 min)
-      setTimeout(() => {
-        db.deleteUploadItem(item.id)
-      }, 5 * 60 * 1000)
+      setTimeout(
+        () => {
+          db.deleteUploadItem(item.id)
+        },
+        5 * 60 * 1000,
+      )
     } catch (error: unknown) {
       if (error.name === 'AbortError' || error.message?.includes('aborted')) {
         // Upload was cancelled

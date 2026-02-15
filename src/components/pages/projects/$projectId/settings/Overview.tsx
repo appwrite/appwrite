@@ -612,7 +612,6 @@ export function ProjectSettingsOverview({
     return `${endpoint}/vcs/github/authorize?project=${projectId}&success=${encodeURIComponent(successUrl)}&failure=${encodeURIComponent(failureUrl)}&mode=admin`
   }
 
-
   if (projectLoading) {
     return (
       <div className="flex h-full items-center justify-center">

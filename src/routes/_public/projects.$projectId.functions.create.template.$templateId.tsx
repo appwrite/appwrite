@@ -17,7 +17,9 @@ const searchSchema = z.object({
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/create/template/$templateId',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Create from template', 'Functions') }] }),
+  head: () => ({
+    meta: [{ title: pageTitle('Create from template', 'Functions') }],
+  }),
   validateSearch: searchSchema,
   component: TemplateConfigPage,
 })

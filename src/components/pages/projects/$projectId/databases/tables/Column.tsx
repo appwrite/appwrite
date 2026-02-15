@@ -282,7 +282,12 @@ export function ColumnDrawer({
         formData.size > VARCHAR_SIZE_MAX
       ) {
         newErrors.size = `Size is required and must be between ${VARCHAR_SIZE_MIN} and ${VARCHAR_SIZE_MAX}`
-      } else if (!isEditMode && table?.bytesUsed !== undefined && table?.bytesMax !== undefined && table.bytesMax > 0) {
+      } else if (
+        !isEditMode &&
+        table?.bytesUsed !== undefined &&
+        table?.bytesMax !== undefined &&
+        table.bytesMax > 0
+      ) {
         const newColumnBytes = formData.size * 4 + 2
         if (table.bytesUsed + newColumnBytes > table.bytesMax) {
           newErrors.size =
@@ -579,7 +584,10 @@ export function ColumnDrawer({
                     value={formData.size ?? ''}
                     onChange={(e) => {
                       const size = parseInt(e.target.value) || 0
-                      setFormData((prev) => ({ ...prev, size: size || undefined }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        size: size || undefined,
+                      }))
                     }}
                     placeholder="255"
                     min={VARCHAR_SIZE_MIN}
@@ -588,7 +596,9 @@ export function ColumnDrawer({
                     className={errors.size ? 'border-destructive' : ''}
                   />
                   {errors.size && (
-                    <p className="text-[12px] text-destructive">{errors.size}</p>
+                    <p className="text-[12px] text-destructive">
+                      {errors.size}
+                    </p>
                   )}
                   <p className="text-[11px] text-muted-foreground">
                     Between {VARCHAR_SIZE_MIN.toLocaleString()} and{' '}
@@ -1312,8 +1322,8 @@ export function ColumnDrawer({
                     />
                   )
                 ) : ['text', 'mediumtext', 'longtext'].includes(
-                      formData.type,
-                    ) ? (
+                    formData.type,
+                  ) ? (
                   <Textarea
                     id="column-default"
                     value={formData.xdefault ? String(formData.xdefault) : ''}

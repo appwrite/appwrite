@@ -93,8 +93,7 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
     }))
   }, [migrations])
 
-  const isLoading =
-    tablesLoading || (tableIds.length > 0 && migrationsLoading)
+  const isLoading = tablesLoading || (tableIds.length > 0 && migrationsLoading)
 
   if (isLoading && rows.length === 0) {
     return (
@@ -148,8 +147,9 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
             {rows.map(({ type, migration }) => {
               const isExport = type === 'export'
               const isCompleted = migration.status === 'completed'
-              const downloadUrl = (migration.options as { downloadUrl?: string })
-                ?.downloadUrl
+              const downloadUrl = (
+                migration.options as { downloadUrl?: string }
+              )?.downloadUrl
               const tid = tableIdFromResourceId(migration.resourceId)
               const tableName = tableNameById[tid] ?? tid
               const status = migration.status
@@ -221,7 +221,9 @@ export function ExportImportView({ databaseId }: ExportImportViewProps) {
                         Download
                       </Button>
                     ) : (
-                      <span className="text-[12px] text-muted-foreground">—</span>
+                      <span className="text-[12px] text-muted-foreground">
+                        —
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>

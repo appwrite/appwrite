@@ -12,7 +12,9 @@ import { pageTitle } from '@/lib/utils/page-title'
 export const Route = createFileRoute(
   '/_public/projects/$projectId/sites/create/templates/$template',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Create from template', 'Sites') }] }),
+  head: () => ({
+    meta: [{ title: pageTitle('Create from template', 'Sites') }],
+  }),
   loader: async ({ params, context }) => {
     if (typeof window === 'undefined') return
 

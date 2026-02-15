@@ -151,7 +151,8 @@ export function ExportCsv({
         <DialogHeader className="px-6 pt-6 pb-4 text-left shrink-0">
           <DialogTitle>Export CSV</DialogTitle>
           <DialogDescription className="text-[13px] mt-2">
-            Choose columns and options for the export. The file will be prepared in the background and you can download it when ready.
+            Choose columns and options for the export. The file will be prepared
+            in the background and you can download it when ready.
           </DialogDescription>
         </DialogHeader>
         <div className="border-t border-border overflow-y-auto flex-1 min-h-0 px-6 py-4">
@@ -268,7 +269,8 @@ export function ExportCsv({
                     className="mt-0.5"
                   />
                   <span className="text-[13px] text-foreground">
-                    Export with filters — Export rows matching current table filters.
+                    Export with filters — Export rows matching current table
+                    filters.
                   </span>
                 </label>
                 {!hasActiveFilters && (

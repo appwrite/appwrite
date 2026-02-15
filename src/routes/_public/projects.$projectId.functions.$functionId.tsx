@@ -12,10 +12,7 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(
-          loaderData?.function?.name ?? 'Function',
-          'Functions',
-        ),
+        title: pageTitle(loaderData?.function?.name ?? 'Function', 'Functions'),
       },
     ],
   }),

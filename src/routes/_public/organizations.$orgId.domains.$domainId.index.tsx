@@ -16,10 +16,7 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(
-          loaderData?.domain?.domain ?? 'Domain',
-          'Domains',
-        ),
+        title: pageTitle(loaderData?.domain?.domain ?? 'Domain', 'Domains'),
       },
     ],
   }),

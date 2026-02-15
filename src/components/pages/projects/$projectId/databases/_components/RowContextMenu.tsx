@@ -82,7 +82,8 @@ function formatCellValueForCopy(value: unknown): string {
 
 function getCellValue(row: RowContextMenuRow, columnKey: string): unknown {
   if (columnKey === '$id') return row.$id
-  if (columnKey === '$sequence') return (row as { $sequence?: number }).$sequence
+  if (columnKey === '$sequence')
+    return (row as { $sequence?: number }).$sequence
   if (columnKey === '$createdAt') return row.$createdAt
   if (columnKey === '$updatedAt') return row.$updatedAt
   return row.data[columnKey]

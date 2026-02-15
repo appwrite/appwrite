@@ -182,26 +182,26 @@ function ProjectLayout() {
       <SessionMigrationsProvider>
         <RealtimeProvider projectId={projectId}>
           <KeyboardShortcutsProvider projectId={projectId}>
-          <ConsoleLayout
-            sidebar={{
-              projectId,
-              activeSection,
-              mobileOpen: sidebarOpen,
-              onMobileClose: () => setSidebarOpen(false),
-              onMenuClick: () => setSidebarOpen(true),
-            }}
-            header={{ projectId }}
-            showFooter={!hideFooter}
-            fixedLayout={isFixedLayoutView}
-          >
-            <Outlet />
-          </ConsoleLayout>
-          {/* Unified progress panel: file uploads + CSV export/import (same style, no collision) */}
-          <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
-            <GlobalUploadProgress embedded />
-            <CsvImportBox projectId={projectId} />
-            <CsvExportBox projectId={projectId} />
-          </div>
+            <ConsoleLayout
+              sidebar={{
+                projectId,
+                activeSection,
+                mobileOpen: sidebarOpen,
+                onMobileClose: () => setSidebarOpen(false),
+                onMenuClick: () => setSidebarOpen(true),
+              }}
+              header={{ projectId }}
+              showFooter={!hideFooter}
+              fixedLayout={isFixedLayoutView}
+            >
+              <Outlet />
+            </ConsoleLayout>
+            {/* Unified progress panel: file uploads + CSV export/import (same style, no collision) */}
+            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full">
+              <GlobalUploadProgress embedded />
+              <CsvImportBox projectId={projectId} />
+              <CsvExportBox projectId={projectId} />
+            </div>
           </KeyboardShortcutsProvider>
         </RealtimeProvider>
       </SessionMigrationsProvider>

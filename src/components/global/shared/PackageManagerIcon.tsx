@@ -40,11 +40,7 @@ export function PackageManagerIcon({
       <img
         src={`/icons/${iconFile}`}
         alt={packageManager}
-        className={cn(
-          sizeClass,
-          'brightness-0 dark:brightness-100',
-          className,
-        )}
+        className={cn(sizeClass, 'brightness-0 dark:brightness-100', className)}
       />
     )
   }

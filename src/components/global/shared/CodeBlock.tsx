@@ -55,12 +55,12 @@ const PRISM_LOADERS: Record<string, () => Promise<unknown>> = {
   kotlin: () => import('prismjs/components/prism-kotlin'),
   markup: () => import('prismjs/components/prism-markup'),
   'markup-templating': () =>
-    loadLanguage('markup').then(() =>
-      import('prismjs/components/prism-markup-templating'),
+    loadLanguage('markup').then(
+      () => import('prismjs/components/prism-markup-templating'),
     ),
   php: () =>
-    loadLanguage('markup-templating').then(() =>
-      import('prismjs/components/prism-php'),
+    loadLanguage('markup-templating').then(
+      () => import('prismjs/components/prism-php'),
     ),
   python: () => import('prismjs/components/prism-python'),
   ruby: () => import('prismjs/components/prism-ruby'),
@@ -124,7 +124,10 @@ export function CodeBlock({
     let parent = el.parentElement
     while (parent) {
       const { overflowY } = getComputedStyle(parent)
-      if (/(auto|scroll|overlay)/.test(overflowY) && parent.scrollHeight > parent.clientHeight) {
+      if (
+        /(auto|scroll|overlay)/.test(overflowY) &&
+        parent.scrollHeight > parent.clientHeight
+      ) {
         return parent
       }
       parent = parent.parentElement
@@ -188,14 +191,18 @@ export function CodeBlock({
         style={fixedHeight ? { height: fixedHeight } : undefined}
       >
         {copyInside && copyButton && (
-          <div className="absolute right-2 top-2 z-10 shrink-0">{copyButton}</div>
+          <div className="absolute right-2 top-2 z-10 shrink-0">
+            {copyButton}
+          </div>
         )}
-        <Highlight
-          theme={prismTheme}
-          code={code}
-          language={effectiveLanguage}
-        >
-          {({ className: preClassName, style, tokens, getLineProps, getTokenProps }) => (
+        <Highlight theme={prismTheme} code={code} language={effectiveLanguage}>
+          {({
+            className: preClassName,
+            style,
+            tokens,
+            getLineProps,
+            getTokenProps,
+          }) => (
             <pre
               ref={preRef}
               onWheel={handleWheel}

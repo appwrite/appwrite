@@ -840,9 +840,9 @@ export function View() {
                   <DialogHeader className="px-6 pt-6 text-left">
                     <DialogTitle>Delete Files</DialogTitle>
                     <DialogDescription className="text-[13px] mt-2">
-                      Are you sure you want to delete {selectedFiles.size}{' '}
-                      file{selectedFiles.size > 1 ? 's' : ''}? This action
-                      cannot be undone.
+                      Are you sure you want to delete {selectedFiles.size} file
+                      {selectedFiles.size > 1 ? 's' : ''}? This action cannot be
+                      undone.
                     </DialogDescription>
                   </DialogHeader>
 

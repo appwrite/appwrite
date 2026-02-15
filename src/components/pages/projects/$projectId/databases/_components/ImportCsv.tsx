@@ -91,7 +91,9 @@ export function ImportCsv({
     fileId: string
   } | null>(null)
   const [storageSearch, setStorageSearch] = useState('')
-  const [storageViewMode, setStorageViewMode] = useState<'list' | 'grid'>('list')
+  const [storageViewMode, setStorageViewMode] = useState<'list' | 'grid'>(
+    'list',
+  )
   const [requestedPage, setRequestedPage] = useState(1)
   const [displayedPage, setDisplayedPage] = useState(1)
   const [displayedSearch, setDisplayedSearch] = useState('')
@@ -183,7 +185,12 @@ export function ImportCsv({
       setRequestedPage(1)
       setDisplayedPage(1)
     }
-  }, [selectedBucketId, selectedBucketFilesSuccess, selectedBucketFilesData])
+  }, [
+    selectedBucketId,
+    selectedBucketFilesSuccess,
+    selectedBucketFilesData,
+    storageSearch,
+  ])
 
   /** On search change, request page 1; displayed search updates when fetch completes */
   useEffect(() => {
@@ -238,26 +245,21 @@ export function ImportCsv({
     e.target.value = ''
   }
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault()
-      setDragOver(false)
-      const f = e.dataTransfer.files?.[0]
-      if (!f) return
-      const name = f.name.toLowerCase()
-      const csv =
-        name.endsWith('.csv') ||
-        f.type === 'text/csv' ||
-        f.type === 'text/plain'
-      if (!csv) {
-        toast.error('Only CSV files can be imported')
-        return
-      }
-      setFile(f)
-      setSelectedStorageFile(null)
-    },
-    [],
-  )
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const f = e.dataTransfer.files?.[0]
+    if (!f) return
+    const name = f.name.toLowerCase()
+    const csv =
+      name.endsWith('.csv') || f.type === 'text/csv' || f.type === 'text/plain'
+    if (!csv) {
+      toast.error('Only CSV files can be imported')
+      return
+    }
+    setFile(f)
+    setSelectedStorageFile(null)
+  }, [])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -510,58 +512,58 @@ export function ImportCsv({
                             className="pl-8 h-8 text-[13px]"
                           />
                         </div>
-                    <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          'h-7 w-7 p-0',
-                          storageViewMode === 'list'
-                            ? 'bg-background'
-                            : 'hover:bg-transparent',
-                        )}
-                        onClick={() => setStorageViewMode('list')}
-                      >
-                        <List className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                          'h-7 w-7 p-0',
-                          storageViewMode === 'grid'
-                            ? 'bg-background'
-                            : 'hover:bg-transparent',
-                        )}
-                        onClick={() => setStorageViewMode('grid')}
-                      >
-                        <LayoutGrid className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-1.5"
-                      asChild
-                      disabled={bucketUploading}
-                    >
-                      <label
-                        htmlFor="import-csv-bucket-upload"
-                        className="cursor-pointer flex items-center gap-1.5"
-                      >
-                        <Upload className="h-3.5 w-3.5" />
-                        Upload
-                      </label>
-                    </Button>
-                    <input
-                      id="import-csv-bucket-upload"
-                      ref={bucketUploadInputRef}
-                      type="file"
-                      accept=".csv,text/csv,text/plain"
-                      className="sr-only"
-                      onChange={handleBucketUpload}
-                      disabled={bucketUploading}
-                    />
+                        <div className="flex items-center gap-1 rounded-md border border-border bg-muted/30 p-0.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              'h-7 w-7 p-0',
+                              storageViewMode === 'list'
+                                ? 'bg-background'
+                                : 'hover:bg-transparent',
+                            )}
+                            onClick={() => setStorageViewMode('list')}
+                          >
+                            <List className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              'h-7 w-7 p-0',
+                              storageViewMode === 'grid'
+                                ? 'bg-background'
+                                : 'hover:bg-transparent',
+                            )}
+                            onClick={() => setStorageViewMode('grid')}
+                          >
+                            <LayoutGrid className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5"
+                          asChild
+                          disabled={bucketUploading}
+                        >
+                          <label
+                            htmlFor="import-csv-bucket-upload"
+                            className="cursor-pointer flex items-center gap-1.5"
+                          >
+                            <Upload className="h-3.5 w-3.5" />
+                            Upload
+                          </label>
+                        </Button>
+                        <input
+                          id="import-csv-bucket-upload"
+                          ref={bucketUploadInputRef}
+                          type="file"
+                          accept=".csv,text/csv,text/plain"
+                          className="sr-only"
+                          onChange={handleBucketUpload}
+                          disabled={bucketUploading}
+                        />
                       </div>
                     </>
                   )}
@@ -570,154 +572,151 @@ export function ImportCsv({
                 {displayedBucketId && (
                   <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
                     <div className="overflow-y-auto p-4 min-h-0 flex-1 max-h-[360px]">
-                  {displayedFilesLoading && files.length === 0 ? (
-                    <div className="flex flex-1 items-center justify-center py-12 text-[13px] text-muted-foreground">
-                      Loading files…
-                    </div>
-                  ) : files.length === 0 && filesTotal === 0 ? (
-                    <EmptyState
-                      variant="card"
-                      className="py-12"
-                    >
-                      <div className="flex flex-col items-center text-center">
-                        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                          <File className="h-6 w-6 text-muted-foreground" />
+                      {displayedFilesLoading && files.length === 0 ? (
+                        <div className="flex flex-1 items-center justify-center py-12 text-[13px] text-muted-foreground">
+                          Loading files…
                         </div>
-                        <p className="mb-1 text-[14px] font-medium text-foreground">
-                          {storageSearch
-                            ? 'No CSV files match your search'
-                            : 'No CSV files in this bucket'}
-                        </p>
-                        <p className="mb-4 text-[13px] text-muted-foreground">
-                          {storageSearch
-                            ? 'Try a different search or upload a CSV file.'
-                            : 'Upload a CSV file to this bucket or choose another bucket.'}
-                        </p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={STORAGE_DOCS_URL}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Documentation
-                            </a>
-                          </Button>
-                          <Button
-                            size="sm"
-                            asChild
-                            disabled={bucketUploading}
-                          >
-                            <label
-                              htmlFor="import-csv-bucket-upload"
-                              className="cursor-pointer"
-                            >
-                              Upload file
-                            </label>
-                          </Button>
-                        </div>
-                      </div>
-                    </EmptyState>
-                  ) : storageViewMode === 'list' ? (
-                    <>
-                    <ul className="divide-y divide-border rounded-lg border border-border bg-card overflow-hidden">
-                      {files.map((f) => {
-                        const isSelected =
-                          selectedStorageFile?.fileId === f.$id &&
-                          selectedStorageFile?.bucketId === f.bucketId
-                        const FileIcon = getFileIcon(f.mimeType)
-                        return (
-                          <li key={f.$id}>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setSelectedStorageFile({
-                                  bucketId: f.bucketId,
-                                  fileId: f.$id,
-                                })
-                              }
-                              className={cn(
-                                'w-full flex items-center gap-3 px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-accent cursor-pointer',
-                                isSelected && 'bg-accent',
-                              )}
-                            >
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                                <FileIcon className="h-4 w-4" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate font-medium text-foreground">
-                                  {f.name}
-                                </p>
-                                <p className="text-[11px] text-muted-foreground">
-                                  {f.mimeType ?? '—'} ·{' '}
-                                  {formatBytes(f.sizeOriginal ?? 0)}
-                                </p>
-                              </div>
-                            </button>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                    <Pagination
-                      currentPage={displayedPage}
-                      totalItems={filesTotal}
-                      pageSize={pageSize}
-                      pageSizeOptions={[10, 25, 50, 100]}
-                      onPageChange={handleStoragePageChange}
-                      onPageSizeChange={handleStoragePageSizeChange}
-                      itemLabel="files"
-                      className="mt-4"
-                    />
-                    </>
-                  ) : (
-                    <>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {files.map((f) => {
-                        const isSelected =
-                          selectedStorageFile?.fileId === f.$id &&
-                          selectedStorageFile?.bucketId === f.bucketId
-                        const FileIcon = getFileIcon(f.mimeType)
-                        return (
-                          <button
-                            key={f.$id}
-                            type="button"
-                            onClick={() =>
-                              setSelectedStorageFile({
-                                bucketId: f.bucketId,
-                                fileId: f.$id,
-                              })
-                            }
-                            className={cn(
-                              'rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40 cursor-pointer',
-                              isSelected &&
-                                'border-primary ring-1 ring-primary/20',
-                            )}
-                          >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                              <FileIcon className="h-5 w-5" />
+                      ) : files.length === 0 && filesTotal === 0 ? (
+                        <EmptyState variant="card" className="py-12">
+                          <div className="flex flex-col items-center text-center">
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                              <File className="h-6 w-6 text-muted-foreground" />
                             </div>
-                            <p className="mt-2 truncate text-[13px] font-medium text-foreground">
-                              {f.name}
+                            <p className="mb-1 text-[14px] font-medium text-foreground">
+                              {storageSearch
+                                ? 'No CSV files match your search'
+                                : 'No CSV files in this bucket'}
                             </p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {formatBytes(f.sizeOriginal ?? 0)}
+                            <p className="mb-4 text-[13px] text-muted-foreground">
+                              {storageSearch
+                                ? 'Try a different search or upload a CSV file.'
+                                : 'Upload a CSV file to this bucket or choose another bucket.'}
                             </p>
-                          </button>
-                        )
-                      })}
-                    </div>
-                    <Pagination
-                      currentPage={displayedPage}
-                      totalItems={filesTotal}
-                      pageSize={pageSize}
-                      pageSizeOptions={[10, 25, 50, 100]}
-                      onPageChange={handleStoragePageChange}
-                      onPageSizeChange={handleStoragePageSizeChange}
-                      itemLabel="files"
-                      className="mt-4"
-                    />
-                    </>
-                  )}
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" asChild>
+                                <a
+                                  href={STORAGE_DOCS_URL}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  Documentation
+                                </a>
+                              </Button>
+                              <Button
+                                size="sm"
+                                asChild
+                                disabled={bucketUploading}
+                              >
+                                <label
+                                  htmlFor="import-csv-bucket-upload"
+                                  className="cursor-pointer"
+                                >
+                                  Upload file
+                                </label>
+                              </Button>
+                            </div>
+                          </div>
+                        </EmptyState>
+                      ) : storageViewMode === 'list' ? (
+                        <>
+                          <ul className="divide-y divide-border rounded-lg border border-border bg-card overflow-hidden">
+                            {files.map((f) => {
+                              const isSelected =
+                                selectedStorageFile?.fileId === f.$id &&
+                                selectedStorageFile?.bucketId === f.bucketId
+                              const FileIcon = getFileIcon(f.mimeType)
+                              return (
+                                <li key={f.$id}>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSelectedStorageFile({
+                                        bucketId: f.bucketId,
+                                        fileId: f.$id,
+                                      })
+                                    }
+                                    className={cn(
+                                      'w-full flex items-center gap-3 px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-accent cursor-pointer',
+                                      isSelected && 'bg-accent',
+                                    )}
+                                  >
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                                      <FileIcon className="h-4 w-4" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate font-medium text-foreground">
+                                        {f.name}
+                                      </p>
+                                      <p className="text-[11px] text-muted-foreground">
+                                        {f.mimeType ?? '—'} ·{' '}
+                                        {formatBytes(f.sizeOriginal ?? 0)}
+                                      </p>
+                                    </div>
+                                  </button>
+                                </li>
+                              )
+                            })}
+                          </ul>
+                          <Pagination
+                            currentPage={displayedPage}
+                            totalItems={filesTotal}
+                            pageSize={pageSize}
+                            pageSizeOptions={[10, 25, 50, 100]}
+                            onPageChange={handleStoragePageChange}
+                            onPageSizeChange={handleStoragePageSizeChange}
+                            itemLabel="files"
+                            className="mt-4"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {files.map((f) => {
+                              const isSelected =
+                                selectedStorageFile?.fileId === f.$id &&
+                                selectedStorageFile?.bucketId === f.bucketId
+                              const FileIcon = getFileIcon(f.mimeType)
+                              return (
+                                <button
+                                  key={f.$id}
+                                  type="button"
+                                  onClick={() =>
+                                    setSelectedStorageFile({
+                                      bucketId: f.bucketId,
+                                      fileId: f.$id,
+                                    })
+                                  }
+                                  className={cn(
+                                    'rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40 cursor-pointer',
+                                    isSelected &&
+                                      'border-primary ring-1 ring-primary/20',
+                                  )}
+                                >
+                                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                                    <FileIcon className="h-5 w-5" />
+                                  </div>
+                                  <p className="mt-2 truncate text-[13px] font-medium text-foreground">
+                                    {f.name}
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    {formatBytes(f.sizeOriginal ?? 0)}
+                                  </p>
+                                </button>
+                              )
+                            })}
+                          </div>
+                          <Pagination
+                            currentPage={displayedPage}
+                            totalItems={filesTotal}
+                            pageSize={pageSize}
+                            pageSizeOptions={[10, 25, 50, 100]}
+                            onPageChange={handleStoragePageChange}
+                            onPageSizeChange={handleStoragePageSizeChange}
+                            itemLabel="files"
+                            className="mt-4"
+                          />
+                        </>
+                      )}
                     </div>
                   </div>
                 )}

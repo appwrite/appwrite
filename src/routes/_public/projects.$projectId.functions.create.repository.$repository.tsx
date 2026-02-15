@@ -11,7 +11,9 @@ import { pageTitle } from '@/lib/utils/page-title'
 export const Route = createFileRoute(
   '/_public/projects/$projectId/functions/create/repository/$repository',
 )({
-  head: () => ({ meta: [{ title: pageTitle('Create from repository', 'Functions') }] }),
+  head: () => ({
+    meta: [{ title: pageTitle('Create from repository', 'Functions') }],
+  }),
   component: RepositoryConfigPage,
 })
 

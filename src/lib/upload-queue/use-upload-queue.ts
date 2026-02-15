@@ -179,7 +179,11 @@ export function useUploadQueue(
             ]
           }
         })
-        if (TERMINAL_STATUSES.includes(progress.status as (typeof TERMINAL_STATUSES)[number])) {
+        if (
+          TERMINAL_STATUSES.includes(
+            progress.status as (typeof TERMINAL_STATUSES)[number],
+          )
+        ) {
           onUploadComplete?.(projectId, bucketId)
           setTimeout(() => unsubscribe(), 0)
         }

@@ -16,10 +16,7 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(
-          loaderData?.database?.name ?? 'Database',
-          'Databases',
-        ),
+        title: pageTitle(loaderData?.database?.name ?? 'Database', 'Databases'),
       },
     ],
   }),
@@ -61,7 +58,9 @@ export const Route = createFileRoute(
       }
     }
 
-    const tableIds = (tablesData.tables || []).map((t: { $id: string }) => t.$id)
+    const tableIds = (tablesData.tables || []).map(
+      (t: { $id: string }) => t.$id,
+    )
     if (tableIds.length > 0) {
       await queryClient
         .ensureQueryData(

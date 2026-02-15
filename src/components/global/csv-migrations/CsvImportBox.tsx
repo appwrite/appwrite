@@ -129,11 +129,8 @@ interface CsvImportBoxProps {
 }
 
 export function CsvImportBox({ projectId }: CsvImportBoxProps) {
-  const {
-    sessionImportIds,
-    dismissedImportIds,
-    dismissImport,
-  } = useSessionMigrations(projectId)
+  const { sessionImportIds, dismissedImportIds, dismissImport } =
+    useSessionMigrations(projectId)
   const { migrations } = useCsvImportMigrations(projectId, sessionImportIds)
   const queryClient = useQueryClient()
   const [detailsMigration, setDetailsMigration] =

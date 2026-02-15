@@ -103,7 +103,10 @@ export function NavigationHistoryProvider({
         forwardStackRef.current = []
         historyStackRef.current.push({
           path: currentPathRef.current,
-          title: typeof document !== 'undefined' ? document.title : currentPathRef.current,
+          title:
+            typeof document !== 'undefined'
+              ? document.title
+              : currentPathRef.current,
         })
         if (historyStackRef.current.length > 50) {
           historyStackRef.current.shift()
@@ -126,7 +129,8 @@ export function NavigationHistoryProvider({
   const popHistory = useCallback(() => {
     const stack = historyStackRef.current
     const currentPath = currentPathRef.current
-    const currentTitle = typeof document !== 'undefined' ? document.title : currentPath
+    const currentTitle =
+      typeof document !== 'undefined' ? document.title : currentPath
     const entry = stack.pop()
     if (entry) {
       forwardStackRef.current.push({ path: currentPath, title: currentTitle })
@@ -143,7 +147,8 @@ export function NavigationHistoryProvider({
     const i = stack.findIndex((e) => e.path === path)
     if (i === -1) return undefined
     const currentPath = currentPathRef.current
-    const currentTitle = typeof document !== 'undefined' ? document.title : currentPath
+    const currentTitle =
+      typeof document !== 'undefined' ? document.title : currentPath
     stack.splice(i)
     forwardStackRef.current.push({ path: currentPath, title: currentTitle })
     return path

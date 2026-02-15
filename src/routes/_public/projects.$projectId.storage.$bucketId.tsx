@@ -8,10 +8,7 @@ export const Route = createFileRoute(
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: pageTitle(
-          loaderData?.bucket?.name ?? 'Bucket',
-          'Storage',
-        ),
+        title: pageTitle(loaderData?.bucket?.name ?? 'Bucket', 'Storage'),
       },
     ],
   }),
@@ -25,12 +22,9 @@ export const Route = createFileRoute(
       queryFn: () => fetchBucket(projectId, bucketId),
       staleTime: 30 * 1000,
     })
-    const bucket = queryClient.getQueryData<Awaited<ReturnType<typeof fetchBucket>>>([
-      'bucket',
-      'project',
-      projectId,
-      bucketId,
-    ])
+    const bucket = queryClient.getQueryData<
+      Awaited<ReturnType<typeof fetchBucket>>
+    >(['bucket', 'project', projectId, bucketId])
     return { bucket }
   },
   component: BucketLayout,
