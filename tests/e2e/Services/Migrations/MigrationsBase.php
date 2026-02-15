@@ -1250,6 +1250,7 @@ trait MigrationsBase
             'size' => 255,
             'required' => false,
         ]);
+
         $this->assertEquals(202, $email['headers']['status-code']);
 
         $text = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/text', [
@@ -1260,6 +1261,7 @@ trait MigrationsBase
             'key' => 'regulartext',
             'required' => false,
         ]);
+
         $this->assertEquals(202, $text['headers']['status-code']);
 
         $mediumtext = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', [
@@ -1270,6 +1272,7 @@ trait MigrationsBase
             'key' => 'mediumtext',
             'required' => false,
         ]);
+
         $this->assertEquals(202, $mediumtext['headers']['status-code']);
 
         $longtext = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', [
@@ -1280,6 +1283,7 @@ trait MigrationsBase
             'key' => 'longtext',
             'required' => false,
         ]);
+
         $this->assertEquals(202, $longtext['headers']['status-code']);
 
         \sleep(3);
