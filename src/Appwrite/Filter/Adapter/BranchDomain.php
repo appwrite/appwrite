@@ -33,7 +33,7 @@ class BranchDomain extends Adapter
 
     /**
      * Pre-process branch name to a valid domain name.
-     * 
+     *
      * Input should be an array with:
      * - 'branch' (string): The branch name
      * - 'resourceId' (string): The resource ID (site or function)
