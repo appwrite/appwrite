@@ -14,6 +14,10 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
 
 FROM appwrite/base:1.0.0 AS base
 
+RUN wget -qO /usr/local/share/ca-certificates/AAA_Certificate_Services.crt \
+    "https://crt.sh/?d=331986" \
+    && update-ca-certificates
+
 LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
