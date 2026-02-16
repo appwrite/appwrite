@@ -214,7 +214,9 @@ class Doctor extends Action
             /* @var PHPMailer $mail */
             $mail = $register->get('smtp');
 
-            $mail->addAddress('demo@example.com', 'Example.com');
+            // Use the environment variable _APP_SMTP_TEST_EMAIL or fallback to demo@example.com
+            $testEmail = System::getEnv('_APP_SMTP_TEST_EMAIL', 'demo@example.com');
+            $mail->addAddress($testEmail, 'Example.com');
             $mail->Subject = 'Test SMTP Connection';
             $mail->Body = 'Hello World';
             $mail->AltBody = 'Hello World';
