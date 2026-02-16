@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Filter;
 
-use Appwrite\Filter\Filter;
 use Appwrite\Filter\Adapter\BranchDomain;
+use Appwrite\Filter\Filter;
 use PHPUnit\Framework\TestCase;
 
 class FilterTest extends TestCase
@@ -175,7 +175,7 @@ class FilterTest extends TestCase
             ])
             ->filter();
         $this->assertFalse($success);
-        
+
         $success = $filter
             ->setInput([
                 'branch' => 'feature/test',
