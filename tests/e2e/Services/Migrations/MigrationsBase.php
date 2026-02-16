@@ -1270,11 +1270,11 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ], [
             'key' => 'varchar',
+            'size' => 1000,
             'required' => false,
         ]);
 
         $this->assertEquals(202, $varchar['headers']['status-code']);
-
 
         $mediumtext = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/mediumtext', [
             'content-type' => 'application/json',
