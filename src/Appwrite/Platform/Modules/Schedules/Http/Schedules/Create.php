@@ -83,12 +83,12 @@ class Create extends Action
                     ),
                 ],
             ))
-            ->param('projectId', '', new UID, 'Project unique ID.')
+            ->param('projectId', '', new UID(), 'Project unique ID.')
             ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.')
-            ->param('resourceId', '', new UID, 'The resource ID to associate with this schedule.')
-            ->param('schedule', '', new Cron, 'Schedule CRON expression.')
-            ->param('active', false, new Boolean, 'Whether the schedule is active.', true)
-            ->param('data', null, new JSON, 'Schedule data as a JSON string. Used to store resource-specific context needed for execution.', true)
+            ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
+            ->param('schedule', '', new Cron(), 'Schedule CRON expression.')
+            ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
+            ->param('data', null, new JSON(), 'Schedule data as a JSON string. Used to store resource-specific context needed for execution.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
