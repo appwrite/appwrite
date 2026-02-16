@@ -58,6 +58,12 @@ class Schedule extends Model
                 'default' => '',
                 'example' => '5 4 * * *',
             ])
+            ->addRule('data', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Schedule data used to store resource-specific context needed for execution.',
+                'default' => [],
+                'example' => [],
+            ])
             ->addRule('active', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether the schedule is active.',

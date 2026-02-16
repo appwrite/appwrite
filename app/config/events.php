@@ -412,12 +412,6 @@ return [
         'create' => [
             '$description' => 'This event triggers when a schedule is created.',
         ],
-        'update' => [
-            '$description' => 'This event triggers when a schedule is updated.',
-        ],
-        'delete' => [
-            '$description' => 'This event triggers when a schedule is deleted.',
-        ],
     ],
     'rules' => [
         '$model' => Response::MODEL_PROXY_RULE,
