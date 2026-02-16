@@ -157,4 +157,84 @@ class EventTest extends TestCase
             $this->assertInstanceOf(InvalidArgumentException::class, $th, 'An invalid exception was thrown');
         }
     }
+
+    public function testCreateRegexPattern()
+    {
+        $tests = [
+            [
+                'input' => 'databases.*.collections.62b88cd71859252c4816ed21.documents.*',
+                'expected' => 'databases\.[^.]*\.collections\.62b88cd71859252c4816ed21\.documents\..*'
+            ],
+            [
+                'input' => 'databases.default.collections.62b88cd71859252c4816ed21.documents.*',
+                'expected' => 'databases\.default\.collections\.62b88cd71859252c4816ed21\.documents\..*'
+            ]
+        ];
+
+        foreach ($tests as $i => $test) {
+            $p = Event::createRegexPattern($test['input']);
+            $this->assertEquals($test['expected'], $p, "Test $i failed");
+        }
+    }
+
+    public function testMatchEvent()
+    {
+        $tests = [
+            [
+                'eventPattern' => 'databases.*.collections.62b88cd71859252c4816ed21.documents',
+                'event' => 'databases.default.collections.62b88cd71859252c4816ed21.documents',
+                'expected' => true
+            ],
+            [
+                'eventPattern' => 'databases.*.collections.*.documents',
+                'event' => 'databases.default.collections.62b88cd71859252c4816ed21.documents',
+                'expected' => true
+            ]
+        ];
+
+        foreach ($tests as $i => $test) {
+            $m = Event::matchEvent($test['eventPattern'], $test['event']);
+            $this->assertEquals($test['expected'], $m, "Test $i failed");
+        }
+    }
+
+    public function testMatchEvents()
+    {
+        $tests = [
+            [
+                'eventPatterns' => [
+                    'databases.*.collections.62b88cd71859252c4816ed21.documents'
+                ],
+                'event' => 'databases.default.collections.62b88cd71859252c4816ed21.documents',
+                'expected' => true
+            ],
+            [
+                'eventPatterns' => [
+                    'databases.*.collections.*.documents'
+                ],
+                'event' => 'databases.default.collections.62b88cd71859252c4816ed21.documents',
+                'expected' => true
+            ],
+            [
+                'eventPatterns' => [
+                    'databases.*.collections.*.documents'
+                ],
+                'event' => 'functions',
+                'expected' => false
+            ],
+            [
+                'eventPatterns' => [
+                    'databases.*.collections.*.documents',
+                    'databases.*.collections.chapters.documents.prolog.create'
+                ],
+                'event' => 'databases.chaptersDB.collections.chapters.documents.prolog.create',
+                'expected' => true
+            ],
+        ];
+
+        foreach ($tests as $i => $test) {
+            $m = Event::matchEvents($test['eventPatterns'], $test['event']);
+            $this->assertEquals($test['expected'], $m, "Test $i failed");
+        }
+    }
 }
