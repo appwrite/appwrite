@@ -56,9 +56,9 @@ services:
       context: .
       target: development
       args:
-        DEBUG: false
-        TESTING: true
-        VERSION: dev
+        DEBUG: "false"
+        TESTING: "true"
+        VERSION: "dev"
     ports:
       - 9501:80
     networks:
