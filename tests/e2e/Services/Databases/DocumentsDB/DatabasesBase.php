@@ -1212,7 +1212,7 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('$sequence', [$sequence])
+                Query::equal('$sequence', [$sequence])->toString()
             ],
         ]);
 
