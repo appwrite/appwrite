@@ -5384,8 +5384,8 @@ class ProjectsConsoleClientTest extends Scope
         ], [
             'success' => 'https://example.com',
             'failure' => 'https://example.com'
-        ]);
-        $this->assertEquals(200, $response['headers']['status-code']);
+        ], followRedirects: false);
+        $this->assertEquals(301, $response['headers']['status-code']);
 
         /** Ensure any hostname is allowed */
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, [
