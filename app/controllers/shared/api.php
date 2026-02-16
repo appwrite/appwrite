@@ -259,7 +259,7 @@ Http::init()
                 $authorization->addRole(Role::user($user->getId())->toString());
                 $authorization->addRole(Role::users()->toString());
 
-                if ($user->getAttribute('emailVerification', false) && $user->getAttribute('phoneVerification', false)) {
+                if ($user->getAttribute('emailVerification', false) || $user->getAttribute('phoneVerification', false)) {
                     $authorization->addRole(Role::user($user->getId(), Roles::DIMENSION_VERIFIED)->toString());
                     $authorization->addRole(Role::users(Roles::DIMENSION_VERIFIED)->toString());
                 } else {
@@ -270,7 +270,7 @@ Http::init()
                 foreach (\array_filter($user->getAttribute('memberships', []), fn ($membership) => ($membership['confirm'] ?? false) === true) as $nodeMembership) {
                     $authorization->addRole(Role::team($nodeMembership['teamId'])->toString());
                     $authorization->addRole(Role::member($nodeMembership->getId())->toString());
-                    foreach (($node['roles'] ?? []) as $nodeRole) {
+                    foreach (($nodeMembership['roles'] ?? []) as $nodeRole) {
                         $authorization->addRole(Role::team($nodeMembership['teamId'], $nodeRole)->toString());
                     }
                 }
