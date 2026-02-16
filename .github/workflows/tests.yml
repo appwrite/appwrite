@@ -188,11 +188,7 @@ jobs:
       matrix:
         db_adapter: [
           MARIADB,
-          POSTGRESQL
-        ]
-
-        db_adapter: [
-          MARIADB,
+          POSTGRESQL,
           # MONGODB
         ]
         service: [
