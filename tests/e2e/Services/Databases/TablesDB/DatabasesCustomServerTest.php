@@ -1319,7 +1319,7 @@ class DatabasesCustomServerTest extends Scope
     public function testColumnRowWidthLimit()
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForSchemas()) {
             $this->expectNotToPerformAssertions();
             return;
         }
@@ -3266,7 +3266,7 @@ class DatabasesCustomServerTest extends Scope
     public function testColumnUpdateStringResize(array $data)
     {
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForAttributeResizing()) {
             $this->expectNotToPerformAssertions();
             return;
         }

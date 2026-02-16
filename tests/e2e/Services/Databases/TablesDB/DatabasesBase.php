@@ -1352,7 +1352,7 @@ trait DatabasesBase
 
         $this->assertEquals(400, $fulltextReleaseYear['headers']['status-code']);
 
-        if (!$this->getSupportForRelationships()) {
+        if (!$this->getSupportForMultipleFulltextIndexes()) {
             // Some databases only allow one fulltext index per collection
             $this->assertEquals('There is already a fulltext index in the collection', $fulltextReleaseYear['body']['message']);
         } else {

@@ -85,7 +85,7 @@ class Document extends Any
 
         if (!$document->isEmpty()) {
             $sequence = $document->getAttribute('$sequence', '');
-            $document->setAttribute('$sequence', \is_numeric($sequence) ? (int)$sequence : (string)$sequence);
+            $document->setAttribute('$sequence', (string)$sequence);
         }
 
         foreach ($document->getAttributes() as $attribute) {

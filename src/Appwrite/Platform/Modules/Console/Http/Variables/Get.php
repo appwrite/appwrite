@@ -97,6 +97,9 @@ class Get extends Action
             'supportForSpatials' => $adapter->getSupportForSpatialAttributes(),
             'supportForSpatialIndexNull' => $adapter->getSupportForSpatialIndexNull(),
             'supportForFulltextWildcard' => $adapter->getSupportForFulltextWildcardIndex(),
+            'supportForMultipleFulltextIndexes' => $adapter->getSupportForMultipleFulltextIndexes(),
+            'supportForAttributeResizing' => $adapter->getSupportForAttributeResizing(),
+            'supportForSchemas' => $adapter->getSupportForSchemas(),
             'maxIndexLength' => $adapter->getMaxIndexLength(),
         ]);
 

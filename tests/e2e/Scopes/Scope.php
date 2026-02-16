@@ -112,6 +112,30 @@ abstract class Scope extends TestCase
     }
 
     /**
+     * Check if the database adapter supports multiple fulltext indexes per collection
+     */
+    protected function getSupportForMultipleFulltextIndexes(): bool
+    {
+        return $this->getConsoleVariables()['supportForMultipleFulltextIndexes'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports resizing attributes
+     */
+    protected function getSupportForAttributeResizing(): bool
+    {
+        return $this->getConsoleVariables()['supportForAttributeResizing'] ?? true;
+    }
+
+    /**
+     * Check if the database adapter supports fixed schemas with row width limits
+     */
+    protected function getSupportForSchemas(): bool
+    {
+        return $this->getConsoleVariables()['supportForSchemas'] ?? true;
+    }
+
+    /**
      * Get the maximum index length supported by the database adapter
      */
     protected function getMaxIndexLength(): int
