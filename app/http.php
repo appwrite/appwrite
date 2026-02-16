@@ -215,7 +215,7 @@ function createDatabase(Http $app, string $resourceKey, string $dbName, array $c
     while (true) {
         try {
             $attempts++;
-                $database->create();
+            $database->create();
             break; // exit loop on success
         } catch (\Exception $e) {
             if ($e instanceof DuplicateException) {
@@ -439,7 +439,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $tot
             while (true) {
                 try {
                     $attempts++;
-                        $dbForProject->create();
+                    $dbForProject->create();
                     break; // exit loop on success
                 } catch (DuplicateException) {
                     Span::add('database.exists', true);
