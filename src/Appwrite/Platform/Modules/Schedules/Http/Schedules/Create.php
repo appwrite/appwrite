@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Schedules\Http\Schedules;
 
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
@@ -17,6 +18,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\JSON;
 use Utopia\Validator\WhiteList;
 
 class Create extends Action
@@ -65,6 +67,7 @@ class Create extends Action
             ->desc('Create schedule')
             ->groups(['api', 'projects'])
             ->label('scope', 'schedules.write')
+            ->label('event', 'schedules.[scheduleId].create')
             ->label('audits.event', 'schedule.create')
             ->label('audits.resource', 'schedule/{response.$id}')
             ->label('sdk', new Method(
@@ -77,18 +80,20 @@ class Create extends Action
                     new SDKResponse(
                         code: Response::STATUS_CODE_CREATED,
                         model: Response::MODEL_SCHEDULE,
-                    )
+                    ),
                 ],
             ))
-            ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: ' . implode(', ', $resourceTypes) . '.')
-            ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
-            ->param('schedule', '', new Cron(), 'Schedule CRON expression.')
-            ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
+            ->param('projectId', '', new UID, 'Project unique ID.')
+            ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: '.implode(', ', $resourceTypes).'.')
+            ->param('resourceId', '', new UID, 'The resource ID to associate with this schedule.')
+            ->param('schedule', '', new Cron, 'Schedule CRON expression.')
+            ->param('active', false, new Boolean, 'Whether the schedule is active.', true)
+            ->param('data', null, new JSON, 'Schedule data as a JSON string. Used to store resource-specific context needed for execution.', true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
             ->inject('authorization')
+            ->inject('queueForEvents')
             ->callback($this->action(...));
     }
 
@@ -98,10 +103,12 @@ class Create extends Action
         string $resourceId,
         string $schedule,
         bool $active,
+        ?string $data,
         Response $response,
         Database $dbForPlatform,
         callable $getProjectDB,
         Authorization $authorization,
+        Event $queueForEvents,
     ): void {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -112,7 +119,7 @@ class Create extends Action
         $dbForProject = $getProjectDB($project);
 
         $collectionMap = $this->getCollectionMap();
-        $collection = $collectionMap[$resourceType] ?? throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type: ' . $resourceType);
+        $collection = $collectionMap[$resourceType] ?? throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type: '.$resourceType);
 
         $resource = $dbForProject->getDocument($collection, $resourceId);
 
@@ -121,22 +128,30 @@ class Create extends Action
             throw new Exception($notFoundMap[$resourceType] ?? Exception::GENERAL_ARGUMENT_INVALID, 'Resource not found');
         }
 
+        $attributes = [
+            'region' => $project->getAttribute('region'),
+            'resourceType' => $resourceType,
+            'resourceId' => $resourceId,
+            'resourceInternalId' => $resource->getSequence(),
+            'resourceUpdatedAt' => DateTime::now(),
+            'projectId' => $project->getId(),
+            'schedule' => $schedule,
+            'active' => $active,
+        ];
+
+        if ($data !== null) {
+            $attributes['data'] = \json_decode($data, true);
+        }
+
         try {
             $doc = $authorization->skip(
-                fn () => $dbForPlatform->createDocument('schedules', new Document([
-                    'region' => $project->getAttribute('region'),
-                    'resourceType' => $resourceType,
-                    'resourceId' => $resourceId,
-                    'resourceInternalId' => $resource->getSequence(),
-                    'resourceUpdatedAt' => DateTime::now(),
-                    'projectId' => $project->getId(),
-                    'schedule' => $schedule,
-                    'active' => $active,
-                ]))
+                fn () => $dbForPlatform->createDocument('schedules', new Document($attributes))
             );
         } catch (DuplicateException) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to create schedule. Please try again.');
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         }
+
+        $queueForEvents->setParam('scheduleId', $doc->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

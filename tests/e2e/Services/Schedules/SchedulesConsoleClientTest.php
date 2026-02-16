@@ -12,8 +12,8 @@ use Utopia\System\System;
 
 class SchedulesConsoleClientTest extends Scope
 {
-    use SchedulesBase;
     use ProjectConsole;
+    use SchedulesBase;
     use SideClient;
 
     /**
@@ -42,7 +42,7 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertEquals(201, $function['headers']['status-code']);
         $functionId = $function['body']['$id'];
 
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -74,7 +74,7 @@ class SchedulesConsoleClientTest extends Scope
          */
 
         // Resource not found
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -86,7 +86,7 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
 
         // Invalid resource type
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -98,7 +98,7 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Invalid cron
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -110,7 +110,7 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Missing resourceType
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -121,7 +121,7 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Missing resourceId
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -132,7 +132,7 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         // Missing schedule
-        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -156,7 +156,7 @@ class SchedulesConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules/' . $scheduleId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules/'.$scheduleId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -171,7 +171,7 @@ class SchedulesConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules/error', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules/'.ID::unique(), array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -191,7 +191,7 @@ class SchedulesConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -214,7 +214,7 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertArrayHasKey('region', $schedule);
 
         /** Filter by resourceType */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -229,7 +229,7 @@ class SchedulesConsoleClientTest extends Scope
         }
 
         /** Filter by active status */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -243,7 +243,7 @@ class SchedulesConsoleClientTest extends Scope
         }
 
         /** List with total disabled */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -257,7 +257,7 @@ class SchedulesConsoleClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$id.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -301,7 +301,7 @@ class SchedulesConsoleClientTest extends Scope
         $otherProjectId = $otherProject['body']['$id'];
 
         // Try to get the schedule from the other project
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $otherProjectId . '/schedules/' . $scheduleId, array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$otherProjectId.'/schedules/'.$scheduleId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
@@ -309,7 +309,7 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
 
         // List should not include schedules from other projects
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $otherProjectId . '/schedules', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/'.$otherProjectId.'/schedules', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
