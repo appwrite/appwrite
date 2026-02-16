@@ -100,8 +100,7 @@ services:
       - ./dev:/usr/src/code/dev
       # - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - redis
       - coredns
       - ollama
@@ -292,8 +291,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - redis
       - ollama
     environment:
@@ -336,8 +334,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - ollama
     environment:
       - _APP_ENV
@@ -370,8 +367,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - request-catcher-sms
       - request-catcher-webhook
       - ollama
@@ -405,8 +401,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - ollama
     volumes:
       - appwrite-uploads:/storage/uploads:rw
@@ -478,8 +473,7 @@ services:
       
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - ollama
     environment:
       - _APP_ENV
@@ -522,8 +516,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - ollama
     environment:
       - _APP_ENV
@@ -655,8 +648,7 @@ services:
       - appwrite
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - ollama
     volumes:
       - appwrite-config:/storage/config:rw
@@ -734,8 +726,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - ollama
       - openruntimes-executor
     environment:
@@ -879,8 +870,7 @@ services:
       - ./tests:/usr/src/code/tests
       
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - ollama
     environment:
       - _APP_ENV
@@ -1010,8 +1000,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - ollama
     environment:
       - _APP_ENV
@@ -1046,8 +1035,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - ollama
     environment:
       - _APP_ENV
@@ -1082,8 +1070,7 @@ services:
       - ./src:/usr/src/code/src
     depends_on:
       - redis
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - ollama
     environment:
       - _APP_ENV
@@ -1117,8 +1104,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - redis
       - ollama
     environment:
@@ -1150,8 +1136,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - redis
       - ollama
     environment:
@@ -1182,8 +1167,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
-      - ${_APP_DB_HOST:-mongodb}
-      - postgresql
+      - ${_APP_DB_HOST:-mariadb}
       - redis
       - ollama
     environment:
@@ -1342,9 +1326,7 @@ services:
       ME_CONFIG_MONGODB_URL: "mongodb://root:${_APP_DB_ROOT_PASS}@appwrite-mongodb:27017/?replicaSet=rs0&directConnection=true"
       ME_CONFIG_BASICAUTH_USERNAME: ${_APP_DB_USER}
       ME_CONFIG_BASICAUTH_PASSWORD: ${_APP_DB_PASS}
-    depends_on:
-      - mongodb
-
+    depends_on: []
 
   postgresql:
     build:
