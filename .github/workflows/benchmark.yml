@@ -3,6 +3,7 @@ concurrency:
   group: '${{ github.workflow }}-${{ github.ref }}'
   cancel-in-progress: true
 env:
+  COMPOSE_FILE: docker-compose.yml
   IMAGE: appwrite-dev
   CACHE_KEY: 'appwrite-dev-${{ github.event.pull_request.head.sha }}'
 'on':
@@ -13,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Set up Docker Buildx
@@ -28,6 +29,7 @@ jobs:
           cache-from: type=gha
           cache-to: 'type=gha,mode=max'
           outputs: 'type=docker,dest=/tmp/${{ env.IMAGE }}.tar'
+          target: development
           build-args: |
             DEBUG=false
             TESTING=true
@@ -45,7 +47,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Load Cache
         uses: actions/cache@v4
         with:
@@ -97,7 +99,7 @@ jobs:
           echo "| 200 | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark.json) | $(jq -r '.statusCodeDistribution."200"|tostring|[while(length>0;.[:-3])|.[-3:]]|reverse|join(",")' benchmark-latest.json) | "  >> benchmark.txt
           echo "| P99 | $(jq -r '.latencyPercentiles.p99' benchmark.json ) | $(jq -r '.latencyPercentiles.p99' benchmark-latest.json ) | "  >> benchmark.txt
       - name: Save results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: '${{ !cancelled() }}'
         with:
           name: benchmark.json

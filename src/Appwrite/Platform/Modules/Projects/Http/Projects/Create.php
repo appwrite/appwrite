@@ -263,6 +263,7 @@ class Create extends Action
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $dsn,
                 'labels' => [],
+                'status' => PROJECT_STATUS_ACTIVE,
                 'documentsDatabase' => $this->getDatabaseDSN('documentsDatabase', $region, $dsn),
                 'vectorDatabase' => $this->getDatabaseDSN('vectorDatabase', $region, $dsn)
             ]));

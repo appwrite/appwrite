@@ -431,6 +431,9 @@ const COOKIE_NAME_PREVIEW = 'a_jwt_console';
 const CACHE_RECONNECT_MAX_RETRIES = 2;
 const CACHE_RECONNECT_RETRY_DELAY = 1000;
 
+// Project status
+const PROJECT_STATUS_ACTIVE = 'active';
+
 // Database types
 const DATABASE_TYPE_LEGACY = 'legacy';
 const DATABASE_TYPE_TABLESDB = 'tablesdb';
