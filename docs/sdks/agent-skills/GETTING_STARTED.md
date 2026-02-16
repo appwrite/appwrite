@@ -9,7 +9,7 @@ These skills follow the Agent Skills Open Standard: https://agentskills.io/home
 Install directly with the Skills CLI:
 
 ```bash
-npx skills add chiragagg5k/appwrite-agent-skills
+npx skills add appwrite/agent-skills
 ```
 
 This installs the packaged `appwrite-*` skills into your local skills directory.
