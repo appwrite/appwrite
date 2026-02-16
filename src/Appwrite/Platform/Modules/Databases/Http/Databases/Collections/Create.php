@@ -25,7 +25,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
@@ -247,6 +247,8 @@ class Create extends Action
             ->setContext('database', $database)
             ->setParam('databaseId', $databaseId)
             ->setParam($this->getEventsParamKey(), $collection->getId());
+
+        $this->addRowBytesInfo($collection, $dbForProject);
 
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_CREATED)

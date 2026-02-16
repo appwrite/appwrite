@@ -9,6 +9,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Execution;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
@@ -27,8 +28,8 @@ use Utopia\Audit\Audit as UtopiaAudit;
 use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Console;
 use Utopia\Database\Adapter\Pool as DatabasePool;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -44,17 +45,13 @@ use Utopia\Queue\Message;
 use Utopia\Queue\Publisher;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
-use Utopia\Span\Exporter;
-use Utopia\Span\Span;
-use Utopia\Span\Storage;
 use Utopia\Storage\Device\Telemetry as TelemetryDevice;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 
 Runtime::enableCoroutine();
-Span::setStorage(new Storage\Coroutine());
-Span::addExporter(new Exporter\Stdout());
+require_once __DIR__ . '/init/span.php';
 
 global $register;
 Server::setResource('register', fn () => $register);
@@ -356,6 +353,10 @@ Server::setResource('queueForWebhooks', function (Publisher $publisher) {
 
 Server::setResource('queueForFunctions', function (Publisher $publisher) {
     return new Func($publisher);
+}, ['publisher']);
+
+Server::setResource('queueForExecutions', function (Publisher $publisher) {
+    return new Execution($publisher);
 }, ['publisher']);
 
 Server::setResource('queueForRealtime', function () {

@@ -1,5 +1,8 @@
 name: "SDK Preview"
 
+env:
+  COMPOSE_FILE: docker-compose.yml
+
 on:
   pull_request:
     paths:
@@ -19,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set SDK type
         id: set-sdk

@@ -62,6 +62,12 @@ trait DatabasesBase
 
         $this->assertEquals(201, $movies['headers']['status-code']);
         $this->assertEquals($movies['body']['name'], 'Movies');
+        $this->assertArrayHasKey('bytesMax', $movies['body']);
+        $this->assertArrayHasKey('bytesUsed', $movies['body']);
+        $this->assertIsInt($movies['body']['bytesMax']);
+        $this->assertIsInt($movies['body']['bytesUsed']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesMax']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesUsed']);
 
         $actors = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables', array_merge([
             'content-type' => 'application/json',
@@ -143,6 +149,8 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertFalse($response['body']['enabled']);
+        $this->assertArrayHasKey('bytesMax', $response['body']);
+        $this->assertArrayHasKey('bytesUsed', $response['body']);
 
         if ($this->getSide() === 'client') {
             $responseCreateRow = $this->client->call(Client::METHOD_POST, '/tablesdb/' . $databaseId . '/tables/' . $data['moviesId'] . '/rows', array_merge([
@@ -363,6 +371,9 @@ trait DatabasesBase
 
         $this->assertIsArray($movies['body']['columns']);
         $this->assertCount(9, $movies['body']['columns']);
+        $this->assertArrayHasKey('bytesMax', $movies['body']);
+        $this->assertArrayHasKey('bytesUsed', $movies['body']);
+        $this->assertGreaterThanOrEqual(0, $movies['body']['bytesUsed']);
         $this->assertEquals($movies['body']['columns'][0]['key'], $title['body']['key']);
         $this->assertEquals($movies['body']['columns'][1]['key'], $description['body']['key']);
         $this->assertEquals($movies['body']['columns'][2]['key'], $tagline['body']['key']);
@@ -2347,6 +2358,36 @@ trait DatabasesBase
         $this->assertEquals($row['title'], $response['body']['title']);
         $this->assertEquals($row['releaseYear'], $response['body']['releaseYear']);
         $this->assertArrayNotHasKey('birthDay', $response['body']);
+
+        $sequence = $response['body']['$sequence'];
+
+        // Query by sequence on get single row route
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$tableId'] . '/rows/' . $row['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$sequence', [$sequence])->toString()
+            ],
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals('Invalid query method: equal', $response['body']['message']);
+
+        // Query by sequence
+        $response = $this->client->call(Client::METHOD_GET, '/tablesdb/' . $databaseId . '/tables/' . $row['$tableId'] . '/rows', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::equal('$sequence', [$sequence.''])->toString()
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($row['title'], $response['body']['rows'][0]['title']);
+        $this->assertEquals($row['releaseYear'], $response['body']['rows'][0]['releaseYear']);
+        $this->assertTrue(array_key_exists('$sequence', $response['body']['rows'][0]));
     }
 
     /**

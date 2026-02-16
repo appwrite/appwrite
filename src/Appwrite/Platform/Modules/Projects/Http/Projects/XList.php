@@ -9,7 +9,6 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
-use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\ListSelection;
 use Utopia\Config\Config;
@@ -68,13 +67,13 @@ class XList extends Action
             ->param('queries', [], $this->getQueriesValidator(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Projects::ALLOWED_ATTRIBUTES), true)
             ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
-            ->inject('request')
             ->inject('response')
             ->inject('dbForPlatform')
+            ->inject('team')
             ->callback($this->action(...));
     }
 
-    public function action(array $queries, string $search, bool $includeTotal, Request $request, Response $response, Database $dbForPlatform)
+    public function action(array $queries, string $search, bool $includeTotal, Response $response, Database $dbForPlatform, Document $team)
     {
         try {
             $queries = Query::parseQueries($queries);
@@ -86,16 +85,14 @@ class XList extends Action
             $queries[] = Query::search('search', $search);
         }
 
-        /**
-         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
-         */
-        $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
-        });
-        $cursor = reset($cursor);
-        if ($cursor) {
-            /** @var Query $cursor */
+        if (!$team->isEmpty()) {
+            $queries[] = Query::equal('teamInternalId', [$team->getSequence()]);
+        }
 
+        $cursor = Query::getCursorQueries($queries, false);
+        $cursor = \reset($cursor);
+
+        if ($cursor !== false) {
             $validator = new Cursor();
             if (!$validator->isValid($cursor)) {
                 throw new Exception(Exception::GENERAL_QUERY_INVALID, $validator->getDescription());
