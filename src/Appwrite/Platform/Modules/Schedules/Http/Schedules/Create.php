@@ -28,8 +28,37 @@ class Create extends Action
         return 'createSchedule';
     }
 
+    protected function getResourceTypes(): array
+    {
+        return [
+            SCHEDULE_RESOURCE_TYPE_FUNCTION,
+            SCHEDULE_RESOURCE_TYPE_EXECUTION,
+            SCHEDULE_RESOURCE_TYPE_MESSAGE,
+        ];
+    }
+
+    protected function getCollectionMap(): array
+    {
+        return [
+            SCHEDULE_RESOURCE_TYPE_FUNCTION => 'functions',
+            SCHEDULE_RESOURCE_TYPE_EXECUTION => 'executions',
+            SCHEDULE_RESOURCE_TYPE_MESSAGE => 'messages',
+        ];
+    }
+
+    protected function getNotFoundExceptionMap(): array
+    {
+        return [
+            SCHEDULE_RESOURCE_TYPE_FUNCTION => Exception::FUNCTION_NOT_FOUND,
+            SCHEDULE_RESOURCE_TYPE_EXECUTION => Exception::EXECUTION_NOT_FOUND,
+            SCHEDULE_RESOURCE_TYPE_MESSAGE => Exception::MESSAGE_NOT_FOUND,
+        ];
+    }
+
     public function __construct()
     {
+        $resourceTypes = $this->getResourceTypes();
+
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_POST)
             ->setHttpPath('/v1/projects/:projectId/schedules')
@@ -52,7 +81,7 @@ class Create extends Action
                 ],
             ))
             ->param('projectId', '', new UID(), 'Project unique ID.')
-            ->param('resourceType', '', new WhiteList([SCHEDULE_RESOURCE_TYPE_FUNCTION, SCHEDULE_RESOURCE_TYPE_EXECUTION, SCHEDULE_RESOURCE_TYPE_MESSAGE], true), 'The resource type for the schedule. Possible values: ' . implode(', ', [SCHEDULE_RESOURCE_TYPE_FUNCTION, SCHEDULE_RESOURCE_TYPE_EXECUTION, SCHEDULE_RESOURCE_TYPE_MESSAGE]) . '.')
+            ->param('resourceType', '', new WhiteList($resourceTypes, true), 'The resource type for the schedule. Possible values: ' . implode(', ', $resourceTypes) . '.')
             ->param('resourceId', '', new UID(), 'The resource ID to associate with this schedule.')
             ->param('schedule', '', new Cron(), 'Schedule CRON expression.')
             ->param('active', false, new Boolean(), 'Whether the schedule is active.', true)
@@ -82,20 +111,14 @@ class Create extends Action
 
         $dbForProject = $getProjectDB($project);
 
-        $collection = match ($resourceType) {
-            SCHEDULE_RESOURCE_TYPE_FUNCTION => 'functions',
-            SCHEDULE_RESOURCE_TYPE_EXECUTION => 'executions',
-            SCHEDULE_RESOURCE_TYPE_MESSAGE => 'messages',
-        };
+        $collectionMap = $this->getCollectionMap();
+        $collection = $collectionMap[$resourceType] ?? throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type: ' . $resourceType);
 
         $resource = $dbForProject->getDocument($collection, $resourceId);
 
         if ($resource->isEmpty()) {
-            throw new Exception(match ($resourceType) {
-                SCHEDULE_RESOURCE_TYPE_FUNCTION => Exception::FUNCTION_NOT_FOUND,
-                SCHEDULE_RESOURCE_TYPE_EXECUTION => Exception::EXECUTION_NOT_FOUND,
-                SCHEDULE_RESOURCE_TYPE_MESSAGE => Exception::MESSAGE_NOT_FOUND,
-            });
+            $notFoundMap = $this->getNotFoundExceptionMap();
+            throw new Exception($notFoundMap[$resourceType] ?? Exception::GENERAL_ARGUMENT_INVALID, 'Resource not found');
         }
 
         try {
