@@ -3797,16 +3797,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "5.1.1",
+            "version": "5.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "94815bfa605282096272625827d0314f9ed99066"
+                "reference": "5c89b39de00f2b3126d0fbbdea36786341293df7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/94815bfa605282096272625827d0314f9ed99066",
-                "reference": "94815bfa605282096272625827d0314f9ed99066",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/5c89b39de00f2b3126d0fbbdea36786341293df7",
+                "reference": "5c89b39de00f2b3126d0fbbdea36786341293df7",
                 "shasum": ""
             },
             "require": {
@@ -3849,9 +3849,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/5.1.1"
+                "source": "https://github.com/utopia-php/database/tree/5.2.0"
             },
-            "time": "2026-02-12T11:44:58+00:00"
+            "time": "2026-02-14T09:37:28+00:00"
         },
         {
             "name": "utopia-php/detector",
@@ -4909,16 +4909,16 @@
         },
         {
             "name": "utopia-php/span",
-            "version": "1.1.4",
+            "version": "1.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/span.git",
-                "reference": "49d04aa588a2cdbbc9381ee7a1c129469e0f905c"
+                "reference": "028406940ca92bdc88099f0b1a123a3b2cbdd4e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/span/zipball/49d04aa588a2cdbbc9381ee7a1c129469e0f905c",
-                "reference": "49d04aa588a2cdbbc9381ee7a1c129469e0f905c",
+                "url": "https://api.github.com/repos/utopia-php/span/zipball/028406940ca92bdc88099f0b1a123a3b2cbdd4e5",
+                "reference": "028406940ca92bdc88099f0b1a123a3b2cbdd4e5",
                 "shasum": ""
             },
             "require": {
@@ -4947,9 +4947,9 @@
             "description": "Simple span tracing library for PHP with coroutine support",
             "support": {
                 "issues": "https://github.com/utopia-php/span/issues",
-                "source": "https://github.com/utopia-php/span/tree/1.1.4"
+                "source": "https://github.com/utopia-php/span/tree/1.1.5"
             },
-            "time": "2026-02-13T10:58:12+00:00"
+            "time": "2026-02-13T18:00:11+00:00"
         },
         {
             "name": "utopia-php/storage",
@@ -5390,16 +5390,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "1.9.0",
+            "version": "1.9.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "94a2d7ef55ea63c6e8afb166d39a82c07d01c8c0"
+                "reference": "74de906ea5051030c5299a5d4aa74d963a531130"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/94a2d7ef55ea63c6e8afb166d39a82c07d01c8c0",
-                "reference": "94a2d7ef55ea63c6e8afb166d39a82c07d01c8c0",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/74de906ea5051030c5299a5d4aa74d963a531130",
+                "reference": "74de906ea5051030c5299a5d4aa74d963a531130",
                 "shasum": ""
             },
             "require": {
@@ -5435,9 +5435,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/1.9.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/1.9.2"
             },
-            "time": "2026-02-12T12:08:13+00:00"
+            "time": "2026-02-16T06:59:54+00:00"
         },
         {
             "name": "doctrine/annotations",
