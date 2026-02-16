@@ -1012,7 +1012,7 @@ class Builds extends Action
 
                 Console::log('Deployment activated');
             }
-            
+
             /** Screenshot site */
             if ($resource->getCollection() === 'sites') {
                 $queueForScreenshots
