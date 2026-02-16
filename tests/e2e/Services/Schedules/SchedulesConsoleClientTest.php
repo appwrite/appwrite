@@ -10,7 +10,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\System\System;
 
-class SchedulesCustomServerTest extends Scope
+class SchedulesConsoleClientTest extends Scope
 {
     use SchedulesBase;
     use ProjectConsole;
