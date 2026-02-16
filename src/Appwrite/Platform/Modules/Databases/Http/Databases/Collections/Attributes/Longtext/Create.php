@@ -90,7 +90,7 @@ class Create extends Action
         Authorization $authorization
     ): void {
         if (!Http::isDevelopment() && $encrypt && !empty($plan) && !($plan['databasesAllowEncrypt'] ?? false)) {
-            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted string ' . $this->getSDKGroup() . ' are not available on your plan. Please upgrade to create encrypted string ' . $this->getSDKGroup() . '.');
+            throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Encrypted ' . $this->getSDKGroup() . ' are not available on your plan. Please upgrade to create encrypted ' . $this->getSDKGroup() . '.');
         }
 
         $filters = [];
