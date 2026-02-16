@@ -738,6 +738,7 @@ services:
     depends_on:
       - redis
       - maildev
+      - ${_APP_DB_HOST:-mariadb}
       # - smtp
     environment:
       - _APP_ENV
