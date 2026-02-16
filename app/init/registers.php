@@ -168,6 +168,23 @@ $register->set('pools', function () {
         'pass' => System::getEnv('_APP_REDIS_PASS', ''),
     ]);
 
+    $fallbackForDocumentsDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => System::getEnv('_APP_DB_ADAPTER_DOCUMENTSDB', 'mongodb'),
+        'host' => System::getEnv('_APP_DB_HOST_DOCUMENTSDB', 'mongodb'),
+        'port' => System::getEnv('_APP_DB_PORT_DOCUMENTSDB', '27017'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+    ]);
+    $fallbackForVectorDB = 'db_main=' . AppwriteURL::unparse([
+        'scheme' => System::getEnv('_APP_DB_ADAPTER_VECTORDB', 'postgresql'),
+        'host' => System::getEnv('_APP_DB_HOST_VECTORDB', 'postgresql'),
+        'port' => System::getEnv('_APP_DB_PORT_VECTORDB', '5432'),
+        'user' => System::getEnv('_APP_DB_USER', ''),
+        'pass' => System::getEnv('_APP_DB_PASS', ''),
+        'path' => System::getEnv('_APP_DB_SCHEMA', ''),
+    ]);
+
     $connections = [
         'console' => [
             'type' => 'database',
@@ -410,7 +427,6 @@ $register->set('db', function () {
 
     switch ($dbAdapter) {
         case 'mongodb':
-
             try {
                 $mongo = new MongoClient($dbScheme, $dbHost, (int)$dbPort, $dbUser, $dbPass, false);
                 @$mongo->connect();
@@ -421,8 +437,8 @@ $register->set('db', function () {
             }
         
         case 'postgresql':
-                    $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}";
-                    break;
+            $dsn = "pgsql:host={$dbHost};port={$dbPort};dbname={$dbSchema}";
+            break;
 
         case 'mysql':
         case 'mariadb':

@@ -15,7 +15,7 @@ use Utopia\Agents\Agent;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\System\System;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Text;
