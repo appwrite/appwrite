@@ -34,7 +34,7 @@ trait SchedulesBase
 
         $projectId = $project['body']['$id'];
 
-        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', array_merge([
+        $key = $this->client->call(Client::METHOD_POST, '/projects/'.$projectId.'/keys', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
