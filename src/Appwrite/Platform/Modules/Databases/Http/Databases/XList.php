@@ -92,6 +92,9 @@ class XList extends Action
             $cursor->setValue($cursorDocument);
         }
 
+        // use base action to get all types, contexts, etc!
+        $queries[] = Query::equal('type', [$this->getDatabaseType()]);
+
         try {
             $databases = $dbForProject->find('databases', $queries);
             $total = $includeTotal ? $dbForProject->count('databases', $queries, APP_LIMIT_COUNT) : 0;
