@@ -1304,6 +1304,7 @@ Http::setResource('team', function (Document $project, Database $dbForPlatform, 
     } else {
         $route = $utopia->match($request);
         $path = !empty($route) ? $route->getPath() : $request->getURI();
+        $orgHeader = $request->getHeader('x-appwrite-organization', '');
         if (str_starts_with($path, '/v1/projects/:projectId')) {
             $uri = $request->getURI();
             $pid = explode('/', $uri)[3];
@@ -1318,6 +1319,8 @@ Http::setResource('team', function (Document $project, Database $dbForPlatform, 
 
             $team = $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $teamId));
             return $team;
+        } elseif (!empty($orgHeader)) {
+            return $authorization->skip(fn () => $dbForPlatform->getDocument('teams', $orgHeader));
         }
     }
 

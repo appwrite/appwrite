@@ -169,8 +169,10 @@ Http::init()
 
             // Handle special app role case
             if ($apiKey->getRole() === User::ROLE_APPS) {
-                // Disable authorization checks for API keys
-                $authorization->setDefaultStatus(false);
+                // Disable authorization checks for project API keys
+                if ($project->getId() !== 'console') {
+                    $authorization->setDefaultStatus(false);
+                }
 
                 $user = new User([
                     '$id' => '',
@@ -244,6 +246,10 @@ Http::init()
                         $dbForPlatform->getAuthorization()->skip(fn () => $dbForPlatform->purgeCachedDocument('teams', $team->getId()));
                     }
                 }
+
+                $authorization->addRole(Role::team($team->getId())->toString());
+                $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
+                $authorization->addRole(Role::member($team->getId())->toString());
 
                 $queueForAudits->setUser($user);
             }
