@@ -255,7 +255,6 @@ Http::init()
             if ($apiKey->getType() === API_KEY_ORGANIZATION) {
                 $authorization->addRole(Role::team($team->getId())->toString());
                 $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
-                $authorization->addRole(Role::member($team->getId())->toString());
             } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
                 $authorization->addRole(Role::user($user->getId())->toString());
                 $authorization->addRole(Role::users()->toString());
@@ -268,7 +267,7 @@ Http::init()
                     $authorization->addRole(Role::users(Roles::DIMENSION_UNVERIFIED)->toString());
                 }
 
-                foreach (\array_filter($user->getAttribute('memberships', []), fn ($membership) => !isset($membership['confirm']) || !$membership['confirm']) as $nodeMembership) {
+                foreach (\array_filter($user->getAttribute('memberships', []), fn ($membership) => ($membership['confirm'] ?? false) === true) as $nodeMembership) {
                     $authorization->addRole(Role::team($nodeMembership['teamId'])->toString());
                     $authorization->addRole(Role::member($nodeMembership->getId())->toString());
                     foreach (($node['roles'] ?? []) as $nodeRole) {
