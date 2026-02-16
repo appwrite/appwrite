@@ -30,6 +30,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Database\Validator\Roles;
 use Utopia\Http\Http;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -169,8 +170,10 @@ Http::init()
 
             // Handle special app role case
             if ($apiKey->getRole() === User::ROLE_APPS) {
-                // Disable authorization checks for API keys
-                $authorization->setDefaultStatus(false);
+                // Disable authorization checks for project API keys
+                if (($apiKey->getType() === API_KEY_STANDARD || $apiKey->getType() === API_KEY_DYNAMIC) && $apiKey->getProjectId() === $project->getId()) {
+                    $authorization->setDefaultStatus(false);
+                }
 
                 $user = new User([
                     '$id' => '',
@@ -246,6 +249,35 @@ Http::init()
                 }
 
                 $queueForAudits->setUser($user);
+            }
+
+            // Apply permission
+            if ($apiKey->getType() === API_KEY_ORGANIZATION) {
+                $authorization->addRole(Role::team($team->getId())->toString());
+                $authorization->addRole(Role::team($team->getId(), 'owner')->toString());
+            } elseif ($apiKey->getType() === API_KEY_ACCOUNT) {
+                $authorization->addRole(Role::user($user->getId())->toString());
+                $authorization->addRole(Role::users()->toString());
+
+                if ($user->getAttribute('emailVerification', false) || $user->getAttribute('phoneVerification', false)) {
+                    $authorization->addRole(Role::user($user->getId(), Roles::DIMENSION_VERIFIED)->toString());
+                    $authorization->addRole(Role::users(Roles::DIMENSION_VERIFIED)->toString());
+                } else {
+                    $authorization->addRole(Role::user($user->getId(), Roles::DIMENSION_UNVERIFIED)->toString());
+                    $authorization->addRole(Role::users(Roles::DIMENSION_UNVERIFIED)->toString());
+                }
+
+                foreach (\array_filter($user->getAttribute('memberships', []), fn ($membership) => ($membership['confirm'] ?? false) === true) as $nodeMembership) {
+                    $authorization->addRole(Role::team($nodeMembership['teamId'])->toString());
+                    $authorization->addRole(Role::member($nodeMembership->getId())->toString());
+                    foreach (($nodeMembership['roles'] ?? []) as $nodeRole) {
+                        $authorization->addRole(Role::team($nodeMembership['teamId'], $nodeRole)->toString());
+                    }
+                }
+
+                foreach ($user->getAttribute('labels', []) as $nodeLabel) {
+                    $authorization->addRole('label:' . $nodeLabel);
+                }
             }
         } // Admin User Authentication
         elseif (($project->getId() === 'console' && !$team->isEmpty() && !$user->isEmpty()) || ($project->getId() !== 'console' && !$user->isEmpty() && $mode === APP_MODE_ADMIN)) {
