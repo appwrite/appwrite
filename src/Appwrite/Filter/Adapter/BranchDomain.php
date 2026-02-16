@@ -1,8 +1,8 @@
 <?php
 
-namespace Appwrite\Transformation\Adapter;
+namespace Appwrite\Filter\Adapter;
 
-use Appwrite\Transformation\Adapter;
+use Appwrite\Filter\Adapter;
 use Utopia\Validator\Text;
 
 class BranchDomain extends Adapter
@@ -17,24 +17,30 @@ class BranchDomain extends Adapter
      */
     public const HASH_SUFFIX_LENGTH = 7;
 
-    /**
-     * @param array<mixed> $traits
-     */
-    public function isValid(array $traits): bool
+    public function isValid(mixed $input): bool
     {
+        $branch = $input['branch'] ?? '';
+        $resourceId = $input['resourceId'] ?? '';
+        $projectId = $input['projectId'] ?? '';
+        $sitesDomain = $input['sitesDomain'] ?? '';
+
+        if (empty($branch) || empty($resourceId) || empty($projectId) || empty($sitesDomain)) {
+            return false;
+        }
+
         return true;
     }
 
     /**
-     * Transform branch name into a valid domain name.
-     *
+     * Pre-process branch name to a valid domain name.
+     * 
      * Input should be an array with:
      * - 'branch' (string): The branch name
      * - 'resourceId' (string): The resource ID (site or function)
      * - 'projectId' (string): The project ID
      * - 'sitesDomain' (string): The base sites domain
      */
-    public function transform(): void
+    public function filter(): self
     {
         $branch = $this->input['branch'] ?? '';
         $resourceId = $this->input['resourceId'] ?? '';
@@ -44,6 +50,7 @@ class BranchDomain extends Adapter
         $branchPrefix = $this->generateBranchPrefix($branch);
         $resourceProjectHash = substr(hash('sha256', $resourceId . $projectId), 0, self::HASH_SUFFIX_LENGTH);
         $this->output = strtolower("branch-{$branchPrefix}-{$resourceProjectHash}.{$sitesDomain}");
+        return $this;
     }
 
     /**
@@ -92,7 +99,7 @@ class BranchDomain extends Adapter
             if (isset($allowedCharsFlip[$char])) {
                 $sanitized .= $char;
             } else {
-                // Prevents two -- or more in row
+                // Prevents two -- or more in a row
                 if (strlen($sanitized) > 0 && $sanitized[strlen($sanitized) - 1] !== '-') {
                     $sanitized .= '-';
                 }

@@ -9,8 +9,8 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
-use Appwrite\Transformation\Adapter\BranchDomain;
-use Appwrite\Transformation\Transformation;
+use Appwrite\Filter\Filter;
+use Appwrite\Filter\Adapter\BranchDomain as FilterBranchDomain;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -371,17 +371,16 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
                 // VCS branch preview
                 if (!empty($providerBranch)) {
-                    $transformation = new Transformation([new BranchDomain()]);
-                    $transformation
+                    $filter = new Filter([new FilterBranchDomain()]);
+                    $filter
                         ->setInput([
                             'branch' => $providerBranch,
                             'resourceId' => $resource->getId(),
                             'projectId' => $project->getId(),
                             'sitesDomain' => $sitesDomain,
                         ])
-                        ->setTraits([])
-                        ->transform();
-                    $domain = $transformation->getOutput();
+                        ->filter();
+                    $domain = $filter->getOutput();
                     $ruleId = md5($domain);
                     try {
                         $authorization->skip(
