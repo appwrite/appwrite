@@ -61,8 +61,25 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']['resourceUpdatedAt']);
         $this->assertNotEmpty($response['body']['projectId']);
         $this->assertEquals('0 0 * * *', $response['body']['schedule']);
+        $this->assertArrayHasKey('data', $response['body']);
         $this->assertTrue($response['body']['active']);
         $this->assertNotEmpty($response['body']['region']);
+
+        // Create with data
+        $scheduleData = ['key' => 'value'];
+        $responseWithData = $this->client->call(Client::METHOD_POST, '/projects/'.$id.'/schedules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'resourceType' => 'function',
+            'resourceId' => $functionId,
+            'schedule' => '0 12 * * *',
+            'active' => true,
+            'data' => json_encode($scheduleData),
+        ]);
+
+        $this->assertEquals(201, $responseWithData['headers']['status-code']);
+        $this->assertEquals($scheduleData, $responseWithData['body']['data']);
 
         $data = array_merge($data, [
             'scheduleId' => $response['body']['$id'],
@@ -166,6 +183,7 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertEquals($scheduleId, $response['body']['$id']);
         $this->assertEquals('function', $response['body']['resourceType']);
         $this->assertEquals('0 0 * * *', $response['body']['schedule']);
+        $this->assertArrayHasKey('data', $response['body']);
         $this->assertTrue($response['body']['active']);
 
         /**
@@ -210,6 +228,7 @@ class SchedulesConsoleClientTest extends Scope
         $this->assertArrayHasKey('resourceId', $schedule);
         $this->assertArrayHasKey('projectId', $schedule);
         $this->assertArrayHasKey('schedule', $schedule);
+        $this->assertArrayHasKey('data', $schedule);
         $this->assertArrayHasKey('active', $schedule);
         $this->assertArrayHasKey('region', $schedule);
 
