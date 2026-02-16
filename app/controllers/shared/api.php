@@ -496,6 +496,7 @@ Http::init()
         $queueForMessaging->setProject($project);
         $queueForFunctions->setProject($project);
         $queueForBuilds->setProject($project);
+        $queueForMails->setProject($project);
 
         /* Auto-set platforms */
         $queueForFunctions->setPlatform($platform);
