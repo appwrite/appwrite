@@ -170,7 +170,7 @@ Http::init()
             // Handle special app role case
             if ($apiKey->getRole() === User::ROLE_APPS) {
                 // Disable authorization checks for project API keys
-                if ($project->getId() !== 'console') {
+                if ($apiKey->getType() === API_KEY_STANDARD && $apiKey->getProjectId() === $project->getId()) {
                     $authorization->setDefaultStatus(false);
                 }
 
