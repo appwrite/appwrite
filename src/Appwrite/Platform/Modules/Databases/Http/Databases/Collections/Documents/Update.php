@@ -205,9 +205,10 @@ class Update extends Action
                     if (
                         \is_array($relation)
                         && \array_values($relation) !== $relation
-                        && !isset($relation['$id'])
                     ) {
-                        $relation['$id'] = ID::unique();
+                        if (!isset($relation['$id'])) {
+                            $relation['$id'] = ID::unique();
+                        }
                         $relation = new Document($relation);
                     }
 
