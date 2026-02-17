@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Schedules\Http\Schedules;
+namespace Appwrite\Platform\Modules\Schedules\Http\Projects\Schedules;
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
@@ -13,7 +13,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -39,22 +38,24 @@ class Create extends Action
         ];
     }
 
-    protected function getCollectionMap(): array
+    protected function getCollection(string $resourceType): string
     {
-        return [
+        return match ($resourceType) {
             SCHEDULE_RESOURCE_TYPE_FUNCTION => 'functions',
             SCHEDULE_RESOURCE_TYPE_EXECUTION => 'executions',
             SCHEDULE_RESOURCE_TYPE_MESSAGE => 'messages',
-        ];
+            default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type: ' . $resourceType),
+        };
     }
 
-    protected function getNotFoundExceptionMap(): array
+    protected function getNotFoundException(string $resourceType): string
     {
-        return [
+        return match ($resourceType) {
             SCHEDULE_RESOURCE_TYPE_FUNCTION => Exception::FUNCTION_NOT_FOUND,
             SCHEDULE_RESOURCE_TYPE_EXECUTION => Exception::EXECUTION_NOT_FOUND,
             SCHEDULE_RESOURCE_TYPE_MESSAGE => Exception::MESSAGE_NOT_FOUND,
-        ];
+            default => Exception::GENERAL_ARGUMENT_INVALID,
+        };
     }
 
     public function __construct()
@@ -92,7 +93,6 @@ class Create extends Action
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('getProjectDB')
-            ->inject('authorization')
             ->inject('queueForEvents')
             ->callback($this->action(...));
     }
@@ -107,7 +107,6 @@ class Create extends Action
         Response $response,
         Database $dbForPlatform,
         callable $getProjectDB,
-        Authorization $authorization,
         Event $queueForEvents,
     ): void {
         $project = $dbForPlatform->getDocument('projects', $projectId);
@@ -118,14 +117,11 @@ class Create extends Action
 
         $dbForProject = $getProjectDB($project);
 
-        $collectionMap = $this->getCollectionMap();
-        $collection = $collectionMap[$resourceType] ?? throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid resource type: '.$resourceType);
-
+        $collection = $this->getCollection($resourceType);
         $resource = $dbForProject->getDocument($collection, $resourceId);
 
         if ($resource->isEmpty()) {
-            $notFoundMap = $this->getNotFoundExceptionMap();
-            throw new Exception($notFoundMap[$resourceType] ?? Exception::GENERAL_ARGUMENT_INVALID, 'Resource not found');
+            throw new Exception($this->getNotFoundException($resourceType), 'Resource not found');
         }
 
         $attributes = [
@@ -144,9 +140,7 @@ class Create extends Action
         }
 
         try {
-            $doc = $authorization->skip(
-                fn () => $dbForPlatform->createDocument('schedules', new Document($attributes))
-            );
+            $doc = $dbForPlatform->createDocument('schedules', new Document($attributes));
         } catch (DuplicateException) {
             throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
         }

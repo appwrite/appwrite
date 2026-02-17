@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Schedules\Http\Schedules;
+namespace Appwrite\Platform\Modules\Schedules\Http\Projects\Schedules;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -8,7 +8,6 @@ use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
@@ -47,7 +46,6 @@ class Get extends Action
             ->param('scheduleId', '', new UID(), 'Schedule ID.')
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -56,7 +54,6 @@ class Get extends Action
         string $scheduleId,
         Response $response,
         Database $dbForPlatform,
-        Authorization $authorization,
     ): void {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -64,9 +61,7 @@ class Get extends Action
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $schedule = $authorization->skip(
-            fn () => $dbForPlatform->getDocument('schedules', $scheduleId)
-        );
+        $schedule = $dbForPlatform->getDocument('schedules', $scheduleId);
 
         if ($schedule->isEmpty()) {
             throw new Exception(Exception::SCHEDULE_NOT_FOUND);

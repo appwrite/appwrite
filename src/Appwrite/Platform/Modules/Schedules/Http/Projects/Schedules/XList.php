@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Schedules\Http\Schedules;
+namespace Appwrite\Platform\Modules\Schedules\Http\Projects\Schedules;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SDK\AuthType;
@@ -13,7 +13,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Order as OrderException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
@@ -55,7 +54,6 @@ class XList extends Action
             ->param('total', true, new Boolean(true), 'When set to false, the total count returned will be 0 and will not be calculated.', true)
             ->inject('response')
             ->inject('dbForPlatform')
-            ->inject('authorization')
             ->callback($this->action(...));
     }
 
@@ -65,7 +63,6 @@ class XList extends Action
         bool $includeTotal,
         Response $response,
         Database $dbForPlatform,
-        Authorization $authorization,
     ): void {
         $project = $dbForPlatform->getDocument('projects', $projectId);
 
@@ -91,9 +88,7 @@ class XList extends Action
             }
 
             $scheduleId = $cursor->getValue();
-            $cursorDocument = $authorization->skip(
-                fn () => $dbForPlatform->getDocument('schedules', $scheduleId)
-            );
+            $cursorDocument = $dbForPlatform->getDocument('schedules', $scheduleId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Schedule '{$scheduleId}' for the 'cursor' value not found.");
@@ -105,12 +100,8 @@ class XList extends Action
         $filterQueries = Query::groupByType($queries)['filters'];
 
         try {
-            $schedules = $authorization->skip(
-                fn () => $dbForPlatform->find('schedules', $queries)
-            );
-            $total = $includeTotal ? $authorization->skip(
-                fn () => $dbForPlatform->count('schedules', $filterQueries, APP_LIMIT_COUNT)
-            ) : 0;
+            $schedules = $dbForPlatform->find('schedules', $queries);
+            $total = $includeTotal ? $dbForPlatform->count('schedules', $filterQueries, APP_LIMIT_COUNT) : 0;
         } catch (OrderException $e) {
             throw new Exception(Exception::DATABASE_QUERY_ORDER_NULL, "The order attribute '{$e->getAttribute()}' had a null value. Cursor pagination requires all documents order attribute values are non-null.");
         }
