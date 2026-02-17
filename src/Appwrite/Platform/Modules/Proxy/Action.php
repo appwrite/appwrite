@@ -130,15 +130,7 @@ class Action extends PlatformAction
         $resourceType = $rule->getAttribute('deploymentResourceType', '');
 
         // Ensures different target based on rule's type, as configured by env variables
-        if ($resourceType === 'function') {
-            // For example: fra.appwrite.run
-            foreach (\explode(',', System::getEnv('_APP_DOMAIN_FUNCTIONS', '')) as $targetCNAME) {
-                if (empty($targetCNAME)) {
-                    continue;
-                }
-                $targetCNAMEs[] = new Domain($targetCNAME);
-            }
-        } elseif ($resourceType === 'site') {
+        if ($resourceType === 'site') {
             // For example: appwrite.network
             foreach (\explode(',', System::getEnv('_APP_DOMAIN_SITES', '')) as $targetCNAME) {
                 if (empty($targetCNAME)) {
@@ -146,7 +138,7 @@ class Action extends PlatformAction
                 }
                 $targetCNAMEs[] = new Domain($targetCNAME);
             }
-        } elseif ($ruleType === 'api') {
+        } elseif ($resourceType === 'function' || $ruleType === 'api') {
             // For example: fra.cloud.appwrite.io
             $targetCNAMEs[] = new Domain(System::getEnv('_APP_DOMAIN_TARGET_CNAME', ''));
         } elseif ($ruleType === 'redirect') {
